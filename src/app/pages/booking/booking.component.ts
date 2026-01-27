@@ -1,7 +1,8 @@
-import { Component, signal } from '@angular/core';
+import { Component, signal, HostListener, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { AppointmentService } from '../../services/appointment.service';
+import { Router, RouterLink } from '@angular/router';
 import { FullCalendarModule } from '@fullcalendar/angular';
 import { CalendarOptions, DateSelectArg } from '@fullcalendar/core';
 import dayGridPlugin from '@fullcalendar/daygrid';
@@ -9,132 +10,44 @@ import interactionPlugin from '@fullcalendar/interaction';
 import { finalize, timeout, catchError } from 'rxjs/operators';
 import { of } from 'rxjs';
 
+import { MatButtonModule } from '@angular/material/button';
+import { MatCardModule } from '@angular/material/card';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { MatSelectModule } from '@angular/material/select';
+import { MatIconModule } from '@angular/material/icon';
+import { MatStepperModule } from '@angular/material/stepper';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+
 @Component({
   selector: 'app-booking',
   standalone: true,
-  imports: [CommonModule, FormsModule, ReactiveFormsModule, FullCalendarModule],
-  template: `
-    <section class="py-5 bg-pink-light min-vh-100">
-      <div class="container py-5">
-        <div class="row justify-content-center">
-          <div class="col-lg-10">
-            <div class="card shadow-lg border-0 rounded-4 overflow-hidden">
-              <div class="row g-0">
-                <!-- Lado Izquierdo: Calendario -->
-                <div class="col-md-7 p-4 bg-white border-end">
-                  <h2 class="h4 fw-bold text-primary-color mb-4">1. Elige una fecha</h2>
-                  <full-calendar [options]="calendarOptions"></full-calendar>
-                  <p class="text-muted small mt-3">
-                    * Trabajamos de Lunes a Sábado. El horario disponible se muestra al seleccionar un día.
-                  </p>
-                </div>
-
-                <!-- Lado Derecho: Horarios y Formulario -->
-                <div class="col-md-5 p-4 p-md-5">
-                  <div class="text-center mb-4">
-                    <h1 class="h2 fw-bold text-primary-color">Agendar Cita</h1>
-                    <p class="text-muted" *ngIf="selectedDate()">Para el día: <strong>{{ selectedDate() | date:'fullDate' }}</strong></p>
-                  </div>
-
-                  <div *ngIf="!selectedDate()" class="alert alert-info text-center">
-                    Selecciona una fecha en el calendario para ver horarios disponibles.
-                  </div>
-
-                  <div *ngIf="selectedDate()">
-                    <h5 class="fw-bold mb-3">2. Selecciona la hora</h5>
-                    <div class="d-flex flex-wrap gap-2 mb-4">
-                      <button *ngFor="let hour of availableHours()"
-                              type="button"
-                              class="btn btn-sm"
-                              [class.btn-primary]="selectedHour() === hour"
-                              [class.btn-outline-primary]="selectedHour() !== hour"
-                              (click)="selectHour(hour)">
-                        {{ hour }}
-                      </button>
-                      <div *ngIf="availableHours().length === 0 && !loadingSlots" class="text-danger small">
-                        No hay horarios disponibles para este día.
-                      </div>
-                      <div *ngIf="loadingSlots" class="spinner-border spinner-border-sm text-primary"></div>
-                    </div>
-
-                    <form [formGroup]="bookingForm" (ngSubmit)="onSubmit()" class="needs-validation" *ngIf="selectedHour()">
-                      <h5 class="fw-bold mb-3">3. Tus datos</h5>
-                      <div class="mb-3">
-                        <label class="form-label fw-semibold">Nombre Completo</label>
-                        <input type="text" formControlName="name" class="form-control rounded-3" placeholder="Ej. Ana García" [class.is-invalid]="f['name'].touched && f['name'].invalid">
-                      </div>
-
-                      <div class="mb-3">
-                        <label class="form-label fw-semibold">Teléfono</label>
-                        <input type="tel" formControlName="phone" class="form-control rounded-3" placeholder="+521..." [class.is-invalid]="f['phone'].touched && f['phone'].invalid">
-
-                      </div>
-
-                      <div class="mb-3">
-                        <label class="form-label fw-semibold">Correo</label>
-                        <input type="email" formControlName="email" class="form-control rounded-3" placeholder="ana@mail.com" [class.is-invalid]="f['email'].touched && f['email'].invalid">
-                      </div>
-
-                      <div class="mb-3">
-                        <label class="form-label fw-semibold">Servicio</label>
-                        <select formControlName="service" class="form-select rounded-3" [class.is-invalid]="f['service'].touched && f['service'].invalid">
-                          <option value="">Selecciona un servicio</option>
-                          <option *ngFor="let s of services" [value]="s">{{ s }}</option>
-                        </select>
-                      </div>
-
-                      <div class="d-grid mt-4">
-                        <button type="submit" [disabled]="bookingForm.invalid || isSubmitting" class="btn btn-primary btn-lg rounded-pill fw-bold shadow-sm">
-                          <span *ngIf="!isSubmitting">Confirmar Reserva para las {{ selectedHour() }}</span>
-                          <span *ngIf="isSubmitting" class="spinner-border spinner-border-sm me-2"></span>
-                        </button>
-                      </div>
-                    </form>
-                  </div>
-
-                  <div class="mt-4 alert alert-success d-flex flex-column align-items-center" *ngIf="submitted || errorMessage">
-                    <div class="d-flex align-items-center mb-2" *ngIf="submitted">
-                      <span class="me-2">✅</span> <strong>¡Cita enviada con éxito!</strong>
-                    </div>
-                    <div class="text-center" [class.text-success]="submitted" [class.text-danger]="!submitted && errorMessage">
-                      {{ errorMessage }}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-  `,
-  styles: [`
-    .bg-pink-light { background-color: #fff5f8; }
-    .text-primary-color { color: #e91e63; }
-    .btn-primary { background-color: #e91e63; border-color: #e91e63; }
-    .btn-primary:hover { background-color: #c2185b; border-color: #c2185b; }
-    .form-control:focus, .form-select:focus {
-      border-color: #e91e63;
-      box-shadow: 0 0 0 0.25rem rgba(233, 30, 99, 0.1);
-    }
-    ::ng-deep .fc .fc-button-primary {
-      background-color: #e91e63;
-      border-color: #e91e63;
-    }
-    ::ng-deep .fc .fc-button-primary:hover {
-      background-color: #c2185b;
-      border-color: #c2185b;
-    }
-    ::ng-deep .fc .fc-day-today {
-      background-color: rgba(233, 30, 99, 0.05) !important;
-    }
-  `]
+  imports: [
+    CommonModule,
+    FormsModule,
+    ReactiveFormsModule,
+    RouterLink,
+    FullCalendarModule,
+    MatButtonModule,
+    MatCardModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatSelectModule,
+    MatIconModule,
+    MatStepperModule,
+    MatProgressSpinnerModule,
+    MatSnackBarModule
+  ],
+  templateUrl: './booking.component.html',
+  styleUrls: ['./booking.component.css']
 })
-export class BookingComponent {
+export class BookingComponent implements OnInit {
   bookingForm: FormGroup;
   submitted = false;
   isSubmitting = false;
   loadingSlots = false;
+  showConfirmation = signal<boolean>(false);
   selectedDate = signal<string | null>(null);
   selectedHour = signal<string | null>(null);
   availableHours = signal<string[]>([]);
@@ -150,27 +63,50 @@ export class BookingComponent {
   ];
 
   errorMessage = '';
+  isMobile = false;
+  isTablet = false;
+
+  @HostListener('window:resize', ['$event'])
+  onResize(event: any) {
+    this.checkScreenSize();
+  }
+
+  ngOnInit() {
+    this.checkScreenSize();
+  }
+
+  private checkScreenSize() {
+    this.isMobile = window.innerWidth < 768;
+    this.isTablet = window.innerWidth >= 768 && window.innerWidth < 1024;
+  }
 
   calendarOptions: CalendarOptions = {
     plugins: [dayGridPlugin, interactionPlugin],
     initialView: 'dayGridMonth',
     locale: 'es',
     selectable: true,
-    weekends: true, // Se maneja en selectAllow
+    unselectAuto: false,
+    longPressDelay: 0, // Permite selección inmediata en táctiles
     headerToolbar: {
       left: 'prev,next',
       center: 'title',
       right: ''
     },
+    contentHeight: 'auto',
+    aspectRatio: 1.35,
+    handleWindowResize: true,
     selectAllow: (selectInfo) => {
       const today = new Date();
       today.setHours(0,0,0,0);
       const maxDate = new Date();
-      maxDate.setDate(today.getDate() + 10);
+      maxDate.setDate(today.getDate() + 30); // Aumentado a 30 días para mejor UX
 
-      // No permitir domingos (0) ni fechas fuera de rango
-      const day = selectInfo.start.getUTCDay();
-      return selectInfo.start >= today && selectInfo.start <= maxDate && day !== 0;
+      // No permitir domingos (0) ni fechas pasadas
+      const day = selectInfo.start.getDay();
+      const startDate = new Date(selectInfo.start);
+      startDate.setHours(0,0,0,0);
+
+      return startDate >= today && startDate <= maxDate && day !== 0;
     },
     select: (arg: DateSelectArg) => {
       const dateStr = arg.startStr;
@@ -178,7 +114,12 @@ export class BookingComponent {
     }
   };
 
-  constructor(private fb: FormBuilder, private appointmentService: AppointmentService) {
+  constructor(
+    private fb: FormBuilder,
+    private appointmentService: AppointmentService,
+    private snackBar: MatSnackBar,
+    private router: Router
+  ) {
     this.bookingForm = this.fb.group({
       name: ['', Validators.required],
       phone: ['', Validators.required],
@@ -216,8 +157,18 @@ export class BookingComponent {
 
   generateAvailableHours(occupied: string[]) {
     const hours: string[] = [];
-    for (let h = 8; h <= 21; h++) { // Horario flexible según el script
+    const now = new Date();
+    const isToday = this.selectedDate() === now.toISOString().split('T')[0];
+
+    for (let h = 8; h <= 20; h++) {
       const hourStr = `${h.toString().padStart(2, '0')}:00`;
+
+      // Si es hoy, no mostrar horas que ya pasaron
+      if (isToday) {
+        const [hour] = hourStr.split(':').map(Number);
+        if (hour <= now.getHours()) continue;
+      }
+
       if (!occupied.includes(hourStr)) {
         hours.push(hourStr);
       }
@@ -294,17 +245,28 @@ export class BookingComponent {
   private handleSuccess(isMaybe = false) {
     this.submitted = true;
     this.isSubmitting = false;
+    this.showConfirmation.set(true);
     this.bookingForm.reset();
     this.selectedDate.set(null);
     this.selectedHour.set(null);
-    if (isMaybe) {
-      this.errorMessage = 'Nota: La respuesta del servidor fue inusual, pero tu cita probablemente fue enviada. Revisa tu correo y confirma por WhatsApp al +1 267 313 6057.';
-    } else {
-      this.errorMessage = '¡Cita enviada! Revisa tu correo y recuerda confirmar por WhatsApp escribiendo "Hola" al +1 267 313 6057.';
-    }
-    setTimeout(() => {
-      this.submitted = false;
-      this.errorMessage = '';
-    }, 10000);
+
+    const message = isMaybe
+      ? 'Nota: La respuesta del servidor fue inusual, pero tu cita probablemente fue enviada. Revisa tu correo.'
+      : '¡Cita enviada con éxito!';
+
+    this.snackBar.open(message, 'Cerrar', {
+      duration: 5000,
+      horizontalPosition: 'center',
+      verticalPosition: 'bottom',
+      panelClass: isMaybe ? ['warning-snackbar'] : ['success-snackbar']
+    });
+  }
+
+  resetBooking() {
+    this.showConfirmation.set(false);
+    this.submitted = false;
+    this.bookingForm.reset();
+    this.selectedDate.set(null);
+    this.selectedHour.set(null);
   }
 }

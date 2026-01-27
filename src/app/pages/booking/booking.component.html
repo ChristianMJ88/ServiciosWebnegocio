@@ -1,0 +1,193 @@
+<section class="booking-section py-5 min-vh-100">
+  <div class="container py-lg-5">
+    <div class="row justify-content-center">
+      <div class="col-lg-11 col-xl-10">
+        <mat-card class="booking-card shadow-lg border-0 rounded-4 overflow-hidden">
+          <mat-card-header class="bg-primary-color text-white booking-header-content p-4">
+            <mat-card-title class="h2 mb-0">Reserva tu Cita</mat-card-title>
+            <mat-card-subtitle class="text-white-50 mt-1" *ngIf="!showConfirmation()">Sigue los pasos para agendar tu servicio</mat-card-subtitle>
+            <mat-card-subtitle class="text-white-50 mt-1" *ngIf="showConfirmation()">¡Registro Exitoso!</mat-card-subtitle>
+          </mat-card-header>
+
+          <mat-card-content class="p-0">
+            <!-- VISTA DE CONFIRMACIÓN -->
+            <div *ngIf="showConfirmation()" class="confirmation-view p-5 text-center animate-fade-in">
+              <div class="success-icon-container mb-4">
+                <mat-icon class="text-success scale-up">check_circle</mat-icon>
+              </div>
+              <h2 class="display-6 fw-bold text-dark mb-3">¡Gracias, {{ submitted ? 'tu registro ha sido exitoso' : '' }}!</h2>
+              <p class="lead text-muted mb-4 px-lg-5">
+                Te llegarán <strong>2 correos electrónicos</strong>: uno con la confirmación de tu servicio y otro para agendar la cita en tu calendario y que no se te pase.
+              </p>
+
+              <div class="d-grid gap-3 d-sm-flex justify-content-sm-center mt-5">
+                <button mat-raised-button color="primary" class="py-2 px-4" (click)="resetBooking()">
+                  <mat-icon class="me-2">add_circle</mat-icon> Agendar nueva cita
+                </button>
+                <a mat-stroked-button color="accent" class="py-2 px-4" routerLink="/servicios">
+                  <mat-icon class="me-2">payments</mat-icon> Ver precios
+                </a>
+                <a mat-button class="py-2 px-4" routerLink="/">
+                  <mat-icon class="me-2">home</mat-icon> Ir a inicio
+                </a>
+              </div>
+            </div>
+
+            <mat-stepper *ngIf="!showConfirmation()" [linear]="true" #stepper [orientation]="(isMobile || isTablet ? 'vertical' : 'horizontal')">
+
+              <!-- PASO 1: FECHA -->
+              <mat-step [completed]="!!selectedDate()">
+                <ng-template matStepLabel>Fecha</ng-template>
+                <div class="row g-0">
+                  <div class="col-md-12 p-4">
+                    <div class="d-flex align-items-center mb-4">
+                      <div class="step-icon me-3"><mat-icon>calendar_today</mat-icon></div>
+                      <h2 class="h4 fw-bold text-primary-color mb-0">Elige una fecha</h2>
+                    </div>
+
+                    <div class="calendar-container shadow-sm border rounded-3 p-2 bg-white">
+                      <full-calendar [options]="calendarOptions"></full-calendar>
+                    </div>
+
+                    <div class="mt-3 p-3 bg-light rounded-3 d-flex align-items-center">
+                      <mat-icon class="text-muted me-2">info</mat-icon>
+                      <p class="text-muted small mb-0">
+                        * Trabajamos de Lunes a Sábado. Selecciona un día para ver horarios.
+                      </p>
+                    </div>
+
+                    <div class="d-flex justify-content-end mt-4" *ngIf="selectedDate()">
+                      <button mat-raised-button color="primary" matStepperNext>
+                        Continuar <mat-icon iconPositionEnd>arrow_forward</mat-icon>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </mat-step>
+
+              <!-- PASO 2: HORA -->
+              <mat-step [completed]="!!selectedHour()">
+                <ng-template matStepLabel>Hora</ng-template>
+                <div class="p-4">
+                  <div class="d-flex align-items-center mb-4">
+                    <div class="step-icon me-3"><mat-icon>schedule</mat-icon></div>
+                    <h2 class="h4 fw-bold text-primary-color mb-0">Selecciona la hora</h2>
+                  </div>
+
+                  <div *ngIf="selectedDate()" class="mb-4">
+                    <p class="text-muted">
+                      Fecha seleccionada: <span class="fw-bold text-dark">{{ selectedDate() | date:'fullDate':'':'es' }}</span>
+                    </p>
+                  </div>
+
+                  <div class="d-flex flex-wrap gap-2 mb-4">
+                    <button *ngFor="let hour of availableHours()"
+                            mat-stroked-button
+                            class="time-button"
+                            [class.active-time]="selectedHour() === hour"
+                            (click)="selectHour(hour)">
+                      {{ hour }}
+                    </button>
+
+                    <div *ngIf="availableHours().length === 0 && !loadingSlots" class="alert alert-warning w-100 py-2 small d-flex align-items-center">
+                      <mat-icon class="me-2">warning</mat-icon> No hay horarios disponibles para este día.
+                    </div>
+
+                    <div *ngIf="loadingSlots" class="text-center w-100 py-4">
+                      <mat-spinner diameter="40" class="mx-auto"></mat-spinner>
+                      <p class="mt-2 text-muted">Buscando horarios...</p>
+                    </div>
+                  </div>
+
+                  <div class="d-flex justify-content-between mt-4">
+                    <button mat-button matStepperPrevious>Atrás</button>
+                    <button mat-raised-button color="primary" matStepperNext *ngIf="selectedHour()">
+                      Siguiente <mat-icon iconPositionEnd>arrow_forward</mat-icon>
+                    </button>
+                  </div>
+                </div>
+              </mat-step>
+
+              <!-- PASO 3: DATOS -->
+              <mat-step [stepControl]="bookingForm">
+                <ng-template matStepLabel>Tus Datos</ng-template>
+                <div class="p-4">
+                  <div class="d-flex align-items-center mb-4">
+                    <div class="step-icon me-3"><mat-icon>person</mat-icon></div>
+                    <h2 class="h4 fw-bold text-primary-color mb-0">Completa tu información</h2>
+                  </div>
+
+                  <form [formGroup]="bookingForm" class="row g-3">
+                    <div class="col-md-6">
+                      <mat-form-field appearance="outline" class="w-100">
+                        <mat-label>Nombre Completo</mat-label>
+                        <input matInput formControlName="name" placeholder="Ej. Ana García" required>
+                        <mat-icon matPrefix>person</mat-icon>
+                        <mat-error *ngIf="f['name'].hasError('required')">El nombre es requerido</mat-error>
+                      </mat-form-field>
+                    </div>
+
+                    <div class="col-md-6">
+                      <mat-form-field appearance="outline" class="w-100">
+                        <mat-label>Teléfono</mat-label>
+                        <input matInput type="tel" formControlName="phone" placeholder="+52 1..." required>
+                        <mat-icon matPrefix>phone</mat-icon>
+                        <mat-error *ngIf="f['phone'].hasError('required')">El teléfono es requerido</mat-error>
+                      </mat-form-field>
+                    </div>
+
+                    <div class="col-md-6">
+                      <mat-form-field appearance="outline" class="w-100">
+                        <mat-label>Correo Electrónico</mat-label>
+                        <input matInput type="email" formControlName="email" placeholder="ana@mail.com" required>
+                        <mat-icon matPrefix>email</mat-icon>
+                        <mat-error *ngIf="f['email'].hasError('required')">El correo es requerido</mat-error>
+                        <mat-error *ngIf="f['email'].hasError('email')">Ingresa un correo válido</mat-error>
+                      </mat-form-field>
+                    </div>
+
+                    <div class="col-md-6">
+                      <mat-form-field appearance="outline" class="w-100">
+                        <mat-label>Servicio</mat-label>
+                        <mat-select formControlName="service" required>
+                          <mat-option value="">Selecciona un servicio</mat-option>
+                          <mat-option *ngFor="let s of services" [value]="s">{{ s }}</mat-option>
+                        </mat-select>
+                        <mat-icon matPrefix>content_cut</mat-icon>
+                        <mat-error *ngIf="f['service'].hasError('required')">Selecciona un servicio</mat-error>
+                      </mat-form-field>
+                    </div>
+
+                    <div class="col-12 mt-4">
+                      <div class="confirm-summary p-3 rounded-3 bg-light border mb-4">
+                        <h6 class="fw-bold mb-2">Resumen de tu cita:</h6>
+                        <p class="mb-1 small text-muted"><mat-icon class="tiny-icon">calendar_today</mat-icon> {{ selectedDate() | date:'fullDate':'':'es' }}</p>
+                        <p class="mb-0 small text-muted"><mat-icon class="tiny-icon">schedule</mat-icon> {{ selectedHour() }}</p>
+                      </div>
+
+                      <div class="d-flex justify-content-between align-items-center">
+                        <button mat-button matStepperPrevious [disabled]="isSubmitting">Atrás</button>
+                        <button mat-raised-button color="accent"
+                                class="confirm-btn py-2 px-4"
+                                [disabled]="bookingForm.invalid || isSubmitting"
+                                (click)="onSubmit()">
+                          <span *ngIf="!isSubmitting">CONFIRMAR CITA</span>
+                          <mat-spinner *ngIf="isSubmitting" diameter="20" class="me-2 d-inline-block"></mat-spinner>
+                        </button>
+                      </div>
+                    </div>
+                  </form>
+                </div>
+              </mat-step>
+            </mat-stepper>
+          </mat-card-content>
+        </mat-card>
+
+        <!-- Mensajes de error adicionales si es necesario (aunque el snackbar es el principal ahora) -->
+        <div class="mt-4 text-center" *ngIf="errorMessage && !submitted">
+          <p class="text-danger small"><mat-icon class="tiny-icon">error</mat-icon> {{ errorMessage }}</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

@@ -1,0 +1,263 @@
+.booking-section {
+  background-color: #fff5f8;
+}
+
+.booking-card {
+  background-color: #ffffff;
+}
+
+.bg-primary-color {
+  background-color: #e91e63 !important;
+}
+
+.text-primary-color {
+  color: #e91e63;
+}
+
+.step-icon {
+  background-color: #fce4ec;
+  color: #e91e63;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.calendar-container {
+  overflow: hidden;
+  max-width: 650px;
+  margin: 0 auto;
+}
+
+/* Estilos para los botones de tiempo */
+.time-button {
+  min-width: 90px;
+  transition: all 0.2s ease;
+}
+
+.active-time {
+  background-color: #e91e63 !important;
+  color: white !important;
+  border-color: #e91e63 !important;
+  box-shadow: 0 4px 8px rgba(233, 30, 99, 0.3);
+}
+
+.tiny-icon {
+  font-size: 16px;
+  height: 16px;
+  width: 16px;
+  vertical-align: middle;
+}
+
+.confirm-summary {
+  border-left: 4px solid #e91e63;
+}
+
+.confirm-btn {
+  font-weight: bold;
+  letter-spacing: 1px;
+}
+
+/* Ajustes de FullCalendar para que parezca más Material */
+::ng-deep .fc {
+  --fc-button-bg-color: transparent;
+  --fc-button-border-color: transparent;
+  --fc-button-text-color: #e91e63;
+  --fc-button-hover-bg-color: #fce4ec;
+  --fc-button-hover-border-color: transparent;
+  --fc-button-active-bg-color: #f8bbd0;
+  --fc-button-active-border-color: transparent;
+  --fc-today-bg-color: rgba(233, 30, 99, 0.05);
+  --fc-border-color: #eeeeee;
+  font-family: inherit;
+}
+
+::ng-deep .fc .fc-toolbar {
+  margin-bottom: 1rem !important;
+  padding: 0 0.5rem;
+}
+
+::ng-deep .fc .fc-button {
+  padding: 0.4rem 0.8rem !important;
+  border-radius: 8px !important;
+  font-size: 0.9rem !important;
+  text-transform: capitalize !important;
+}
+
+::ng-deep .fc .fc-toolbar-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #333;
+}
+
+::ng-deep .fc .fc-col-header-cell {
+  background-color: #fafafa;
+  padding: 12px 0;
+  color: #666;
+  font-weight: 500;
+  text-transform: uppercase;
+  font-size: 0.75rem;
+  letter-spacing: 1px;
+}
+
+::ng-deep .fc .fc-daygrid-day-number {
+  padding: 8px;
+  font-size: 0.9rem;
+  color: #555;
+}
+
+::ng-deep .fc .fc-day-other .fc-daygrid-day-number {
+  color: #ccc;
+}
+
+::ng-deep .fc .fc-day-disabled {
+  background-color: #f8f9fa !important;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+::ng-deep .fc .fc-daygrid-day.fc-day-today {
+  background-color: rgba(233, 30, 99, 0.05) !important;
+  font-weight: bold;
+}
+
+::ng-deep .fc .fc-highlight {
+  background: rgba(233, 30, 99, 0.15) !important;
+}
+
+/* Animaciones y Estilos de Confirmación */
+.animate-fade-in {
+  animation: fadeIn 0.5s ease-out forwards;
+}
+
+.scale-up {
+  font-size: 80px !important;
+  width: 80px !important;
+  height: 80px !important;
+  animation: scaleUp 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes scaleUp {
+  from { transform: scale(0.5); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+.confirmation-view {
+  background: linear-gradient(to bottom, #ffffff, #fffdfd);
+}
+
+.success-icon-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+@media (max-width: 768px) {
+  .calendar-container {
+    max-width: 100%;
+    padding: 0.5rem !important;
+  }
+
+  ::ng-deep .fc .fc-toolbar-title {
+    font-size: 1rem;
+  }
+
+  ::ng-deep .fc .fc-col-header-cell {
+    padding: 8px 0;
+  }
+
+  .confirmation-view {
+    padding: 2rem 1rem !important;
+  }
+
+  .scale-up {
+    font-size: 60px !important;
+    width: 60px !important;
+    height: 60px !important;
+  }
+}
+
+/* Responsividad */
+@media (max-width: 1023px) {
+  /* En tablets y móviles, el stepper es vertical, pero Angular Material maneja el layout.
+     Forzamos que el contenido ocupe todo el ancho y no se vea apretado. */
+  .p-4 {
+    padding: 1.5rem !important;
+  }
+
+  .h4 {
+    font-size: 1.1rem;
+  }
+
+  .booking-header-content {
+    padding: 1.5rem !important;
+  }
+}
+
+@media (max-width: 768px) {
+  .p-4 {
+    padding: 1rem !important;
+  }
+
+  ::ng-deep .fc .fc-toolbar {
+    flex-direction: column;
+    gap: 10px;
+    align-items: center;
+  }
+
+  ::ng-deep .fc .fc-toolbar-title {
+    font-size: 0.9rem;
+    order: 1;
+  }
+
+  ::ng-deep .fc .fc-button-group {
+    order: 2;
+  }
+
+  /* Ajuste de botones de hora para móviles pequeños */
+  .time-button {
+    min-width: 70px;
+    padding: 0 8px !important;
+    font-size: 0.8rem !important;
+  }
+
+  .step-icon {
+    width: 32px;
+    height: 32px;
+  }
+
+  .step-icon mat-icon {
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+  }
+}
+
+/* Evitar que las letras se encimen en pantallas muy pequeñas */
+@media (max-width: 400px) {
+  .h2 {
+    font-size: 1.25rem !important;
+  }
+
+  .mat-step-label {
+    font-size: 0.8rem;
+  }
+}
+
+/* Estilos globales para SnackBar (deben estar en styles.css idealmente, pero se pueden forzar aquí con ::ng-deep) */
+::ng-deep .success-snackbar {
+  background: #43a047;
+  color: white;
+}
+
+::ng-deep .warning-snackbar {
+  background: #fb8c00;
+  color: white;
+}
