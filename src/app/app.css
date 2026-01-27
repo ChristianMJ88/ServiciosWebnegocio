@@ -1,0 +1,58 @@
+/* Estilos Globales y Flotantes */
+.whatsapp-float {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  background-color: #25d366;
+  color: #FFF;
+  border-radius: 50px;
+  text-align: center;
+  padding: 12px;
+  z-index: 1000;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+}
+
+.whatsapp-float:hover {
+  transform: scale(1.1);
+  background-color: #128c7e;
+}
+
+.chatbot-wrapper {
+  position: fixed;
+  bottom: 90px;
+  right: 20px;
+  width: 300px;
+  z-index: 999;
+  border-radius: 15px;
+  overflow: hidden;
+  transition: all 0.3s ease;
+  font-size: 0.9rem;
+}
+
+.chat-header {
+  background: #e91e63;
+  color: white;
+  cursor: pointer;
+}
+
+.chat-response {
+  font-size: 0.85rem;
+  color: #333;
+}
+
+.chat-toggle-icon {
+  font-size: 1.2rem;
+  line-height: 1;
+}
+
+@media (max-width: 576px) {
+  .chatbot-wrapper {
+    width: 250px;
+    bottom: 85px;
+    right: 15px;
+  }
+}
