@@ -38,10 +38,29 @@ backend/
 docker compose up -d mysql
 ```
 
+MySQL queda expuesto localmente en `localhost:3302` para no chocar con instalaciones que ya usan `3306`.
+
+La imagen local recomendada es `mysql:8.0` para evitar el warning de compatibilidad que Flyway muestra con `8.4`.
+
 2. Ejecuta el backend:
 
 ```bash
 mvn spring-boot:run
+```
+
+Spring Boot usa configuracion en:
+
+- `src/main/resources/application.yml`
+- `src/main/resources/application-dev.yml`
+- `src/main/resources/application-prod.yml`
+
+No hay `application.properties` porque en este backend se esta usando formato YAML.
+
+Si ya habias levantado Docker con una version distinta de MySQL, puede que necesites recrear el volumen:
+
+```bash
+docker compose down -v
+docker compose up -d mysql
 ```
 
 ## Endpoints iniciales
@@ -53,21 +72,27 @@ mvn spring-boot:run
 - `POST /api/v1/publico/citas`
 - `POST /api/v1/auth/iniciar-sesion`
 - `POST /api/v1/auth/registrar-cliente`
+- `POST /api/v1/auth/refrescar-token`
+- `POST /api/v1/auth/cerrar-sesion`
 
-## Estado actual
+## Produccion
 
-Esta base deja:
+1. Copia el ejemplo de variables:
 
-- estructura modular en espanol
-- seguridad JWT preparada
-- configuracion de Docker y MySQL
-- migracion inicial de base de datos
-- controladores y servicios base para comenzar implementacion
+```bash
+cp .env.example .env
+```
 
-Lo siguiente recomendado es implementar:
+2. Ajusta secretos, base de datos y origenes CORS.
 
-1. persistencia JPA para sucursales, servicios y usuarios
-2. autenticacion real con usuarios y roles en base de datos
-3. calculo real de disponibilidad
-4. creacion transaccional de citas con validacion de conflicto
+3. Levanta el backend:
 
+```bash
+docker compose -f docker-compose.prod.yml up -d --build
+```
+
+Notas:
+
+- En `prod`, Hibernate queda en `validate`.
+- El frontend Angular ya esta preparado para trabajar en modo `backend-first`.
+- Si necesitas una transicion temporal, puedes activar `allowLegacyFallback` en `src/environments`.

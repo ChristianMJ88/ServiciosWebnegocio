@@ -24,8 +24,27 @@
         <li class="nav-item">
           <a class="nav-link px-3 text-light hover-accent" routerLink="/contacto" routerLinkActive="active-link">Contacto</a>
         </li>
-        <li class="nav-item ms-lg-3 mt-3 mt-lg-0">
+
+        <li class="nav-item" *ngIf="!authService.autenticado()">
+          <a class="nav-link px-3 text-light hover-accent" routerLink="/login" routerLinkActive="active-link">Iniciar sesión</a>
+        </li>
+        <li class="nav-item" *ngIf="!authService.autenticado()">
+          <a class="nav-link px-3 text-light hover-accent" routerLink="/registro" routerLinkActive="active-link">Registro</a>
+        </li>
+        <li class="nav-item" *ngIf="authService.autenticado()">
+          <a class="nav-link px-3 text-light hover-accent" [routerLink]="authService.rutaPanel()" routerLinkActive="active-link">Mi panel</a>
+        </li>
+        <li class="nav-item" *ngIf="authService.autenticado()">
+          <button type="button" class="nav-link px-3 text-light hover-accent border-0 bg-transparent" (click)="logout()">
+            Cerrar sesión
+          </button>
+        </li>
+
+        <li class="nav-item ms-lg-3 mt-3 mt-lg-0" *ngIf="!authService.autenticado()">
           <a routerLink="/agendar" class="btn btn-primary rounded-pill shadow-lg">Agendar Cita</a>
+        </li>
+        <li class="nav-item ms-lg-3 mt-3 mt-lg-0" *ngIf="authService.autenticado()">
+          <a [routerLink]="authService.rutaPanel()" class="btn btn-primary rounded-pill shadow-lg">Mi Panel</a>
         </li>
       </ul>
     </div>

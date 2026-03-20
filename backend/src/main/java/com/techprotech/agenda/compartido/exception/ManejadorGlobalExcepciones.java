@@ -7,6 +7,7 @@ import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.time.OffsetDateTime;
 import java.util.HashMap;
@@ -49,6 +50,15 @@ public class ManejadorGlobalExcepciones {
         ));
     }
 
+    @ExceptionHandler(ResponseStatusException.class)
+    public ResponseEntity<ErrorApi> manejarResponseStatus(ResponseStatusException ex) {
+        return ResponseEntity.status(ex.getStatusCode()).body(new ErrorApi(
+                "ERROR_NEGOCIO",
+                ex.getReason() != null ? ex.getReason() : ex.getMessage(),
+                OffsetDateTime.now()
+        ));
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorApi> manejarGeneral(Exception ex) {
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ErrorApi(
@@ -58,4 +68,3 @@ public class ManejadorGlobalExcepciones {
         ));
     }
 }
-

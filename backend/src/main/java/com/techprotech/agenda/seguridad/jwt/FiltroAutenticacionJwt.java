@@ -28,14 +28,22 @@ public class FiltroAutenticacionJwt extends OncePerRequestFilter {
             throws ServletException, IOException {
         String token = resolverToken(request);
         if (StringUtils.hasText(token) && servicioTokenJwt.esValido(token)) {
+            var roles = servicioTokenJwt.obtenerRoles(token);
             var authorities = servicioTokenJwt.obtenerRoles(token)
                     .stream()
                     .map(rol -> rol.startsWith("ROLE_") ? rol : "ROLE_" + rol)
                     .map(SimpleGrantedAuthority::new)
                     .collect(Collectors.toSet());
 
-            var autenticacion = new UsernamePasswordAuthenticationToken(
+            UsuarioAutenticado usuarioAutenticado = new UsuarioAutenticado(
                     servicioTokenJwt.obtenerSujeto(token),
+                    servicioTokenJwt.obtenerUsuarioId(token),
+                    servicioTokenJwt.obtenerEmpresaId(token),
+                    roles
+            );
+
+            var autenticacion = new UsernamePasswordAuthenticationToken(
+                    usuarioAutenticado,
                     null,
                     authorities
             );
@@ -53,4 +61,3 @@ public class FiltroAutenticacionJwt extends OncePerRequestFilter {
         return null;
     }
 }
-

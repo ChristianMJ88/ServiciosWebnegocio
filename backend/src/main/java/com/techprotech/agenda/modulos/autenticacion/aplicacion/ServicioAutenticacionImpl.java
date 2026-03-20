@@ -1,49 +1,222 @@
 package com.techprotech.agenda.modulos.autenticacion.aplicacion;
 
 import com.techprotech.agenda.modulos.autenticacion.api.dto.IniciarSesionRequest;
+import com.techprotech.agenda.modulos.autenticacion.api.dto.RefrescarTokenRequest;
 import com.techprotech.agenda.modulos.autenticacion.api.dto.RegistrarClienteRequest;
 import com.techprotech.agenda.modulos.autenticacion.api.dto.RespuestaTokenJwt;
+import com.techprotech.agenda.modulos.autenticacion.infraestructura.entidad.ClienteEntidad;
+import com.techprotech.agenda.modulos.autenticacion.infraestructura.entidad.RolEntidad;
+import com.techprotech.agenda.modulos.autenticacion.infraestructura.entidad.TokenActualizacionEntidad;
+import com.techprotech.agenda.modulos.autenticacion.infraestructura.entidad.UsuarioEntidad;
+import com.techprotech.agenda.modulos.autenticacion.infraestructura.entidad.UsuarioRolEntidad;
+import com.techprotech.agenda.modulos.autenticacion.infraestructura.entidad.UsuarioRolId;
+import com.techprotech.agenda.modulos.autenticacion.infraestructura.repositorio.ClienteRepositorio;
+import com.techprotech.agenda.modulos.autenticacion.infraestructura.repositorio.EmpresaRepositorio;
+import com.techprotech.agenda.modulos.autenticacion.infraestructura.repositorio.RolRepositorio;
+import com.techprotech.agenda.modulos.autenticacion.infraestructura.repositorio.TokenActualizacionRepositorio;
+import com.techprotech.agenda.modulos.autenticacion.infraestructura.repositorio.UsuarioRepositorio;
+import com.techprotech.agenda.modulos.autenticacion.infraestructura.repositorio.UsuarioRolRepositorio;
+import com.techprotech.agenda.seguridad.jwt.PropiedadesJwt;
 import com.techprotech.agenda.seguridad.jwt.ServicioTokenJwt;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
+
+import static org.springframework.http.HttpStatus.CONFLICT;
+import static org.springframework.http.HttpStatus.FORBIDDEN;
+import static org.springframework.http.HttpStatus.NOT_FOUND;
+import static org.springframework.http.HttpStatus.UNAUTHORIZED;
 
 @Service
 public class ServicioAutenticacionImpl implements ServicioAutenticacion {
 
     private final ServicioTokenJwt servicioTokenJwt;
+    private final PropiedadesJwt propiedadesJwt;
+    private final EmpresaRepositorio empresaRepositorio;
+    private final UsuarioRepositorio usuarioRepositorio;
+    private final ClienteRepositorio clienteRepositorio;
+    private final RolRepositorio rolRepositorio;
+    private final UsuarioRolRepositorio usuarioRolRepositorio;
+    private final TokenActualizacionRepositorio tokenActualizacionRepositorio;
+    private final PasswordEncoder passwordEncoder;
 
-    public ServicioAutenticacionImpl(ServicioTokenJwt servicioTokenJwt) {
+    public ServicioAutenticacionImpl(
+            ServicioTokenJwt servicioTokenJwt,
+            PropiedadesJwt propiedadesJwt,
+            EmpresaRepositorio empresaRepositorio,
+            UsuarioRepositorio usuarioRepositorio,
+            ClienteRepositorio clienteRepositorio,
+            RolRepositorio rolRepositorio,
+            UsuarioRolRepositorio usuarioRolRepositorio,
+            TokenActualizacionRepositorio tokenActualizacionRepositorio,
+            PasswordEncoder passwordEncoder
+    ) {
         this.servicioTokenJwt = servicioTokenJwt;
+        this.propiedadesJwt = propiedadesJwt;
+        this.empresaRepositorio = empresaRepositorio;
+        this.usuarioRepositorio = usuarioRepositorio;
+        this.clienteRepositorio = clienteRepositorio;
+        this.rolRepositorio = rolRepositorio;
+        this.usuarioRolRepositorio = usuarioRolRepositorio;
+        this.tokenActualizacionRepositorio = tokenActualizacionRepositorio;
+        this.passwordEncoder = passwordEncoder;
     }
 
     @Override
+    @Transactional
     public RespuestaTokenJwt iniciarSesion(IniciarSesionRequest request) {
-        throw new UnsupportedOperationException(
-                "La autenticacion real con base de datos aun no esta implementada. " +
-                "El siguiente paso es crear repositorios de usuario, roles y refresh tokens."
-        );
+        validarEmpresaExiste(request.empresaId());
+
+        UsuarioEntidad usuario = usuarioRepositorio.findByEmpresaIdAndCorreo(request.empresaId(), request.correo().trim().toLowerCase())
+                .orElseThrow(() -> new ResponseStatusException(UNAUTHORIZED, "Credenciales invalidas"));
+
+        if (!usuario.isHabilitado() || usuario.isBloqueado()) {
+            throw new ResponseStatusException(FORBIDDEN, "El usuario no tiene acceso habilitado");
+        }
+
+        if (!passwordEncoder.matches(request.contrasena(), usuario.getContrasenaHash())) {
+            throw new ResponseStatusException(UNAUTHORIZED, "Credenciales invalidas");
+        }
+
+        List<String> roles = usuarioRolRepositorio.findByUsuario_Id(usuario.getId())
+                .stream()
+                .map(usuarioRol -> usuarioRol.getRol().getCodigo())
+                .toList();
+
+        usuario.setUltimoAccesoEn(LocalDateTime.now());
+        usuarioRepositorio.save(usuario);
+
+        return emitirTokens(usuario, roles);
     }
 
     @Override
-    public void registrarCliente(RegistrarClienteRequest request) {
-        throw new UnsupportedOperationException(
-                "El registro de clientes aun no esta implementado. " +
-                "El siguiente paso es persistir usuario, cliente y rol CLIENTE."
-        );
+    @Transactional
+    public RespuestaTokenJwt refrescarToken(RefrescarTokenRequest request) {
+        String tokenPlano = request.tokenActualizacion().trim();
+        if (!servicioTokenJwt.esValido(tokenPlano)) {
+            throw new ResponseStatusException(UNAUTHORIZED, "El token de actualizacion no es valido");
+        }
+
+        Long usuarioId = servicioTokenJwt.obtenerUsuarioId(tokenPlano);
+        Long empresaId = servicioTokenJwt.obtenerEmpresaId(tokenPlano);
+        validarEmpresaExiste(empresaId);
+
+        UsuarioEntidad usuario = usuarioRepositorio.findByIdAndEmpresaId(usuarioId, empresaId)
+                .orElseThrow(() -> new ResponseStatusException(UNAUTHORIZED, "La sesion ya no es valida"));
+
+        if (!usuario.isHabilitado() || usuario.isBloqueado()) {
+            throw new ResponseStatusException(FORBIDDEN, "El usuario no tiene acceso habilitado");
+        }
+
+        TokenActualizacionEntidad tokenGuardado = buscarTokenVigente(usuarioId, tokenPlano)
+                .orElseThrow(() -> new ResponseStatusException(UNAUTHORIZED, "El token de actualizacion ya no es valido"));
+
+        tokenGuardado.setRevocadoEn(LocalDateTime.now());
+        tokenActualizacionRepositorio.save(tokenGuardado);
+
+        List<String> roles = usuarioRolRepositorio.findByUsuario_Id(usuario.getId())
+                .stream()
+                .map(usuarioRol -> usuarioRol.getRol().getCodigo())
+                .toList();
+
+        return emitirTokens(usuario, roles);
     }
 
-    @SuppressWarnings("unused")
-    private RespuestaTokenJwt construirRespuestaDemo(Long empresaId) {
-        List<String> roles = List.of("CLIENTE");
+    @Override
+    @Transactional
+    public void cerrarSesion(RefrescarTokenRequest request) {
+        String tokenPlano = request.tokenActualizacion().trim();
+        if (!servicioTokenJwt.esValido(tokenPlano)) {
+            return;
+        }
+
+        Long usuarioId = servicioTokenJwt.obtenerUsuarioId(tokenPlano);
+        buscarTokenVigente(usuarioId, tokenPlano).ifPresent(token -> {
+            token.setRevocadoEn(LocalDateTime.now());
+            tokenActualizacionRepositorio.save(token);
+        });
+    }
+
+    @Override
+    @Transactional
+    public void registrarCliente(RegistrarClienteRequest request) {
+        validarEmpresaExiste(request.empresaId());
+
+        String correoNormalizado = request.correo().trim().toLowerCase();
+        if (usuarioRepositorio.existsByEmpresaIdAndCorreo(request.empresaId(), correoNormalizado)) {
+            throw new ResponseStatusException(CONFLICT, "Ya existe un usuario con ese correo en la empresa");
+        }
+
+        RolEntidad rolCliente = rolRepositorio.findByCodigo("CLIENTE")
+                .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "No existe el rol CLIENTE"));
+
+        UsuarioEntidad usuario = new UsuarioEntidad();
+        usuario.setEmpresaId(request.empresaId());
+        usuario.setCorreo(correoNormalizado);
+        usuario.setContrasenaHash(passwordEncoder.encode(request.contrasena()));
+        usuario.setHabilitado(true);
+        usuario.setBloqueado(false);
+        usuario = usuarioRepositorio.save(usuario);
+
+        ClienteEntidad cliente = new ClienteEntidad();
+        cliente.setUsuarioId(usuario.getId());
+        cliente.setNombreCompleto(request.nombreCompleto().trim());
+        cliente.setTelefono(request.telefono().trim());
+        cliente.setAceptaWhatsapp(true);
+        clienteRepositorio.save(cliente);
+
+        UsuarioRolEntidad usuarioRol = new UsuarioRolEntidad(
+                new UsuarioRolId(usuario.getId(), rolCliente.getId(), request.empresaId()),
+                usuario,
+                rolCliente
+        );
+        usuarioRolRepositorio.save(usuarioRol);
+    }
+
+    private void validarEmpresaExiste(Long empresaId) {
+        if (!empresaRepositorio.existsById(empresaId)) {
+            throw new ResponseStatusException(NOT_FOUND, "La empresa indicada no existe");
+        }
+    }
+
+    private RespuestaTokenJwt emitirTokens(UsuarioEntidad usuario, List<String> roles) {
+        String tokenAcceso = servicioTokenJwt.generarTokenAcceso(
+                usuario.getCorreo(),
+                usuario.getId(),
+                usuario.getEmpresaId(),
+                roles
+        );
+        String tokenActualizacion = servicioTokenJwt.generarTokenActualizacion(
+                usuario.getCorreo(),
+                usuario.getId(),
+                usuario.getEmpresaId()
+        );
+
+        TokenActualizacionEntidad token = new TokenActualizacionEntidad();
+        token.setUsuarioId(usuario.getId());
+        token.setTokenHash(passwordEncoder.encode(tokenActualizacion));
+        token.setExpiraEn(LocalDateTime.now().plusDays(propiedadesJwt.diasRefresh()));
+        tokenActualizacionRepositorio.save(token);
+
         return new RespuestaTokenJwt(
-                servicioTokenJwt.generarTokenAcceso("demo@agenda.local", 1L, empresaId, roles),
-                servicioTokenJwt.generarTokenActualizacion("demo@agenda.local", 1L, empresaId),
+                tokenAcceso,
+                tokenActualizacion,
                 "Bearer",
-                1L,
-                empresaId,
+                usuario.getId(),
+                usuario.getEmpresaId(),
                 roles
         );
     }
-}
 
+    private Optional<TokenActualizacionEntidad> buscarTokenVigente(Long usuarioId, String tokenPlano) {
+        return tokenActualizacionRepositorio.findByUsuarioIdAndRevocadoEnIsNullAndExpiraEnAfter(usuarioId, LocalDateTime.now())
+                .stream()
+                .filter(token -> passwordEncoder.matches(tokenPlano, token.getTokenHash()))
+                .findFirst();
+    }
+}

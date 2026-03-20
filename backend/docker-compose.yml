@@ -1,6 +1,6 @@
 services:
   mysql:
-    image: mysql:8.4
+    image: mysql:8.0
     container_name: agenda-mysql
     environment:
       MYSQL_DATABASE: agenda_db
@@ -8,7 +8,7 @@ services:
       MYSQL_USER: agenda_user
       MYSQL_PASSWORD: agenda_pass
     ports:
-      - "3306:3306"
+      - "3302:3306"
     volumes:
       - agenda_mysql_data:/var/lib/mysql
     healthcheck:
@@ -37,4 +37,3 @@ services:
 
 volumes:
   agenda_mysql_data:
-

@@ -1,8 +1,17 @@
-import { Component, signal, ElementRef, ViewChild, inject } from '@angular/core';
+import { Component, signal, ElementRef, ViewChild, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { AppointmentService } from '../../services/appointment.service';
-import { BookingDataService } from '../../services/booking-data.service';
+import {
+  AppointmentService,
+  ConsultaFranjasRequest,
+  CrearCitaBackendRequest,
+  FranjaDisponible
+} from '../../services/appointment.service';
+import {
+  BookingDataService,
+  ServicioCatalogo,
+  SucursalCatalogo
+} from '../../services/booking-data.service';
 import { FullCalendarModule } from '@fullcalendar/angular';
 import { CalendarOptions, DateSelectArg } from '@fullcalendar/core';
 import dayGridPlugin from '@fullcalendar/daygrid';
@@ -16,7 +25,7 @@ import { finalize } from 'rxjs/operators';
   templateUrl: './booking.component.html',
   styleUrls: ['./booking.component.css']
 })
-export class BookingComponent {
+export class BookingComponent implements OnInit {
   private fb = inject(FormBuilder);
   private appointmentService = inject(AppointmentService);
   private bookingDataService = inject(BookingDataService);
@@ -26,21 +35,23 @@ export class BookingComponent {
   @ViewChild('confirmationSection') confirmationSection!: ElementRef;
 
   bookingForm: FormGroup = this.fb.group({
+    branchId: [null, Validators.required],
+    serviceId: [null, Validators.required],
     name: ['', [Validators.required, Validators.minLength(3)]],
     phone: ['', [Validators.required, Validators.pattern('^[0-9+ ]{10,15}$')]],
-    email: ['', [Validators.required, Validators.email]],
-    service: ['', Validators.required]
+    email: ['', [Validators.required, Validators.email]]
   });
 
   submitted = signal(false);
   isSubmitting = signal(false);
   loadingSlots = signal(false);
+  loadingCatalog = signal(false);
   selectedDate = signal<string | null>(null);
   selectedHour = signal<string | null>(null);
-  availableHours = signal<string[]>([]);
+  availableSlots = signal<FranjaDisponible[]>([]);
+  branches = signal<SucursalCatalogo[]>([]);
+  services = signal<ServicioCatalogo[]>([]);
   errorMessage = '';
-
-  services = this.bookingDataService.getServices();
 
   calendarOptions: CalendarOptions = {
     plugins: [dayGridPlugin, interactionPlugin],
@@ -60,6 +71,9 @@ export class BookingComponent {
     },
 
     selectAllow: (selectInfo) => {
+      if (!this.hasCatalogSelection()) {
+        return false;
+      }
       const today = new Date();
       today.setHours(0,0,0,0);
       const maxDate = new Date();
@@ -73,72 +87,84 @@ export class BookingComponent {
     }
   };
 
+  ngOnInit(): void {
+    this.loadBranches();
+  }
+
   get f() { return this.bookingForm.controls; }
 
+  get selectedBranch(): SucursalCatalogo | undefined {
+    const branchId = Number(this.bookingForm.value.branchId);
+    return this.branches().find(branch => branch.id === branchId);
+  }
+
+  get selectedService(): ServicioCatalogo | undefined {
+    const serviceId = Number(this.bookingForm.value.serviceId);
+    return this.services().find(service => service.id === serviceId);
+  }
+
+  onBranchChange(rawBranchId: string) {
+    const branchId = rawBranchId ? Number(rawBranchId) : null;
+    this.bookingForm.patchValue({ branchId, serviceId: null });
+    this.services.set([]);
+    this.resetAvailabilityFlow();
+
+    if (branchId) {
+      this.loadServices(branchId);
+    }
+  }
+
+  onServiceChange(rawServiceId: string) {
+    const serviceId = rawServiceId ? Number(rawServiceId) : null;
+    this.bookingForm.patchValue({ serviceId });
+    this.resetAvailabilityFlow();
+  }
+
   onDateSelect(date: string) {
+    if (!this.hasCatalogSelection()) {
+      this.errorMessage = 'Selecciona primero una sucursal y un servicio.';
+      return;
+    }
+
     this.selectedDate.set(date);
     this.selectedHour.set(null);
     this.loadingSlots.set(true);
     this.errorMessage = '';
-    this.availableHours.set([]);
-    console.log('Solicitando horarios para:', date, 'loadingSlots:', this.loadingSlots());
+    this.availableSlots.set([]);
 
-    this.appointmentService.getAvailableSlots(date)
+    const request: ConsultaFranjasRequest = {
+      empresaId: 1,
+      sucursalId: Number(this.bookingForm.value.branchId),
+      servicioId: Number(this.bookingForm.value.serviceId),
+      fecha: date
+    };
+
+    this.appointmentService.getAvailableSlots(request)
       .pipe(
         finalize(() => {
           this.loadingSlots.set(false);
-          console.log('Finalize: loadingSlots set to false. Current value:', this.loadingSlots());
           setTimeout(() => this.scrollToHours(), 100);
         })
       )
       .subscribe({
-        next: (response) => {
-          console.log('1. Respuesta recibida del servidor');
-          let available: string[] = [];
-          try {
-            const cleanedResponse = typeof response === 'string' ? response.trim() : response;
-            console.log('2. Respuesta cruda:', cleanedResponse);
-
-            if (cleanedResponse && cleanedResponse !== '[]') {
-              if (typeof cleanedResponse === 'string' && cleanedResponse.startsWith('[')) {
-                available = JSON.parse(cleanedResponse);
-              } else if (Array.isArray(cleanedResponse)) {
-                available = cleanedResponse;
-              }
-            }
-          } catch (e) {
-            console.warn('3. Error parseando JSON:', e);
-          }
-          console.log('4. Llamando a generateAvailableHours con:', available);
-          this.generateAvailableHours(available);
+        next: (slots) => {
+          this.generateAvailableSlots(slots);
         },
         error: (err) => {
           console.error('ERROR en la petición:', err);
-          this.errorMessage = 'Error de conexión. Cargando horarios base.';
-          this.generateAvailableHours([]);
+          this.errorMessage = err?.message || 'No se pudieron cargar los horarios disponibles.';
+          this.availableSlots.set([]);
         }
       });
   }
 
-  private generateAvailableHours(backendAvailable: string[]) {
-    console.log('Procesando horarios. Backend devolvió:', backendAvailable);
-
-    // Si el backend nos dio una lista con elementos, la usamos.
-    // Si viene vacío o nulo, usamos las horas de trabajo por defecto (fallback).
-    const hasBackendData = Array.isArray(backendAvailable) && backendAvailable.length > 0;
-    const baseHours = hasBackendData ? backendAvailable : this.bookingDataService.getWorkingHours();
-    console.log('5. Horas base a usar:', baseHours);
-
-    const hours: string[] = [];
-
-    // Obtener la fecha seleccionada
+  private generateAvailableSlots(backendAvailable: FranjaDisponible[]) {
+    const slots: FranjaDisponible[] = [];
     const selectedDateStr = this.selectedDate();
     if (!selectedDateStr) {
-      console.warn('generateAvailableHours llamado sin fecha seleccionada');
       return;
     }
 
-    // Crear un objeto de fecha para hoy en la zona horaria local para comparar
     const now = new Date();
     const year = now.getFullYear();
     const month = String(now.getMonth() + 1).padStart(2, '0');
@@ -146,36 +172,26 @@ export class BookingComponent {
     const todayStr = `${year}-${month}-${day}`;
 
     const isToday = selectedDateStr === todayStr;
-    console.log('6. ¿Es hoy?:', isToday, 'Fecha seleccionada:', selectedDateStr, 'Fecha actual:', todayStr);
 
-    for (const hourStr of baseHours) {
+    for (const slot of backendAvailable) {
       if (isToday) {
-        const [hour, minutes] = hourStr.split(':').map(Number);
-        const currentHour = now.getHours();
-        const currentMinutes = now.getMinutes();
-
-        // Si la hora ya pasó (más de 30 mins de cortesía), saltar
-        // Ejemplo: son las 10:45. La cita de las 10:00 ya no sale.
-        // La cita de las 11:00 sí sale.
-        const slotTime = hour * 60 + minutes;
-        const currentTime = currentHour * 60 + currentMinutes;
-
+        const slotDate = new Date(slot.inicio);
+        const slotTime = slotDate.getHours() * 60 + slotDate.getMinutes();
+        const currentTime = now.getHours() * 60 + now.getMinutes();
         if (slotTime < (currentTime - 30)) {
-          console.log(`Filtro hoy: ${hourStr} descartada (${slotTime} < ${currentTime - 30})`);
           continue;
         }
       }
 
-      hours.push(hourStr);
+      slots.push(slot);
     }
 
-    console.log('7. Horarios finales a mostrar:', hours);
-    this.availableHours.set(hours);
+    this.availableSlots.set(slots);
   }
 
-  selectHour(hour: string) {
-    this.selectedHour.set(hour);
-    this.errorMessage = ''; // Limpiar errores al seleccionar una hora
+  selectHour(slot: FranjaDisponible) {
+    this.selectedHour.set(slot.inicio);
+    this.errorMessage = '';
     this.scrollToData();
   }
 
@@ -198,7 +214,7 @@ export class BookingComponent {
   }
 
   onSubmit() {
-    if (this.bookingForm.invalid || !this.selectedDate() || !this.selectedHour()) {
+    if (this.bookingForm.invalid || !this.selectedDate() || !this.selectedHour() || !this.selectedService) {
       this.bookingForm.markAllAsTouched();
       return;
     }
@@ -209,14 +225,15 @@ export class BookingComponent {
 
     const phone = this.formatPhone(this.bookingForm.value.phone);
 
-    const formData = {
-      token: 'AGENDA2025',
-      nombre: this.bookingForm.value.name.trim(),
-      telefono: phone,
-      correo: this.bookingForm.value.email.trim(),
-      servicio: this.bookingForm.value.service,
-      fecha: this.selectedDate(),
-      hora: this.selectedHour()
+    const formData: CrearCitaBackendRequest = {
+      empresaId: 1,
+      sucursalId: Number(this.bookingForm.value.branchId),
+      servicioId: Number(this.bookingForm.value.serviceId),
+      nombreCliente: this.bookingForm.value.name.trim(),
+      telefonoCliente: phone,
+      correoCliente: this.bookingForm.value.email.trim(),
+      inicio: this.selectedHour()!,
+      notas: this.selectedService?.nombre ?? null
     };
 
     this.appointmentService.bookAppointment(formData)
@@ -225,25 +242,34 @@ export class BookingComponent {
       )
       .subscribe({
         next: (response: any) => {
-          if (!response) return;
-
-          let resData;
-          try {
-            resData = typeof response === 'string' ? JSON.parse(response) : response;
-          } catch (e) {
+          if (!response) {
             this.handleSuccess();
             return;
           }
 
-          if (resData?.success) {
-            this.handleSuccess();
+          if (typeof response === 'string') {
+            try {
+              const legacyResponse = JSON.parse(response);
+              if (legacyResponse?.success) {
+                this.handleSuccess(legacyResponse?.message || 'Tu cita fue registrada correctamente.');
+              } else {
+                this.errorMessage = legacyResponse?.message || 'Hubo un problema al procesar la cita.';
+              }
+            } catch {
+              this.handleSuccess('Tu cita fue registrada correctamente.');
+            }
+            return;
+          }
+
+          if (response?.id) {
+            this.handleSuccess(response?.mensaje || 'Tu cita fue registrada correctamente.');
           } else {
-            this.errorMessage = resData?.message || 'Hubo un problema al procesar la cita.';
+            this.errorMessage = response?.mensaje || 'Hubo un problema al procesar la cita.';
           }
         },
         error: (err) => {
-          console.error('Error al agendar cita tras reintentos:', err);
-          this.handleSuccess(true);
+          console.error('Error al agendar cita:', err);
+          this.errorMessage = err?.message || 'No se pudo completar la reserva.';
         }
       });
   }
@@ -260,21 +286,74 @@ export class BookingComponent {
     return cleaned;
   }
 
-  private handleSuccess(isMaybe = false) {
+  private handleSuccess(message = 'Tu cita fue registrada correctamente.') {
     this.submitted.set(true);
     this.isSubmitting.set(false);
     this.bookingForm.reset();
     this.selectedDate.set(null);
     this.selectedHour.set(null);
+    this.availableSlots.set([]);
+    this.errorMessage = message;
 
-    this.errorMessage = isMaybe
-      ? 'Nota: La respuesta del servidor fue inusual, pero tu cita probablemente fue enviada. Revisa tu correo y confirma por WhatsApp al +1 267 313 6057.'
-      : '¡Cita enviada! Revisa tu correo y recuerda confirmar por WhatsApp escribiendo "Hola" al +1 267 313 6057.';
+    if (this.branches().length === 1) {
+      const branchId = this.branches()[0].id;
+      this.bookingForm.patchValue({ branchId });
+      this.loadServices(branchId);
+    }
 
     this.scrollToConfirmation();
     setTimeout(() => {
       this.submitted.set(false);
       this.errorMessage = '';
     }, 15000);
+  }
+
+  private loadBranches() {
+    this.loadingCatalog.set(true);
+    this.bookingDataService.getBranches()
+      .pipe(finalize(() => this.loadingCatalog.set(false)))
+      .subscribe({
+        next: (branches) => {
+          this.branches.set(branches);
+          if (branches.length === 1) {
+            this.bookingForm.patchValue({ branchId: branches[0].id });
+            this.loadServices(branches[0].id);
+          }
+        },
+        error: (err) => {
+          console.error('Error cargando sucursales:', err);
+          this.errorMessage = 'No se pudo cargar el catálogo de sucursales.';
+        }
+      });
+  }
+
+  private loadServices(branchId: number) {
+    this.loadingCatalog.set(true);
+    this.bookingDataService.getServices(branchId)
+      .pipe(finalize(() => this.loadingCatalog.set(false)))
+      .subscribe({
+        next: (services) => {
+          this.services.set(services);
+          if (services.length === 1) {
+            this.bookingForm.patchValue({ serviceId: services[0].id });
+          }
+        },
+        error: (err) => {
+          console.error('Error cargando servicios:', err);
+          this.errorMessage = 'No se pudo cargar el catálogo de servicios.';
+        }
+      });
+  }
+
+  private resetAvailabilityFlow() {
+    this.selectedDate.set(null);
+    this.selectedHour.set(null);
+    this.availableSlots.set([]);
+    this.submitted.set(false);
+    this.errorMessage = '';
+  }
+
+  hasCatalogSelection(): boolean {
+    return Boolean(this.bookingForm.value.branchId && this.bookingForm.value.serviceId);
   }
 }

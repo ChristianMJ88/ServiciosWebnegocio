@@ -1,19 +1,34 @@
 package com.techprotech.agenda.modulos.servicios.aplicacion;
 
+import com.techprotech.agenda.modulos.servicios.infraestructura.repositorio.ServicioRepositorio;
 import org.springframework.stereotype.Service;
 
-import java.math.BigDecimal;
 import java.util.List;
 
 @Service
 public class ServicioCatalogoServicios {
 
+    private final ServicioRepositorio servicioRepositorio;
+
+    public ServicioCatalogoServicios(ServicioRepositorio servicioRepositorio) {
+        this.servicioRepositorio = servicioRepositorio;
+    }
+
     public List<ServicioPublicoResponse> listarPorSucursal(Long sucursalId) {
         Long sucursal = sucursalId != null ? sucursalId : 1L;
-        return List.of(
-                new ServicioPublicoResponse(1L, sucursal, "Manicura", "Servicio base de ejemplo", 60, 0, 10, new BigDecimal("250.00"), "MXN"),
-                new ServicioPublicoResponse(2L, sucursal, "Pedicura", "Servicio base de ejemplo", 75, 0, 15, new BigDecimal("320.00"), "MXN")
-        );
+        return servicioRepositorio.findBySucursalIdAndActivoTrue(sucursal)
+                .stream()
+                .map(servicio -> new ServicioPublicoResponse(
+                        servicio.getId(),
+                        servicio.getSucursalId(),
+                        servicio.getNombre(),
+                        servicio.getDescripcion(),
+                        servicio.getDuracionMinutos(),
+                        servicio.getBufferAntesMinutos(),
+                        servicio.getBufferDespuesMinutos(),
+                        servicio.getPrecio(),
+                        servicio.getMoneda()
+                ))
+                .toList();
     }
 }
-

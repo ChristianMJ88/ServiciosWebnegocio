@@ -2,6 +2,10 @@
   background-color: var(--primary-light);
 }
 
+.booking-summary {
+  backdrop-filter: blur(12px);
+}
+
 .step-badge {
   background: linear-gradient(45deg, var(--primary-pink), var(--accent-blue));
   color: white;

@@ -1,6 +1,7 @@
 package com.techprotech.agenda.modulos.autenticacion.api;
 
 import com.techprotech.agenda.modulos.autenticacion.api.dto.IniciarSesionRequest;
+import com.techprotech.agenda.modulos.autenticacion.api.dto.RefrescarTokenRequest;
 import com.techprotech.agenda.modulos.autenticacion.api.dto.RegistrarClienteRequest;
 import com.techprotech.agenda.modulos.autenticacion.api.dto.RespuestaTokenJwt;
 import com.techprotech.agenda.modulos.autenticacion.aplicacion.ServicioAutenticacion;
@@ -31,5 +32,15 @@ public class ControladorAutenticacion {
         servicioAutenticacion.registrarCliente(request);
         return ResponseEntity.noContent().build();
     }
-}
 
+    @PostMapping("/refrescar-token")
+    public ResponseEntity<RespuestaTokenJwt> refrescarToken(@Valid @RequestBody RefrescarTokenRequest request) {
+        return ResponseEntity.ok(servicioAutenticacion.refrescarToken(request));
+    }
+
+    @PostMapping("/cerrar-sesion")
+    public ResponseEntity<Void> cerrarSesion(@Valid @RequestBody RefrescarTokenRequest request) {
+        servicioAutenticacion.cerrarSesion(request);
+        return ResponseEntity.noContent().build();
+    }
+}

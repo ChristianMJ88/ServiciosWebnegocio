@@ -4,14 +4,14 @@ spring:
   profiles:
     active: dev
   datasource:
-    url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3306}/${DB_NAME:agenda_db}?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+    url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3302}/${DB_NAME:agenda_db}?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
     username: ${DB_USER:agenda_user}
     password: ${DB_PASSWORD:agenda_pass}
     driver-class-name: com.mysql.cj.jdbc.Driver
   jpa:
     open-in-view: false
     hibernate:
-      ddl-auto: validate
+      ddl-auto: update
     properties:
       hibernate:
         format_sql: true
@@ -33,7 +33,7 @@ management:
 
 aplicacion:
   cors:
-    origenes-permitidos: ${CORS_ORIGENES:http://localhost:4200}
+    origenes-permitidos: ${CORS_ORIGENES:http://localhost:4200,http://127.0.0.1:4200}
   jwt:
     secreto: ${JWT_SECRETO:cambio-este-secreto-en-desarrollo}
     issuer: agenda-backend
@@ -42,4 +42,3 @@ aplicacion:
 
 server:
   port: 8080
-
