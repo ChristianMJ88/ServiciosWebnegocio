@@ -1,0 +1,32 @@
+@startuml Diagrama de Estados - Cita
+
+state PENDIENTE
+state CONFIRMADA
+state FINALIZADA
+state CANCELADA
+state NO_ASISTIO
+
+[*] --> PENDIENTE : crearCita()
+
+PENDIENTE --> CONFIRMADA : confirmarCita()
+PENDIENTE --> CANCELADA : cancelarCita()
+PENDIENTE --> CANCELADA : reprogramarCita()\ncerrar original
+
+CONFIRMADA --> FINALIZADA : finalizarCita()
+CONFIRMADA --> CANCELADA : cancelarCita()
+CONFIRMADA --> NO_ASISTIO : marcarNoAsistio()
+CONFIRMADA --> CANCELADA : reprogramarCita()\ncerrar original
+
+FINALIZADA --> [*]
+CANCELADA --> [*]
+NO_ASISTIO --> [*]
+
+note right of PENDIENTE
+  Estado inicial al crear la reserva.
+  Ya bloquea la agenda.
+end note
+
+note right of CONFIRMADA
+  Lista para operacion y recordatorios.
+end note
+@enduml

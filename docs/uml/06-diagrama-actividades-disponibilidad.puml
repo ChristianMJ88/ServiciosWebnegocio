@@ -1,0 +1,36 @@
+@startuml
+start
+
+:Recibir empresaId, sucursalId,\nservicioId, prestadorId, fecha;
+:Obtener configuracion del servicio;
+:Calcular duracion total =\nduracion + buffers;
+
+if (Prestador ofrece el servicio?) then (si)
+else (no)
+  :Retornar error de validacion;
+  stop
+endif
+
+:Obtener reglas base de sucursal;
+:Obtener reglas base de prestador;
+:Construir ventanas efectivas del dia;
+
+:Obtener excepciones de sucursal;
+:Obtener excepciones de prestador;
+:Restar excepciones a ventanas efectivas;
+
+:Obtener citas activas\nPENDIENTE y CONFIRMADA;
+:Restar intervalos ocupados;
+
+:Generar franjas con intervalo configurado;
+:Validar que cada franja soporte\nla duracion completa del servicio;
+
+if (Hay franjas disponibles?) then (si)
+  :Ordenar franjas;
+  :Retornar lista final;
+else (no)
+  :Retornar lista vacia;
+endif
+
+stop
+@enduml

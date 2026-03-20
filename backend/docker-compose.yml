@@ -1,0 +1,40 @@
+services:
+  mysql:
+    image: mysql:8.4
+    container_name: agenda-mysql
+    environment:
+      MYSQL_DATABASE: agenda_db
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_USER: agenda_user
+      MYSQL_PASSWORD: agenda_pass
+    ports:
+      - "3306:3306"
+    volumes:
+      - agenda_mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-proot"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    build:
+      context: .
+    container_name: agenda-backend
+    depends_on:
+      mysql:
+        condition: service_healthy
+    environment:
+      SPRING_PROFILES_ACTIVE: dev
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_NAME: agenda_db
+      DB_USER: agenda_user
+      DB_PASSWORD: agenda_pass
+      JWT_SECRETO: cambio-este-secreto-en-desarrollo
+    ports:
+      - "8080:8080"
+
+volumes:
+  agenda_mysql_data:
+

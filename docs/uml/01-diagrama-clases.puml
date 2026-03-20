@@ -1,0 +1,304 @@
+@startuml
+skinparam classAttributeIconSize 0
+hide circle
+
+package "com.techprotech.agenda.modulos.empresas.dominio" {
+  class Empresa {
+    +id: Long
+    +nombre: String
+    +slug: String
+    +zonaHoraria: String
+    +estado: EstadoEmpresa
+  }
+
+  enum EstadoEmpresa {
+    ACTIVA
+    INACTIVA
+  }
+}
+
+package "com.techprotech.agenda.modulos.sucursales.dominio" {
+  class Sucursal {
+    +id: Long
+    +empresaId: Long
+    +nombre: String
+    +direccion: String
+    +telefono: String
+    +zonaHoraria: String
+    +activa: boolean
+  }
+}
+
+package "com.techprotech.agenda.modulos.usuarios.dominio" {
+  class Usuario {
+    +id: Long
+    +empresaId: Long
+    +correo: String
+    +contrasenaHash: String
+    +habilitado: boolean
+    +bloqueado: boolean
+    +ultimoAccesoEn: FechaHora
+  }
+
+  class Rol {
+    +id: Long
+    +codigo: CodigoRol
+  }
+
+  enum CodigoRol {
+    ADMIN
+    STAFF
+    CLIENTE
+  }
+}
+
+package "com.techprotech.agenda.modulos.clientes.dominio" {
+  class Cliente {
+    +usuarioId: Long
+    +nombreCompleto: String
+    +telefono: String
+    +aceptaWhatsapp: boolean
+    +notas: String
+  }
+}
+
+package "com.techprotech.agenda.modulos.prestadores.dominio" {
+  class PrestadorServicio {
+    +usuarioId: Long
+    +sucursalId: Long
+    +nombreMostrar: String
+    +biografia: String
+    +activo: boolean
+    +colorAgenda: String
+  }
+
+  class AsignacionServicioPrestador {
+    +prestadorId: Long
+    +servicioId: Long
+    +duracionPersonalizadaMinutos: Numero
+    +precioPersonalizado: Decimal
+    +activa: boolean
+  }
+}
+
+package "com.techprotech.agenda.modulos.servicios.dominio" {
+  class Servicio {
+    +id: Long
+    +empresaId: Long
+    +sucursalId: Long
+    +nombre: String
+    +descripcion: String
+    +duracionMinutos: int
+    +bufferAntesMinutos: int
+    +bufferDespuesMinutos: int
+    +precio: Decimal
+    +moneda: String
+    +activo: boolean
+  }
+}
+
+package "com.techprotech.agenda.modulos.disponibilidad.dominio" {
+  class ReglaDisponibilidad {
+    +id: Long
+    +empresaId: Long
+    +tipoSujeto: TipoSujetoDisponibilidad
+    +sujetoId: Long
+    +diaSemana: int
+    +horaInicio: Hora
+    +horaFin: Hora
+    +intervaloMinutos: int
+    +vigenteDesde: Fecha
+    +vigenteHasta: Fecha
+  }
+
+  class ExcepcionDisponibilidad {
+    +id: Long
+    +empresaId: Long
+    +tipoSujeto: TipoSujetoDisponibilidad
+    +sujetoId: Long
+    +fechaExcepcion: Fecha
+    +horaInicio: Hora
+    +horaFin: Hora
+    +tipoBloqueo: TipoBloqueoDisponibilidad
+    +motivo: String
+  }
+
+  class FranjaHoraria {
+    +inicio: FechaHora
+    +fin: FechaHora
+  }
+
+  enum TipoSujetoDisponibilidad {
+    SUCURSAL
+    PRESTADOR
+  }
+
+  enum TipoBloqueoDisponibilidad {
+    VACACIONES
+    DESCANSO
+    BLOQUEO
+    HORARIO_ESPECIAL
+  }
+}
+
+package "com.techprotech.agenda.modulos.citas.dominio" {
+  class Cita {
+    +id: Long
+    +empresaId: Long
+    +sucursalId: Long
+    +servicioId: Long
+    +prestadorId: Long
+    +clienteId: Long
+    +estado: EstadoCita
+    +inicio: FechaHora
+    +fin: FechaHora
+    +precio: Decimal
+    +moneda: String
+    +notas: String
+    +canceladaEn: FechaHora
+    +motivoCancelacion: String
+    +reprogramadaDesdeId: Long
+    +confirmar()
+    +cancelar(motivo: String)
+    +finalizar()
+    +marcarNoAsistio()
+  }
+
+  class HistorialEstadoCita {
+    +id: Long
+    +citaId: Long
+    +estadoAnterior: EstadoCita
+    +estadoNuevo: EstadoCita
+    +cambiadoPorUsuarioId: Long
+    +motivo: String
+    +cambiadoEn: FechaHora
+  }
+
+  enum EstadoCita {
+    PENDIENTE
+    CONFIRMADA
+    CANCELADA
+    FINALIZADA
+    NO_ASISTIO
+  }
+}
+
+package "com.techprotech.agenda.modulos.notificaciones.dominio" {
+  class BandejaSalidaNotificacion {
+    +id: Long
+    +empresaId: Long
+    +tipoAgregado: String
+    +agregadoId: Long
+    +tipoEvento: String
+    +canal: CanalNotificacion
+    +payloadJson: String
+    +estado: EstadoBandejaSalida
+    +programadaEn: FechaHora
+    +enviadaEn: FechaHora
+    +mensajeError: String
+  }
+
+  enum CanalNotificacion {
+    EMAIL
+    WHATSAPP
+    SMS
+  }
+
+  enum EstadoBandejaSalida {
+    PENDIENTE
+    ENVIADA
+    ERROR
+  }
+}
+
+package "com.techprotech.agenda.modulos.autenticacion.dominio" {
+  class TokenActualizacion {
+    +id: Long
+    +usuarioId: Long
+    +tokenHash: String
+    +expiraEn: FechaHora
+    +revocadoEn: FechaHora
+    +nombreDispositivo: String
+    +direccionIp: String
+  }
+}
+
+package "com.techprotech.agenda.modulos.disponibilidad.aplicacion" {
+  class ServicioConsultaDisponibilidad {
+    +obtenerFranjasDisponibles(consulta): FranjasHorarias
+  }
+
+  class CalculadoraDisponibilidad {
+    +calcular(empresaId, sucursalId, servicioId, prestadorId, fecha): FranjasHorarias
+  }
+}
+
+package "com.techprotech.agenda.modulos.citas.aplicacion" {
+  class ServicioCitas {
+    +crearCita(comando): Cita
+    +cancelarCita(comando): Cita
+    +reprogramarCita(comando): Cita
+    +confirmarCita(comando): Cita
+    +finalizarCita(comando): Cita
+    +marcarNoAsistio(comando): Cita
+  }
+
+  class ValidadorConflictoCita {
+    +tieneConflicto(prestadorId, inicio, fin): boolean
+  }
+
+  class PoliticaCitas {
+    +validarCreacion()
+    +validarCancelacion()
+    +validarReprogramacion()
+  }
+}
+
+package "com.techprotech.agenda.modulos.autenticacion.aplicacion" {
+  class ServicioAutenticacion {
+    +iniciarSesion(comando): TokenJwt
+    +registrarCliente(comando): Usuario
+    +refrescarToken(comando): TokenJwt
+    +cerrarSesion(comando): void
+  }
+}
+
+package "com.techprotech.agenda.modulos.notificaciones.aplicacion" {
+  class ServicioBandejaSalidaNotificacion {
+    +encolarCitaCreada(cita): void
+    +encolarCitaCancelada(cita): void
+    +encolarCitaConfirmada(cita): void
+  }
+
+  class TrabajoDespachoNotificaciones {
+    +despacharPendientes(): void
+  }
+}
+
+Empresa "1" -- "0..*" Sucursal
+Empresa "1" -- "0..*" Usuario
+Empresa "1" -- "0..*" Servicio
+Usuario "1" -- "0..1" Cliente
+Usuario "1" -- "0..1" PrestadorServicio
+Usuario "1" -- "0..*" Rol
+Sucursal "1" -- "0..*" PrestadorServicio
+Sucursal "1" -- "0..*" Servicio
+PrestadorServicio "1" -- "0..*" AsignacionServicioPrestador
+Servicio "1" -- "0..*" AsignacionServicioPrestador
+Cita "0..*" --> "1" Sucursal
+Cita "0..*" --> "1" Servicio
+Cita "0..*" --> "1" PrestadorServicio
+Cita "0..*" --> "1" Cliente
+Cita "1" -- "0..*" HistorialEstadoCita
+Cita "1" -- "0..*" BandejaSalidaNotificacion
+Usuario "1" -- "0..*" TokenActualizacion
+
+ServicioConsultaDisponibilidad ..> CalculadoraDisponibilidad
+ServicioCitas ..> ValidadorConflictoCita
+ServicioCitas ..> PoliticaCitas
+ServicioCitas ..> ServicioBandejaSalidaNotificacion
+CalculadoraDisponibilidad ..> ReglaDisponibilidad
+CalculadoraDisponibilidad ..> ExcepcionDisponibilidad
+CalculadoraDisponibilidad ..> Cita
+ServicioAutenticacion ..> TokenActualizacion
+@enduml

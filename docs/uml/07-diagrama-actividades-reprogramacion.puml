@@ -1,0 +1,33 @@
+@startuml
+start
+
+:Recibir solicitud de reprogramacion;
+:Validar autenticacion y permisos;
+:Buscar cita original;
+
+if (La cita existe?) then (si)
+else (no)
+  :Retornar 404;
+  stop
+endif
+
+if (El estado permite reprogramacion?) then (si)
+else (no)
+  :Retornar error de negocio;
+  stop
+endif
+
+:Calcular disponibilidad del nuevo horario;
+
+if (El nuevo horario esta disponible?) then (si)
+  :Crear nueva cita;
+  :Cancelar cita original\nmotivo = REPROGRAMADA;
+  :Registrar historial de ambas;
+  :Encolar eventos de notificacion;
+  :Retornar nueva cita;
+else (no)
+  :Retornar conflicto de agenda;
+endif
+
+stop
+@enduml

@@ -1,0 +1,46 @@
+@startuml
+skinparam componentStyle rectangle
+
+node "Usuario Final" {
+  artifact "Navegador Web\nAngular SPA"
+}
+
+node "Capa de Entrada" {
+  node "Nginx / Reverse Proxy" as Nginx
+}
+
+node "Capa de Aplicacion" {
+  node "Contenedor Docker\nagenda-api" as Api {
+    artifact "Spring Boot 3\nagenda-servicio.jar"
+  }
+
+  node "Contenedor Docker\ntrabajo-notificaciones" as Worker {
+    artifact "TrabajoDespachoNotificaciones"
+  }
+}
+
+node "Capa de Datos" {
+  database "MySQL 8\nagenda_db" as MySQL
+}
+
+cloud "Twilio WhatsApp API" as Twilio
+cloud "Proveedor Email" as Email
+
+"Navegador Web\nAngular SPA" --> Nginx : HTTPS
+Nginx --> Api : /api/v1/**
+Api --> MySQL : JDBC / JPA / HikariCP
+Worker --> MySQL : leer bandeja_salida_notificacion
+Worker --> Twilio : HTTPS
+Worker --> Email : SMTP/API
+
+note right of Api
+  Modulos:
+  - autenticacion
+  - sucursales
+  - servicios
+  - prestadores
+  - disponibilidad
+  - citas
+  - notificaciones
+end note
+@enduml

@@ -1,0 +1,60 @@
+@startuml
+skinparam componentStyle rectangle
+
+package "Angular SPA" {
+  [Interfaz Publica]
+  [Portal Cliente]
+  [Portal Staff]
+  [Portal Admin]
+}
+
+package "Monolito Spring Boot" {
+  [API Autenticacion]
+  [API Sucursales]
+  [API Servicios]
+  [API Prestadores]
+  [API Disponibilidad]
+  [API Citas]
+  [API Notificaciones]
+  [Capa Seguridad]
+  [Servicios Aplicacion]
+  [Modelo Dominio]
+  [Capa Persistencia]
+}
+
+database "MySQL" as BD
+cloud "Twilio / Email" as Externos
+
+[Interfaz Publica] --> [API Sucursales]
+[Interfaz Publica] --> [API Servicios]
+[Interfaz Publica] --> [API Prestadores]
+[Interfaz Publica] --> [API Disponibilidad]
+[Interfaz Publica] --> [API Citas]
+
+[Portal Cliente] --> [API Autenticacion]
+[Portal Cliente] --> [API Citas]
+
+[Portal Staff] --> [API Autenticacion]
+[Portal Staff] --> [API Citas]
+[Portal Staff] --> [API Disponibilidad]
+
+[Portal Admin] --> [API Autenticacion]
+[Portal Admin] --> [API Sucursales]
+[Portal Admin] --> [API Servicios]
+[Portal Admin] --> [API Prestadores]
+[Portal Admin] --> [API Disponibilidad]
+[Portal Admin] --> [API Citas]
+
+[API Autenticacion] --> [Capa Seguridad]
+[API Sucursales] --> [Servicios Aplicacion]
+[API Servicios] --> [Servicios Aplicacion]
+[API Prestadores] --> [Servicios Aplicacion]
+[API Disponibilidad] --> [Servicios Aplicacion]
+[API Citas] --> [Servicios Aplicacion]
+[API Notificaciones] --> [Servicios Aplicacion]
+
+[Servicios Aplicacion] --> [Modelo Dominio]
+[Servicios Aplicacion] --> [Capa Persistencia]
+[Capa Persistencia] --> BD
+[API Notificaciones] --> Externos
+@enduml

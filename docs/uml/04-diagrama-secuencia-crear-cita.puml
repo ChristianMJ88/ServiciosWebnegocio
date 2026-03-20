@@ -1,0 +1,42 @@
+@startuml
+autonumber
+
+actor "Cliente / Angular SPA" as Cliente
+participant "ControladorCitasPublico" as Controlador
+participant "ServicioCitas" as ServicioCitas
+participant "ServicioConsultaDisponibilidad" as ServicioDisponibilidad
+participant "PoliticaCitas" as Politica
+participant "ValidadorConflictoCita" as Validador
+participant "RepositorioCitas" as RepositorioCitas
+participant "RepositorioHistorialEstadoCita" as RepositorioHistorial
+participant "ServicioBandejaSalidaNotificacion" as ServicioNotificacion
+database "MySQL" as BD
+
+Cliente -> Controlador : POST /api/v1/publico/citas
+Controlador -> ServicioCitas : crearCita(comando)
+
+ServicioCitas -> Politica : validarCreacion(comando)
+Politica --> ServicioCitas : ok
+
+ServicioCitas -> ServicioDisponibilidad : obtenerFranjasDisponibles(consulta)
+ServicioDisponibilidad -> BD : consultar reglas, excepciones y citas
+BD --> ServicioDisponibilidad : datos
+ServicioDisponibilidad --> ServicioCitas : franjas disponibles
+
+ServicioCitas -> Validador : tieneConflicto(prestadorId, inicio, fin)
+Validador -> BD : buscar traslapes
+BD --> Validador : sin conflicto
+
+ServicioCitas -> RepositorioCitas : guardar(cita)
+RepositorioCitas -> BD : INSERT cita
+BD --> RepositorioCitas : cita creada
+
+ServicioCitas -> RepositorioHistorial : guardar(historial inicial)
+RepositorioHistorial -> BD : INSERT historial_estado_cita
+
+ServicioCitas -> ServicioNotificacion : encolarCitaCreada(cita)
+ServicioNotificacion -> BD : INSERT bandeja_salida_notificacion
+
+ServicioCitas --> Controlador : CitaResponse
+Controlador --> Cliente : 201 Created
+@enduml

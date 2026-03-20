@@ -1,0 +1,78 @@
+@startuml
+left to right direction
+skinparam packageStyle rectangle
+
+actor Invitado
+actor Cliente
+actor Staff
+actor Admin
+actor "Proveedor de Notificaciones" as Proveedor
+
+rectangle "Plataforma de Agenda de Servicios" {
+  usecase "Consultar sucursales" as U1
+  usecase "Consultar servicios" as U2
+  usecase "Consultar prestadores" as U3
+  usecase "Consultar franjas disponibles" as U4
+  usecase "Registrar cliente" as U5
+  usecase "Iniciar sesion" as U6
+  usecase "Agendar cita" as U7
+  usecase "Cancelar cita" as U8
+  usecase "Reprogramar cita" as U9
+  usecase "Consultar mis citas" as U10
+  usecase "Consultar agenda personal" as U11
+  usecase "Confirmar cita" as U12
+  usecase "Finalizar cita" as U13
+  usecase "Marcar no asistio" as U14
+  usecase "Registrar excepcion de agenda" as U15
+  usecase "Gestionar sucursales" as U16
+  usecase "Gestionar servicios" as U17
+  usecase "Gestionar prestadores" as U18
+  usecase "Asignar servicios a prestadores" as U19
+  usecase "Configurar horarios base" as U20
+  usecase "Gestionar excepciones" as U21
+  usecase "Consultar citas globales" as U22
+  usecase "Consultar indicadores" as U23
+  usecase "Validar JWT y roles" as U24
+  usecase "Validar conflicto de agenda" as U25
+  usecase "Publicar evento de notificacion" as U26
+}
+
+Invitado --> U1
+Invitado --> U2
+Invitado --> U3
+Invitado --> U4
+Invitado --> U5
+Invitado --> U6
+Invitado --> U7
+
+Cliente --> U6
+Cliente --> U8
+Cliente --> U9
+Cliente --> U10
+
+Staff --> U6
+Staff --> U11
+Staff --> U12
+Staff --> U13
+Staff --> U14
+Staff --> U15
+
+Admin --> U6
+Admin --> U16
+Admin --> U17
+Admin --> U18
+Admin --> U19
+Admin --> U20
+Admin --> U21
+Admin --> U22
+Admin --> U23
+
+U6 .> U24 : <<include>>
+U7 .> U25 : <<include>>
+U9 .> U25 : <<include>>
+U7 .> U26 : <<extend>>
+U8 .> U26 : <<extend>>
+U12 .> U26 : <<extend>>
+
+Proveedor --> U26
+@enduml
