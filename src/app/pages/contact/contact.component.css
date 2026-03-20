@@ -1,0 +1,42 @@
+.form-control {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: white;
+  padding: 0.8rem 1.2rem;
+  border-radius: 10px;
+  transition: all 0.3s ease;
+}
+
+.form-control:focus {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: #A239CA;
+  color: white;
+  box-shadow: 0 0 10px rgba(162, 57, 202, 0.2);
+}
+
+.form-control::placeholder {
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.map-container {
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  filter: grayscale(0.2) invert(0.9) hue-rotate(180deg);
+  transition: all 0.5s ease;
+}
+
+.map-container:hover {
+  filter: grayscale(0);
+}
+
+.btn-outline-primary {
+  width: 45px;
+  height: 45px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  font-size: 1.2rem;
+}
+
+
+

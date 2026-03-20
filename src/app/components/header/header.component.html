@@ -1,0 +1,33 @@
+<nav class="navbar navbar-expand-lg glass-effect sticky-top py-3">
+  <div class="container">
+    <a class="navbar-brand fw-bold d-flex align-items-center" routerLink="/">
+      <span class="fs-2 me-2">✨</span>
+      <div>
+        <span class="fs-3 gradient-text">NailArt</span>
+        <span class="text-light opacity-75">Studio</span>
+      </div>
+    </a>
+    <button class="navbar-toggler border-0 shadow-none bg-light opacity-75" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarNav">
+      <ul class="navbar-nav ms-auto align-items-center">
+        <li class="nav-item">
+          <a class="nav-link px-3 text-light hover-accent" routerLink="/" routerLinkActive="active-link" [routerLinkActiveOptions]="{exact: true}">Inicio</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link px-3 text-light hover-accent" routerLink="/servicios" routerLinkActive="active-link">Servicios</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link px-3 text-light hover-accent" href="/#nosotros">Nosotros</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link px-3 text-light hover-accent" routerLink="/contacto" routerLinkActive="active-link">Contacto</a>
+        </li>
+        <li class="nav-item ms-lg-3 mt-3 mt-lg-0">
+          <a routerLink="/agendar" class="btn btn-primary rounded-pill shadow-lg">Agendar Cita</a>
+        </li>
+      </ul>
+    </div>
+  </div>
+</nav>

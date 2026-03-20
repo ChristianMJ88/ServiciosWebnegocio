@@ -1,0 +1,87 @@
+.service-card {
+  transition: var(--transition-base);
+}
+
+.service-card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 15px 35px rgba(162, 57, 202, 0.2) !important;
+  border-color: var(--primary-purple);
+}
+
+.service-img-container {
+  overflow: hidden;
+  position: relative;
+}
+
+.service-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.6s ease;
+}
+
+.service-card:hover .service-img {
+  transform: scale(1.1);
+}
+
+.service-title {
+  position: relative;
+  display: inline-block;
+  padding-bottom: 0.5rem;
+}
+
+.service-title::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 40px;
+  height: 3px;
+  background: linear-gradient(90deg, var(--primary-purple), var(--accent-blue));
+  border-radius: 2px;
+  transition: width 0.3s ease;
+}
+
+.service-card:hover .service-title::after {
+  width: 100%;
+}
+
+.price-badge {
+  background: rgba(162, 57, 202, 0.15);
+  color: var(--primary-pink);
+  padding: 0.4rem 1rem;
+  border-radius: 50px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  transition: all 0.3s ease;
+  border: 1px solid rgba(162, 57, 202, 0.3);
+}
+
+.service-item:hover .price-badge {
+  background: var(--primary-pink);
+  color: white;
+}
+
+@media (max-width: 991.98px) {
+  .service-img-container {
+    height: 300px;
+  }
+}
+
+@media (max-width: 767.98px) {
+  .service-img-container {
+    height: 250px;
+  }
+  .service-card {
+    margin-bottom: 1rem;
+  }
+  .display-5 {
+    font-size: 2.2rem;
+  }
+}
+
+@media (max-width: 575.98px) {
+  .service-img-container {
+    height: 200px;
+  }
+}
