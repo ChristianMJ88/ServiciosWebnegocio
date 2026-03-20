@@ -1,0 +1,190 @@
+<section class="section-padding bg-dark-custom min-vh-100">
+  <div class="container">
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4">
+      <div>
+        <h1 class="h2 fw-bold gradient-text mb-1">Panel Staff</h1>
+        <p class="text-light opacity-75 mb-0">Gestiona tu agenda operativa.</p>
+      </div>
+      <button type="button" class="btn btn-outline-light rounded-pill" (click)="recargar()">Actualizar</button>
+    </div>
+
+    <div *ngIf="error" class="alert alert-danger bg-danger bg-opacity-10 border-danger text-light">
+      {{ error }}
+    </div>
+
+    <div *ngIf="!loading() && agenda().length === 0" class="alert alert-info bg-info bg-opacity-10 border-info text-light">
+      No hay citas en el rango actual.
+    </div>
+
+    <div class="row g-4 mb-4">
+      <div class="col-xl-6">
+        <div class="panel-card p-4 rounded-4 border border-secondary bg-white bg-opacity-5 h-100">
+          <div class="d-flex justify-content-between align-items-start gap-3 mb-3 flex-wrap">
+            <div>
+              <h2 class="h4 text-light mb-1">Mis horarios base</h2>
+              <p class="text-light opacity-75 mb-0">Define en qué días y horas atiendes.</p>
+            </div>
+            <button type="button" class="btn btn-sm btn-outline-light rounded-pill" *ngIf="reglaEditandoId" (click)="cancelarEdicionRegla()">
+              Nueva regla
+            </button>
+          </div>
+
+          <form class="row g-3 mb-4" (ngSubmit)="guardarRegla()">
+            <div class="col-md-4">
+              <label class="form-label text-light">Día</label>
+              <select class="form-select rounded-3" name="staffReglaDiaSemana" [(ngModel)]="formularioRegla.diaSemana">
+                <option *ngFor="let dia of diasSemana" [ngValue]="dia.value">{{ dia.label }}</option>
+              </select>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label text-light">Inicio</label>
+              <input class="form-control rounded-3" type="time" name="staffReglaHoraInicio" [(ngModel)]="formularioRegla.horaInicio" required>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label text-light">Fin</label>
+              <input class="form-control rounded-3" type="time" name="staffReglaHoraFin" [(ngModel)]="formularioRegla.horaFin" required>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label text-light">Intervalo</label>
+              <input class="form-control rounded-3" type="number" min="5" step="5" name="staffReglaIntervalo" [(ngModel)]="formularioRegla.intervaloMinutos" required>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label text-light">Vigente desde</label>
+              <input class="form-control rounded-3" type="date" name="staffReglaVigenteDesde" [(ngModel)]="formularioRegla.vigenteDesde">
+            </div>
+            <div class="col-md-4">
+              <label class="form-label text-light">Vigente hasta</label>
+              <input class="form-control rounded-3" type="date" name="staffReglaVigenteHasta" [(ngModel)]="formularioRegla.vigenteHasta">
+            </div>
+            <div class="col-12 d-flex gap-2 flex-wrap">
+              <button type="submit" class="btn btn-primary rounded-pill" [disabled]="guardandoRegla">
+                {{ reglaEditandoId ? 'Actualizar regla' : 'Crear regla' }}
+              </button>
+              <button type="button" class="btn btn-outline-light rounded-pill" *ngIf="reglaEditandoId" (click)="cancelarEdicionRegla()">
+                Cancelar
+              </button>
+            </div>
+          </form>
+
+          <div class="d-grid gap-3">
+            <div class="mini-item rounded-4 p-3 border border-secondary bg-dark bg-opacity-25" *ngFor="let regla of reglas()">
+              <div class="d-flex justify-content-between align-items-start gap-3">
+                <div>
+                  <div class="fw-semibold text-light">{{ etiquetaDiaSemana(regla.diaSemana) }} · {{ regla.horaInicio }} - {{ regla.horaFin }}</div>
+                  <div class="small text-light opacity-75">Intervalo {{ regla.intervaloMinutos }} min</div>
+                </div>
+                <button type="button" class="btn btn-sm btn-outline-light rounded-pill" (click)="editarRegla(regla)">
+                  Editar
+                </button>
+              </div>
+              <div class="small text-light opacity-75 mt-2" *ngIf="regla.vigenteDesde || regla.vigenteHasta">
+                Vigencia: {{ regla.vigenteDesde || 'sin inicio' }} a {{ regla.vigenteHasta || 'sin fin' }}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-xl-6">
+        <div class="panel-card p-4 rounded-4 border border-secondary bg-white bg-opacity-5 h-100">
+          <div class="d-flex justify-content-between align-items-start gap-3 mb-3 flex-wrap">
+            <div>
+              <h2 class="h4 text-light mb-1">Mis bloqueos</h2>
+              <p class="text-light opacity-75 mb-0">Registra descansos, vacaciones o cierres puntuales.</p>
+            </div>
+            <button type="button" class="btn btn-sm btn-outline-light rounded-pill" *ngIf="excepcionEditandoId" (click)="cancelarEdicionExcepcion()">
+              Nueva excepción
+            </button>
+          </div>
+
+          <form class="row g-3 mb-4" (ngSubmit)="guardarExcepcion()">
+            <div class="col-md-4">
+              <label class="form-label text-light">Fecha</label>
+              <input class="form-control rounded-3" type="date" name="staffExcepcionFecha" [(ngModel)]="formularioExcepcion.fechaExcepcion" required>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label text-light">Hora inicio</label>
+              <input class="form-control rounded-3" type="time" name="staffExcepcionHoraInicio" [(ngModel)]="formularioExcepcion.horaInicio">
+            </div>
+            <div class="col-md-4">
+              <label class="form-label text-light">Hora fin</label>
+              <input class="form-control rounded-3" type="time" name="staffExcepcionHoraFin" [(ngModel)]="formularioExcepcion.horaFin">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label text-light">Tipo</label>
+              <select class="form-select rounded-3" name="staffExcepcionTipo" [(ngModel)]="formularioExcepcion.tipoBloqueo">
+                <option *ngFor="let tipo of tiposBloqueo" [value]="tipo">{{ tipo }}</option>
+              </select>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label text-light">Motivo</label>
+              <input class="form-control rounded-3" name="staffExcepcionMotivo" [(ngModel)]="formularioExcepcion.motivo" maxlength="255">
+            </div>
+            <div class="col-12 d-flex gap-2 flex-wrap">
+              <button type="submit" class="btn btn-primary rounded-pill" [disabled]="guardandoExcepcion">
+                {{ excepcionEditandoId ? 'Actualizar excepción' : 'Crear excepción' }}
+              </button>
+              <button type="button" class="btn btn-outline-light rounded-pill" *ngIf="excepcionEditandoId" (click)="cancelarEdicionExcepcion()">
+                Cancelar
+              </button>
+            </div>
+          </form>
+
+          <div class="d-grid gap-3">
+            <div class="mini-item rounded-4 p-3 border border-secondary bg-dark bg-opacity-25" *ngFor="let excepcion of excepciones()">
+              <div class="d-flex justify-content-between align-items-start gap-3">
+                <div>
+                  <div class="fw-semibold text-light">{{ excepcion.fechaExcepcion }} · {{ excepcion.tipoBloqueo }}</div>
+                  <div class="small text-light opacity-75">
+                    {{ excepcion.horaInicio && excepcion.horaFin ? (excepcion.horaInicio + ' - ' + excepcion.horaFin) : 'Bloqueo de todo el día' }}
+                  </div>
+                </div>
+                <button type="button" class="btn btn-sm btn-outline-light rounded-pill" (click)="editarExcepcion(excepcion)">
+                  Editar
+                </button>
+              </div>
+              <div class="small text-light opacity-75 mt-2" *ngIf="excepcion.motivo">{{ excepcion.motivo }}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="d-grid gap-3">
+      <div class="panel-card p-4 rounded-4 border border-secondary bg-white bg-opacity-5" *ngFor="let cita of agenda()">
+        <div class="d-flex justify-content-between align-items-start gap-3 flex-wrap">
+          <div>
+            <div class="small text-light opacity-75">{{ cita.sucursalNombre }}</div>
+            <div class="text-light fw-bold">{{ cita.servicioNombre }}</div>
+            <div class="small text-light opacity-75 mt-1">{{ cita.clienteNombre }} · {{ cita.clienteTelefono }}</div>
+          </div>
+          <span class="badge rounded-pill text-bg-light">{{ cita.estado }}</span>
+        </div>
+
+        <div class="row mt-3 g-3">
+          <div class="col-md-6">
+            <div class="small text-light opacity-75">Inicio</div>
+            <div class="text-light">{{ cita.inicio | date:'fullDate':'':'es-MX' }}</div>
+            <div class="text-light opacity-75">{{ cita.inicio | date:'shortTime':'':'es-MX' }}</div>
+          </div>
+          <div class="col-md-6">
+            <div class="small text-light opacity-75">Correo</div>
+            <div class="text-light">{{ cita.clienteCorreo }}</div>
+          </div>
+        </div>
+
+        <div class="d-flex gap-2 flex-wrap mt-3" *ngIf="cita.estado === 'PENDIENTE' || cita.estado === 'CONFIRMADA'">
+          <button type="button" class="btn btn-outline-success rounded-pill" *ngIf="cita.estado === 'PENDIENTE'" (click)="confirmar(cita.id)">
+            Confirmar
+          </button>
+          <button type="button" class="btn btn-outline-info rounded-pill" *ngIf="cita.estado === 'CONFIRMADA'" (click)="finalizar(cita.id)">
+            Finalizar
+          </button>
+          <button type="button" class="btn btn-outline-secondary rounded-pill" *ngIf="cita.estado === 'CONFIRMADA'" (click)="noAsistio(cita.id)">
+            No asistió
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

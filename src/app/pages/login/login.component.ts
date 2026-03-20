@@ -1,0 +1,54 @@
+import { Component, inject, signal } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { Router, RouterLink } from '@angular/router';
+import { finalize } from 'rxjs/operators';
+import { AuthService } from '../../core/auth/auth.service';
+
+@Component({
+  selector: 'app-login',
+  standalone: true,
+  imports: [CommonModule, ReactiveFormsModule, RouterLink],
+  templateUrl: './login.component.html',
+  styleUrl: './login.component.css'
+})
+export class LoginComponent {
+  private readonly fb = inject(FormBuilder);
+  private readonly authService = inject(AuthService);
+  private readonly router = inject(Router);
+
+  readonly loading = signal(false);
+  error = '';
+
+  readonly form = this.fb.group({
+    correo: ['', [Validators.required, Validators.email]],
+    contrasena: ['', [Validators.required, Validators.minLength(8)]]
+  });
+
+  get f() {
+    return this.form.controls;
+  }
+
+  onSubmit() {
+    if (this.form.invalid) {
+      this.form.markAllAsTouched();
+      return;
+    }
+
+    this.loading.set(true);
+    this.error = '';
+
+    this.authService
+      .login({
+        correo: this.form.value.correo!.trim(),
+        contrasena: this.form.value.contrasena!
+      })
+      .pipe(finalize(() => this.loading.set(false)))
+      .subscribe({
+        next: () => this.router.navigateByUrl(this.authService.rutaPanel()),
+        error: err => {
+          this.error = err?.message || 'No se pudo iniciar sesión.';
+        }
+      });
+  }
+}

@@ -1,0 +1,138 @@
+<section class="section-padding bg-dark-custom min-vh-100">
+  <div class="container">
+    <div class="row justify-content-center">
+      <div class="col-lg-8 col-xl-7">
+        <div class="card card-custom p-4 p-lg-5">
+          <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4">
+            <div>
+              <h1 class="h2 fw-bold gradient-text mb-1">Mi Cuenta</h1>
+              <p class="text-light opacity-75 mb-0">Tu sesión de cliente está activa.</p>
+            </div>
+            <button type="button" class="btn btn-outline-light rounded-pill px-4" (click)="logout()">
+              Cerrar sesión
+            </button>
+          </div>
+
+          <div class="account-box p-4 rounded-4 bg-white bg-opacity-5 border border-secondary">
+            <div class="small text-light opacity-75">Correo</div>
+            <div class="text-light fw-semibold mb-3">{{ authService.sesionActual()?.correo }}</div>
+
+            <div class="small text-light opacity-75">Empresa</div>
+            <div class="text-light fw-semibold mb-3">#{{ authService.sesionActual()?.empresaId }}</div>
+
+            <div class="small text-light opacity-75">Roles</div>
+            <div class="d-flex flex-wrap gap-2 mt-2">
+              <span class="badge rounded-pill text-bg-light" *ngFor="let rol of authService.sesionActual()?.roles">
+                {{ rol }}
+              </span>
+            </div>
+          </div>
+
+          <div *ngIf="error" class="alert alert-danger bg-danger bg-opacity-10 border-danger text-light mt-4">
+            {{ error }}
+          </div>
+
+          <div class="mt-4">
+            <div class="d-flex align-items-center justify-content-between mb-3">
+              <h2 class="h4 text-light mb-0">Mis citas</h2>
+              <span class="small text-light opacity-75" *ngIf="loading()">Cargando...</span>
+            </div>
+
+            <div *ngIf="!loading() && citas().length === 0" class="alert alert-info bg-info bg-opacity-10 border-info text-light mb-0">
+              Aún no tienes citas registradas en esta cuenta.
+            </div>
+
+            <div class="d-grid gap-3" *ngIf="citas().length > 0">
+              <div class="cita-card p-4 rounded-4 border border-secondary bg-white bg-opacity-5" *ngFor="let cita of citas()">
+                <div class="d-flex justify-content-between align-items-start gap-3 flex-wrap">
+                  <div>
+                    <div class="small text-light opacity-75">{{ cita.sucursalNombre }}</div>
+                    <div class="text-light fw-bold">{{ cita.servicioNombre }}</div>
+                    <div class="small text-light opacity-75 mt-1">Con {{ cita.prestadorNombre }}</div>
+                  </div>
+                  <span class="badge rounded-pill estado-badge" [ngClass]="'estado-' + cita.estado.toLowerCase()">
+                    {{ cita.estado }}
+                  </span>
+                </div>
+
+                <div class="row mt-3 g-3">
+                  <div class="col-md-6">
+                    <div class="small text-light opacity-75">Inicio</div>
+                    <div class="text-light">{{ cita.inicio | date:'fullDate':'':'es-MX' }}</div>
+                    <div class="text-light opacity-75">{{ cita.inicio | date:'shortTime':'':'es-MX' }}</div>
+                  </div>
+                  <div class="col-md-3">
+                    <div class="small text-light opacity-75">Precio</div>
+                    <div class="text-light">{{ cita.precio | currency:(cita.moneda || 'MXN'):'symbol-narrow':'1.0-0':'es-MX' }}</div>
+                  </div>
+                  <div class="col-md-3" *ngIf="cita.notas">
+                    <div class="small text-light opacity-75">Notas</div>
+                    <div class="text-light">{{ cita.notas }}</div>
+                  </div>
+                </div>
+
+                <div class="mt-3" *ngIf="cita.cancelable">
+                  <div class="d-flex gap-2 flex-wrap">
+                    <button type="button" class="btn btn-outline-warning rounded-pill px-4" [disabled]="loading()" (click)="cancelAppointment(cita.id)">
+                      Cancelar cita
+                    </button>
+                    <button type="button" class="btn btn-outline-light rounded-pill px-4" [disabled]="loading()" (click)="abrirReprogramacion(cita)">
+                      Reprogramar
+                    </button>
+                  </div>
+                </div>
+
+                <div class="reprogramacion-box mt-3 p-3 rounded-3 border border-secondary bg-dark bg-opacity-25"
+                     *ngIf="citaEnReprogramacionId() === cita.id">
+                  <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+                    <div class="text-light fw-semibold">Elegir nueva fecha y hora</div>
+                    <button type="button" class="btn btn-sm btn-outline-light rounded-pill" (click)="cerrarReprogramacion()">
+                      Cerrar
+                    </button>
+                  </div>
+
+                  <div class="mb-3">
+                    <label class="form-label text-light opacity-75 small">Nueva fecha</label>
+                    <input
+                      type="date"
+                      class="form-control bg-white bg-opacity-10 border-secondary text-light"
+                      [value]="fechaReprogramacion()"
+                      (change)="onFechaReprogramacionChange(cita, $any($event.target).value)">
+                  </div>
+
+                  <div *ngIf="loadingFranjas()" class="small text-light opacity-75 mb-3">
+                    Cargando franjas disponibles...
+                  </div>
+
+                  <div class="d-flex flex-wrap gap-2" *ngIf="franjasReprogramacion().length > 0">
+                    <button
+                      type="button"
+                      class="btn btn-time"
+                      *ngFor="let franja of franjasReprogramacion()"
+                      [class.active]="franjaSeleccionada() === franja.inicio"
+                      (click)="seleccionarFranjaReprogramacion(franja)">
+                      {{ franja.hora }}
+                    </button>
+                  </div>
+
+                  <div *ngIf="!loadingFranjas() && fechaReprogramacion() && franjasReprogramacion().length === 0"
+                       class="small text-warning mt-2">
+                    No hay franjas disponibles para la fecha seleccionada.
+                  </div>
+
+                  <div class="mt-3">
+                    <button type="button" class="btn btn-primary rounded-pill px-4"
+                            [disabled]="!franjaSeleccionada() || loading()"
+                            (click)="confirmarReprogramacion(cita.id)">
+                      Confirmar nueva cita
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

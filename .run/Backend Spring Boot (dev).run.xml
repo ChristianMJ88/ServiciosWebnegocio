@@ -1,0 +1,31 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="Backend Spring Boot (dev)" type="MavenRunConfiguration" factoryName="Maven">
+    <MavenSettings>
+      <option name="myGeneralSettings" />
+      <option name="myRunnerSettings" />
+      <option name="myRunnerParameters">
+        <MavenRunnerParameters>
+          <option name="cmdOptions" value="-Dspring-boot.run.profiles=dev -Dspring-boot.run.jvmArguments=&quot;-DDB_HOST=localhost -DDB_PORT=3302 -DDB_NAME=agenda_db -DDB_USER=agenda_user -DDB_PASSWORD=agenda_pass -DJWT_SECRETO=cambio-este-secreto-en-desarrollo&quot;" />
+          <option name="goals">
+            <list>
+              <option value="spring-boot:run" />
+            </list>
+          </option>
+          <option name="profiles">
+            <set />
+          </option>
+          <option name="profilesMap">
+            <map />
+          </option>
+          <option name="projectsCmdOptionValues">
+            <list />
+          </option>
+          <option name="resolveToWorkspace" value="false" />
+          <option name="workingDirPath" value="$PROJECT_DIR$/backend" />
+          <option name="pomFileName" value="pom.xml" />
+        </MavenRunnerParameters>
+      </option>
+    </MavenSettings>
+    <method v="2" />
+  </configuration>
+</component>

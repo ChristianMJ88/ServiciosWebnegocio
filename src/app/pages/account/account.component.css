@@ -1,0 +1,67 @@
+.card-custom {
+  background: rgba(18, 18, 18, 0.92);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.35);
+}
+
+.account-box {
+  backdrop-filter: blur(12px);
+}
+
+.cita-card {
+  backdrop-filter: blur(12px);
+}
+
+.reprogramacion-box {
+  backdrop-filter: blur(10px);
+}
+
+.estado-badge {
+  padding: 0.55rem 0.9rem;
+  font-weight: 600;
+}
+
+.estado-pendiente {
+  background: rgba(255, 193, 7, 0.18);
+  color: #ffd76a;
+}
+
+.estado-confirmada {
+  background: rgba(25, 135, 84, 0.18);
+  color: #87f7be;
+}
+
+.estado-cancelada {
+  background: rgba(220, 53, 69, 0.18);
+  color: #ff96a2;
+}
+
+.estado-finalizada {
+  background: rgba(13, 202, 240, 0.18);
+  color: #8de8ff;
+}
+
+.estado-no_asistio {
+  background: rgba(108, 117, 125, 0.24);
+  color: #d4d9de;
+}
+
+.btn-time {
+  border: 1px solid rgba(231, 223, 221, 0.1);
+  background: rgba(231, 223, 221, 0.05);
+  color: #ffffff !important;
+  padding: 0.55rem 1rem;
+  border-radius: 10px;
+  transition: all 0.2s ease;
+  min-width: 90px;
+}
+
+.btn-time:hover {
+  border-color: var(--primary-pink);
+  background: rgba(162, 57, 202, 0.1);
+}
+
+.btn-time.active {
+  background: var(--primary-pink);
+  border-color: var(--primary-pink);
+}

@@ -1,0 +1,37 @@
+.metric-card,
+.panel-card {
+  backdrop-filter: blur(12px);
+}
+
+.mini-item {
+  backdrop-filter: blur(6px);
+}
+
+.form-control,
+.form-select,
+.form-check-input {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.18);
+  color: #fff;
+}
+
+.form-control:focus,
+.form-select:focus,
+.form-check-input:focus {
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+  border-color: rgba(255, 255, 255, 0.35);
+  box-shadow: none;
+}
+
+.form-control::placeholder {
+  color: rgba(255, 255, 255, 0.45);
+}
+
+.form-control-color {
+  min-width: 100%;
+}
+
+.service-chip {
+  background: rgba(255, 255, 255, 0.05);
+}

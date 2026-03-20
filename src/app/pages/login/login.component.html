@@ -1,0 +1,51 @@
+<section class="section-padding bg-dark-custom min-vh-100 d-flex align-items-center">
+  <div class="container">
+    <div class="row justify-content-center">
+      <div class="col-lg-5 col-xl-4">
+        <div class="card card-custom p-4 p-lg-5">
+          <div class="text-center mb-4">
+            <h1 class="h2 fw-bold gradient-text mb-2">Iniciar Sesión</h1>
+            <p class="text-light opacity-75 mb-0">Accede a tu cuenta para ver y gestionar tus citas.</p>
+          </div>
+
+          <form [formGroup]="form" (ngSubmit)="onSubmit()">
+            <div class="mb-3">
+              <label class="form-label text-light opacity-75 small fw-semibold">Correo</label>
+              <input type="email" formControlName="correo" class="form-control bg-white bg-opacity-10 border-secondary text-light"
+                     placeholder="ana@mail.com" [class.is-invalid]="f['correo'].touched && f['correo'].invalid">
+              <div class="invalid-feedback" *ngIf="f['correo'].touched && f['correo'].invalid">
+                Ingresa un correo válido.
+              </div>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label text-light opacity-75 small fw-semibold">Contraseña</label>
+              <input type="password" formControlName="contrasena" class="form-control bg-white bg-opacity-10 border-secondary text-light"
+                     placeholder="Mínimo 8 caracteres" [class.is-invalid]="f['contrasena'].touched && f['contrasena'].invalid">
+              <div class="invalid-feedback" *ngIf="f['contrasena'].touched && f['contrasena'].invalid">
+                La contraseña es obligatoria.
+              </div>
+            </div>
+
+            <div *ngIf="error" class="alert alert-danger bg-danger bg-opacity-10 border-danger text-light small">
+              {{ error }}
+            </div>
+
+            <div class="d-grid mt-4">
+              <button type="submit" class="btn btn-primary rounded-pill py-3" [disabled]="loading()">
+                <span *ngIf="!loading()">Entrar</span>
+                <span *ngIf="loading()" class="spinner-border spinner-border-sm me-2"></span>
+              </button>
+            </div>
+          </form>
+
+          <p class="text-center text-light opacity-75 small mt-4 mb-0">
+            ¿No tienes cuenta?
+            <a routerLink="/registro" class="text-accent text-decoration-none fw-semibold">Regístrate aquí</a>
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+

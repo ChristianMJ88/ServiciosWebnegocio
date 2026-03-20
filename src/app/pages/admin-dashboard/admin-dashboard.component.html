@@ -1,0 +1,563 @@
+<section class="section-padding bg-dark-custom min-vh-100">
+  <div class="container">
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4">
+      <div>
+        <h1 class="h2 fw-bold gradient-text mb-1">Panel Admin</h1>
+        <p class="text-light opacity-75 mb-0">Vista ejecutiva y operativa del sistema.</p>
+      </div>
+      <button type="button" class="btn btn-outline-light rounded-pill" (click)="recargar()">Actualizar</button>
+    </div>
+
+    <div *ngIf="error" class="alert alert-danger bg-danger bg-opacity-10 border-danger text-light">
+      {{ error }}
+    </div>
+
+    <div class="row g-3 mb-4" *ngIf="resumen() as r">
+      <div class="col-sm-6 col-xl-2">
+        <div class="metric-card p-3 rounded-4 border border-secondary bg-white bg-opacity-5">
+          <div class="small text-light opacity-75">Total</div>
+          <div class="h3 text-light mb-0">{{ r.totalCitas }}</div>
+        </div>
+      </div>
+      <div class="col-sm-6 col-xl-2">
+        <div class="metric-card p-3 rounded-4 border border-secondary bg-white bg-opacity-5">
+          <div class="small text-light opacity-75">Pendientes</div>
+          <div class="h3 text-warning mb-0">{{ r.pendientes }}</div>
+        </div>
+      </div>
+      <div class="col-sm-6 col-xl-2">
+        <div class="metric-card p-3 rounded-4 border border-secondary bg-white bg-opacity-5">
+          <div class="small text-light opacity-75">Confirmadas</div>
+          <div class="h3 text-success mb-0">{{ r.confirmadas }}</div>
+        </div>
+      </div>
+      <div class="col-sm-6 col-xl-2">
+        <div class="metric-card p-3 rounded-4 border border-secondary bg-white bg-opacity-5">
+          <div class="small text-light opacity-75">Finalizadas</div>
+          <div class="h3 text-info mb-0">{{ r.finalizadas }}</div>
+        </div>
+      </div>
+      <div class="col-sm-6 col-xl-2">
+        <div class="metric-card p-3 rounded-4 border border-secondary bg-white bg-opacity-5">
+          <div class="small text-light opacity-75">Canceladas</div>
+          <div class="h3 text-danger mb-0">{{ r.canceladas }}</div>
+        </div>
+      </div>
+      <div class="col-sm-6 col-xl-2">
+        <div class="metric-card p-3 rounded-4 border border-secondary bg-white bg-opacity-5">
+          <div class="small text-light opacity-75">No asistió</div>
+          <div class="h3 text-secondary mb-0">{{ r.noAsistio }}</div>
+        </div>
+      </div>
+      <div class="col-sm-6 col-xl-3">
+        <div class="metric-card p-3 rounded-4 border border-secondary bg-white bg-opacity-5">
+          <div class="small text-light opacity-75">Citas hoy</div>
+          <div class="h3 text-light mb-0">{{ r.citasHoy }}</div>
+        </div>
+      </div>
+      <div class="col-sm-6 col-xl-3">
+        <div class="metric-card p-3 rounded-4 border border-secondary bg-white bg-opacity-5">
+          <div class="small text-light opacity-75">Ingreso programado</div>
+          <div class="h3 text-success mb-0">{{ r.ingresosProgramados | currency:'MXN':'symbol-narrow':'1.0-0':'es-MX' }}</div>
+        </div>
+      </div>
+      <div class="col-sm-6 col-xl-3">
+        <div class="metric-card p-3 rounded-4 border border-secondary bg-white bg-opacity-5">
+          <div class="small text-light opacity-75">Ingreso finalizado</div>
+          <div class="h3 text-info mb-0">{{ r.ingresosFinalizados | currency:'MXN':'symbol-narrow':'1.0-0':'es-MX' }}</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel-card p-4 rounded-4 border border-secondary bg-white bg-opacity-5 mb-4">
+      <div class="d-flex justify-content-between align-items-start gap-3 mb-3 flex-wrap">
+        <div>
+          <h2 class="h4 text-light mb-1">Rendimiento por servicio</h2>
+          <p class="text-light opacity-75 mb-0">Resumen comercial y operativo por tipo de cita.</p>
+        </div>
+      </div>
+      <div class="row g-3">
+        <div class="col-lg-4" *ngFor="let reporte of reporteServicios()">
+          <div class="mini-item rounded-4 p-3 border border-secondary bg-dark bg-opacity-25 h-100">
+            <div class="fw-semibold text-light">{{ reporte.servicioNombre }}</div>
+            <div class="small text-light opacity-75 mb-3">{{ reporte.totalCitas }} citas totales</div>
+            <div class="small text-light opacity-75">Pendientes: {{ reporte.pendientes }}</div>
+            <div class="small text-light opacity-75">Confirmadas: {{ reporte.confirmadas }}</div>
+            <div class="small text-light opacity-75">Finalizadas: {{ reporte.finalizadas }}</div>
+            <div class="small text-light opacity-75 mt-2">Programado</div>
+            <div class="text-success fw-semibold">{{ reporte.ingresosProgramados | currency:'MXN':'symbol-narrow':'1.0-0':'es-MX' }}</div>
+            <div class="small text-light opacity-75 mt-2">Finalizado</div>
+            <div class="text-info fw-semibold">{{ reporte.ingresosFinalizados | currency:'MXN':'symbol-narrow':'1.0-0':'es-MX' }}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="row g-4 mb-4">
+      <div class="col-lg-5">
+        <div class="panel-card p-4 rounded-4 border border-secondary bg-white bg-opacity-5 h-100">
+          <div class="d-flex justify-content-between align-items-start gap-3 mb-3">
+            <div>
+              <h2 class="h4 text-light mb-1">Sucursales</h2>
+              <p class="text-light opacity-75 mb-0">Alta y ajuste de sedes operativas.</p>
+            </div>
+            <button type="button" class="btn btn-sm btn-outline-light rounded-pill" *ngIf="sucursalEditandoId" (click)="cancelarEdicionSucursal()">
+              Nueva
+            </button>
+          </div>
+
+          <form class="row g-3 mb-4" (ngSubmit)="guardarSucursal()">
+            <div class="col-12">
+              <label class="form-label text-light">Nombre</label>
+              <input class="form-control rounded-3" name="sucursalNombre" [(ngModel)]="formularioSucursal.nombre" required maxlength="150">
+            </div>
+            <div class="col-12">
+              <label class="form-label text-light">Dirección</label>
+              <input class="form-control rounded-3" name="sucursalDireccion" [(ngModel)]="formularioSucursal.direccion" maxlength="255">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label text-light">Teléfono</label>
+              <input class="form-control rounded-3" name="sucursalTelefono" [(ngModel)]="formularioSucursal.telefono" maxlength="20">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label text-light">Zona horaria</label>
+              <input class="form-control rounded-3" name="sucursalZonaHoraria" [(ngModel)]="formularioSucursal.zonaHoraria" required maxlength="60">
+            </div>
+            <div class="col-12">
+              <label class="form-check text-light">
+                <input class="form-check-input" type="checkbox" name="sucursalActiva" [(ngModel)]="formularioSucursal.activa">
+                <span class="form-check-label">Sucursal activa</span>
+              </label>
+            </div>
+            <div class="col-12 d-flex gap-2 flex-wrap">
+              <button type="submit" class="btn btn-primary rounded-pill" [disabled]="guardandoSucursal">
+                {{ sucursalEditandoId ? 'Actualizar sucursal' : 'Crear sucursal' }}
+              </button>
+              <button type="button" class="btn btn-outline-light rounded-pill" *ngIf="sucursalEditandoId" (click)="cancelarEdicionSucursal()">
+                Cancelar
+              </button>
+            </div>
+          </form>
+
+          <div class="d-grid gap-3">
+            <div class="mini-item rounded-4 p-3 border border-secondary bg-dark bg-opacity-25" *ngFor="let sucursal of sucursales()">
+              <div class="d-flex justify-content-between align-items-start gap-3">
+                <div>
+                  <div class="fw-semibold text-light">{{ sucursal.nombre }}</div>
+                  <div class="small text-light opacity-75">{{ sucursal.zonaHoraria }}</div>
+                  <div class="small text-light opacity-75" *ngIf="sucursal.direccion">{{ sucursal.direccion }}</div>
+                </div>
+                <span class="badge rounded-pill" [class.text-bg-success]="sucursal.activa" [class.text-bg-secondary]="!sucursal.activa">
+                  {{ sucursal.activa ? 'Activa' : 'Inactiva' }}
+                </span>
+              </div>
+              <div class="d-flex justify-content-between align-items-center gap-3 mt-3 flex-wrap">
+                <div class="small text-light opacity-75">{{ sucursal.telefono || 'Sin teléfono' }}</div>
+                <button type="button" class="btn btn-sm btn-outline-light rounded-pill" (click)="editarSucursal(sucursal)">
+                  Editar
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-lg-7">
+        <div class="panel-card p-4 rounded-4 border border-secondary bg-white bg-opacity-5 h-100">
+          <div class="d-flex justify-content-between align-items-start gap-3 mb-3">
+            <div>
+              <h2 class="h4 text-light mb-1">Servicios</h2>
+              <p class="text-light opacity-75 mb-0">Gestiona duración, buffers y precio por servicio.</p>
+            </div>
+            <button type="button" class="btn btn-sm btn-outline-light rounded-pill" *ngIf="servicioEditandoId" (click)="cancelarEdicionServicio()">
+              Nuevo
+            </button>
+          </div>
+
+          <form class="row g-3 mb-4" (ngSubmit)="guardarServicio()">
+            <div class="col-md-6">
+              <label class="form-label text-light">Sucursal</label>
+              <select class="form-select rounded-3" name="servicioSucursalId" [(ngModel)]="formularioServicio.sucursalId" required>
+                <option [ngValue]="0" disabled>Selecciona una sucursal</option>
+                <option *ngFor="let sucursal of sucursales()" [ngValue]="sucursal.id">{{ sucursal.nombre }}</option>
+              </select>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label text-light">Nombre</label>
+              <input class="form-control rounded-3" name="servicioNombre" [(ngModel)]="formularioServicio.nombre" required maxlength="150">
+            </div>
+            <div class="col-12">
+              <label class="form-label text-light">Descripción</label>
+              <textarea class="form-control rounded-3" rows="2" name="servicioDescripcion" [(ngModel)]="formularioServicio.descripcion" maxlength="500"></textarea>
+            </div>
+            <div class="col-sm-4">
+              <label class="form-label text-light">Duración (min)</label>
+              <input class="form-control rounded-3" type="number" min="5" name="servicioDuracion" [(ngModel)]="formularioServicio.duracionMinutos" required>
+            </div>
+            <div class="col-sm-4">
+              <label class="form-label text-light">Buffer antes</label>
+              <input class="form-control rounded-3" type="number" min="0" name="servicioBufferAntes" [(ngModel)]="formularioServicio.bufferAntesMinutos" required>
+            </div>
+            <div class="col-sm-4">
+              <label class="form-label text-light">Buffer después</label>
+              <input class="form-control rounded-3" type="number" min="0" name="servicioBufferDespues" [(ngModel)]="formularioServicio.bufferDespuesMinutos" required>
+            </div>
+            <div class="col-sm-4">
+              <label class="form-label text-light">Precio</label>
+              <input class="form-control rounded-3" type="number" min="0" step="0.01" name="servicioPrecio" [(ngModel)]="formularioServicio.precio" required>
+            </div>
+            <div class="col-sm-4">
+              <label class="form-label text-light">Moneda</label>
+              <input class="form-control rounded-3 text-uppercase" name="servicioMoneda" [(ngModel)]="formularioServicio.moneda" maxlength="10" required>
+            </div>
+            <div class="col-sm-4 d-flex align-items-end">
+              <label class="form-check text-light">
+                <input class="form-check-input" type="checkbox" name="servicioActivo" [(ngModel)]="formularioServicio.activo">
+                <span class="form-check-label">Servicio activo</span>
+              </label>
+            </div>
+            <div class="col-12 d-flex gap-2 flex-wrap">
+              <button type="submit" class="btn btn-primary rounded-pill" [disabled]="guardandoServicio || !sucursales().length">
+                {{ servicioEditandoId ? 'Actualizar servicio' : 'Crear servicio' }}
+              </button>
+              <button type="button" class="btn btn-outline-light rounded-pill" *ngIf="servicioEditandoId" (click)="cancelarEdicionServicio()">
+                Cancelar
+              </button>
+            </div>
+          </form>
+
+          <div class="d-grid gap-3">
+            <div class="mini-item rounded-4 p-3 border border-secondary bg-dark bg-opacity-25" *ngFor="let servicio of servicios()">
+              <div class="d-flex justify-content-between align-items-start gap-3">
+                <div>
+                  <div class="small text-light opacity-75">{{ servicio.sucursalNombre }}</div>
+                  <div class="fw-semibold text-light">{{ servicio.nombre }}</div>
+                  <div class="small text-light opacity-75" *ngIf="servicio.descripcion">{{ servicio.descripcion }}</div>
+                </div>
+                <span class="badge rounded-pill" [class.text-bg-success]="servicio.activo" [class.text-bg-secondary]="!servicio.activo">
+                  {{ servicio.activo ? 'Activo' : 'Inactivo' }}
+                </span>
+              </div>
+              <div class="row g-3 mt-1">
+                <div class="col-sm-4">
+                  <div class="small text-light opacity-75">Duración</div>
+                  <div class="text-light">{{ servicio.duracionMinutos }} min</div>
+                </div>
+                <div class="col-sm-4">
+                  <div class="small text-light opacity-75">Buffers</div>
+                  <div class="text-light">{{ servicio.bufferAntesMinutos }} / {{ servicio.bufferDespuesMinutos }} min</div>
+                </div>
+                <div class="col-sm-4">
+                  <div class="small text-light opacity-75">Precio</div>
+                  <div class="text-light">{{ servicio.precio | currency:(servicio.moneda || 'MXN'):'symbol-narrow':'1.0-0':'es-MX' }}</div>
+                </div>
+              </div>
+              <div class="d-flex justify-content-end mt-3">
+                <button type="button" class="btn btn-sm btn-outline-light rounded-pill" (click)="editarServicio(servicio)">
+                  Editar
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="row g-4 mb-4">
+      <div class="col-12">
+        <div class="panel-card p-4 rounded-4 border border-secondary bg-white bg-opacity-5">
+          <div class="d-flex justify-content-between align-items-start gap-3 mb-3 flex-wrap">
+            <div>
+              <h2 class="h4 text-light mb-1">Prestadores y asignaciones</h2>
+              <p class="text-light opacity-75 mb-0">Crea usuarios staff y define qué servicios atienden.</p>
+            </div>
+            <button type="button" class="btn btn-sm btn-outline-light rounded-pill" *ngIf="prestadorEditandoId" (click)="cancelarEdicionPrestador()">
+              Nuevo prestador
+            </button>
+          </div>
+
+          <form class="row g-3 mb-4" (ngSubmit)="guardarPrestador()">
+            <div class="col-md-4">
+              <label class="form-label text-light">Sucursal</label>
+              <select class="form-select rounded-3" name="prestadorSucursalId" [(ngModel)]="formularioPrestador.sucursalId" (ngModelChange)="cambiarSucursalPrestador($event)" required>
+                <option [ngValue]="0" disabled>Selecciona una sucursal</option>
+                <option *ngFor="let sucursal of sucursales()" [ngValue]="sucursal.id">{{ sucursal.nombre }}</option>
+              </select>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label text-light">Nombre visible</label>
+              <input class="form-control rounded-3" name="prestadorNombreMostrar" [(ngModel)]="formularioPrestador.nombreMostrar" required maxlength="150">
+            </div>
+            <div class="col-md-4">
+              <label class="form-label text-light">Correo</label>
+              <input class="form-control rounded-3" type="email" name="prestadorCorreo" [(ngModel)]="formularioPrestador.correo" required maxlength="150">
+            </div>
+            <div class="col-md-4">
+              <label class="form-label text-light">Contraseña temporal</label>
+              <input class="form-control rounded-3" type="text" name="prestadorPassword" [(ngModel)]="formularioPrestador.contrasenaTemporal" [placeholder]="prestadorEditandoId ? 'Opcional para actualizar' : 'Mínimo 8 caracteres'">
+            </div>
+            <div class="col-md-4">
+              <label class="form-label text-light">Color agenda</label>
+              <input class="form-control form-control-color rounded-3" type="color" name="prestadorColorAgenda" [(ngModel)]="formularioPrestador.colorAgenda">
+            </div>
+            <div class="col-md-4 d-flex align-items-end">
+              <label class="form-check text-light">
+                <input class="form-check-input" type="checkbox" name="prestadorActivo" [(ngModel)]="formularioPrestador.activo">
+                <span class="form-check-label">Prestador activo</span>
+              </label>
+            </div>
+            <div class="col-12">
+              <label class="form-label text-light">Biografía</label>
+              <textarea class="form-control rounded-3" rows="2" name="prestadorBiografia" [(ngModel)]="formularioPrestador.biografia" maxlength="500"></textarea>
+            </div>
+            <div class="col-12">
+              <label class="form-label text-light">Servicios asignados</label>
+              <div class="row g-2">
+                <div class="col-md-4" *ngFor="let servicio of serviciosDisponiblesPrestador()">
+                  <label class="service-chip d-flex align-items-center gap-2 rounded-3 p-2 border border-secondary">
+                    <input
+                      class="form-check-input m-0"
+                      type="checkbox"
+                      [checked]="servicioPrestadorSeleccionado(servicio.id)"
+                      (change)="alternarServicioPrestador(servicio.id, $any($event.target).checked)"
+                    >
+                    <span class="text-light small">{{ servicio.nombre }}</span>
+                  </label>
+                </div>
+              </div>
+              <div class="small text-light opacity-75 mt-2" *ngIf="!serviciosDisponiblesPrestador().length">
+                No hay servicios en la sucursal seleccionada.
+              </div>
+            </div>
+            <div class="col-12 d-flex gap-2 flex-wrap">
+              <button type="submit" class="btn btn-primary rounded-pill" [disabled]="guardandoPrestador || !sucursales().length">
+                {{ prestadorEditandoId ? 'Actualizar prestador' : 'Crear prestador' }}
+              </button>
+              <button type="button" class="btn btn-outline-light rounded-pill" *ngIf="prestadorEditandoId" (click)="cancelarEdicionPrestador()">
+                Cancelar
+              </button>
+            </div>
+          </form>
+
+          <div class="row g-3">
+            <div class="col-lg-6" *ngFor="let prestador of prestadores()">
+              <div class="mini-item rounded-4 p-3 border border-secondary bg-dark bg-opacity-25 h-100">
+                <div class="d-flex justify-content-between align-items-start gap-3">
+                  <div>
+                    <div class="small text-light opacity-75">{{ prestador.sucursalNombre }}</div>
+                    <div class="fw-semibold text-light">{{ prestador.nombreMostrar }}</div>
+                    <div class="small text-light opacity-75">{{ prestador.correo }}</div>
+                  </div>
+                  <span class="badge rounded-pill" [class.text-bg-success]="prestador.activo" [class.text-bg-secondary]="!prestador.activo">
+                    {{ prestador.activo ? 'Activo' : 'Inactivo' }}
+                  </span>
+                </div>
+                <div class="small text-light opacity-75 mt-2" *ngIf="prestador.biografia">{{ prestador.biografia }}</div>
+                <div class="d-flex align-items-center gap-2 mt-3 flex-wrap">
+                  <span class="small text-light opacity-75">Servicios:</span>
+                  <span class="badge text-bg-light" *ngFor="let nombre of prestador.servicioNombres">{{ nombre }}</span>
+                  <span class="small text-light opacity-50" *ngIf="!prestador.servicioNombres.length">Sin asignaciones</span>
+                </div>
+                <div class="d-flex justify-content-between align-items-center gap-3 mt-3 flex-wrap">
+                  <div class="small text-light opacity-75">Color agenda: {{ prestador.colorAgenda || '#2563eb' }}</div>
+                  <button type="button" class="btn btn-sm btn-outline-light rounded-pill" (click)="editarPrestador(prestador)">
+                    Editar
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="row g-4 mb-4">
+      <div class="col-xl-6">
+        <div class="panel-card p-4 rounded-4 border border-secondary bg-white bg-opacity-5 h-100">
+          <div class="d-flex justify-content-between align-items-start gap-3 mb-3 flex-wrap">
+            <div>
+              <h2 class="h4 text-light mb-1">Horarios base</h2>
+              <p class="text-light opacity-75 mb-0">Reglas semanales de sucursal o prestador.</p>
+            </div>
+            <button type="button" class="btn btn-sm btn-outline-light rounded-pill" *ngIf="reglaEditandoId" (click)="cancelarEdicionRegla()">
+              Nueva regla
+            </button>
+          </div>
+
+          <form class="row g-3 mb-4" (ngSubmit)="guardarRegla()">
+            <div class="col-md-6">
+              <label class="form-label text-light">Tipo</label>
+              <select class="form-select rounded-3" name="reglaTipoSujeto" [(ngModel)]="formularioRegla.tipoSujeto" (ngModelChange)="cambiarTipoSujetoRegla($event)">
+                <option value="SUCURSAL">Sucursal</option>
+                <option value="PRESTADOR">Prestador</option>
+              </select>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label text-light">Sujeto</label>
+              <select class="form-select rounded-3" name="reglaSujetoId" [(ngModel)]="formularioRegla.sujetoId" required>
+                <option *ngFor="let sujeto of opcionesSujetosDisponibilidad(formularioRegla.tipoSujeto)" [ngValue]="sujeto.id">{{ sujeto.nombre }}</option>
+              </select>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label text-light">Día</label>
+              <select class="form-select rounded-3" name="reglaDiaSemana" [(ngModel)]="formularioRegla.diaSemana">
+                <option *ngFor="let dia of diasSemana" [ngValue]="dia.value">{{ dia.label }}</option>
+              </select>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label text-light">Inicio</label>
+              <input class="form-control rounded-3" type="time" name="reglaHoraInicio" [(ngModel)]="formularioRegla.horaInicio" required>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label text-light">Fin</label>
+              <input class="form-control rounded-3" type="time" name="reglaHoraFin" [(ngModel)]="formularioRegla.horaFin" required>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label text-light">Intervalo</label>
+              <input class="form-control rounded-3" type="number" min="5" step="5" name="reglaIntervalo" [(ngModel)]="formularioRegla.intervaloMinutos" required>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label text-light">Vigente desde</label>
+              <input class="form-control rounded-3" type="date" name="reglaVigenteDesde" [(ngModel)]="formularioRegla.vigenteDesde">
+            </div>
+            <div class="col-md-4">
+              <label class="form-label text-light">Vigente hasta</label>
+              <input class="form-control rounded-3" type="date" name="reglaVigenteHasta" [(ngModel)]="formularioRegla.vigenteHasta">
+            </div>
+            <div class="col-12 d-flex gap-2 flex-wrap">
+              <button type="submit" class="btn btn-primary rounded-pill" [disabled]="guardandoRegla">
+                {{ reglaEditandoId ? 'Actualizar regla' : 'Crear regla' }}
+              </button>
+              <button type="button" class="btn btn-outline-light rounded-pill" *ngIf="reglaEditandoId" (click)="cancelarEdicionRegla()">
+                Cancelar
+              </button>
+            </div>
+          </form>
+
+          <div class="d-grid gap-3">
+            <div class="mini-item rounded-4 p-3 border border-secondary bg-dark bg-opacity-25" *ngFor="let regla of reglasDisponibilidad()">
+              <div class="d-flex justify-content-between align-items-start gap-3">
+                <div>
+                  <div class="small text-light opacity-75">{{ regla.tipoSujeto }} · {{ regla.sujetoNombre }}</div>
+                  <div class="fw-semibold text-light">{{ etiquetaDiaSemana(regla.diaSemana) }} · {{ regla.horaInicio }} - {{ regla.horaFin }}</div>
+                  <div class="small text-light opacity-75">Intervalo {{ regla.intervaloMinutos }} min</div>
+                </div>
+                <button type="button" class="btn btn-sm btn-outline-light rounded-pill" (click)="editarRegla(regla)">
+                  Editar
+                </button>
+              </div>
+              <div class="small text-light opacity-75 mt-2" *ngIf="regla.vigenteDesde || regla.vigenteHasta">
+                Vigencia: {{ regla.vigenteDesde || 'sin inicio' }} a {{ regla.vigenteHasta || 'sin fin' }}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-xl-6">
+        <div class="panel-card p-4 rounded-4 border border-secondary bg-white bg-opacity-5 h-100">
+          <div class="d-flex justify-content-between align-items-start gap-3 mb-3 flex-wrap">
+            <div>
+              <h2 class="h4 text-light mb-1">Bloqueos y excepciones</h2>
+              <p class="text-light opacity-75 mb-0">Vacaciones, descansos y cierres especiales.</p>
+            </div>
+            <button type="button" class="btn btn-sm btn-outline-light rounded-pill" *ngIf="excepcionEditandoId" (click)="cancelarEdicionExcepcion()">
+              Nueva excepción
+            </button>
+          </div>
+
+          <form class="row g-3 mb-4" (ngSubmit)="guardarExcepcion()">
+            <div class="col-md-6">
+              <label class="form-label text-light">Tipo</label>
+              <select class="form-select rounded-3" name="excepcionTipoSujeto" [(ngModel)]="formularioExcepcion.tipoSujeto" (ngModelChange)="cambiarTipoSujetoExcepcion($event)">
+                <option value="SUCURSAL">Sucursal</option>
+                <option value="PRESTADOR">Prestador</option>
+              </select>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label text-light">Sujeto</label>
+              <select class="form-select rounded-3" name="excepcionSujetoId" [(ngModel)]="formularioExcepcion.sujetoId" required>
+                <option *ngFor="let sujeto of opcionesSujetosDisponibilidad(formularioExcepcion.tipoSujeto)" [ngValue]="sujeto.id">{{ sujeto.nombre }}</option>
+              </select>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label text-light">Fecha</label>
+              <input class="form-control rounded-3" type="date" name="excepcionFecha" [(ngModel)]="formularioExcepcion.fechaExcepcion" required>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label text-light">Hora inicio</label>
+              <input class="form-control rounded-3" type="time" name="excepcionHoraInicio" [(ngModel)]="formularioExcepcion.horaInicio">
+            </div>
+            <div class="col-md-4">
+              <label class="form-label text-light">Hora fin</label>
+              <input class="form-control rounded-3" type="time" name="excepcionHoraFin" [(ngModel)]="formularioExcepcion.horaFin">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label text-light">Tipo de bloqueo</label>
+              <select class="form-select rounded-3" name="excepcionTipoBloqueo" [(ngModel)]="formularioExcepcion.tipoBloqueo">
+                <option *ngFor="let tipo of tiposBloqueo" [value]="tipo">{{ tipo }}</option>
+              </select>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label text-light">Motivo</label>
+              <input class="form-control rounded-3" name="excepcionMotivo" [(ngModel)]="formularioExcepcion.motivo" maxlength="255">
+            </div>
+            <div class="col-12 d-flex gap-2 flex-wrap">
+              <button type="submit" class="btn btn-primary rounded-pill" [disabled]="guardandoExcepcion">
+                {{ excepcionEditandoId ? 'Actualizar excepción' : 'Crear excepción' }}
+              </button>
+              <button type="button" class="btn btn-outline-light rounded-pill" *ngIf="excepcionEditandoId" (click)="cancelarEdicionExcepcion()">
+                Cancelar
+              </button>
+            </div>
+          </form>
+
+          <div class="d-grid gap-3">
+            <div class="mini-item rounded-4 p-3 border border-secondary bg-dark bg-opacity-25" *ngFor="let excepcion of excepcionesDisponibilidad()">
+              <div class="d-flex justify-content-between align-items-start gap-3">
+                <div>
+                  <div class="small text-light opacity-75">{{ excepcion.tipoSujeto }} · {{ excepcion.sujetoNombre }}</div>
+                  <div class="fw-semibold text-light">{{ excepcion.fechaExcepcion }} · {{ excepcion.tipoBloqueo }}</div>
+                  <div class="small text-light opacity-75">
+                    {{ excepcion.horaInicio && excepcion.horaFin ? (excepcion.horaInicio + ' - ' + excepcion.horaFin) : 'Bloqueo de todo el día' }}
+                  </div>
+                </div>
+                <button type="button" class="btn btn-sm btn-outline-light rounded-pill" (click)="editarExcepcion(excepcion)">
+                  Editar
+                </button>
+              </div>
+              <div class="small text-light opacity-75 mt-2" *ngIf="excepcion.motivo">{{ excepcion.motivo }}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="d-grid gap-3">
+      <div class="panel-card p-4 rounded-4 border border-secondary bg-white bg-opacity-5" *ngFor="let cita of citas()">
+        <div class="d-flex justify-content-between align-items-start gap-3 flex-wrap">
+          <div>
+            <div class="small text-light opacity-75">{{ cita.sucursalNombre }}</div>
+            <div class="text-light fw-bold">{{ cita.servicioNombre }}</div>
+            <div class="small text-light opacity-75 mt-1">Prestador #{{ cita.prestadorId }}</div>
+          </div>
+          <span class="badge rounded-pill text-bg-light">{{ cita.estado }}</span>
+        </div>
+        <div class="row mt-3 g-3">
+          <div class="col-md-4">
+            <div class="small text-light opacity-75">Inicio</div>
+            <div class="text-light">{{ cita.inicio | date:'medium':'':'es-MX' }}</div>
+          </div>
+          <div class="col-md-4">
+            <div class="small text-light opacity-75">Precio</div>
+            <div class="text-light">{{ cita.precio | currency:(cita.moneda || 'MXN'):'symbol-narrow':'1.0-0':'es-MX' }}</div>
+          </div>
+          <div class="col-md-4">
+            <div class="small text-light opacity-75">Cliente</div>
+            <div class="text-light">Reserva #{{ cita.id }}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
