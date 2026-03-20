@@ -3,54 +3,7 @@ import { Component } from '@angular/core';
 @Component({
   selector: 'app-footer',
   standalone: true,
-  template: `
-    <footer class="bg-dark text-white pt-5 pb-4">
-      <div class="container text-center text-md-start">
-        <div class="row text-center text-md-start">
-          <div class="col-md-3 col-lg-3 col-xl-3 mx-auto mt-3">
-            <h5 class="text-uppercase mb-4 font-weight-bold text-primary-color">NailArt Studio</h5>
-            <p>Servicios integrales de embellecimiento y cuidado para manos y pies con las técnicas más modernas y profesionales.</p>
-          </div>
-
-          <div class="col-md-2 col-lg-2 col-xl-2 mx-auto mt-3">
-            <h5 class="text-uppercase mb-4 font-weight-bold">Servicios</h5>
-            <p><a href="/servicios" class="text-white text-decoration-none">Manicura en Gel</a></p>
-            <p><a href="/servicios" class="text-white text-decoration-none">Uñas Acrílicas</a></p>
-            <p><a href="/servicios" class="text-white text-decoration-none">Nail Art</a></p>
-            <p><a href="/servicios" class="text-white text-decoration-none">Tratamientos Spa</a></p>
-          </div>
-
-          <div class="col-md-4 col-lg-3 col-xl-3 mx-auto mt-3">
-            <h5 class="text-uppercase mb-4 font-weight-bold">Contacto</h5>
-            <p>📍 Calle Principal #123, Ciudad Belleza</p>
-            <p>📧 hola@nailartstudio.com</p>
-            <p>📞 +123 456 7890</p>
-          </div>
-        </div>
-
-        <hr class="mb-4">
-
-        <div class="row align-items-center">
-          <div class="col-md-7 col-lg-8">
-            <p> &copy; 2025 Todos los derechos reservados por:
-              <a href="#" class="text-decoration-none"><strong class="text-primary-color">NailArt Studio</strong></a>
-            </p>
-          </div>
-          <div class="col-md-5 col-lg-4">
-            <div class="text-center text-md-right">
-              <ul class="list-unstyled list-inline">
-                <li class="list-inline-item"><a href="#" class="btn-floating btn-sm text-white fs-4"><i class="fab fa-facebook"></i></a></li>
-                <li class="list-inline-item"><a href="#" class="btn-floating btn-sm text-white fs-4"><i class="fab fa-instagram"></i></a></li>
-              </ul>
-            </div>
-          </div>
-        </div>
-      </div>
-    </footer>
-  `,
-  styles: [`
-    .text-primary-color { color: #e91e63; }
-    footer { font-size: 0.9rem; }
-  `]
+  templateUrl: './footer.component.html',
+  styleUrl: './footer.component.css'
 })
 export class FooterComponent {}

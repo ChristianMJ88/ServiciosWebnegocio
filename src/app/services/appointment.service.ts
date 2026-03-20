@@ -1,21 +1,31 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, throwError } from 'rxjs';
+import { timeout, retry, catchError } from 'rxjs/operators';
 
 @Injectable({
   providedIn: 'root'
 })
 export class AppointmentService {
-  private apiUrl = 'https://script.google.com/macros/s/AKfycbxxzwusLPH3Hh9xC9Fh2GaTaPh5-pPD50gLMsdgOIvWWBdFM6ylxRKn9lh9Kfz_ZNRxuQ/exec';
+  private apiUrl = 'https://script.google.com/macros/s/AKfycbx1VZhYuxQ8yMXv0jBJpnYTSuNbOKj9jwd_SXyi_u9eBqsNY17PwynCN6dRfoWFrH_BeA/exec';
 
 
   private token = 'AGENDA2025';
+  private TIMEOUT_DURATION = 15000; // 15 segundos
+  private RETRY_COUNT = 3;
 
   constructor(private http: HttpClient) {}
 
 
-  getOccupiedSlots(fecha: string): Observable<string> {
-    return this.http.get(`${this.apiUrl}?fecha=${fecha}`, { responseType: 'text' });
+  getAvailableSlots(fecha: string): Observable<string> {
+    return this.http.get(`${this.apiUrl}?fecha=${fecha}`, { responseType: 'text' }).pipe(
+      timeout(this.TIMEOUT_DURATION),
+      retry(this.RETRY_COUNT),
+      catchError(err => {
+        console.error('Error obteniendo horarios:', err);
+        return throwError(() => new Error('Error al conectar con el servidor tras varios reintentos.'));
+      })
+    );
   }
 
   bookAppointment(data: any): Observable<any> {
@@ -30,6 +40,13 @@ export class AppointmentService {
     return this.http.post(this.apiUrl, JSON.stringify(payload), {
       headers: { 'Content-Type': 'text/plain' },
       responseType: 'text'
-    });
+    }).pipe(
+      timeout(this.TIMEOUT_DURATION),
+      retry(this.RETRY_COUNT),
+      catchError(err => {
+        console.error('Error al agendar cita:', err);
+        return throwError(() => new Error('No se pudo completar la reserva tras varios intentos. Por favor, verifica tu conexión.'));
+      })
+    );
   }
 }

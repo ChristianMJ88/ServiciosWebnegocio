@@ -1,263 +1,210 @@
-.booking-section {
-  background-color: #fff5f8;
+.bg-pink-light {
+  background-color: var(--primary-light);
 }
 
-.booking-card {
-  background-color: #ffffff;
-}
-
-.bg-primary-color {
-  background-color: #e91e63 !important;
-}
-
-.text-primary-color {
-  color: #e91e63;
-}
-
-.step-icon {
-  background-color: #fce4ec;
-  color: #e91e63;
-  width: 40px;
-  height: 40px;
+.step-badge {
+  background: linear-gradient(45deg, var(--primary-pink), var(--accent-blue));
+  color: white;
+  width: 35px;
+  height: 35px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
+  font-weight: bold;
+  flex-shrink: 0;
+}
+
+.btn-time {
+  border: 1px solid rgba(231, 223, 221, 0.1);
+  background: rgba(231, 223, 221, 0.05);
+  color: #FFFFFF !important; /* Forzado a blanco para visibilidad */
+  padding: 0.6rem 1.2rem;
+  border-radius: 10px;
+  transition: var(--transition-base);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 90px;
+}
+
+.btn-time:hover {
+  border-color: var(--primary-pink);
+  background: rgba(162, 57, 202, 0.1);
+  color: var(--primary-pink);
+}
+
+.btn-time.active {
+  background: var(--primary-pink);
+  border-color: var(--primary-pink);
+  color: white;
+  box-shadow: 0 4px 15px rgba(162, 57, 202, 0.4);
 }
 
 .calendar-container {
-  overflow: hidden;
-  max-width: 650px;
-  margin: 0 auto;
+  min-height: 450px;
+  border-radius: 15px;
+  padding: 15px;
+  background: rgba(255, 255, 255, 0.02);
 }
 
-/* Estilos para los botones de tiempo */
-.time-button {
-  min-width: 90px;
-  transition: all 0.2s ease;
-}
-
-.active-time {
-  background-color: #e91e63 !important;
-  color: white !important;
-  border-color: #e91e63 !important;
-  box-shadow: 0 4px 8px rgba(233, 30, 99, 0.3);
-}
-
-.tiny-icon {
-  font-size: 16px;
-  height: 16px;
-  width: 16px;
-  vertical-align: middle;
-}
-
-.confirm-summary {
-  border-left: 4px solid #e91e63;
-}
-
-.confirm-btn {
-  font-weight: bold;
-  letter-spacing: 1px;
-}
-
-/* Ajustes de FullCalendar para que parezca más Material */
+/* FullCalendar Customization */
 ::ng-deep .fc {
-  --fc-button-bg-color: transparent;
-  --fc-button-border-color: transparent;
-  --fc-button-text-color: #e91e63;
-  --fc-button-hover-bg-color: #fce4ec;
-  --fc-button-hover-border-color: transparent;
-  --fc-button-active-bg-color: #f8bbd0;
-  --fc-button-active-border-color: transparent;
-  --fc-today-bg-color: rgba(233, 30, 99, 0.05);
-  --fc-border-color: #eeeeee;
   font-family: inherit;
-}
-
-::ng-deep .fc .fc-toolbar {
-  margin-bottom: 1rem !important;
-  padding: 0 0.5rem;
-}
-
-::ng-deep .fc .fc-button {
-  padding: 0.4rem 0.8rem !important;
-  border-radius: 8px !important;
-  font-size: 0.9rem !important;
-  text-transform: capitalize !important;
+  --fc-button-bg-color: var(--primary-pink);
+  --fc-button-border-color: var(--primary-pink);
+  --fc-button-hover-bg-color: var(--accent-blue);
+  --fc-button-hover-border-color: var(--accent-blue);
+  --fc-button-active-bg-color: var(--accent-blue);
+  --fc-button-active-border-color: var(--accent-blue);
+  --fc-event-bg-color: var(--primary-pink);
+  --fc-event-border-color: var(--primary-pink);
+  --fc-today-bg-color: rgba(162, 57, 202, 0.15);
+  --fc-page-bg-color: transparent;
+  --fc-list-event-hover-bg-color: rgba(231, 223, 221, 0.05);
+  --fc-border-color: rgba(231, 223, 221, 0.1);
 }
 
 ::ng-deep .fc .fc-toolbar-title {
-  font-size: 1.1rem;
-  font-weight: 600;
-  color: #333;
+  font-size: 1.2rem !important;
+  font-weight: 700;
+  color: var(--text-gray);
 }
 
 ::ng-deep .fc .fc-col-header-cell {
-  background-color: #fafafa;
-  padding: 12px 0;
-  color: #666;
-  font-weight: 500;
-  text-transform: uppercase;
-  font-size: 0.75rem;
-  letter-spacing: 1px;
+  background: rgba(231, 223, 221, 0.05);
+  padding: 10px 0 !important;
+}
+
+::ng-deep .fc .fc-col-header-cell-cushion {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--primary-pink);
+  text-decoration: none !important;
 }
 
 ::ng-deep .fc .fc-daygrid-day-number {
-  padding: 8px;
   font-size: 0.9rem;
-  color: #555;
+  padding: 10px !important;
+  color: var(--text-gray);
+  text-decoration: none !important;
 }
 
 ::ng-deep .fc .fc-day-other .fc-daygrid-day-number {
-  color: #ccc;
-}
-
-::ng-deep .fc .fc-day-disabled {
-  background-color: #f8f9fa !important;
-  cursor: not-allowed;
-  opacity: 0.6;
+  opacity: 0.2;
 }
 
 ::ng-deep .fc .fc-daygrid-day.fc-day-today {
-  background-color: rgba(233, 30, 99, 0.05) !important;
+  background-color: rgba(162, 57, 202, 0.1) !important;
+}
+
+::ng-deep .fc .fc-daygrid-day.fc-day-today .fc-daygrid-day-number {
+  color: var(--accent-blue);
   font-weight: bold;
 }
 
 ::ng-deep .fc .fc-highlight {
-  background: rgba(233, 30, 99, 0.15) !important;
+  background-color: rgba(71, 23, 246, 0.2) !important;
 }
 
-/* Animaciones y Estilos de Confirmación */
-.animate-fade-in {
-  animation: fadeIn 0.5s ease-out forwards;
+::ng-deep .fc .fc-button-primary {
+  padding: 6px 12px !important;
+  font-weight: 600 !important;
 }
 
-.scale-up {
-  font-size: 80px !important;
-  width: 80px !important;
-  height: 80px !important;
-  animation: scaleUp 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
-}
-
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(20px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-@keyframes scaleUp {
-  from { transform: scale(0.5); opacity: 0; }
-  to { transform: scale(1); opacity: 1; }
-}
-
-.confirmation-view {
-  background: linear-gradient(to bottom, #ffffff, #fffdfd);
-}
-
-.success-icon-container {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-
-@media (max-width: 768px) {
+/* Responsive adjustments */
+@media (max-width: 991.98px) {
   .calendar-container {
-    max-width: 100%;
-    padding: 0.5rem !important;
-  }
-
-  ::ng-deep .fc .fc-toolbar-title {
-    font-size: 1rem;
-  }
-
-  ::ng-deep .fc .fc-col-header-cell {
-    padding: 8px 0;
-  }
-
-  .confirmation-view {
-    padding: 2rem 1rem !important;
-  }
-
-  .scale-up {
-    font-size: 60px !important;
-    width: 60px !important;
-    height: 60px !important;
+    min-height: 400px;
   }
 }
 
-/* Responsividad */
-@media (max-width: 1023px) {
-  /* En tablets y móviles, el stepper es vertical, pero Angular Material maneja el layout.
-     Forzamos que el contenido ocupe todo el ancho y no se vea apretado. */
-  .p-4 {
-    padding: 1.5rem !important;
-  }
-
-  .h4 {
-    font-size: 1.1rem;
-  }
-
-  .booking-header-content {
-    padding: 1.5rem !important;
-  }
-}
-
-@media (max-width: 768px) {
-  .p-4 {
-    padding: 1rem !important;
+@media (max-width: 767.98px) {
+  .calendar-container {
+    min-height: 350px;
+    padding: 0;
+    margin-bottom: 2rem;
   }
 
   ::ng-deep .fc .fc-toolbar {
     flex-direction: column;
-    gap: 10px;
-    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1rem !important;
   }
 
   ::ng-deep .fc .fc-toolbar-title {
+    font-size: 1.1rem !important;
+  }
+
+  .card {
+    border-radius: 15px !important; /* Mantener bordes redondeados */
+    overflow: hidden;
+  }
+
+  .border-end {
+    border-right: 0 !important;
+    border-bottom: 1px solid rgba(231, 223, 221, 0.1) !important;
+  }
+
+  .p-4 {
+    padding: 1.25rem !important;
+  }
+
+  .btn-time {
+    width: 100%;
+    text-align: center;
+    margin-bottom: 0.5rem;
+  }
+}
+
+@media (max-width: 575.98px) {
+  .step-badge {
+    width: 30px;
+    height: 30px;
     font-size: 0.9rem;
-    order: 1;
   }
 
-  ::ng-deep .fc .fc-button-group {
-    order: 2;
-  }
-
-  /* Ajuste de botones de hora para móviles pequeños */
-  .time-button {
-    min-width: 70px;
-    padding: 0 8px !important;
-    font-size: 0.8rem !important;
-  }
-
-  .step-icon {
-    width: 32px;
-    height: 32px;
-  }
-
-  .step-icon mat-icon {
-    font-size: 18px;
-    width: 18px;
-    height: 18px;
+  .h4 {
+    font-size: 1.25rem;
   }
 }
 
-/* Evitar que las letras se encimen en pantallas muy pequeñas */
-@media (max-width: 400px) {
-  .h2 {
-    font-size: 1.25rem !important;
-  }
-
-  .mat-step-label {
-    font-size: 0.8rem;
-  }
+.input-group-text {
+  color: var(--primary-color);
 }
 
-/* Estilos globales para SnackBar (deben estar en styles.css idealmente, pero se pueden forzar aquí con ::ng-deep) */
-::ng-deep .success-snackbar {
-  background: #43a047;
-  color: white;
+.form-control:focus, .form-select:focus {
+  border-color: var(--primary-border);
+  box-shadow: 0 0 0 0.25rem var(--primary-shadow);
 }
 
-::ng-deep .warning-snackbar {
-  background: #fb8c00;
-  color: white;
+/* Skeleton Loader */
+.skeleton-hour {
+  width: 90px;
+  height: 40px;
+  background: linear-gradient(90deg, rgba(255,255,255,0.05) 25%, rgba(255,255,255,0.1) 50%, rgba(255,255,255,0.05) 75%);
+  background-size: 200% 100%;
+  animation: skeleton-loading 1.5s infinite linear;
+  border-radius: 10px;
+}
+
+@keyframes skeleton-loading {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+.animate-pulse {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: .5; }
+}
+
+@media (max-width: 767.98px) {
+  .skeleton-hour {
+    width: 100%;
+    margin-bottom: 0.5rem;
+  }
 }

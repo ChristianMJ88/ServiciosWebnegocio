@@ -34,14 +34,25 @@
 }
 
 .chat-header {
-  background: #e91e63;
+  background: linear-gradient(45deg, var(--primary-pink), var(--accent-blue));
   color: white;
   cursor: pointer;
+  padding: 12px 15px !important;
+}
+
+.chat-body {
+  background: rgba(14, 11, 22, 0.95) !important;
+  backdrop-filter: blur(10px);
+  color: var(--text-gray);
+  border: 1px solid rgba(231, 223, 221, 0.1);
+  border-top: none;
 }
 
 .chat-response {
   font-size: 0.85rem;
-  color: #333;
+  color: var(--text-gray);
+  background: rgba(231, 223, 221, 0.05) !important;
+  border-color: rgba(231, 223, 221, 0.1) !important;
 }
 
 .chat-toggle-icon {

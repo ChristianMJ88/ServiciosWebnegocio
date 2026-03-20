@@ -1,5 +1,140 @@
 /* You can add global styles to this file, and also import other style files */
-@import "@angular/material/prebuilt-themes/deeppurple-amber.css";
+:root {
+  --bg-dark: #1A1625; /* Un poco más claro que #0E0B16 */
+  --bg-darker: #0E0B16;
+  --primary-pink: #A239CA;
+  --accent-blue: #4717F6;
+  --text-gray: #F0EBE9; /* Más claro que #E7DFDD */
+  /* Aliases para compatibilidad */
+  --primary-purple: var(--primary-pink);
+  --text-light: var(--text-gray);
+  --white: #ffffff;
+  --transition-base: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+}
 
-html, body { height: 100%; }
-body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
+body {
+  font-family: 'Poppins', sans-serif;
+  color: var(--text-gray);
+  background-color: var(--bg-dark);
+  line-height: 1.6;
+}
+
+h1, h2, h3, .navbar-brand {
+  font-family: 'Playfair Display', serif;
+}
+
+.text-primary-color {
+  color: var(--primary-pink) !important;
+}
+
+.text-accent {
+  color: var(--accent-blue) !important;
+}
+
+.bg-dark-custom {
+  background-color: var(--bg-dark);
+}
+
+.glass-effect {
+  background: rgba(26, 22, 37, 0.85);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(162, 57, 202, 0.3);
+}
+
+.btn-primary {
+  background: linear-gradient(45deg, var(--primary-pink), var(--accent-blue));
+  border: none;
+  padding: 0.8rem 2rem;
+  transition: var(--transition-base);
+  color: white;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+
+.btn-primary:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 20px rgba(162, 57, 202, 0.3);
+  background: linear-gradient(45deg, var(--accent-blue), var(--primary-pink));
+  color: white;
+}
+
+.btn-outline-primary {
+  color: var(--primary-pink);
+  border: 2px solid var(--primary-pink);
+  padding: 0.8rem 2rem;
+  font-weight: 600;
+  background: transparent;
+}
+
+.btn-outline-primary:hover {
+  background: var(--primary-pink);
+  color: white;
+  transform: translateY(-3px);
+}
+
+.card-custom {
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 20px;
+  transition: var(--transition-base);
+}
+
+.card-custom:hover {
+  transform: translateY(-10px);
+  background: rgba(162, 57, 202, 0.12);
+  border-color: var(--primary-pink);
+  box-shadow: 0 15px 35px rgba(162, 57, 202, 0.25);
+}
+
+.card-custom img {
+  transition: transform 0.5s ease;
+}
+
+.card-custom:hover img {
+  transform: scale(1.1);
+}
+
+.bg-primary-pink {
+  background-color: var(--primary-pink);
+}
+
+.bg-accent-blue {
+  background-color: var(--accent-blue);
+}
+
+.bg-primary-color {
+  background: linear-gradient(90deg, var(--primary-pink), var(--accent-blue)) !important;
+}
+
+.section-padding {
+  padding: 100px 0;
+}
+
+@media (max-width: 991.98px) {
+  .section-padding {
+    padding: 70px 0;
+  }
+}
+
+@media (max-width: 767.98px) {
+  .section-padding {
+    padding: 50px 0;
+  }
+}
+
+.gradient-text {
+  background: linear-gradient(45deg, var(--primary-pink), var(--accent-blue));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+@media (max-width: 991.98px) {
+  .display-2 { font-size: calc(2.5rem + 2vw); }
+  .display-5 { font-size: calc(1.8rem + 1.5vw); }
+}
+
+@media (max-width: 767.98px) {
+  .display-2 { font-size: 2.8rem; }
+  .display-5 { font-size: 2.2rem; }
+  .lead { font-size: 1.1rem; }
+}
