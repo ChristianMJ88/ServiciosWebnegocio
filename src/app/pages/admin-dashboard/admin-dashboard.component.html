@@ -6,16 +6,29 @@
 
   <div class="admin-layout" [class.is-mobile]="panelMovil()" [class.is-compact]="sidebarCompacto() && !panelMovil()">
     <aside
+      id="admin-sidebar"
       class="admin-sidebar"
-      [class.is-hidden]="panelMovil() && !sidebarAbierto()">
+      [class.is-hidden]="panelMovil() && !sidebarAbierto()"
+      aria-label="Navegación principal del panel administrativo">
+      <div class="sidebar-brand">
+        <span class="sidebar-brand-mark" aria-hidden="true">NA</span>
+        <div class="sidebar-brand-copy" *ngIf="!sidebarCompacto() || panelMovil()">
+          <span class="sidebar-brand-eyebrow">Sistema de citas</span>
+          <span class="sidebar-brand-title">NailArt Studio</span>
+          <span class="sidebar-brand-subtitle">Administración central</span>
+        </div>
+      </div>
+
       <div class="sidebar-nav-card">
-        <nav class="sidebar-nav" aria-label="Navegación admin">
+        <nav class="sidebar-nav" aria-label="Secciones administrativas">
           <button
             type="button"
             class="sidebar-nav-item"
             *ngFor="let modulo of modulosAdmin"
             (click)="seleccionarSeccion(modulo.id)"
             [class.active-nav-item]="seccionActiva() === modulo.id"
+            [attr.aria-current]="seccionActiva() === modulo.id ? 'page' : null"
+            [attr.aria-label]="modulo.titulo"
             [matTooltip]="sidebarCompacto() && !panelMovil() ? modulo.titulo : ''"
             matTooltipPosition="right">
             <span class="sidebar-nav-icon" [ngSwitch]="modulo.icono" aria-hidden="true">
@@ -37,747 +50,1176 @@
               <svg *ngSwitchCase="'bloqueo'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
                 <path d="M8 11V8a4 4 0 1 1 8 0v3M7 11h10a1 1 0 0 1 1 1v7H6v-7a1 1 0 0 1 1-1Z" stroke-linecap="round" stroke-linejoin="round"/>
               </svg>
+              <svg *ngSwitchCase="'correo'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                <path d="M4 7.5 12 13l8-5.5M5 19h14a1 1 0 0 0 1-1V7a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v11a1 1 0 0 0 1 1Z" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
               <svg *ngSwitchDefault viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
                 <path d="M7 4v3M17 4v3M4 9h16M6 5h12a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2Zm2 7h3m2 0h3m-8 4h3m2 0h3" stroke-linecap="round" stroke-linejoin="round"/>
               </svg>
             </span>
             <span class="sidebar-nav-copy" *ngIf="!sidebarCompacto() || panelMovil()">
               <span class="sidebar-nav-title">{{ modulo.titulo }}</span>
+              <span class="sidebar-nav-description">{{ modulo.descripcion }}</span>
             </span>
           </button>
         </nav>
+      </div>
+
+      <div class="sidebar-support" *ngIf="!sidebarCompacto() || panelMovil()">
+        <span class="sidebar-support-label">Sesión activa</span>
+        <strong class="sidebar-support-value">{{ nombreUsuarioAdmin() || 'Administrador' }}</strong>
+        <span class="sidebar-support-meta">{{ correoUsuarioAdmin() || sucursalActivaNombre() }}</span>
       </div>
     </aside>
 
     <div class="admin-content">
       <mat-toolbar class="admin-toolbar">
-        <div class="toolbar-leading">
-          <button type="button" class="toolbar-hamburger" (click)="alternarCompactoSidebar()" aria-label="Alternar menú lateral">
+        <div class="topbar-left">
+          <button
+            type="button"
+            class="toolbar-hamburger"
+            (click)="alternarCompactoSidebar()"
+            aria-label="Alternar menú lateral"
+            aria-controls="admin-sidebar"
+            [attr.aria-expanded]="panelMovil() ? sidebarAbierto() : !sidebarCompacto()">
             <span></span>
             <span></span>
             <span></span>
           </button>
 
-          <div class="toolbar-brand">
-            <span class="toolbar-brand-mark">NA</span>
-            <div class="toolbar-brand-copy">
-              <span class="toolbar-brand-title">NailArt Studio</span>
-            </div>
+          <div class="topbar-brand" aria-label="NailArt Studio Backoffice">
+            <span class="topbar-brand-mark" aria-hidden="true">NA</span>
+            <span class="topbar-brand-title">NailArt Studio</span>
           </div>
         </div>
 
-        <span class="toolbar-spacer"></span>
+        <div class="toolbar-actions">
+          <button
+            mat-icon-button
+            class="toolbar-icon-button"
+            [matBadge]="totalNotificaciones()"
+            [matBadgeHidden]="!totalNotificaciones()"
+            matBadgeColor="accent"
+            matBadgeSize="small"
+            [attr.aria-label]="'Notificaciones pendientes: ' + totalNotificaciones()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+              <path d="M15 17H9m8-2V11a5 5 0 1 0-10 0v4l-2 2h14l-2-2Zm-3 6a2 2 0 0 1-2-2h4a2 2 0 0 1-2 2Z" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </button>
 
-        <button
-          mat-icon-button
-          class="toolbar-icon-button"
-          [matBadge]="totalNotificaciones()"
-          [matBadgeHidden]="!totalNotificaciones()"
-          matBadgeColor="accent"
-          matBadgeSize="small"
-          aria-label="Notificaciones">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-            <path d="M15 17H9m8-2V11a5 5 0 1 0-10 0v4l-2 2h14l-2-2Zm-3 6a2 2 0 0 1-2-2h4a2 2 0 0 1-2 2Z" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
-        </button>
-
-        <button
-          mat-button
-          class="toolbar-user-button"
-          [matMenuTriggerFor]="menuUsuario">
-          <span class="toolbar-user-avatar">{{ inicialesUsuarioAdmin() }}</span>
-          <span class="toolbar-user-meta">
-            <span class="toolbar-user-name">{{ nombreUsuarioAdmin() }}</span>
-            <span class="toolbar-user-role">Administrador</span>
-          </span>
-        </button>
-
-        <mat-menu #menuUsuario="matMenu" class="toolbar-user-menu">
-          <button mat-menu-item type="button">Perfil</button>
-          <button mat-menu-item type="button">Configuración</button>
-          <button mat-menu-item type="button" (click)="logout()">Cerrar sesión</button>
-        </mat-menu>
-
-        <button mat-flat-button type="button" color="primary" class="toolbar-refresh-button" (click)="recargar()">
-          Actualizar datos
-        </button>
+          <button
+            mat-button
+            class="toolbar-user-button"
+            [matMenuTriggerFor]="menuUsuario"
+            aria-label="Abrir menú de usuario"
+            aria-haspopup="menu">
+            <span class="toolbar-user-avatar">{{ inicialesUsuarioAdmin() }}</span>
+            <span class="toolbar-user-meta">
+              <span class="toolbar-user-name">{{ nombreUsuarioAdmin() }}</span>
+              <span class="toolbar-user-role">Administrador</span>
+            </span>
+          </button>
+        </div>
       </mat-toolbar>
+
+      <mat-menu #menuUsuario="matMenu" class="toolbar-user-menu">
+        <button mat-menu-item type="button">Perfil</button>
+        <button mat-menu-item type="button">Configuración</button>
+        <button mat-menu-item type="button" (click)="logout()">Cerrar sesión</button>
+      </mat-menu>
 
       <mat-progress-bar *ngIf="loading()" mode="indeterminate"></mat-progress-bar>
 
-      <div class="admin-body">
-        <div *ngIf="error" class="alert alert-danger admin-alert">
+      <main class="admin-body" id="admin-main">
+        <header class="content-header">
+          <div class="content-header-copy">
+            <span class="content-header-kicker">Backoffice</span>
+            <h1>{{ moduloActivo().titulo }}</h1>
+            <p>{{ moduloActivo().descripcion }}</p>
+          </div>
+
+          <div class="content-header-actions">
+            <button mat-flat-button type="button" color="primary" class="toolbar-refresh-button" (click)="recargar()">
+              Actualizar datos
+            </button>
+          </div>
+        </header>
+
+        <div *ngIf="error" class="alert alert-danger admin-alert" role="alert">
           {{ error }}
         </div>
 
+        <div *ngIf="mensajeExito" class="alert alert-success admin-alert admin-alert-success" role="status">
+          {{ mensajeExito }}
+        </div>
+
         <ng-container *ngIf="seccionActiva() === 'resumen'">
-          <div class="overview-hero" *ngIf="resumen() as r">
-            <mat-card class="hero-card">
-              <div class="hero-copy">
-                <div class="hero-eyebrow">Visión general</div>
-                <h2>Estado actual de la operación</h2>
-                <p>
-                  Supervisa citas, ocupación e ingresos en una interfaz clara y premium pensada para equipos que necesitan control sin ruido visual.
-                </p>
-              </div>
-
-              <div class="hero-stats">
-                <div class="hero-stat">
-                  <span>Total de citas</span>
-                  <strong>{{ r.totalCitas }}</strong>
+          <section class="section-stack">
+            <div class="overview-hero" *ngIf="resumen() as r">
+              <mat-card class="hero-card">
+                <div class="hero-copy">
+                  <div class="hero-eyebrow">Visión general</div>
+                  <h2>Estado actual de la operación</h2>
+                  <p>
+                    Supervisa citas, ocupación e ingresos desde una vista ejecutiva más limpia, enfocada y lista para operación diaria.
+                  </p>
                 </div>
-                <div class="hero-stat">
-                  <span>Citas hoy</span>
-                  <strong>{{ r.citasHoy }}</strong>
-                </div>
-                <div class="hero-stat">
-                  <span>Ingreso programado</span>
-                  <strong>{{ r.ingresosProgramados | currency:'MXN':'symbol-narrow':'1.0-0':'es-MX' }}</strong>
-                </div>
-              </div>
-            </mat-card>
-          </div>
 
-          <div class="metric-grid" *ngIf="resumen() as r">
-            <mat-card class="metric-card">
-              <span>Pendientes</span>
-              <strong>{{ r.pendientes }}</strong>
-            </mat-card>
-            <mat-card class="metric-card">
-              <span>Confirmadas</span>
-              <strong>{{ r.confirmadas }}</strong>
-            </mat-card>
-            <mat-card class="metric-card">
-              <span>Finalizadas</span>
-              <strong>{{ r.finalizadas }}</strong>
-            </mat-card>
-            <mat-card class="metric-card">
-              <span>Canceladas</span>
-              <strong>{{ r.canceladas }}</strong>
-            </mat-card>
-            <mat-card class="metric-card">
-              <span>No asistió</span>
-              <strong>{{ r.noAsistio }}</strong>
-            </mat-card>
-            <mat-card class="metric-card">
-              <span>Ingreso finalizado</span>
-              <strong>{{ r.ingresosFinalizados | currency:'MXN':'symbol-narrow':'1.0-0':'es-MX' }}</strong>
-            </mat-card>
-          </div>
-
-          <mat-card class="workspace-card">
-            <div class="section-header">
-              <div>
-                <div class="section-eyebrow">Agenda operativa</div>
-                <h3>Vista diaria por colaborador</h3>
-              </div>
-              <span class="agenda-date-pill">{{ fechaAgendaActiva() }}</span>
-            </div>
-
-            <div class="agenda-calendar-shell" *ngIf="colaboradoresAgenda().length; else agendaSinStaff">
-              <div class="agenda-calendar-header">
-                <div class="agenda-hour-column"></div>
-                <div class="agenda-collaborators" [style.gridTemplateColumns]="'repeat(' + colaboradoresAgenda().length + ', minmax(220px, 1fr))'">
-                  <div class="agenda-collaborator-card" *ngFor="let colaborador of colaboradoresAgenda()">
-                    <div class="agenda-collaborator-name">{{ colaborador.nombre }}</div>
-                    <div class="agenda-collaborator-role">Disponible hoy</div>
+                <div class="hero-stats">
+                  <div class="hero-stat hero-stat-primary">
+                    <span>Total de citas</span>
+                    <strong>{{ r.totalCitas }}</strong>
                   </div>
-                </div>
-              </div>
-
-              <div class="agenda-calendar-body">
-                <div class="agenda-hours">
-                  <div class="agenda-hour-slot" *ngFor="let hora of horasAgenda" [style.height.px]="86">
-                    {{ hora.etiqueta }}
+                  <div class="hero-stat">
+                    <span>Citas hoy</span>
+                    <strong>{{ r.citasHoy }}</strong>
                   </div>
-                </div>
-
-                <div class="agenda-grid-area">
-                  <div class="agenda-grid-lines">
-                    <div class="agenda-grid-line" *ngFor="let hora of horasAgenda" [style.height.px]="86"></div>
-                  </div>
-
-                  <div class="agenda-columns" [style.gridTemplateColumns]="'repeat(' + colaboradoresAgenda().length + ', minmax(220px, 1fr))'">
-                    <div class="agenda-column" *ngFor="let colaborador of colaboradoresAgenda()"></div>
-                  </div>
-
-                  <div
-                    class="agenda-event"
-                    *ngFor="let cita of citasAgendaPosicionadas()"
-                    [ngClass]="claseEstadoCita(cita.estado)"
-                    [style.top.px]="cita.top"
-                    [style.height.px]="cita.height"
-                    [style.left.%]="(100 / colaboradoresAgenda().length) * cita.columna"
-                    [style.width.%]="100 / colaboradoresAgenda().length">
-                    <div class="agenda-event-time">{{ cita.inicio | date:'shortTime':'':'es-MX' }}</div>
-                    <div class="agenda-event-title">{{ cita.servicioNombre }}</div>
-                    <div class="agenda-event-meta">{{ cita.prestadorNombre }}</div>
-                    <div class="agenda-event-meta">{{ cita.sucursalNombre }}</div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <ng-template #agendaSinStaff>
-              <div class="agenda-empty">
-                Aún no hay colaboradores o citas suficientes para construir la agenda visual.
-              </div>
-            </ng-template>
-          </mat-card>
-
-          <mat-card class="workspace-card">
-            <div class="section-header">
-              <div>
-                <div class="section-eyebrow">Analítica comercial</div>
-                <h3>Rendimiento por servicio</h3>
-              </div>
-            </div>
-
-            <div class="report-grid">
-              <mat-card class="report-card" *ngFor="let reporte of reporteServicios()">
-                <div class="report-title">{{ reporte.servicioNombre }}</div>
-                <div class="report-subtitle">{{ reporte.totalCitas }} citas totales</div>
-
-                <div class="report-rows">
-                  <div><span>Pendientes</span><strong>{{ reporte.pendientes }}</strong></div>
-                  <div><span>Confirmadas</span><strong>{{ reporte.confirmadas }}</strong></div>
-                  <div><span>Finalizadas</span><strong>{{ reporte.finalizadas }}</strong></div>
-                </div>
-
-                <mat-divider></mat-divider>
-
-                <div class="report-money">
-                  <div>
-                    <span>Programado</span>
-                    <strong>{{ reporte.ingresosProgramados | currency:'MXN':'symbol-narrow':'1.0-0':'es-MX' }}</strong>
-                  </div>
-                  <div>
-                    <span>Finalizado</span>
-                    <strong>{{ reporte.ingresosFinalizados | currency:'MXN':'symbol-narrow':'1.0-0':'es-MX' }}</strong>
+                  <div class="hero-stat">
+                    <span>Ingreso programado</span>
+                    <strong>{{ r.ingresosProgramados | currency:'MXN':'symbol-narrow':'1.0-0':'es-MX' }}</strong>
                   </div>
                 </div>
               </mat-card>
             </div>
-          </mat-card>
+
+            <div class="metric-grid" *ngIf="resumen() as r">
+              <mat-card class="metric-card metric-card-highlight">
+                <span>Pendientes</span>
+                <strong>{{ r.pendientes }}</strong>
+              </mat-card>
+              <mat-card class="metric-card">
+                <span>Confirmadas</span>
+                <strong>{{ r.confirmadas }}</strong>
+              </mat-card>
+              <mat-card class="metric-card">
+                <span>Finalizadas</span>
+                <strong>{{ r.finalizadas }}</strong>
+              </mat-card>
+              <mat-card class="metric-card">
+                <span>Canceladas</span>
+                <strong>{{ r.canceladas }}</strong>
+              </mat-card>
+              <mat-card class="metric-card">
+                <span>No asistió</span>
+                <strong>{{ r.noAsistio }}</strong>
+              </mat-card>
+              <mat-card class="metric-card">
+                <span>Ingreso finalizado</span>
+                <strong>{{ r.ingresosFinalizados | currency:'MXN':'symbol-narrow':'1.0-0':'es-MX' }}</strong>
+              </mat-card>
+            </div>
+
+            <mat-card class="workspace-card workspace-card-emphasis">
+              <div class="section-header">
+                <div>
+                  <div class="section-eyebrow">Agenda operativa</div>
+                  <h3>Vista diaria por colaborador</h3>
+                </div>
+                <span class="agenda-date-pill">{{ fechaAgendaActivaTexto() }}</span>
+              </div>
+
+              <div class="agenda-toolbar">
+                <div class="agenda-toolbar-nav">
+                  <button mat-stroked-button type="button" (click)="desplazarFechaAgenda(-1)">Anterior</button>
+                  <button mat-stroked-button type="button" (click)="irAHoyAgenda()">Hoy</button>
+                  <button mat-stroked-button type="button" (click)="desplazarFechaAgenda(1)">Siguiente</button>
+                </div>
+
+                <label class="agenda-date-field">
+                  <span>Fecha seleccionada</span>
+                  <input
+                    type="date"
+                    [ngModel]="fechaAgendaActiva()"
+                    (ngModelChange)="seleccionarFechaAgenda($event)" />
+                </label>
+              </div>
+
+              <div class="agenda-summary">
+                <div class="agenda-summary-card">
+                  <span>Citas del día</span>
+                  <strong>{{ resumenAgendaActiva().total }}</strong>
+                </div>
+                <div class="agenda-summary-card">
+                  <span>Pendientes</span>
+                  <strong>{{ resumenAgendaActiva().pendientes }}</strong>
+                </div>
+                <div class="agenda-summary-card">
+                  <span>Confirmadas</span>
+                  <strong>{{ resumenAgendaActiva().confirmadas }}</strong>
+                </div>
+                <div class="agenda-summary-card">
+                  <span>Colaboradores</span>
+                  <strong>{{ resumenAgendaActiva().colaboradores }}</strong>
+                </div>
+              </div>
+
+              <div class="agenda-calendar-shell agenda-calendar-shell--desktop" *ngIf="colaboradoresAgenda().length; else agendaSinStaff">
+                <div class="agenda-calendar-scroll">
+                  <div class="agenda-calendar-track" [style.width.px]="anchoAgendaTimeline()">
+                    <div class="agenda-calendar-header">
+                      <div class="agenda-hour-column"></div>
+                      <div class="agenda-collaborators" [style.gridTemplateColumns]="'repeat(' + colaboradoresAgenda().length + ', minmax(260px, 1fr))'">
+                        <div class="agenda-collaborator-card" *ngFor="let colaborador of colaboradoresAgenda()">
+                          <div class="agenda-collaborator-name">{{ colaborador.nombre }}</div>
+                          <div class="agenda-collaborator-role">Disponible hoy</div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div class="agenda-calendar-body">
+                      <div class="agenda-hours">
+                        <div class="agenda-hour-slot" *ngFor="let hora of horasAgenda" [style.height.px]="86">
+                          {{ hora.etiqueta }}
+                        </div>
+                      </div>
+
+                      <div class="agenda-grid-area">
+                        <div class="agenda-grid-lines">
+                          <div class="agenda-grid-line" *ngFor="let hora of horasAgenda" [style.height.px]="86"></div>
+                        </div>
+
+                        <div class="agenda-columns" [style.gridTemplateColumns]="'repeat(' + colaboradoresAgenda().length + ', minmax(260px, 1fr))'">
+                          <div class="agenda-column" *ngFor="let colaborador of colaboradoresAgenda()"></div>
+                        </div>
+
+                        <article
+                          class="agenda-event"
+                          *ngFor="let cita of citasAgendaPosicionadas()"
+                          [ngClass]="claseEstadoCita(cita.estado)"
+                          [style.top.px]="cita.top"
+                          [style.height.px]="cita.height"
+                          [style.left.%]="cita.leftPct"
+                          [style.width.%]="cita.widthPct">
+                          <div class="agenda-event-time">{{ cita.inicio | date:'shortTime':'':'es-MX' }}</div>
+                          <div class="agenda-event-title">{{ cita.servicioNombre }}</div>
+                          <div class="agenda-event-meta">{{ cita.prestadorNombre }}</div>
+                          <div class="agenda-event-meta">{{ cita.sucursalNombre }}</div>
+                        </article>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="agenda-board agenda-board-mobile" *ngIf="citasDelDiaActivas().length">
+                <section class="agenda-day agenda-day-mobile">
+                  <div class="agenda-day-header">
+                    <div>
+                      <div class="agenda-day-eyebrow">Agenda diaria</div>
+                      <h4>{{ fechaAgendaActivaTexto() }}</h4>
+                    </div>
+                    <span class="agenda-day-count">{{ citasDelDiaActivas().length }} citas</span>
+                  </div>
+
+                  <div class="agenda-day-items">
+                    <article class="agenda-item" *ngFor="let cita of citasDelDiaActivas()">
+                      <div class="agenda-item-time">
+                        <div class="agenda-item-hour">{{ cita.horaTexto }}</div>
+                        <div class="agenda-item-range">{{ cita.rangoTexto }}</div>
+                      </div>
+
+                      <div class="agenda-item-main">
+                        <div class="agenda-item-service">{{ cita.servicioNombre }}</div>
+                        <div class="agenda-item-meta">
+                          {{ cita.sucursalNombre }} · {{ cita.prestadorNombre }}
+                        </div>
+                        <div class="agenda-item-meta">
+                          Reserva #{{ cita.id }} · {{ cita.precio | currency:(cita.moneda || 'MXN'):'symbol-narrow':'1.0-0':'es-MX' }}
+                        </div>
+                      </div>
+
+                      <div class="agenda-item-status">
+                        <span class="status-pill" [ngClass]="claseEstadoCita(cita.estado)">{{ cita.estado }}</span>
+                      </div>
+                    </article>
+                  </div>
+                </section>
+              </div>
+
+              <ng-template #agendaSinStaff>
+                <div class="agenda-empty">
+                  Aún no hay colaboradores o citas suficientes para construir la agenda visual.
+                </div>
+              </ng-template>
+            </mat-card>
+
+            <mat-card class="workspace-card">
+              <div class="section-header">
+                <div>
+                  <div class="section-eyebrow">Analítica comercial</div>
+                  <h3>Rendimiento por servicio</h3>
+                </div>
+              </div>
+
+              <div class="report-grid">
+                <mat-card class="report-card" *ngFor="let reporte of reporteServicios()">
+                  <div class="report-title">{{ reporte.servicioNombre }}</div>
+                  <div class="report-subtitle">{{ reporte.totalCitas }} citas totales</div>
+
+                  <div class="report-rows">
+                    <div><span>Pendientes</span><strong>{{ reporte.pendientes }}</strong></div>
+                    <div><span>Confirmadas</span><strong>{{ reporte.confirmadas }}</strong></div>
+                    <div><span>Finalizadas</span><strong>{{ reporte.finalizadas }}</strong></div>
+                  </div>
+
+                  <mat-divider></mat-divider>
+
+                  <div class="report-money">
+                    <div>
+                      <span>Programado</span>
+                      <strong>{{ reporte.ingresosProgramados | currency:'MXN':'symbol-narrow':'1.0-0':'es-MX' }}</strong>
+                    </div>
+                    <div>
+                      <span>Finalizado</span>
+                      <strong>{{ reporte.ingresosFinalizados | currency:'MXN':'symbol-narrow':'1.0-0':'es-MX' }}</strong>
+                    </div>
+                  </div>
+                </mat-card>
+              </div>
+            </mat-card>
+          </section>
+        </ng-container>
+
+        <ng-container *ngIf="seccionActiva() === 'correo'">
+          <section class="section-stack">
+            <div class="workspace-grid two-columns">
+              <mat-card class="workspace-card form-card">
+                <div class="section-header">
+                  <div>
+                    <div class="section-eyebrow">Entrega transaccional</div>
+                    <h3>Configuración de correo del tenant</h3>
+                  </div>
+                </div>
+
+                <form class="admin-form-grid admin-form-shell" (ngSubmit)="guardarConfiguracionCorreo()">
+                  <div class="form-block-title full-width">Proveedor</div>
+
+                  <mat-form-field appearance="outline" class="full-width">
+                    <mat-label>Proveedor de envío</mat-label>
+                    <mat-select name="correoProveedor" [(ngModel)]="formularioCorreo.proveedor">
+                      <mat-option value="GRAPH">Microsoft Graph</mat-option>
+                      <mat-option value="SMTP">SMTP</mat-option>
+                    </mat-select>
+                  </mat-form-field>
+
+                  <div class="form-block-title full-width">Identidad de envío</div>
+
+                  <mat-slide-toggle name="correoHabilitado" [(ngModel)]="formularioCorreo.habilitado" class="full-width">
+                    Habilitar confirmaciones por correo para este tenant
+                  </mat-slide-toggle>
+
+                  <mat-form-field appearance="outline">
+                    <mat-label>Remitente</mat-label>
+                    <input matInput type="email" name="correoRemitente" [(ngModel)]="formularioCorreo.remitente" maxlength="150">
+                  </mat-form-field>
+
+                  <mat-form-field appearance="outline">
+                    <mat-label>Nombre remitente</mat-label>
+                    <input matInput name="correoNombreRemitente" [(ngModel)]="formularioCorreo.nombreRemitente" maxlength="150">
+                  </mat-form-field>
+
+                  <mat-form-field appearance="outline" class="full-width">
+                    <mat-label>Responder a</mat-label>
+                    <input matInput type="email" name="correoResponderA" [(ngModel)]="formularioCorreo.responderA" maxlength="150">
+                  </mat-form-field>
+
+                  <ng-container *ngIf="formularioCorreo.proveedor === 'GRAPH'; else bloqueSmtp">
+                    <div class="form-block-title full-width">Microsoft Graph</div>
+
+                    <mat-form-field appearance="outline">
+                      <mat-label>Tenant ID</mat-label>
+                      <input matInput name="correoGraphTenantId" [(ngModel)]="formularioCorreo.graphTenantId" maxlength="100">
+                    </mat-form-field>
+
+                    <mat-form-field appearance="outline">
+                      <mat-label>Client ID</mat-label>
+                      <input matInput name="correoGraphClientId" [(ngModel)]="formularioCorreo.graphClientId" maxlength="100">
+                    </mat-form-field>
+
+                    <mat-form-field appearance="outline" class="full-width">
+                      <mat-label>Client secret nuevo (opcional)</mat-label>
+                      <input matInput type="password" name="correoGraphClientSecret" [(ngModel)]="formularioCorreo.graphClientSecret" maxlength="255">
+                    </mat-form-field>
+
+                    <mat-form-field appearance="outline" class="full-width">
+                      <mat-label>Mailbox o User ID de Graph</mat-label>
+                      <input matInput name="correoGraphUserId" [(ngModel)]="formularioCorreo.graphUserId" maxlength="150">
+                    </mat-form-field>
+
+                    <mat-form-field appearance="outline" class="full-width">
+                      <mat-label>Thumbprint del certificado</mat-label>
+                      <input matInput name="correoGraphCertificateThumbprint" [(ngModel)]="formularioCorreo.graphCertificateThumbprint" maxlength="100">
+                    </mat-form-field>
+
+                    <mat-form-field appearance="outline" class="full-width">
+                      <mat-label>Llave privada PEM nueva</mat-label>
+                      <textarea matInput rows="6" name="correoGraphPrivateKeyPem" [(ngModel)]="formularioCorreo.graphPrivateKeyPem"></textarea>
+                    </mat-form-field>
+
+                    <div class="helper-text full-width">
+                      Usa el buzón autenticado en Microsoft 365, por ejemplo `no-reply@tecprotech.com.mx`.
+                    </div>
+
+                    <div class="helper-text full-width">
+                      Si dejas vacía la llave privada PEM, se conserva la configurada actualmente.
+                    </div>
+
+                    <div class="helper-text full-width">
+                      Si tu tenant bloquea client secrets, deja ese campo vacío y usa certificado con llave privada PEM.
+                    </div>
+                  </ng-container>
+
+                  <ng-template #bloqueSmtp>
+                    <div class="form-block-title full-width">Servidor SMTP</div>
+
+                    <mat-form-field appearance="outline">
+                      <mat-label>Host SMTP</mat-label>
+                      <input matInput name="correoSmtpHost" [(ngModel)]="formularioCorreo.smtpHost" maxlength="150">
+                    </mat-form-field>
+
+                    <mat-form-field appearance="outline">
+                      <mat-label>Puerto SMTP</mat-label>
+                      <input matInput type="number" min="1" max="65535" name="correoSmtpPort" [(ngModel)]="formularioCorreo.smtpPort">
+                    </mat-form-field>
+
+                    <mat-form-field appearance="outline">
+                      <mat-label>Usuario SMTP</mat-label>
+                      <input matInput name="correoSmtpUsername" [(ngModel)]="formularioCorreo.smtpUsername" maxlength="150">
+                    </mat-form-field>
+
+                    <mat-form-field appearance="outline">
+                      <mat-label>Nueva contraseña SMTP</mat-label>
+                      <input matInput type="password" name="correoSmtpPassword" [(ngModel)]="formularioCorreo.smtpPassword" maxlength="255">
+                    </mat-form-field>
+
+                    <mat-slide-toggle name="correoSmtpAuth" [(ngModel)]="formularioCorreo.smtpAuth">
+                      Requiere autenticación
+                    </mat-slide-toggle>
+
+                    <mat-slide-toggle name="correoSmtpTls" [(ngModel)]="formularioCorreo.smtpStartTls">
+                      Usar STARTTLS
+                    </mat-slide-toggle>
+
+                    <div class="helper-text full-width">
+                      Si dejas la contraseña vacía, se conserva la configurada actualmente.
+                    </div>
+                  </ng-template>
+
+                  <div class="form-actions">
+                    <button mat-flat-button color="primary" type="submit" [disabled]="guardandoCorreo">
+                      Guardar configuración
+                    </button>
+                  </div>
+                </form>
+              </mat-card>
+
+              <mat-card class="workspace-card list-card">
+                <div class="section-header">
+                  <div>
+                    <div class="section-eyebrow">Estado del tenant</div>
+                    <h3>Salud de configuración</h3>
+                  </div>
+                </div>
+
+                <div class="entity-list" *ngIf="configuracionCorreo() as config; else correoSinDatos">
+                  <article class="entity-row">
+                    <div class="entity-main">
+                      <div class="entity-title">Proveedor activo</div>
+                      <div class="entity-meta">{{ config.proveedor || 'SMTP' }}</div>
+                    </div>
+                    <div class="entity-side">
+                      <span class="status-pill" [class.is-active]="!!config.proveedor">
+                        {{ config.proveedor || 'SMTP' }}
+                      </span>
+                    </div>
+                  </article>
+
+                  <article class="entity-row" *ngIf="(config.proveedor || 'SMTP') === 'GRAPH'; else estadoSmtp">
+                    <div class="entity-main">
+                      <div class="entity-title">Secreto de Graph</div>
+                      <div class="entity-meta" *ngIf="config.graphClientSecretConfigurado">Existe un client secret guardado para Microsoft Graph.</div>
+                      <div class="entity-meta" *ngIf="!config.graphClientSecretConfigurado">No hay client secret guardado. Esto es válido si usas certificado.</div>
+                      <div class="entity-meta" *ngIf="config.graphClientSecretConfigurado">
+                        {{ config.graphClientSecretCifrado ? 'El secreto está cifrado.' : 'El secreto sigue en texto plano y requiere migración.' }}
+                      </div>
+                    </div>
+                    <div class="entity-side">
+                      <span class="status-pill" [class.is-active]="config.graphClientSecretCifrado">
+                        {{ config.graphClientSecretCifrado ? 'Cifrado' : 'Legacy' }}
+                      </span>
+                    </div>
+                  </article>
+
+                  <article class="entity-row" *ngIf="(config.proveedor || 'SMTP') === 'GRAPH'">
+                    <div class="entity-main">
+                      <div class="entity-title">Llave privada de Graph</div>
+                      <div class="entity-meta" *ngIf="config.graphPrivateKeyConfigurada">Existe una llave privada PEM guardada para Microsoft Graph.</div>
+                      <div class="entity-meta" *ngIf="!config.graphPrivateKeyConfigurada">Todavía no se ha configurado una llave privada PEM para Microsoft Graph.</div>
+                      <div class="entity-meta" *ngIf="config.graphPrivateKeyConfigurada">
+                        {{ config.graphPrivateKeyCifrada ? 'La llave está cifrada.' : 'La llave sigue en texto plano y requiere migración.' }}
+                      </div>
+                    </div>
+                    <div class="entity-side">
+                      <span class="status-pill" [class.is-active]="config.graphPrivateKeyCifrada">
+                        {{ config.graphPrivateKeyCifrada ? 'Cifrada' : 'Legacy' }}
+                      </span>
+                    </div>
+                  </article>
+
+                  <ng-template #estadoSmtp>
+                    <article class="entity-row">
+                      <div class="entity-main">
+                        <div class="entity-title">Secreto SMTP</div>
+                        <div class="entity-meta" *ngIf="config.smtpPasswordConfigurada">Existe una contraseña SMTP guardada para este tenant.</div>
+                        <div class="entity-meta" *ngIf="!config.smtpPasswordConfigurada">Todavía no se ha configurado una contraseña SMTP.</div>
+                        <div class="entity-meta" *ngIf="config.smtpPasswordConfigurada">
+                          {{ config.smtpPasswordCifrada ? 'El secreto está cifrado.' : 'El secreto sigue en texto plano y requiere migración.' }}
+                        </div>
+                      </div>
+                      <div class="entity-side">
+                        <span class="status-pill" [class.is-active]="config.smtpPasswordCifrada">
+                          {{ config.smtpPasswordCifrada ? 'Cifrado' : 'Legacy' }}
+                        </span>
+                      </div>
+                    </article>
+                  </ng-template>
+
+                  <article class="entity-row" *ngIf="config.requiereMigracionSecretos">
+                    <div class="entity-main">
+                      <div class="entity-title">Migración recomendada</div>
+                      <div class="entity-meta">
+                        Migra los secretos legacy del proveedor actual a formato cifrado sin cambiar el resto de la configuración.
+                      </div>
+                    </div>
+                    <div class="entity-side">
+                      <button mat-stroked-button type="button" (click)="migrarSecretosCorreo()" [disabled]="migrandoSecretosCorreo">
+                        {{ migrandoSecretosCorreo ? 'Migrando...' : 'Migrar secretos' }}
+                      </button>
+                    </div>
+                  </article>
+
+                  <article class="entity-row" *ngIf="(config.proveedor || 'SMTP') === 'GRAPH'; else resumenSmtp">
+                    <div class="entity-main">
+                      <div class="entity-title">Resumen técnico</div>
+                      <div class="entity-meta">Tenant ID: {{ config.graphTenantId || 'Sin definir' }}</div>
+                      <div class="entity-meta">Client ID: {{ config.graphClientId || 'Sin definir' }}</div>
+                      <div class="entity-meta">Mailbox Graph: {{ config.graphUserId || 'Sin definir' }}</div>
+                      <div class="entity-meta">Thumbprint: {{ config.graphCertificateThumbprint || 'Sin definir' }}</div>
+                    </div>
+                    <div class="entity-side">
+                      <span class="status-pill" [class.is-active]="!!config.graphTenantId && !!config.graphClientId && !!config.graphUserId && (!!config.graphClientSecretConfigurado || (!!config.graphCertificateThumbprint && !!config.graphPrivateKeyConfigurada))">
+                        {{ !!config.graphTenantId && !!config.graphClientId && !!config.graphUserId && (!!config.graphClientSecretConfigurado || (!!config.graphCertificateThumbprint && !!config.graphPrivateKeyConfigurada)) ? 'Listo' : 'Pendiente' }}
+                      </span>
+                    </div>
+                  </article>
+
+                  <ng-template #resumenSmtp>
+                    <article class="entity-row">
+                      <div class="entity-main">
+                        <div class="entity-title">Resumen técnico</div>
+                        <div class="entity-meta">Host: {{ config.smtpHost || 'Sin definir' }}</div>
+                        <div class="entity-meta">Puerto: {{ config.smtpPort || 'Sin definir' }}</div>
+                        <div class="entity-meta">Usuario: {{ config.smtpUsername || 'Sin definir' }}</div>
+                      </div>
+                      <div class="entity-side">
+                        <span class="status-pill" [class.is-active]="!!config.smtpHost && !!config.smtpPort">
+                          {{ !!config.smtpHost && !!config.smtpPort ? 'Listo' : 'Pendiente' }}
+                        </span>
+                      </div>
+                    </article>
+                  </ng-template>
+
+                  <article class="entity-row">
+                    <div class="entity-main">
+                      <div class="entity-title">Estado general</div>
+                      <div class="entity-meta">
+                        {{ config.habilitado ? 'Las confirmaciones por correo están habilitadas.' : 'Las confirmaciones por correo están deshabilitadas.' }}
+                      </div>
+                    </div>
+                    <div class="entity-side">
+                      <span class="status-pill" [class.is-active]="config.habilitado">{{ config.habilitado ? 'Activo' : 'Inactivo' }}</span>
+                    </div>
+                  </article>
+
+                </div>
+
+                <ng-template #correoSinDatos>
+                  <div class="agenda-empty">
+                    No fue posible cargar la configuración actual de correo.
+                  </div>
+                </ng-template>
+              </mat-card>
+            </div>
+          </section>
         </ng-container>
 
         <ng-container *ngIf="seccionActiva() === 'sucursales'">
-          <div class="workspace-grid two-columns">
-            <mat-card class="workspace-card form-card">
-              <div class="section-header">
-                <div>
-                  <div class="section-eyebrow">Configuración</div>
-                  <h3>{{ sucursalEditandoId ? 'Editar sucursal' : 'Nueva sucursal' }}</h3>
-                </div>
-                <button mat-stroked-button type="button" *ngIf="sucursalEditandoId" (click)="cancelarEdicionSucursal()">
-                  Limpiar formulario
-                </button>
-              </div>
-
-              <form class="admin-form-grid" (ngSubmit)="guardarSucursal()">
-                <mat-form-field appearance="outline" class="full-width">
-                  <mat-label>Nombre</mat-label>
-                  <input matInput name="sucursalNombre" [(ngModel)]="formularioSucursal.nombre" required maxlength="150">
-                </mat-form-field>
-
-                <mat-form-field appearance="outline" class="full-width">
-                  <mat-label>Dirección</mat-label>
-                  <input matInput name="sucursalDireccion" [(ngModel)]="formularioSucursal.direccion" maxlength="255">
-                </mat-form-field>
-
-                <mat-form-field appearance="outline">
-                  <mat-label>Teléfono</mat-label>
-                  <input matInput name="sucursalTelefono" [(ngModel)]="formularioSucursal.telefono" maxlength="20">
-                </mat-form-field>
-
-                <mat-form-field appearance="outline">
-                  <mat-label>Zona horaria</mat-label>
-                  <input matInput name="sucursalZonaHoraria" [(ngModel)]="formularioSucursal.zonaHoraria" required maxlength="60">
-                </mat-form-field>
-
-                <mat-slide-toggle name="sucursalActiva" [(ngModel)]="formularioSucursal.activa">
-                  Sucursal activa
-                </mat-slide-toggle>
-
-                <div class="form-actions">
-                  <button mat-flat-button color="primary" type="submit" [disabled]="guardandoSucursal">
-                    {{ sucursalEditandoId ? 'Actualizar sucursal' : 'Crear sucursal' }}
-                  </button>
-                </div>
-              </form>
-            </mat-card>
-
-            <mat-card class="workspace-card list-card">
-              <div class="section-header">
-                <div>
-                  <div class="section-eyebrow">Operación</div>
-                  <h3>Sucursales registradas</h3>
-                </div>
-              </div>
-
-              <div class="entity-list">
-                <div class="entity-row" *ngFor="let sucursal of sucursales()">
-                  <div class="entity-main">
-                    <div class="entity-title">{{ sucursal.nombre }}</div>
-                    <div class="entity-meta">{{ sucursal.zonaHoraria }}</div>
-                    <div class="entity-meta" *ngIf="sucursal.direccion">{{ sucursal.direccion }}</div>
-                    <div class="entity-meta">{{ sucursal.telefono || 'Sin teléfono' }}</div>
-                  </div>
-                  <div class="entity-side">
-                    <span class="status-pill" [class.is-active]="sucursal.activa">{{ sucursal.activa ? 'Activa' : 'Inactiva' }}</span>
-                    <button mat-stroked-button type="button" (click)="editarSucursal(sucursal)">Editar</button>
-                  </div>
-                </div>
-              </div>
-            </mat-card>
-          </div>
-        </ng-container>
-
-        <ng-container *ngIf="seccionActiva() === 'servicios'">
-          <div class="workspace-grid two-columns">
-            <mat-card class="workspace-card form-card">
-              <div class="section-header">
-                <div>
-                  <div class="section-eyebrow">Catálogo</div>
-                  <h3>{{ servicioEditandoId ? 'Editar servicio' : 'Nuevo servicio' }}</h3>
-                </div>
-                <button mat-stroked-button type="button" *ngIf="servicioEditandoId" (click)="cancelarEdicionServicio()">
-                  Limpiar formulario
-                </button>
-              </div>
-
-              <form class="admin-form-grid" (ngSubmit)="guardarServicio()">
-                <mat-form-field appearance="outline">
-                  <mat-label>Sucursal</mat-label>
-                  <mat-select name="servicioSucursalId" [(ngModel)]="formularioServicio.sucursalId" required>
-                    <mat-option *ngFor="let sucursal of sucursales()" [value]="sucursal.id">{{ sucursal.nombre }}</mat-option>
-                  </mat-select>
-                </mat-form-field>
-
-                <mat-form-field appearance="outline">
-                  <mat-label>Nombre</mat-label>
-                  <input matInput name="servicioNombre" [(ngModel)]="formularioServicio.nombre" required maxlength="150">
-                </mat-form-field>
-
-                <mat-form-field appearance="outline" class="full-width">
-                  <mat-label>Descripción</mat-label>
-                  <textarea matInput rows="3" name="servicioDescripcion" [(ngModel)]="formularioServicio.descripcion" maxlength="500"></textarea>
-                </mat-form-field>
-
-                <mat-form-field appearance="outline">
-                  <mat-label>Duración (min)</mat-label>
-                  <input matInput type="number" min="5" name="servicioDuracion" [(ngModel)]="formularioServicio.duracionMinutos" required>
-                </mat-form-field>
-
-                <mat-form-field appearance="outline">
-                  <mat-label>Buffer antes</mat-label>
-                  <input matInput type="number" min="0" name="servicioBufferAntes" [(ngModel)]="formularioServicio.bufferAntesMinutos" required>
-                </mat-form-field>
-
-                <mat-form-field appearance="outline">
-                  <mat-label>Buffer después</mat-label>
-                  <input matInput type="number" min="0" name="servicioBufferDespues" [(ngModel)]="formularioServicio.bufferDespuesMinutos" required>
-                </mat-form-field>
-
-                <mat-form-field appearance="outline">
-                  <mat-label>Precio</mat-label>
-                  <input matInput type="number" min="0" step="0.01" name="servicioPrecio" [(ngModel)]="formularioServicio.precio" required>
-                </mat-form-field>
-
-                <mat-form-field appearance="outline">
-                  <mat-label>Moneda</mat-label>
-                  <input matInput name="servicioMoneda" [(ngModel)]="formularioServicio.moneda" maxlength="10" required>
-                </mat-form-field>
-
-                <mat-slide-toggle name="servicioActivo" [(ngModel)]="formularioServicio.activo">
-                  Servicio activo
-                </mat-slide-toggle>
-
-                <div class="form-actions">
-                  <button mat-flat-button color="primary" type="submit" [disabled]="guardandoServicio || !sucursales().length">
-                    {{ servicioEditandoId ? 'Actualizar servicio' : 'Crear servicio' }}
-                  </button>
-                </div>
-              </form>
-            </mat-card>
-
-            <mat-card class="workspace-card list-card">
-              <div class="section-header">
-                <div>
-                  <div class="section-eyebrow">Portafolio</div>
-                  <h3>Servicios disponibles</h3>
-                </div>
-              </div>
-
-              <div class="entity-list">
-                <div class="entity-row" *ngFor="let servicio of servicios()">
-                  <div class="entity-main">
-                    <div class="entity-meta">{{ servicio.sucursalNombre }}</div>
-                    <div class="entity-title">{{ servicio.nombre }}</div>
-                    <div class="entity-meta" *ngIf="servicio.descripcion">{{ servicio.descripcion }}</div>
-                    <div class="service-metrics">
-                      <span>{{ servicio.duracionMinutos }} min</span>
-                      <span>Buffers {{ servicio.bufferAntesMinutos }} / {{ servicio.bufferDespuesMinutos }}</span>
-                      <span>{{ servicio.precio | currency:(servicio.moneda || 'MXN'):'symbol-narrow':'1.0-0':'es-MX' }}</span>
-                    </div>
-                  </div>
-                  <div class="entity-side">
-                    <span class="status-pill" [class.is-active]="servicio.activo">{{ servicio.activo ? 'Activo' : 'Inactivo' }}</span>
-                    <button mat-stroked-button type="button" (click)="editarServicio(servicio)">Editar</button>
-                  </div>
-                </div>
-              </div>
-            </mat-card>
-          </div>
-        </ng-container>
-
-        <ng-container *ngIf="seccionActiva() === 'prestadores'">
-          <div class="workspace-grid two-columns">
-            <mat-card class="workspace-card form-card">
-              <div class="section-header">
-                <div>
-                  <div class="section-eyebrow">Equipo</div>
-                  <h3>{{ prestadorEditandoId ? 'Editar prestador' : 'Nuevo prestador' }}</h3>
-                </div>
-                <button mat-stroked-button type="button" *ngIf="prestadorEditandoId" (click)="cancelarEdicionPrestador()">
-                  Limpiar formulario
-                </button>
-              </div>
-
-              <form class="admin-form-grid" (ngSubmit)="guardarPrestador()">
-                <mat-form-field appearance="outline">
-                  <mat-label>Sucursal</mat-label>
-                  <mat-select
-                    name="prestadorSucursalId"
-                    [(ngModel)]="formularioPrestador.sucursalId"
-                    (ngModelChange)="cambiarSucursalPrestador($event)"
-                    required>
-                    <mat-option *ngFor="let sucursal of sucursales()" [value]="sucursal.id">{{ sucursal.nombre }}</mat-option>
-                  </mat-select>
-                </mat-form-field>
-
-                <mat-form-field appearance="outline">
-                  <mat-label>Nombre visible</mat-label>
-                  <input matInput name="prestadorNombreMostrar" [(ngModel)]="formularioPrestador.nombreMostrar" required maxlength="150">
-                </mat-form-field>
-
-                <mat-form-field appearance="outline">
-                  <mat-label>Correo</mat-label>
-                  <input matInput type="email" name="prestadorCorreo" [(ngModel)]="formularioPrestador.correo" required maxlength="150">
-                </mat-form-field>
-
-                <mat-form-field appearance="outline">
-                  <mat-label>Contraseña temporal</mat-label>
-                  <input matInput type="text" name="prestadorPassword" [(ngModel)]="formularioPrestador.contrasenaTemporal">
-                </mat-form-field>
-
-                <mat-form-field appearance="outline">
-                  <mat-label>Color de agenda</mat-label>
-                  <input matInput type="color" name="prestadorColorAgenda" [(ngModel)]="formularioPrestador.colorAgenda">
-                </mat-form-field>
-
-                <mat-slide-toggle name="prestadorActivo" [(ngModel)]="formularioPrestador.activo">
-                  Prestador activo
-                </mat-slide-toggle>
-
-                <mat-form-field appearance="outline" class="full-width">
-                  <mat-label>Biografía</mat-label>
-                  <textarea matInput rows="3" name="prestadorBiografia" [(ngModel)]="formularioPrestador.biografia" maxlength="500"></textarea>
-                </mat-form-field>
-
-                <div class="full-width">
-                  <div class="field-caption">Servicios asignados</div>
-                  <div class="checkbox-grid">
-                    <mat-checkbox
-                      *ngFor="let servicio of serviciosPrestadorDisponibles"
-                      [checked]="formularioPrestador.servicioIds.includes(servicio.id)"
-                      (change)="alternarServicioPrestador(servicio.id, $event.checked)">
-                      {{ servicio.nombre }}
-                    </mat-checkbox>
-                  </div>
-                  <div class="helper-text" *ngIf="!serviciosPrestadorDisponibles.length">
-                    No hay servicios disponibles en la sucursal seleccionada.
-                  </div>
-                </div>
-
-                <div class="form-actions">
-                  <button mat-flat-button color="primary" type="submit" [disabled]="guardandoPrestador || !sucursales().length">
-                    {{ prestadorEditandoId ? 'Actualizar prestador' : 'Crear prestador' }}
-                  </button>
-                </div>
-              </form>
-            </mat-card>
-
-            <mat-card class="workspace-card list-card">
-              <div class="section-header">
-                <div>
-                  <div class="section-eyebrow">Staff</div>
-                  <h3>Prestadores activos</h3>
-                </div>
-              </div>
-
-              <div class="entity-list">
-                <div class="entity-row" *ngFor="let prestador of prestadores()">
-                  <div class="entity-main">
-                    <div class="entity-meta">{{ prestador.sucursalNombre }}</div>
-                    <div class="entity-title">{{ prestador.nombreMostrar }}</div>
-                    <div class="entity-meta">{{ prestador.correo }}</div>
-                    <div class="entity-meta" *ngIf="prestador.biografia">{{ prestador.biografia }}</div>
-                    <mat-chip-set>
-                      <mat-chip *ngFor="let nombre of prestador.servicioNombres">{{ nombre }}</mat-chip>
-                    </mat-chip-set>
-                  </div>
-                  <div class="entity-side">
-                    <span class="status-pill" [class.is-active]="prestador.activo">{{ prestador.activo ? 'Activo' : 'Inactivo' }}</span>
-                    <button mat-stroked-button type="button" (click)="editarPrestador(prestador)">Editar</button>
-                  </div>
-                </div>
-              </div>
-            </mat-card>
-          </div>
-        </ng-container>
-
-        <ng-container *ngIf="seccionActiva() === 'reglas'">
-          <div class="workspace-grid two-columns">
-            <mat-card class="workspace-card form-card">
-              <div class="section-header">
-                <div>
-                  <div class="section-eyebrow">Disponibilidad base</div>
-                  <h3>{{ reglaEditandoId ? 'Editar horario base' : 'Nueva regla' }}</h3>
-                </div>
-                <button mat-stroked-button type="button" *ngIf="reglaEditandoId" (click)="cancelarEdicionRegla()">
-                  Limpiar formulario
-                </button>
-              </div>
-
-              <form class="admin-form-grid" (ngSubmit)="guardarRegla()">
-                <mat-form-field appearance="outline">
-                  <mat-label>Tipo</mat-label>
-                  <mat-select name="reglaTipoSujeto" [(ngModel)]="formularioRegla.tipoSujeto" (ngModelChange)="cambiarTipoSujetoRegla($event)">
-                    <mat-option value="SUCURSAL">Sucursal</mat-option>
-                    <mat-option value="PRESTADOR">Prestador</mat-option>
-                  </mat-select>
-                </mat-form-field>
-
-                <mat-form-field appearance="outline">
-                  <mat-label>Sujeto</mat-label>
-                  <mat-select name="reglaSujetoId" [(ngModel)]="formularioRegla.sujetoId" required>
-                    <mat-option *ngFor="let sujeto of sujetosRegla" [value]="sujeto.id">
-                      {{ sujeto.nombre }}
-                    </mat-option>
-                  </mat-select>
-                </mat-form-field>
-
-                <mat-form-field appearance="outline">
-                  <mat-label>Día</mat-label>
-                  <mat-select name="reglaDiaSemana" [(ngModel)]="formularioRegla.diaSemana">
-                    <mat-option *ngFor="let dia of diasSemana" [value]="dia.value">{{ dia.label }}</mat-option>
-                  </mat-select>
-                </mat-form-field>
-
-                <mat-form-field appearance="outline">
-                  <mat-label>Hora inicio</mat-label>
-                  <input matInput type="time" name="reglaHoraInicio" [(ngModel)]="formularioRegla.horaInicio" required>
-                </mat-form-field>
-
-                <mat-form-field appearance="outline">
-                  <mat-label>Hora fin</mat-label>
-                  <input matInput type="time" name="reglaHoraFin" [(ngModel)]="formularioRegla.horaFin" required>
-                </mat-form-field>
-
-                <mat-form-field appearance="outline">
-                  <mat-label>Intervalo</mat-label>
-                  <input matInput type="number" min="5" step="5" name="reglaIntervalo" [(ngModel)]="formularioRegla.intervaloMinutos" required>
-                </mat-form-field>
-
-                <mat-form-field appearance="outline">
-                  <mat-label>Vigente desde</mat-label>
-                  <input matInput type="date" name="reglaVigenteDesde" [(ngModel)]="formularioRegla.vigenteDesde">
-                </mat-form-field>
-
-                <mat-form-field appearance="outline">
-                  <mat-label>Vigente hasta</mat-label>
-                  <input matInput type="date" name="reglaVigenteHasta" [(ngModel)]="formularioRegla.vigenteHasta">
-                </mat-form-field>
-
-                <div class="form-actions">
-                  <button mat-flat-button color="primary" type="submit" [disabled]="guardandoRegla">
-                    {{ reglaEditandoId ? 'Actualizar regla' : 'Crear regla' }}
-                  </button>
-                </div>
-              </form>
-            </mat-card>
-
-            <mat-card class="workspace-card list-card">
-              <div class="section-header">
-                <div>
-                  <div class="section-eyebrow">Capacidad operativa</div>
-                  <h3>Reglas configuradas</h3>
-                </div>
-              </div>
-
-              <div class="entity-list">
-                <div class="entity-row" *ngFor="let regla of reglasDisponibilidad()">
-                  <div class="entity-main">
-                    <div class="entity-meta">{{ regla.tipoSujeto }} · {{ regla.sujetoNombre }}</div>
-                    <div class="entity-title">{{ diasSemanaTexto[regla.diaSemana] || ('Día ' + regla.diaSemana) }} · {{ regla.horaInicio }} - {{ regla.horaFin }}</div>
-                    <div class="entity-meta">Intervalo {{ regla.intervaloMinutos }} min</div>
-                    <div class="entity-meta" *ngIf="regla.vigenteDesde || regla.vigenteHasta">
-                      Vigencia: {{ regla.vigenteDesde || 'sin inicio' }} a {{ regla.vigenteHasta || 'sin fin' }}
-                    </div>
-                  </div>
-                  <div class="entity-side">
-                    <button mat-stroked-button type="button" (click)="editarRegla(regla)">Editar</button>
-                  </div>
-                </div>
-              </div>
-            </mat-card>
-          </div>
-        </ng-container>
-
-        <ng-container *ngIf="seccionActiva() === 'excepciones'">
-          <div class="workspace-grid two-columns">
-            <mat-card class="workspace-card form-card">
-              <div class="section-header">
-                <div>
-                  <div class="section-eyebrow">Bloqueos</div>
-                  <h3>{{ excepcionEditandoId ? 'Editar excepción' : 'Nueva excepción' }}</h3>
-                </div>
-                <button mat-stroked-button type="button" *ngIf="excepcionEditandoId" (click)="cancelarEdicionExcepcion()">
-                  Limpiar formulario
-                </button>
-              </div>
-
-              <form class="admin-form-grid" (ngSubmit)="guardarExcepcion()">
-                <mat-form-field appearance="outline">
-                  <mat-label>Tipo</mat-label>
-                  <mat-select name="excepcionTipoSujeto" [(ngModel)]="formularioExcepcion.tipoSujeto" (ngModelChange)="cambiarTipoSujetoExcepcion($event)">
-                    <mat-option value="SUCURSAL">Sucursal</mat-option>
-                    <mat-option value="PRESTADOR">Prestador</mat-option>
-                  </mat-select>
-                </mat-form-field>
-
-                <mat-form-field appearance="outline">
-                  <mat-label>Sujeto</mat-label>
-                  <mat-select name="excepcionSujetoId" [(ngModel)]="formularioExcepcion.sujetoId" required>
-                    <mat-option *ngFor="let sujeto of sujetosExcepcion" [value]="sujeto.id">
-                      {{ sujeto.nombre }}
-                    </mat-option>
-                  </mat-select>
-                </mat-form-field>
-
-                <mat-form-field appearance="outline">
-                  <mat-label>Fecha</mat-label>
-                  <input matInput type="date" name="excepcionFecha" [(ngModel)]="formularioExcepcion.fechaExcepcion" required>
-                </mat-form-field>
-
-                <mat-form-field appearance="outline">
-                  <mat-label>Hora inicio</mat-label>
-                  <input matInput type="time" name="excepcionHoraInicio" [(ngModel)]="formularioExcepcion.horaInicio">
-                </mat-form-field>
-
-                <mat-form-field appearance="outline">
-                  <mat-label>Hora fin</mat-label>
-                  <input matInput type="time" name="excepcionHoraFin" [(ngModel)]="formularioExcepcion.horaFin">
-                </mat-form-field>
-
-                <mat-form-field appearance="outline">
-                  <mat-label>Tipo de bloqueo</mat-label>
-                  <mat-select name="excepcionTipoBloqueo" [(ngModel)]="formularioExcepcion.tipoBloqueo">
-                    <mat-option *ngFor="let tipo of tiposBloqueo" [value]="tipo">{{ tipo }}</mat-option>
-                  </mat-select>
-                </mat-form-field>
-
-                <mat-form-field appearance="outline" class="full-width">
-                  <mat-label>Motivo</mat-label>
-                  <input matInput name="excepcionMotivo" [(ngModel)]="formularioExcepcion.motivo" maxlength="255">
-                </mat-form-field>
-
-                <div class="form-actions">
-                  <button mat-flat-button color="primary" type="submit" [disabled]="guardandoExcepcion">
-                    {{ excepcionEditandoId ? 'Actualizar excepción' : 'Crear excepción' }}
-                  </button>
-                </div>
-              </form>
-            </mat-card>
-
-            <mat-card class="workspace-card list-card">
-              <div class="section-header">
-                <div>
-                  <div class="section-eyebrow">Excepciones activas</div>
-                  <h3>Bloqueos registrados</h3>
-                </div>
-              </div>
-
-              <div class="entity-list">
-                <div class="entity-row" *ngFor="let excepcion of excepcionesDisponibilidad()">
-                  <div class="entity-main">
-                    <div class="entity-meta">{{ excepcion.tipoSujeto }} · {{ excepcion.sujetoNombre }}</div>
-                    <div class="entity-title">{{ excepcion.fechaExcepcion }} · {{ excepcion.tipoBloqueo }}</div>
-                    <div class="entity-meta">
-                      {{ excepcion.horaInicio && excepcion.horaFin ? (excepcion.horaInicio + ' - ' + excepcion.horaFin) : 'Bloqueo de todo el día' }}
-                    </div>
-                    <div class="entity-meta" *ngIf="excepcion.motivo">{{ excepcion.motivo }}</div>
-                  </div>
-                  <div class="entity-side">
-                    <button mat-stroked-button type="button" (click)="editarExcepcion(excepcion)">Editar</button>
-                  </div>
-                </div>
-              </div>
-            </mat-card>
-          </div>
-        </ng-container>
-
-        <ng-container *ngIf="seccionActiva() === 'citas'">
-          <mat-card class="workspace-card">
-            <div class="section-header">
-              <div>
-                <div class="section-eyebrow">Operación diaria</div>
-                <h3>Agenda de citas</h3>
-              </div>
-            </div>
-
-            <div class="agenda-empty" *ngIf="!citasAgrupadas().length">
-              Aún no hay citas registradas para mostrar en agenda.
-            </div>
-
-            <div class="agenda-board" *ngIf="citasAgrupadas().length">
-              <section class="agenda-day" *ngFor="let grupo of citasAgrupadas()">
-                <div class="agenda-day-header">
+          <section class="section-stack">
+            <div class="workspace-grid two-columns">
+              <mat-card class="workspace-card form-card">
+                <div class="section-header">
                   <div>
-                    <div class="agenda-day-eyebrow">Agenda diaria</div>
-                    <h4>{{ grupo.fechaTexto }}</h4>
+                    <div class="section-eyebrow">Configuración</div>
+                    <h3>{{ sucursalEditandoId ? 'Editar sucursal' : 'Nueva sucursal' }}</h3>
                   </div>
-                  <span class="agenda-day-count">{{ grupo.items.length }} citas</span>
+                  <button mat-stroked-button type="button" *ngIf="sucursalEditandoId" (click)="cancelarEdicionSucursal()">
+                    Limpiar formulario
+                  </button>
                 </div>
 
-                <div class="agenda-day-items">
-                  <article class="agenda-item" *ngFor="let cita of grupo.items">
-                    <div class="agenda-item-time">
-                      <div class="agenda-item-hour">{{ cita.horaTexto }}</div>
-                      <div class="agenda-item-range">{{ cita.rangoTexto }}</div>
-                    </div>
+                <form class="admin-form-grid admin-form-shell" (ngSubmit)="guardarSucursal()">
+                  <div class="form-block-title full-width">Información general</div>
 
-                    <div class="agenda-item-main">
-                      <div class="agenda-item-service">{{ cita.servicioNombre }}</div>
-                      <div class="agenda-item-meta">
-                        {{ cita.sucursalNombre }} · {{ cita.prestadorNombre }}
-                      </div>
-                      <div class="agenda-item-meta">
-                        Reserva #{{ cita.id }} · {{ cita.precio | currency:(cita.moneda || 'MXN'):'symbol-narrow':'1.0-0':'es-MX' }}
-                      </div>
-                    </div>
+                  <mat-form-field appearance="outline" class="full-width">
+                    <mat-label>Nombre</mat-label>
+                    <input matInput name="sucursalNombre" [(ngModel)]="formularioSucursal.nombre" required maxlength="150">
+                  </mat-form-field>
 
-                    <div class="agenda-item-status">
-                      <span class="status-pill" [ngClass]="claseEstadoCita(cita.estado)">{{ cita.estado }}</span>
+                  <mat-form-field appearance="outline" class="full-width">
+                    <mat-label>Dirección</mat-label>
+                    <input matInput name="sucursalDireccion" [(ngModel)]="formularioSucursal.direccion" maxlength="255">
+                  </mat-form-field>
+
+                  <mat-form-field appearance="outline">
+                    <mat-label>Teléfono</mat-label>
+                    <input matInput name="sucursalTelefono" [(ngModel)]="formularioSucursal.telefono" maxlength="20">
+                  </mat-form-field>
+
+                  <mat-form-field appearance="outline">
+                    <mat-label>Zona horaria</mat-label>
+                    <input matInput name="sucursalZonaHoraria" [(ngModel)]="formularioSucursal.zonaHoraria" required maxlength="60">
+                  </mat-form-field>
+
+                  <div class="form-block-title full-width">Estado operativo</div>
+
+                  <mat-slide-toggle name="sucursalActiva" [(ngModel)]="formularioSucursal.activa">
+                    Sucursal activa
+                  </mat-slide-toggle>
+
+                  <div class="form-actions">
+                    <button mat-flat-button color="primary" type="submit" [disabled]="guardandoSucursal">
+                      {{ sucursalEditandoId ? 'Actualizar sucursal' : 'Crear sucursal' }}
+                    </button>
+                  </div>
+                </form>
+              </mat-card>
+
+              <mat-card class="workspace-card list-card">
+                <div class="section-header">
+                  <div>
+                    <div class="section-eyebrow">Operación</div>
+                    <h3>Sucursales registradas</h3>
+                  </div>
+                </div>
+
+                <div class="entity-list">
+                  <article class="entity-row" *ngFor="let sucursal of sucursales()">
+                    <div class="entity-main">
+                      <div class="entity-title">{{ sucursal.nombre }}</div>
+                      <div class="entity-meta">{{ sucursal.zonaHoraria }}</div>
+                      <div class="entity-meta" *ngIf="sucursal.direccion">{{ sucursal.direccion }}</div>
+                      <div class="entity-meta">{{ sucursal.telefono || 'Sin teléfono' }}</div>
+                    </div>
+                    <div class="entity-side">
+                      <span class="status-pill" [class.is-active]="sucursal.activa">{{ sucursal.activa ? 'Activa' : 'Inactiva' }}</span>
+                      <button mat-stroked-button type="button" (click)="editarSucursal(sucursal)">Editar</button>
                     </div>
                   </article>
                 </div>
-              </section>
+              </mat-card>
             </div>
-          </mat-card>
+          </section>
         </ng-container>
-      </div>
+
+        <ng-container *ngIf="seccionActiva() === 'servicios'">
+          <section class="section-stack">
+            <div class="workspace-grid two-columns">
+              <mat-card class="workspace-card form-card">
+                <div class="section-header">
+                  <div>
+                    <div class="section-eyebrow">Catálogo</div>
+                    <h3>{{ servicioEditandoId ? 'Editar servicio' : 'Nuevo servicio' }}</h3>
+                  </div>
+                  <button mat-stroked-button type="button" *ngIf="servicioEditandoId" (click)="cancelarEdicionServicio()">
+                    Limpiar formulario
+                  </button>
+                </div>
+
+                <form class="admin-form-grid admin-form-shell" (ngSubmit)="guardarServicio()">
+                  <div class="form-block-title full-width">Datos del servicio</div>
+
+                  <mat-form-field appearance="outline">
+                    <mat-label>Sucursal</mat-label>
+                    <mat-select name="servicioSucursalId" [(ngModel)]="formularioServicio.sucursalId" required>
+                      <mat-option *ngFor="let sucursal of sucursales()" [value]="sucursal.id">{{ sucursal.nombre }}</mat-option>
+                    </mat-select>
+                  </mat-form-field>
+
+                  <mat-form-field appearance="outline">
+                    <mat-label>Nombre</mat-label>
+                    <input matInput name="servicioNombre" [(ngModel)]="formularioServicio.nombre" required maxlength="150">
+                  </mat-form-field>
+
+                  <mat-form-field appearance="outline" class="full-width">
+                    <mat-label>Descripción</mat-label>
+                    <textarea matInput rows="3" name="servicioDescripcion" [(ngModel)]="formularioServicio.descripcion" maxlength="500"></textarea>
+                  </mat-form-field>
+
+                  <div class="form-block-title full-width">Configuración operativa</div>
+
+                  <mat-form-field appearance="outline">
+                    <mat-label>Duración (min)</mat-label>
+                    <input matInput type="number" min="5" name="servicioDuracion" [(ngModel)]="formularioServicio.duracionMinutos" required>
+                  </mat-form-field>
+
+                  <mat-form-field appearance="outline">
+                    <mat-label>Buffer antes</mat-label>
+                    <input matInput type="number" min="0" name="servicioBufferAntes" [(ngModel)]="formularioServicio.bufferAntesMinutos" required>
+                  </mat-form-field>
+
+                  <mat-form-field appearance="outline">
+                    <mat-label>Buffer después</mat-label>
+                    <input matInput type="number" min="0" name="servicioBufferDespues" [(ngModel)]="formularioServicio.bufferDespuesMinutos" required>
+                  </mat-form-field>
+
+                  <mat-form-field appearance="outline">
+                    <mat-label>Precio</mat-label>
+                    <input matInput type="number" min="0" step="0.01" name="servicioPrecio" [(ngModel)]="formularioServicio.precio" required>
+                  </mat-form-field>
+
+                  <mat-form-field appearance="outline">
+                    <mat-label>Moneda</mat-label>
+                    <input matInput name="servicioMoneda" [(ngModel)]="formularioServicio.moneda" maxlength="10" required>
+                  </mat-form-field>
+
+                  <mat-slide-toggle name="servicioActivo" [(ngModel)]="formularioServicio.activo">
+                    Servicio activo
+                  </mat-slide-toggle>
+
+                  <div class="form-actions">
+                    <button mat-flat-button color="primary" type="submit" [disabled]="guardandoServicio || !sucursales().length">
+                      {{ servicioEditandoId ? 'Actualizar servicio' : 'Crear servicio' }}
+                    </button>
+                  </div>
+                </form>
+              </mat-card>
+
+              <mat-card class="workspace-card list-card">
+                <div class="section-header">
+                  <div>
+                    <div class="section-eyebrow">Portafolio</div>
+                    <h3>Servicios disponibles</h3>
+                  </div>
+                </div>
+
+                <div class="entity-list">
+                  <article class="entity-row" *ngFor="let servicio of servicios()">
+                    <div class="entity-main">
+                      <div class="entity-meta">{{ servicio.sucursalNombre }}</div>
+                      <div class="entity-title">{{ servicio.nombre }}</div>
+                      <div class="entity-meta" *ngIf="servicio.descripcion">{{ servicio.descripcion }}</div>
+                      <div class="service-metrics">
+                        <span>{{ servicio.duracionMinutos }} min</span>
+                        <span>Buffers {{ servicio.bufferAntesMinutos }} / {{ servicio.bufferDespuesMinutos }}</span>
+                        <span>{{ servicio.precio | currency:(servicio.moneda || 'MXN'):'symbol-narrow':'1.0-0':'es-MX' }}</span>
+                      </div>
+                    </div>
+                    <div class="entity-side">
+                      <span class="status-pill" [class.is-active]="servicio.activo">{{ servicio.activo ? 'Activo' : 'Inactivo' }}</span>
+                      <button mat-stroked-button type="button" (click)="editarServicio(servicio)">Editar</button>
+                    </div>
+                  </article>
+                </div>
+              </mat-card>
+            </div>
+          </section>
+        </ng-container>
+
+        <ng-container *ngIf="seccionActiva() === 'prestadores'">
+          <section class="section-stack">
+            <div class="workspace-grid two-columns">
+              <mat-card class="workspace-card form-card">
+                <div class="section-header">
+                  <div>
+                    <div class="section-eyebrow">Equipo</div>
+                    <h3>{{ prestadorEditandoId ? 'Editar prestador' : 'Nuevo prestador' }}</h3>
+                  </div>
+                  <button mat-stroked-button type="button" *ngIf="prestadorEditandoId" (click)="cancelarEdicionPrestador()">
+                    Limpiar formulario
+                  </button>
+                </div>
+
+                <form class="admin-form-grid admin-form-shell" (ngSubmit)="guardarPrestador()">
+                  <div class="form-block-title full-width">Identidad</div>
+
+                  <mat-form-field appearance="outline">
+                    <mat-label>Sucursal</mat-label>
+                    <mat-select
+                      name="prestadorSucursalId"
+                      [(ngModel)]="formularioPrestador.sucursalId"
+                      (ngModelChange)="cambiarSucursalPrestador($event)"
+                      required>
+                      <mat-option *ngFor="let sucursal of sucursales()" [value]="sucursal.id">{{ sucursal.nombre }}</mat-option>
+                    </mat-select>
+                  </mat-form-field>
+
+                  <mat-form-field appearance="outline">
+                    <mat-label>Nombre visible</mat-label>
+                    <input matInput name="prestadorNombreMostrar" [(ngModel)]="formularioPrestador.nombreMostrar" required maxlength="150">
+                  </mat-form-field>
+
+                  <mat-form-field appearance="outline">
+                    <mat-label>Correo</mat-label>
+                    <input matInput type="email" name="prestadorCorreo" [(ngModel)]="formularioPrestador.correo" required maxlength="150">
+                  </mat-form-field>
+
+                  <mat-form-field appearance="outline">
+                    <mat-label>Contraseña temporal</mat-label>
+                    <input matInput type="text" name="prestadorPassword" [(ngModel)]="formularioPrestador.contrasenaTemporal">
+                  </mat-form-field>
+
+                  <div class="form-block-title full-width">Perfil operativo</div>
+
+                  <mat-form-field appearance="outline">
+                    <mat-label>Color de agenda</mat-label>
+                    <input matInput type="color" name="prestadorColorAgenda" [(ngModel)]="formularioPrestador.colorAgenda">
+                  </mat-form-field>
+
+                  <mat-slide-toggle name="prestadorActivo" [(ngModel)]="formularioPrestador.activo">
+                    Prestador activo
+                  </mat-slide-toggle>
+
+                  <mat-form-field appearance="outline" class="full-width">
+                    <mat-label>Biografía</mat-label>
+                    <textarea matInput rows="3" name="prestadorBiografia" [(ngModel)]="formularioPrestador.biografia" maxlength="500"></textarea>
+                  </mat-form-field>
+
+                  <div class="form-block-title full-width">Servicios asignados</div>
+
+                  <div class="full-width">
+                    <div class="checkbox-grid">
+                      <mat-checkbox
+                        *ngFor="let servicio of serviciosPrestadorDisponibles"
+                        [checked]="formularioPrestador.servicioIds.includes(servicio.id)"
+                        (change)="alternarServicioPrestador(servicio.id, $event.checked)">
+                        {{ servicio.nombre }}
+                      </mat-checkbox>
+                    </div>
+                    <div class="helper-text" *ngIf="!serviciosPrestadorDisponibles.length">
+                      No hay servicios disponibles en la sucursal seleccionada.
+                    </div>
+                  </div>
+
+                  <div class="form-actions">
+                    <button mat-flat-button color="primary" type="submit" [disabled]="guardandoPrestador || !sucursales().length">
+                      {{ prestadorEditandoId ? 'Actualizar prestador' : 'Crear prestador' }}
+                    </button>
+                  </div>
+                </form>
+              </mat-card>
+
+              <mat-card class="workspace-card list-card">
+                <div class="section-header">
+                  <div>
+                    <div class="section-eyebrow">Staff</div>
+                    <h3>Prestadores activos</h3>
+                  </div>
+                </div>
+
+                <div class="entity-list">
+                  <article class="entity-row" *ngFor="let prestador of prestadores()">
+                    <div class="entity-main">
+                      <div class="entity-meta">{{ prestador.sucursalNombre }}</div>
+                      <div class="entity-title">{{ prestador.nombreMostrar }}</div>
+                      <div class="entity-meta">{{ prestador.correo }}</div>
+                      <div class="entity-meta" *ngIf="prestador.biografia">{{ prestador.biografia }}</div>
+                      <mat-chip-set>
+                        <mat-chip *ngFor="let nombre of prestador.servicioNombres">{{ nombre }}</mat-chip>
+                      </mat-chip-set>
+                    </div>
+                    <div class="entity-side">
+                      <span class="status-pill" [class.is-active]="prestador.activo">{{ prestador.activo ? 'Activo' : 'Inactivo' }}</span>
+                      <button mat-stroked-button type="button" (click)="editarPrestador(prestador)">Editar</button>
+                    </div>
+                  </article>
+                </div>
+              </mat-card>
+            </div>
+          </section>
+        </ng-container>
+
+        <ng-container *ngIf="seccionActiva() === 'reglas'">
+          <section class="section-stack">
+            <div class="workspace-grid two-columns">
+              <mat-card class="workspace-card form-card">
+                <div class="section-header">
+                  <div>
+                    <div class="section-eyebrow">Disponibilidad base</div>
+                    <h3>{{ reglaEditandoId ? 'Editar horario base' : 'Nueva regla' }}</h3>
+                  </div>
+                  <button mat-stroked-button type="button" *ngIf="reglaEditandoId" (click)="cancelarEdicionRegla()">
+                    Limpiar formulario
+                  </button>
+                </div>
+
+                <form class="admin-form-grid admin-form-shell" (ngSubmit)="guardarRegla()">
+                  <div class="form-block-title full-width">Asignación</div>
+
+                  <mat-form-field appearance="outline">
+                    <mat-label>Tipo</mat-label>
+                    <mat-select name="reglaTipoSujeto" [(ngModel)]="formularioRegla.tipoSujeto" (ngModelChange)="cambiarTipoSujetoRegla($event)">
+                      <mat-option value="SUCURSAL">Sucursal</mat-option>
+                      <mat-option value="PRESTADOR">Prestador</mat-option>
+                    </mat-select>
+                  </mat-form-field>
+
+                  <mat-form-field appearance="outline">
+                    <mat-label>Sujeto</mat-label>
+                    <mat-select name="reglaSujetoId" [(ngModel)]="formularioRegla.sujetoId" required>
+                      <mat-option *ngFor="let sujeto of sujetosRegla" [value]="sujeto.id">
+                        {{ sujeto.nombre }}
+                      </mat-option>
+                    </mat-select>
+                  </mat-form-field>
+
+                  <div class="form-block-title full-width">Disponibilidad</div>
+
+                  <mat-form-field appearance="outline">
+                    <mat-label>Día</mat-label>
+                    <mat-select name="reglaDiaSemana" [(ngModel)]="formularioRegla.diaSemana">
+                      <mat-option *ngFor="let dia of diasSemana" [value]="dia.value">{{ dia.label }}</mat-option>
+                    </mat-select>
+                  </mat-form-field>
+
+                  <mat-form-field appearance="outline">
+                    <mat-label>Hora inicio</mat-label>
+                    <input matInput type="time" name="reglaHoraInicio" [(ngModel)]="formularioRegla.horaInicio" required>
+                  </mat-form-field>
+
+                  <mat-form-field appearance="outline">
+                    <mat-label>Hora fin</mat-label>
+                    <input matInput type="time" name="reglaHoraFin" [(ngModel)]="formularioRegla.horaFin" required>
+                  </mat-form-field>
+
+                  <mat-form-field appearance="outline">
+                    <mat-label>Intervalo</mat-label>
+                    <input matInput type="number" min="5" step="5" name="reglaIntervalo" [(ngModel)]="formularioRegla.intervaloMinutos" required>
+                  </mat-form-field>
+
+                  <mat-form-field appearance="outline">
+                    <mat-label>Vigente desde</mat-label>
+                    <input matInput type="date" name="reglaVigenteDesde" [(ngModel)]="formularioRegla.vigenteDesde">
+                  </mat-form-field>
+
+                  <mat-form-field appearance="outline">
+                    <mat-label>Vigente hasta</mat-label>
+                    <input matInput type="date" name="reglaVigenteHasta" [(ngModel)]="formularioRegla.vigenteHasta">
+                  </mat-form-field>
+
+                  <div class="form-actions">
+                    <button mat-flat-button color="primary" type="submit" [disabled]="guardandoRegla">
+                      {{ reglaEditandoId ? 'Actualizar regla' : 'Crear regla' }}
+                    </button>
+                  </div>
+                </form>
+              </mat-card>
+
+              <mat-card class="workspace-card list-card">
+                <div class="section-header">
+                  <div>
+                    <div class="section-eyebrow">Capacidad operativa</div>
+                    <h3>Reglas configuradas</h3>
+                  </div>
+                </div>
+
+                <div class="entity-list">
+                  <article class="entity-row" *ngFor="let regla of reglasDisponibilidad()">
+                    <div class="entity-main">
+                      <div class="entity-meta">{{ regla.tipoSujeto }} · {{ regla.sujetoNombre }}</div>
+                      <div class="entity-title">{{ diasSemanaTexto[regla.diaSemana] || ('Día ' + regla.diaSemana) }} · {{ regla.horaInicio }} - {{ regla.horaFin }}</div>
+                      <div class="entity-meta">Intervalo {{ regla.intervaloMinutos }} min</div>
+                      <div class="entity-meta" *ngIf="regla.vigenteDesde || regla.vigenteHasta">
+                        Vigencia: {{ regla.vigenteDesde || 'sin inicio' }} a {{ regla.vigenteHasta || 'sin fin' }}
+                      </div>
+                    </div>
+                    <div class="entity-side">
+                      <button mat-stroked-button type="button" (click)="editarRegla(regla)">Editar</button>
+                    </div>
+                  </article>
+                </div>
+              </mat-card>
+            </div>
+          </section>
+        </ng-container>
+
+        <ng-container *ngIf="seccionActiva() === 'excepciones'">
+          <section class="section-stack">
+            <div class="workspace-grid two-columns">
+              <mat-card class="workspace-card form-card">
+                <div class="section-header">
+                  <div>
+                    <div class="section-eyebrow">Bloqueos</div>
+                    <h3>{{ excepcionEditandoId ? 'Editar excepción' : 'Nueva excepción' }}</h3>
+                  </div>
+                  <button mat-stroked-button type="button" *ngIf="excepcionEditandoId" (click)="cancelarEdicionExcepcion()">
+                    Limpiar formulario
+                  </button>
+                </div>
+
+                <form class="admin-form-grid admin-form-shell" (ngSubmit)="guardarExcepcion()">
+                  <div class="form-block-title full-width">Contexto</div>
+
+                  <mat-form-field appearance="outline">
+                    <mat-label>Tipo</mat-label>
+                    <mat-select name="excepcionTipoSujeto" [(ngModel)]="formularioExcepcion.tipoSujeto" (ngModelChange)="cambiarTipoSujetoExcepcion($event)">
+                      <mat-option value="SUCURSAL">Sucursal</mat-option>
+                      <mat-option value="PRESTADOR">Prestador</mat-option>
+                    </mat-select>
+                  </mat-form-field>
+
+                  <mat-form-field appearance="outline">
+                    <mat-label>Sujeto</mat-label>
+                    <mat-select name="excepcionSujetoId" [(ngModel)]="formularioExcepcion.sujetoId" required>
+                      <mat-option *ngFor="let sujeto of sujetosExcepcion" [value]="sujeto.id">
+                        {{ sujeto.nombre }}
+                      </mat-option>
+                    </mat-select>
+                  </mat-form-field>
+
+                  <div class="form-block-title full-width">Bloqueo</div>
+
+                  <mat-form-field appearance="outline">
+                    <mat-label>Fecha</mat-label>
+                    <input matInput type="date" name="excepcionFecha" [(ngModel)]="formularioExcepcion.fechaExcepcion" required>
+                  </mat-form-field>
+
+                  <mat-form-field appearance="outline">
+                    <mat-label>Hora inicio</mat-label>
+                    <input matInput type="time" name="excepcionHoraInicio" [(ngModel)]="formularioExcepcion.horaInicio">
+                  </mat-form-field>
+
+                  <mat-form-field appearance="outline">
+                    <mat-label>Hora fin</mat-label>
+                    <input matInput type="time" name="excepcionHoraFin" [(ngModel)]="formularioExcepcion.horaFin">
+                  </mat-form-field>
+
+                  <mat-form-field appearance="outline">
+                    <mat-label>Tipo de bloqueo</mat-label>
+                    <mat-select name="excepcionTipoBloqueo" [(ngModel)]="formularioExcepcion.tipoBloqueo">
+                      <mat-option *ngFor="let tipo of tiposBloqueo" [value]="tipo">{{ tipo }}</mat-option>
+                    </mat-select>
+                  </mat-form-field>
+
+                  <mat-form-field appearance="outline" class="full-width">
+                    <mat-label>Motivo</mat-label>
+                    <input matInput name="excepcionMotivo" [(ngModel)]="formularioExcepcion.motivo" maxlength="255">
+                  </mat-form-field>
+
+                  <div class="form-actions">
+                    <button mat-flat-button color="primary" type="submit" [disabled]="guardandoExcepcion">
+                      {{ excepcionEditandoId ? 'Actualizar excepción' : 'Crear excepción' }}
+                    </button>
+                  </div>
+                </form>
+              </mat-card>
+
+              <mat-card class="workspace-card list-card">
+                <div class="section-header">
+                  <div>
+                    <div class="section-eyebrow">Excepciones activas</div>
+                    <h3>Bloqueos registrados</h3>
+                  </div>
+                </div>
+
+                <div class="entity-list">
+                  <article class="entity-row" *ngFor="let excepcion of excepcionesDisponibilidad()">
+                    <div class="entity-main">
+                      <div class="entity-meta">{{ excepcion.tipoSujeto }} · {{ excepcion.sujetoNombre }}</div>
+                      <div class="entity-title">{{ excepcion.fechaExcepcion }} · {{ excepcion.tipoBloqueo }}</div>
+                      <div class="entity-meta">
+                        {{ excepcion.horaInicio && excepcion.horaFin ? (excepcion.horaInicio + ' - ' + excepcion.horaFin) : 'Bloqueo de todo el día' }}
+                      </div>
+                      <div class="entity-meta" *ngIf="excepcion.motivo">{{ excepcion.motivo }}</div>
+                    </div>
+                    <div class="entity-side">
+                      <button mat-stroked-button type="button" (click)="editarExcepcion(excepcion)">Editar</button>
+                    </div>
+                  </article>
+                </div>
+              </mat-card>
+            </div>
+          </section>
+        </ng-container>
+
+        <ng-container *ngIf="seccionActiva() === 'citas'">
+          <section class="section-stack">
+            <mat-card class="workspace-card">
+              <div class="section-header">
+                <div>
+                  <div class="section-eyebrow">Operación diaria</div>
+                  <h3>Agenda detallada de citas</h3>
+                </div>
+                <span class="agenda-date-pill">{{ fechaAgendaActivaTexto() }}</span>
+              </div>
+
+              <div class="agenda-toolbar">
+                <div class="agenda-toolbar-nav">
+                  <button mat-stroked-button type="button" (click)="desplazarFechaAgenda(-1)">Anterior</button>
+                  <button mat-stroked-button type="button" (click)="irAHoyAgenda()">Hoy</button>
+                  <button mat-stroked-button type="button" (click)="desplazarFechaAgenda(1)">Siguiente</button>
+                </div>
+
+                <label class="agenda-date-field">
+                  <span>Fecha seleccionada</span>
+                  <input
+                    type="date"
+                    [ngModel]="fechaAgendaActiva()"
+                    (ngModelChange)="seleccionarFechaAgenda($event)" />
+                </label>
+              </div>
+
+              <div class="agenda-empty" *ngIf="!citasDelDiaActivas().length">
+                No hay citas registradas para la fecha seleccionada.
+              </div>
+
+              <div class="agenda-board" *ngIf="citasDelDiaActivas().length">
+                <section class="agenda-day">
+                  <div class="agenda-day-header">
+                    <div>
+                      <div class="agenda-day-eyebrow">Agenda diaria</div>
+                      <h4>{{ fechaAgendaActivaTexto() }}</h4>
+                    </div>
+                    <span class="agenda-day-count">{{ citasDelDiaActivas().length }} citas</span>
+                  </div>
+
+                  <div class="agenda-day-items">
+                    <article class="agenda-item" *ngFor="let cita of citasDelDiaActivas()">
+                      <div class="agenda-item-time">
+                        <div class="agenda-item-hour">{{ cita.horaTexto }}</div>
+                        <div class="agenda-item-range">{{ cita.rangoTexto }}</div>
+                      </div>
+
+                      <div class="agenda-item-main">
+                        <div class="agenda-item-service">{{ cita.servicioNombre }}</div>
+                        <div class="agenda-item-meta">
+                          {{ cita.sucursalNombre }} · {{ cita.prestadorNombre }}
+                        </div>
+                        <div class="agenda-item-meta">
+                          Reserva #{{ cita.id }} · {{ cita.precio | currency:(cita.moneda || 'MXN'):'symbol-narrow':'1.0-0':'es-MX' }}
+                        </div>
+                      </div>
+
+                      <div class="agenda-item-status">
+                        <span class="status-pill" [ngClass]="claseEstadoCita(cita.estado)">{{ cita.estado }}</span>
+                      </div>
+                    </article>
+                  </div>
+                </section>
+              </div>
+            </mat-card>
+          </section>
+        </ng-container>
+      </main>
     </div>
   </div>
 </section>

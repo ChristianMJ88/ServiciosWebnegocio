@@ -2,167 +2,311 @@
   <div class="container py-lg-5">
     <div class="row justify-content-center">
       <div class="col-lg-11 col-xl-10">
-        <div class="card card-custom overflow-hidden">
-          <div class="row g-0">
-            <!-- Lado Izquierdo: Calendario -->
-            <div class="col-md-7 p-3 p-lg-4 border-end border-secondary">
-              <div class="d-flex align-items-center mb-4">
-                <div class="step-badge me-3 shadow-lg">2</div>
-                <h2 class="h4 fw-bold gradient-text mb-0">Elige una fecha</h2>
-              </div>
-              <div class="calendar-container glass-effect">
-                <full-calendar [options]="calendarOptions"></full-calendar>
-              </div>
-              <div class="mt-3 p-3 bg-white bg-opacity-10 rounded-3">
-                <p class="text-light opacity-50 small mb-0">
-                  <i class="bi bi-info-circle me-1"></i>
-                  <span *ngIf="hasCatalogSelection(); else seleccionaCatalogo">
-                    * Trabajamos de Lunes a Sábado. El horario disponible se muestra al seleccionar un día.
-                  </span>
-                  <ng-template #seleccionaCatalogo>
-                    * Selecciona primero una sucursal y un servicio para habilitar el calendario.
-                  </ng-template>
-                </p>
+        <div class="card card-custom booking-shell overflow-hidden">
+          <div class="booking-shell__header">
+            <div>
+              <span class="booking-shell__eyebrow">Reserva en línea</span>
+              <h1 class="h2 fw-bold gradient-text mb-2">Agenda tu cita</h1>
+              <p class="booking-shell__lead mb-0">
+                Sigue el flujo en orden para elegir sucursal, servicio, fecha, horario y tus datos de contacto.
+              </p>
+            </div>
+
+            <div class="booking-progress" aria-label="Flujo de reserva">
+              <span class="booking-progress__item" [class.is-active]="!hasCatalogSelection()">1. Servicio</span>
+              <span class="booking-progress__item" [class.is-active]="hasCatalogSelection() && !selectedDate()">2. Fecha</span>
+              <span class="booking-progress__item" [class.is-active]="selectedDate() && !selectedHour()">3. Horario</span>
+              <span class="booking-progress__item" [class.is-active]="!!selectedHour()">4. Datos</span>
+            </div>
+          </div>
+
+          <div class="booking-flow">
+            <div class="mb-3" *ngIf="errorMessage && !submitted()">
+              <div
+                class="alert alert-danger"
+                role="alert"
+                style="background: rgba(220,53,69,0.12); border-color: rgba(220,53,69,0.35); color: white;">
+                <div class="d-flex align-items-center">
+                  <i class="bi bi-exclamation-octagon-fill me-2 text-warning"></i>
+                  <strong>No pudimos completar una parte de la carga.</strong>
+                </div>
+                <div class="mt-2 small opacity-75">
+                  {{ errorMessage }}
+                </div>
               </div>
             </div>
 
-            <!-- Lado Derecho: Horarios y Formulario -->
-            <div class="col-md-5 p-4 p-lg-5">
-              <div class="text-center mb-4">
-                <h1 class="h2 fw-bold gradient-text">Agendar Cita</h1>
-                <p class="text-light opacity-75" *ngIf="selectedDate()">
-                  Para el día: <br>
-                  <strong class="text-accent">{{ selectedDate() | date:'fullDate':'':'es' }}</strong>
-                </p>
-              </div>
-
-              <div class="mb-4">
-                <div class="d-flex align-items-center mb-3">
-                  <div class="step-badge me-2 shadow-lg">1</div>
-                  <h5 class="fw-bold mb-0 text-light">Sucursal y servicio</h5>
-                </div>
-
-                <div class="mb-3">
-                  <label class="form-label fw-semibold small text-light opacity-75">Sucursal</label>
-                  <select
-                    class="form-select bg-white bg-opacity-10 border-secondary text-light"
-                    [value]="bookingForm.value.branchId ?? ''"
-                    [disabled]="loadingCatalog()"
-                    (change)="onBranchChange($any($event.target).value)">
-                    <option value="" class="bg-dark">Selecciona una sucursal</option>
-                    <option *ngFor="let branch of branches()" [value]="branch.id" class="bg-dark">
-                      {{ branch.nombre }}
-                    </option>
-                  </select>
-                </div>
-
-                <div class="mb-0">
-                  <label class="form-label fw-semibold small text-light opacity-75">Servicio</label>
-                  <select
-                    class="form-select bg-white bg-opacity-10 border-secondary text-light"
-                    [value]="bookingForm.value.serviceId ?? ''"
-                    [disabled]="!bookingForm.value.branchId || loadingCatalog()"
-                    (change)="onServiceChange($any($event.target).value)">
-                    <option value="" class="bg-dark">Selecciona un servicio</option>
-                    <option *ngFor="let service of services()" [value]="service.id" class="bg-dark">
-                      {{ service.nombre }} - {{ service.precio | currency:(service.moneda || 'MXN'):'symbol-narrow':'1.0-0':'es-MX' }}
-                    </option>
-                  </select>
-                </div>
-
-                <div *ngIf="loadingCatalog()" class="small text-light opacity-75 mt-2">
-                  Cargando catálogo...
+            <section class="booking-step-panel">
+              <div class="booking-step-header">
+                <div class="step-badge shadow-lg">1</div>
+                <div>
+                  <h2 class="booking-step-title">Sucursal y servicio</h2>
+                  <p class="booking-step-description mb-0">
+                    Define primero dónde quieres atenderte y qué servicio deseas reservar.
+                  </p>
                 </div>
               </div>
 
-              <div *ngIf="!selectedDate()" class="empty-state text-center p-4 border border-secondary rounded-4 bg-white bg-opacity-5">
-                <i class="bi bi-calendar-event h1 text-accent opacity-50"></i>
-                <p class="mt-3 mb-0 text-light opacity-75">Selecciona una fecha en el calendario para ver horarios disponibles.</p>
-              </div>
-
-              <div *ngIf="selectedDate()" #hoursSection class="animate__animated animate__fadeIn">
-                <div class="d-flex align-items-center mb-3">
-                  <div class="step-badge me-2 shadow-lg">3</div>
-                  <h5 class="fw-bold mb-0 text-light">Selecciona la hora</h5>
-                </div>
-
-                <div class="mb-4">
-                  <!-- Skeleton Loader (Estado de carga independiente) -->
-                  <div *ngIf="loadingSlots()" class="d-flex flex-wrap gap-2 justify-content-center justify-content-md-start">
-                    <div *ngFor="let i of [1,2,3,4,5,6,7,8]" class="skeleton-hour"></div>
-                    <div class="text-center w-100 py-3 mt-2 bg-white bg-opacity-5 rounded-3">
-                      <div class="spinner-grow spinner-grow-sm text-accent me-2"></div>
-                      <span class="small text-light opacity-75 fw-medium">Buscando horarios disponibles...</span>
-                    </div>
+              <div class="booking-step-content">
+                <div class="booking-catalog-grid">
+                  <div class="booking-field">
+                    <label class="form-label fw-semibold small text-light opacity-75">Sucursal</label>
+                    <select
+                      class="form-select bg-white bg-opacity-10 border-secondary text-light"
+                      [value]="bookingForm.value.branchId ?? ''"
+                      [disabled]="loadingCatalog()"
+                      (change)="onBranchChange($any($event.target).value)">
+                      <option value="" class="bg-dark">Selecciona una sucursal</option>
+                      <option *ngFor="let branch of branches()" [value]="branch.id" class="bg-dark">
+                        {{ branch.nombre }}
+                      </option>
+                    </select>
                   </div>
 
-                  <!-- Contenido de Horarios (Solo se muestra cuando NO está cargando) -->
-                  <div *ngIf="!loadingSlots()" class="animate__animated animate__fadeIn">
-                    <div class="d-flex flex-wrap gap-2 w-100 justify-content-center justify-content-md-start">
+                  <div class="booking-field">
+                    <label class="form-label fw-semibold small text-light opacity-75">Servicio</label>
+                    <select
+                      class="form-select bg-white bg-opacity-10 border-secondary text-light"
+                      [value]="bookingForm.value.serviceId ?? ''"
+                      [disabled]="!bookingForm.value.branchId || loadingCatalog()"
+                      (change)="onServiceChange($any($event.target).value)">
+                      <option value="" class="bg-dark">Selecciona un servicio</option>
+                      <option *ngFor="let service of services()" [value]="service.id" class="bg-dark">
+                        {{ service.nombre }} - {{ service.precio | currency:(service.moneda || 'MXN'):'symbol-narrow':'1.0-0':'es-MX' }}
+                      </option>
+                    </select>
+                  </div>
+                </div>
+
+                <div class="booking-inline-note" *ngIf="loadingCatalog()">
+                  <i class="bi bi-arrow-repeat"></i>
+                  <span>Cargando catálogo...</span>
+                </div>
+
+                <div class="booking-selection-summary" *ngIf="selectedBranch || selectedService">
+                  <div class="booking-selection-chip" *ngIf="selectedBranch">
+                    <span class="booking-selection-chip__label">Sucursal</span>
+                    <strong>{{ selectedBranch.nombre }}</strong>
+                  </div>
+                  <div class="booking-selection-chip" *ngIf="selectedService">
+                    <span class="booking-selection-chip__label">Servicio</span>
+                    <strong>{{ selectedService.nombre }}</strong>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            <section class="booking-step-panel" [class.is-disabled]="!hasCatalogSelection()" [attr.aria-disabled]="!hasCatalogSelection()">
+              <div class="booking-step-header">
+                <div class="step-badge shadow-lg">2</div>
+                <div>
+                  <h2 class="booking-step-title">Fecha</h2>
+                  <p class="booking-step-description mb-0">
+                    Elige un día disponible para ese servicio. En móvil puedes cambiar de semana sin perder contexto.
+                  </p>
+                </div>
+              </div>
+
+              <div class="booking-step-content">
+                <div *ngIf="!hasCatalogSelection(); else bookingDatePicker" class="empty-state text-center p-4 border border-secondary rounded-4 bg-white bg-opacity-5">
+                  <i class="bi bi-diagram-3 h1 text-accent opacity-50"></i>
+                  <p class="mt-3 mb-0 text-light opacity-75">Primero selecciona una sucursal y un servicio para habilitar la fecha.</p>
+                </div>
+
+                <ng-template #bookingDatePicker>
+                  <div class="calendar-container glass-effect d-none d-md-block">
+                    <full-calendar [options]="calendarOptions"></full-calendar>
+                  </div>
+
+                  <div class="booking-mobile-calendar d-md-none">
+                    <div class="mobile-week-header">
                       <button
-                        *ngFor="let slot of availableSlots()"
                         type="button"
-                        class="btn btn-time animate__animated animate__zoomIn"
-                        [class.active]="selectedHour() === slot.inicio"
-                        (click)="selectHour(slot)">
-                        <i class="bi bi-clock me-1 small"></i> {{ slot.hora }}
+                        class="mobile-week-nav"
+                        aria-label="Semana anterior"
+                        [disabled]="!canGoPrevWeek()"
+                        (click)="moveMobileWeek(-1)">
+                        <i class="bi bi-chevron-left"></i>
+                      </button>
+
+                      <div class="mobile-week-title">{{ mobileMonthLabel() }}</div>
+
+                      <button
+                        type="button"
+                        class="mobile-week-nav"
+                        aria-label="Semana siguiente"
+                        [disabled]="!canGoNextWeek()"
+                        (click)="moveMobileWeek(1)">
+                        <i class="bi bi-chevron-right"></i>
                       </button>
                     </div>
 
-                    <div
-                      *ngIf="availableSlots().length === 0"
-                      class="alert alert-warning bg-dark bg-opacity-50 text-warning border-warning w-100 py-3 mt-3 small shadow-lg animate__animated animate__headShake">
-                      <i class="bi bi-exclamation-triangle-fill me-2"></i>
-                      No hay horarios disponibles para este día. Prueba con otra fecha.
+                    <div class="mobile-week-strip">
+                      <button
+                        type="button"
+                        class="mobile-day-card"
+                        *ngFor="let day of mobileWeekDays()"
+                        [class.is-selected]="day.seleccionada"
+                        [class.is-today]="day.esHoy"
+                        [class.is-disabled]="!day.disponible"
+                        [disabled]="!day.disponible || !hasCatalogSelection()"
+                        (click)="selectMobileDay(day.fechaIso)">
+                        <span class="mobile-day-label">{{ day.diaCorto }}</span>
+                        <span class="mobile-day-number">{{ day.diaNumero }}</span>
+                        <span class="mobile-day-indicator"></span>
+                      </button>
+                    </div>
+                  </div>
+
+                  <div class="mt-3 p-3 bg-white bg-opacity-10 rounded-3 booking-date-hint" *ngIf="isMobile() && selectedDate()">
+                    <span class="small text-light opacity-75 d-block">Disponibilidad para:</span>
+                    <strong class="text-accent">{{ selectedDate() | date:'fullDate':'':'es' }}</strong>
+                  </div>
+
+                  <div class="booking-inline-note">
+                    <i class="bi bi-info-circle"></i>
+                    <span *ngIf="isMobile(); else desktopDateNote">
+                      Desliza por semanas y toca un día para consultar horarios sin abrir un calendario completo.
+                    </span>
+                    <ng-template #desktopDateNote>
+                      Selecciona un día en el calendario para consultar los horarios disponibles.
+                    </ng-template>
+                  </div>
+                </ng-template>
+              </div>
+            </section>
+
+            <section class="booking-step-panel" [class.is-disabled]="!selectedDate()" [attr.aria-disabled]="!selectedDate()">
+              <div class="booking-step-header">
+                <div class="step-badge shadow-lg">3</div>
+                <div>
+                  <h2 class="booking-step-title">Horario</h2>
+                  <p class="booking-step-description mb-0">
+                    Elige una franja disponible para la fecha seleccionada.
+                  </p>
+                </div>
+              </div>
+
+              <div class="booking-step-content">
+                <div *ngIf="!selectedDate()" class="empty-state text-center p-4 border border-secondary rounded-4 bg-white bg-opacity-5">
+                  <i class="bi bi-calendar-event h1 text-accent opacity-50"></i>
+                  <p class="mt-3 mb-0 text-light opacity-75">Selecciona una fecha para ver horarios disponibles.</p>
+                </div>
+
+                <div *ngIf="selectedDate()" #hoursSection class="animate__animated animate__fadeIn">
+                  <div class="booking-slot-header">
+                    <div>
+                      <span class="booking-slot-label">Fecha seleccionada</span>
+                      <strong class="text-accent">{{ selectedDate() | date:'fullDate':'':'es' }}</strong>
+                    </div>
+                  </div>
+
+                  <div class="mb-0">
+                    <div *ngIf="loadingSlots()" class="slots-grid slots-grid-loading">
+                      <div *ngFor="let i of [1,2,3,4,5,6,7,8]" class="skeleton-hour"></div>
+                      <div class="text-center w-100 py-3 mt-2 bg-white bg-opacity-5 rounded-3 slots-grid-status">
+                        <div class="spinner-grow spinner-grow-sm text-accent me-2"></div>
+                        <span class="small text-light opacity-75 fw-medium">Buscando horarios disponibles...</span>
+                      </div>
+                    </div>
+
+                    <div *ngIf="!loadingSlots()" class="animate__animated animate__fadeIn">
+                      <div class="slots-grid">
+                        <button
+                          *ngFor="let slot of availableSlots()"
+                          type="button"
+                          class="btn btn-time animate__animated animate__zoomIn"
+                          [class.active]="selectedHour() === slot.inicio"
+                          (click)="selectHour(slot)">
+                          <i class="bi bi-clock me-1 small"></i> {{ slot.hora }}
+                        </button>
+                      </div>
+
+                      <div
+                        *ngIf="availableSlots().length === 0"
+                        class="alert alert-warning bg-dark bg-opacity-50 text-warning border-warning w-100 py-3 mt-3 small shadow-lg animate__animated animate__headShake">
+                        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                        No hay horarios disponibles para este día. Prueba con otra fecha.
+                      </div>
                     </div>
                   </div>
                 </div>
+              </div>
+            </section>
+
+            <section class="booking-step-panel" [class.is-disabled]="!selectedHour()" [attr.aria-disabled]="!selectedHour()">
+              <div class="booking-step-header">
+                <div class="step-badge shadow-lg">4</div>
+                <div>
+                  <h2 class="booking-step-title">Tus datos</h2>
+                  <p class="booking-step-description mb-0">
+                    Completa tus datos para confirmar la reserva.
+                  </p>
+                </div>
+              </div>
+
+              <div class="booking-step-content">
+                <div *ngIf="!selectedHour()" class="empty-state text-center p-4 border border-secondary rounded-4 bg-white bg-opacity-5">
+                  <i class="bi bi-clock-history h1 text-accent opacity-50"></i>
+                  <p class="mt-3 mb-0 text-light opacity-75">Selecciona primero un horario para continuar con tus datos.</p>
+                </div>
 
                 <form [formGroup]="bookingForm" (ngSubmit)="onSubmit()" class="needs-validation animate__animated animate__fadeInUp" *ngIf="selectedHour()" #dataSection>
-                  <div class="d-flex align-items-center mb-3">
-                    <div class="step-badge me-2 shadow-lg">4</div>
-                    <h5 class="fw-bold mb-0 text-light">Tus datos</h5>
-                  </div>
-
                   <div class="booking-summary p-3 rounded-3 mb-3 bg-white bg-opacity-5 border border-secondary">
-                    <div class="small text-light opacity-75">Sucursal</div>
-                    <div class="text-light fw-semibold mb-2">{{ selectedBranch?.nombre }}</div>
-                    <div class="small text-light opacity-75">Servicio</div>
-                    <div class="text-light fw-semibold">{{ selectedService?.nombre }}</div>
-                  </div>
-
-                  <div class="mb-3">
-                    <label class="form-label fw-semibold small text-light opacity-75">Nombre Completo</label>
-                    <div class="input-group">
-                      <span class="input-group-text bg-white bg-opacity-10 border-end-0 border-secondary text-accent"><i class="bi bi-person"></i></span>
-                      <input type="text" formControlName="name" class="form-control bg-white bg-opacity-10 border-start-0 border-secondary ps-0 text-light" placeholder="Ej. Ana García" [class.is-invalid]="f['name'].touched && f['name'].invalid">
-                      <div class="invalid-feedback" *ngIf="f['name'].touched && f['name'].invalid">
-                        <span *ngIf="f['name'].errors?.['required']">El nombre es obligatorio.</span>
-                        <span *ngIf="f['name'].errors?.['minlength']">Mínimo 3 caracteres.</span>
+                    <div class="booking-summary-grid">
+                      <div>
+                        <div class="small text-light opacity-75">Sucursal</div>
+                        <div class="text-light fw-semibold">{{ selectedBranch?.nombre }}</div>
+                      </div>
+                      <div>
+                        <div class="small text-light opacity-75">Servicio</div>
+                        <div class="text-light fw-semibold">{{ selectedService?.nombre }}</div>
+                      </div>
+                      <div>
+                        <div class="small text-light opacity-75">Fecha</div>
+                        <div class="text-light fw-semibold">{{ selectedDate() | date:'fullDate':'':'es' }}</div>
+                      </div>
+                      <div>
+                        <div class="small text-light opacity-75">Horario</div>
+                        <div class="text-light fw-semibold">{{ selectedHour() }}</div>
                       </div>
                     </div>
                   </div>
 
-                  <div class="mb-3">
-                    <label class="form-label fw-semibold small text-light opacity-75">Teléfono</label>
-                    <div class="input-group">
-                      <span class="input-group-text bg-white bg-opacity-10 border-end-0 border-secondary text-accent"><i class="bi bi-whatsapp"></i></span>
-                      <input type="tel" formControlName="phone" class="form-control bg-white bg-opacity-10 border-start-0 border-secondary ps-0 text-light" placeholder="10 dígitos" [class.is-invalid]="f['phone'].touched && f['phone'].invalid">
-                      <div class="invalid-feedback" *ngIf="f['phone'].touched && f['phone'].invalid">
-                        <span *ngIf="f['phone'].errors?.['required']">El teléfono es obligatorio.</span>
-                        <span *ngIf="f['phone'].errors?.['pattern']">Ingresa un número válido (10-15 dígitos).</span>
+                  <div class="booking-form-grid">
+                    <div class="booking-field">
+                      <label class="form-label fw-semibold small text-light opacity-75">Nombre Completo</label>
+                      <div class="input-group">
+                        <span class="input-group-text bg-white bg-opacity-10 border-end-0 border-secondary text-accent"><i class="bi bi-person"></i></span>
+                        <input type="text" formControlName="name" class="form-control bg-white bg-opacity-10 border-start-0 border-secondary ps-0 text-light" placeholder="Ej. Ana García" [class.is-invalid]="f['name'].touched && f['name'].invalid">
+                        <div class="invalid-feedback" *ngIf="f['name'].touched && f['name'].invalid">
+                          <span *ngIf="f['name'].errors?.['required']">El nombre es obligatorio.</span>
+                          <span *ngIf="f['name'].errors?.['minlength']">Mínimo 3 caracteres.</span>
+                        </div>
                       </div>
                     </div>
-                  </div>
 
-                  <div class="mb-3">
-                    <label class="form-label fw-semibold small text-light opacity-75">Correo</label>
-                    <div class="input-group">
-                      <span class="input-group-text bg-white bg-opacity-10 border-end-0 border-secondary text-accent"><i class="bi bi-envelope"></i></span>
-                      <input type="email" formControlName="email" class="form-control bg-white bg-opacity-10 border-start-0 border-secondary ps-0 text-light" placeholder="ana@mail.com" [class.is-invalid]="f['email'].touched && f['email'].invalid">
-                      <div class="invalid-feedback" *ngIf="f['email'].touched && f['email'].invalid">
-                        <span *ngIf="f['email'].errors?.['required']">El correo es obligatorio.</span>
-                        <span *ngIf="f['email'].errors?.['email']">Ingresa un correo válido.</span>
+                    <div class="booking-field">
+                      <label class="form-label fw-semibold small text-light opacity-75">Teléfono</label>
+                      <div class="input-group">
+                        <span class="input-group-text bg-white bg-opacity-10 border-end-0 border-secondary text-accent"><i class="bi bi-whatsapp"></i></span>
+                        <input type="tel" formControlName="phone" class="form-control bg-white bg-opacity-10 border-start-0 border-secondary ps-0 text-light" placeholder="10 dígitos" [class.is-invalid]="f['phone'].touched && f['phone'].invalid">
+                        <div class="invalid-feedback" *ngIf="f['phone'].touched && f['phone'].invalid">
+                          <span *ngIf="f['phone'].errors?.['required']">El teléfono es obligatorio.</span>
+                          <span *ngIf="f['phone'].errors?.['pattern']">Ingresa un número válido (10-15 dígitos).</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div class="booking-field booking-field--full">
+                      <label class="form-label fw-semibold small text-light opacity-75">Correo</label>
+                      <div class="input-group">
+                        <span class="input-group-text bg-white bg-opacity-10 border-end-0 border-secondary text-accent"><i class="bi bi-envelope"></i></span>
+                        <input type="email" formControlName="email" class="form-control bg-white bg-opacity-10 border-start-0 border-secondary ps-0 text-light" placeholder="ana@mail.com" [class.is-invalid]="f['email'].touched && f['email'].invalid">
+                        <div class="invalid-feedback" *ngIf="f['email'].touched && f['email'].invalid">
+                          <span *ngIf="f['email'].errors?.['required']">El correo es obligatorio.</span>
+                          <span *ngIf="f['email'].errors?.['email']">Ingresa un correo válido.</span>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -173,21 +317,21 @@
                       <span *ngIf="isSubmitting()" class="spinner-border spinner-border-sm me-2"></span>
                     </button>
                     <p class="text-center small text-light opacity-50 mt-2" *ngIf="!isSubmitting()">
-                      Para las {{ selectedHour() }}
+                      Reservar para las {{ selectedHour() }}
                     </p>
                   </div>
                 </form>
               </div>
+            </section>
 
-              <div class="mt-4" *ngIf="submitted() || errorMessage" #confirmationSection>
-                <div class="alert" [class.alert-success]="submitted()" [class.alert-danger]="!submitted() && errorMessage" role="alert" style="background: rgba(255,255,255,0.05); border-color: rgba(255,255,255,0.1); color: white;">
-                  <div class="d-flex align-items-center">
-                    <i class="bi" [class.bi-check-circle-fill]="submitted()" [class.bi-exclamation-octagon-fill]="!submitted()" class="me-2 h4 mb-0 text-accent"></i>
-                    <strong *ngIf="submitted()" class="text-accent">¡Cita enviada con éxito!</strong>
-                  </div>
-                  <div class="mt-2 small opacity-75">
-                    {{ errorMessage }}
-                  </div>
+            <div class="mt-2" *ngIf="submitted() || errorMessage" #confirmationSection>
+              <div class="alert" [class.alert-success]="submitted()" [class.alert-danger]="!submitted() && errorMessage" role="alert" style="background: rgba(255,255,255,0.05); border-color: rgba(255,255,255,0.1); color: white;">
+                <div class="d-flex align-items-center">
+                  <i class="bi" [class.bi-check-circle-fill]="submitted()" [class.bi-exclamation-octagon-fill]="!submitted()" class="me-2 h4 mb-0 text-accent"></i>
+                  <strong *ngIf="submitted()" class="text-accent">¡Cita enviada con éxito!</strong>
+                </div>
+                <div class="mt-2 small opacity-75">
+                  {{ errorMessage }}
                 </div>
               </div>
             </div>

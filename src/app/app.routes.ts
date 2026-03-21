@@ -17,9 +17,9 @@ export const routes: Routes = [
   { path: 'agendar', component: BookingComponent },
   { path: 'login', component: LoginComponent },
   { path: 'registro', component: RegisterComponent },
-  { path: 'mi-cuenta', component: AccountComponent, canActivate: [authGuard] },
-  { path: 'staff', component: StaffDashboardComponent, canActivate: [roleGuard], data: { roles: ['STAFF'] } },
-  { path: 'admin', component: AdminDashboardComponent, canActivate: [roleGuard], data: { roles: ['ADMIN'] } },
+  { path: 'mi-cuenta', component: AccountComponent, canActivate: [authGuard], data: { layout: 'panel' } },
+  { path: 'staff', component: StaffDashboardComponent, canActivate: [roleGuard], data: { roles: ['STAFF'], layout: 'panel' } },
+  { path: 'admin', component: AdminDashboardComponent, canActivate: [roleGuard], data: { roles: ['ADMIN'], layout: 'panel' } },
   { path: 'contacto', component: ContactComponent },
   { path: '**', redirectTo: '' }
 ];

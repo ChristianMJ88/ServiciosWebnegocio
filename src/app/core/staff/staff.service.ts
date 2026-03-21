@@ -1,5 +1,5 @@
 import { Injectable, inject } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
 
@@ -68,8 +68,16 @@ export interface GuardarExcepcionDisponibilidadStaffPayload {
 export class StaffService {
   private readonly http = inject(HttpClient);
 
-  getAgenda(): Observable<CitaStaff[]> {
-    return this.http.get<CitaStaff[]>(`${environment.apiBaseUrl}/staff/agenda`);
+  getAgenda(desde?: string, hasta?: string): Observable<CitaStaff[]> {
+    let params = new HttpParams();
+    if (desde) {
+      params = params.set('desde', desde);
+    }
+    if (hasta) {
+      params = params.set('hasta', hasta);
+    }
+
+    return this.http.get<CitaStaff[]>(`${environment.apiBaseUrl}/staff/agenda`, { params });
   }
 
   confirmar(citaId: number): Observable<void> {

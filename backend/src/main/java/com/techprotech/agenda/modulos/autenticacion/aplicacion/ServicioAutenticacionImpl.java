@@ -18,6 +18,8 @@ import com.techprotech.agenda.modulos.autenticacion.infraestructura.repositorio.
 import com.techprotech.agenda.modulos.autenticacion.infraestructura.repositorio.UsuarioRolRepositorio;
 import com.techprotech.agenda.seguridad.jwt.PropiedadesJwt;
 import com.techprotech.agenda.seguridad.jwt.ServicioTokenJwt;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -34,6 +36,8 @@ import static org.springframework.http.HttpStatus.UNAUTHORIZED;
 
 @Service
 public class ServicioAutenticacionImpl implements ServicioAutenticacion {
+
+    private static final Logger log = LoggerFactory.getLogger(ServicioAutenticacionImpl.class);
 
     private final ServicioTokenJwt servicioTokenJwt;
     private final PropiedadesJwt propiedadesJwt;
@@ -71,15 +75,27 @@ public class ServicioAutenticacionImpl implements ServicioAutenticacion {
     @Transactional
     public RespuestaTokenJwt iniciarSesion(IniciarSesionRequest request) {
         validarEmpresaExiste(request.empresaId());
+        String correoNormalizado = request.correo().trim().toLowerCase();
 
-        UsuarioEntidad usuario = usuarioRepositorio.findByEmpresaIdAndCorreo(request.empresaId(), request.correo().trim().toLowerCase())
-                .orElseThrow(() -> new ResponseStatusException(UNAUTHORIZED, "Credenciales invalidas"));
+        UsuarioEntidad usuario = usuarioRepositorio.findByEmpresaIdAndCorreo(request.empresaId(), correoNormalizado)
+                .orElseThrow(() -> {
+                    log.warn("Intento de inicio de sesion sin usuario: empresaId={}, correo={}", request.empresaId(), correoNormalizado);
+                    return new ResponseStatusException(UNAUTHORIZED, "Credenciales invalidas");
+                });
 
         if (!usuario.isHabilitado() || usuario.isBloqueado()) {
+            log.warn(
+                    "Intento de inicio de sesion rechazado por estado de usuario: empresaId={}, correo={}, habilitado={}, bloqueado={}",
+                    request.empresaId(),
+                    correoNormalizado,
+                    usuario.isHabilitado(),
+                    usuario.isBloqueado()
+            );
             throw new ResponseStatusException(FORBIDDEN, "El usuario no tiene acceso habilitado");
         }
 
         if (!passwordEncoder.matches(request.contrasena(), usuario.getContrasenaHash())) {
+            log.warn("Intento de inicio de sesion con contrasena invalida: empresaId={}, correo={}", request.empresaId(), correoNormalizado);
             throw new ResponseStatusException(UNAUTHORIZED, "Credenciales invalidas");
         }
 

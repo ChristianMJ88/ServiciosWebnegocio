@@ -10,7 +10,7 @@ import { AuthService } from '../../core/auth/auth.service';
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule, RouterLink],
   templateUrl: './login.component.html',
-  styleUrl: './login.component.css'
+  styleUrls: ['./login.component.css']
 })
 export class LoginComponent {
   private readonly fb = inject(FormBuilder);
@@ -53,6 +53,24 @@ export class LoginComponent {
           });
         },
         error: err => {
+          if (err?.error?.mensaje) {
+            this.error = err.error.mensaje;
+            return;
+          }
+
+          if (typeof err?.error === 'string' && err.error.trim()) {
+            this.error = err.error;
+            return;
+          }
+
+          if (err?.status >= 500 || err?.status === 0) {
+            const hostActual = typeof globalThis !== 'undefined' && 'location' in globalThis
+              ? globalThis.location.hostname
+              : 'localhost';
+            this.error = `El backend no está respondiendo correctamente. Verifica que el servidor API esté activo en http://${hostActual}:8080.`;
+            return;
+          }
+
           this.error = err?.message || 'No se pudo iniciar sesión.';
         }
       });

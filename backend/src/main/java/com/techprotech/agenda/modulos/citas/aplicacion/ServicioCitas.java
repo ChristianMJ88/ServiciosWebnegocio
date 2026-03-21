@@ -1,13 +1,18 @@
 package com.techprotech.agenda.modulos.citas.aplicacion;
 
+import com.techprotech.agenda.compartido.correo.ConfirmacionCitaCorreo;
+import com.techprotech.agenda.compartido.correo.ServicioCorreoCitas;
+import com.techprotech.agenda.compartido.correo.ServicioOutboxCorreoCitas;
 import com.techprotech.agenda.modulos.citas.api.dto.CitaCreadaResponse;
 import com.techprotech.agenda.modulos.citas.api.dto.CrearCitaRequest;
 import com.techprotech.agenda.modulos.autenticacion.infraestructura.entidad.ClienteEntidad;
+import com.techprotech.agenda.modulos.autenticacion.infraestructura.entidad.EmpresaEntidad;
 import com.techprotech.agenda.modulos.autenticacion.infraestructura.entidad.RolEntidad;
 import com.techprotech.agenda.modulos.autenticacion.infraestructura.entidad.UsuarioEntidad;
 import com.techprotech.agenda.modulos.autenticacion.infraestructura.entidad.UsuarioRolEntidad;
 import com.techprotech.agenda.modulos.autenticacion.infraestructura.entidad.UsuarioRolId;
 import com.techprotech.agenda.modulos.autenticacion.infraestructura.repositorio.ClienteRepositorio;
+import com.techprotech.agenda.modulos.autenticacion.infraestructura.repositorio.EmpresaRepositorio;
 import com.techprotech.agenda.modulos.autenticacion.infraestructura.repositorio.RolRepositorio;
 import com.techprotech.agenda.modulos.autenticacion.infraestructura.repositorio.UsuarioRepositorio;
 import com.techprotech.agenda.modulos.autenticacion.infraestructura.repositorio.UsuarioRolRepositorio;
@@ -50,11 +55,14 @@ public class ServicioCitas {
     private final AsignacionServicioPrestadorRepositorio asignacionServicioPrestadorRepositorio;
     private final UsuarioRepositorio usuarioRepositorio;
     private final ClienteRepositorio clienteRepositorio;
+    private final EmpresaRepositorio empresaRepositorio;
     private final RolRepositorio rolRepositorio;
     private final UsuarioRolRepositorio usuarioRolRepositorio;
     private final CitaRepositorio citaRepositorio;
     private final HistorialEstadoCitaRepositorio historialEstadoCitaRepositorio;
     private final PasswordEncoder passwordEncoder;
+    private final ServicioCorreoCitas servicioCorreoCitas;
+    private final ServicioOutboxCorreoCitas servicioOutboxCorreoCitas;
 
     public ServicioCitas(
             ServicioConsultaDisponibilidad servicioConsultaDisponibilidad,
@@ -64,11 +72,14 @@ public class ServicioCitas {
             AsignacionServicioPrestadorRepositorio asignacionServicioPrestadorRepositorio,
             UsuarioRepositorio usuarioRepositorio,
             ClienteRepositorio clienteRepositorio,
+            EmpresaRepositorio empresaRepositorio,
             RolRepositorio rolRepositorio,
             UsuarioRolRepositorio usuarioRolRepositorio,
             CitaRepositorio citaRepositorio,
             HistorialEstadoCitaRepositorio historialEstadoCitaRepositorio,
-            PasswordEncoder passwordEncoder
+            PasswordEncoder passwordEncoder,
+            ServicioCorreoCitas servicioCorreoCitas,
+            ServicioOutboxCorreoCitas servicioOutboxCorreoCitas
     ) {
         this.servicioConsultaDisponibilidad = servicioConsultaDisponibilidad;
         this.sucursalRepositorio = sucursalRepositorio;
@@ -77,16 +88,21 @@ public class ServicioCitas {
         this.asignacionServicioPrestadorRepositorio = asignacionServicioPrestadorRepositorio;
         this.usuarioRepositorio = usuarioRepositorio;
         this.clienteRepositorio = clienteRepositorio;
+        this.empresaRepositorio = empresaRepositorio;
         this.rolRepositorio = rolRepositorio;
         this.usuarioRolRepositorio = usuarioRolRepositorio;
         this.citaRepositorio = citaRepositorio;
         this.historialEstadoCitaRepositorio = historialEstadoCitaRepositorio;
         this.passwordEncoder = passwordEncoder;
+        this.servicioCorreoCitas = servicioCorreoCitas;
+        this.servicioOutboxCorreoCitas = servicioOutboxCorreoCitas;
     }
 
     @Transactional
     public CitaCreadaResponse crearCita(CrearCitaRequest request) {
         Long empresaId = request.empresaId() != null ? request.empresaId() : 1L;
+        EmpresaEntidad empresa = empresaRepositorio.findById(empresaId)
+                .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "La empresa no existe"));
 
         SucursalEntidad sucursal = sucursalRepositorio.findByIdAndEmpresaIdAndActivaTrue(request.sucursalId(), empresaId)
                 .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "La sucursal no existe o no esta activa"));
@@ -148,6 +164,27 @@ public class ServicioCitas {
         historial.setMotivo("Creacion inicial de cita");
         historialEstadoCitaRepositorio.save(historial);
 
+        OffsetDateTime inicioRespuesta = cita.getInicio().atZone(zona).toOffsetDateTime();
+        OffsetDateTime finRespuesta = cita.getFin().atZone(zona).toOffsetDateTime();
+        boolean correoConfirmacionProgramado = servicioOutboxCorreoCitas.programarConfirmacion(
+                empresaId,
+                new ConfirmacionCitaCorreo(
+                    cita.getId(),
+                    empresa.getNombre(),
+                    request.nombreCliente().trim(),
+                    request.correoCliente().trim().toLowerCase(),
+                    servicio.getNombre(),
+                    sucursal.getNombre(),
+                    sucursal.getDireccion(),
+                    sucursal.getTelefono(),
+                    inicioRespuesta,
+                    finRespuesta,
+                    zona,
+                    cita.getPrecio(),
+                    cita.getMoneda()
+                )
+        );
+
         return new CitaCreadaResponse(
                 cita.getId(),
                 cita.getEstado(),
@@ -155,10 +192,24 @@ public class ServicioCitas {
                 cita.getSucursalId(),
                 cita.getServicioId(),
                 cita.getPrestadorId(),
-                cita.getInicio().atZone(zona).toOffsetDateTime(),
-                cita.getFin().atZone(zona).toOffsetDateTime(),
-                "Cita creada correctamente"
+                inicioRespuesta,
+                finRespuesta,
+                resolverMensajeRespuesta(empresaId, correoConfirmacionProgramado),
+                correoConfirmacionProgramado,
+                false
         );
+    }
+
+    private String resolverMensajeRespuesta(Long empresaId, boolean correoConfirmacionProgramado) {
+        if (!servicioCorreoCitas.estaHabilitado(empresaId)) {
+            return "Cita creada correctamente";
+        }
+
+        if (correoConfirmacionProgramado) {
+            return "Cita creada correctamente. Te enviaremos una confirmacion por correo en breve.";
+        }
+
+        return "Cita creada correctamente. La empresa no tiene correo de confirmacion disponible en este momento.";
     }
 
     private PrestadorServicioEntidad resolverPrestador(Long prestadorId, Long sucursalId, Long servicioId) {

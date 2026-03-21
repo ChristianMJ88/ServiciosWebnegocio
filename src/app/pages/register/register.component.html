@@ -1,61 +1,152 @@
-<section class="section-padding bg-dark-custom min-vh-100 d-flex align-items-center">
-  <div class="container">
-    <div class="row justify-content-center">
-      <div class="col-lg-6 col-xl-5">
-        <div class="card card-custom p-4 p-lg-5">
-          <div class="text-center mb-4">
-            <h1 class="h2 fw-bold gradient-text mb-2">Crear Cuenta</h1>
-            <p class="text-light opacity-75 mb-0">Regístrate para consultar y administrar tus citas.</p>
+<section class="auth-page min-vh-100 d-flex align-items-center">
+  <div class="container auth-container">
+    <div class="auth-shell auth-shell--register">
+      <aside class="auth-aside">
+        <div class="auth-brand">
+          <span class="auth-brand__mark">NA</span>
+          <div>
+            <div class="auth-brand__eyebrow">NailArt Studio</div>
+            <div class="auth-brand__name">Registro de clientes</div>
+          </div>
+        </div>
+
+        <div class="auth-copy">
+          <span class="auth-copy__kicker">Nuevo acceso</span>
+          <h1 class="auth-copy__title">Crea tu cuenta y reserva con una experiencia más cómoda.</h1>
+          <p class="auth-copy__description">
+            Regístrate una sola vez para consultar tus citas, elegir horarios disponibles y gestionar todo desde móvil, iPad o escritorio.
+          </p>
+        </div>
+
+        <div class="auth-feature-list" aria-label="Ventajas del registro">
+          <div class="auth-feature-item">
+            <i class="bi bi-lightning-charge"></i>
+            <div>
+              <strong>Registro simple</strong>
+              <span>Completa tus datos en pocos pasos con campos optimizados para táctil.</span>
+            </div>
+          </div>
+          <div class="auth-feature-item">
+            <i class="bi bi-journal-check"></i>
+            <div>
+              <strong>Historial centralizado</strong>
+              <span>Consulta tus próximas citas desde tu cuenta.</span>
+            </div>
+          </div>
+          <div class="auth-feature-item">
+            <i class="bi bi-tablet-landscape"></i>
+            <div>
+              <strong>Responsive real</strong>
+              <span>Mejor lectura y mejor alcance de interacción en iPad y móvil.</span>
+            </div>
+          </div>
+        </div>
+      </aside>
+
+      <div class="auth-panel">
+        <div class="auth-panel__header">
+          <span class="auth-panel__eyebrow">Crear cuenta</span>
+          <h2 class="auth-panel__title">Regístrate</h2>
+          <p class="auth-panel__description">Ingresa tus datos para activar tu acceso y comenzar a administrar tus citas.</p>
+        </div>
+
+        <form [formGroup]="form" (ngSubmit)="onSubmit()" class="auth-form">
+          <div class="auth-form-grid">
+            <div class="auth-field auth-field--full">
+              <label class="form-label text-light opacity-75 small fw-semibold" for="register-nombre">Nombre completo</label>
+              <div class="input-group auth-input-group">
+                <span class="input-group-text"><i class="bi bi-person"></i></span>
+                <input
+                  id="register-nombre"
+                  type="text"
+                  formControlName="nombreCompleto"
+                  autocomplete="name"
+                  class="form-control"
+                  placeholder="Ana García"
+                  [class.is-invalid]="f['nombreCompleto'].touched && f['nombreCompleto'].invalid">
+              </div>
+            </div>
+
+            <div class="auth-field">
+              <label class="form-label text-light opacity-75 small fw-semibold" for="register-correo">Correo</label>
+              <div class="input-group auth-input-group">
+                <span class="input-group-text"><i class="bi bi-envelope"></i></span>
+                <input
+                  id="register-correo"
+                  type="email"
+                  formControlName="correo"
+                  autocomplete="email"
+                  class="form-control"
+                  placeholder="ana@mail.com"
+                  [class.is-invalid]="f['correo'].touched && f['correo'].invalid">
+              </div>
+            </div>
+
+            <div class="auth-field">
+              <label class="form-label text-light opacity-75 small fw-semibold" for="register-telefono">Teléfono</label>
+              <div class="input-group auth-input-group">
+                <span class="input-group-text"><i class="bi bi-telephone"></i></span>
+                <input
+                  id="register-telefono"
+                  type="tel"
+                  formControlName="telefono"
+                  autocomplete="tel"
+                  class="form-control"
+                  placeholder="5512345678"
+                  [class.is-invalid]="f['telefono'].touched && f['telefono'].invalid">
+              </div>
+            </div>
+
+            <div class="auth-field auth-field--full">
+              <label class="form-label text-light opacity-75 small fw-semibold" for="register-contrasena">Contraseña</label>
+              <div class="input-group auth-input-group">
+                <span class="input-group-text"><i class="bi bi-lock"></i></span>
+                <input
+                  id="register-contrasena"
+                  type="password"
+                  formControlName="contrasena"
+                  autocomplete="new-password"
+                  class="form-control"
+                  placeholder="Mínimo 8 caracteres"
+                  [class.is-invalid]="f['contrasena'].touched && f['contrasena'].invalid">
+              </div>
+            </div>
           </div>
 
-          <form [formGroup]="form" (ngSubmit)="onSubmit()">
-            <div class="mb-3">
-              <label class="form-label text-light opacity-75 small fw-semibold">Nombre completo</label>
-              <input type="text" formControlName="nombreCompleto" class="form-control bg-white bg-opacity-10 border-secondary text-light"
-                     placeholder="Ana García" [class.is-invalid]="f['nombreCompleto'].touched && f['nombreCompleto'].invalid">
-            </div>
+          <div class="invalid-feedback d-block" *ngIf="f['nombreCompleto'].touched && f['nombreCompleto'].invalid">
+            Ingresa tu nombre completo.
+          </div>
+          <div class="invalid-feedback d-block" *ngIf="f['correo'].touched && f['correo'].invalid">
+            Ingresa un correo válido.
+          </div>
+          <div class="invalid-feedback d-block" *ngIf="f['telefono'].touched && f['telefono'].invalid">
+            Ingresa un teléfono válido.
+          </div>
+          <div class="invalid-feedback d-block" *ngIf="f['contrasena'].touched && f['contrasena'].invalid">
+            La contraseña debe tener al menos 8 caracteres.
+          </div>
 
-            <div class="mb-3">
-              <label class="form-label text-light opacity-75 small fw-semibold">Correo</label>
-              <input type="email" formControlName="correo" class="form-control bg-white bg-opacity-10 border-secondary text-light"
-                     placeholder="ana@mail.com" [class.is-invalid]="f['correo'].touched && f['correo'].invalid">
-            </div>
+          <div *ngIf="error" class="alert alert-danger auth-alert" role="alert">
+            {{ error }}
+          </div>
 
-            <div class="mb-3">
-              <label class="form-label text-light opacity-75 small fw-semibold">Teléfono</label>
-              <input type="tel" formControlName="telefono" class="form-control bg-white bg-opacity-10 border-secondary text-light"
-                     placeholder="5512345678" [class.is-invalid]="f['telefono'].touched && f['telefono'].invalid">
-            </div>
+          <div *ngIf="completed()" class="alert alert-success auth-alert auth-alert--success" role="status">
+            Registro completado. Redirigiendo al inicio de sesión...
+          </div>
 
-            <div class="mb-3">
-              <label class="form-label text-light opacity-75 small fw-semibold">Contraseña</label>
-              <input type="password" formControlName="contrasena" class="form-control bg-white bg-opacity-10 border-secondary text-light"
-                     placeholder="Mínimo 8 caracteres" [class.is-invalid]="f['contrasena'].touched && f['contrasena'].invalid">
-            </div>
+          <div class="d-grid auth-submit">
+            <button type="submit" class="btn btn-primary auth-submit__button" [disabled]="loading() || completed()">
+              <span *ngIf="!loading()">Crear cuenta</span>
+              <span *ngIf="loading()" class="spinner-border spinner-border-sm me-2"></span>
+            </button>
+          </div>
+        </form>
 
-            <div *ngIf="error" class="alert alert-danger bg-danger bg-opacity-10 border-danger text-light small">
-              {{ error }}
-            </div>
-
-            <div *ngIf="completed()" class="alert alert-success bg-success bg-opacity-10 border-success text-light small">
-              Registro completado. Redirigiendo al inicio de sesión...
-            </div>
-
-            <div class="d-grid mt-4">
-              <button type="submit" class="btn btn-primary rounded-pill py-3" [disabled]="loading() || completed()">
-                <span *ngIf="!loading()">Crear cuenta</span>
-                <span *ngIf="loading()" class="spinner-border spinner-border-sm me-2"></span>
-              </button>
-            </div>
-          </form>
-
-          <p class="text-center text-light opacity-75 small mt-4 mb-0">
-            ¿Ya tienes cuenta?
-            <a routerLink="/login" class="text-accent text-decoration-none fw-semibold">Inicia sesión</a>
-          </p>
+        <div class="auth-panel__footer">
+          <span class="text-light opacity-75">¿Ya tienes cuenta?</span>
+          <a routerLink="/login" class="text-accent text-decoration-none fw-semibold">Inicia sesión</a>
         </div>
       </div>
     </div>
   </div>
 </section>
-

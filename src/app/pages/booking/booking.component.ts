@@ -1,5 +1,7 @@
-import { Component, signal, ElementRef, ViewChild, inject, OnInit } from '@angular/core';
+import { Component, signal, ElementRef, ViewChild, inject, OnInit, computed, DestroyRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { BreakpointObserver } from '@angular/cdk/layout';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import {
   AppointmentService,
@@ -26,9 +28,14 @@ import { finalize } from 'rxjs/operators';
   styleUrls: ['./booking.component.css']
 })
 export class BookingComponent implements OnInit {
+  private readonly mobileBreakpoint = '(max-width: 767.98px)';
   private fb = inject(FormBuilder);
   private appointmentService = inject(AppointmentService);
   private bookingDataService = inject(BookingDataService);
+  private breakpointObserver = inject(BreakpointObserver);
+  private destroyRef = inject(DestroyRef);
+  private readonly hoy = this.normalizarFecha(new Date());
+  private readonly fechaMaximaReserva = this.sumarDias(this.hoy, 30);
 
   @ViewChild('hoursSection') hoursSection!: ElementRef;
   @ViewChild('dataSection') dataSection!: ElementRef;
@@ -46,12 +53,40 @@ export class BookingComponent implements OnInit {
   isSubmitting = signal(false);
   loadingSlots = signal(false);
   loadingCatalog = signal(false);
+  isMobile = signal(this.breakpointObserver.isMatched(this.mobileBreakpoint));
   selectedDate = signal<string | null>(null);
   selectedHour = signal<string | null>(null);
   availableSlots = signal<FranjaDisponible[]>([]);
   branches = signal<SucursalCatalogo[]>([]);
   services = signal<ServicioCatalogo[]>([]);
   errorMessage = '';
+  readonly mobileWeekStart = signal(this.inicioSemana(this.hoy));
+  readonly mobileMonthLabel = computed(() => {
+    const inicio = this.mobileWeekStart();
+    const fin = this.sumarDias(inicio, 6);
+    const formatter = new Intl.DateTimeFormat('es-MX', { month: 'long', year: 'numeric' });
+    const inicioTexto = formatter.format(inicio);
+    const finTexto = formatter.format(fin);
+    return inicioTexto === finTexto ? inicioTexto : `${inicioTexto} - ${finTexto}`;
+  });
+  readonly canGoPrevWeek = computed(() => this.mobileWeekStart().getTime() > this.inicioSemana(this.hoy).getTime());
+  readonly canGoNextWeek = computed(() => this.mobileWeekStart().getTime() < this.inicioSemana(this.fechaMaximaReserva).getTime());
+  readonly mobileWeekDays = computed(() =>
+    Array.from({ length: 7 }, (_, index) => {
+      const fecha = this.sumarDias(this.mobileWeekStart(), index);
+      const fechaIso = this.formatearFechaLocal(fecha);
+      const disponible = this.esFechaReservable(fecha);
+      return {
+        fecha,
+        fechaIso,
+        diaCorto: new Intl.DateTimeFormat('es-MX', { weekday: 'short' }).format(fecha).replace('.', ''),
+        diaNumero: fecha.getDate(),
+        disponible,
+        seleccionada: this.selectedDate() === fechaIso,
+        esHoy: fechaIso === this.formatearFechaLocal(this.hoy)
+      };
+    })
+  );
 
   calendarOptions: CalendarOptions = {
     plugins: [dayGridPlugin, interactionPlugin],
@@ -89,6 +124,12 @@ export class BookingComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadBranches();
+    this.breakpointObserver
+      .observe(this.mobileBreakpoint)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(({ matches }) => {
+        this.isMobile.set(matches);
+      });
   }
 
   get f() { return this.bookingForm.controls; }
@@ -132,6 +173,7 @@ export class BookingComponent implements OnInit {
     }
 
     this.selectedDate.set(date);
+    this.sincronizarSemanaMovil(date);
     this.selectedHour.set(null);
     this.loadingSlots.set(true);
     this.errorMessage = '';
@@ -198,6 +240,39 @@ export class BookingComponent implements OnInit {
     this.selectedHour.set(slot.inicio);
     this.errorMessage = '';
     this.scrollToData();
+  }
+
+  selectMobileDay(date: string) {
+    if (!this.hasCatalogSelection()) {
+      this.errorMessage = 'Selecciona primero una sucursal y un servicio.';
+      return;
+    }
+
+    const fecha = this.parsearFechaLocal(date);
+    if (!this.esFechaReservable(fecha)) {
+      return;
+    }
+
+    this.onDateSelect(date);
+  }
+
+  moveMobileWeek(offset: number) {
+    const base = this.mobileWeekStart();
+    const propuesta = this.inicioSemana(this.sumarDias(base, offset * 7));
+    const inicioMinimo = this.inicioSemana(this.hoy);
+    const inicioMaximo = this.inicioSemana(this.fechaMaximaReserva);
+
+    if (propuesta < inicioMinimo) {
+      this.mobileWeekStart.set(inicioMinimo);
+      return;
+    }
+
+    if (propuesta > inicioMaximo) {
+      this.mobileWeekStart.set(inicioMaximo);
+      return;
+    }
+
+    this.mobileWeekStart.set(propuesta);
   }
 
   private scrollToHours() {
@@ -299,6 +374,7 @@ export class BookingComponent implements OnInit {
     this.selectedDate.set(null);
     this.selectedHour.set(null);
     this.availableSlots.set([]);
+    this.mobileWeekStart.set(this.inicioSemana(this.hoy));
     this.errorMessage = message;
 
     if (this.branches().length === 1) {
@@ -357,9 +433,51 @@ export class BookingComponent implements OnInit {
     this.availableSlots.set([]);
     this.submitted.set(false);
     this.errorMessage = '';
+    this.mobileWeekStart.set(this.inicioSemana(this.hoy));
   }
 
   hasCatalogSelection(): boolean {
     return Boolean(this.bookingForm.value.branchId && this.bookingForm.value.serviceId);
+  }
+
+  private sincronizarSemanaMovil(date: string) {
+    this.mobileWeekStart.set(this.inicioSemana(this.parsearFechaLocal(date)));
+  }
+
+  private esFechaReservable(fecha: Date): boolean {
+    const normalizada = this.normalizarFecha(fecha);
+    const dia = normalizada.getDay();
+    return normalizada >= this.hoy && normalizada <= this.fechaMaximaReserva && dia !== 0;
+  }
+
+  private inicioSemana(fecha: Date): Date {
+    const normalizada = this.normalizarFecha(fecha);
+    const inicio = new Date(normalizada);
+    inicio.setDate(normalizada.getDate() - normalizada.getDay());
+    return this.normalizarFecha(inicio);
+  }
+
+  private sumarDias(fecha: Date, dias: number): Date {
+    const resultado = new Date(fecha);
+    resultado.setDate(resultado.getDate() + dias);
+    return this.normalizarFecha(resultado);
+  }
+
+  private normalizarFecha(fecha: Date): Date {
+    const normalizada = new Date(fecha);
+    normalizada.setHours(0, 0, 0, 0);
+    return normalizada;
+  }
+
+  private formatearFechaLocal(fecha: Date): string {
+    const year = fecha.getFullYear();
+    const month = String(fecha.getMonth() + 1).padStart(2, '0');
+    const day = String(fecha.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  }
+
+  private parsearFechaLocal(fecha: string): Date {
+    const [year, month, day] = fecha.split('-').map(Number);
+    return this.normalizarFecha(new Date(year, (month || 1) - 1, day || 1));
   }
 }

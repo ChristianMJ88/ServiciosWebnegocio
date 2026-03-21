@@ -11,7 +11,8 @@ public record CitaCreadaResponse(
         Long prestadorId,
         OffsetDateTime inicio,
         OffsetDateTime fin,
-        String mensaje
+        String mensaje,
+        boolean correoConfirmacionProgramado,
+        boolean correoConfirmacionEnviado
 ) {
 }
-

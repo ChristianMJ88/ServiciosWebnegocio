@@ -1,51 +1,109 @@
-<section class="section-padding bg-dark-custom min-vh-100 d-flex align-items-center">
-  <div class="container">
-    <div class="row justify-content-center">
-      <div class="col-lg-5 col-xl-4">
-        <div class="card card-custom p-4 p-lg-5">
-          <div class="text-center mb-4">
-            <h1 class="h2 fw-bold gradient-text mb-2">Iniciar Sesión</h1>
-            <p class="text-light opacity-75 mb-0">Accede a tu cuenta para ver y gestionar tus citas.</p>
+<section class="auth-page min-vh-100 d-flex align-items-center">
+  <div class="container auth-container">
+    <div class="auth-shell">
+      <aside class="auth-aside">
+        <div class="auth-brand">
+          <span class="auth-brand__mark">NA</span>
+          <div>
+            <div class="auth-brand__eyebrow">NailArt Studio</div>
+            <div class="auth-brand__name">Acceso clientes</div>
+          </div>
+        </div>
+
+        <div class="auth-copy">
+          <span class="auth-copy__kicker">Bienvenida de vuelta</span>
+          <h1 class="auth-copy__title">Gestiona tus citas desde cualquier dispositivo.</h1>
+          <p class="auth-copy__description">
+            Inicia sesión para revisar reservas, consultar horarios y mantener el control de tu agenda con una experiencia clara y cómoda en móvil, iPad y escritorio.
+          </p>
+        </div>
+
+        <div class="auth-feature-list" aria-label="Beneficios del acceso">
+          <div class="auth-feature-item">
+            <i class="bi bi-phone"></i>
+            <div>
+              <strong>Diseño táctil</strong>
+              <span>Campos amplios y navegación más cómoda en pantallas pequeñas.</span>
+            </div>
+          </div>
+          <div class="auth-feature-item">
+            <i class="bi bi-calendar-check"></i>
+            <div>
+              <strong>Control de citas</strong>
+              <span>Consulta y administra tus reservas sin fricción.</span>
+            </div>
+          </div>
+          <div class="auth-feature-item">
+            <i class="bi bi-shield-check"></i>
+            <div>
+              <strong>Acceso seguro</strong>
+              <span>Tu cuenta y tus datos protegidos dentro del panel.</span>
+            </div>
+          </div>
+        </div>
+      </aside>
+
+      <div class="auth-panel">
+        <div class="auth-panel__header">
+          <span class="auth-panel__eyebrow">Iniciar sesión</span>
+          <h2 class="auth-panel__title">Entra a tu cuenta</h2>
+          <p class="auth-panel__description">Usa tu correo y contraseña para acceder a tu panel personal.</p>
+        </div>
+
+        <form [formGroup]="form" (ngSubmit)="onSubmit()" class="auth-form">
+          <div class="auth-field">
+            <label class="form-label text-light opacity-75 small fw-semibold" for="login-correo">Correo</label>
+            <div class="input-group auth-input-group">
+              <span class="input-group-text"><i class="bi bi-envelope"></i></span>
+              <input
+                id="login-correo"
+                type="email"
+                formControlName="correo"
+                autocomplete="email"
+                class="form-control"
+                placeholder="ana@mail.com"
+                [class.is-invalid]="f['correo'].touched && f['correo'].invalid">
+            </div>
+            <div class="invalid-feedback d-block" *ngIf="f['correo'].touched && f['correo'].invalid">
+              Ingresa un correo válido.
+            </div>
           </div>
 
-          <form [formGroup]="form" (ngSubmit)="onSubmit()">
-            <div class="mb-3">
-              <label class="form-label text-light opacity-75 small fw-semibold">Correo</label>
-              <input type="email" formControlName="correo" class="form-control bg-white bg-opacity-10 border-secondary text-light"
-                     placeholder="ana@mail.com" [class.is-invalid]="f['correo'].touched && f['correo'].invalid">
-              <div class="invalid-feedback" *ngIf="f['correo'].touched && f['correo'].invalid">
-                Ingresa un correo válido.
-              </div>
+          <div class="auth-field">
+            <label class="form-label text-light opacity-75 small fw-semibold" for="login-contrasena">Contraseña</label>
+            <div class="input-group auth-input-group">
+              <span class="input-group-text"><i class="bi bi-lock"></i></span>
+              <input
+                id="login-contrasena"
+                type="password"
+                formControlName="contrasena"
+                autocomplete="current-password"
+                class="form-control"
+                placeholder="Mínimo 8 caracteres"
+                [class.is-invalid]="f['contrasena'].touched && f['contrasena'].invalid">
             </div>
-
-            <div class="mb-3">
-              <label class="form-label text-light opacity-75 small fw-semibold">Contraseña</label>
-              <input type="password" formControlName="contrasena" class="form-control bg-white bg-opacity-10 border-secondary text-light"
-                     placeholder="Mínimo 8 caracteres" [class.is-invalid]="f['contrasena'].touched && f['contrasena'].invalid">
-              <div class="invalid-feedback" *ngIf="f['contrasena'].touched && f['contrasena'].invalid">
-                La contraseña es obligatoria.
-              </div>
+            <div class="invalid-feedback d-block" *ngIf="f['contrasena'].touched && f['contrasena'].invalid">
+              La contraseña es obligatoria.
             </div>
+          </div>
 
-            <div *ngIf="error" class="alert alert-danger bg-danger bg-opacity-10 border-danger text-light small">
-              {{ error }}
-            </div>
+          <div *ngIf="error" class="alert alert-danger auth-alert" role="alert">
+            {{ error }}
+          </div>
 
-            <div class="d-grid mt-4">
-              <button type="submit" class="btn btn-primary rounded-pill py-3" [disabled]="loading()">
-                <span *ngIf="!loading()">Entrar</span>
-                <span *ngIf="loading()" class="spinner-border spinner-border-sm me-2"></span>
-              </button>
-            </div>
-          </form>
+          <div class="d-grid auth-submit">
+            <button type="submit" class="btn btn-primary auth-submit__button" [disabled]="loading()">
+              <span *ngIf="!loading()">Entrar</span>
+              <span *ngIf="loading()" class="spinner-border spinner-border-sm me-2"></span>
+            </button>
+          </div>
+        </form>
 
-          <p class="text-center text-light opacity-75 small mt-4 mb-0">
-            ¿No tienes cuenta?
-            <a routerLink="/registro" class="text-accent text-decoration-none fw-semibold">Regístrate aquí</a>
-          </p>
+        <div class="auth-panel__footer">
+          <span class="text-light opacity-75">¿No tienes cuenta?</span>
+          <a routerLink="/registro" class="text-accent text-decoration-none fw-semibold">Regístrate aquí</a>
         </div>
       </div>
     </div>
   </div>
 </section>
-

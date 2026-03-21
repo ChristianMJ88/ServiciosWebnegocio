@@ -20,6 +20,20 @@ spring:
     locations: classpath:db/migration
   jackson:
     time-zone: UTC
+  mail:
+    host: ${MAIL_HOST:localhost}
+    port: ${MAIL_PORT:1025}
+    username: ${MAIL_USERNAME:}
+    password: ${MAIL_PASSWORD:}
+    properties:
+      mail:
+        smtp:
+          auth: ${MAIL_SMTP_AUTH:false}
+          starttls:
+            enable: ${MAIL_SMTP_STARTTLS:false}
+          connectiontimeout: ${MAIL_SMTP_CONNECTION_TIMEOUT:5000}
+          timeout: ${MAIL_SMTP_TIMEOUT:5000}
+          writetimeout: ${MAIL_SMTP_WRITE_TIMEOUT:5000}
 
 management:
   endpoints:
@@ -39,6 +53,21 @@ aplicacion:
     issuer: agenda-backend
     minutos-acceso: 15
     dias-refresh: 7
+  correo:
+    habilitado: ${CORREO_HABILITADO:false}
+    proveedor-por-defecto: ${CORREO_PROVEEDOR_POR_DEFECTO:SMTP}
+    remitente-por-defecto: ${CORREO_REMITENTE_POR_DEFECTO:no-reply@agenda.local}
+    nombre-remitente-por-defecto: ${CORREO_NOMBRE_REMITENTE_POR_DEFECTO:Agenda Web}
+    responder-a-por-defecto: ${CORREO_RESPONDER_A_POR_DEFECTO:}
+    graph-tenant-id: ${CORREO_GRAPH_TENANT_ID:}
+    graph-client-id: ${CORREO_GRAPH_CLIENT_ID:}
+    graph-client-secret: ${CORREO_GRAPH_CLIENT_SECRET:}
+    graph-user-id: ${CORREO_GRAPH_USER_ID:}
+    graph-certificate-thumbprint: ${CORREO_GRAPH_CERTIFICATE_THUMBPRINT:}
+    graph-private-key-pem: ${CORREO_GRAPH_PRIVATE_KEY_PEM:}
+    llave-cifrado-secretos: ${CORREO_LLAVE_CIFRADO_SECRETOS:}
+    lote-maximo-outbox: ${CORREO_LOTE_MAXIMO_OUTBOX:20}
+    retraso-reintento-segundos: ${CORREO_REINTENTO_SEGUNDOS:60}
 
 server:
   port: 8080

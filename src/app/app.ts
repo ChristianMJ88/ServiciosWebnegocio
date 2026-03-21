@@ -1,6 +1,6 @@
 import { Component, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { NavigationEnd, Router, RouterOutlet } from '@angular/router';
+import { ActivatedRouteSnapshot, NavigationEnd, Router, RouterOutlet } from '@angular/router';
 import { filter } from 'rxjs/operators';
 import { HeaderComponent } from './components/header/header.component';
 import { FooterComponent } from './components/footer/footer.component';
@@ -18,7 +18,7 @@ export class App {
   private readonly authService = inject(AuthService);
   private readonly router = inject(Router);
   protected readonly title = signal('ServiciosWebnegocio');
-  esPanelInterno = signal(this.calcularEsPanelInterno(this.router.url));
+  esPanelInterno = signal(this.calcularEsPanelInterno());
   isChatOpen = signal(false);
   chatMsg = signal('');
 
@@ -29,8 +29,8 @@ export class App {
         filter((event): event is NavigationEnd => event instanceof NavigationEnd),
         takeUntilDestroyed()
       )
-      .subscribe(evento => {
-        this.esPanelInterno.set(this.calcularEsPanelInterno(evento.urlAfterRedirects));
+      .subscribe(() => {
+        this.esPanelInterno.set(this.calcularEsPanelInterno());
       });
   }
 
@@ -48,7 +48,27 @@ export class App {
     }
   }
 
-  private calcularEsPanelInterno(url: string): boolean {
-    return ['/admin', '/staff', '/mi-cuenta'].some(ruta => url.startsWith(ruta));
+  private calcularEsPanelInterno(): boolean {
+    const rutaActiva = this.obtenerRutaActiva(this.router.routerState.snapshot.root);
+    if (rutaActiva?.data?.['layout'] === 'panel') {
+      return true;
+    }
+
+    const urlNormalizada = this.normalizarUrl(this.router.url);
+    return ['/admin', '/staff', '/mi-cuenta'].some(ruta => urlNormalizada.startsWith(ruta));
+  }
+
+  private obtenerRutaActiva(snapshot: ActivatedRouteSnapshot): ActivatedRouteSnapshot {
+    let actual = snapshot;
+    while (actual.firstChild) {
+      actual = actual.firstChild;
+    }
+    return actual;
+  }
+
+  private normalizarUrl(url: string): string {
+    const [sinQuery] = url.split('?');
+    const [sinHash] = sinQuery.split('#');
+    return sinHash.endsWith('/') && sinHash.length > 1 ? sinHash.slice(0, -1) : sinHash;
   }
 }

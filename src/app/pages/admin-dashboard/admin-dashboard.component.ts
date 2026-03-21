@@ -1,5 +1,5 @@
 import { CommonModule, CurrencyPipe } from '@angular/common';
-import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { ChangeDetectorRef, Component, NgZone, OnInit, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { BreakpointObserver } from '@angular/cdk/layout';
 import { FormsModule } from '@angular/forms';
@@ -23,12 +23,15 @@ import { forkJoin, of } from 'rxjs';
 import { catchError, finalize } from 'rxjs/operators';
 import {
   AdminService,
+  ConfiguracionCorreoAdmin,
   ExcepcionDisponibilidadAdmin,
+  GuardarConfiguracionCorreoPayload,
   GuardarExcepcionDisponibilidadPayload,
   GuardarPrestadorPayload,
   GuardarReglaDisponibilidadPayload,
   GuardarServicioPayload,
   GuardarSucursalPayload,
+  MigracionSecretosCorreoResponse,
   PrestadorAdmin,
   ReporteServicioAdmin,
   ReglaDisponibilidadAdmin,
@@ -41,6 +44,7 @@ import { CitaCliente } from '../../core/auth/client-appointments.service';
 
 type SeccionAdmin =
   | 'resumen'
+  | 'correo'
   | 'sucursales'
   | 'servicios'
   | 'prestadores'
@@ -72,17 +76,20 @@ type SeccionAdmin =
     MatProgressBarModule
   ],
   templateUrl: './admin-dashboard.component.html',
-  styleUrl: './admin-dashboard.component.css'
+  styleUrls: ['./admin-dashboard.component.css']
 })
 export class AdminDashboardComponent implements OnInit {
   private readonly adminService = inject(AdminService);
   private readonly breakpointObserver = inject(BreakpointObserver);
   private readonly authService = inject(AuthService);
   private readonly router = inject(Router);
+  private readonly ngZone = inject(NgZone);
+  private readonly changeDetectorRef = inject(ChangeDetectorRef);
   private readonly inicioAgendaHora = 8;
   private readonly finAgendaHora = 20;
   private readonly alturaHoraAgenda = 86;
   readonly loading = signal(false);
+  readonly fechaAgendaSeleccionada = signal<string | null>(null);
   readonly seccionActiva = signal<SeccionAdmin>('resumen');
   readonly panelMovil = signal(false);
   readonly sidebarAbierto = signal(true);
@@ -95,6 +102,7 @@ export class AdminDashboardComponent implements OnInit {
   readonly reglasDisponibilidad = signal<ReglaDisponibilidadAdmin[]>([]);
   readonly excepcionesDisponibilidad = signal<ExcepcionDisponibilidadAdmin[]>([]);
   readonly reporteServicios = signal<ReporteServicioAdmin[]>([]);
+  readonly configuracionCorreo = signal<ConfiguracionCorreoAdmin | null>(null);
   readonly diasSemana = [
     { value: 1, label: 'Lunes' },
     { value: 2, label: 'Martes' },
@@ -116,6 +124,7 @@ export class AdminDashboardComponent implements OnInit {
   readonly tiposBloqueo = ['BLOQUEO', 'DESCANSO', 'VACACIONES', 'HORARIO_ESPECIAL'];
   readonly modulosAdmin: Array<{ id: SeccionAdmin; titulo: string; descripcion: string; abreviatura: string; icono: string }> = [
     { id: 'resumen', titulo: 'Resumen ejecutivo', descripcion: 'Métricas generales y desempeño comercial.', abreviatura: 'RE', icono: 'resumen' },
+    { id: 'correo', titulo: 'Correo transaccional', descripcion: 'Graph o SMTP por tenant, con cifrado y migración de secretos.', abreviatura: 'CO', icono: 'correo' },
     { id: 'sucursales', titulo: 'Sucursales', descripcion: 'Alta y mantenimiento de sedes operativas.', abreviatura: 'SU', icono: 'sucursal' },
     { id: 'servicios', titulo: 'Servicios', descripcion: 'Catálogo, duración, buffers y precio.', abreviatura: 'SV', icono: 'servicio' },
     { id: 'prestadores', titulo: 'Prestadores', descripcion: 'Usuarios staff y asignaciones de servicio.', abreviatura: 'PR', icono: 'prestador' },
@@ -123,6 +132,7 @@ export class AdminDashboardComponent implements OnInit {
     { id: 'excepciones', titulo: 'Bloqueos', descripcion: 'Vacaciones, descansos y cierres puntuales.', abreviatura: 'BL', icono: 'bloqueo' },
     { id: 'citas', titulo: 'Citas', descripcion: 'Seguimiento operativo de reservas creadas.', abreviatura: 'CT', icono: 'agenda' }
   ];
+  readonly moduloActivo = computed(() => this.modulosAdmin.find(modulo => modulo.id === this.seccionActiva()) ?? this.modulosAdmin[0]);
   readonly nombreUsuarioAdmin = computed(() => this.authService.nombreUsuarioVisible());
   readonly correoUsuarioAdmin = computed(() => this.authService.sesionActual()?.correo ?? '');
   readonly inicialesUsuarioAdmin = computed(() => this.authService.inicialesUsuarioVisible());
@@ -172,21 +182,25 @@ export class AdminDashboardComponent implements OnInit {
 
     return Array.from(agrupadas.values());
   });
+  readonly fechasConCitasAgenda = computed(() =>
+    Array.from(new Set(this.citas().map(cita => cita.inicio.slice(0, 10)))).sort((a, b) => a.localeCompare(b))
+  );
   readonly fechaAgendaActiva = computed(() => {
-    const citas = this.citas();
-    if (!citas.length) {
-      return new Date().toISOString().slice(0, 10);
-    }
-
-    const hoy = new Date().toISOString().slice(0, 10);
-    if (citas.some(cita => cita.inicio.startsWith(hoy))) {
-      return hoy;
-    }
-
-    return [...citas]
-      .sort((a, b) => new Date(a.inicio).getTime() - new Date(b.inicio).getTime())[0]
-      .inicio
-      .slice(0, 10);
+    return this.fechaAgendaSeleccionada() ?? this.obtenerFechaAgendaInicial();
+  });
+  readonly fechaAgendaActivaTexto = computed(() => this.formatearFechaAgendaLarga(this.fechaAgendaActiva()));
+  readonly citasDelDiaActivas = computed(() => {
+    const fecha = this.fechaAgendaActiva();
+    return this.citasAgrupadas().find(grupo => grupo.fechaClave === fecha)?.items ?? [];
+  });
+  readonly resumenAgendaActiva = computed(() => {
+    const citas = this.citas().filter(cita => cita.inicio.startsWith(this.fechaAgendaActiva()));
+    return {
+      total: citas.length,
+      pendientes: citas.filter(cita => cita.estado === 'PENDIENTE').length,
+      confirmadas: citas.filter(cita => cita.estado === 'CONFIRMADA').length,
+      colaboradores: new Set(citas.map(cita => cita.prestadorId)).size
+    };
   });
   readonly colaboradoresAgenda = computed(() => {
     const fecha = this.fechaAgendaActiva();
@@ -207,35 +221,52 @@ export class AdminDashboardComponent implements OnInit {
 
     return Array.from(mapa.values());
   });
+  readonly anchoAgendaTimeline = computed(() => Math.max(this.colaboradoresAgenda().length * 272, 860));
   readonly citasAgendaPosicionadas = computed(() => {
     const fecha = this.fechaAgendaActiva();
     const columnas = this.colaboradoresAgenda();
+    const totalColumnas = Math.max(columnas.length, 1);
+    const anchoColumna = 100 / totalColumnas;
     const indiceColumna = new Map(columnas.map((columna, index) => [columna.id, index]));
+    const citasDelDia = this.citas().filter(cita => cita.inicio.startsWith(fecha));
+    const distribucionPorPrestador = new Map<number, Map<CitaCliente, { lane: number; laneCount: number }>>();
 
-    return this.citas()
-      .filter(cita => cita.inicio.startsWith(fecha))
-      .map(cita => {
+    for (const colaborador of columnas) {
+      const citasColumna = citasDelDia.filter(cita => cita.prestadorId === colaborador.id);
+      distribucionPorPrestador.set(colaborador.id, this.calcularDistribucionAgenda(citasColumna));
+    }
+
+    return citasDelDia.map(cita => {
         const inicio = new Date(cita.inicio);
         const fin = new Date(cita.fin);
         const minutosInicio = (inicio.getHours() - this.inicioAgendaHora) * 60 + inicio.getMinutes();
         const duracionMinutos = Math.max(30, Math.round((fin.getTime() - inicio.getTime()) / 60000));
         const top = (minutosInicio / 60) * this.alturaHoraAgenda;
         const height = Math.max(64, (duracionMinutos / 60) * this.alturaHoraAgenda - 8);
+        const distribucion = distribucionPorPrestador.get(cita.prestadorId)?.get(cita) ?? { lane: 0, laneCount: 1 };
+        const columna = indiceColumna.get(cita.prestadorId) ?? 0;
+        const widthPct = anchoColumna / distribucion.laneCount;
+        const leftPct = columna * anchoColumna + distribucion.lane * widthPct;
 
         return {
           ...cita,
           top,
           height,
-          columna: indiceColumna.get(cita.prestadorId) ?? 0
+          columna,
+          leftPct,
+          widthPct
         };
       });
   });
   error = '';
+  mensajeExito = '';
   guardandoSucursal = false;
   guardandoServicio = false;
   guardandoPrestador = false;
   guardandoRegla = false;
   guardandoExcepcion = false;
+  guardandoCorreo = false;
+  migrandoSecretosCorreo = false;
   sujetosRegla: Array<{ id: number; nombre: string }> = [];
   sujetosExcepcion: Array<{ id: number; nombre: string }> = [];
   serviciosPrestadorDisponibles: ServicioAdmin[] = [];
@@ -297,21 +328,58 @@ export class AdminDashboardComponent implements OnInit {
     motivo: null
   };
 
+  formularioCorreo: GuardarConfiguracionCorreoPayload = {
+    habilitado: false,
+    proveedor: 'SMTP',
+    remitente: '',
+    nombreRemitente: '',
+    responderA: '',
+    smtpHost: '',
+    smtpPort: 587,
+    smtpUsername: '',
+    smtpPassword: '',
+    smtpAuth: true,
+    smtpStartTls: true,
+    graphTenantId: '',
+    graphClientId: '',
+    graphClientSecret: '',
+    graphUserId: '',
+    graphCertificateThumbprint: '',
+    graphPrivateKeyPem: ''
+  };
+
   ngOnInit(): void {
+    this.actualizarVistaEnZona(() => {
+      this.sincronizarSidebarConViewport(this.breakpointObserver.isMatched('(max-width: 991px)'));
+    });
+
     if (this.authService.asegurarSesion()) {
-      setTimeout(() => this.recargar());
+      this.recargar();
     }
 
     this.breakpointObserver
       .observe('(max-width: 991px)')
       .pipe(takeUntilDestroyed())
       .subscribe(({ matches }) => {
-        this.panelMovil.set(matches);
-        this.sidebarAbierto.set(!matches);
-        if (matches) {
-          this.sidebarCompacto.set(false);
-        }
+        this.actualizarVistaEnZona(() => {
+          this.sincronizarSidebarConViewport(matches);
+        });
       });
+  }
+
+  private actualizarVistaEnZona(actualizacion: () => void) {
+    this.ngZone.run(() => {
+      actualizacion();
+      this.changeDetectorRef.detectChanges();
+    });
+  }
+
+  private sincronizarSidebarConViewport(esMovil: boolean) {
+    this.panelMovil.set(esMovil);
+    this.sidebarAbierto.set(!esMovil);
+    if (esMovil) {
+      this.sidebarCompacto.set(false);
+    }
   }
 
   seleccionarSeccion(seccion: SeccionAdmin) {
@@ -349,6 +417,59 @@ export class AdminDashboardComponent implements OnInit {
     return `estado-${estado.toLowerCase()}`;
   }
 
+  private calcularDistribucionAgenda<T extends { inicio: string; fin: string }>(eventos: T[]) {
+    const ordenados = [...eventos].sort((a, b) => new Date(a.inicio).getTime() - new Date(b.inicio).getTime());
+    const distribucion = new Map<T, { lane: number; laneCount: number }>();
+    const finPorCarril: number[] = [];
+
+    for (const evento of ordenados) {
+      const inicio = new Date(evento.inicio).getTime();
+      const fin = new Date(evento.fin).getTime();
+      let lane = finPorCarril.findIndex(finCarril => finCarril <= inicio);
+
+      if (lane === -1) {
+        lane = finPorCarril.length;
+        finPorCarril.push(fin);
+      } else {
+        finPorCarril[lane] = fin;
+      }
+
+      const laneCount = Math.max(
+        1,
+        ordenados.filter(candidato => this.seSolapan(evento.inicio, evento.fin, candidato.inicio, candidato.fin)).length
+      );
+
+      distribucion.set(evento, { lane, laneCount });
+    }
+
+    return distribucion;
+  }
+
+  private seSolapan(inicioA: string, finA: string, inicioB: string, finB: string) {
+    const desdeA = new Date(inicioA).getTime();
+    const hastaA = new Date(finA).getTime();
+    const desdeB = new Date(inicioB).getTime();
+    const hastaB = new Date(finB).getTime();
+
+    return desdeA < hastaB && hastaA > desdeB;
+  }
+
+  seleccionarFechaAgenda(fecha: string | null) {
+    if (!fecha) {
+      this.fechaAgendaSeleccionada.set(this.obtenerFechaAgendaInicial());
+      return;
+    }
+    this.fechaAgendaSeleccionada.set(fecha);
+  }
+
+  desplazarFechaAgenda(dias: number) {
+    this.fechaAgendaSeleccionada.set(this.sumarDiasAgenda(this.fechaAgendaActiva(), dias));
+  }
+
+  irAHoyAgenda() {
+    this.fechaAgendaSeleccionada.set(this.obtenerFechaLocalISO());
+  }
+
   logout() {
     this.authService.logout();
     void this.router.navigateByUrl('/login');
@@ -359,8 +480,11 @@ export class AdminDashboardComponent implements OnInit {
       return;
     }
 
-    this.loading.set(true);
-    this.error = '';
+    this.actualizarVistaEnZona(() => {
+      this.loading.set(true);
+      this.error = '';
+      this.mensajeExito = '';
+    });
     forkJoin({
       resumen: this.adminService.getResumen().pipe(
         catchError(err => {
@@ -409,31 +533,107 @@ export class AdminDashboardComponent implements OnInit {
           this.marcarErrorCarga(err, 'No se pudo cargar el reporte de servicios.');
           return of([]);
         })
+      ),
+      configuracionCorreo: this.adminService.getConfiguracionCorreo().pipe(
+        catchError(err => {
+          this.marcarErrorCarga(err, 'No se pudo cargar la configuración de correo.');
+          return of(null);
+        })
       )
     })
-      .pipe(finalize(() => this.loading.set(false)))
+      .pipe(finalize(() => this.actualizarVistaEnZona(() => this.loading.set(false))))
       .subscribe({
-        next: ({ resumen, citas, sucursales, servicios, prestadores, reglas, excepciones, reporteServicios }) => {
-          this.resumen.set(resumen);
-          this.citas.set(citas);
-          this.sucursales.set(sucursales);
-          this.servicios.set(servicios);
-          this.prestadores.set(prestadores);
-          this.reglasDisponibilidad.set(reglas);
-          this.excepcionesDisponibilidad.set(excepciones);
-          this.reporteServicios.set(reporteServicios);
-          if (!this.formularioServicio.sucursalId && sucursales.length > 0) {
-            this.formularioServicio.sucursalId = sucursales[0].id;
-          }
-          if (!this.formularioPrestador.sucursalId && sucursales.length > 0) {
-            this.formularioPrestador.sucursalId = sucursales[0].id;
-          }
-          this.actualizarServiciosPrestadorDisponibles();
-          this.actualizarSujetosRegla();
-          this.actualizarSujetosExcepcion();
+        next: ({ resumen, citas, sucursales, servicios, prestadores, reglas, excepciones, reporteServicios, configuracionCorreo }) => {
+          this.actualizarVistaEnZona(() => {
+            this.resumen.set(resumen);
+            this.citas.set(citas);
+            this.sucursales.set(sucursales);
+            this.servicios.set(servicios);
+            this.prestadores.set(prestadores);
+            this.reglasDisponibilidad.set(reglas);
+            this.excepcionesDisponibilidad.set(excepciones);
+            this.reporteServicios.set(reporteServicios);
+            this.configuracionCorreo.set(configuracionCorreo);
+            if (!this.formularioServicio.sucursalId && sucursales.length > 0) {
+              this.formularioServicio.sucursalId = sucursales[0].id;
+            }
+            if (!this.formularioPrestador.sucursalId && sucursales.length > 0) {
+              this.formularioPrestador.sucursalId = sucursales[0].id;
+            }
+            this.sincronizarFormularioCorreo(configuracionCorreo);
+            this.actualizarServiciosPrestadorDisponibles();
+            this.actualizarSujetosRegla();
+            this.actualizarSujetosExcepcion();
+            this.inicializarFechaAgenda();
+          });
         },
         error: err => {
-          this.error = err?.error?.mensaje || err?.message || 'No se pudo cargar el panel administrativo.';
+          this.actualizarVistaEnZona(() => {
+            this.error = err?.error?.mensaje || err?.message || 'No se pudo cargar el panel administrativo.';
+          });
+        }
+      });
+  }
+
+  guardarConfiguracionCorreo() {
+    this.guardandoCorreo = true;
+    this.error = '';
+    this.mensajeExito = '';
+    const payload: GuardarConfiguracionCorreoPayload = {
+      habilitado: this.formularioCorreo.habilitado,
+      proveedor: this.formularioCorreo.proveedor,
+      remitente: this.normalizarTexto(this.formularioCorreo.remitente),
+      nombreRemitente: this.normalizarTexto(this.formularioCorreo.nombreRemitente),
+      responderA: this.normalizarTexto(this.formularioCorreo.responderA),
+      smtpHost: this.normalizarTexto(this.formularioCorreo.smtpHost),
+      smtpPort: this.formularioCorreo.smtpPort ? Number(this.formularioCorreo.smtpPort) : null,
+      smtpUsername: this.normalizarTexto(this.formularioCorreo.smtpUsername),
+      smtpPassword: this.normalizarTexto(this.formularioCorreo.smtpPassword),
+      smtpAuth: this.formularioCorreo.smtpAuth,
+      smtpStartTls: this.formularioCorreo.smtpStartTls,
+      graphTenantId: this.normalizarTexto(this.formularioCorreo.graphTenantId),
+      graphClientId: this.normalizarTexto(this.formularioCorreo.graphClientId),
+      graphClientSecret: this.normalizarTexto(this.formularioCorreo.graphClientSecret),
+      graphUserId: this.normalizarTexto(this.formularioCorreo.graphUserId),
+      graphCertificateThumbprint: this.normalizarTexto(this.formularioCorreo.graphCertificateThumbprint),
+      graphPrivateKeyPem: this.normalizarTexto(this.formularioCorreo.graphPrivateKeyPem)
+    };
+
+    this.adminService.actualizarConfiguracionCorreo(payload)
+      .pipe(finalize(() => this.guardandoCorreo = false))
+      .subscribe({
+        next: response => {
+          this.configuracionCorreo.set(response);
+          this.sincronizarFormularioCorreo(response);
+          this.mensajeExito = 'La configuración de correo se guardó correctamente.';
+        },
+        error: err => {
+          this.error = err?.error?.mensaje || err?.message || 'No se pudo guardar la configuración de correo.';
+        }
+      });
+  }
+
+  migrarSecretosCorreo() {
+    this.migrandoSecretosCorreo = true;
+    this.error = '';
+    this.mensajeExito = '';
+    this.adminService.migrarSecretosCorreo()
+      .pipe(finalize(() => this.migrandoSecretosCorreo = false))
+      .subscribe({
+        next: (response: MigracionSecretosCorreoResponse) => {
+          this.mensajeExito = response.mensaje;
+          this.adminService.getConfiguracionCorreo().subscribe({
+            next: configuracion => {
+              this.configuracionCorreo.set(configuracion);
+              this.sincronizarFormularioCorreo(configuracion);
+            },
+            error: err => {
+              this.error = err?.error?.mensaje || err?.message || 'Se migró el secreto, pero no se pudo refrescar la configuración.';
+            }
+          });
+        },
+        error: err => {
+          this.error = err?.error?.mensaje || err?.message || 'No se pudo migrar el secreto SMTP.';
         }
       });
   }
@@ -463,6 +663,7 @@ export class AdminDashboardComponent implements OnInit {
   guardarSucursal() {
     this.guardandoSucursal = true;
     this.error = '';
+    this.mensajeExito = '';
     const payload: GuardarSucursalPayload = {
       ...this.formularioSucursal,
       direccion: this.normalizarTexto(this.formularioSucursal.direccion),
@@ -519,6 +720,7 @@ export class AdminDashboardComponent implements OnInit {
   guardarServicio() {
     this.guardandoServicio = true;
     this.error = '';
+    this.mensajeExito = '';
     const payload: GuardarServicioPayload = {
       ...this.formularioServicio,
       descripcion: this.normalizarTexto(this.formularioServicio.descripcion),
@@ -575,6 +777,7 @@ export class AdminDashboardComponent implements OnInit {
   guardarPrestador() {
     this.guardandoPrestador = true;
     this.error = '';
+    this.mensajeExito = '';
     const payload: GuardarPrestadorPayload = {
       ...this.formularioPrestador,
       correo: this.formularioPrestador.correo.trim().toLowerCase(),
@@ -672,6 +875,7 @@ export class AdminDashboardComponent implements OnInit {
   guardarRegla() {
     this.guardandoRegla = true;
     this.error = '';
+    this.mensajeExito = '';
     const payload: GuardarReglaDisponibilidadPayload = {
       ...this.formularioRegla,
       vigenteDesde: this.normalizarTexto(this.formularioRegla.vigenteDesde),
@@ -724,6 +928,7 @@ export class AdminDashboardComponent implements OnInit {
   guardarExcepcion() {
     this.guardandoExcepcion = true;
     this.error = '';
+    this.mensajeExito = '';
     const payload: GuardarExcepcionDisponibilidadPayload = {
       ...this.formularioExcepcion,
       horaInicio: this.normalizarTexto(this.formularioExcepcion.horaInicio),
@@ -758,6 +963,28 @@ export class AdminDashboardComponent implements OnInit {
     }
   }
 
+  private sincronizarFormularioCorreo(configuracion: ConfiguracionCorreoAdmin | null) {
+    this.formularioCorreo = {
+      habilitado: configuracion?.habilitado ?? false,
+      proveedor: configuracion?.proveedor ?? 'SMTP',
+      remitente: configuracion?.remitente ?? '',
+      nombreRemitente: configuracion?.nombreRemitente ?? '',
+      responderA: configuracion?.responderA ?? '',
+      smtpHost: configuracion?.smtpHost ?? '',
+      smtpPort: configuracion?.smtpPort ?? 587,
+      smtpUsername: configuracion?.smtpUsername ?? '',
+      smtpPassword: '',
+      smtpAuth: configuracion?.smtpAuth ?? true,
+      smtpStartTls: configuracion?.smtpStartTls ?? true,
+      graphTenantId: configuracion?.graphTenantId ?? '',
+      graphClientId: configuracion?.graphClientId ?? '',
+      graphClientSecret: '',
+      graphUserId: configuracion?.graphUserId ?? '',
+      graphCertificateThumbprint: configuracion?.graphCertificateThumbprint ?? '',
+      graphPrivateKeyPem: ''
+    };
+  }
+
   private actualizarServiciosPrestadorDisponibles() {
     this.serviciosPrestadorDisponibles = this.servicios().filter(
       servicio => servicio.sucursalId === this.formularioPrestador.sucursalId
@@ -776,5 +1003,48 @@ export class AdminDashboardComponent implements OnInit {
     if (!this.sujetosExcepcion.some(sujeto => sujeto.id === this.formularioExcepcion.sujetoId)) {
       this.formularioExcepcion.sujetoId = this.sujetosExcepcion[0]?.id ?? 0;
     }
+  }
+
+  private inicializarFechaAgenda() {
+    if (!this.fechaAgendaSeleccionada()) {
+      this.fechaAgendaSeleccionada.set(this.obtenerFechaAgendaInicial());
+    }
+  }
+
+  private obtenerFechaAgendaInicial(): string {
+    const fechas = this.fechasConCitasAgenda();
+    const hoy = this.obtenerFechaLocalISO();
+    if (!fechas.length) {
+      return hoy;
+    }
+
+    if (fechas.includes(hoy)) {
+      return hoy;
+    }
+
+    return fechas.find(fecha => fecha >= hoy) ?? fechas[0];
+  }
+
+  private obtenerFechaLocalISO(fecha = new Date()): string {
+    const year = fecha.getFullYear();
+    const month = `${fecha.getMonth() + 1}`.padStart(2, '0');
+    const day = `${fecha.getDate()}`.padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  }
+
+  private sumarDiasAgenda(fechaIso: string, dias: number): string {
+    const fecha = new Date(`${fechaIso}T12:00:00`);
+    fecha.setDate(fecha.getDate() + dias);
+    return this.obtenerFechaLocalISO(fecha);
+  }
+
+  private formatearFechaAgendaLarga(fechaIso: string): string {
+    const fecha = new Date(`${fechaIso}T12:00:00`);
+    return fecha.toLocaleDateString('es-MX', {
+      weekday: 'long',
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric'
+    });
   }
 }

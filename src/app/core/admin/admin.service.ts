@@ -140,6 +140,55 @@ export interface ReporteServicioAdmin {
   ingresosFinalizados: number;
 }
 
+export interface ConfiguracionCorreoAdmin {
+  habilitado: boolean;
+  proveedor: 'SMTP' | 'GRAPH' | string | null;
+  remitente: string | null;
+  nombreRemitente: string | null;
+  responderA: string | null;
+  smtpHost: string | null;
+  smtpPort: number | null;
+  smtpUsername: string | null;
+  smtpPasswordConfigurada: boolean;
+  smtpPasswordCifrada: boolean;
+  requiereMigracionSecretos: boolean;
+  smtpAuth: boolean | null;
+  smtpStartTls: boolean | null;
+  graphTenantId: string | null;
+  graphClientId: string | null;
+  graphUserId: string | null;
+  graphClientSecretConfigurado: boolean;
+  graphClientSecretCifrado: boolean;
+  graphCertificateThumbprint: string | null;
+  graphPrivateKeyConfigurada: boolean;
+  graphPrivateKeyCifrada: boolean;
+}
+
+export interface GuardarConfiguracionCorreoPayload {
+  habilitado: boolean;
+  proveedor: 'SMTP' | 'GRAPH' | string | null;
+  remitente: string | null;
+  nombreRemitente: string | null;
+  responderA: string | null;
+  smtpHost: string | null;
+  smtpPort: number | null;
+  smtpUsername: string | null;
+  smtpPassword: string | null;
+  smtpAuth: boolean | null;
+  smtpStartTls: boolean | null;
+  graphTenantId: string | null;
+  graphClientId: string | null;
+  graphClientSecret: string | null;
+  graphUserId: string | null;
+  graphCertificateThumbprint: string | null;
+  graphPrivateKeyPem: string | null;
+}
+
+export interface MigracionSecretosCorreoResponse {
+  actualizada: boolean;
+  mensaje: string;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -216,5 +265,17 @@ export class AdminService {
 
   getReporteServicios(): Observable<ReporteServicioAdmin[]> {
     return this.http.get<ReporteServicioAdmin[]>(`${environment.apiBaseUrl}/admin/reportes/servicios`);
+  }
+
+  getConfiguracionCorreo(): Observable<ConfiguracionCorreoAdmin> {
+    return this.http.get<ConfiguracionCorreoAdmin>(`${environment.apiBaseUrl}/admin/configuracion-correo`);
+  }
+
+  actualizarConfiguracionCorreo(payload: GuardarConfiguracionCorreoPayload): Observable<ConfiguracionCorreoAdmin> {
+    return this.http.patch<ConfiguracionCorreoAdmin>(`${environment.apiBaseUrl}/admin/configuracion-correo`, payload);
+  }
+
+  migrarSecretosCorreo(): Observable<MigracionSecretosCorreoResponse> {
+    return this.http.post<MigracionSecretosCorreoResponse>(`${environment.apiBaseUrl}/admin/configuracion-correo/migrar-secretos`, {});
   }
 }

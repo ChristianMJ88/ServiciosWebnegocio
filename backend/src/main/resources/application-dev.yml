@@ -1,14 +1,13 @@
-spring:
-  devtools:
-    livereload:
+management:
+  health:
+    mail:
       enabled: false
+
+server:
+  address: 0.0.0.0
 
 aplicacion:
   cors:
-    origenes-permitidos: http://localhost:4200,http://127.0.0.1:4200,http://*:4200
-
-logging:
-  level:
-    root: INFO
-    org.springframework.security: INFO
-    org.hibernate.SQL: INFO
+    origenes-permitidos: ${CORS_ORIGENES:http://localhost:4200,http://127.0.0.1:4200,http://192.168.*:4200,http://10.*:4200,http://172.*:4200}
+  correo:
+    habilitado: true

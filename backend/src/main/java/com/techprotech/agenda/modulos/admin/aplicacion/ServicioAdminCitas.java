@@ -1,5 +1,12 @@
 package com.techprotech.agenda.modulos.admin.aplicacion;
 
+import com.techprotech.agenda.compartido.correo.ConfiguracionCorreoEmpresaEntidad;
+import com.techprotech.agenda.compartido.correo.ConfiguracionCorreoEmpresaRepositorio;
+import com.techprotech.agenda.compartido.correo.ProveedorCorreo;
+import com.techprotech.agenda.compartido.correo.ProtectorSecretosCorreo;
+import com.techprotech.agenda.modulos.admin.api.dto.ConfiguracionCorreoAdminRequest;
+import com.techprotech.agenda.modulos.admin.api.dto.ConfiguracionCorreoAdminResponse;
+import com.techprotech.agenda.modulos.admin.api.dto.MigracionSecretosCorreoResponse;
 import com.techprotech.agenda.modulos.admin.api.dto.PrestadorAdminRequest;
 import com.techprotech.agenda.modulos.admin.api.dto.PrestadorAdminResponse;
 import com.techprotech.agenda.modulos.admin.api.dto.ReporteServicioAdminResponse;
@@ -59,6 +66,8 @@ public class ServicioAdminCitas {
     private final UsuarioRolRepositorio usuarioRolRepositorio;
     private final RolRepositorio rolRepositorio;
     private final PasswordEncoder passwordEncoder;
+    private final ConfiguracionCorreoEmpresaRepositorio configuracionCorreoEmpresaRepositorio;
+    private final ProtectorSecretosCorreo protectorSecretosCorreo;
 
     public ServicioAdminCitas(
             CitaRepositorio citaRepositorio,
@@ -69,7 +78,9 @@ public class ServicioAdminCitas {
             UsuarioRepositorio usuarioRepositorio,
             UsuarioRolRepositorio usuarioRolRepositorio,
             RolRepositorio rolRepositorio,
-            PasswordEncoder passwordEncoder
+            PasswordEncoder passwordEncoder,
+            ConfiguracionCorreoEmpresaRepositorio configuracionCorreoEmpresaRepositorio,
+            ProtectorSecretosCorreo protectorSecretosCorreo
     ) {
         this.citaRepositorio = citaRepositorio;
         this.sucursalRepositorio = sucursalRepositorio;
@@ -80,6 +91,8 @@ public class ServicioAdminCitas {
         this.usuarioRolRepositorio = usuarioRolRepositorio;
         this.rolRepositorio = rolRepositorio;
         this.passwordEncoder = passwordEncoder;
+        this.configuracionCorreoEmpresaRepositorio = configuracionCorreoEmpresaRepositorio;
+        this.protectorSecretosCorreo = protectorSecretosCorreo;
     }
 
     @Transactional(readOnly = true)
@@ -124,6 +137,111 @@ public class ServicioAdminCitas {
                 })
                 .sorted(Comparator.comparing(ReporteServicioAdminResponse::totalCitas).reversed())
                 .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public ConfiguracionCorreoAdminResponse obtenerConfiguracionCorreo(Long empresaId) {
+        ConfiguracionCorreoEmpresaEntidad configuracion = configuracionCorreoEmpresaRepositorio.findById(empresaId)
+                .orElseGet(() -> {
+                    ConfiguracionCorreoEmpresaEntidad nueva = new ConfiguracionCorreoEmpresaEntidad();
+                    nueva.setEmpresaId(empresaId);
+                    nueva.setHabilitado(false);
+                    return nueva;
+                });
+
+        return mapearConfiguracionCorreo(configuracion);
+    }
+
+    @Transactional
+    public ConfiguracionCorreoAdminResponse actualizarConfiguracionCorreo(Long empresaId, ConfiguracionCorreoAdminRequest request) {
+        ConfiguracionCorreoEmpresaEntidad configuracion = configuracionCorreoEmpresaRepositorio.findById(empresaId)
+                .orElseGet(() -> {
+                    ConfiguracionCorreoEmpresaEntidad nueva = new ConfiguracionCorreoEmpresaEntidad();
+                    nueva.setEmpresaId(empresaId);
+                    return nueva;
+        });
+
+        ProveedorCorreo proveedor = ProveedorCorreo.desdeValor(request.proveedor(), ProveedorCorreo.SMTP);
+        configuracion.setHabilitado(request.habilitado());
+        configuracion.setProveedor(proveedor.name());
+        configuracion.setRemitente(normalizarOpcional(request.remitente()));
+        configuracion.setNombreRemitente(normalizarOpcional(request.nombreRemitente()));
+        configuracion.setResponderA(normalizarOpcional(request.responderA()));
+        configuracion.setSmtpHost(normalizarOpcional(request.smtpHost()));
+        configuracion.setSmtpPort(request.smtpPort());
+        configuracion.setSmtpUsername(normalizarOpcional(request.smtpUsername()));
+        configuracion.setSmtpAuth(request.smtpAuth());
+        configuracion.setSmtpStartTls(request.smtpStartTls());
+        configuracion.setGraphTenantId(normalizarOpcional(request.graphTenantId()));
+        configuracion.setGraphClientId(normalizarOpcional(request.graphClientId()));
+        configuracion.setGraphUserId(normalizarOpcional(request.graphUserId()));
+        configuracion.setGraphCertificateThumbprint(normalizarOpcional(request.graphCertificateThumbprint()));
+
+        if (request.smtpPassword() != null) {
+            String passwordNormalizado = normalizarOpcional(request.smtpPassword());
+            configuracion.setSmtpPassword(
+                    passwordNormalizado != null ? protectorSecretosCorreo.encriptar(passwordNormalizado) : null
+            );
+        }
+
+        if (request.graphClientSecret() != null) {
+            String secretoNormalizado = normalizarOpcional(request.graphClientSecret());
+            configuracion.setGraphClientSecret(
+                    secretoNormalizado != null ? protectorSecretosCorreo.encriptar(secretoNormalizado) : null
+            );
+        }
+
+        if (request.graphPrivateKeyPem() != null) {
+            String llavePrivadaNormalizada = normalizarOpcional(request.graphPrivateKeyPem());
+            configuracion.setGraphPrivateKeyPem(
+                    llavePrivadaNormalizada != null ? protectorSecretosCorreo.encriptar(llavePrivadaNormalizada) : null
+            );
+        }
+
+        return mapearConfiguracionCorreo(configuracionCorreoEmpresaRepositorio.save(configuracion));
+    }
+
+    @Transactional
+    public MigracionSecretosCorreoResponse migrarSecretosCorreo(Long empresaId) {
+        ConfiguracionCorreoEmpresaEntidad configuracion = configuracionCorreoEmpresaRepositorio.findById(empresaId)
+                .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "No existe configuracion de correo para la empresa"));
+
+        boolean actualizada = false;
+        StringBuilder mensaje = new StringBuilder();
+
+        String smtpPassword = configuracion.getSmtpPassword();
+        if (smtpPassword != null && !smtpPassword.isBlank() && !smtpPassword.startsWith("enc:v1:")) {
+            configuracion.setSmtpPassword(protectorSecretosCorreo.encriptar(smtpPassword));
+            actualizada = true;
+            mensaje.append("smtp_password migrado");
+        }
+
+        String graphClientSecret = configuracion.getGraphClientSecret();
+        if (graphClientSecret != null && !graphClientSecret.isBlank() && !graphClientSecret.startsWith("enc:v1:")) {
+            configuracion.setGraphClientSecret(protectorSecretosCorreo.encriptar(graphClientSecret));
+            if (mensaje.length() > 0) {
+                mensaje.append("; ");
+            }
+            mensaje.append("graph_client_secret migrado");
+            actualizada = true;
+        }
+
+        String graphPrivateKeyPem = configuracion.getGraphPrivateKeyPem();
+        if (graphPrivateKeyPem != null && !graphPrivateKeyPem.isBlank() && !graphPrivateKeyPem.startsWith("enc:v1:")) {
+            configuracion.setGraphPrivateKeyPem(protectorSecretosCorreo.encriptar(graphPrivateKeyPem));
+            if (mensaje.length() > 0) {
+                mensaje.append("; ");
+            }
+            mensaje.append("graph_private_key_pem migrado");
+            actualizada = true;
+        }
+
+        if (!actualizada) {
+            return new MigracionSecretosCorreoResponse(false, "No hay secretos legacy por migrar");
+        }
+
+        configuracionCorreoEmpresaRepositorio.save(configuracion);
+        return new MigracionSecretosCorreoResponse(true, mensaje + " a formato cifrado");
     }
 
     @Transactional(readOnly = true)
@@ -314,6 +432,50 @@ public class ServicioAdminCitas {
         sucursal.setTelefono(request.telefono() != null ? request.telefono().trim() : null);
         sucursal.setZonaHoraria(request.zonaHoraria().trim());
         sucursal.setActiva(request.activa());
+    }
+
+    private ConfiguracionCorreoAdminResponse mapearConfiguracionCorreo(ConfiguracionCorreoEmpresaEntidad configuracion) {
+        String smtpPassword = configuracion.getSmtpPassword();
+        boolean smtpConfigurada = smtpPassword != null && !smtpPassword.isBlank();
+        boolean smtpCifrada = smtpConfigurada && smtpPassword.startsWith("enc:v1:");
+        String graphClientSecret = configuracion.getGraphClientSecret();
+        boolean graphConfigurada = graphClientSecret != null && !graphClientSecret.isBlank();
+        boolean graphCifrada = graphConfigurada && graphClientSecret.startsWith("enc:v1:");
+        String graphPrivateKeyPem = configuracion.getGraphPrivateKeyPem();
+        boolean graphPrivateKeyConfigurada = graphPrivateKeyPem != null && !graphPrivateKeyPem.isBlank();
+        boolean graphPrivateKeyCifrada = graphPrivateKeyConfigurada && graphPrivateKeyPem.startsWith("enc:v1:");
+
+        return new ConfiguracionCorreoAdminResponse(
+                configuracion.isHabilitado(),
+                configuracion.getProveedor(),
+                configuracion.getRemitente(),
+                configuracion.getNombreRemitente(),
+                configuracion.getResponderA(),
+                configuracion.getSmtpHost(),
+                configuracion.getSmtpPort(),
+                configuracion.getSmtpUsername(),
+                smtpConfigurada,
+                smtpCifrada,
+                (smtpConfigurada && !smtpCifrada) || (graphConfigurada && !graphCifrada) || (graphPrivateKeyConfigurada && !graphPrivateKeyCifrada),
+                configuracion.getSmtpAuth(),
+                configuracion.getSmtpStartTls(),
+                configuracion.getGraphTenantId(),
+                configuracion.getGraphClientId(),
+                configuracion.getGraphUserId(),
+                graphConfigurada,
+                graphCifrada,
+                configuracion.getGraphCertificateThumbprint(),
+                graphPrivateKeyConfigurada,
+                graphPrivateKeyCifrada
+        );
+    }
+
+    private String normalizarOpcional(String valor) {
+        if (valor == null) {
+            return null;
+        }
+        String limpio = valor.trim();
+        return limpio.isEmpty() ? null : limpio;
     }
 
     private SucursalAdminResponse mapearSucursal(SucursalEntidad sucursal) {

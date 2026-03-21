@@ -1,5 +1,8 @@
 package com.techprotech.agenda.modulos.admin.api;
 
+import com.techprotech.agenda.modulos.admin.api.dto.ConfiguracionCorreoAdminRequest;
+import com.techprotech.agenda.modulos.admin.api.dto.ConfiguracionCorreoAdminResponse;
+import com.techprotech.agenda.modulos.admin.api.dto.MigracionSecretosCorreoResponse;
 import com.techprotech.agenda.modulos.admin.api.dto.PrestadorAdminRequest;
 import com.techprotech.agenda.modulos.admin.api.dto.PrestadorAdminResponse;
 import com.techprotech.agenda.modulos.admin.api.dto.ReporteServicioAdminResponse;
@@ -48,6 +51,24 @@ public class ControladorAdminCitas {
     @GetMapping("/reportes/servicios")
     public List<ReporteServicioAdminResponse> reporteServicios(@AuthenticationPrincipal UsuarioAutenticado usuario) {
         return servicioAdminCitas.reporteServicios(usuario.empresaId());
+    }
+
+    @GetMapping("/configuracion-correo")
+    public ConfiguracionCorreoAdminResponse configuracionCorreo(@AuthenticationPrincipal UsuarioAutenticado usuario) {
+        return servicioAdminCitas.obtenerConfiguracionCorreo(usuario.empresaId());
+    }
+
+    @PatchMapping("/configuracion-correo")
+    public ConfiguracionCorreoAdminResponse actualizarConfiguracionCorreo(
+            @AuthenticationPrincipal UsuarioAutenticado usuario,
+            @Valid @RequestBody ConfiguracionCorreoAdminRequest request
+    ) {
+        return servicioAdminCitas.actualizarConfiguracionCorreo(usuario.empresaId(), request);
+    }
+
+    @PostMapping("/configuracion-correo/migrar-secretos")
+    public MigracionSecretosCorreoResponse migrarSecretosCorreo(@AuthenticationPrincipal UsuarioAutenticado usuario) {
+        return servicioAdminCitas.migrarSecretosCorreo(usuario.empresaId());
     }
 
     @GetMapping("/sucursales")
