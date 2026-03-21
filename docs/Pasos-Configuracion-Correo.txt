@@ -1,0 +1,89 @@
+PASOS DE CONFIGURACION DEL CORREO TRANSACCIONAL
+
+Proyecto: ServiciosWebnegocio
+Documento de referencia para la configuracion del envio de confirmaciones de cita por correo.
+
+1. OBJETIVO
+
+Se configuro el sistema para enviar correos de confirmacion de cita desde la aplicacion web, con soporte multitenant, integracion con Microsoft Graph, plantilla HTML profesional y opciones para agregar la cita al calendario del cliente.
+
+2. DECISION DE PROVEEDOR
+
+- Se evaluo SMTP tradicional frente a Microsoft Graph.
+- Se eligio Microsoft Graph porque el dominio tecprotech.com.mx ya opera con Microsoft 365.
+- Se descarto depender de autenticacion basica SMTP como solucion principal.
+
+3. APP EN MICROSOFT ENTRA
+
+- Se registro una aplicacion en Entra con el nombre "Tecprotech No-Reply Backend".
+- Se usaron estos identificadores:
+
+  Tenant ID: 70eff3e9-e3a8-4940-b2aa-dbfd6cc7f522
+  Client ID: 0ff2fa1d-0df6-4543-8d92-6e2bd2320205
+
+4. CERTIFICADO PARA MICROSOFT GRAPH
+
+- Se genero un certificado y una llave privada local.
+- Se cargo el certificado publico a la app registrada en Entra.
+- Se confirmo la huella digital:
+
+  Thumbprint: 683EEA1BEE3E7BE55E82DF0740E6ECC55BAF3EEE
+
+- La llave privada quedo local para uso del backend y se utilizo la ruta de autenticacion por certificado.
+
+5. PERMISOS DE MICROSOFT GRAPH
+
+- Se agrego el permiso Mail.Send de tipo Aplicacion.
+- Se otorgo admin consent para el tenant.
+- Se verifico que la app ya podia autenticarse y llamar a Graph.
+
+6. BUZON EMISOR
+
+- Se definio el buzon tecnico no-reply@tecprotech.com.mx.
+- Se verifico que el usuario "No Reply" existe y tiene licencia en Microsoft 365.
+- Inicialmente se intento usar el correo como Graph User ID, pero Graph devolvio ErrorInvalidUser.
+- La correccion fue cambiar el Graph User ID al Object ID del usuario en Entra:
+
+  Object ID de No Reply: 80dceef1-fc42-4858-a61e-24ba67118189
+
+7. CONFIGURACION DEL TENANT EN LA APLICACION
+
+Se cargo la configuracion del tenant 1 con estos datos:
+
+- Proveedor: GRAPH
+- Remitente tecnico: no-reply@tecprotech.com.mx
+- Nombre remitente visible: NailArt Studio
+- Graph User ID: 80dceef1-fc42-4858-a61e-24ba67118189
+- Tenant ID: 70eff3e9-e3a8-4940-b2aa-dbfd6cc7f522
+- Client ID: 0ff2fa1d-0df6-4543-8d92-6e2bd2320205
+- Thumbprint: 683EEA1BEE3E7BE55E82DF0740E6ECC55BAF3EEE
+
+8. CAMBIOS IMPLEMENTADOS EN EL BACKEND
+
+- Soporte para Microsoft Graph con autenticacion por certificado.
+- Soporte multitenant por empresa para remitente, proveedor y credenciales.
+- Procesamiento por outbox para que el envio no bloquee la creacion de la cita.
+- Plantilla HTML profesional para correos de confirmacion.
+- Botones para abrir la cita en Google Calendar y Outlook.
+- Adjunto .ics para agregar la cita a cualquier calendario compatible.
+
+9. RESULTADO DE LAS PRUEBAS
+
+- La primera prueba fallo porque se estaba usando el correo del buzon como identificador de Graph.
+- Una vez cambiado al Object ID, Graph acepto el envio correctamente.
+- Se hicieron pruebas reales de citas y el outbox las marco como ENVIADA.
+- Las ultimas pruebas salieron ya con:
+  - remitente visible NailArt Studio
+  - plantilla HTML
+  - botones de calendario
+  - adjunto .ics
+
+10. PENDIENTES RECOMENDADOS
+
+- Definir un correo real en Responder a para clientes.
+- Cifrar la llave privada Graph en base de datos para eliminar el pendiente de seguridad local.
+- Si se desea, limpiar las citas de prueba creadas durante la configuracion.
+
+11. RECOMENDACION FINAL
+
+La configuracion actual ya es funcional para pruebas y demostraciones. Para dejarla lista para operacion continua, conviene cerrar los pendientes de seguridad y dejar el branding del negocio completo en la plantilla final.

@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <title>Pasos de Configuracion de Correo</title>
+  <style>
+    body {
+      font-family: Arial, Helvetica, sans-serif;
+      color: #16324a;
+      margin: 40px;
+      line-height: 1.55;
+    }
+    h1, h2, h3 {
+      color: #0f3d62;
+    }
+    h1 {
+      font-size: 26px;
+      margin-bottom: 8px;
+    }
+    h2 {
+      font-size: 18px;
+      margin-top: 28px;
+      margin-bottom: 10px;
+      border-bottom: 1px solid #d7e7f5;
+      padding-bottom: 6px;
+    }
+    p, li {
+      font-size: 12.5pt;
+    }
+    ul, ol {
+      margin-top: 8px;
+    }
+    code {
+      font-family: Menlo, Consolas, monospace;
+      font-size: 10.5pt;
+      background: #eef5fb;
+      padding: 2px 5px;
+      border-radius: 4px;
+    }
+    .meta {
+      color: #5b7388;
+      margin-bottom: 20px;
+    }
+    .box {
+      background: #f8fbfe;
+      border: 1px solid #d7e7f5;
+      border-radius: 10px;
+      padding: 14px 16px;
+      margin: 14px 0;
+    }
+  </style>
+</head>
+<body>
+  <h1>Pasos de Configuracion del Correo Transaccional</h1>
+  <p class="meta">Proyecto: ServiciosWebnegocio<br>Documento de referencia para la configuracion del envio de confirmaciones de cita por correo.</p>
+
+  <h2>1. Objetivo</h2>
+  <p>Se configuro el sistema para enviar correos de confirmacion de cita desde la aplicacion web, con soporte multitenant, integracion con Microsoft Graph, plantilla HTML profesional y opciones para agregar la cita al calendario del cliente.</p>
+
+  <h2>2. Decision de proveedor</h2>
+  <ol>
+    <li>Se evaluo SMTP tradicional frente a Microsoft Graph.</li>
+    <li>Se eligio <strong>Microsoft Graph</strong> porque el dominio <code>tecprotech.com.mx</code> ya opera con Microsoft 365.</li>
+    <li>Se descarto depender de autenticacion basica SMTP como solucion principal.</li>
+  </ol>
+
+  <h2>3. App en Microsoft Entra</h2>
+  <ol>
+    <li>Se registro una aplicacion en Entra con el nombre <strong>Tecprotech No-Reply Backend</strong>.</li>
+    <li>Se usaron estos identificadores:</li>
+  </ol>
+  <div class="box">
+    <p><strong>Tenant ID:</strong> <code>70eff3e9-e3a8-4940-b2aa-dbfd6cc7f522</code><br>
+    <strong>Client ID:</strong> <code>0ff2fa1d-0df6-4543-8d92-6e2bd2320205</code></p>
+  </div>
+
+  <h2>4. Certificado para Microsoft Graph</h2>
+  <ol>
+    <li>Se genero un certificado y una llave privada local.</li>
+    <li>Se cargo el certificado publico a la app registrada en Entra.</li>
+    <li>Se confirmo la huella digital:</li>
+  </ol>
+  <div class="box">
+    <p><strong>Thumbprint:</strong> <code>683EEA1BEE3E7BE55E82DF0740E6ECC55BAF3EEE</code></p>
+  </div>
+  <p>La llave privada quedo local para uso del backend y se utilizo la ruta de autenticacion por certificado.</p>
+
+  <h2>5. Permisos de Microsoft Graph</h2>
+  <ol>
+    <li>Se agrego el permiso <code>Mail.Send</code> de tipo <strong>Aplicacion</strong>.</li>
+    <li>Se otorgo <strong>admin consent</strong> para el tenant.</li>
+    <li>Se verifico que la app ya podia autenticarse y llamar a Graph.</li>
+  </ol>
+
+  <h2>6. Buzon emisor</h2>
+  <ol>
+    <li>Se definio el buzon tecnico <code>no-reply@tecprotech.com.mx</code>.</li>
+    <li>Se verifico que el usuario <strong>No Reply</strong> existe y tiene licencia en Microsoft 365.</li>
+    <li>Inicialmente se intento usar el correo como <code>Graph User ID</code>, pero Graph devolvio <code>ErrorInvalidUser</code>.</li>
+    <li>La correccion fue cambiar el <code>Graph User ID</code> al <strong>Object ID</strong> del usuario en Entra:</li>
+  </ol>
+  <div class="box">
+    <p><strong>Object ID de No Reply:</strong> <code>80dceef1-fc42-4858-a61e-24ba67118189</code></p>
+  </div>
+
+  <h2>7. Configuracion del tenant en la aplicacion</h2>
+  <p>Se cargo la configuracion del tenant <code>1</code> con estos datos:</p>
+  <ul>
+    <li><strong>Proveedor:</strong> <code>GRAPH</code></li>
+    <li><strong>Remitente tecnico:</strong> <code>no-reply@tecprotech.com.mx</code></li>
+    <li><strong>Nombre remitente visible:</strong> <code>NailArt Studio</code></li>
+    <li><strong>Graph User ID:</strong> <code>80dceef1-fc42-4858-a61e-24ba67118189</code></li>
+    <li><strong>Tenant ID:</strong> <code>70eff3e9-e3a8-4940-b2aa-dbfd6cc7f522</code></li>
+    <li><strong>Client ID:</strong> <code>0ff2fa1d-0df6-4543-8d92-6e2bd2320205</code></li>
+    <li><strong>Thumbprint:</strong> <code>683EEA1BEE3E7BE55E82DF0740E6ECC55BAF3EEE</code></li>
+  </ul>
+
+  <h2>8. Cambios implementados en el backend</h2>
+  <ul>
+    <li>Soporte para Microsoft Graph con autenticacion por certificado.</li>
+    <li>Soporte multitenant por empresa para remitente, proveedor y credenciales.</li>
+    <li>Procesamiento por outbox para que el envio no bloquee la creacion de la cita.</li>
+    <li>Plantilla HTML profesional para correos de confirmacion.</li>
+    <li>Botones para abrir la cita en Google Calendar y Outlook.</li>
+    <li>Adjunto <code>.ics</code> para agregar la cita a cualquier calendario compatible.</li>
+  </ul>
+
+  <h2>9. Resultado de las pruebas</h2>
+  <ol>
+    <li>La primera prueba fallo porque se estaba usando el correo del buzon como identificador de Graph.</li>
+    <li>Una vez cambiado al <strong>Object ID</strong>, Graph acepto el envio correctamente.</li>
+    <li>Se hicieron pruebas reales de citas y el outbox las marco como <strong>ENVIADA</strong>.</li>
+    <li>Las ultimas pruebas salieron ya con:
+      <ul>
+        <li>remitente visible <strong>NailArt Studio</strong></li>
+        <li>plantilla HTML</li>
+        <li>botones de calendario</li>
+        <li>adjunto <code>.ics</code></li>
+      </ul>
+    </li>
+  </ol>
+
+  <h2>10. Pendientes recomendados</h2>
+  <ol>
+    <li>Definir un correo real en <strong>Responder a</strong> para clientes.</li>
+    <li>Cifrar la llave privada Graph en base de datos para eliminar el pendiente de seguridad local.</li>
+    <li>Si se desea, limpiar las citas de prueba creadas durante la configuracion.</li>
+  </ol>
+
+  <h2>11. Recomendacion final</h2>
+  <p>La configuracion actual ya es funcional para pruebas y demostraciones. Para dejarla lista para operacion continua, conviene cerrar los pendientes de seguridad y dejar el branding del negocio completo en la plantilla final.</p>
+</body>
+</html>
