@@ -1,5 +1,5 @@
-import { CommonModule, CurrencyPipe, DatePipe } from '@angular/common';
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { CommonModule, CurrencyPipe } from '@angular/common';
+import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { AuthService } from '../../core/auth/auth.service';
 import { ClientAppointmentsService, CitaCliente } from '../../core/auth/client-appointments.service';
@@ -9,7 +9,7 @@ import { AppointmentService, FranjaDisponible } from '../../services/appointment
 @Component({
   selector: 'app-account',
   standalone: true,
-  imports: [CommonModule, DatePipe, CurrencyPipe],
+  imports: [CommonModule, CurrencyPipe],
   templateUrl: './account.component.html',
   styleUrl: './account.component.css'
 })
@@ -25,6 +25,43 @@ export class AccountComponent implements OnInit {
   readonly franjasReprogramacion = signal<FranjaDisponible[]>([]);
   readonly franjaSeleccionada = signal<string | null>(null);
   readonly loadingFranjas = signal(false);
+  readonly citasAgrupadas = computed(() => {
+    const grupos = new Map<string, {
+      fechaClave: string;
+      fechaTexto: string;
+      items: Array<CitaCliente & { horaTexto: string; rangoTexto: string }>;
+    }>();
+
+    const ordenadas = [...this.citas()].sort((a, b) => new Date(a.inicio).getTime() - new Date(b.inicio).getTime());
+    for (const cita of ordenadas) {
+      const inicio = new Date(cita.inicio);
+      const fin = new Date(cita.fin);
+      const fechaClave = cita.inicio.slice(0, 10);
+      const item = {
+        ...cita,
+        horaTexto: inicio.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' }),
+        rangoTexto: `${inicio.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' })} - ${fin.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' })}`
+      };
+
+      const actual = grupos.get(fechaClave);
+      if (actual) {
+        actual.items.push(item);
+        continue;
+      }
+
+      grupos.set(fechaClave, {
+        fechaClave,
+        fechaTexto: inicio.toLocaleDateString('es-MX', {
+          weekday: 'long',
+          day: 'numeric',
+          month: 'long'
+        }),
+        items: [item]
+      });
+    }
+
+    return Array.from(grupos.values());
+  });
   error = '';
 
   ngOnInit(): void {

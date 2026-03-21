@@ -7,7 +7,7 @@ export const roleGuard: CanActivateFn = (route: ActivatedRouteSnapshot) => {
   const router = inject(Router);
   const expectedRoles = (route.data['roles'] as string[] | undefined) ?? [];
 
-  if (!authService.autenticado()) {
+  if (!authService.asegurarSesion()) {
     return router.createUrlTree(['/login']);
   }
 
@@ -18,4 +18,3 @@ export const roleGuard: CanActivateFn = (route: ActivatedRouteSnapshot) => {
 
   return router.createUrlTree([authService.rutaPanel()]);
 };
-

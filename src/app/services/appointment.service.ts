@@ -8,6 +8,7 @@ export interface FranjaDisponible {
   inicio: string;
   fin: string;
   hora: string;
+  prestadorId: number | null;
 }
 
 export interface ConsultaFranjasRequest {
@@ -95,7 +96,6 @@ export class AppointmentService {
     if (environment.useBackendBooking && this.apiUrl) {
       return this.http.post(`${this.apiUrl}/publico/citas`, data).pipe(
         timeout(this.TIMEOUT_DURATION),
-        retry(this.RETRY_COUNT),
         catchError(err => {
           console.error('Error al crear cita en backend:', err);
           if (environment.allowLegacyFallback) {
@@ -116,7 +116,7 @@ export class AppointmentService {
               responseType: 'text'
             });
           }
-          return throwError(() => new Error(err?.error?.mensaje || 'No se pudo crear la cita en el backend.'));
+          return throwError(() => new Error(this.resolveBackendErrorMessage(err)));
         })
       );
     }
@@ -154,7 +154,8 @@ export class AppointmentService {
     return {
       inicio: slot.inicio,
       fin: slot.fin,
-      hora: this.formatHour(slot.inicio)
+      hora: this.formatHour(slot.inicio),
+      prestadorId: slot.prestadorId
     };
   }
 
@@ -173,8 +174,27 @@ export class AppointmentService {
     return available.map(hour => ({
       inicio: `${fecha}T${hour}:00`,
       fin: `${fecha}T${hour}:00`,
-      hora: hour
+      hora: hour,
+      prestadorId: null
     }));
+  }
+
+  private resolveBackendErrorMessage(error: any): string {
+    const errorBody = error?.error;
+
+    if (typeof errorBody === 'string' && errorBody.trim()) {
+      return errorBody;
+    }
+
+    if (errorBody?.mensaje) {
+      if (errorBody?.errores && typeof errorBody.errores === 'object') {
+        const detalles = Object.values(errorBody.errores).join(' ');
+        return detalles ? `${errorBody.mensaje}. ${detalles}` : errorBody.mensaje;
+      }
+      return errorBody.mensaje;
+    }
+
+    return 'No se pudo crear la cita en el backend.';
   }
 
   private formatHour(isoDateTime: string): string {

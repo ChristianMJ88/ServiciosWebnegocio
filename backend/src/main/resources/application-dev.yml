@@ -1,6 +1,14 @@
+spring:
+  devtools:
+    livereload:
+      enabled: false
+
+aplicacion:
+  cors:
+    origenes-permitidos: http://localhost:4200,http://127.0.0.1:4200,http://*:4200
+
 logging:
   level:
     root: INFO
     org.springframework.security: INFO
     org.hibernate.SQL: INFO
-

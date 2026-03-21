@@ -1,8 +1,26 @@
-import { CommonModule, CurrencyPipe, DatePipe } from '@angular/common';
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { CommonModule, CurrencyPipe } from '@angular/common';
+import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { BreakpointObserver } from '@angular/cdk/layout';
 import { FormsModule } from '@angular/forms';
-import { forkJoin } from 'rxjs';
-import { finalize } from 'rxjs/operators';
+import { Router } from '@angular/router';
+import { MatBadgeModule } from '@angular/material/badge';
+import { MatButtonModule } from '@angular/material/button';
+import { MatCardModule } from '@angular/material/card';
+import { MatCheckboxModule } from '@angular/material/checkbox';
+import { MatChipsModule } from '@angular/material/chips';
+import { MatDividerModule } from '@angular/material/divider';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { MatListModule } from '@angular/material/list';
+import { MatMenuModule } from '@angular/material/menu';
+import { MatProgressBarModule } from '@angular/material/progress-bar';
+import { MatSelectModule } from '@angular/material/select';
+import { MatSlideToggleModule } from '@angular/material/slide-toggle';
+import { MatToolbarModule } from '@angular/material/toolbar';
+import { MatTooltipModule } from '@angular/material/tooltip';
+import { forkJoin, of } from 'rxjs';
+import { catchError, finalize } from 'rxjs/operators';
 import {
   AdminService,
   ExcepcionDisponibilidadAdmin,
@@ -18,18 +36,57 @@ import {
   ServicioAdmin,
   SucursalAdmin
 } from '../../core/admin/admin.service';
+import { AuthService } from '../../core/auth/auth.service';
 import { CitaCliente } from '../../core/auth/client-appointments.service';
+
+type SeccionAdmin =
+  | 'resumen'
+  | 'sucursales'
+  | 'servicios'
+  | 'prestadores'
+  | 'reglas'
+  | 'excepciones'
+  | 'citas';
 
 @Component({
   selector: 'app-admin-dashboard',
   standalone: true,
-  imports: [CommonModule, DatePipe, CurrencyPipe, FormsModule],
+  imports: [
+    CommonModule,
+    CurrencyPipe,
+    FormsModule,
+    MatBadgeModule,
+    MatToolbarModule,
+    MatListModule,
+    MatButtonModule,
+    MatCardModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatSelectModule,
+    MatSlideToggleModule,
+    MatCheckboxModule,
+    MatChipsModule,
+    MatMenuModule,
+    MatTooltipModule,
+    MatDividerModule,
+    MatProgressBarModule
+  ],
   templateUrl: './admin-dashboard.component.html',
   styleUrl: './admin-dashboard.component.css'
 })
 export class AdminDashboardComponent implements OnInit {
   private readonly adminService = inject(AdminService);
+  private readonly breakpointObserver = inject(BreakpointObserver);
+  private readonly authService = inject(AuthService);
+  private readonly router = inject(Router);
+  private readonly inicioAgendaHora = 8;
+  private readonly finAgendaHora = 20;
+  private readonly alturaHoraAgenda = 86;
   readonly loading = signal(false);
+  readonly seccionActiva = signal<SeccionAdmin>('resumen');
+  readonly panelMovil = signal(false);
+  readonly sidebarAbierto = signal(true);
+  readonly sidebarCompacto = signal(false);
   readonly resumen = signal<ResumenAdmin | null>(null);
   readonly citas = signal<CitaCliente[]>([]);
   readonly sucursales = signal<SucursalAdmin[]>([]);
@@ -47,13 +104,141 @@ export class AdminDashboardComponent implements OnInit {
     { value: 6, label: 'Sábado' },
     { value: 7, label: 'Domingo' }
   ];
+  readonly diasSemanaTexto: Record<number, string> = {
+    1: 'Lunes',
+    2: 'Martes',
+    3: 'Miércoles',
+    4: 'Jueves',
+    5: 'Viernes',
+    6: 'Sábado',
+    7: 'Domingo'
+  };
   readonly tiposBloqueo = ['BLOQUEO', 'DESCANSO', 'VACACIONES', 'HORARIO_ESPECIAL'];
+  readonly modulosAdmin: Array<{ id: SeccionAdmin; titulo: string; descripcion: string; abreviatura: string; icono: string }> = [
+    { id: 'resumen', titulo: 'Resumen ejecutivo', descripcion: 'Métricas generales y desempeño comercial.', abreviatura: 'RE', icono: 'resumen' },
+    { id: 'sucursales', titulo: 'Sucursales', descripcion: 'Alta y mantenimiento de sedes operativas.', abreviatura: 'SU', icono: 'sucursal' },
+    { id: 'servicios', titulo: 'Servicios', descripcion: 'Catálogo, duración, buffers y precio.', abreviatura: 'SV', icono: 'servicio' },
+    { id: 'prestadores', titulo: 'Prestadores', descripcion: 'Usuarios staff y asignaciones de servicio.', abreviatura: 'PR', icono: 'prestador' },
+    { id: 'reglas', titulo: 'Horarios base', descripcion: 'Reglas semanales por sucursal o prestador.', abreviatura: 'HB', icono: 'horario' },
+    { id: 'excepciones', titulo: 'Bloqueos', descripcion: 'Vacaciones, descansos y cierres puntuales.', abreviatura: 'BL', icono: 'bloqueo' },
+    { id: 'citas', titulo: 'Citas', descripcion: 'Seguimiento operativo de reservas creadas.', abreviatura: 'CT', icono: 'agenda' }
+  ];
+  readonly nombreUsuarioAdmin = computed(() => this.authService.nombreUsuarioVisible());
+  readonly correoUsuarioAdmin = computed(() => this.authService.sesionActual()?.correo ?? '');
+  readonly inicialesUsuarioAdmin = computed(() => this.authService.inicialesUsuarioVisible());
+  readonly totalNotificaciones = computed(() => this.resumen()?.pendientes ?? 0);
+  readonly sucursalActivaNombre = computed(() => this.sucursales()[0]?.nombre ?? 'Sucursal principal');
+  readonly horasAgenda = Array.from({ length: this.finAgendaHora - this.inicioAgendaHora + 1 }, (_, index) => {
+    const hora = this.inicioAgendaHora + index;
+    return {
+      hora,
+      etiqueta: `${hora.toString().padStart(2, '0')}:00`
+    };
+  });
+  readonly citasAgrupadas = computed(() => {
+    const agrupadas = new Map<string, {
+      fechaClave: string;
+      fechaTexto: string;
+      items: Array<CitaCliente & { horaTexto: string; rangoTexto: string }>;
+    }>();
+
+    const citasOrdenadas = [...this.citas()].sort((a, b) => new Date(a.inicio).getTime() - new Date(b.inicio).getTime());
+    for (const cita of citasOrdenadas) {
+      const inicio = new Date(cita.inicio);
+      const fin = new Date(cita.fin);
+      const fechaClave = cita.inicio.slice(0, 10);
+      const existente = agrupadas.get(fechaClave);
+      const item = {
+        ...cita,
+        horaTexto: inicio.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' }),
+        rangoTexto: `${inicio.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' })} - ${fin.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' })}`
+      };
+
+      if (existente) {
+        existente.items.push(item);
+        continue;
+      }
+
+      agrupadas.set(fechaClave, {
+        fechaClave,
+        fechaTexto: inicio.toLocaleDateString('es-MX', {
+          weekday: 'long',
+          day: 'numeric',
+          month: 'long'
+        }),
+        items: [item]
+      });
+    }
+
+    return Array.from(agrupadas.values());
+  });
+  readonly fechaAgendaActiva = computed(() => {
+    const citas = this.citas();
+    if (!citas.length) {
+      return new Date().toISOString().slice(0, 10);
+    }
+
+    const hoy = new Date().toISOString().slice(0, 10);
+    if (citas.some(cita => cita.inicio.startsWith(hoy))) {
+      return hoy;
+    }
+
+    return [...citas]
+      .sort((a, b) => new Date(a.inicio).getTime() - new Date(b.inicio).getTime())[0]
+      .inicio
+      .slice(0, 10);
+  });
+  readonly colaboradoresAgenda = computed(() => {
+    const fecha = this.fechaAgendaActiva();
+    const mapa = new Map<number, { id: number; nombre: string }>();
+
+    for (const cita of this.citas()) {
+      if (!cita.inicio.startsWith(fecha)) {
+        continue;
+      }
+      mapa.set(cita.prestadorId, { id: cita.prestadorId, nombre: cita.prestadorNombre });
+    }
+
+    if (!mapa.size) {
+      for (const prestador of this.prestadores().slice(0, 4)) {
+        mapa.set(prestador.usuarioId, { id: prestador.usuarioId, nombre: prestador.nombreMostrar });
+      }
+    }
+
+    return Array.from(mapa.values());
+  });
+  readonly citasAgendaPosicionadas = computed(() => {
+    const fecha = this.fechaAgendaActiva();
+    const columnas = this.colaboradoresAgenda();
+    const indiceColumna = new Map(columnas.map((columna, index) => [columna.id, index]));
+
+    return this.citas()
+      .filter(cita => cita.inicio.startsWith(fecha))
+      .map(cita => {
+        const inicio = new Date(cita.inicio);
+        const fin = new Date(cita.fin);
+        const minutosInicio = (inicio.getHours() - this.inicioAgendaHora) * 60 + inicio.getMinutes();
+        const duracionMinutos = Math.max(30, Math.round((fin.getTime() - inicio.getTime()) / 60000));
+        const top = (minutosInicio / 60) * this.alturaHoraAgenda;
+        const height = Math.max(64, (duracionMinutos / 60) * this.alturaHoraAgenda - 8);
+
+        return {
+          ...cita,
+          top,
+          height,
+          columna: indiceColumna.get(cita.prestadorId) ?? 0
+        };
+      });
+  });
   error = '';
   guardandoSucursal = false;
   guardandoServicio = false;
   guardandoPrestador = false;
   guardandoRegla = false;
   guardandoExcepcion = false;
+  sujetosRegla: Array<{ id: number; nombre: string }> = [];
+  sujetosExcepcion: Array<{ id: number; nombre: string }> = [];
+  serviciosPrestadorDisponibles: ServicioAdmin[] = [];
   sucursalEditandoId: number | null = null;
   servicioEditandoId: number | null = null;
   prestadorEditandoId: number | null = null;
@@ -113,21 +298,118 @@ export class AdminDashboardComponent implements OnInit {
   };
 
   ngOnInit(): void {
-    this.recargar();
+    if (this.authService.asegurarSesion()) {
+      setTimeout(() => this.recargar());
+    }
+
+    this.breakpointObserver
+      .observe('(max-width: 991px)')
+      .pipe(takeUntilDestroyed())
+      .subscribe(({ matches }) => {
+        this.panelMovil.set(matches);
+        this.sidebarAbierto.set(!matches);
+        if (matches) {
+          this.sidebarCompacto.set(false);
+        }
+      });
+  }
+
+  seleccionarSeccion(seccion: SeccionAdmin) {
+    this.seccionActiva.set(seccion);
+    if (this.panelMovil()) {
+      this.sidebarAbierto.set(false);
+    }
+  }
+
+  alternarSidebar() {
+    this.sidebarAbierto.update(valor => !valor);
+  }
+
+  cerrarSidebar() {
+    this.sidebarAbierto.set(false);
+  }
+
+  alternarCompactoSidebar() {
+    if (this.panelMovil()) {
+      this.sidebarAbierto.update(valor => !valor);
+      return;
+    }
+    this.sidebarCompacto.update(valor => !valor);
+  }
+
+  tituloSeccionActual(): string {
+    return this.modulosAdmin.find(modulo => modulo.id === this.seccionActiva())?.titulo ?? 'Panel Admin';
+  }
+
+  descripcionSeccionActual(): string {
+    return this.modulosAdmin.find(modulo => modulo.id === this.seccionActiva())?.descripcion ?? '';
+  }
+
+  claseEstadoCita(estado: string): string {
+    return `estado-${estado.toLowerCase()}`;
+  }
+
+  logout() {
+    this.authService.logout();
+    void this.router.navigateByUrl('/login');
   }
 
   recargar() {
+    if (!this.authService.asegurarSesion()) {
+      return;
+    }
+
     this.loading.set(true);
     this.error = '';
     forkJoin({
-      resumen: this.adminService.getResumen(),
-      citas: this.adminService.getCitas(),
-      sucursales: this.adminService.getSucursales(),
-      servicios: this.adminService.getServicios(),
-      prestadores: this.adminService.getPrestadores(),
-      reglas: this.adminService.getReglasDisponibilidad(),
-      excepciones: this.adminService.getExcepcionesDisponibilidad(),
-      reporteServicios: this.adminService.getReporteServicios()
+      resumen: this.adminService.getResumen().pipe(
+        catchError(err => {
+          this.marcarErrorCarga(err, 'No se pudo cargar el resumen.');
+          return of(null);
+        })
+      ),
+      citas: this.adminService.getCitas().pipe(
+        catchError(err => {
+          this.marcarErrorCarga(err, 'No se pudieron cargar las citas.');
+          return of([]);
+        })
+      ),
+      sucursales: this.adminService.getSucursales().pipe(
+        catchError(err => {
+          this.marcarErrorCarga(err, 'No se pudieron cargar las sucursales.');
+          return of([]);
+        })
+      ),
+      servicios: this.adminService.getServicios().pipe(
+        catchError(err => {
+          this.marcarErrorCarga(err, 'No se pudieron cargar los servicios.');
+          return of([]);
+        })
+      ),
+      prestadores: this.adminService.getPrestadores().pipe(
+        catchError(err => {
+          this.marcarErrorCarga(err, 'No se pudieron cargar los prestadores.');
+          return of([]);
+        })
+      ),
+      reglas: this.adminService.getReglasDisponibilidad().pipe(
+        catchError(err => {
+          this.marcarErrorCarga(err, 'No se pudieron cargar las reglas de disponibilidad.');
+          return of([]);
+        })
+      ),
+      excepciones: this.adminService.getExcepcionesDisponibilidad().pipe(
+        catchError(err => {
+          this.marcarErrorCarga(err, 'No se pudieron cargar las excepciones.');
+          return of([]);
+        })
+      ),
+      reporteServicios: this.adminService.getReporteServicios().pipe(
+        catchError(err => {
+          this.marcarErrorCarga(err, 'No se pudo cargar el reporte de servicios.');
+          return of([]);
+        })
+      )
     })
       .pipe(finalize(() => this.loading.set(false)))
       .subscribe({
@@ -146,12 +428,9 @@ export class AdminDashboardComponent implements OnInit {
           if (!this.formularioPrestador.sucursalId && sucursales.length > 0) {
             this.formularioPrestador.sucursalId = sucursales[0].id;
           }
-          if (!this.formularioRegla.sujetoId) {
-            this.formularioRegla.sujetoId = this.opcionesSujetosDisponibilidad('SUCURSAL')[0]?.id ?? 0;
-          }
-          if (!this.formularioExcepcion.sujetoId) {
-            this.formularioExcepcion.sujetoId = this.opcionesSujetosDisponibilidad('SUCURSAL')[0]?.id ?? 0;
-          }
+          this.actualizarServiciosPrestadorDisponibles();
+          this.actualizarSujetosRegla();
+          this.actualizarSujetosExcepcion();
         },
         error: err => {
           this.error = err?.error?.mensaje || err?.message || 'No se pudo cargar el panel administrativo.';
@@ -275,6 +554,7 @@ export class AdminDashboardComponent implements OnInit {
       activo: prestador.activo,
       servicioIds: [...prestador.servicioIds]
     };
+    this.actualizarServiciosPrestadorDisponibles();
   }
 
   cancelarEdicionPrestador() {
@@ -289,6 +569,7 @@ export class AdminDashboardComponent implements OnInit {
       activo: true,
       servicioIds: []
     };
+    this.actualizarServiciosPrestadorDisponibles();
   }
 
   guardarPrestador() {
@@ -321,7 +602,8 @@ export class AdminDashboardComponent implements OnInit {
 
   cambiarSucursalPrestador(sucursalId: number) {
     this.formularioPrestador.sucursalId = sucursalId;
-    const serviciosValidos = new Set(this.serviciosDisponiblesPrestador().map(servicio => servicio.id));
+    this.actualizarServiciosPrestadorDisponibles();
+    const serviciosValidos = new Set(this.serviciosPrestadorDisponibles.map(servicio => servicio.id));
     this.formularioPrestador.servicioIds = this.formularioPrestador.servicioIds.filter(id => serviciosValidos.has(id));
   }
 
@@ -335,15 +617,7 @@ export class AdminDashboardComponent implements OnInit {
     this.formularioPrestador.servicioIds = Array.from(seleccionados);
   }
 
-  servicioPrestadorSeleccionado(servicioId: number): boolean {
-    return this.formularioPrestador.servicioIds.includes(servicioId);
-  }
-
-  serviciosDisponiblesPrestador(): ServicioAdmin[] {
-    return this.servicios().filter(servicio => servicio.sucursalId === this.formularioPrestador.sucursalId);
-  }
-
-  opcionesSujetosDisponibilidad(tipoSujeto: string): Array<{ id: number; nombre: string }> {
+  private construirOpcionesSujetos(tipoSujeto: string): Array<{ id: number; nombre: string }> {
     if (tipoSujeto === 'PRESTADOR') {
       return this.prestadores().map(prestador => ({
         id: prestador.usuarioId,
@@ -358,12 +632,12 @@ export class AdminDashboardComponent implements OnInit {
 
   cambiarTipoSujetoRegla(tipoSujeto: string) {
     this.formularioRegla.tipoSujeto = tipoSujeto;
-    this.formularioRegla.sujetoId = this.opcionesSujetosDisponibilidad(tipoSujeto)[0]?.id ?? 0;
+    this.actualizarSujetosRegla();
   }
 
   cambiarTipoSujetoExcepcion(tipoSujeto: string) {
     this.formularioExcepcion.tipoSujeto = tipoSujeto;
-    this.formularioExcepcion.sujetoId = this.opcionesSujetosDisponibilidad(tipoSujeto)[0]?.id ?? 0;
+    this.actualizarSujetosExcepcion();
   }
 
   editarRegla(regla: ReglaDisponibilidadAdmin) {
@@ -384,7 +658,7 @@ export class AdminDashboardComponent implements OnInit {
     this.reglaEditandoId = null;
     this.formularioRegla = {
       tipoSujeto: 'SUCURSAL',
-      sujetoId: this.opcionesSujetosDisponibilidad('SUCURSAL')[0]?.id ?? 0,
+      sujetoId: 0,
       diaSemana: 1,
       horaInicio: '09:00',
       horaFin: '18:00',
@@ -392,6 +666,7 @@ export class AdminDashboardComponent implements OnInit {
       vigenteDesde: null,
       vigenteHasta: null
     };
+    this.actualizarSujetosRegla();
   }
 
   guardarRegla() {
@@ -436,13 +711,14 @@ export class AdminDashboardComponent implements OnInit {
     this.excepcionEditandoId = null;
     this.formularioExcepcion = {
       tipoSujeto: 'SUCURSAL',
-      sujetoId: this.opcionesSujetosDisponibilidad('SUCURSAL')[0]?.id ?? 0,
+      sujetoId: 0,
       fechaExcepcion: '',
       horaInicio: null,
       horaFin: null,
       tipoBloqueo: 'BLOQUEO',
       motivo: null
     };
+    this.actualizarSujetosExcepcion();
   }
 
   guardarExcepcion() {
@@ -471,12 +747,34 @@ export class AdminDashboardComponent implements OnInit {
       });
   }
 
-  etiquetaDiaSemana(dia: number): string {
-    return this.diasSemana.find(item => item.value === dia)?.label ?? `Día ${dia}`;
-  }
-
   private normalizarTexto(valor: string | null): string | null {
     const limpio = valor?.trim();
     return limpio ? limpio : null;
+  }
+
+  private marcarErrorCarga(err: any, mensajeFallback: string) {
+    if (!this.error) {
+      this.error = err?.error?.mensaje || err?.message || mensajeFallback;
+    }
+  }
+
+  private actualizarServiciosPrestadorDisponibles() {
+    this.serviciosPrestadorDisponibles = this.servicios().filter(
+      servicio => servicio.sucursalId === this.formularioPrestador.sucursalId
+    );
+  }
+
+  private actualizarSujetosRegla() {
+    this.sujetosRegla = this.construirOpcionesSujetos(this.formularioRegla.tipoSujeto);
+    if (!this.sujetosRegla.some(sujeto => sujeto.id === this.formularioRegla.sujetoId)) {
+      this.formularioRegla.sujetoId = this.sujetosRegla[0]?.id ?? 0;
+    }
+  }
+
+  private actualizarSujetosExcepcion() {
+    this.sujetosExcepcion = this.construirOpcionesSujetos(this.formularioExcepcion.tipoSujeto);
+    if (!this.sujetosExcepcion.some(sujeto => sujeto.id === this.formularioExcepcion.sujetoId)) {
+      this.formularioExcepcion.sujetoId = this.sujetosExcepcion[0]?.id ?? 0;
+    }
   }
 }

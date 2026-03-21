@@ -103,6 +103,11 @@ export class BookingComponent implements OnInit {
     return this.services().find(service => service.id === serviceId);
   }
 
+  get selectedSlot(): FranjaDisponible | undefined {
+    const selectedHour = this.selectedHour();
+    return this.availableSlots().find(slot => slot.inicio === selectedHour);
+  }
+
   onBranchChange(rawBranchId: string) {
     const branchId = rawBranchId ? Number(rawBranchId) : null;
     this.bookingForm.patchValue({ branchId, serviceId: null });
@@ -214,7 +219,7 @@ export class BookingComponent implements OnInit {
   }
 
   onSubmit() {
-    if (this.bookingForm.invalid || !this.selectedDate() || !this.selectedHour() || !this.selectedService) {
+    if (this.bookingForm.invalid || !this.selectedDate() || !this.selectedHour() || !this.selectedService || !this.selectedSlot) {
       this.bookingForm.markAllAsTouched();
       return;
     }
@@ -229,6 +234,7 @@ export class BookingComponent implements OnInit {
       empresaId: 1,
       sucursalId: Number(this.bookingForm.value.branchId),
       servicioId: Number(this.bookingForm.value.serviceId),
+      prestadorId: this.selectedSlot.prestadorId,
       nombreCliente: this.bookingForm.value.name.trim(),
       telefonoCliente: phone,
       correoCliente: this.bookingForm.value.email.trim(),

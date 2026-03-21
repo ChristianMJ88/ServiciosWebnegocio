@@ -1,4 +1,4 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, NgZone, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
@@ -16,6 +16,7 @@ export class LoginComponent {
   private readonly fb = inject(FormBuilder);
   private readonly authService = inject(AuthService);
   private readonly router = inject(Router);
+  private readonly ngZone = inject(NgZone);
 
   readonly loading = signal(false);
   error = '';
@@ -45,7 +46,12 @@ export class LoginComponent {
       })
       .pipe(finalize(() => this.loading.set(false)))
       .subscribe({
-        next: () => this.router.navigateByUrl(this.authService.rutaPanel()),
+        next: () => {
+          const rutaDestino = this.authService.rutaPanelPersistida();
+          this.ngZone.run(() => {
+            void this.router.navigateByUrl(rutaDestino);
+          });
+        },
         error: err => {
           this.error = err?.message || 'No se pudo iniciar sesión.';
         }

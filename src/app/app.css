@@ -1,4 +1,8 @@
 /* Estilos Globales y Flotantes */
+.panel-shell {
+  min-height: 100vh;
+}
+
 .whatsapp-float {
   position: fixed;
   bottom: 20px;

@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, computed, inject } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { AuthService } from '../../core/auth/auth.service';
@@ -12,6 +12,8 @@ import { AuthService } from '../../core/auth/auth.service';
 })
 export class HeaderComponent {
   readonly authService = inject(AuthService);
+  readonly autenticadoVisible = computed(() => this.authService.autenticado());
+  readonly rutaPanelVisible = computed(() => this.authService.rutaPanel());
 
   logout() {
     this.authService.logout();

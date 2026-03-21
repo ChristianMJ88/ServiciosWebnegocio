@@ -18,7 +18,7 @@ public class ConfiguracionCors {
             @Value("${aplicacion.cors.origenes-permitidos}") String origenesPermitidos
     ) {
         CorsConfiguration configuracion = new CorsConfiguration();
-        configuracion.setAllowedOrigins(Arrays.stream(origenesPermitidos.split(",")).map(String::trim).toList());
+        configuracion.setAllowedOriginPatterns(Arrays.stream(origenesPermitidos.split(",")).map(String::trim).toList());
         configuracion.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         configuracion.setAllowedHeaders(List.of("*"));
         configuracion.setExposedHeaders(List.of("Authorization"));
@@ -29,4 +29,3 @@ public class ConfiguracionCors {
         return source;
     }
 }
-

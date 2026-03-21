@@ -1,67 +1,155 @@
-.card-custom {
-  background: rgba(18, 18, 18, 0.92);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.35);
+.card-custom,
+.account-box,
+.cita-card,
+.reprogramacion-box {
+  background: rgba(15, 23, 42, 0.78);
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  box-shadow: 0 20px 44px rgba(2, 8, 23, 0.32);
+  backdrop-filter: blur(14px);
 }
 
-.account-box {
-  backdrop-filter: blur(12px);
+.account-agenda {
+  display: grid;
+  gap: 1rem;
+}
+
+.agenda-group {
+  display: grid;
+  gap: 0.85rem;
+}
+
+.agenda-group-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+}
+
+.agenda-group-eyebrow {
+  color: #8fd3ff;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  font-size: 0.72rem;
+  font-weight: 800;
+}
+
+.agenda-group-header h3 {
+  margin: 0.3rem 0 0;
+  color: #f8fbff;
+  text-transform: capitalize;
+  font-size: 1.15rem;
+}
+
+.agenda-group-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.42rem 0.8rem;
+  border-radius: 999px;
+  background: rgba(37, 99, 235, 0.16);
+  color: #bfdbfe;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.agenda-stack {
+  display: grid;
+  gap: 0.85rem;
 }
 
 .cita-card {
-  backdrop-filter: blur(12px);
+  display: grid;
+  grid-template-columns: 104px minmax(0, 1fr);
+  gap: 1rem;
+  padding: 1.15rem;
 }
 
-.reprogramacion-box {
-  backdrop-filter: blur(10px);
+.agenda-time-rail {
+  display: grid;
+  gap: 0.2rem;
+}
+
+.agenda-time-hour {
+  color: #f8fbff;
+  font-size: 1.05rem;
+  font-weight: 800;
+}
+
+.agenda-time-range {
+  color: var(--text-muted);
+  font-size: 0.78rem;
+}
+
+.agenda-main {
+  display: grid;
+  gap: 0.9rem;
+}
+
+.agenda-meta-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 0.9rem;
 }
 
 .estado-badge {
   padding: 0.55rem 0.9rem;
-  font-weight: 600;
+  font-weight: 700;
+  letter-spacing: 0.02em;
 }
 
 .estado-pendiente {
-  background: rgba(255, 193, 7, 0.18);
-  color: #ffd76a;
+  background: rgba(251, 191, 36, 0.18);
+  color: #fde68a;
 }
 
 .estado-confirmada {
-  background: rgba(25, 135, 84, 0.18);
-  color: #87f7be;
+  background: rgba(52, 211, 153, 0.18);
+  color: #a7f3d0;
 }
 
 .estado-cancelada {
-  background: rgba(220, 53, 69, 0.18);
-  color: #ff96a2;
+  background: rgba(251, 113, 133, 0.16);
+  color: #fecdd3;
 }
 
 .estado-finalizada {
-  background: rgba(13, 202, 240, 0.18);
-  color: #8de8ff;
+  background: rgba(34, 211, 238, 0.16);
+  color: #a5f3fc;
 }
 
 .estado-no_asistio {
-  background: rgba(108, 117, 125, 0.24);
-  color: #d4d9de;
+  background: rgba(148, 163, 184, 0.2);
+  color: #e2e8f0;
 }
 
 .btn-time {
-  border: 1px solid rgba(231, 223, 221, 0.1);
-  background: rgba(231, 223, 221, 0.05);
-  color: #ffffff !important;
-  padding: 0.55rem 1rem;
-  border-radius: 10px;
-  transition: all 0.2s ease;
-  min-width: 90px;
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  background: rgba(15, 23, 42, 0.9);
+  color: var(--text-gray) !important;
+  padding: 0.58rem 1rem;
+  border-radius: 12px;
+  transition: var(--transition-base);
+  min-width: 96px;
+  font-weight: 600;
 }
 
 .btn-time:hover {
-  border-color: var(--primary-pink);
-  background: rgba(162, 57, 202, 0.1);
+  border-color: rgba(6, 182, 212, 0.45);
+  background: rgba(8, 47, 73, 0.8);
 }
 
 .btn-time.active {
-  background: var(--primary-pink);
-  border-color: var(--primary-pink);
+  background: linear-gradient(135deg, var(--accent-blue), #0891b2);
+  border-color: transparent;
+  color: white !important;
+}
+
+@media (max-width: 767.98px) {
+  .cita-card {
+    grid-template-columns: 1fr;
+  }
+
+  .agenda-group-header {
+    flex-direction: column;
+  }
 }

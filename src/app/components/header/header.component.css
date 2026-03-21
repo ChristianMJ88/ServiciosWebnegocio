@@ -3,7 +3,8 @@
 }
 
 .nav-link {
-  font-weight: 500;
+  font-weight: 600;
+  letter-spacing: -0.01em;
   transition: var(--transition-base);
   color: var(--text-gray) !important;
 }
@@ -29,10 +30,11 @@
   height: 2px;
   background: linear-gradient(45deg, var(--primary-pink), var(--accent-blue));
   transform: scaleX(0);
-  transition: transform 0.3s ease;
+  transition: transform 0.24s ease;
 }
 
-.nav-link:hover::after, .active-link::after {
+.nav-link:hover::after,
+.active-link::after {
   transform: scaleX(1);
 }
 
@@ -43,7 +45,7 @@
     margin-top: 1rem;
     padding: 1.5rem;
     border-radius: 15px;
-    border: 1px solid rgba(162, 57, 202, 0.1);
+    border: 1px solid rgba(148, 163, 184, 0.12);
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
   }
 
@@ -58,7 +60,7 @@
   }
 
   .nav-link::after {
-    display: none; /* Desactivar línea en móvil/tablet */
+    display: none;
   }
 }
 
