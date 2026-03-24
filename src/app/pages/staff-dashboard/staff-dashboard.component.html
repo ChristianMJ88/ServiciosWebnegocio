@@ -167,204 +167,28 @@
               </div>
             </div>
 
-            <mat-card class="staff-workspace-card staff-workspace-card-emphasis">
-              <div class="staff-section-header">
-                <div>
-                  <div class="staff-eyebrow">Agenda visual</div>
-                  <h3>Agenda por fecha</h3>
-                </div>
-                <span class="staff-date-pill">{{ agendaFechaActivaTexto() }}</span>
-              </div>
-
-              <div class="staff-agenda-toolbar">
-                <div class="staff-agenda-nav">
-                  <button mat-stroked-button type="button" (click)="desplazarFechaAgenda(-1)">Anterior</button>
-                  <button mat-stroked-button type="button" (click)="irAHoyAgenda()">Hoy</button>
-                  <button mat-stroked-button type="button" (click)="desplazarFechaAgenda(1)">Siguiente</button>
-                </div>
-
-                <label class="staff-agenda-date-field">
-                  <span>Fecha seleccionada</span>
-                  <input
-                    type="date"
-                    [ngModel]="agendaFechaActiva()"
-                    (ngModelChange)="seleccionarFechaAgenda($event)" />
-                </label>
-              </div>
-
-              <div class="staff-agenda-summary">
-                <div class="staff-agenda-summary-card">
-                  <span>Citas del día</span>
-                  <strong>{{ resumenAgendaActiva().total }}</strong>
-                </div>
-                <div class="staff-agenda-summary-card">
-                  <span>Pendientes</span>
-                  <strong>{{ resumenAgendaActiva().pendientes }}</strong>
-                </div>
-                <div class="staff-agenda-summary-card">
-                  <span>Confirmadas</span>
-                  <strong>{{ resumenAgendaActiva().confirmadas }}</strong>
-                </div>
-                <div class="staff-agenda-summary-card">
-                  <span>Finalizadas</span>
-                  <strong>{{ resumenAgendaActiva().finalizadas }}</strong>
-                </div>
-              </div>
-
-              <div class="staff-agenda-empty" *ngIf="!citasAgenda().length">
-                No hay citas programadas en la fecha activa.
-              </div>
-
-              <div class="staff-agenda-experience" *ngIf="citasAgenda().length">
-                <div class="staff-agenda-shell staff-agenda-shell--desktop">
-                  <div class="staff-agenda-hours">
-                    <div class="staff-agenda-hour" *ngFor="let hora of horasAgenda" [style.height.px]="84">
-                      {{ hora.etiqueta }}
-                    </div>
-                  </div>
-
-                  <div class="staff-agenda-grid">
-                    <div class="staff-agenda-lines">
-                      <div class="staff-agenda-line" *ngFor="let hora of horasAgenda" [style.height.px]="84"></div>
-                    </div>
-
-                    <button
-                      type="button"
-                      class="staff-agenda-event"
-                      *ngFor="let cita of citasAgenda()"
-                      [ngClass]="[claseEstadoCita(cita.estado), esCitaSeleccionada(cita.id) ? 'is-selected' : '']"
-                      [style.top.px]="cita.top"
-                      [style.height.px]="cita.height"
-                      [style.left.%]="cita.leftPct"
-                      [style.width.%]="cita.widthPct"
-                      (click)="seleccionarCitaAgenda(cita.id)">
-                      <div class="staff-agenda-event-time">{{ cita.inicio | date:'shortTime':'':'es-MX' }}</div>
-                      <div class="staff-agenda-event-title">{{ cita.clienteNombre }}</div>
-                      <div class="staff-agenda-event-meta">{{ cita.servicioNombre }} · {{ cita.sucursalNombre }}</div>
-                      <div class="staff-agenda-event-meta">{{ cita.clienteTelefono }}</div>
-                    </button>
-                  </div>
-                </div>
-
-                <div class="staff-agenda-mobile-list">
-                  <div class="staff-agenda-mobile-hint">Toca una cita para ver detalles y acciones.</div>
-
-                  <article
-                    class="staff-agenda-mobile-card"
-                    *ngFor="let cita of citasAgenda()"
-                    [ngClass]="[claseEstadoCita(cita.estado), esCitaSeleccionada(cita.id) ? 'is-selected' : '']"
-                    (click)="seleccionarCitaAgenda(cita.id)">
-                    <div class="staff-agenda-mobile-card__top">
-                      <div>
-                        <div class="staff-agenda-event-time">{{ cita.inicio | date:'shortTime':'':'es-MX' }}</div>
-                        <div class="staff-agenda-event-title">{{ cita.clienteNombre }}</div>
-                        <div class="staff-agenda-mobile-service">{{ cita.servicioNombre }}</div>
-                      </div>
-                      <span class="status-pill" [ngClass]="claseEstadoCita(cita.estado)">{{ cita.estado }}</span>
-                    </div>
-
-                    <div class="staff-agenda-event-meta">{{ cita.sucursalNombre }}</div>
-                    <div class="staff-agenda-event-meta">{{ cita.clienteTelefono }}</div>
-                    <div class="staff-agenda-mobile-detail" *ngIf="esCitaSeleccionada(cita.id)">
-                      <div class="staff-agenda-mobile-meta">
-                        <div>
-                          <span>Horario</span>
-                          <strong>{{ cita.inicio | date:'EEEE d MMMM, h:mm a':'':'es-MX' }} - {{ cita.fin | date:'h:mm a':'':'es-MX' }}</strong>
-                        </div>
-                        <div>
-                          <span>Correo</span>
-                          <strong>{{ cita.clienteCorreo || 'Sin correo' }}</strong>
-                        </div>
-                        <div *ngIf="cita.notas">
-                          <span>Notas</span>
-                          <strong>{{ cita.notas }}</strong>
-                        </div>
-                      </div>
-
-                      <div class="staff-agenda-mobile-actions" *ngIf="cita.estado === 'PENDIENTE' || cita.estado === 'CONFIRMADA'">
-                        <button
-                          mat-flat-button
-                          color="primary"
-                          type="button"
-                          *ngIf="cita.estado === 'PENDIENTE'"
-                          (click)="confirmar(cita.id); $event.stopPropagation()">
-                          Confirmar cita
-                        </button>
-                        <button
-                          mat-flat-button
-                          color="primary"
-                          type="button"
-                          *ngIf="cita.estado === 'CONFIRMADA'"
-                          (click)="finalizar(cita.id); $event.stopPropagation()">
-                          Finalizar cita
-                        </button>
-                        <button
-                          mat-stroked-button
-                          type="button"
-                          *ngIf="cita.estado === 'CONFIRMADA'"
-                          (click)="noAsistio(cita.id); $event.stopPropagation()">
-                          Marcar no asistió
-                        </button>
-                      </div>
-                    </div>
-                  </article>
-                </div>
-
-                <aside class="staff-agenda-detail staff-agenda-detail--desktop" *ngIf="citaAgendaSeleccionada() as cita">
-                  <div class="staff-agenda-detail__header">
-                    <div>
-                      <div class="staff-eyebrow">Cita seleccionada</div>
-                      <h4>{{ cita.clienteNombre }}</h4>
-                    </div>
-                    <span class="status-pill" [ngClass]="claseEstadoCita(cita.estado)">{{ cita.estado }}</span>
-                  </div>
-
-                  <div class="staff-agenda-detail__time">
-                    {{ cita.inicio | date:'EEEE d MMMM, h:mm a':'':'es-MX' }} - {{ cita.fin | date:'h:mm a':'':'es-MX' }}
-                  </div>
-
-                  <div class="staff-agenda-detail__meta">
-                    <div>
-                      <span>Servicio</span>
-                      <strong>{{ cita.servicioNombre }}</strong>
-                    </div>
-                    <div>
-                      <span>Sucursal</span>
-                      <strong>{{ cita.sucursalNombre }}</strong>
-                    </div>
-                    <div>
-                      <span>Teléfono</span>
-                      <strong>{{ cita.clienteTelefono || 'Sin teléfono' }}</strong>
-                    </div>
-                    <div>
-                      <span>Correo</span>
-                      <strong>{{ cita.clienteCorreo || 'Sin correo' }}</strong>
-                    </div>
-                  </div>
-
-                  <div class="staff-agenda-detail__notes" *ngIf="cita.notas">
-                    <span>Notas</span>
-                    <p>{{ cita.notas }}</p>
-                  </div>
-
-                  <div class="staff-agenda-detail__actions" *ngIf="cita.estado === 'PENDIENTE' || cita.estado === 'CONFIRMADA'">
-                    <button mat-flat-button color="primary" type="button" *ngIf="cita.estado === 'PENDIENTE'" (click)="confirmar(cita.id)">
-                      Confirmar cita
-                    </button>
-                    <button mat-flat-button color="primary" type="button" *ngIf="cita.estado === 'CONFIRMADA'" (click)="finalizar(cita.id)">
-                      Finalizar cita
-                    </button>
-                    <button mat-stroked-button type="button" *ngIf="cita.estado === 'CONFIRMADA'" (click)="noAsistio(cita.id)">
-                      Marcar no asistió
-                    </button>
-                  </div>
-
-                  <div class="staff-agenda-detail__helper" *ngIf="cita.estado !== 'PENDIENTE' && cita.estado !== 'CONFIRMADA'">
-                    Esta cita ya no requiere acciones operativas.
-                  </div>
-                </aside>
-              </div>
-            </mat-card>
+            <app-agenda-operations-section
+              [eyebrow]="'Agenda visual'"
+              [title]="'Agenda por fecha'"
+              [dateLabel]="'Fecha seleccionada'"
+              [dateValue]="agendaFechaActiva()"
+              [dateDisplay]="agendaFechaActivaTexto()"
+              [summaryCards]="resumenAgendaCards()"
+              [occupancy]="agendaOccupancyVm()"
+              [hourLabels]="agendaHourLabels"
+              [collaborators]="agendaCollaboratorsVm()"
+              [appointments]="agendaAppointmentsVm()"
+              [selectedAppointment]="citaAgendaDetalleSeleccionada()"
+              [selectedAppointmentId]="citaAgendaSeleccionadaId()"
+              [timelineWidthPx]="920"
+              [hourSlotHeight]="84"
+              [emptyMessage]="'No hay citas programadas en la fecha activa.'"
+              (previousDay)="desplazarFechaAgenda(-1)"
+              (goToToday)="irAHoyAgenda()"
+              (nextDay)="desplazarFechaAgenda(1)"
+              (dateValueChange)="seleccionarFechaAgenda($event)"
+              (appointmentSelected)="seleccionarCitaAgenda($event)"
+              (appointmentAction)="gestionarAccionAgenda($event)" />
           </section>
         </ng-container>
 

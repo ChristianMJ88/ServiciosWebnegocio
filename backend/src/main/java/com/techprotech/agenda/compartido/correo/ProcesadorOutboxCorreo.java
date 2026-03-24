@@ -2,6 +2,7 @@ package com.techprotech.agenda.compartido.correo;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.techprotech.agenda.modulos.contactos.aplicacion.ServicioGestionSolicitudesContacto;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -19,17 +20,23 @@ public class ProcesadorOutboxCorreo {
 
     private final BandejaSalidaNotificacionRepositorio bandejaSalidaNotificacionRepositorio;
     private final ServicioCorreoCitas servicioCorreoCitas;
+    private final ServicioCorreoContactos servicioCorreoContactos;
+    private final ServicioGestionSolicitudesContacto servicioGestionSolicitudesContacto;
     private final PropiedadesCorreo propiedadesCorreo;
     private final ObjectMapper objectMapper;
 
     public ProcesadorOutboxCorreo(
             BandejaSalidaNotificacionRepositorio bandejaSalidaNotificacionRepositorio,
             ServicioCorreoCitas servicioCorreoCitas,
+            ServicioCorreoContactos servicioCorreoContactos,
+            ServicioGestionSolicitudesContacto servicioGestionSolicitudesContacto,
             PropiedadesCorreo propiedadesCorreo,
             ObjectMapper objectMapper
     ) {
         this.bandejaSalidaNotificacionRepositorio = bandejaSalidaNotificacionRepositorio;
         this.servicioCorreoCitas = servicioCorreoCitas;
+        this.servicioCorreoContactos = servicioCorreoContactos;
+        this.servicioGestionSolicitudesContacto = servicioGestionSolicitudesContacto;
         this.propiedadesCorreo = propiedadesCorreo;
         this.objectMapper = objectMapper;
     }
@@ -50,8 +57,7 @@ public class ProcesadorOutboxCorreo {
     @Transactional
     protected void procesar(BandejaSalidaNotificacionEntidad pendiente) {
         try {
-            ConfirmacionCitaCorreo confirmacion = objectMapper.readValue(pendiente.getPayloadJson(), ConfirmacionCitaCorreo.class);
-            servicioCorreoCitas.enviarConfirmacion(pendiente.getEmpresaId(), confirmacion);
+            procesarSegunEvento(pendiente);
             marcarComoEnviada(pendiente);
         } catch (JsonProcessingException ex) {
             LOGGER.warn("No se pudo leer el payload del outbox {}", pendiente.getId(), ex);
@@ -60,6 +66,26 @@ public class ProcesadorOutboxCorreo {
             LOGGER.warn("Fallo el envio del outbox {}", pendiente.getId(), ex);
             reprogramar(pendiente, resumirError(ex));
         }
+    }
+
+    private void procesarSegunEvento(BandejaSalidaNotificacionEntidad pendiente) throws JsonProcessingException {
+        if ("CITA_CONFIRMADA".equals(pendiente.getTipoEvento())) {
+            ConfirmacionCitaCorreo confirmacion = objectMapper.readValue(pendiente.getPayloadJson(), ConfirmacionCitaCorreo.class);
+            servicioCorreoCitas.enviarConfirmacion(pendiente.getEmpresaId(), confirmacion);
+            return;
+        }
+
+        if ("CONTACTO_REGISTRADO".equals(pendiente.getTipoEvento())) {
+            NotificacionSolicitudContactoCorreo notificacion = objectMapper.readValue(
+                    pendiente.getPayloadJson(),
+                    NotificacionSolicitudContactoCorreo.class
+            );
+            servicioCorreoContactos.enviarNotificacion(pendiente.getEmpresaId(), notificacion);
+            servicioGestionSolicitudesContacto.marcarNotificada(notificacion.solicitudContactoId());
+            return;
+        }
+
+        throw new IllegalStateException("Tipo de evento no soportado en outbox: " + pendiente.getTipoEvento());
     }
 
     private void marcarComoEnviada(BandejaSalidaNotificacionEntidad pendiente) {

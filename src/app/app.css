@@ -65,9 +65,35 @@
 }
 
 @media (max-width: 576px) {
+  .whatsapp-float {
+    right: 14px;
+    bottom: 14px;
+    padding: 10px;
+  }
+
+  .whatsapp-float img {
+    width: 30px;
+    height: 30px;
+  }
+
   .chatbot-wrapper {
-    width: 250px;
-    bottom: 85px;
-    right: 15px;
+    width: calc(100vw - 1.5rem);
+    max-width: 320px;
+    bottom: 66px;
+    right: 12px;
+    border-radius: 18px;
+  }
+
+  .chat-header {
+    padding: 10px 13px !important;
+    font-size: 0.84rem;
+  }
+
+  .chat-toggle-icon {
+    font-size: 1rem;
+  }
+
+  .chat-body {
+    font-size: 0.84rem;
   }
 }

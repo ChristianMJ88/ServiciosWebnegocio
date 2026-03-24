@@ -1,45 +1,82 @@
-<footer class="bg-dark text-white pt-5 pb-4">
-  <div class="container text-center text-md-start">
-    <div class="row text-center text-md-start">
-      <div class="col-md-3 col-lg-3 col-xl-3 mx-auto mt-3">
-        <h5 class="text-uppercase mb-4 font-weight-bold text-primary-color">NailArt Studio</h5>
-        <p>Servicios integrales de embellecimiento y cuidado para manos y pies con las técnicas más modernas y profesionales.</p>
+<footer class="site-footer pt-5 pb-4">
+  <div class="container">
+    <div class="footer-grid">
+      <div class="footer-brand-panel">
+        <div class="d-flex align-items-center gap-3 mb-3">
+          <img src="/NailArt_logo.jpeg" alt="Logo NailArt Studio" class="footer-logo">
+          <div>
+            <h3 class="footer-brand-title mb-1">NailArt Studio</h3>
+            <p class="footer-brand-copy mb-0">Diseño, técnica y cuidado para manos y pies.</p>
+          </div>
+        </div>
+
+        <p class="footer-copy mb-4">
+          Agenda fácil, atención cercana y resultados pensados para durar y lucir impecables.
+        </p>
+
+        <div class="footer-socials">
+          <a href="#" class="social-icon" aria-label="Instagram">
+            <i class="bi bi-instagram"></i>
+          </a>
+          <a href="#" class="social-icon" aria-label="Facebook">
+            <i class="bi bi-facebook"></i>
+          </a>
+          <a href="https://wa.me/522213688035" class="social-icon" aria-label="WhatsApp">
+            <i class="bi bi-whatsapp"></i>
+          </a>
+        </div>
       </div>
 
-      <div class="col-md-2 col-lg-2 col-xl-2 mx-auto mt-3">
-        <h5 class="text-uppercase mb-4 font-weight-bold">Servicios</h5>
-        <p><a href="/servicios" class="text-white text-decoration-none">Manicura en Gel</a></p>
-        <p><a href="/servicios" class="text-white text-decoration-none">Uñas Acrílicas</a></p>
-        <p><a href="/servicios" class="text-white text-decoration-none">Nail Art</a></p>
-        <p><a href="/servicios" class="text-white text-decoration-none">Tratamientos Spa</a></p>
+      <div class="footer-links-panel">
+        <h4 class="footer-title">Navegación</h4>
+        <ul class="list-unstyled footer-links-list mb-0">
+          <li><a routerLink="/" class="footer-link">Inicio</a></li>
+          <li><a routerLink="/servicios" class="footer-link">Servicios</a></li>
+          <li><a routerLink="/agendar" class="footer-link">Agendar</a></li>
+          <li><a routerLink="/contacto" class="footer-link">Contacto</a></li>
+        </ul>
       </div>
 
-      <div class="col-md-4 col-lg-3 col-xl-3 mx-auto mt-3">
-        <h5 class="text-uppercase mb-4 font-weight-bold">Contacto</h5>
-        <p>📍 Calle Principal #408, Col. Animas, Puebla</p>
-        <p>📧 info&#64;nailartstudio.com</p>
-        <p>📞 +52 221 368 8035</p>
+      <div class="footer-links-panel">
+        <h4 class="footer-title">Servicios</h4>
+        <ul class="list-unstyled footer-links-list mb-0">
+          <li><a routerLink="/servicios" class="footer-link">Manicura premium</a></li>
+          <li><a routerLink="/servicios" class="footer-link">Gel semipermanente</a></li>
+          <li><a routerLink="/servicios" class="footer-link">Nail art</a></li>
+          <li><a routerLink="/servicios" class="footer-link">Pedicura spa</a></li>
+        </ul>
+      </div>
+
+      <div class="footer-links-panel">
+        <h4 class="footer-title">Contacto</h4>
+        <ul class="list-unstyled footer-contact-list mb-0">
+          <li>
+            <i class="bi bi-geo-alt"></i>
+            <span>Calle Principal #408, Col. Animas, Puebla</span>
+          </li>
+          <li>
+            <i class="bi bi-envelope"></i>
+            <span>info&#64;nailartstudio.com</span>
+          </li>
+          <li>
+            <i class="bi bi-telephone"></i>
+            <span>+52 221 368 8035</span>
+          </li>
+          <li>
+            <i class="bi bi-clock"></i>
+            <span>Lun a sáb, 9:00 AM a 7:00 PM</span>
+          </li>
+        </ul>
       </div>
     </div>
 
-    <hr class="mb-4">
-
-    <div class="row align-items-center">
-      <div class="col-md-7 col-lg-8">
-        <p> &copy; 2026 Todos los derechos reservados por:
-          <a href="#" class="text-decoration-none"><strong class="text-primary-color">NailArt Studio</strong></a>
-        </p>
-      </div>
-      <div class="col-md-5 col-lg-4">
-        <div class="text-center text-md-right">
-          <ul class="list-unstyled list-inline">
-            <li class="list-inline-item"><a href="#" class="btn-floating btn-sm text-white fs-4"><i class="fab fa-facebook"></i></a></li>
-            <li class="list-inline-item"><a href="#" class="btn-floating btn-sm text-white fs-4"><i class="fab fa-instagram"></i></a></li>
-          </ul>
-        </div>
+    <div class="footer-bottom d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mt-4 pt-4">
+      <p class="mb-0">© 2026 NailArt Studio. Todos los derechos reservados.</p>
+      <div class="d-flex flex-wrap gap-3">
+        <a routerLink="/contacto" class="footer-bottom-link">Soporte</a>
+        <a href="#" class="footer-bottom-link">Privacidad</a>
+        <a href="#" class="footer-bottom-link">Términos</a>
       </div>
     </div>
   </div>
-
-
 </footer>

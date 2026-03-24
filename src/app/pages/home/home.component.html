@@ -1,258 +1,285 @@
-<!-- Hero Section -->
-<header class="hero-section text-white d-flex align-items-center">
-  <div class="container text-center">
-    <h1 class="display-2 fw-bold mb-3 animate__animated animate__fadeInDown">Arte en tus Manos</h1>
-    <p class="lead mb-4 fs-4 animate__animated animate__fadeInUp">Servicios profesionales de manicura, pedicura y diseños personalizados.</p>
-    <div class="d-flex justify-content-center gap-3 flex-wrap">
-      <a routerLink="/agendar" class="btn btn-primary btn-lg px-5 py-3 rounded-pill shadow">Agendar Ahora</a>
-      <a routerLink="/servicios" class="btn btn-light btn-lg px-5 py-3 rounded-pill shadow">Ver Servicios</a>
-    </div>
-  </div>
-</header>
+<main class="home-page">
+  <section class="home-hero">
+    <div class="hero-frame">
+      <div class="hero-shell">
+        <div class="row align-items-center g-4 hero-grid">
+          <div class="col-xl-6 col-lg-6 hero-copy-column">
+            <p class="hero-eyebrow">Manicure con técnica, orden y estilo</p>
+            <h1>
+              Uñas impecables con un diseño que se sienta
+              <span class="hero-title-accent">tuyo desde la primera cita.</span>
+            </h1>
+            <p class="hero-copy">
+              Cada sesión combina preparación técnica, asesoría real y acabados limpios para que salgas con un resultado bonito, durable y coherente con tu estilo.
+            </p>
 
-<!-- Características y Servicios Destacados -->
-<section class="section-padding position-relative overflow-hidden">
-  <div class="container">
-    <div class="text-center mb-5 animate__animated animate__fadeIn">
-      <h2 class="display-5 fw-bold mb-3 gradient-text">Nuestra Especialidad</h2>
-      <div class="mx-auto mb-4 bg-primary-color" style="height: 4px; width: 70px; border-radius: 2px;"></div>
-      <p class="text-light opacity-75 lead mx-auto" style="max-width: 700px;">
-        Descubre por qué somos los favoritos. Combinamos técnica profesional con los mejores productos para resultados que enamoran.
-      </p>
-    </div>
+            <div class="hero-actions">
+              <a routerLink="/agendar" class="btn btn-primary btn-lg rounded-pill">Reservar cita</a>
+              <a routerLink="/servicios" class="btn btn-outline-light btn-lg rounded-pill">Explorar servicios</a>
+            </div>
 
-    <div class="row g-4 justify-content-center">
-      <!-- Característica 1 -->
-      <div class="col-lg-4 col-md-6">
-        <div class="card h-100 feature-card border-0 overflow-hidden">
-          <div class="feature-img-wrapper">
-            <img src="https://images.unsplash.com/photo-1604654894610-df63bc536371?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80" alt="Manicura y Gel" class="feature-img">
-            <div class="feature-icon-badge">💅</div>
-          </div>
-          <div class="card-body p-4 text-center">
-            <h3 class="fw-bold h4 mb-3 text-white">Manicura y Gel</h3>
-            <p class="text-light opacity-75 mb-0">Utilizamos técnicas de vanguardia y productos de larga duración para un brillo que no se apaga.</p>
-          </div>
-        </div>
-      </div>
-
-      <!-- Característica 2 -->
-      <div class="col-lg-4 col-md-6">
-        <div class="card h-100 feature-card border-0 overflow-hidden">
-          <div class="feature-img-wrapper">
-            <img src="https://images.unsplash.com/photo-1632345031435-8727f6897d53?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80" alt="Nail Art" class="feature-img">
-            <div class="feature-icon-badge">🎨</div>
-          </div>
-          <div class="card-body p-4 text-center">
-            <h3 class="fw-bold h4 mb-3 text-white">Nail Art Exclusivo</h3>
-            <p class="text-light opacity-75 mb-0">Diseños personalizados hechos a mano. Tu imaginación es el único límite para tus uñas.</p>
-          </div>
-        </div>
-      </div>
-
-      <!-- Característica 3 -->
-      <div class="col-lg-4 col-md-6">
-        <div class="card h-100 feature-card border-0 overflow-hidden">
-          <div class="feature-img-wrapper">
-            <img src="https://images.unsplash.com/photo-1519014816548-bf5fe059798b?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80" alt="Tratamientos Spa" class="feature-img">
-            <div class="feature-icon-badge">🌿</div>
-          </div>
-          <div class="card-body p-4 text-center">
-            <h3 class="fw-bold h4 mb-3 text-white">Tratamientos Spa</h3>
-            <p class="text-light opacity-75 mb-0">Una experiencia sensorial completa para rejuvenecer tus manos y pies con aceites naturales.</p>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div class="text-center mt-5">
-      <a routerLink="/servicios" class="btn btn-outline-primary rounded-pill px-4">Ver todos los servicios</a>
-    </div>
-  </div>
-</section>
-
-<!-- Galería Rápida (Nuestros Trabajos) -->
-<section class="section-padding overflow-hidden">
-  <div class="container">
-    <div class="text-center mb-5">
-      <h2 class="display-5 fw-bold mb-3 gradient-text">Nuestros Trabajos</h2>
-      <div class="mx-auto bg-primary-color" style="height: 4px; width: 60px; border-radius: 2px;"></div>
-      <p class="text-light opacity-75 mt-3 lead">Explora nuestra colección de diseños exclusivos y acabados profesionales</p>
-    </div>
-
-    <div class="row g-4">
-      <div class="col-sm-6 col-lg-3" *ngFor="let trabajo of trabajos">
-        <div class="work-card h-100">
-          <div class="work-img-container">
-            <img [src]="trabajo.imagen" [alt]="trabajo.titulo" class="work-img">
-            <div class="work-overlay">
-              <span class="badge bg-primary rounded-pill mb-2">{{trabajo.categoria}}</span>
-              <h3 class="h5 fw-bold text-white mb-2">{{trabajo.titulo}}</h3>
-              <p class="small text-white-50 mb-0 px-3">{{trabajo.descripcion}}</p>
+            <div class="hero-quick-points">
+              <article class="hero-quick-point" *ngFor="let highlight of heroHighlights">
+                <span class="hero-quick-icon">
+                  <i [class]="highlight.icono"></i>
+                </span>
+                <div>
+                  <strong>{{ highlight.titulo }}</strong>
+                  <p>{{ highlight.descripcion }}</p>
+                </div>
+              </article>
             </div>
           </div>
-          <div class="work-content">
-            <h4 class="h6 fw-bold mb-1 gradient-text">{{trabajo.titulo}}</h4>
-            <p class="text-light opacity-50 small mb-0">{{trabajo.categoria}}</p>
+
+          <div class="col-xl-6 col-lg-6 hero-visual-column">
+            <div class="hero-visual">
+              <article class="hero-story card-custom">
+                <div class="hero-story-image">
+                  <img
+                    src="https://images.unsplash.com/photo-1604654894610-df63bc536371?ixlib=rb-1.2.1&auto=format&fit=crop&w=1200&q=80"
+                    alt="Diseño premium de uñas con acabado elegante"
+                  >
+                  <span class="hero-story-badge">Set favorito de la semana</span>
+                </div>
+                <div class="hero-story-body">
+                  <span class="hero-story-kicker">Qué pasa en tu cita</span>
+                  <h2>Elegimos contigo el acabado antes de empezar.</h2>
+                  <p>
+                    Antes de empezar revisamos largo, forma y acabado para proponerte un diseño que se vea bien hoy y también aguante bonito los próximos días.
+                  </p>
+                  <ul class="hero-story-points">
+                    <li *ngFor="let point of heroStoryPoints">{{ point }}</li>
+                  </ul>
+                  <div class="hero-story-footer">
+                    <i class="bi bi-clock-history"></i>
+                    <span>Sesiones guiadas de 60 a 90 minutos según el servicio.</span>
+                  </div>
+                </div>
+              </article>
+            </div>
+          </div>
+        </div>
+
+        <div class="hero-meta">
+          <p class="hero-note">
+            <i class="bi bi-heart-pulse"></i>
+            Atención puntual, asesoría cercana y un espacio pensado para que tu cita se sienta clara, cómoda y bien guiada.
+          </p>
+
+          <div class="hero-stats">
+            <article class="hero-stat" *ngFor="let estadistica of estadisticas">
+              <strong>{{ estadistica.valor }}</strong>
+              <span>{{ estadistica.etiqueta }}</span>
+            </article>
           </div>
         </div>
       </div>
     </div>
-  </div>
-</section>
+  </section>
 
-<!-- Acerca de Nosotros & Historia -->
-<section id="nosotros" class="section-padding">
-  <div class="container">
-    <div class="row align-items-center g-5">
-      <div class="col-lg-6">
-        <div class="position-relative">
-          <img src="https://images.unsplash.com/photo-1560750588-73207b1ef5b8?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80" alt="Nuestro Salón" class="img-fluid rounded-4 shadow-lg border border-secondary opacity-75">
-          <div class="position-absolute bottom-0 end-0 bg-primary-purple p-4 rounded-4 shadow-lg translate-middle-y d-none d-md-block" style="margin-right: -20px;">
-             <span class="fs-1 fw-bold text-white">10+</span><br><span class="text-white opacity-75">Años de Arte</span>
-          </div>
-        </div>
-      </div>
-      <div class="col-lg-6">
-        <h2 class="display-5 fw-bold mb-4 gradient-text">Acerca de Nosotros</h2>
-        <p class="lead text-light mb-4">Nuestra pasión es resaltar tu belleza natural a través del arte en tus manos y pies.</p>
-        <h3 class="h4 fw-bold mb-3 text-accent">Nuestra Historia</h3>
-        <p class="mb-4 text-light opacity-75">
-          NailArt Studio nació de un pequeño sueño en una habitación compartida, donde nuestra fundadora comenzó a experimentar con diseños únicos para sus amigas. La idea era simple: convertir cada uña en un lienzo de expresión personal.
-        </p>
-        <p class="mb-4 text-light opacity-75">
-          Con el paso de los años, lo que empezó como un pasatiempo se convirtió en un referente de elegancia y cuidado. Hoy, contamos con un equipo de profesionales apasionados y nos dirigimos a convertirnos en el centro de bienestar integral líder de la ciudad.
+  <section class="section-padding">
+    <div class="container">
+      <div class="section-header section-header-centered">
+        <span class="section-kicker">Especialidades</span>
+        <h2>Servicios que más te piden</h2>
+        <p>
+          Tres favoritos para resolver desde una cita elegante hasta un set especial.
         </p>
       </div>
-    </div>
-  </div>
-</section>
 
-<!-- ¿Por qué elegirnos? -->
-<section class="section-padding bg-dark-custom">
-  <div class="container">
-    <div class="text-center mb-5 animate__animated animate__fadeIn">
-      <h2 class="display-5 fw-bold gradient-text">¿Por qué elegirnos?</h2>
-      <p class="text-light opacity-75">Nos diferenciamos por nuestro compromiso con la excelencia y el bienestar de tus uñas</p>
-    </div>
-    <div class="row g-4 text-center">
-      <div class="col-md-4">
-        <div class="p-4 card-custom h-100 animate__animated animate__fadeInUp">
-          <div class="fs-1 mb-3 text-primary-color">
-            <i class="bi bi-stars"></i>
-          </div>
-          <h4 class="fw-bold">Calidad Premium</h4>
-          <p class="text-light opacity-75">Utilizamos solo los mejores productos de marcas internacionales para asegurar la salud y durabilidad excepcional de tu manicura.</p>
-        </div>
-      </div>
-      <div class="col-md-4" style="animation-delay: 0.2s;">
-        <div class="p-4 card-custom h-100 animate__animated animate__fadeInUp">
-          <div class="fs-1 mb-3 text-primary-color">
-            <i class="bi bi-shield-check"></i>
-          </div>
-          <h4 class="fw-bold">Higiene Estricta</h4>
-          <p class="text-light opacity-75">Tu seguridad es prioridad. Implementamos protocolos de esterilización de grado hospitalario en cada herramienta y servicio.</p>
-        </div>
-      </div>
-      <div class="col-md-4" style="animation-delay: 0.4s;">
-        <div class="p-4 card-custom h-100 animate__animated animate__fadeInUp">
-          <div class="fs-1 mb-3 text-primary-color">
-            <i class="bi bi-person-heart"></i>
-          </div>
-          <h4 class="fw-bold">Artistas Expertos</h4>
-          <p class="text-light opacity-75">Nuestro equipo se capacita constantemente en las últimas tendencias mundiales para ofrecerte diseños únicos y técnicos.</p>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
+      <div class="row g-4">
+        <div class="col-lg-4" *ngFor="let servicio of especialidades">
+          <article class="service-card card-custom">
+            <div class="service-card-media">
+              <img [src]="servicio.imagen" [alt]="servicio.titulo">
+              <span class="service-card-tag">{{ servicio.etiqueta }}</span>
+            </div>
 
-<!-- Tips, Cuidados y Tendencias -->
-<section class="section-padding overflow-hidden">
-  <div class="container">
-    <div class="text-center mb-5 animate__animated animate__fadeIn">
-      <h2 class="display-5 fw-bold gradient-text">Tips y Tendencias</h2>
-      <p class="text-light opacity-75">Aprende a cuidar tus uñas y mantente al día con lo último en el mundo del Nail Art</p>
+            <div class="service-card-body">
+              <div class="service-card-title">
+                <span class="service-card-icon">
+                  <i class="bi" [ngClass]="servicio.icono"></i>
+                </span>
+                <h3>{{ servicio.titulo }}</h3>
+              </div>
+
+              <p>{{ servicio.descripcion }}</p>
+
+              <ul class="service-card-points">
+                <li *ngFor="let detalle of servicio.detalles">{{ detalle }}</li>
+              </ul>
+            </div>
+          </article>
+        </div>
+      </div>
     </div>
-    <div class="row g-4">
-      <div class="col-md-4">
-        <div class="card h-100 card-custom overflow-hidden animate__animated animate__fadeInLeft">
-          <div class="position-relative">
-            <img src="https://images.unsplash.com/photo-1519014816548-bf5fe059798b?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60" class="card-img-top" alt="Tip de Cuidado" style="height: 250px; object-fit: cover;">
-            <div class="position-absolute top-0 end-0 m-3 badge bg-primary">Tip de Cuidado</div>
+  </section>
+
+  <section class="section-padding section-surface">
+    <div class="container">
+      <div class="row align-items-center g-5">
+        <div class="col-lg-5">
+          <div class="section-header">
+            <span class="section-kicker">Ventajas reales</span>
+            <h2>Lo que hace distinta la experiencia NailArt.</h2>
+            <p>
+              Calidad, higiene y una experiencia cómoda desde la reserva hasta el resultado final.
+            </p>
           </div>
-          <div class="card-body p-4">
-            <h5 class="fw-bold text-accent mb-3">Cuidado Post-Cita</h5>
-            <p class="small text-light opacity-75">Aplica aceite de cutícula todas las noches para mantener la hidratación. Unas cutículas sanas son el secreto de una manicura duradera.</p>
-            <hr class="opacity-25 my-3">
-            <div class="d-flex align-items-center text-primary-color small">
-              <i class="bi bi-clock me-2"></i> 2 min de lectura
+        </div>
+
+        <div class="col-lg-7">
+          <div class="benefits-grid">
+            <article class="benefit-card card-custom" *ngFor="let beneficio of beneficios">
+              <div class="benefit-icon">
+                <i class="bi" [ngClass]="beneficio.icono"></i>
+              </div>
+              <h3>{{ beneficio.titulo }}</h3>
+              <p>{{ beneficio.descripcion }}</p>
+            </article>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section-padding">
+    <div class="container">
+      <div class="section-header section-header-split">
+        <div>
+          <span class="section-kicker">Portafolio</span>
+          <h2>Diseños que hablan por sí solos</h2>
+        </div>
+        <p>
+          Una selección de estilos para inspirarte antes de reservar.
+        </p>
+      </div>
+
+      <div class="gallery-grid">
+        <article class="gallery-card" *ngFor="let trabajo of trabajos">
+          <div class="gallery-card-media">
+            <img [src]="trabajo.imagen" [alt]="trabajo.titulo">
+            <div class="gallery-card-overlay">
+              <span class="gallery-badge">{{ trabajo.categoria }}</span>
+              <h3>{{ trabajo.titulo }}</h3>
+              <p>{{ trabajo.descripcion }}</p>
+            </div>
+          </div>
+          <div class="gallery-card-body">
+            <h4>{{ trabajo.titulo }}</h4>
+            <span>{{ trabajo.categoria }}</span>
+          </div>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <section id="nosotros" class="section-padding section-surface">
+    <div class="container">
+      <div class="row align-items-center g-5">
+        <div class="col-lg-6">
+          <div class="about-media">
+            <img
+              src="https://images.unsplash.com/photo-1560750588-73207b1ef5b8?ixlib=rb-1.2.1&auto=format&fit=crop&w=1000&q=80"
+              alt="Interior del estudio"
+            >
+            <div class="about-floating-card card-custom">
+              <strong>10+ años</strong>
+              <span>transformando una cita de belleza en una experiencia cuidada</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-lg-6">
+          <div class="section-header">
+            <span class="section-kicker">Sobre el estudio</span>
+            <h2>Detalle, técnica y una atención que se siente cercana.</h2>
+          </div>
+
+          <p class="about-copy">
+            NailArt Studio nace del gusto por los acabados limpios, el diseño bien hecho y una atención pensada para que quieras volver.
+          </p>
+
+          <p class="about-copy">
+            Trabajamos con técnica, higiene y asesoría real para ayudarte a elegir un estilo que vaya contigo y dure bonito.
+          </p>
+
+          <div class="about-values">
+            <div class="about-value">
+              <i class="bi bi-brush"></i>
+              <div>
+                <h3>Diseño con criterio</h3>
+                <p>Propuestas pensadas según estilo, ocasión y duración esperada.</p>
+              </div>
+            </div>
+            <div class="about-value">
+              <i class="bi bi-heart-pulse"></i>
+              <div>
+                <h3>Cuidado integral</h3>
+                <p>El enfoque no es solo estético; también prioriza salud, higiene y confort.</p>
+              </div>
+            </div>
+            <div class="about-value">
+              <i class="bi bi-people"></i>
+              <div>
+                <h3>Atención cercana</h3>
+                <p>Una comunicación más humana mejora la confianza y fideliza más.</p>
+              </div>
             </div>
           </div>
         </div>
       </div>
-      <div class="col-md-4">
-        <div class="card h-100 card-custom overflow-hidden animate__animated animate__fadeInUp">
-          <div class="position-relative">
-            <img src="https://images.unsplash.com/photo-1604902396830-aca29e19b067?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60" class="card-img-top" alt="Tendencia 2024" style="height: 250px; object-fit: cover;">
-            <div class="position-absolute top-0 end-0 m-3 badge bg-info">Tendencia</div>
-          </div>
-          <div class="card-body p-4">
-            <h5 class="fw-bold text-accent mb-3">Estilo Minimalista</h5>
-            <p class="small text-light opacity-75">Este año, los diseños "Clean Girl" y las uñas "Milky" son la sensación. La elegancia reside en la simplicidad y los tonos naturales.</p>
-            <hr class="opacity-25 my-3">
-            <div class="d-flex align-items-center text-primary-color small">
-              <i class="bi bi-clock me-2"></i> 3 min de lectura
-            </div>
-          </div>
-        </div>
-      </div>
-      <div class="col-md-4">
-        <div class="card h-100 card-custom overflow-hidden animate__animated animate__fadeInRight">
-          <div class="position-relative">
-            <img src="https://images.unsplash.com/photo-1519014816548-bf5fe059798b?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60" class="card-img-top" alt="Recomendación" style="height: 250px; object-fit: cover;">
-            <div class="position-absolute top-0 end-0 m-3 badge bg-success">Salud</div>
-          </div>
-          <div class="card-body p-4">
-            <h5 class="fw-bold text-accent mb-3">Protege tus manos</h5>
-            <p class="small text-light opacity-75">Usa guantes al realizar tareas domésticas. El contacto prolongado con agua y químicos puede debilitar el gel y tus uñas naturales.</p>
-            <hr class="opacity-25 my-3">
-            <div class="d-flex align-items-center text-primary-color small">
-              <i class="bi bi-clock me-2"></i> 4 min de lectura
-            </div>
-          </div>
-        </div>
-      </div>
     </div>
-  </div>
-</section>
+  </section>
 
-<!-- Reseñas de Clientes -->
-<section class="section-padding bg-dark-custom">
-  <div class="container">
-    <h2 class="display-5 fw-bold text-center mb-5 gradient-text">Lo que dicen nuestras clientes</h2>
-    <div class="row g-4">
-      <div class="col-md-4">
-        <div class="card h-100 card-custom p-4">
-          <div class="mb-3 text-warning">⭐⭐⭐⭐⭐</div>
-          <p class="fst-italic mb-3 text-light opacity-75">"Excelente servicio, mis uñas quedaron hermosas y el diseño personalizado superó mis expectativas."</p>
-          <div class="fw-bold text-accent small">— María G.</div>
-        </div>
+  <section class="section-padding">
+    <div class="container">
+      <div class="section-header section-header-centered">
+        <span class="section-kicker">Contenido útil</span>
+        <h2>Tips rápidos para cuidar tu manicure</h2>
+        <p>
+          Consejos simples para mantener tus uñas lindas por más tiempo.
+        </p>
       </div>
-      <div class="col-md-4">
-        <div class="card h-100 card-custom p-4">
-          <div class="mb-3 text-warning">⭐⭐⭐⭐⭐</div>
-          <p class="fst-italic mb-3 text-light opacity-75">"La atención es maravillosa. El spa de pies es lo más relajante que he probado. Volveré sin duda."</p>
-          <div class="fw-bold text-accent small">— Lucía R.</div>
-        </div>
-      </div>
-      <div class="col-md-4">
-        <div class="card h-100 card-custom p-4">
-          <div class="mb-3 text-warning">⭐⭐⭐⭐⭐</div>
-          <p class="fst-italic mb-3 text-light opacity-75">"Increíble calidad en el gel. Me duraron intactas por 3 semanas. La puntualidad es un plus."</p>
-          <div class="fw-bold text-accent small">— Ana S.</div>
+
+      <div class="row g-4">
+        <div class="col-lg-4" *ngFor="let consejo of consejos">
+          <article class="article-card card-custom">
+            <span class="article-tag">{{ consejo.etiqueta }}</span>
+            <h3>{{ consejo.titulo }}</h3>
+            <p>{{ consejo.descripcion }}</p>
+            <div class="article-meta">
+              <i class="bi bi-clock"></i>
+              <span>{{ consejo.lectura }} de lectura</span>
+            </div>
+          </article>
         </div>
       </div>
     </div>
-  </div>
-</section>
+  </section>
+
+  <section class="section-padding section-surface">
+    <div class="container">
+      <div class="section-header section-header-centered">
+        <span class="section-kicker">Prueba social</span>
+        <h2>Lo que dicen nuestras clientas</h2>
+        <p>
+          Confianza, puntualidad y resultados que sí se notan.
+        </p>
+      </div>
+
+      <div class="row g-4">
+        <div class="col-lg-4" *ngFor="let testimonio of testimonios">
+          <article class="testimonial-card card-custom">
+            <div class="testimonial-stars">★★★★★</div>
+            <p>{{ testimonio.comentario }}</p>
+            <div class="testimonial-author">
+              <strong>{{ testimonio.nombre }}</strong>
+              <span>{{ testimonio.resumen }}</span>
+            </div>
+          </article>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>

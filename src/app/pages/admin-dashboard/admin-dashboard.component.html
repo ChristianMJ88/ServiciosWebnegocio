@@ -53,6 +53,10 @@
               <svg *ngSwitchCase="'correo'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
                 <path d="M4 7.5 12 13l8-5.5M5 19h14a1 1 0 0 0 1-1V7a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v11a1 1 0 0 0 1 1Z" stroke-linecap="round" stroke-linejoin="round"/>
               </svg>
+              <svg *ngSwitchCase="'contactos'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                <path d="M5 6h14a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2H9l-4 3v-3H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2Z" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M8 10h8M8 13h5" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
               <svg *ngSwitchDefault viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
                 <path d="M7 4v3M17 4v3M4 9h16M6 5h12a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2Zm2 7h3m2 0h3m-8 4h3m2 0h3" stroke-linecap="round" stroke-linejoin="round"/>
               </svg>
@@ -209,139 +213,28 @@
               </mat-card>
             </div>
 
-            <mat-card class="workspace-card workspace-card-emphasis">
-              <div class="section-header">
-                <div>
-                  <div class="section-eyebrow">Agenda operativa</div>
-                  <h3>Vista diaria por colaborador</h3>
-                </div>
-                <span class="agenda-date-pill">{{ fechaAgendaActivaTexto() }}</span>
-              </div>
-
-              <div class="agenda-toolbar">
-                <div class="agenda-toolbar-nav">
-                  <button mat-stroked-button type="button" (click)="desplazarFechaAgenda(-1)">Anterior</button>
-                  <button mat-stroked-button type="button" (click)="irAHoyAgenda()">Hoy</button>
-                  <button mat-stroked-button type="button" (click)="desplazarFechaAgenda(1)">Siguiente</button>
-                </div>
-
-                <label class="agenda-date-field">
-                  <span>Fecha seleccionada</span>
-                  <input
-                    type="date"
-                    [ngModel]="fechaAgendaActiva()"
-                    (ngModelChange)="seleccionarFechaAgenda($event)" />
-                </label>
-              </div>
-
-              <div class="agenda-summary">
-                <div class="agenda-summary-card">
-                  <span>Citas del día</span>
-                  <strong>{{ resumenAgendaActiva().total }}</strong>
-                </div>
-                <div class="agenda-summary-card">
-                  <span>Pendientes</span>
-                  <strong>{{ resumenAgendaActiva().pendientes }}</strong>
-                </div>
-                <div class="agenda-summary-card">
-                  <span>Confirmadas</span>
-                  <strong>{{ resumenAgendaActiva().confirmadas }}</strong>
-                </div>
-                <div class="agenda-summary-card">
-                  <span>Colaboradores</span>
-                  <strong>{{ resumenAgendaActiva().colaboradores }}</strong>
-                </div>
-              </div>
-
-              <div class="agenda-calendar-shell agenda-calendar-shell--desktop" *ngIf="colaboradoresAgenda().length; else agendaSinStaff">
-                <div class="agenda-calendar-scroll">
-                  <div class="agenda-calendar-track" [style.width.px]="anchoAgendaTimeline()">
-                    <div class="agenda-calendar-header">
-                      <div class="agenda-hour-column"></div>
-                      <div class="agenda-collaborators" [style.gridTemplateColumns]="'repeat(' + colaboradoresAgenda().length + ', minmax(260px, 1fr))'">
-                        <div class="agenda-collaborator-card" *ngFor="let colaborador of colaboradoresAgenda()">
-                          <div class="agenda-collaborator-name">{{ colaborador.nombre }}</div>
-                          <div class="agenda-collaborator-role">Disponible hoy</div>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div class="agenda-calendar-body">
-                      <div class="agenda-hours">
-                        <div class="agenda-hour-slot" *ngFor="let hora of horasAgenda" [style.height.px]="86">
-                          {{ hora.etiqueta }}
-                        </div>
-                      </div>
-
-                      <div class="agenda-grid-area">
-                        <div class="agenda-grid-lines">
-                          <div class="agenda-grid-line" *ngFor="let hora of horasAgenda" [style.height.px]="86"></div>
-                        </div>
-
-                        <div class="agenda-columns" [style.gridTemplateColumns]="'repeat(' + colaboradoresAgenda().length + ', minmax(260px, 1fr))'">
-                          <div class="agenda-column" *ngFor="let colaborador of colaboradoresAgenda()"></div>
-                        </div>
-
-                        <article
-                          class="agenda-event"
-                          *ngFor="let cita of citasAgendaPosicionadas()"
-                          [ngClass]="claseEstadoCita(cita.estado)"
-                          [style.top.px]="cita.top"
-                          [style.height.px]="cita.height"
-                          [style.left.%]="cita.leftPct"
-                          [style.width.%]="cita.widthPct">
-                          <div class="agenda-event-time">{{ cita.inicio | date:'shortTime':'':'es-MX' }}</div>
-                          <div class="agenda-event-title">{{ cita.servicioNombre }}</div>
-                          <div class="agenda-event-meta">{{ cita.prestadorNombre }}</div>
-                          <div class="agenda-event-meta">{{ cita.sucursalNombre }}</div>
-                        </article>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div class="agenda-board agenda-board-mobile" *ngIf="citasDelDiaActivas().length">
-                <section class="agenda-day agenda-day-mobile">
-                  <div class="agenda-day-header">
-                    <div>
-                      <div class="agenda-day-eyebrow">Agenda diaria</div>
-                      <h4>{{ fechaAgendaActivaTexto() }}</h4>
-                    </div>
-                    <span class="agenda-day-count">{{ citasDelDiaActivas().length }} citas</span>
-                  </div>
-
-                  <div class="agenda-day-items">
-                    <article class="agenda-item" *ngFor="let cita of citasDelDiaActivas()">
-                      <div class="agenda-item-time">
-                        <div class="agenda-item-hour">{{ cita.horaTexto }}</div>
-                        <div class="agenda-item-range">{{ cita.rangoTexto }}</div>
-                      </div>
-
-                      <div class="agenda-item-main">
-                        <div class="agenda-item-service">{{ cita.servicioNombre }}</div>
-                        <div class="agenda-item-meta">
-                          {{ cita.sucursalNombre }} · {{ cita.prestadorNombre }}
-                        </div>
-                        <div class="agenda-item-meta">
-                          Reserva #{{ cita.id }} · {{ cita.precio | currency:(cita.moneda || 'MXN'):'symbol-narrow':'1.0-0':'es-MX' }}
-                        </div>
-                      </div>
-
-                      <div class="agenda-item-status">
-                        <span class="status-pill" [ngClass]="claseEstadoCita(cita.estado)">{{ cita.estado }}</span>
-                      </div>
-                    </article>
-                  </div>
-                </section>
-              </div>
-
-              <ng-template #agendaSinStaff>
-                <div class="agenda-empty">
-                  Aún no hay colaboradores o citas suficientes para construir la agenda visual.
-                </div>
-              </ng-template>
-            </mat-card>
+            <app-agenda-operations-section
+              [eyebrow]="'Agenda operativa'"
+              [title]="'Vista diaria por colaborador'"
+              [dateLabel]="'Fecha seleccionada'"
+              [dateValue]="fechaAgendaActiva()"
+              [dateDisplay]="fechaAgendaActivaTexto()"
+              [summaryCards]="resumenAgendaCards()"
+              [occupancy]="agendaOccupancyVm()"
+              [hourLabels]="agendaHourLabels"
+              [collaborators]="agendaCollaboratorsVm()"
+              [appointments]="agendaAppointmentsVm()"
+              [selectedAppointment]="citaAgendaSeleccionada()"
+              [selectedAppointmentId]="citaAgendaSeleccionadaId()"
+              [timelineWidthPx]="anchoAgendaTimeline()"
+              [hourSlotHeight]="86"
+              [emptyMessage]="'Aún no hay colaboradores o citas suficientes para construir la agenda visual.'"
+              (previousDay)="desplazarFechaAgenda(-1)"
+              (goToToday)="irAHoyAgenda()"
+              (nextDay)="desplazarFechaAgenda(1)"
+              (dateValueChange)="seleccionarFechaAgenda($event)"
+              (appointmentSelected)="seleccionarCitaAgenda($event)"
+              (appointmentAction)="gestionarAccionAgenda($event)" />
 
             <mat-card class="workspace-card">
               <div class="section-header">
@@ -653,6 +546,89 @@
           </section>
         </ng-container>
 
+        <ng-container *ngIf="seccionActiva() === 'contactos'">
+          <section class="section-stack">
+            <div class="metric-grid">
+              <mat-card class="metric-card metric-card-highlight">
+                <span>Total de mensajes</span>
+                <strong>{{ resumenContactos().total }}</strong>
+              </mat-card>
+              <mat-card class="metric-card">
+                <span>Nuevos</span>
+                <strong>{{ resumenContactos().nuevos }}</strong>
+              </mat-card>
+              <mat-card class="metric-card">
+                <span>En proceso</span>
+                <strong>{{ resumenContactos().enProceso }}</strong>
+              </mat-card>
+              <mat-card class="metric-card">
+                <span>Atendidos</span>
+                <strong>{{ resumenContactos().atendidos }}</strong>
+              </mat-card>
+            </div>
+
+            <mat-card class="workspace-card workspace-card-emphasis">
+              <div class="section-header">
+                <div>
+                  <div class="section-eyebrow">Bandeja comercial</div>
+                  <h3>Mensajes recibidos desde la web</h3>
+                </div>
+                <span class="agenda-date-pill">{{ contactos().length }} registros</span>
+              </div>
+
+              <div class="agenda-empty" *ngIf="!contactos().length">
+                Aún no se han recibido mensajes desde el formulario de contacto.
+              </div>
+
+              <div class="entity-list" *ngIf="contactos().length">
+                <article class="entity-row contacto-row" *ngFor="let contacto of contactos()">
+                  <div class="entity-main contacto-row__main">
+                    <div class="contacto-row__header">
+                      <div>
+                        <div class="entity-title">{{ contacto.nombreCompleto }}</div>
+                        <div class="entity-meta">{{ contacto.correo }}<span *ngIf="contacto.telefono"> · {{ contacto.telefono }}</span></div>
+                      </div>
+                      <span class="status-pill contacto-status-pill" [ngClass]="claseEstadoContacto(contacto.estado)">
+                        {{ formatearEstadoContacto(contacto.estado) }}
+                      </span>
+                    </div>
+
+                    <div class="service-metrics contacto-row__meta">
+                      <span>Asunto: {{ contacto.asunto }}</span>
+                      <span>Canal: {{ contacto.canal }}</span>
+                      <span>Recibido: {{ contacto.creadaEn | date:'medium':'':'es-MX' }}</span>
+                      <span *ngIf="contacto.notificadaEn">Notificado: {{ contacto.notificadaEn | date:'short':'':'es-MX' }}</span>
+                      <span *ngIf="!contacto.notificadaEn && contacto.notificacionCorreoProgramada">Notificación pendiente</span>
+                    </div>
+
+                    <div class="contacto-row__message">
+                      {{ contacto.mensaje }}
+                    </div>
+                  </div>
+
+                  <div class="entity-side contacto-row__side">
+                    <mat-form-field appearance="outline" class="contacto-row__field">
+                      <mat-label>Estado</mat-label>
+                      <mat-select
+                        [ngModel]="contacto.estado"
+                        (ngModelChange)="actualizarEstadoContacto(contacto, $event)"
+                        [disabled]="actualizandoContactoId === contacto.id">
+                        <mat-option *ngFor="let estado of estadosContactoDisponibles" [value]="estado">
+                          {{ formatearEstadoContacto(estado) }}
+                        </mat-option>
+                      </mat-select>
+                    </mat-form-field>
+
+                    <a mat-stroked-button [href]="'mailto:' + contacto.correo + '?subject=Re: ' + contacto.asunto">
+                      Responder
+                    </a>
+                  </div>
+                </article>
+              </div>
+            </mat-card>
+          </section>
+        </ng-container>
+
         <ng-container *ngIf="seccionActiva() === 'sucursales'">
           <section class="section-stack">
             <div class="workspace-grid two-columns">
@@ -875,7 +851,17 @@
 
                   <mat-form-field appearance="outline">
                     <mat-label>Contraseña temporal</mat-label>
-                    <input matInput type="text" name="prestadorPassword" [(ngModel)]="formularioPrestador.contrasenaTemporal">
+                    <input
+                      matInput
+                      type="password"
+                      name="prestadorPassword"
+                      [(ngModel)]="formularioPrestador.contrasenaTemporal"
+                      minlength="8"
+                      maxlength="100"
+                    >
+                    <mat-hint>
+                      {{ prestadorEditandoId ? 'Opcional al editar. Si la cambias, usa mínimo 8 caracteres.' : 'Usa una contraseña temporal de al menos 8 caracteres.' }}
+                    </mat-hint>
                   </mat-form-field>
 
                   <div class="form-block-title full-width">Perfil operativo</div>
@@ -1153,70 +1139,28 @@
 
         <ng-container *ngIf="seccionActiva() === 'citas'">
           <section class="section-stack">
-            <mat-card class="workspace-card">
-              <div class="section-header">
-                <div>
-                  <div class="section-eyebrow">Operación diaria</div>
-                  <h3>Agenda detallada de citas</h3>
-                </div>
-                <span class="agenda-date-pill">{{ fechaAgendaActivaTexto() }}</span>
-              </div>
-
-              <div class="agenda-toolbar">
-                <div class="agenda-toolbar-nav">
-                  <button mat-stroked-button type="button" (click)="desplazarFechaAgenda(-1)">Anterior</button>
-                  <button mat-stroked-button type="button" (click)="irAHoyAgenda()">Hoy</button>
-                  <button mat-stroked-button type="button" (click)="desplazarFechaAgenda(1)">Siguiente</button>
-                </div>
-
-                <label class="agenda-date-field">
-                  <span>Fecha seleccionada</span>
-                  <input
-                    type="date"
-                    [ngModel]="fechaAgendaActiva()"
-                    (ngModelChange)="seleccionarFechaAgenda($event)" />
-                </label>
-              </div>
-
-              <div class="agenda-empty" *ngIf="!citasDelDiaActivas().length">
-                No hay citas registradas para la fecha seleccionada.
-              </div>
-
-              <div class="agenda-board" *ngIf="citasDelDiaActivas().length">
-                <section class="agenda-day">
-                  <div class="agenda-day-header">
-                    <div>
-                      <div class="agenda-day-eyebrow">Agenda diaria</div>
-                      <h4>{{ fechaAgendaActivaTexto() }}</h4>
-                    </div>
-                    <span class="agenda-day-count">{{ citasDelDiaActivas().length }} citas</span>
-                  </div>
-
-                  <div class="agenda-day-items">
-                    <article class="agenda-item" *ngFor="let cita of citasDelDiaActivas()">
-                      <div class="agenda-item-time">
-                        <div class="agenda-item-hour">{{ cita.horaTexto }}</div>
-                        <div class="agenda-item-range">{{ cita.rangoTexto }}</div>
-                      </div>
-
-                      <div class="agenda-item-main">
-                        <div class="agenda-item-service">{{ cita.servicioNombre }}</div>
-                        <div class="agenda-item-meta">
-                          {{ cita.sucursalNombre }} · {{ cita.prestadorNombre }}
-                        </div>
-                        <div class="agenda-item-meta">
-                          Reserva #{{ cita.id }} · {{ cita.precio | currency:(cita.moneda || 'MXN'):'symbol-narrow':'1.0-0':'es-MX' }}
-                        </div>
-                      </div>
-
-                      <div class="agenda-item-status">
-                        <span class="status-pill" [ngClass]="claseEstadoCita(cita.estado)">{{ cita.estado }}</span>
-                      </div>
-                    </article>
-                  </div>
-                </section>
-              </div>
-            </mat-card>
+            <app-agenda-operations-section
+              [eyebrow]="'Operación diaria'"
+              [title]="'Agenda detallada de citas'"
+              [dateLabel]="'Fecha seleccionada'"
+              [dateValue]="fechaAgendaActiva()"
+              [dateDisplay]="fechaAgendaActivaTexto()"
+              [summaryCards]="resumenAgendaCards()"
+              [occupancy]="agendaOccupancyVm()"
+              [hourLabels]="agendaHourLabels"
+              [collaborators]="agendaCollaboratorsVm()"
+              [appointments]="agendaAppointmentsVm()"
+              [selectedAppointment]="citaAgendaSeleccionada()"
+              [selectedAppointmentId]="citaAgendaSeleccionadaId()"
+              [timelineWidthPx]="anchoAgendaTimeline()"
+              [hourSlotHeight]="86"
+              [emptyMessage]="'No hay citas registradas para la fecha seleccionada.'"
+              (previousDay)="desplazarFechaAgenda(-1)"
+              (goToToday)="irAHoyAgenda()"
+              (nextDay)="desplazarFechaAgenda(1)"
+              (dateValueChange)="seleccionarFechaAgenda($event)"
+              (appointmentSelected)="seleccionarCitaAgenda($event)"
+              (appointmentAction)="gestionarAccionAgenda($event)" />
           </section>
         </ng-container>
       </main>

@@ -1,8 +1,8 @@
 :host {
-  --account-surface-bg: rgba(15, 23, 42, 0.78);
-  --account-surface-border: rgba(148, 163, 184, 0.18);
-  --account-surface-shadow: 0 20px 44px rgba(2, 8, 23, 0.32);
-  --account-surface-blur: 14px;
+  --account-surface-bg: rgba(255, 255, 255, 0.98);
+  --account-surface-border: rgba(203, 213, 225, 0.92);
+  --account-surface-shadow: 0 20px 44px rgba(15, 23, 42, 0.08);
+  --account-surface-blur: 10px;
 }
 
 .card-base {
@@ -13,9 +13,9 @@
 }
 
 .card-custom {
-  background: linear-gradient(180deg, rgba(15, 23, 42, 0.96) 0%, rgba(17, 28, 49, 0.98) 100%);
-  border: 1px solid rgba(148, 163, 184, 0.18);
-  box-shadow: 0 32px 72px rgba(2, 8, 23, 0.42);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.99) 0%, rgba(248, 250, 252, 0.99) 100%);
+  border: 1px solid rgba(203, 213, 225, 0.92);
+  box-shadow: 0 32px 72px rgba(15, 23, 42, 0.1);
   position: relative;
   overflow: hidden;
 }
@@ -30,9 +30,9 @@
 }
 
 .account-box {
-  --account-card-bg: rgba(255, 255, 255, 0.05);
-  --account-card-border: rgba(148, 163, 184, 0.24);
-  --account-card-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  --account-card-bg: rgba(248, 250, 252, 0.98);
+  --account-card-border: rgba(203, 213, 225, 0.9);
+  --account-card-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7);
   --account-card-blur: 12px;
 }
 
@@ -54,7 +54,7 @@
 }
 
 .agenda-group-eyebrow {
-  color: #8fd3ff;
+  color: #2563eb;
   text-transform: uppercase;
   letter-spacing: 0.12em;
   font-size: 0.72rem;
@@ -63,7 +63,7 @@
 
 .agenda-group-header h3 {
   margin: 0.3rem 0 0;
-  color: #f8fbff;
+  color: #0f172a;
   text-transform: capitalize;
   font-size: 1.15rem;
 }
@@ -74,8 +74,8 @@
   justify-content: center;
   padding: 0.42rem 0.8rem;
   border-radius: 999px;
-  background: rgba(37, 99, 235, 0.16);
-  color: #bfdbfe;
+  background: rgba(219, 234, 254, 0.96);
+  color: #1d4ed8;
   font-size: 0.78rem;
   font-weight: 700;
 }
@@ -86,7 +86,7 @@
 }
 
 .cita-card {
-  --account-card-bg: rgba(15, 23, 42, 0.78);
+  --account-card-bg: rgba(255, 255, 255, 0.98);
   display: grid;
   grid-template-columns: 104px minmax(0, 1fr);
   gap: 1rem;
@@ -95,9 +95,9 @@
 }
 
 .reprogramacion-box {
-  --account-card-bg: rgba(15, 23, 42, 0.58);
-  --account-card-border: rgba(148, 163, 184, 0.16);
-  --account-card-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  --account-card-bg: rgba(248, 250, 252, 0.98);
+  --account-card-border: rgba(203, 213, 225, 0.9);
+  --account-card-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8);
   --account-card-blur: 10px;
 }
 
@@ -107,7 +107,7 @@
 }
 
 .agenda-time-hour {
-  color: #f8fbff;
+  color: #0f172a;
   font-size: 1.05rem;
   font-weight: 800;
 }
@@ -135,34 +135,34 @@
 }
 
 .estado-pendiente {
-  background: rgba(251, 191, 36, 0.18);
-  color: #fde68a;
+  background: rgba(254, 243, 199, 0.95);
+  color: #b45309;
 }
 
 .estado-confirmada {
-  background: rgba(52, 211, 153, 0.18);
-  color: #a7f3d0;
+  background: rgba(209, 250, 229, 0.95);
+  color: #047857;
 }
 
 .estado-cancelada {
-  background: rgba(251, 113, 133, 0.16);
-  color: #fecdd3;
+  background: rgba(254, 226, 226, 0.98);
+  color: #be123c;
 }
 
 .estado-finalizada {
-  background: rgba(34, 211, 238, 0.16);
-  color: #a5f3fc;
+  background: rgba(219, 234, 254, 0.96);
+  color: #1d4ed8;
 }
 
 .estado-no_asistio {
-  background: rgba(148, 163, 184, 0.2);
-  color: #e2e8f0;
+  background: rgba(226, 232, 240, 0.95);
+  color: #475569;
 }
 
 .btn-time {
-  border: 1px solid rgba(148, 163, 184, 0.22);
-  background: rgba(15, 23, 42, 0.9);
-  color: var(--text-gray) !important;
+  border: 1px solid rgba(203, 213, 225, 0.92);
+  background: rgba(255, 255, 255, 0.98);
+  color: var(--text-dark) !important;
   padding: 0.58rem 1rem;
   border-radius: 12px;
   transition: var(--transition-base);
@@ -171,8 +171,8 @@
 }
 
 .btn-time:hover {
-  border-color: rgba(6, 182, 212, 0.45);
-  background: rgba(8, 47, 73, 0.8);
+  border-color: rgba(37, 99, 235, 0.28);
+  background: rgba(239, 246, 255, 0.98);
 }
 
 .btn-time.active {

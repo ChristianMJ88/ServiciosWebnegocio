@@ -1,4 +1,4 @@
-import { CommonModule, DatePipe } from '@angular/common';
+import { CommonModule } from '@angular/common';
 import { ChangeDetectorRef, Component, NgZone, OnInit, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { BreakpointObserver } from '@angular/cdk/layout';
@@ -18,6 +18,15 @@ import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { forkJoin } from 'rxjs';
 import { finalize } from 'rxjs/operators';
+import { AgendaOperationsSectionComponent } from '../../components/agenda/agenda-operations-section.component';
+import { buildWhatsAppUrl, formatAgendaStatusLabel, getDurationMinutes, getInitials } from '../../components/agenda/agenda.helpers';
+import {
+  AgendaActionVm,
+  AgendaAppointmentVm,
+  AgendaCollaboratorVm,
+  AgendaOccupancyVm,
+  AgendaStatCardVm
+} from '../../components/agenda/agenda.types';
 import { AuthService } from '../../core/auth/auth.service';
 import {
   CitaStaff,
@@ -35,7 +44,6 @@ type SeccionStaff = 'agenda' | 'horarios' | 'bloqueos';
   standalone: true,
   imports: [
     CommonModule,
-    DatePipe,
     FormsModule,
     MatBadgeModule,
     MatButtonModule,
@@ -48,7 +56,8 @@ type SeccionStaff = 'agenda' | 'horarios' | 'bloqueos';
     MatProgressBarModule,
     MatSelectModule,
     MatToolbarModule,
-    MatTooltipModule
+    MatTooltipModule,
+    AgendaOperationsSectionComponent
   ],
   templateUrl: './staff-dashboard.component.html',
   styleUrls: ['./staff-dashboard.component.css']
@@ -139,6 +148,18 @@ export class StaffDashboardComponent implements OnInit {
       finalizadas: citas.filter(cita => cita.estado === 'FINALIZADA').length
     };
   });
+  readonly analiticaAgendaActiva = computed(() => {
+    const citas = this.citasAgenda();
+    const minutosReservados = citas.reduce((total, cita) => total + getDurationMinutes(cita.inicio, cita.fin), 0);
+    const capacidadMinutos = (this.finAgendaHora - this.inicioAgendaHora) * 60;
+    const ocupacion = capacidadMinutos ? Math.min(100, Math.round((minutosReservados / capacidadMinutos) * 100)) : 0;
+
+    return {
+      ocupacion,
+      horasReservadas: Math.max(0, Math.round((minutosReservados / 60) * 10) / 10),
+      horasLibres: Math.max(0, Math.round(((capacidadMinutos - minutosReservados) / 60) * 10) / 10)
+    };
+  });
   readonly citaAgendaSeleccionada = computed(() => {
     const citas = this.citasAgenda();
     if (!citas.length) {
@@ -150,6 +171,69 @@ export class StaffDashboardComponent implements OnInit {
   readonly totalAgenda = computed(() => this.agenda().length);
   readonly totalConfirmadas = computed(() => this.agenda().filter(cita => cita.estado === 'CONFIRMADA').length);
   readonly totalFinalizadas = computed(() => this.agenda().filter(cita => cita.estado === 'FINALIZADA').length);
+  readonly agendaHourLabels = this.horasAgenda.map(hora => hora.etiqueta);
+  readonly resumenAgendaCards = computed<AgendaStatCardVm[]>(() => [
+    { label: 'Citas del día', value: this.resumenAgendaActiva().total },
+    { label: 'Pendientes', value: this.resumenAgendaActiva().pendientes },
+    { label: 'Confirmadas', value: this.resumenAgendaActiva().confirmadas },
+    { label: 'Finalizadas', value: this.resumenAgendaActiva().finalizadas }
+  ]);
+  readonly agendaOccupancyVm = computed<AgendaOccupancyVm>(() => ({
+    percent: this.analiticaAgendaActiva().ocupacion,
+    bookedLabel: `${this.analiticaAgendaActiva().horasReservadas} h reservadas`,
+    freeLabel: `${this.analiticaAgendaActiva().horasLibres} h libres`,
+    helper: 'Ocupación del día'
+  }));
+  readonly agendaCollaboratorsVm = computed<AgendaCollaboratorVm[]>(() => [
+    {
+      id: 'staff-owner',
+      name: this.nombreUsuario() || 'Staff',
+      meta: `${this.citasAgenda().length} citas programadas`,
+      avatar: getInitials(this.nombreUsuario() || 'Staff')
+    }
+  ]);
+  readonly agendaAppointmentsVm = computed<AgendaAppointmentVm[]>(() =>
+    this.citasAgenda().map(cita => {
+      const whatsappUrl = buildWhatsAppUrl(cita.clienteTelefono);
+
+      return {
+        id: cita.id,
+        status: cita.estado,
+        statusLabel: formatAgendaStatusLabel(cita.estado),
+        title: cita.clienteNombre,
+        subtitle: cita.servicioNombre,
+        supportingText: cita.sucursalNombre,
+        supportingTextSecondary: cita.clienteTelefono || cita.clienteCorreo || 'Sin contacto',
+        avatarLabel: getInitials(cita.clienteNombre),
+        top: cita.top,
+        height: cita.height,
+        leftPct: cita.leftPct,
+        widthPct: cita.widthPct,
+        start: cita.inicio,
+        end: cita.fin,
+        detailTitle: cita.clienteNombre,
+        detailEyebrow: 'Cita seleccionada',
+        notes: cita.notas,
+        metaFields: [
+          { label: 'Servicio', value: cita.servicioNombre },
+          { label: 'Sucursal', value: cita.sucursalNombre },
+          { label: 'Teléfono', value: cita.clienteTelefono || 'Sin teléfono' },
+          { label: 'Correo', value: cita.clienteCorreo || 'Sin correo' },
+          { label: 'Estado', value: formatAgendaStatusLabel(cita.estado) },
+          { label: 'Horario', value: `${new Date(cita.inicio).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' })} - ${new Date(cita.fin).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' })}` }
+        ],
+        actions: this.construirAccionesAgendaStaff(cita.id, cita.estado, whatsappUrl)
+      };
+    })
+  );
+  readonly citaAgendaDetalleSeleccionada = computed<AgendaAppointmentVm | null>(() => {
+    const citas = this.agendaAppointmentsVm();
+    if (!citas.length) {
+      return null;
+    }
+
+    return citas.find(cita => cita.id === this.citaAgendaSeleccionadaId()) ?? citas[0];
+  });
 
   error = '';
   guardandoRegla = false;
@@ -240,6 +324,30 @@ export class StaffDashboardComponent implements OnInit {
     return `estado-${estado.toLowerCase()}`;
   }
 
+  formatearEstadoCita(estado: string): string {
+    return formatAgendaStatusLabel(estado);
+  }
+
+  obtenerInicialesNombre(nombre: string): string {
+    return getInitials(nombre);
+  }
+
+  gestionarAccionAgenda(evento: { actionId: string; appointmentId: number }): void {
+    switch (evento.actionId) {
+      case 'confirm':
+        this.confirmar(evento.appointmentId);
+        break;
+      case 'finalize':
+        this.finalizar(evento.appointmentId);
+        break;
+      case 'no_show':
+        this.noAsistio(evento.appointmentId);
+        break;
+      default:
+        break;
+    }
+  }
+
   private calcularDistribucionAgenda<T extends { inicio: string; fin: string }>(eventos: T[]) {
     const ordenados = [...eventos].sort((a, b) => new Date(a.inicio).getTime() - new Date(b.inicio).getTime());
     const distribucion = new Map<T, { lane: number; laneCount: number }>();
@@ -303,7 +411,7 @@ export class StaffDashboardComponent implements OnInit {
   }
 
   esCitaSeleccionada(citaId: number): boolean {
-    return this.citaAgendaSeleccionada()?.id === citaId;
+    return this.citaAgendaDetalleSeleccionada()?.id === citaId;
   }
 
   logout() {
@@ -484,6 +592,27 @@ export class StaffDashboardComponent implements OnInit {
   private normalizarTexto(valor: string | null): string | null {
     const limpio = valor?.trim();
     return limpio ? limpio : null;
+  }
+
+  private construirAccionesAgendaStaff(citaId: number, estado: string, whatsappUrl: string | null): AgendaActionVm[] {
+    const acciones: AgendaActionVm[] = [];
+
+    if (estado === 'PENDIENTE') {
+      acciones.push({ id: 'confirm', label: 'Confirmar', kind: 'primary' });
+    }
+
+    if (estado === 'CONFIRMADA') {
+      acciones.push({ id: 'finalize', label: 'Finalizar', kind: 'primary' });
+      acciones.push({ id: 'no_show', label: 'No asistió', kind: 'secondary' });
+    }
+
+    acciones.push({ id: 'reschedule', label: 'Reprogramar', kind: 'ghost', disabled: true });
+
+    if (whatsappUrl) {
+      acciones.push({ id: 'whatsapp', label: 'Enviar WhatsApp', kind: 'secondary', externalUrl: whatsappUrl });
+    }
+
+    return acciones;
   }
 
   private asegurarAgendaParaFecha(fecha: string) {

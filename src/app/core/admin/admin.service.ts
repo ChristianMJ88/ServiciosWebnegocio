@@ -189,6 +189,21 @@ export interface MigracionSecretosCorreoResponse {
   mensaje: string;
 }
 
+export interface SolicitudContactoAdmin {
+  id: number;
+  empresaId: number;
+  nombreCompleto: string;
+  telefono: string | null;
+  correo: string;
+  asunto: string;
+  mensaje: string;
+  canal: string;
+  estado: 'NUEVO' | 'EN_PROCESO' | 'ATENDIDO' | 'CERRADO' | string;
+  notificacionCorreoProgramada: boolean;
+  notificadaEn: string | null;
+  creadaEn: string;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -201,6 +216,22 @@ export class AdminService {
 
   getCitas(): Observable<CitaCliente[]> {
     return this.http.get<CitaCliente[]>(`${environment.apiBaseUrl}/admin/citas`);
+  }
+
+  confirmarCita(citaId: number): Observable<void> {
+    return this.http.patch<void>(`${environment.apiBaseUrl}/admin/citas/${citaId}/confirmar`, {});
+  }
+
+  finalizarCita(citaId: number): Observable<void> {
+    return this.http.patch<void>(`${environment.apiBaseUrl}/admin/citas/${citaId}/finalizar`, {});
+  }
+
+  marcarNoAsistio(citaId: number): Observable<void> {
+    return this.http.patch<void>(`${environment.apiBaseUrl}/admin/citas/${citaId}/no-asistio`, {});
+  }
+
+  cancelarCita(citaId: number): Observable<void> {
+    return this.http.patch<void>(`${environment.apiBaseUrl}/admin/citas/${citaId}/cancelar`, {});
   }
 
   getSucursales(): Observable<SucursalAdmin[]> {
@@ -277,5 +308,13 @@ export class AdminService {
 
   migrarSecretosCorreo(): Observable<MigracionSecretosCorreoResponse> {
     return this.http.post<MigracionSecretosCorreoResponse>(`${environment.apiBaseUrl}/admin/configuracion-correo/migrar-secretos`, {});
+  }
+
+  getContactos(): Observable<SolicitudContactoAdmin[]> {
+    return this.http.get<SolicitudContactoAdmin[]>(`${environment.apiBaseUrl}/admin/contactos`);
+  }
+
+  actualizarEstadoContacto(id: number, estado: string): Observable<SolicitudContactoAdmin> {
+    return this.http.patch<SolicitudContactoAdmin>(`${environment.apiBaseUrl}/admin/contactos/${id}/estado`, { estado });
   }
 }

@@ -1,6 +1,8 @@
 package com.techprotech.agenda.modulos.citas.aplicacion;
 
 import com.techprotech.agenda.modulos.citas.api.dto.CitaClienteResponse;
+import com.techprotech.agenda.modulos.autenticacion.infraestructura.repositorio.ClienteRepositorio;
+import com.techprotech.agenda.modulos.autenticacion.infraestructura.repositorio.UsuarioRepositorio;
 import com.techprotech.agenda.modulos.disponibilidad.aplicacion.FranjaDisponibleResponse;
 import com.techprotech.agenda.modulos.disponibilidad.aplicacion.ServicioConsultaDisponibilidad;
 import com.techprotech.agenda.modulos.citas.infraestructura.entidad.CitaEntidad;
@@ -32,6 +34,8 @@ public class ServicioCitasCliente {
     private final ServicioRepositorio servicioRepositorio;
     private final PrestadorServicioRepositorio prestadorServicioRepositorio;
     private final ServicioConsultaDisponibilidad servicioConsultaDisponibilidad;
+    private final ClienteRepositorio clienteRepositorio;
+    private final UsuarioRepositorio usuarioRepositorio;
 
     public ServicioCitasCliente(
             CitaRepositorio citaRepositorio,
@@ -39,7 +43,9 @@ public class ServicioCitasCliente {
             SucursalRepositorio sucursalRepositorio,
             ServicioRepositorio servicioRepositorio,
             PrestadorServicioRepositorio prestadorServicioRepositorio,
-            ServicioConsultaDisponibilidad servicioConsultaDisponibilidad
+            ServicioConsultaDisponibilidad servicioConsultaDisponibilidad,
+            ClienteRepositorio clienteRepositorio,
+            UsuarioRepositorio usuarioRepositorio
     ) {
         this.citaRepositorio = citaRepositorio;
         this.historialEstadoCitaRepositorio = historialEstadoCitaRepositorio;
@@ -47,6 +53,8 @@ public class ServicioCitasCliente {
         this.servicioRepositorio = servicioRepositorio;
         this.prestadorServicioRepositorio = prestadorServicioRepositorio;
         this.servicioConsultaDisponibilidad = servicioConsultaDisponibilidad;
+        this.clienteRepositorio = clienteRepositorio;
+        this.usuarioRepositorio = usuarioRepositorio;
     }
 
     @Transactional(readOnly = true)
@@ -146,6 +154,9 @@ public class ServicioCitasCliente {
         String zonaHoraria = sucursalRepositorio.findById(cita.getSucursalId())
                 .map(sucursal -> sucursal.getZonaHoraria())
                 .orElse("America/Mexico_City");
+        String clienteNombre = clienteRepositorio.findById(cita.getClienteId()).map(cliente -> cliente.getNombreCompleto()).orElse("Cliente");
+        String clienteTelefono = clienteRepositorio.findById(cita.getClienteId()).map(cliente -> cliente.getTelefono()).orElse("");
+        String clienteCorreo = usuarioRepositorio.findById(cita.getClienteId()).map(usuario -> usuario.getCorreo()).orElse("");
 
         boolean cancelable = List.of("PENDIENTE", "CONFIRMADA").contains(cita.getEstado())
                 && cita.getInicio().isAfter(LocalDateTime.now());
@@ -164,7 +175,10 @@ public class ServicioCitasCliente {
                 cita.getPrecio(),
                 cita.getMoneda(),
                 cita.getNotas(),
-                cancelable
+                cancelable,
+                clienteNombre,
+                clienteCorreo,
+                clienteTelefono
         );
     }
 }

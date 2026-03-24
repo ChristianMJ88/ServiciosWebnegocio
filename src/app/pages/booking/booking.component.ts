@@ -440,6 +440,22 @@ export class BookingComponent implements OnInit {
     return Boolean(this.bookingForm.value.branchId && this.bookingForm.value.serviceId);
   }
 
+  currentStepLabel(): string {
+    if (!this.hasCatalogSelection()) {
+      return 'Paso 1 de 4';
+    }
+
+    if (!this.selectedDate()) {
+      return 'Paso 2 de 4';
+    }
+
+    if (!this.selectedHour()) {
+      return 'Paso 3 de 4';
+    }
+
+    return 'Paso 4 de 4';
+  }
+
   private sincronizarSemanaMovil(date: string) {
     this.mobileWeekStart.set(this.inicioSemana(this.parsearFechaLocal(date)));
   }

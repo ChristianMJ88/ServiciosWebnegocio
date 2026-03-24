@@ -1,50 +1,81 @@
-<nav class="navbar navbar-expand-lg glass-effect sticky-top py-3">
-  <div class="container">
-    <a class="navbar-brand fw-bold d-flex align-items-center" routerLink="/">
-      <span class="fs-2 me-2">✨</span>
-      <div>
-        <span class="fs-3 gradient-text">NailArt</span>
-        <span class="text-light opacity-75">Studio</span>
-      </div>
+<nav class="navbar navbar-expand-lg sticky-top site-header">
+  <div class="container header-shell">
+    <a class="navbar-brand brand-lockup" routerLink="/">
+      <img src="/NailArt_logo.jpeg" alt="Logo NailArt Studio" class="brand-logo">
+      <span class="brand-copy">
+        <strong>NailArt Studio</strong>
+        <small>Boutique de manicura y pedicura</small>
+      </span>
     </a>
-    <button class="navbar-toggler border-0 shadow-none bg-light opacity-75" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-      <span class="navbar-toggler-icon"></span>
+
+    <button
+      class="navbar-toggler header-toggler"
+      type="button"
+      data-bs-toggle="collapse"
+      data-bs-target="#navbarNav"
+      aria-controls="navbarNav"
+      aria-expanded="false"
+      aria-label="Mostrar navegación"
+    >
+      <span></span>
+      <span></span>
+      <span></span>
     </button>
-    <div class="collapse navbar-collapse" id="navbarNav">
-      <ul class="navbar-nav ms-auto align-items-center">
+
+    <div class="collapse navbar-collapse header-collapse" id="navbarNav">
+      <ul class="navbar-nav ms-auto align-items-lg-center header-nav">
         <li class="nav-item">
-          <a class="nav-link px-3 text-light hover-accent" routerLink="/" routerLinkActive="active-link" [routerLinkActiveOptions]="{exact: true}">Inicio</a>
+          <a
+            class="nav-link header-link"
+            routerLink="/"
+            routerLinkActive="active-link"
+            [routerLinkActiveOptions]="{ exact: true }"
+          >
+            Inicio
+          </a>
         </li>
         <li class="nav-item">
-          <a class="nav-link px-3 text-light hover-accent" routerLink="/servicios" routerLinkActive="active-link">Servicios</a>
+          <a class="nav-link header-link" routerLink="/servicios" routerLinkActive="active-link">
+            Servicios
+          </a>
         </li>
         <li class="nav-item">
-          <a class="nav-link px-3 text-light hover-accent" href="/#nosotros">Nosotros</a>
+          <a class="nav-link header-link" routerLink="/" fragment="nosotros">
+            Nosotros
+          </a>
         </li>
         <li class="nav-item">
-          <a class="nav-link px-3 text-light hover-accent" routerLink="/contacto" routerLinkActive="active-link">Contacto</a>
+          <a class="nav-link header-link" routerLink="/contacto" routerLinkActive="active-link">
+            Contacto
+          </a>
         </li>
 
         <li class="nav-item" *ngIf="!autenticadoVisible()">
-          <a class="nav-link px-3 text-light hover-accent" routerLink="/login" routerLinkActive="active-link">Iniciar sesión</a>
+          <a class="nav-link header-link header-link-soft" routerLink="/login" routerLinkActive="active-link">
+            Iniciar sesión
+          </a>
         </li>
         <li class="nav-item" *ngIf="!autenticadoVisible()">
-          <a class="nav-link px-3 text-light hover-accent" routerLink="/registro" routerLinkActive="active-link">Registro</a>
+          <a class="nav-link header-link header-link-soft" routerLink="/registro" routerLinkActive="active-link">
+            Registro
+          </a>
         </li>
         <li class="nav-item" *ngIf="autenticadoVisible()">
-          <a class="nav-link px-3 text-light hover-accent" [routerLink]="rutaPanelVisible()" routerLinkActive="active-link">Mi panel</a>
+          <a class="nav-link header-link header-link-soft" [routerLink]="rutaPanelVisible()" routerLinkActive="active-link">
+            Mi panel
+          </a>
         </li>
         <li class="nav-item" *ngIf="autenticadoVisible()">
-          <button type="button" class="nav-link px-3 text-light hover-accent border-0 bg-transparent" (click)="logout()">
+          <button type="button" class="nav-link header-link header-link-soft border-0 bg-transparent" (click)="logout()">
             Cerrar sesión
           </button>
         </li>
 
-        <li class="nav-item ms-lg-3 mt-3 mt-lg-0" *ngIf="!autenticadoVisible()">
-          <a routerLink="/agendar" class="btn btn-primary rounded-pill shadow-lg">Agendar Cita</a>
+        <li class="nav-item header-cta" *ngIf="!autenticadoVisible()">
+          <a routerLink="/agendar" class="btn btn-primary rounded-pill">Reservar</a>
         </li>
-        <li class="nav-item ms-lg-3 mt-3 mt-lg-0" *ngIf="autenticadoVisible()">
-          <a [routerLink]="rutaPanelVisible()" class="btn btn-primary rounded-pill shadow-lg">Mi Panel</a>
+        <li class="nav-item header-cta" *ngIf="autenticadoVisible()">
+          <a [routerLink]="rutaPanelVisible()" class="btn btn-primary rounded-pill">Ir a mi panel</a>
         </li>
       </ul>
     </div>

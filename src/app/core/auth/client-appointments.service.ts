@@ -18,6 +18,9 @@ export interface CitaCliente {
   moneda: string;
   notas: string | null;
   cancelable: boolean;
+  clienteNombre?: string | null;
+  clienteCorreo?: string | null;
+  clienteTelefono?: string | null;
 }
 
 @Injectable({

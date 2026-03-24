@@ -15,6 +15,7 @@ import com.techprotech.agenda.modulos.admin.api.dto.ServicioAdminResponse;
 import com.techprotech.agenda.modulos.admin.api.dto.SucursalAdminRequest;
 import com.techprotech.agenda.modulos.admin.api.dto.SucursalAdminResponse;
 import com.techprotech.agenda.modulos.admin.api.dto.ResumenAdminResponse;
+import com.techprotech.agenda.modulos.autenticacion.infraestructura.repositorio.ClienteRepositorio;
 import com.techprotech.agenda.modulos.autenticacion.infraestructura.entidad.RolEntidad;
 import com.techprotech.agenda.modulos.autenticacion.infraestructura.entidad.UsuarioEntidad;
 import com.techprotech.agenda.modulos.autenticacion.infraestructura.entidad.UsuarioRolEntidad;
@@ -24,7 +25,9 @@ import com.techprotech.agenda.modulos.autenticacion.infraestructura.repositorio.
 import com.techprotech.agenda.modulos.autenticacion.infraestructura.repositorio.UsuarioRolRepositorio;
 import com.techprotech.agenda.modulos.citas.api.dto.CitaClienteResponse;
 import com.techprotech.agenda.modulos.citas.infraestructura.entidad.CitaEntidad;
+import com.techprotech.agenda.modulos.citas.infraestructura.entidad.HistorialEstadoCitaEntidad;
 import com.techprotech.agenda.modulos.citas.infraestructura.repositorio.CitaRepositorio;
+import com.techprotech.agenda.modulos.citas.infraestructura.repositorio.HistorialEstadoCitaRepositorio;
 import com.techprotech.agenda.modulos.prestadores.infraestructura.entidad.PrestadorServicioEntidad;
 import com.techprotech.agenda.modulos.prestadores.infraestructura.repositorio.PrestadorServicioRepositorio;
 import com.techprotech.agenda.modulos.servicios.infraestructura.entidad.AsignacionServicioPrestadorEntidad;
@@ -53,15 +56,18 @@ import java.util.stream.Collectors;
 
 import static org.springframework.http.HttpStatus.CONFLICT;
 import static org.springframework.http.HttpStatus.NOT_FOUND;
+import static org.springframework.http.HttpStatus.BAD_REQUEST;
 
 @Service
 public class ServicioAdminCitas {
 
     private final CitaRepositorio citaRepositorio;
+    private final HistorialEstadoCitaRepositorio historialEstadoCitaRepositorio;
     private final SucursalRepositorio sucursalRepositorio;
     private final ServicioRepositorio servicioRepositorio;
     private final PrestadorServicioRepositorio prestadorServicioRepositorio;
     private final AsignacionServicioPrestadorRepositorio asignacionServicioPrestadorRepositorio;
+    private final ClienteRepositorio clienteRepositorio;
     private final UsuarioRepositorio usuarioRepositorio;
     private final UsuarioRolRepositorio usuarioRolRepositorio;
     private final RolRepositorio rolRepositorio;
@@ -71,10 +77,12 @@ public class ServicioAdminCitas {
 
     public ServicioAdminCitas(
             CitaRepositorio citaRepositorio,
+            HistorialEstadoCitaRepositorio historialEstadoCitaRepositorio,
             SucursalRepositorio sucursalRepositorio,
             ServicioRepositorio servicioRepositorio,
             PrestadorServicioRepositorio prestadorServicioRepositorio,
             AsignacionServicioPrestadorRepositorio asignacionServicioPrestadorRepositorio,
+            ClienteRepositorio clienteRepositorio,
             UsuarioRepositorio usuarioRepositorio,
             UsuarioRolRepositorio usuarioRolRepositorio,
             RolRepositorio rolRepositorio,
@@ -83,10 +91,12 @@ public class ServicioAdminCitas {
             ProtectorSecretosCorreo protectorSecretosCorreo
     ) {
         this.citaRepositorio = citaRepositorio;
+        this.historialEstadoCitaRepositorio = historialEstadoCitaRepositorio;
         this.sucursalRepositorio = sucursalRepositorio;
         this.servicioRepositorio = servicioRepositorio;
         this.prestadorServicioRepositorio = prestadorServicioRepositorio;
         this.asignacionServicioPrestadorRepositorio = asignacionServicioPrestadorRepositorio;
+        this.clienteRepositorio = clienteRepositorio;
         this.usuarioRepositorio = usuarioRepositorio;
         this.usuarioRolRepositorio = usuarioRolRepositorio;
         this.rolRepositorio = rolRepositorio;
@@ -262,9 +272,40 @@ public class ServicioAdminCitas {
                         cita.getPrecio(),
                         cita.getMoneda(),
                         cita.getNotas(),
-                        false
+                        false,
+                        clienteRepositorio.findById(cita.getClienteId()).map(cliente -> cliente.getNombreCompleto()).orElse("Cliente"),
+                        usuarioRepositorio.findById(cita.getClienteId()).map(usuario -> usuario.getCorreo()).orElse(""),
+                        clienteRepositorio.findById(cita.getClienteId()).map(cliente -> cliente.getTelefono()).orElse("")
                 ))
                 .toList();
+    }
+
+    @Transactional
+    public void cambiarEstadoCita(Long empresaId, Long usuarioAdminId, Long citaId, String nuevoEstado) {
+        CitaEntidad cita = citaRepositorio.findByIdAndEmpresaId(citaId, empresaId)
+                .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "La cita no existe para la empresa"));
+
+        if (!List.of("CONFIRMADA", "FINALIZADA", "NO_ASISTIO", "CANCELADA").contains(nuevoEstado)) {
+            throw new ResponseStatusException(BAD_REQUEST, "El estado solicitado no es valido para administracion");
+        }
+
+        String estadoAnterior = cita.getEstado();
+        cita.setEstado(nuevoEstado);
+
+        if ("CANCELADA".equals(nuevoEstado)) {
+            cita.setCanceladaEn(java.time.LocalDateTime.now());
+            cita.setMotivoCancelacion("Cancelada desde el panel administrativo");
+        }
+
+        citaRepositorio.save(cita);
+
+        HistorialEstadoCitaEntidad historial = new HistorialEstadoCitaEntidad();
+        historial.setCitaId(cita.getId());
+        historial.setEstadoAnterior(estadoAnterior);
+        historial.setEstadoNuevo(nuevoEstado);
+        historial.setCambiadoPorUsuarioId(usuarioAdminId);
+        historial.setMotivo("Cambio de estado realizado por administracion");
+        historialEstadoCitaRepositorio.save(historial);
     }
 
     @Transactional(readOnly = true)

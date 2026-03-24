@@ -2,6 +2,23 @@
 
 This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 21.0.4.
 
+## Node version
+
+This project is pinned to `Node 20.19.0` and `npm 10.8.2` to keep local builds aligned with Azure Static Web Apps.
+
+If you use `nvm`, run:
+
+```bash
+nvm use
+```
+
+If Node 20.19.0 is not installed yet, run:
+
+```bash
+nvm install 20.19.0
+nvm use
+```
+
 ## Development server
 
 To start a local development server, run:
@@ -31,10 +48,15 @@ ng generate --help
 To build the project run:
 
 ```bash
+nvm use
 ng build
 ```
 
 This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
+
+## Azure deployment
+
+The Azure Static Web Apps workflow reads the Node version directly from `.nvmrc`, so the CI build stays in sync with local development.
 
 ## Running unit tests
 

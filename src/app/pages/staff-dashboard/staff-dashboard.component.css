@@ -1,21 +1,21 @@
 :host {
   --staff-font: "Inter", "Aptos", "Segoe UI", sans-serif;
   --staff-heading-font: "Plus Jakarta Sans", "Aptos Display", "Inter", sans-serif;
-  --staff-bg: #07111f;
-  --staff-surface: rgba(13, 23, 40, 0.88);
-  --staff-surface-strong: rgba(16, 27, 46, 0.96);
-  --staff-line: rgba(148, 163, 184, 0.16);
-  --staff-line-strong: rgba(94, 168, 255, 0.26);
-  --staff-ink: #ecf4ff;
-  --staff-ink-soft: #93a8c1;
-  --staff-ink-muted: #6f84a0;
+  --staff-bg: #f8fbff;
+  --staff-surface: rgba(255, 255, 255, 0.98);
+  --staff-surface-strong: rgba(248, 250, 252, 0.98);
+  --staff-line: rgba(203, 213, 225, 0.9);
+  --staff-line-strong: rgba(94, 168, 255, 0.28);
+  --staff-ink: #0f172a;
+  --staff-ink-soft: #64748b;
+  --staff-ink-muted: #94a3b8;
   --staff-primary: #5ea8ff;
   --staff-accent: #2dd4bf;
   --staff-purple: #8b5cf6;
   --staff-warning: #f59e0b;
   --staff-success: #34d399;
-  --staff-sidebar-start: #091321;
-  --staff-sidebar-end: #0e1a2d;
+  --staff-sidebar-start: #ffffff;
+  --staff-sidebar-end: #f8fbff;
   display: block;
   color: var(--staff-ink);
   font-family: var(--staff-font);
@@ -24,15 +24,15 @@
 .staff-shell {
   min-height: 100vh;
   background:
-    radial-gradient(circle at top left, rgba(45, 212, 191, 0.12), transparent 28%),
-    radial-gradient(circle at top right, rgba(94, 168, 255, 0.15), transparent 30%),
-    linear-gradient(180deg, #08111f 0%, #0b1322 100%);
+    radial-gradient(circle at top left, rgba(45, 212, 191, 0.08), transparent 28%),
+    radial-gradient(circle at top right, rgba(94, 168, 255, 0.1), transparent 30%),
+    linear-gradient(180deg, #fbfdff 0%, #eef4fb 100%);
 }
 
 .staff-backdrop {
   position: fixed;
   inset: 0;
-  background: rgba(3, 8, 18, 0.72);
+  background: rgba(15, 23, 42, 0.16);
   backdrop-filter: blur(8px);
   z-index: 30;
 }
@@ -57,10 +57,10 @@
   gap: 1rem;
   padding: 1.2rem 1rem 1rem;
   background:
-    linear-gradient(180deg, rgba(94, 168, 255, 0.06), transparent 18%),
+    linear-gradient(180deg, rgba(94, 168, 255, 0.08), transparent 18%),
     linear-gradient(180deg, var(--staff-sidebar-start) 0%, var(--staff-sidebar-end) 100%);
-  border-right: 1px solid rgba(148, 163, 184, 0.14);
-  box-shadow: 22px 0 48px rgba(2, 6, 23, 0.32);
+  border-right: 1px solid rgba(203, 213, 225, 0.92);
+  box-shadow: 22px 0 48px rgba(15, 23, 42, 0.08);
   z-index: 15;
 }
 
@@ -69,7 +69,7 @@
   align-items: center;
   gap: 0.9rem;
   padding: 0.15rem 0.35rem 1rem;
-  border-bottom: 1px solid rgba(148, 163, 184, 0.14);
+  border-bottom: 1px solid rgba(203, 213, 225, 0.9);
 }
 
 .staff-sidebar-brand-mark,
@@ -84,7 +84,7 @@
   background:
     linear-gradient(135deg, rgba(94, 168, 255, 0.28) 0%, rgba(45, 212, 191, 0.18) 100%);
   border: 1px solid rgba(94, 168, 255, 0.24);
-  color: #f8fbff;
+  color: #1d4ed8;
   font-size: 0.86rem;
   font-weight: 800;
   letter-spacing: 0.08em;
@@ -109,7 +109,7 @@
 
 .staff-sidebar-brand-eyebrow,
 .staff-sidebar-support-label {
-  color: #7ea9d8;
+  color: #64748b;
 }
 
 .staff-sidebar-brand-title,
@@ -172,15 +172,15 @@
   border-radius: 16px !important;
   border: 1px solid transparent;
   background: transparent;
-  color: rgba(226, 232, 240, 0.92) !important;
+  color: #1e293b !important;
   text-align: left;
   position: relative;
   transition: background 180ms ease, border-color 180ms ease;
 }
 
 .staff-nav-item:hover {
-  background: rgba(255, 255, 255, 0.05) !important;
-  border-color: rgba(94, 168, 255, 0.16);
+  background: rgba(241, 245, 249, 0.98) !important;
+  border-color: rgba(94, 168, 255, 0.2);
 }
 
 .staff-nav-item.active-nav-item {
@@ -207,9 +207,9 @@
   align-items: center;
   justify-content: center;
   border-radius: 12px;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  color: #dce8f8;
+  background: rgba(255, 255, 255, 0.98);
+  border: 1px solid rgba(203, 213, 225, 0.9);
+  color: #2563eb;
 }
 
 .staff-nav-icon svg {
@@ -245,12 +245,12 @@
   padding: 1rem;
   border-radius: 18px;
   margin-top: auto;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(148, 163, 184, 0.14);
+  background: rgba(255, 255, 255, 0.98);
+  border: 1px solid rgba(203, 213, 225, 0.9);
 }
 
 .staff-sidebar-support-value {
-  color: #f8fbff;
+  color: #0f172a;
   font-size: 0.92rem;
   font-weight: 700;
 }
@@ -282,8 +282,8 @@
   gap: 1rem;
   min-height: 72px;
   padding: 0.9rem 1.5rem;
-  background: rgba(7, 13, 25, 0.76);
-  border-bottom: 1px solid rgba(148, 163, 184, 0.12);
+  background: rgba(255, 255, 255, 0.88);
+  border-bottom: 1px solid rgba(203, 213, 225, 0.9);
   backdrop-filter: blur(18px);
 }
 
@@ -314,8 +314,8 @@
   justify-content: center;
   gap: 3px;
   border-radius: 12px;
-  border: 1px solid rgba(148, 163, 184, 0.14);
-  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(203, 213, 225, 0.9);
+  background: rgba(255, 255, 255, 0.98);
 }
 
 .staff-toolbar-hamburger span {
@@ -361,8 +361,8 @@
 .staff-toolbar-icon-button {
   width: 40px;
   height: 40px;
-  border: 1px solid rgba(148, 163, 184, 0.14);
-  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(203, 213, 225, 0.9);
+  background: rgba(255, 255, 255, 0.98);
 }
 
 .staff-toolbar-icon-button svg {
@@ -377,8 +377,8 @@
   min-height: 40px;
   max-width: min(100%, 250px);
   padding: 0.18rem 0.2rem 0.18rem 0.45rem;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(148, 163, 184, 0.14);
+  background: rgba(255, 255, 255, 0.98);
+  border: 1px solid rgba(203, 213, 225, 0.9);
 }
 
 .staff-user-avatar {
@@ -1055,6 +1055,428 @@
   outline-offset: 2px;
 }
 
+.content-header {
+  background:
+    linear-gradient(135deg, rgba(219, 234, 254, 0.9) 0%, rgba(243, 232, 255, 0.72) 100%),
+    rgba(255, 255, 255, 0.98);
+  border: 1px solid rgba(191, 219, 254, 0.9);
+}
+
+.content-header-kicker,
+.staff-eyebrow,
+.form-block-title {
+  color: #2563eb;
+}
+
+.staff-hero-card,
+.staff-workspace-card,
+.staff-metric-card,
+.staff-entity-card,
+.staff-agenda-summary-card,
+.staff-agenda-mobile-card,
+.staff-agenda-empty,
+.staff-agenda-mobile-hint,
+.staff-agenda-detail__notes {
+  background: rgba(255, 255, 255, 0.98);
+  border-color: rgba(203, 213, 225, 0.9);
+  box-shadow: 0 20px 44px rgba(15, 23, 42, 0.06);
+}
+
+.staff-workspace-card-emphasis,
+.staff-hero-card,
+.staff-agenda-detail {
+  background:
+    radial-gradient(circle at top right, rgba(96, 165, 250, 0.12), transparent 28%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.99) 0%, rgba(248, 250, 252, 0.99) 100%);
+}
+
+.staff-hero-stat,
+.staff-metric-card,
+.staff-agenda-grid,
+.staff-content ::ng-deep .mat-mdc-text-field-wrapper,
+.staff-content ::ng-deep .mdc-text-field--outlined {
+  background: rgba(248, 250, 252, 0.96);
+  border-color: rgba(203, 213, 225, 0.9);
+}
+
+.staff-date-pill {
+  background: rgba(219, 234, 254, 0.96);
+  color: #1d4ed8;
+  border-color: rgba(147, 197, 253, 0.55);
+}
+
+.staff-agenda-grid {
+  background:
+    linear-gradient(180deg, rgba(248, 250, 252, 0.96) 0%, rgba(241, 245, 249, 0.98) 100%),
+    #ffffff;
+}
+
+.staff-agenda-event {
+  border-color: rgba(255, 255, 255, 0.75);
+  box-shadow: 0 14px 24px rgba(15, 23, 42, 0.12);
+}
+
+.staff-agenda-event-time {
+  color: #1e3a8a;
+}
+
+.staff-agenda-studio-card {
+  background:
+    radial-gradient(circle at top right, rgba(56, 189, 248, 0.16), transparent 26%),
+    radial-gradient(circle at bottom left, rgba(59, 130, 246, 0.18), transparent 30%),
+    linear-gradient(180deg, #07111f 0%, #0d1829 100%) !important;
+  border-color: rgba(96, 165, 250, 0.12) !important;
+  box-shadow: 0 28px 60px rgba(2, 6, 23, 0.36) !important;
+}
+
+.staff-agenda-studio-card .staff-section-header {
+  align-items: flex-start;
+  margin-bottom: 1.05rem;
+}
+
+.staff-agenda-studio-card .staff-eyebrow {
+  color: #7dd3fc;
+}
+
+.staff-agenda-studio-card .staff-section-header h3,
+.staff-agenda-studio-card .staff-agenda-event-title,
+.staff-agenda-studio-card .staff-agenda-detail__header h4 {
+  color: #f8fafc;
+}
+
+.staff-agenda-studio-card .staff-date-pill {
+  background: rgba(15, 23, 42, 0.72);
+  color: #dbeafe;
+  border-color: rgba(125, 211, 252, 0.22);
+}
+
+.staff-agenda-studio-card .staff-agenda-toolbar {
+  margin-bottom: 1rem;
+  padding: 1rem 1.05rem;
+  border-radius: 20px;
+  background: rgba(8, 15, 29, 0.72);
+  border: 1px solid rgba(148, 163, 184, 0.12);
+}
+
+.staff-agenda-toolbar-button {
+  box-shadow: none !important;
+  min-height: 44px;
+  padding-inline: 1rem;
+  border-radius: 14px !important;
+  border: 1px solid rgba(125, 211, 252, 0.16) !important;
+  background: rgba(15, 23, 42, 0.72) !important;
+  color: #e2e8f0 !important;
+}
+
+.staff-agenda-toolbar-button:hover {
+  background: rgba(30, 41, 59, 0.88) !important;
+  border-color: rgba(125, 211, 252, 0.28) !important;
+}
+
+.staff-action-button {
+  min-height: 42px;
+  padding-inline: 1rem;
+  border-radius: 14px;
+  font-weight: 700;
+  box-shadow: none !important;
+}
+
+.staff-agenda-studio-card .staff-action-button.btn-primary {
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+}
+
+.staff-agenda-studio-card .staff-action-button.is-secondary {
+  background: rgba(15, 23, 42, 0.72) !important;
+  color: #e2e8f0 !important;
+  border-color: rgba(148, 163, 184, 0.18) !important;
+}
+
+.staff-agenda-studio-card .staff-agenda-date-field {
+  color: #8fa4c5;
+}
+
+.staff-agenda-studio-card .staff-agenda-date-field input {
+  border-color: rgba(125, 211, 252, 0.14);
+  background: rgba(15, 23, 42, 0.78);
+  color: #f8fafc;
+}
+
+.staff-agenda-studio-card .staff-agenda-summary-card {
+  background: rgba(10, 19, 35, 0.76);
+  border-color: rgba(148, 163, 184, 0.12);
+  box-shadow: none !important;
+}
+
+.staff-agenda-studio-card .staff-agenda-summary-card span,
+.staff-agenda-studio-card .staff-agenda-hour,
+.staff-agenda-studio-card .staff-agenda-empty,
+.staff-agenda-studio-card .staff-agenda-event-meta,
+.staff-agenda-studio-card .staff-agenda-mobile-hint,
+.staff-agenda-studio-card .staff-agenda-detail__time,
+.staff-agenda-studio-card .staff-agenda-detail__helper {
+  color: #8fa4c5;
+}
+
+.staff-agenda-studio-card .staff-agenda-summary-card strong {
+  color: #f8fafc;
+}
+
+.staff-agenda-band {
+  display: grid;
+  gap: 0.8rem;
+  padding: 1rem 1.05rem;
+  margin-bottom: 1rem;
+  border-radius: 20px;
+  background: linear-gradient(135deg, rgba(14, 25, 46, 0.92) 0%, rgba(8, 15, 29, 0.9) 100%);
+  border: 1px solid rgba(125, 211, 252, 0.12);
+}
+
+.staff-agenda-band__copy {
+  display: grid;
+  gap: 0.2rem;
+}
+
+.staff-agenda-band__copy span,
+.staff-agenda-band__copy small {
+  color: #9fb2cf;
+}
+
+.staff-agenda-band__copy span {
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.staff-agenda-band__copy strong {
+  color: #f8fafc;
+  font-size: 1.45rem;
+  font-weight: 800;
+}
+
+.staff-agenda-band__copy small {
+  font-size: 0.86rem;
+}
+
+.staff-agenda-band__track {
+  position: relative;
+  height: 8px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(148, 163, 184, 0.16);
+}
+
+.staff-agenda-band__track span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #2dd4bf 0%, #60a5fa 55%, #38bdf8 100%);
+  box-shadow: 0 0 22px rgba(56, 189, 248, 0.35);
+}
+
+.staff-agenda-panel {
+  display: grid;
+  gap: 1rem;
+  min-width: 0;
+}
+
+.staff-agenda-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem 1.05rem;
+  border-radius: 20px;
+  background: rgba(10, 19, 35, 0.8);
+  border: 1px solid rgba(148, 163, 184, 0.12);
+}
+
+.staff-agenda-panel-header div {
+  display: grid;
+  gap: 0.2rem;
+}
+
+.staff-agenda-panel-header span {
+  color: #8fa4c5;
+  font-size: 0.8rem;
+}
+
+.staff-agenda-panel-header strong {
+  color: #f8fafc;
+  font-size: 1rem;
+}
+
+.staff-agenda-studio-card .staff-agenda-shell {
+  gap: 1.15rem;
+}
+
+.staff-agenda-studio-card .staff-agenda-hour {
+  font-weight: 600;
+}
+
+.staff-agenda-studio-card .staff-agenda-grid {
+  background:
+    linear-gradient(180deg, rgba(12, 21, 37, 0.96) 0%, rgba(7, 15, 27, 0.98) 100%),
+    #07111f;
+  border-color: rgba(148, 163, 184, 0.12);
+}
+
+.staff-agenda-studio-card .staff-agenda-grid::before {
+  background:
+    linear-gradient(180deg, rgba(56, 189, 248, 0.08), transparent 22%),
+    linear-gradient(90deg, rgba(148, 163, 184, 0.05) 1px, transparent 1px);
+  background-size: 100% 100%, 25% 100%;
+}
+
+.staff-agenda-studio-card .staff-agenda-line {
+  border-color: rgba(148, 163, 184, 0.08);
+}
+
+.staff-agenda-studio-card .staff-agenda-event {
+  display: flex;
+  flex-direction: column;
+  gap: 0.22rem;
+  padding: 0.82rem 0.9rem;
+  border-color: rgba(255, 255, 255, 0.16);
+  box-shadow: 0 18px 30px rgba(2, 6, 23, 0.28);
+}
+
+.staff-agenda-event-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.65rem;
+}
+
+.staff-agenda-studio-card .staff-agenda-event-time {
+  margin-bottom: 0;
+  color: #e0f2fe;
+}
+
+.staff-agenda-event-status {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.24rem 0.5rem;
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.36);
+  color: #f8fafc;
+  font-size: 0.66rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+}
+
+.staff-agenda-event-footer {
+  margin-top: auto;
+  padding-top: 0.46rem;
+  color: #f8fafc;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.staff-agenda-studio-card .staff-agenda-event.estado-pendiente {
+  background: linear-gradient(180deg, rgba(245, 158, 11, 0.34) 0%, rgba(120, 53, 15, 0.28) 100%);
+}
+
+.staff-agenda-studio-card .staff-agenda-event.estado-confirmada {
+  background: linear-gradient(180deg, rgba(45, 212, 191, 0.28) 0%, rgba(13, 148, 136, 0.24) 100%);
+}
+
+.staff-agenda-studio-card .staff-agenda-event.estado-finalizada {
+  background: linear-gradient(180deg, rgba(96, 165, 250, 0.32) 0%, rgba(37, 99, 235, 0.26) 100%);
+}
+
+.staff-agenda-studio-card .staff-agenda-event.estado-no_asistio {
+  background: linear-gradient(180deg, rgba(248, 113, 113, 0.3) 0%, rgba(127, 29, 29, 0.24) 100%);
+}
+
+.staff-agenda-studio-card .staff-agenda-mobile-card,
+.staff-agenda-studio-card .staff-agenda-mobile-hint,
+.staff-agenda-studio-card .staff-agenda-empty,
+.staff-agenda-studio-card .staff-agenda-detail,
+.staff-agenda-studio-card .staff-agenda-detail__notes {
+  background: rgba(10, 19, 35, 0.8);
+  border-color: rgba(148, 163, 184, 0.12);
+  box-shadow: none !important;
+}
+
+.staff-agenda-studio-card .staff-agenda-detail {
+  background:
+    radial-gradient(circle at bottom right, rgba(56, 189, 248, 0.14), transparent 28%),
+    linear-gradient(180deg, rgba(10, 19, 35, 0.92) 0%, rgba(7, 15, 27, 0.96) 100%);
+}
+
+.staff-agenda-detail__profile {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+}
+
+.staff-agenda-detail__avatar {
+  width: 48px;
+  height: 48px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 16px;
+  background: linear-gradient(135deg, rgba(96, 165, 250, 0.28), rgba(45, 212, 191, 0.24));
+  border: 1px solid rgba(125, 211, 252, 0.18);
+  color: #eff6ff;
+  font-size: 0.84rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+}
+
+.staff-agenda-studio-card .staff-agenda-detail__meta span,
+.staff-agenda-studio-card .staff-agenda-detail__notes span,
+.staff-agenda-studio-card .staff-agenda-mobile-meta span {
+  color: #8fa4c5;
+}
+
+.staff-agenda-studio-card .staff-agenda-detail__meta strong,
+.staff-agenda-studio-card .staff-agenda-detail__notes p,
+.staff-agenda-studio-card .staff-agenda-mobile-meta strong,
+.staff-agenda-studio-card .staff-agenda-mobile-service {
+  color: #f8fafc;
+}
+
+.staff-agenda-studio-card .status-pill {
+  background: rgba(15, 23, 42, 0.72);
+  color: #e2e8f0;
+  border-color: rgba(148, 163, 184, 0.16);
+}
+
+.staff-agenda-studio-card .status-pill.estado-pendiente {
+  background: rgba(245, 158, 11, 0.18);
+  color: #fcd34d;
+  border-color: rgba(245, 158, 11, 0.22);
+}
+
+.staff-agenda-studio-card .status-pill.estado-confirmada {
+  background: rgba(45, 212, 191, 0.16);
+  color: #99f6e4;
+  border-color: rgba(45, 212, 191, 0.2);
+}
+
+.staff-agenda-studio-card .status-pill.estado-finalizada {
+  background: rgba(96, 165, 250, 0.18);
+  color: #bfdbfe;
+  border-color: rgba(96, 165, 250, 0.2);
+}
+
+.staff-agenda-studio-card .status-pill.estado-no_asistio {
+  background: rgba(248, 113, 113, 0.18);
+  color: #fecaca;
+  border-color: rgba(248, 113, 113, 0.2);
+}
+
+.staff-alert {
+  border-color: rgba(248, 113, 113, 0.22);
+  background: rgba(254, 242, 242, 0.98);
+  color: #b91c1c;
+}
+
 @media (max-width: 1200px) {
   .staff-hero-card,
   .staff-grid.two-columns,
@@ -1279,6 +1701,10 @@
   }
 
   .staff-agenda-shell--desktop {
+    display: none;
+  }
+
+  .staff-agenda-panel-header {
     display: none;
   }
 

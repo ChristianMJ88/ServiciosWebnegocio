@@ -2,6 +2,7 @@ services:
   mysql:
     image: mysql:8.0
     container_name: agenda-mysql
+    stop_grace_period: 30s
     environment:
       MYSQL_DATABASE: agenda_db
       MYSQL_ROOT_PASSWORD: root

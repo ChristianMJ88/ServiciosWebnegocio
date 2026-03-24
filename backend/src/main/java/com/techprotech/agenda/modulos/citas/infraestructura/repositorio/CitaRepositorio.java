@@ -32,6 +32,8 @@ public interface CitaRepositorio extends JpaRepository<CitaEntidad, Long> {
 
     Optional<CitaEntidad> findByIdAndEmpresaIdAndPrestadorId(Long id, Long empresaId, Long prestadorId);
 
+    Optional<CitaEntidad> findByIdAndEmpresaId(Long id, Long empresaId);
+
     List<CitaEntidad> findByEmpresaIdOrderByInicioDesc(Long empresaId);
 
     long countByEmpresaId(Long empresaId);

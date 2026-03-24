@@ -63,6 +63,13 @@ docker compose down -v
 docker compose up -d mysql
 ```
 
+Si MySQL deja de arrancar con errores tipo `Invalid pid in unix socket lock file` o `mysqlx.sock.lock`, normalmente basta con recrear solo el contenedor y conservar el volumen:
+
+```bash
+docker compose rm -sf mysql
+docker compose up -d mysql
+```
+
 ## Endpoints iniciales
 
 - `GET /actuator/health`

@@ -176,6 +176,8 @@ class ServicioAdminCitasCorreoTest {
                 null,
                 null,
                 null,
+                null,
+                null,
                 new BCryptPasswordEncoder(),
                 crearRepositorio(store),
                 protector

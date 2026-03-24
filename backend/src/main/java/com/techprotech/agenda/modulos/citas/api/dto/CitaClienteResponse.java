@@ -17,6 +17,9 @@ public record CitaClienteResponse(
         BigDecimal precio,
         String moneda,
         String notas,
-        boolean cancelable
+        boolean cancelable,
+        String clienteNombre,
+        String clienteCorreo,
+        String clienteTelefono
 ) {
 }

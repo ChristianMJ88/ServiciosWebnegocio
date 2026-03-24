@@ -48,6 +48,42 @@ public class ControladorAdminCitas {
         return servicioAdminCitas.listar(usuario.empresaId());
     }
 
+    @PatchMapping("/citas/{citaId}/confirmar")
+    public org.springframework.http.ResponseEntity<Void> confirmarCita(
+            @AuthenticationPrincipal UsuarioAutenticado usuario,
+            @PathVariable Long citaId
+    ) {
+        servicioAdminCitas.cambiarEstadoCita(usuario.empresaId(), usuario.usuarioId(), citaId, "CONFIRMADA");
+        return org.springframework.http.ResponseEntity.noContent().build();
+    }
+
+    @PatchMapping("/citas/{citaId}/finalizar")
+    public org.springframework.http.ResponseEntity<Void> finalizarCita(
+            @AuthenticationPrincipal UsuarioAutenticado usuario,
+            @PathVariable Long citaId
+    ) {
+        servicioAdminCitas.cambiarEstadoCita(usuario.empresaId(), usuario.usuarioId(), citaId, "FINALIZADA");
+        return org.springframework.http.ResponseEntity.noContent().build();
+    }
+
+    @PatchMapping("/citas/{citaId}/no-asistio")
+    public org.springframework.http.ResponseEntity<Void> marcarNoAsistio(
+            @AuthenticationPrincipal UsuarioAutenticado usuario,
+            @PathVariable Long citaId
+    ) {
+        servicioAdminCitas.cambiarEstadoCita(usuario.empresaId(), usuario.usuarioId(), citaId, "NO_ASISTIO");
+        return org.springframework.http.ResponseEntity.noContent().build();
+    }
+
+    @PatchMapping("/citas/{citaId}/cancelar")
+    public org.springframework.http.ResponseEntity<Void> cancelarCita(
+            @AuthenticationPrincipal UsuarioAutenticado usuario,
+            @PathVariable Long citaId
+    ) {
+        servicioAdminCitas.cambiarEstadoCita(usuario.empresaId(), usuario.usuarioId(), citaId, "CANCELADA");
+        return org.springframework.http.ResponseEntity.noContent().build();
+    }
+
     @GetMapping("/reportes/servicios")
     public List<ReporteServicioAdminResponse> reporteServicios(@AuthenticationPrincipal UsuarioAutenticado usuario) {
         return servicioAdminCitas.reporteServicios(usuario.empresaId());
