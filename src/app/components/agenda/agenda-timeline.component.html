@@ -1,0 +1,108 @@
+<div class="agenda-timeline" [attr.data-theme]="theme()">
+  <div class="agenda-timeline-empty" *ngIf="!appointments().length">
+    {{ emptyMessage() }}
+  </div>
+
+  <ng-container *ngIf="appointments().length">
+    <div class="agenda-timeline-shell agenda-timeline-shell--desktop" *ngIf="collaborators().length">
+      <div class="agenda-timeline-scroll">
+        <div class="agenda-timeline-track" [style.width.px]="timelineWidthPx()">
+          <div class="agenda-timeline-header">
+            <div class="agenda-timeline-hour-column"></div>
+            <div class="agenda-timeline-collaborators" [style.gridTemplateColumns]="gridTemplateColumns()">
+              <article class="agenda-timeline-collaborator" *ngFor="let collaborator of collaborators()">
+                <span
+                  class="agenda-timeline-collaborator__avatar"
+                  [style.background]="collaborator.accentColor ? 'linear-gradient(135deg, ' + collaborator.accentColor + '33, rgba(45, 212, 191, 0.18))' : null">
+                  {{ collaborator.avatar }}
+                </span>
+                <div class="agenda-timeline-collaborator__copy">
+                  <h4>{{ collaborator.name }}</h4>
+                  <p>{{ collaborator.meta }}</p>
+                </div>
+              </article>
+            </div>
+          </div>
+
+          <div class="agenda-timeline-body">
+            <div class="agenda-timeline-hours">
+              <div class="agenda-timeline-hour" *ngFor="let hour of hourLabels()" [style.height.px]="hourSlotHeight()">
+                {{ hour }}
+              </div>
+            </div>
+
+            <div class="agenda-timeline-grid">
+              <div class="agenda-timeline-lines">
+                <div class="agenda-timeline-line" *ngFor="let hour of hourLabels()" [style.height.px]="hourSlotHeight()"></div>
+              </div>
+
+              <div class="agenda-timeline-columns" [style.gridTemplateColumns]="gridTemplateColumns()">
+                <div class="agenda-timeline-column" *ngFor="let collaborator of collaborators()"></div>
+              </div>
+
+              <button
+                type="button"
+                class="agenda-timeline-appointment"
+                *ngFor="let appointment of appointments()"
+                [attr.data-status]="appointment.status.toLowerCase()"
+                [class.is-selected]="isSelected(appointment.id)"
+                [style.top.px]="appointment.top"
+                [style.height.px]="appointment.height"
+                [style.left.%]="appointment.leftPct"
+                [style.width.%]="appointment.widthPct"
+                (click)="selectAppointment(appointment.id)">
+                <div class="agenda-timeline-appointment__top">
+                  <div class="agenda-timeline-appointment__time">
+                    {{ appointment.start | date:'shortTime':'':'es-MX' }} - {{ appointment.end | date:'shortTime':'':'es-MX' }}
+                  </div>
+                  <span class="agenda-timeline-appointment__status">{{ appointment.statusLabel }}</span>
+                </div>
+
+                <strong class="agenda-timeline-appointment__title">{{ appointment.title }}</strong>
+                <div class="agenda-timeline-appointment__meta">{{ appointment.subtitle }}</div>
+
+                <div class="agenda-timeline-appointment__meta" *ngIf="appointment.supportingText">
+                  {{ appointment.supportingText }}
+                </div>
+
+                <div class="agenda-timeline-appointment__footer" *ngIf="appointment.priceLabel || appointment.supportingTextSecondary">
+                  <span>{{ appointment.supportingTextSecondary }}</span>
+                  <strong *ngIf="appointment.priceLabel">{{ appointment.priceLabel }}</strong>
+                </div>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="agenda-timeline-mobile">
+      <article
+        class="agenda-timeline-mobile-card"
+        *ngFor="let appointment of appointments()"
+        [attr.data-status]="appointment.status.toLowerCase()"
+        [class.is-selected]="isSelected(appointment.id)"
+        (click)="selectAppointment(appointment.id)">
+        <div class="agenda-timeline-mobile-card__top">
+          <div>
+            <div class="agenda-timeline-mobile-card__time">
+              {{ appointment.start | date:'shortTime':'':'es-MX' }} - {{ appointment.end | date:'shortTime':'':'es-MX' }}
+            </div>
+            <strong class="agenda-timeline-mobile-card__title">{{ appointment.title }}</strong>
+            <div class="agenda-timeline-mobile-card__meta">{{ appointment.subtitle }}</div>
+          </div>
+          <span class="agenda-timeline-mobile-card__status">{{ appointment.statusLabel }}</span>
+        </div>
+
+        <div class="agenda-timeline-mobile-card__meta" *ngIf="appointment.supportingText">
+          {{ appointment.supportingText }}
+        </div>
+
+        <div class="agenda-timeline-mobile-card__footer" *ngIf="appointment.priceLabel || appointment.supportingTextSecondary">
+          <span>{{ appointment.supportingTextSecondary }}</span>
+          <strong *ngIf="appointment.priceLabel">{{ appointment.priceLabel }}</strong>
+        </div>
+      </article>
+    </div>
+  </ng-container>
+</div>

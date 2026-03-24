@@ -1,0 +1,60 @@
+<section class="agenda-operations" [attr.data-theme]="theme()">
+  <header class="agenda-operations__header">
+    <div>
+      <span class="agenda-operations__eyebrow">{{ eyebrow() }}</span>
+      <h3>{{ title() }}</h3>
+    </div>
+    <span class="agenda-operations__date-pill">{{ dateDisplay() }}</span>
+  </header>
+
+  <div class="agenda-operations__toolbar">
+    <div class="agenda-operations__nav">
+      <button type="button" class="agenda-operations__nav-button" (click)="previousDay.emit()">Anterior</button>
+      <button type="button" class="agenda-operations__nav-button" (click)="goToToday.emit()">Hoy</button>
+      <button type="button" class="agenda-operations__nav-button" (click)="nextDay.emit()">Siguiente</button>
+    </div>
+
+    <label class="agenda-operations__date-field">
+      <span>{{ dateLabel() }}</span>
+      <input #agendaDateInput type="date" [value]="dateValue()" (input)="onDateChange(agendaDateInput.value)" />
+    </label>
+  </div>
+
+  <div class="agenda-operations__stats" *ngIf="summaryCards().length">
+    <article class="agenda-operations__stat" *ngFor="let stat of summaryCards()">
+      <span>{{ stat.label }}</span>
+      <strong>{{ stat.value }}</strong>
+    </article>
+  </div>
+
+  <div class="agenda-operations__occupancy" *ngIf="occupancy() as occupancyVm">
+    <div class="agenda-operations__occupancy-copy">
+      <span>{{ occupancyVm.helper || 'Ocupación operativa' }}</span>
+      <strong>{{ occupancyPercent() }}%</strong>
+      <small>{{ occupancyVm.bookedLabel }} · {{ occupancyVm.freeLabel }}</small>
+    </div>
+    <div class="agenda-operations__occupancy-track" aria-hidden="true">
+      <span [style.width.%]="occupancyPercent()"></span>
+    </div>
+  </div>
+
+  <div class="agenda-operations__workspace">
+    <app-agenda-timeline
+      class="agenda-operations__timeline"
+      [theme]="theme()"
+      [collaborators]="collaborators()"
+      [appointments]="appointments()"
+      [hourLabels]="hourLabels()"
+      [selectedAppointmentId]="selectedAppointmentId()"
+      [timelineWidthPx]="timelineWidthPx()"
+      [hourSlotHeight]="hourSlotHeight()"
+      [emptyMessage]="emptyMessage()"
+      (appointmentSelected)="appointmentSelected.emit($event)" />
+
+    <app-agenda-detail-panel
+      class="agenda-operations__detail"
+      [theme]="theme()"
+      [appointment]="selectedAppointment()"
+      (actionTriggered)="appointmentAction.emit($event)" />
+  </div>
+</section>
