@@ -16,4 +16,6 @@ public interface UsuarioRepositorio extends JpaRepository<UsuarioEntidad, Long> 
     Optional<UsuarioEntidad> findByIdAndEmpresaId(Long id, Long empresaId);
 
     List<UsuarioEntidad> findByEmpresaIdAndIdIn(Long empresaId, Collection<Long> ids);
+
+    List<UsuarioEntidad> findByEmpresaIdOrderByCorreoAsc(Long empresaId);
 }

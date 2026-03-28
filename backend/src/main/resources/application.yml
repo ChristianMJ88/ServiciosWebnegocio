@@ -68,6 +68,28 @@ aplicacion:
     llave-cifrado-secretos: ${CORREO_LLAVE_CIFRADO_SECRETOS:}
     lote-maximo-outbox: ${CORREO_LOTE_MAXIMO_OUTBOX:20}
     retraso-reintento-segundos: ${CORREO_REINTENTO_SEGUNDOS:60}
+  whatsapp:
+    habilitado: ${WHATSAPP_HABILITADO:true}
+    empresa-id-por-defecto: ${WHATSAPP_EMPRESA_ID:1}
+    account-sid: ${TWILIO_ACCOUNT_SID:}
+    auth-token: ${TWILIO_AUTH_TOKEN:}
+    numero-remitente: ${TWILIO_WHATSAPP_FROM:}
+    messaging-service-sid: ${TWILIO_MESSAGING_SERVICE_SID:}
+    status-callback-url: ${TWILIO_WHATSAPP_STATUS_CALLBACK_URL:}
+    plantilla-solicitud-confirmacion-sid: ${TWILIO_WHATSAPP_TEMPLATE_SOLICITUD_CONFIRMACION_SID:}
+    plantilla-reprogramada-pendiente-sid: ${TWILIO_WHATSAPP_TEMPLATE_REPROGRAMADA_PENDIENTE_SID:}
+    plantilla-recordatorio-confirmacion-sid: ${TWILIO_WHATSAPP_TEMPLATE_RECORDATORIO_CONFIRMACION_SID:}
+    plantilla-cita-confirmada-sid: ${TWILIO_WHATSAPP_TEMPLATE_CITA_CONFIRMADA_SID:}
+    plantilla-recordatorio-sid: ${TWILIO_WHATSAPP_TEMPLATE_RECORDATORIO_SID:}
+    plantilla-cancelacion-sid: ${TWILIO_WHATSAPP_TEMPLATE_CANCELACION_SID:}
+    plantilla-liberada-sin-confirmacion-sid: ${TWILIO_WHATSAPP_TEMPLATE_LIBERADA_SIN_CONFIRMACION_SID:}
+    plantilla-gracias-visita-sid: ${TWILIO_WHATSAPP_TEMPLATE_GRACIAS_VISITA_SID:}
+    plantilla-recordatorio-regreso-sid: ${TWILIO_WHATSAPP_TEMPLATE_RECORDATORIO_REGRESO_SID:}
+    lote-maximo-outbox: ${WHATSAPP_LOTE_MAXIMO_OUTBOX:20}
+    retraso-reintento-segundos: ${WHATSAPP_REINTENTO_SEGUNDOS:60}
+    recordatorio-horas-antes: ${WHATSAPP_RECORDATORIO_HORAS_ANTES:24}
+    ventana-recordatorio-minutos: ${WHATSAPP_RECORDATORIO_VENTANA_MINUTOS:60}
+    liberacion-sin-confirmacion-horas-antes: ${WHATSAPP_LIBERACION_SIN_CONFIRMACION_HORAS_ANTES:2}
 
 server:
   port: 8080

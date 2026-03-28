@@ -18,16 +18,23 @@ public class BandejaSalidaNotificacionRepositorioImpl implements BandejaSalidaNo
     @Override
     @Transactional
     public List<BandejaSalidaNotificacionEntidad> reclamarPendientesEmail(int limite, LocalDateTime ahora) {
+        return reclamarPendientesPorCanal("EMAIL", limite, ahora);
+    }
+
+    @Override
+    @Transactional
+    public List<BandejaSalidaNotificacionEntidad> reclamarPendientesPorCanal(String canal, int limite, LocalDateTime ahora) {
         @SuppressWarnings("unchecked")
         List<Number> ids = entityManager.createNativeQuery("""
                 SELECT id
                 FROM bandeja_salida_notificacion
-                WHERE canal = 'EMAIL'
+                WHERE canal = :canal
                   AND estado = 'PENDIENTE'
                   AND programada_en <= :ahora
                 ORDER BY programada_en ASC
                 FOR UPDATE SKIP LOCKED
                 """)
+                .setParameter("canal", canal)
                 .setParameter("ahora", Timestamp.valueOf(ahora))
                 .setMaxResults(limite)
                 .getResultList();

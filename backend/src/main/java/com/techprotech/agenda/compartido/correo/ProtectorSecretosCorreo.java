@@ -28,18 +28,22 @@ public class ProtectorSecretosCorreo {
     }
 
     public String desencriptarSiNecesario(String valor) {
+        return desencriptarSiNecesario(valor, "smtp_password");
+    }
+
+    public String desencriptarSiNecesario(String valor, String etiqueta) {
         if (valor == null || valor.isBlank()) {
             return valor;
         }
 
         if (!valor.startsWith(PREFIJO)) {
-            LOGGER.warn("Se detecto smtp_password en texto plano. Se recomienda migrarlo a formato cifrado.");
+            LOGGER.warn("Se detecto {} en texto plano. Se recomienda migrarlo a formato cifrado.", etiqueta);
             return valor;
         }
 
         String llave = propiedadesCorreo.llaveCifradoSecretos();
         if (llave == null || llave.isBlank()) {
-            throw new IllegalStateException("Falta aplicacion.correo.llave-cifrado-secretos para desencriptar smtp_password");
+            throw new IllegalStateException("Falta aplicacion.correo.llave-cifrado-secretos para desencriptar " + etiqueta);
         }
 
         try {
@@ -53,7 +57,7 @@ public class ProtectorSecretosCorreo {
             cipher.init(Cipher.DECRYPT_MODE, new SecretKeySpec(derivarLlave(llave), "AES"), new GCMParameterSpec(TAG_LENGTH, iv));
             return new String(cipher.doFinal(cifrado), StandardCharsets.UTF_8);
         } catch (Exception ex) {
-            throw new IllegalStateException("No se pudo desencriptar smtp_password", ex);
+            throw new IllegalStateException("No se pudo desencriptar " + etiqueta, ex);
         }
     }
 

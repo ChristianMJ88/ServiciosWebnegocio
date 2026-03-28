@@ -38,6 +38,7 @@ import static org.springframework.http.HttpStatus.UNAUTHORIZED;
 public class ServicioAutenticacionImpl implements ServicioAutenticacion {
 
     private static final Logger log = LoggerFactory.getLogger(ServicioAutenticacionImpl.class);
+    private static final String CONTRASENA_LEGACY_CITA = "Temporal123!";
 
     private final ServicioTokenJwt servicioTokenJwt;
     private final PropiedadesJwt propiedadesJwt;
@@ -84,6 +85,9 @@ public class ServicioAutenticacionImpl implements ServicioAutenticacion {
                 });
 
         if (!usuario.isHabilitado() || usuario.isBloqueado()) {
+            if (esClientePendienteActivacion(usuario)) {
+                throw new ResponseStatusException(FORBIDDEN, "Tu acceso aun no esta activado. Completa tu registro para continuar.");
+            }
             log.warn(
                     "Intento de inicio de sesion rechazado por estado de usuario: empresaId={}, correo={}, habilitado={}, bloqueado={}",
                     request.empresaId(),
@@ -92,6 +96,10 @@ public class ServicioAutenticacionImpl implements ServicioAutenticacion {
                     usuario.isBloqueado()
             );
             throw new ResponseStatusException(FORBIDDEN, "El usuario no tiene acceso habilitado");
+        }
+
+        if (esClientePendienteActivacion(usuario) && tieneRolCliente(usuario.getId())) {
+            throw new ResponseStatusException(FORBIDDEN, "Tu acceso aun no esta activado. Completa tu registro para continuar.");
         }
 
         if (!passwordEncoder.matches(request.contrasena(), usuario.getContrasenaHash())) {
@@ -164,13 +172,21 @@ public class ServicioAutenticacionImpl implements ServicioAutenticacion {
         validarEmpresaExiste(request.empresaId());
 
         String correoNormalizado = request.correo().trim().toLowerCase();
-        if (usuarioRepositorio.existsByEmpresaIdAndCorreo(request.empresaId(), correoNormalizado)) {
-            throw new ResponseStatusException(CONFLICT, "Ya existe un usuario con ese correo en la empresa");
-        }
 
         RolEntidad rolCliente = rolRepositorio.findByCodigo("CLIENTE")
                 .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "No existe el rol CLIENTE"));
 
+        Optional<UsuarioEntidad> usuarioExistente = usuarioRepositorio.findByEmpresaIdAndCorreo(request.empresaId(), correoNormalizado);
+        if (usuarioExistente.isPresent()) {
+            activarClientePendiente(usuarioExistente.get(), rolCliente, request);
+            return;
+        }
+
+        UsuarioEntidad usuario = crearNuevoCliente(rolCliente, request, correoNormalizado);
+        crearPerfilCliente(usuario.getId(), request.nombreCompleto().trim(), request.telefono().trim());
+    }
+
+    private UsuarioEntidad crearNuevoCliente(RolEntidad rolCliente, RegistrarClienteRequest request, String correoNormalizado) {
         UsuarioEntidad usuario = new UsuarioEntidad();
         usuario.setEmpresaId(request.empresaId());
         usuario.setCorreo(correoNormalizado);
@@ -179,19 +195,60 @@ public class ServicioAutenticacionImpl implements ServicioAutenticacion {
         usuario.setBloqueado(false);
         usuario = usuarioRepositorio.save(usuario);
 
-        ClienteEntidad cliente = new ClienteEntidad();
-        cliente.setUsuarioId(usuario.getId());
-        cliente.setNombreCompleto(request.nombreCompleto().trim());
-        cliente.setTelefono(request.telefono().trim());
-        cliente.setAceptaWhatsapp(true);
-        clienteRepositorio.save(cliente);
-
         UsuarioRolEntidad usuarioRol = new UsuarioRolEntidad(
                 new UsuarioRolId(usuario.getId(), rolCliente.getId(), request.empresaId()),
                 usuario,
                 rolCliente
         );
         usuarioRolRepositorio.save(usuarioRol);
+        return usuario;
+    }
+
+    private void crearPerfilCliente(Long usuarioId, String nombreCompleto, String telefono) {
+        ClienteEntidad cliente = new ClienteEntidad();
+        cliente.setUsuarioId(usuarioId);
+        cliente.setNombreCompleto(nombreCompleto);
+        cliente.setTelefono(telefono);
+        cliente.setAceptaWhatsapp(true);
+        clienteRepositorio.save(cliente);
+    }
+
+    private void activarClientePendiente(UsuarioEntidad usuario, RolEntidad rolCliente, RegistrarClienteRequest request) {
+        if (!tieneRolCliente(usuario.getId())) {
+            throw new ResponseStatusException(CONFLICT, "Ya existe un usuario con ese correo en la empresa");
+        }
+        if (!esClientePendienteActivacion(usuario)) {
+            throw new ResponseStatusException(CONFLICT, "Ya existe un usuario con ese correo en la empresa");
+        }
+
+        usuario.setContrasenaHash(passwordEncoder.encode(request.contrasena()));
+        usuario.setHabilitado(true);
+        usuario.setBloqueado(false);
+        usuarioRepositorio.save(usuario);
+
+        clienteRepositorio.findById(usuario.getId()).ifPresent(cliente -> {
+            cliente.setNombreCompleto(request.nombreCompleto().trim());
+            cliente.setTelefono(request.telefono().trim());
+            clienteRepositorio.save(cliente);
+        });
+
+        if (usuarioRolRepositorio.findByUsuario_Id(usuario.getId()).isEmpty()) {
+            usuarioRolRepositorio.save(new UsuarioRolEntidad(
+                    new UsuarioRolId(usuario.getId(), rolCliente.getId(), request.empresaId()),
+                    usuario,
+                    rolCliente
+            ));
+        }
+    }
+
+    private boolean tieneRolCliente(Long usuarioId) {
+        return usuarioRolRepositorio.findByUsuario_Id(usuarioId)
+                .stream()
+                .anyMatch(usuarioRol -> "CLIENTE".equals(usuarioRol.getRol().getCodigo()));
+    }
+
+    private boolean esClientePendienteActivacion(UsuarioEntidad usuario) {
+        return !usuario.isHabilitado() || passwordEncoder.matches(CONTRASENA_LEGACY_CITA, usuario.getContrasenaHash());
     }
 
     private void validarEmpresaExiste(Long empresaId) {

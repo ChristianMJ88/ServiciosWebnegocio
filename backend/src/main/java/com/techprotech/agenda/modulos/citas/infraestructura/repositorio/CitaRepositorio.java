@@ -5,6 +5,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
 import java.time.LocalDateTime;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
@@ -35,6 +36,27 @@ public interface CitaRepositorio extends JpaRepository<CitaEntidad, Long> {
     Optional<CitaEntidad> findByIdAndEmpresaId(Long id, Long empresaId);
 
     List<CitaEntidad> findByEmpresaIdOrderByInicioDesc(Long empresaId);
+
+    List<CitaEntidad> findByEmpresaIdAndEstadoInOrderByInicioDesc(Long empresaId, Collection<String> estados);
+
+    List<CitaEntidad> findByEmpresaIdAndInicioBetweenOrderByInicioAsc(
+            Long empresaId,
+            LocalDateTime inicio,
+            LocalDateTime fin
+    );
+
+    List<CitaEntidad> findByEmpresaIdAndInicioBetweenAndEstadoInOrderByInicioAsc(
+            Long empresaId,
+            LocalDateTime inicio,
+            LocalDateTime fin,
+            List<String> estados
+    );
+
+    List<CitaEntidad> findByEmpresaIdAndInicioBeforeAndEstadoOrderByInicioAsc(
+            Long empresaId,
+            LocalDateTime inicio,
+            String estado
+    );
 
     long countByEmpresaId(Long empresaId);
 

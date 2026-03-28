@@ -2,25 +2,55 @@ package com.techprotech.agenda.modulos.admin.aplicacion;
 
 import com.techprotech.agenda.compartido.correo.ConfiguracionCorreoEmpresaEntidad;
 import com.techprotech.agenda.compartido.correo.ConfiguracionCorreoEmpresaRepositorio;
+import com.techprotech.agenda.compartido.correo.BandejaSalidaNotificacionEntidad;
+import com.techprotech.agenda.compartido.correo.BandejaSalidaNotificacionRepositorio;
 import com.techprotech.agenda.compartido.correo.ProveedorCorreo;
 import com.techprotech.agenda.compartido.correo.ProtectorSecretosCorreo;
+import com.techprotech.agenda.compartido.whatsapp.ClienteWhatsappTwilio;
+import com.techprotech.agenda.compartido.whatsapp.ConfiguracionWhatsappEmpresaEntidad;
+import com.techprotech.agenda.compartido.whatsapp.ConfiguracionWhatsappEmpresaRepositorio;
+import com.techprotech.agenda.compartido.whatsapp.ConfiguracionWhatsappResolvida;
+import com.techprotech.agenda.compartido.whatsapp.ResultadoEnvioWhatsapp;
+import com.techprotech.agenda.compartido.whatsapp.ServicioConfiguracionWhatsappEmpresa;
+import com.techprotech.agenda.compartido.whatsapp.ServicioOutboxWhatsappCitas;
 import com.techprotech.agenda.modulos.admin.api.dto.ConfiguracionCorreoAdminRequest;
 import com.techprotech.agenda.modulos.admin.api.dto.ConfiguracionCorreoAdminResponse;
+import com.techprotech.agenda.modulos.admin.api.dto.ConfiguracionWhatsappAdminRequest;
+import com.techprotech.agenda.modulos.admin.api.dto.ConfiguracionWhatsappAdminResponse;
+import com.techprotech.agenda.modulos.admin.api.dto.DetectarChannelSenderWhatsappResponse;
+import com.techprotech.agenda.modulos.admin.api.dto.LogMensajeWhatsappAdminResponse;
 import com.techprotech.agenda.modulos.admin.api.dto.MigracionSecretosCorreoResponse;
+import com.techprotech.agenda.modulos.admin.api.dto.AsociarChannelSenderWhatsappRequest;
+import com.techprotech.agenda.modulos.admin.api.dto.AsociarChannelSenderWhatsappResponse;
+import com.techprotech.agenda.modulos.admin.api.dto.PlantillaWhatsappAdminResponse;
 import com.techprotech.agenda.modulos.admin.api.dto.PrestadorAdminRequest;
 import com.techprotech.agenda.modulos.admin.api.dto.PrestadorAdminResponse;
+import com.techprotech.agenda.modulos.admin.api.dto.ProvisionarSubcuentaWhatsappRequest;
+import com.techprotech.agenda.modulos.admin.api.dto.ProvisionarMessagingServiceWhatsappRequest;
+import com.techprotech.agenda.modulos.admin.api.dto.ProvisionarMessagingServiceWhatsappResponse;
+import com.techprotech.agenda.modulos.admin.api.dto.ProvisionarSubcuentaWhatsappResponse;
+import com.techprotech.agenda.modulos.admin.api.dto.PruebaPlantillaWhatsappRequest;
+import com.techprotech.agenda.modulos.admin.api.dto.PruebaPlantillaWhatsappResponse;
 import com.techprotech.agenda.modulos.admin.api.dto.ReporteServicioAdminResponse;
 import com.techprotech.agenda.modulos.admin.api.dto.ServicioAdminRequest;
 import com.techprotech.agenda.modulos.admin.api.dto.ServicioAdminResponse;
 import com.techprotech.agenda.modulos.admin.api.dto.SucursalAdminRequest;
 import com.techprotech.agenda.modulos.admin.api.dto.SucursalAdminResponse;
+import com.techprotech.agenda.modulos.admin.api.dto.UsuarioInternoAdminRequest;
+import com.techprotech.agenda.modulos.admin.api.dto.UsuarioInternoAdminResponse;
 import com.techprotech.agenda.modulos.admin.api.dto.ResumenAdminResponse;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.techprotech.agenda.modulos.autenticacion.infraestructura.repositorio.ClienteRepositorio;
 import com.techprotech.agenda.modulos.autenticacion.infraestructura.entidad.RolEntidad;
 import com.techprotech.agenda.modulos.autenticacion.infraestructura.entidad.UsuarioEntidad;
+import com.techprotech.agenda.modulos.autenticacion.infraestructura.entidad.UsuarioInternoPerfilEntidad;
 import com.techprotech.agenda.modulos.autenticacion.infraestructura.entidad.UsuarioRolEntidad;
 import com.techprotech.agenda.modulos.autenticacion.infraestructura.entidad.UsuarioRolId;
+import com.techprotech.agenda.modulos.autenticacion.infraestructura.entidad.EmpresaEntidad;
+import com.techprotech.agenda.modulos.autenticacion.infraestructura.repositorio.EmpresaRepositorio;
 import com.techprotech.agenda.modulos.autenticacion.infraestructura.repositorio.RolRepositorio;
+import com.techprotech.agenda.modulos.autenticacion.infraestructura.repositorio.UsuarioInternoPerfilRepositorio;
 import com.techprotech.agenda.modulos.autenticacion.infraestructura.repositorio.UsuarioRepositorio;
 import com.techprotech.agenda.modulos.autenticacion.infraestructura.repositorio.UsuarioRolRepositorio;
 import com.techprotech.agenda.modulos.citas.api.dto.CitaClienteResponse;
@@ -37,6 +67,8 @@ import com.techprotech.agenda.modulos.servicios.infraestructura.repositorio.Asig
 import com.techprotech.agenda.modulos.servicios.infraestructura.repositorio.ServicioRepositorio;
 import com.techprotech.agenda.modulos.sucursales.infraestructura.entidad.SucursalEntidad;
 import com.techprotech.agenda.modulos.sucursales.infraestructura.repositorio.SucursalRepositorio;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -44,8 +76,11 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.time.ZoneId;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.List;
 import java.util.Set;
@@ -61,6 +96,9 @@ import static org.springframework.http.HttpStatus.BAD_REQUEST;
 @Service
 public class ServicioAdminCitas {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(ServicioAdminCitas.class);
+    private static final Set<String> ROLES_USUARIO_INTERNO = Set.of("ADMIN", "RECEPCIONISTA", "CAJERO");
+
     private final CitaRepositorio citaRepositorio;
     private final HistorialEstadoCitaRepositorio historialEstadoCitaRepositorio;
     private final SucursalRepositorio sucursalRepositorio;
@@ -69,10 +107,18 @@ public class ServicioAdminCitas {
     private final AsignacionServicioPrestadorRepositorio asignacionServicioPrestadorRepositorio;
     private final ClienteRepositorio clienteRepositorio;
     private final UsuarioRepositorio usuarioRepositorio;
+    private final UsuarioInternoPerfilRepositorio usuarioInternoPerfilRepositorio;
     private final UsuarioRolRepositorio usuarioRolRepositorio;
     private final RolRepositorio rolRepositorio;
     private final PasswordEncoder passwordEncoder;
+    private final EmpresaRepositorio empresaRepositorio;
     private final ConfiguracionCorreoEmpresaRepositorio configuracionCorreoEmpresaRepositorio;
+    private final ConfiguracionWhatsappEmpresaRepositorio configuracionWhatsappEmpresaRepositorio;
+    private final ServicioConfiguracionWhatsappEmpresa servicioConfiguracionWhatsappEmpresa;
+    private final ClienteWhatsappTwilio clienteWhatsappTwilio;
+    private final ServicioOutboxWhatsappCitas servicioOutboxWhatsappCitas;
+    private final BandejaSalidaNotificacionRepositorio bandejaSalidaNotificacionRepositorio;
+    private final ObjectMapper objectMapper;
     private final ProtectorSecretosCorreo protectorSecretosCorreo;
 
     public ServicioAdminCitas(
@@ -84,10 +130,18 @@ public class ServicioAdminCitas {
             AsignacionServicioPrestadorRepositorio asignacionServicioPrestadorRepositorio,
             ClienteRepositorio clienteRepositorio,
             UsuarioRepositorio usuarioRepositorio,
+            UsuarioInternoPerfilRepositorio usuarioInternoPerfilRepositorio,
             UsuarioRolRepositorio usuarioRolRepositorio,
             RolRepositorio rolRepositorio,
             PasswordEncoder passwordEncoder,
+            EmpresaRepositorio empresaRepositorio,
             ConfiguracionCorreoEmpresaRepositorio configuracionCorreoEmpresaRepositorio,
+            ConfiguracionWhatsappEmpresaRepositorio configuracionWhatsappEmpresaRepositorio,
+            ServicioConfiguracionWhatsappEmpresa servicioConfiguracionWhatsappEmpresa,
+            ClienteWhatsappTwilio clienteWhatsappTwilio,
+            ServicioOutboxWhatsappCitas servicioOutboxWhatsappCitas,
+            BandejaSalidaNotificacionRepositorio bandejaSalidaNotificacionRepositorio,
+            ObjectMapper objectMapper,
             ProtectorSecretosCorreo protectorSecretosCorreo
     ) {
         this.citaRepositorio = citaRepositorio;
@@ -98,10 +152,18 @@ public class ServicioAdminCitas {
         this.asignacionServicioPrestadorRepositorio = asignacionServicioPrestadorRepositorio;
         this.clienteRepositorio = clienteRepositorio;
         this.usuarioRepositorio = usuarioRepositorio;
+        this.usuarioInternoPerfilRepositorio = usuarioInternoPerfilRepositorio;
         this.usuarioRolRepositorio = usuarioRolRepositorio;
         this.rolRepositorio = rolRepositorio;
         this.passwordEncoder = passwordEncoder;
+        this.empresaRepositorio = empresaRepositorio;
         this.configuracionCorreoEmpresaRepositorio = configuracionCorreoEmpresaRepositorio;
+        this.configuracionWhatsappEmpresaRepositorio = configuracionWhatsappEmpresaRepositorio;
+        this.servicioConfiguracionWhatsappEmpresa = servicioConfiguracionWhatsappEmpresa;
+        this.clienteWhatsappTwilio = clienteWhatsappTwilio;
+        this.servicioOutboxWhatsappCitas = servicioOutboxWhatsappCitas;
+        this.bandejaSalidaNotificacionRepositorio = bandejaSalidaNotificacionRepositorio;
+        this.objectMapper = objectMapper;
         this.protectorSecretosCorreo = protectorSecretosCorreo;
     }
 
@@ -255,6 +317,327 @@ public class ServicioAdminCitas {
     }
 
     @Transactional(readOnly = true)
+    public ConfiguracionWhatsappAdminResponse obtenerConfiguracionWhatsapp(Long empresaId) {
+        ConfiguracionWhatsappEmpresaEntidad configuracion = configuracionWhatsappEmpresaRepositorio.findById(empresaId)
+                .orElseGet(() -> {
+                    ConfiguracionWhatsappEmpresaEntidad nueva = new ConfiguracionWhatsappEmpresaEntidad();
+                    nueva.setEmpresaId(empresaId);
+                    nueva.setHabilitado(false);
+                    return nueva;
+                });
+        return mapearConfiguracionWhatsapp(configuracion);
+    }
+
+    @Transactional
+    public ConfiguracionWhatsappAdminResponse actualizarConfiguracionWhatsapp(Long empresaId, ConfiguracionWhatsappAdminRequest request) {
+        ConfiguracionWhatsappEmpresaEntidad configuracion = configuracionWhatsappEmpresaRepositorio.findById(empresaId)
+                .orElseGet(() -> {
+                    ConfiguracionWhatsappEmpresaEntidad nueva = new ConfiguracionWhatsappEmpresaEntidad();
+                    nueva.setEmpresaId(empresaId);
+                    return nueva;
+                });
+
+        configuracion.setHabilitado(request.habilitado());
+        configuracion.setAccountSid(normalizarOpcional(request.accountSid()));
+        configuracion.setNumeroRemitente(normalizarOpcional(request.numeroRemitente()));
+        configuracion.setTipoCuentaTwilio(normalizarOpcional(request.tipoCuentaTwilio()));
+        configuracion.setSubaccountSid(normalizarOpcional(request.subaccountSid()));
+        configuracion.setMessagingServiceSid(normalizarOpcional(request.messagingServiceSid()));
+        configuracion.setChannelSenderSid(normalizarOpcional(request.channelSenderSid()));
+        configuracion.setStatusCallbackUrl(normalizarOpcional(request.statusCallbackUrl()));
+        configuracion.setPlantillaSolicitudConfirmacionSid(normalizarOpcional(request.plantillaSolicitudConfirmacionSid()));
+        configuracion.setPlantillaReprogramadaPendienteSid(normalizarOpcional(request.plantillaReprogramadaPendienteSid()));
+        configuracion.setPlantillaRecordatorioConfirmacionSid(normalizarOpcional(request.plantillaRecordatorioConfirmacionSid()));
+        configuracion.setPlantillaCitaConfirmadaSid(normalizarOpcional(request.plantillaCitaConfirmadaSid()));
+        configuracion.setPlantillaRecordatorioSid(normalizarOpcional(request.plantillaRecordatorioSid()));
+        configuracion.setPlantillaCancelacionSid(normalizarOpcional(request.plantillaCancelacionSid()));
+        configuracion.setPlantillaLiberadaSinConfirmacionSid(normalizarOpcional(request.plantillaLiberadaSinConfirmacionSid()));
+        configuracion.setPlantillaGraciasVisitaSid(normalizarOpcional(request.plantillaGraciasVisitaSid()));
+        configuracion.setPlantillaRecordatorioRegresoSid(normalizarOpcional(request.plantillaRecordatorioRegresoSid()));
+        configuracion.setSenderDisplayName(normalizarOpcional(request.senderDisplayName()));
+        configuracion.setSenderPhoneNumber(normalizarOpcional(request.senderPhoneNumber()));
+        configuracion.setSenderStatus(normalizarOpcional(request.senderStatus()));
+        configuracion.setQualityRating(normalizarOpcional(request.qualityRating()));
+        configuracion.setThroughputMps(request.throughputMps());
+        configuracion.setWabaId(normalizarOpcional(request.wabaId()));
+        configuracion.setMetaBusinessManagerId(normalizarOpcional(request.metaBusinessManagerId()));
+
+        if (request.authToken() != null) {
+            String authTokenNormalizado = normalizarOpcional(request.authToken());
+            configuracion.setAuthToken(
+                    authTokenNormalizado != null ? cifrarSecretosWhatsappSiEsPosible(authTokenNormalizado, empresaId) : null
+            );
+        }
+
+        return mapearConfiguracionWhatsapp(configuracionWhatsappEmpresaRepositorio.save(configuracion));
+    }
+
+    private String cifrarSecretosWhatsappSiEsPosible(String valorPlano, Long empresaId) {
+        try {
+            return protectorSecretosCorreo.encriptar(valorPlano);
+        } catch (IllegalStateException ex) {
+            LOGGER.warn(
+                    "No se pudo cifrar authToken de WhatsApp para empresa {}. Se guardara temporalmente en texto plano: {}",
+                    empresaId,
+                    ex.getMessage()
+            );
+            return valorPlano;
+        }
+    }
+
+    @Transactional(readOnly = true)
+    public List<PlantillaWhatsappAdminResponse> listarPlantillasWhatsapp(Long empresaId) {
+        ConfiguracionWhatsappResolvida configuracion = servicioConfiguracionWhatsappEmpresa.resolver(empresaId);
+        Map<String, PlantillaWhatsappAdminResponse> plantillas = new LinkedHashMap<>();
+
+        try {
+            for (ClienteWhatsappTwilio.PlantillaTwilioWhatsapp plantilla : clienteWhatsappTwilio.listarPlantillasWhatsapp(empresaId)) {
+                plantillas.put(
+                        plantilla.sid(),
+                        new PlantillaWhatsappAdminResponse(
+                                plantilla.sid(),
+                                plantilla.nombre(),
+                                plantilla.idioma(),
+                                plantilla.categoria(),
+                                plantilla.estado(),
+                                plantilla.tipoPlantilla()
+                        )
+                );
+            }
+        } catch (Exception ex) {
+            // El panel admin debe seguir mostrando al menos las plantillas configuradas localmente.
+        }
+
+        for (PlantillaWhatsappAdminResponse plantillaLocal : construirPlantillasLocalmente(configuracion)) {
+            plantillas.putIfAbsent(plantillaLocal.sid(), plantillaLocal);
+        }
+
+        return new ArrayList<>(plantillas.values());
+    }
+
+    @Transactional(readOnly = true)
+    public List<LogMensajeWhatsappAdminResponse> listarLogsWhatsapp(Long empresaId) {
+        ConfiguracionWhatsappResolvida configuracion = servicioConfiguracionWhatsappEmpresa.resolver(empresaId);
+        return bandejaSalidaNotificacionRepositorio.findTop50ByEmpresaIdAndCanalOrderByIdDesc(empresaId, "WHATSAPP")
+                .stream()
+                .map(log -> mapearLogWhatsapp(log, configuracion))
+                .toList();
+    }
+
+    @Transactional
+    public ProvisionarSubcuentaWhatsappResponse provisionarSubcuentaWhatsapp(
+            Long empresaId,
+            ProvisionarSubcuentaWhatsappRequest request
+    ) {
+        EmpresaEntidad empresa = empresaRepositorio.findById(empresaId)
+                .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "No existe la empresa para provisionar la subcuenta"));
+
+        ConfiguracionWhatsappEmpresaEntidad configuracion = configuracionWhatsappEmpresaRepositorio.findById(empresaId)
+                .orElseGet(() -> {
+                    ConfiguracionWhatsappEmpresaEntidad nueva = new ConfiguracionWhatsappEmpresaEntidad();
+                    nueva.setEmpresaId(empresaId);
+                    nueva.setHabilitado(false);
+                    return nueva;
+                });
+
+        if (configuracion.getSubaccountSid() != null && !configuracion.getSubaccountSid().isBlank()) {
+            throw new ResponseStatusException(CONFLICT, "Este tenant ya tiene una subcuenta Twilio registrada");
+        }
+
+        String friendlyName = normalizarOpcional(request.friendlyName());
+        if (friendlyName == null) {
+            friendlyName = construirNombreSubcuenta(empresa);
+        }
+
+        ClienteWhatsappTwilio.SubcuentaTwilioProvisionada subcuenta = clienteWhatsappTwilio.provisionarSubcuenta(friendlyName);
+
+        configuracion.setTipoCuentaTwilio("SUBCUENTA");
+        configuracion.setSubaccountSid(subcuenta.sid());
+        configuracion.setAuthToken(protectorSecretosCorreo.encriptar(subcuenta.authToken()));
+        if (configuracion.getAccountSid() == null || configuracion.getAccountSid().isBlank()) {
+            configuracion.setAccountSid(subcuenta.ownerAccountSid());
+        }
+        if (configuracion.getSenderStatus() == null || configuracion.getSenderStatus().isBlank()) {
+            configuracion.setSenderStatus("PENDIENTE_CONFIGURACION");
+        }
+
+        ConfiguracionWhatsappEmpresaEntidad guardada = configuracionWhatsappEmpresaRepositorio.save(configuracion);
+        ConfiguracionWhatsappAdminResponse respuestaConfiguracion = mapearConfiguracionWhatsapp(guardada);
+
+        return new ProvisionarSubcuentaWhatsappResponse(
+                true,
+                "Subcuenta Twilio creada. Falta registrar el sender de WhatsApp y completar el Messaging Service del tenant.",
+                subcuenta.friendlyName(),
+                subcuenta.sid(),
+                subcuenta.status(),
+                respuestaConfiguracion
+        );
+    }
+
+    @Transactional
+    public ProvisionarMessagingServiceWhatsappResponse provisionarMessagingServiceWhatsapp(
+            Long empresaId,
+            ProvisionarMessagingServiceWhatsappRequest request
+    ) {
+        EmpresaEntidad empresa = empresaRepositorio.findById(empresaId)
+                .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "No existe la empresa para provisionar el Messaging Service"));
+
+        ConfiguracionWhatsappEmpresaEntidad configuracion = configuracionWhatsappEmpresaRepositorio.findById(empresaId)
+                .orElseGet(() -> {
+                    ConfiguracionWhatsappEmpresaEntidad nueva = new ConfiguracionWhatsappEmpresaEntidad();
+                    nueva.setEmpresaId(empresaId);
+                    nueva.setHabilitado(false);
+                    return nueva;
+                });
+
+        if (configuracion.getMessagingServiceSid() != null && !configuracion.getMessagingServiceSid().isBlank()) {
+            throw new ResponseStatusException(CONFLICT, "Este tenant ya tiene un Messaging Service registrado");
+        }
+
+        String friendlyName = normalizarOpcional(request.friendlyName());
+        if (friendlyName == null) {
+            friendlyName = construirNombreMessagingService(empresa);
+        }
+
+        String inboundRequestUrl = normalizarOpcional(request.inboundRequestUrl());
+        String statusCallbackUrl = normalizarOpcional(configuracion.getStatusCallbackUrl());
+
+        ClienteWhatsappTwilio.MessagingServiceProvisionado messagingService = clienteWhatsappTwilio.provisionarMessagingService(
+                empresaId,
+                friendlyName,
+                inboundRequestUrl,
+                statusCallbackUrl
+        );
+
+        configuracion.setMessagingServiceSid(messagingService.sid());
+        ConfiguracionWhatsappEmpresaEntidad guardada = configuracionWhatsappEmpresaRepositorio.save(configuracion);
+        ConfiguracionWhatsappAdminResponse respuestaConfiguracion = mapearConfiguracionWhatsapp(guardada);
+
+        return new ProvisionarMessagingServiceWhatsappResponse(
+                true,
+                "Messaging Service creado. El siguiente paso es asociar el sender de WhatsApp del tenant a este servicio.",
+                messagingService.friendlyName(),
+                messagingService.sid(),
+                messagingService.inboundRequestUrl(),
+                respuestaConfiguracion
+        );
+    }
+
+    @Transactional
+    public AsociarChannelSenderWhatsappResponse asociarChannelSenderWhatsapp(
+            Long empresaId,
+            AsociarChannelSenderWhatsappRequest request
+    ) {
+        ConfiguracionWhatsappEmpresaEntidad configuracion = configuracionWhatsappEmpresaRepositorio.findById(empresaId)
+                .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "No existe configuracion de WhatsApp para este tenant"));
+
+        String messagingServiceSid = normalizarOpcional(configuracion.getMessagingServiceSid());
+        if (messagingServiceSid == null) {
+            throw new ResponseStatusException(BAD_REQUEST, "Primero debes crear o capturar el Messaging Service SID del tenant");
+        }
+
+        String channelSenderSid = request.channelSenderSid().trim();
+        clienteWhatsappTwilio.asociarChannelSenderAMessagingService(empresaId, messagingServiceSid, channelSenderSid);
+        configuracion.setChannelSenderSid(channelSenderSid);
+        ConfiguracionWhatsappEmpresaEntidad guardada = configuracionWhatsappEmpresaRepositorio.save(configuracion);
+        ConfiguracionWhatsappAdminResponse respuestaConfiguracion = mapearConfiguracionWhatsapp(guardada);
+
+        return new AsociarChannelSenderWhatsappResponse(
+                true,
+                "Channel Sender asociado correctamente al Messaging Service del tenant.",
+                messagingServiceSid,
+                channelSenderSid,
+                respuestaConfiguracion
+        );
+    }
+
+    @Transactional
+    public DetectarChannelSenderWhatsappResponse detectarChannelSenderWhatsapp(Long empresaId) {
+        ConfiguracionWhatsappEmpresaEntidad configuracion = configuracionWhatsappEmpresaRepositorio.findById(empresaId)
+                .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "No existe configuracion de WhatsApp para este tenant"));
+
+        String numeroRemitente = normalizarOpcional(configuracion.getNumeroRemitente());
+        if (numeroRemitente == null) {
+            throw new ResponseStatusException(BAD_REQUEST, "Primero debes capturar el numero remitente del tenant para detectar su sender en Twilio");
+        }
+
+        ClienteWhatsappTwilio.SenderTwilioWhatsapp sender = clienteWhatsappTwilio.detectarSenderWhatsapp(empresaId, numeroRemitente);
+        if (sender == null) {
+            return new DetectarChannelSenderWhatsappResponse(
+                    false,
+                    "No se encontro un Channel Sender en Twilio que coincida con el numero remitente configurado.",
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    mapearConfiguracionWhatsapp(configuracion)
+            );
+        }
+
+        configuracion.setChannelSenderSid(sender.sid());
+        if ((configuracion.getSenderPhoneNumber() == null || configuracion.getSenderPhoneNumber().isBlank()) && sender.senderId() != null) {
+            configuracion.setSenderPhoneNumber(sender.senderId());
+        }
+        if ((configuracion.getSenderStatus() == null || configuracion.getSenderStatus().isBlank()) && sender.status() != null) {
+            configuracion.setSenderStatus(sender.status());
+        }
+        if ((configuracion.getSenderDisplayName() == null || configuracion.getSenderDisplayName().isBlank()) && sender.displayName() != null) {
+            configuracion.setSenderDisplayName(sender.displayName());
+        }
+        if ((configuracion.getWabaId() == null || configuracion.getWabaId().isBlank()) && sender.wabaId() != null) {
+            configuracion.setWabaId(sender.wabaId());
+        }
+
+        ConfiguracionWhatsappEmpresaEntidad guardada = configuracionWhatsappEmpresaRepositorio.save(configuracion);
+        return new DetectarChannelSenderWhatsappResponse(
+                true,
+                "Sender detectado correctamente en Twilio.",
+                sender.sid(),
+                sender.senderId(),
+                sender.status(),
+                sender.displayName(),
+                sender.wabaId(),
+                mapearConfiguracionWhatsapp(guardada)
+        );
+    }
+
+    @Transactional
+    public PruebaPlantillaWhatsappResponse probarPlantillaWhatsapp(Long empresaId, PruebaPlantillaWhatsappRequest request) {
+        ConfiguracionWhatsappResolvida configuracion = servicioConfiguracionWhatsappEmpresa.resolver(empresaId);
+        if (!configuracion.habilitado()) {
+            throw new ResponseStatusException(BAD_REQUEST, "WhatsApp no esta habilitado o la configuracion minima esta incompleta para este tenant");
+        }
+
+        String plantillaSid = normalizarOpcional(request.plantillaSid()) != null
+                ? request.plantillaSid().trim()
+                : (configuracion.plantillaSolicitudConfirmacionSid() != null && !configuracion.plantillaSolicitudConfirmacionSid().isBlank()
+                ? configuracion.plantillaSolicitudConfirmacionSid()
+                : configuracion.plantillaCitaConfirmadaSid());
+
+        if (plantillaSid == null || plantillaSid.isBlank()) {
+            throw new ResponseStatusException(BAD_REQUEST, "No hay plantilla de WhatsApp configurada para la prueba");
+        }
+
+        ResultadoEnvioWhatsapp resultado = clienteWhatsappTwilio.enviarPlantilla(
+                empresaId,
+                request.telefonoDestino().trim(),
+                plantillaSid,
+                Map.of(
+                        "1", request.nombreCliente().trim(),
+                        "2", request.fecha().trim(),
+                        "3", request.hora().trim()
+                )
+        );
+
+        registrarLogPruebaWhatsapp(empresaId, request, plantillaSid, resultado);
+        return new PruebaPlantillaWhatsappResponse(
+                true,
+                "La prueba de WhatsApp fue enviada a Twilio" + (resultado.proveedorMensajeId() != null ? " con Message SID " + resultado.proveedorMensajeId() : "")
+        );
+    }
+
+    @Transactional(readOnly = true)
     public List<CitaClienteResponse> listar(Long empresaId) {
         return citaRepositorio.findByEmpresaIdOrderByInicioDesc(empresaId)
                 .stream()
@@ -306,6 +689,28 @@ public class ServicioAdminCitas {
         historial.setCambiadoPorUsuarioId(usuarioAdminId);
         historial.setMotivo("Cambio de estado realizado por administracion");
         historialEstadoCitaRepositorio.save(historial);
+
+        if ("CANCELADA".equals(nuevoEstado) && !"CANCELADA".equals(estadoAnterior)) {
+            clienteRepositorio.findById(cita.getClienteId())
+                    .filter(cliente -> cliente.isAceptaWhatsapp() && cliente.getTelefono() != null && !cliente.getTelefono().isBlank())
+                    .ifPresent(cliente -> servicioOutboxWhatsappCitas.programarCancelacionNegocio(
+                            empresaId,
+                            cita.getId(),
+                            cliente.getTelefono(),
+                            cita.getInicio()
+                    ));
+        }
+
+        if ("FINALIZADA".equals(nuevoEstado) && !"FINALIZADA".equals(estadoAnterior)) {
+            clienteRepositorio.findById(cita.getClienteId())
+                    .filter(cliente -> cliente.isAceptaWhatsapp() && cliente.getTelefono() != null && !cliente.getTelefono().isBlank())
+                    .ifPresent(cliente -> servicioOutboxWhatsappCitas.programarGraciasVisita(
+                            empresaId,
+                            cita.getId(),
+                            cliente.getTelefono(),
+                            cita.getInicio()
+                    ));
+        }
     }
 
     @Transactional(readOnly = true)
@@ -397,6 +802,91 @@ public class ServicioAdminCitas {
                 ))
                 .filter(java.util.Objects::nonNull)
                 .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public List<UsuarioInternoAdminResponse> listarUsuariosInternos(Long empresaId) {
+        List<UsuarioEntidad> usuarios = usuarioRepositorio.findByEmpresaIdOrderByCorreoAsc(empresaId);
+        if (usuarios.isEmpty()) {
+            return List.of();
+        }
+
+        List<Long> usuarioIds = usuarios.stream().map(UsuarioEntidad::getId).toList();
+        Map<Long, List<UsuarioRolEntidad>> rolesPorUsuario = usuarioRolRepositorio.findByUsuario_IdIn(usuarioIds).stream()
+                .collect(Collectors.groupingBy(usuarioRol -> usuarioRol.getUsuario().getId()));
+        Map<Long, UsuarioInternoPerfilEntidad> perfilesPorUsuario = usuarioInternoPerfilRepositorio.findByUsuarioIdIn(usuarioIds).stream()
+                .collect(Collectors.toMap(UsuarioInternoPerfilEntidad::getUsuarioId, perfil -> perfil));
+        Map<Long, String> sucursalNombres = sucursalRepositorio.findByEmpresaIdOrderByNombreAsc(empresaId).stream()
+                .collect(Collectors.toMap(SucursalEntidad::getId, SucursalEntidad::getNombre));
+
+        return usuarios.stream()
+                .map(usuario -> mapearUsuarioInterno(usuario, perfilesPorUsuario.get(usuario.getId()), rolesPorUsuario.getOrDefault(usuario.getId(), List.of()), sucursalNombres))
+                .filter(java.util.Objects::nonNull)
+                .toList();
+    }
+
+    @Transactional
+    public UsuarioInternoAdminResponse crearUsuarioInterno(Long empresaId, UsuarioInternoAdminRequest request) {
+        validarRolUsuarioInterno(request.rolCodigo());
+        validarSucursalUsuarioInterno(empresaId, request.sucursalId());
+
+        String correoNormalizado = request.correo().trim().toLowerCase();
+        usuarioRepositorio.findByEmpresaIdAndCorreo(empresaId, correoNormalizado)
+                .ifPresent(usuario -> {
+                    throw new ResponseStatusException(CONFLICT, "Ya existe un usuario con ese correo en la empresa");
+                });
+
+        if (request.contrasenaTemporal() == null || request.contrasenaTemporal().isBlank()) {
+            throw new ResponseStatusException(CONFLICT, "Debes indicar una contrasena temporal para el usuario interno");
+        }
+
+        UsuarioEntidad usuario = new UsuarioEntidad();
+        usuario.setEmpresaId(empresaId);
+        usuario.setCorreo(correoNormalizado);
+        usuario.setContrasenaHash(passwordEncoder.encode(request.contrasenaTemporal()));
+        usuario.setHabilitado(request.activo());
+        usuario.setBloqueado(false);
+        usuario = usuarioRepositorio.save(usuario);
+
+        UsuarioInternoPerfilEntidad perfil = new UsuarioInternoPerfilEntidad();
+        perfil.setUsuarioId(usuario.getId());
+        aplicarUsuarioInterno(perfil, request);
+        usuarioInternoPerfilRepositorio.save(perfil);
+
+        asignarRolUsuarioInterno(usuario, empresaId, request.rolCodigo().trim().toUpperCase());
+        return construirUsuarioInternoResponse(usuario, perfil, request.rolCodigo().trim().toUpperCase(), empresaId);
+    }
+
+    @Transactional
+    public UsuarioInternoAdminResponse actualizarUsuarioInterno(Long empresaId, Long usuarioId, UsuarioInternoAdminRequest request) {
+        validarRolUsuarioInterno(request.rolCodigo());
+        validarSucursalUsuarioInterno(empresaId, request.sucursalId());
+
+        UsuarioEntidad usuario = usuarioRepositorio.findByIdAndEmpresaId(usuarioId, empresaId)
+                .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "El usuario interno no existe para la empresa"));
+        UsuarioInternoPerfilEntidad perfil = usuarioInternoPerfilRepositorio.findById(usuarioId)
+                .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "El perfil interno no existe"));
+
+        String correoNormalizado = request.correo().trim().toLowerCase();
+        usuarioRepositorio.findByEmpresaIdAndCorreo(empresaId, correoNormalizado)
+                .filter(existente -> !existente.getId().equals(usuarioId))
+                .ifPresent(existente -> {
+                    throw new ResponseStatusException(CONFLICT, "Ya existe otro usuario con ese correo en la empresa");
+                });
+
+        usuario.setCorreo(correoNormalizado);
+        if (request.contrasenaTemporal() != null && !request.contrasenaTemporal().isBlank()) {
+            usuario.setContrasenaHash(passwordEncoder.encode(request.contrasenaTemporal()));
+        }
+        usuario.setHabilitado(request.activo());
+        usuario.setBloqueado(false);
+        usuarioRepositorio.save(usuario);
+
+        aplicarUsuarioInterno(perfil, request);
+        usuarioInternoPerfilRepositorio.save(perfil);
+
+        reasignarRolUsuarioInterno(usuario, empresaId, request.rolCodigo().trim().toUpperCase());
+        return construirUsuarioInternoResponse(usuario, perfil, request.rolCodigo().trim().toUpperCase(), empresaId);
     }
 
     @Transactional
@@ -511,12 +1001,199 @@ public class ServicioAdminCitas {
         );
     }
 
+    private ConfiguracionWhatsappAdminResponse mapearConfiguracionWhatsapp(ConfiguracionWhatsappEmpresaEntidad configuracion) {
+        String authToken = configuracion.getAuthToken();
+        boolean authTokenConfigurado = authToken != null && !authToken.isBlank();
+        return new ConfiguracionWhatsappAdminResponse(
+                configuracion.isHabilitado(),
+                configuracion.getAccountSid(),
+                authTokenConfigurado,
+                configuracion.getTipoCuentaTwilio() != null && !configuracion.getTipoCuentaTwilio().isBlank()
+                        ? configuracion.getTipoCuentaTwilio()
+                        : "PLATAFORMA",
+                configuracion.getSubaccountSid(),
+                configuracion.getNumeroRemitente(),
+                configuracion.getMessagingServiceSid(),
+                configuracion.getChannelSenderSid(),
+                configuracion.getStatusCallbackUrl(),
+                configuracion.getPlantillaSolicitudConfirmacionSid(),
+                configuracion.getPlantillaReprogramadaPendienteSid(),
+                configuracion.getPlantillaRecordatorioConfirmacionSid(),
+                configuracion.getPlantillaCitaConfirmadaSid(),
+                configuracion.getPlantillaRecordatorioSid(),
+                configuracion.getPlantillaCancelacionSid(),
+                configuracion.getPlantillaLiberadaSinConfirmacionSid(),
+                configuracion.getPlantillaGraciasVisitaSid(),
+                configuracion.getPlantillaRecordatorioRegresoSid(),
+                configuracion.getSenderDisplayName(),
+                configuracion.getSenderPhoneNumber(),
+                configuracion.getSenderStatus(),
+                configuracion.getQualityRating(),
+                configuracion.getThroughputMps(),
+                configuracion.getWabaId(),
+                configuracion.getMetaBusinessManagerId()
+        );
+    }
+
     private String normalizarOpcional(String valor) {
         if (valor == null) {
             return null;
         }
         String limpio = valor.trim();
         return limpio.isEmpty() ? null : limpio;
+    }
+
+    private String construirNombreSubcuenta(EmpresaEntidad empresa) {
+        String base = empresa.getNombre() != null && !empresa.getNombre().isBlank()
+                ? empresa.getNombre().trim()
+                : "tenant-" + empresa.getId();
+        String candidato = "Agenda SaaS - " + base;
+        return candidato.length() > 64 ? candidato.substring(0, 64) : candidato;
+    }
+
+    private String construirNombreMessagingService(EmpresaEntidad empresa) {
+        String base = empresa.getNombre() != null && !empresa.getNombre().isBlank()
+                ? empresa.getNombre().trim()
+                : "tenant-" + empresa.getId();
+        String candidato = "WhatsApp - " + base;
+        return candidato.length() > 64 ? candidato.substring(0, 64) : candidato;
+    }
+
+    private LogMensajeWhatsappAdminResponse mapearLogWhatsapp(
+            BandejaSalidaNotificacionEntidad log,
+            ConfiguracionWhatsappResolvida configuracion
+    ) {
+        return new LogMensajeWhatsappAdminResponse(
+                log.getId(),
+                log.getAgregadoId(),
+                log.getTipoEvento(),
+                log.getEstado(),
+                log.getEstadoEntrega(),
+                log.getProveedorMensajeId(),
+                extraerCampoPayload(log.getPayloadJson(), "telefonoDestino"),
+                resolverPlantillaSid(log, configuracion),
+                log.getCodigoErrorProveedor(),
+                log.getDetalleErrorProveedor() != null ? log.getDetalleErrorProveedor() : log.getMensajeError(),
+                log.getEnviadaEn(),
+                log.getEstadoEntregaActualizadoEn()
+        );
+    }
+
+    private List<PlantillaWhatsappAdminResponse> construirPlantillasLocalmente(ConfiguracionWhatsappResolvida configuracion) {
+        List<PlantillaWhatsappAdminResponse> plantillas = new ArrayList<>();
+        Set<String> sids = new HashSet<>();
+
+        agregarPlantillaLocal(plantillas, sids, configuracion.plantillaSolicitudConfirmacionSid(), "solicitud_confirmacion_cita");
+        agregarPlantillaLocal(plantillas, sids, configuracion.plantillaReprogramadaPendienteSid(), "cita_reprogramada_pendiente_confirmacion");
+        agregarPlantillaLocal(plantillas, sids, configuracion.plantillaRecordatorioConfirmacionSid(), "recordatorio_confirmar_cita");
+        agregarPlantillaLocal(plantillas, sids, configuracion.plantillaCitaConfirmadaSid(), "cita_confirmada");
+        agregarPlantillaLocal(plantillas, sids, configuracion.plantillaRecordatorioSid(), "recordatorio_cita");
+        agregarPlantillaLocal(plantillas, sids, configuracion.plantillaCancelacionSid(), "cita_cancelada_negocio");
+        agregarPlantillaLocal(plantillas, sids, configuracion.plantillaLiberadaSinConfirmacionSid(), "cita_liberada_sin_confirmacion");
+        agregarPlantillaLocal(plantillas, sids, configuracion.plantillaGraciasVisitaSid(), "gracias_por_tu_visita");
+        agregarPlantillaLocal(plantillas, sids, configuracion.plantillaRecordatorioRegresoSid(), "recordatorio_regreso");
+
+        return plantillas;
+    }
+
+    private void agregarPlantillaLocal(
+            List<PlantillaWhatsappAdminResponse> plantillas,
+            Set<String> sids,
+            String sid,
+            String nombre
+    ) {
+        if (sid == null || sid.isBlank() || !sids.add(sid)) {
+            return;
+        }
+
+        plantillas.add(new PlantillaWhatsappAdminResponse(
+                sid,
+                nombre,
+                "es_MX",
+                "UTILITY",
+                "CONFIGURADA_LOCAL",
+                "CONTENT_TEMPLATE"
+        ));
+    }
+
+    private String resolverPlantillaSid(BandejaSalidaNotificacionEntidad log, ConfiguracionWhatsappResolvida configuracion) {
+        String plantillaPayload = extraerCampoPayload(log.getPayloadJson(), "plantillaSid");
+        if (plantillaPayload != null) {
+            return plantillaPayload;
+        }
+        if ("CITA_RECORDATORIO_WHATSAPP".equals(log.getTipoEvento())) {
+            return configuracion.plantillaRecordatorioSid();
+        }
+        if ("CITA_RECORDATORIO_CONFIRMACION_WHATSAPP".equals(log.getTipoEvento())) {
+            return configuracion.plantillaRecordatorioConfirmacionSid();
+        }
+        if ("CITA_REGISTRADA_WHATSAPP".equals(log.getTipoEvento())) {
+            return configuracion.plantillaSolicitudConfirmacionSid();
+        }
+        if ("CITA_REPROGRAMADA_PENDIENTE_WHATSAPP".equals(log.getTipoEvento())) {
+            return configuracion.plantillaReprogramadaPendienteSid();
+        }
+        if ("CITA_CANCELADA_NEGOCIO_WHATSAPP".equals(log.getTipoEvento())) {
+            return configuracion.plantillaCancelacionSid();
+        }
+        if ("CITA_CONFIRMADA_WHATSAPP".equals(log.getTipoEvento())) {
+            return configuracion.plantillaCitaConfirmadaSid();
+        }
+        if ("CITA_LIBERADA_SIN_CONFIRMACION_WHATSAPP".equals(log.getTipoEvento())) {
+            return configuracion.plantillaLiberadaSinConfirmacionSid();
+        }
+        if ("CITA_GRACIAS_VISITA_WHATSAPP".equals(log.getTipoEvento())) {
+            return configuracion.plantillaGraciasVisitaSid();
+        }
+        return null;
+    }
+
+    private String extraerCampoPayload(String payloadJson, String campo) {
+        if (payloadJson == null || payloadJson.isBlank()) {
+            return null;
+        }
+        try {
+            JsonNode raiz = objectMapper.readTree(payloadJson);
+            JsonNode valor = raiz.get(campo);
+            return valor != null && !valor.isNull() ? valor.asText() : null;
+        } catch (Exception ex) {
+            return null;
+        }
+    }
+
+    private void registrarLogPruebaWhatsapp(
+            Long empresaId,
+            PruebaPlantillaWhatsappRequest request,
+            String plantillaSid,
+            ResultadoEnvioWhatsapp resultado
+    ) {
+        try {
+            BandejaSalidaNotificacionEntidad salida = new BandejaSalidaNotificacionEntidad();
+            salida.setEmpresaId(empresaId);
+            salida.setTipoAgregado("WHATSAPP_TEST");
+            salida.setAgregadoId(0L);
+            salida.setTipoEvento("WHATSAPP_PRUEBA_PLANTILLA");
+            salida.setCanal("WHATSAPP");
+            salida.setPayloadJson(objectMapper.writeValueAsString(Map.of(
+                    "telefonoDestino", request.telefonoDestino().trim(),
+                    "plantillaSid", plantillaSid,
+                    "nombreCliente", request.nombreCliente().trim(),
+                    "fecha", request.fecha().trim(),
+                    "hora", request.hora().trim()
+            )));
+            salida.setEstado("ENVIADA");
+            salida.setProgramadaEn(LocalDateTime.now());
+            salida.setEnviadaEn(LocalDateTime.now());
+            salida.setIntentos(1);
+            salida.setProveedorMensajeId(resultado.proveedorMensajeId());
+            salida.setEstadoEntrega(resultado.estadoProveedor());
+            salida.setEstadoEntregaActualizadoEn(LocalDateTime.now());
+            salida.setCodigoErrorProveedor(resultado.codigoErrorProveedor());
+            salida.setDetalleErrorProveedor(resultado.detalleErrorProveedor());
+            bandejaSalidaNotificacionRepositorio.save(salida);
+        } catch (Exception ex) {
+            throw new IllegalStateException("La plantilla se envio, pero no se pudo registrar el log de prueba de WhatsApp", ex);
+        }
     }
 
     private SucursalAdminResponse mapearSucursal(SucursalEntidad sucursal) {
@@ -573,6 +1250,96 @@ public class ServicioAdminCitas {
         if (!usuarioRolRepositorio.existsById(usuarioRolId)) {
             usuarioRolRepositorio.save(new UsuarioRolEntidad(usuarioRolId, usuario, rolStaff));
         }
+    }
+
+    private void aplicarUsuarioInterno(UsuarioInternoPerfilEntidad perfil, UsuarioInternoAdminRequest request) {
+        perfil.setSucursalId(request.sucursalId());
+        perfil.setNombreCompleto(request.nombreCompleto().trim());
+        perfil.setTelefono(request.telefono() != null && !request.telefono().isBlank() ? request.telefono().trim() : null);
+        perfil.setPuesto(request.puesto() != null && !request.puesto().isBlank() ? request.puesto().trim() : null);
+        perfil.setNotas(request.notas() != null && !request.notas().isBlank() ? request.notas().trim() : null);
+    }
+
+    private void validarRolUsuarioInterno(String rolCodigo) {
+        String rolNormalizado = rolCodigo != null ? rolCodigo.trim().toUpperCase() : "";
+        if (!ROLES_USUARIO_INTERNO.contains(rolNormalizado)) {
+            throw new ResponseStatusException(BAD_REQUEST, "El rol interno indicado no es valido");
+        }
+    }
+
+    private void validarSucursalUsuarioInterno(Long empresaId, Long sucursalId) {
+        if (sucursalId == null) {
+            return;
+        }
+        sucursalRepositorio.findByIdAndEmpresaId(sucursalId, empresaId)
+                .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "La sucursal indicada no existe para la empresa"));
+    }
+
+    private void asignarRolUsuarioInterno(UsuarioEntidad usuario, Long empresaId, String rolCodigo) {
+        RolEntidad rol = rolRepositorio.findByCodigo(rolCodigo)
+                .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "No existe el rol " + rolCodigo));
+        UsuarioRolId usuarioRolId = new UsuarioRolId(usuario.getId(), rol.getId(), empresaId);
+        if (!usuarioRolRepositorio.existsById(usuarioRolId)) {
+            usuarioRolRepositorio.save(new UsuarioRolEntidad(usuarioRolId, usuario, rol));
+        }
+    }
+
+    private void reasignarRolUsuarioInterno(UsuarioEntidad usuario, Long empresaId, String rolCodigo) {
+        usuarioRolRepositorio.deleteByUsuario_IdAndIdEmpresaIdAndRol_CodigoIn(usuario.getId(), empresaId, ROLES_USUARIO_INTERNO);
+        asignarRolUsuarioInterno(usuario, empresaId, rolCodigo);
+    }
+
+    private UsuarioInternoAdminResponse construirUsuarioInternoResponse(
+            UsuarioEntidad usuario,
+            UsuarioInternoPerfilEntidad perfil,
+            String rolCodigo,
+            Long empresaId
+    ) {
+        Map<Long, String> sucursalNombres = sucursalRepositorio.findByEmpresaIdOrderByNombreAsc(empresaId).stream()
+                .collect(Collectors.toMap(SucursalEntidad::getId, SucursalEntidad::getNombre));
+        return mapearUsuarioInterno(usuario, perfil, rolCodigo, sucursalNombres);
+    }
+
+    private UsuarioInternoAdminResponse mapearUsuarioInterno(
+            UsuarioEntidad usuario,
+            UsuarioInternoPerfilEntidad perfil,
+            List<UsuarioRolEntidad> roles,
+            Map<Long, String> sucursalNombres
+    ) {
+        String rolCodigo = roles.stream()
+                .map(usuarioRol -> usuarioRol.getRol().getCodigo())
+                .filter(ROLES_USUARIO_INTERNO::contains)
+                .findFirst()
+                .orElse(null);
+        if (rolCodigo == null || perfil == null) {
+            return null;
+        }
+
+        return mapearUsuarioInterno(usuario, perfil, rolCodigo, sucursalNombres);
+    }
+
+    private UsuarioInternoAdminResponse mapearUsuarioInterno(
+            UsuarioEntidad usuario,
+            UsuarioInternoPerfilEntidad perfil,
+            String rolCodigo,
+            Map<Long, String> sucursalNombres
+    ) {
+        if (perfil == null) {
+            return null;
+        }
+
+        return new UsuarioInternoAdminResponse(
+                usuario.getId(),
+                perfil.getSucursalId(),
+                perfil.getSucursalId() != null ? sucursalNombres.getOrDefault(perfil.getSucursalId(), "Sucursal") : null,
+                usuario.getCorreo(),
+                perfil.getNombreCompleto(),
+                perfil.getTelefono(),
+                perfil.getPuesto(),
+                rolCodigo,
+                usuario.isHabilitado() && !usuario.isBloqueado(),
+                perfil.getNotas()
+        );
     }
 
     private Map<Long, ServicioEntidad> validarServiciosAsignados(Long empresaId, Long sucursalId, List<Long> servicioIds) {

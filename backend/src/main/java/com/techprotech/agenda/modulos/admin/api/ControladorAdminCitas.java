@@ -2,15 +2,30 @@ package com.techprotech.agenda.modulos.admin.api;
 
 import com.techprotech.agenda.modulos.admin.api.dto.ConfiguracionCorreoAdminRequest;
 import com.techprotech.agenda.modulos.admin.api.dto.ConfiguracionCorreoAdminResponse;
+import com.techprotech.agenda.modulos.admin.api.dto.ConfiguracionWhatsappAdminRequest;
+import com.techprotech.agenda.modulos.admin.api.dto.ConfiguracionWhatsappAdminResponse;
+import com.techprotech.agenda.modulos.admin.api.dto.DetectarChannelSenderWhatsappResponse;
+import com.techprotech.agenda.modulos.admin.api.dto.LogMensajeWhatsappAdminResponse;
 import com.techprotech.agenda.modulos.admin.api.dto.MigracionSecretosCorreoResponse;
+import com.techprotech.agenda.modulos.admin.api.dto.AsociarChannelSenderWhatsappRequest;
+import com.techprotech.agenda.modulos.admin.api.dto.AsociarChannelSenderWhatsappResponse;
+import com.techprotech.agenda.modulos.admin.api.dto.PlantillaWhatsappAdminResponse;
 import com.techprotech.agenda.modulos.admin.api.dto.PrestadorAdminRequest;
 import com.techprotech.agenda.modulos.admin.api.dto.PrestadorAdminResponse;
+import com.techprotech.agenda.modulos.admin.api.dto.ProvisionarSubcuentaWhatsappRequest;
+import com.techprotech.agenda.modulos.admin.api.dto.ProvisionarMessagingServiceWhatsappRequest;
+import com.techprotech.agenda.modulos.admin.api.dto.ProvisionarMessagingServiceWhatsappResponse;
+import com.techprotech.agenda.modulos.admin.api.dto.ProvisionarSubcuentaWhatsappResponse;
+import com.techprotech.agenda.modulos.admin.api.dto.PruebaPlantillaWhatsappRequest;
+import com.techprotech.agenda.modulos.admin.api.dto.PruebaPlantillaWhatsappResponse;
 import com.techprotech.agenda.modulos.admin.api.dto.ReporteServicioAdminResponse;
 import com.techprotech.agenda.modulos.admin.api.dto.ResumenAdminResponse;
 import com.techprotech.agenda.modulos.admin.api.dto.ServicioAdminRequest;
 import com.techprotech.agenda.modulos.admin.api.dto.ServicioAdminResponse;
 import com.techprotech.agenda.modulos.admin.api.dto.SucursalAdminRequest;
 import com.techprotech.agenda.modulos.admin.api.dto.SucursalAdminResponse;
+import com.techprotech.agenda.modulos.admin.api.dto.UsuarioInternoAdminRequest;
+import com.techprotech.agenda.modulos.admin.api.dto.UsuarioInternoAdminResponse;
 import com.techprotech.agenda.modulos.admin.aplicacion.ServicioAdminCitas;
 import com.techprotech.agenda.modulos.citas.api.dto.CitaClienteResponse;
 import jakarta.validation.Valid;
@@ -107,6 +122,68 @@ public class ControladorAdminCitas {
         return servicioAdminCitas.migrarSecretosCorreo(usuario.empresaId());
     }
 
+    @GetMapping("/configuracion-whatsapp")
+    public ConfiguracionWhatsappAdminResponse configuracionWhatsapp(@AuthenticationPrincipal UsuarioAutenticado usuario) {
+        return servicioAdminCitas.obtenerConfiguracionWhatsapp(usuario.empresaId());
+    }
+
+    @PatchMapping("/configuracion-whatsapp")
+    public ConfiguracionWhatsappAdminResponse actualizarConfiguracionWhatsapp(
+            @AuthenticationPrincipal UsuarioAutenticado usuario,
+            @Valid @RequestBody ConfiguracionWhatsappAdminRequest request
+    ) {
+        return servicioAdminCitas.actualizarConfiguracionWhatsapp(usuario.empresaId(), request);
+    }
+
+    @GetMapping("/configuracion-whatsapp/plantillas")
+    public List<PlantillaWhatsappAdminResponse> plantillasWhatsapp(@AuthenticationPrincipal UsuarioAutenticado usuario) {
+        return servicioAdminCitas.listarPlantillasWhatsapp(usuario.empresaId());
+    }
+
+    @GetMapping("/configuracion-whatsapp/logs")
+    public List<LogMensajeWhatsappAdminResponse> logsWhatsapp(@AuthenticationPrincipal UsuarioAutenticado usuario) {
+        return servicioAdminCitas.listarLogsWhatsapp(usuario.empresaId());
+    }
+
+    @PostMapping("/configuracion-whatsapp/provisionar-subcuenta")
+    public ProvisionarSubcuentaWhatsappResponse provisionarSubcuentaWhatsapp(
+            @AuthenticationPrincipal UsuarioAutenticado usuario,
+            @Valid @RequestBody ProvisionarSubcuentaWhatsappRequest request
+    ) {
+        return servicioAdminCitas.provisionarSubcuentaWhatsapp(usuario.empresaId(), request);
+    }
+
+    @PostMapping("/configuracion-whatsapp/provisionar-messaging-service")
+    public ProvisionarMessagingServiceWhatsappResponse provisionarMessagingServiceWhatsapp(
+            @AuthenticationPrincipal UsuarioAutenticado usuario,
+            @Valid @RequestBody ProvisionarMessagingServiceWhatsappRequest request
+    ) {
+        return servicioAdminCitas.provisionarMessagingServiceWhatsapp(usuario.empresaId(), request);
+    }
+
+    @PostMapping("/configuracion-whatsapp/asociar-channel-sender")
+    public AsociarChannelSenderWhatsappResponse asociarChannelSenderWhatsapp(
+            @AuthenticationPrincipal UsuarioAutenticado usuario,
+            @Valid @RequestBody AsociarChannelSenderWhatsappRequest request
+    ) {
+        return servicioAdminCitas.asociarChannelSenderWhatsapp(usuario.empresaId(), request);
+    }
+
+    @PostMapping("/configuracion-whatsapp/detectar-channel-sender")
+    public DetectarChannelSenderWhatsappResponse detectarChannelSenderWhatsapp(
+            @AuthenticationPrincipal UsuarioAutenticado usuario
+    ) {
+        return servicioAdminCitas.detectarChannelSenderWhatsapp(usuario.empresaId());
+    }
+
+    @PostMapping("/configuracion-whatsapp/probar-plantilla")
+    public PruebaPlantillaWhatsappResponse probarPlantillaWhatsapp(
+            @AuthenticationPrincipal UsuarioAutenticado usuario,
+            @Valid @RequestBody PruebaPlantillaWhatsappRequest request
+    ) {
+        return servicioAdminCitas.probarPlantillaWhatsapp(usuario.empresaId(), request);
+    }
+
     @GetMapping("/sucursales")
     public List<SucursalAdminResponse> sucursales(@AuthenticationPrincipal UsuarioAutenticado usuario) {
         return servicioAdminCitas.listarSucursales(usuario.empresaId());
@@ -154,6 +231,28 @@ public class ControladorAdminCitas {
     @GetMapping("/prestadores")
     public List<PrestadorAdminResponse> prestadores(@AuthenticationPrincipal UsuarioAutenticado usuario) {
         return servicioAdminCitas.listarPrestadores(usuario.empresaId());
+    }
+
+    @GetMapping("/usuarios-internos")
+    public List<UsuarioInternoAdminResponse> usuariosInternos(@AuthenticationPrincipal UsuarioAutenticado usuario) {
+        return servicioAdminCitas.listarUsuariosInternos(usuario.empresaId());
+    }
+
+    @PostMapping("/usuarios-internos")
+    public UsuarioInternoAdminResponse crearUsuarioInterno(
+            @AuthenticationPrincipal UsuarioAutenticado usuario,
+            @Valid @RequestBody UsuarioInternoAdminRequest request
+    ) {
+        return servicioAdminCitas.crearUsuarioInterno(usuario.empresaId(), request);
+    }
+
+    @PatchMapping("/usuarios-internos/{id}")
+    public UsuarioInternoAdminResponse actualizarUsuarioInterno(
+            @AuthenticationPrincipal UsuarioAutenticado usuario,
+            @PathVariable Long id,
+            @Valid @RequestBody UsuarioInternoAdminRequest request
+    ) {
+        return servicioAdminCitas.actualizarUsuarioInterno(usuario.empresaId(), id, request);
     }
 
     @PostMapping("/prestadores")

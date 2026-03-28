@@ -1,6 +1,8 @@
 package com.techprotech.agenda.modulos.citas.aplicacion;
 
+import com.techprotech.agenda.compartido.whatsapp.ServicioOutboxWhatsappCitas;
 import com.techprotech.agenda.modulos.citas.api.dto.CitaClienteResponse;
+import com.techprotech.agenda.modulos.autenticacion.infraestructura.entidad.ClienteEntidad;
 import com.techprotech.agenda.modulos.autenticacion.infraestructura.repositorio.ClienteRepositorio;
 import com.techprotech.agenda.modulos.autenticacion.infraestructura.repositorio.UsuarioRepositorio;
 import com.techprotech.agenda.modulos.disponibilidad.aplicacion.FranjaDisponibleResponse;
@@ -36,6 +38,7 @@ public class ServicioCitasCliente {
     private final ServicioConsultaDisponibilidad servicioConsultaDisponibilidad;
     private final ClienteRepositorio clienteRepositorio;
     private final UsuarioRepositorio usuarioRepositorio;
+    private final ServicioOutboxWhatsappCitas servicioOutboxWhatsappCitas;
 
     public ServicioCitasCliente(
             CitaRepositorio citaRepositorio,
@@ -45,7 +48,8 @@ public class ServicioCitasCliente {
             PrestadorServicioRepositorio prestadorServicioRepositorio,
             ServicioConsultaDisponibilidad servicioConsultaDisponibilidad,
             ClienteRepositorio clienteRepositorio,
-            UsuarioRepositorio usuarioRepositorio
+            UsuarioRepositorio usuarioRepositorio,
+            ServicioOutboxWhatsappCitas servicioOutboxWhatsappCitas
     ) {
         this.citaRepositorio = citaRepositorio;
         this.historialEstadoCitaRepositorio = historialEstadoCitaRepositorio;
@@ -55,6 +59,7 @@ public class ServicioCitasCliente {
         this.servicioConsultaDisponibilidad = servicioConsultaDisponibilidad;
         this.clienteRepositorio = clienteRepositorio;
         this.usuarioRepositorio = usuarioRepositorio;
+        this.servicioOutboxWhatsappCitas = servicioOutboxWhatsappCitas;
     }
 
     @Transactional(readOnly = true)
@@ -63,6 +68,43 @@ public class ServicioCitasCliente {
                 .stream()
                 .map(this::mapearCita)
                 .toList();
+    }
+
+    @Transactional
+    public CitaClienteResponse confirmar(Long empresaId, Long clienteId, Long citaId) {
+        CitaEntidad cita = citaRepositorio.findByIdAndEmpresaIdAndClienteId(citaId, empresaId, clienteId)
+                .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "La cita no existe para el cliente autenticado"));
+
+        if (!"PENDIENTE".equals(cita.getEstado())) {
+            throw new ResponseStatusException(BAD_REQUEST, "Solo se pueden confirmar citas pendientes");
+        }
+
+        if (!cita.getInicio().isAfter(LocalDateTime.now())) {
+            throw new ResponseStatusException(BAD_REQUEST, "No se pueden confirmar citas pasadas o en curso");
+        }
+
+        cita.setEstado("CONFIRMADA");
+        citaRepositorio.save(cita);
+
+        HistorialEstadoCitaEntidad historial = new HistorialEstadoCitaEntidad();
+        historial.setCitaId(cita.getId());
+        historial.setEstadoAnterior("PENDIENTE");
+        historial.setEstadoNuevo("CONFIRMADA");
+        historial.setCambiadoPorUsuarioId(clienteId);
+        historial.setMotivo("Confirmacion realizada por el cliente");
+        historialEstadoCitaRepositorio.save(historial);
+
+        ClienteEntidad cliente = clienteRepositorio.findById(clienteId).orElse(null);
+        if (cliente != null && cliente.isAceptaWhatsapp() && cliente.getTelefono() != null && !cliente.getTelefono().isBlank()) {
+            servicioOutboxWhatsappCitas.programarCitaConfirmada(
+                    empresaId,
+                    cita.getId(),
+                    cliente.getTelefono(),
+                    cita.getInicio()
+            );
+        }
+
+        return mapearCita(cita);
     }
 
     @Transactional
@@ -138,6 +180,16 @@ public class ServicioCitasCliente {
         historial.setCambiadoPorUsuarioId(clienteId);
         historial.setMotivo("Reprogramacion realizada por el cliente");
         historialEstadoCitaRepositorio.save(historial);
+
+        ClienteEntidad cliente = clienteRepositorio.findById(clienteId).orElse(null);
+        if (cliente != null && cliente.isAceptaWhatsapp() && cliente.getTelefono() != null && !cliente.getTelefono().isBlank()) {
+            servicioOutboxWhatsappCitas.programarCitaReprogramadaPendiente(
+                    empresaId,
+                    cita.getId(),
+                    cliente.getTelefono(),
+                    cita.getInicio()
+            );
+        }
 
         return mapearCita(cita);
     }

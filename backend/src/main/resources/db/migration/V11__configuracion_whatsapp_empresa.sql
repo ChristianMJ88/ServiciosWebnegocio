@@ -1,0 +1,20 @@
+CREATE TABLE configuracion_whatsapp_empresa (
+    empresa_id BIGINT PRIMARY KEY,
+    habilitado BOOLEAN NOT NULL DEFAULT FALSE,
+    account_sid VARCHAR(80) NULL,
+    auth_token VARCHAR(255) NULL,
+    numero_remitente VARCHAR(40) NULL,
+    messaging_service_sid VARCHAR(80) NULL,
+    status_callback_url VARCHAR(255) NULL,
+    plantilla_cita_confirmada_sid VARCHAR(80) NULL,
+    plantilla_recordatorio_sid VARCHAR(80) NULL,
+    sender_display_name VARCHAR(150) NULL,
+    sender_phone_number VARCHAR(40) NULL,
+    sender_status VARCHAR(40) NULL,
+    quality_rating VARCHAR(40) NULL,
+    throughput_mps INT NULL,
+    waba_id VARCHAR(100) NULL,
+    meta_business_manager_id VARCHAR(100) NULL,
+    actualizada_en TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT fk_configuracion_whatsapp_empresa FOREIGN KEY (empresa_id) REFERENCES empresa(id)
+);

@@ -50,6 +50,21 @@ public class BandejaSalidaNotificacionEntidad {
     @Column(nullable = false)
     private int intentos;
 
+    @Column(name = "proveedor_mensaje_id", length = 64)
+    private String proveedorMensajeId;
+
+    @Column(name = "estado_entrega", length = 30)
+    private String estadoEntrega;
+
+    @Column(name = "estado_entrega_actualizado_en")
+    private LocalDateTime estadoEntregaActualizadoEn;
+
+    @Column(name = "codigo_error_proveedor", length = 32)
+    private String codigoErrorProveedor;
+
+    @Column(name = "detalle_error_proveedor", length = 500)
+    private String detalleErrorProveedor;
+
     public Long getId() {
         return id;
     }
@@ -140,5 +155,45 @@ public class BandejaSalidaNotificacionEntidad {
 
     public void setIntentos(int intentos) {
         this.intentos = intentos;
+    }
+
+    public String getProveedorMensajeId() {
+        return proveedorMensajeId;
+    }
+
+    public void setProveedorMensajeId(String proveedorMensajeId) {
+        this.proveedorMensajeId = proveedorMensajeId;
+    }
+
+    public String getEstadoEntrega() {
+        return estadoEntrega;
+    }
+
+    public void setEstadoEntrega(String estadoEntrega) {
+        this.estadoEntrega = estadoEntrega;
+    }
+
+    public LocalDateTime getEstadoEntregaActualizadoEn() {
+        return estadoEntregaActualizadoEn;
+    }
+
+    public void setEstadoEntregaActualizadoEn(LocalDateTime estadoEntregaActualizadoEn) {
+        this.estadoEntregaActualizadoEn = estadoEntregaActualizadoEn;
+    }
+
+    public String getCodigoErrorProveedor() {
+        return codigoErrorProveedor;
+    }
+
+    public void setCodigoErrorProveedor(String codigoErrorProveedor) {
+        this.codigoErrorProveedor = codigoErrorProveedor;
+    }
+
+    public String getDetalleErrorProveedor() {
+        return detalleErrorProveedor;
+    }
+
+    public void setDetalleErrorProveedor(String detalleErrorProveedor) {
+        this.detalleErrorProveedor = detalleErrorProveedor;
     }
 }

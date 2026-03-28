@@ -3,6 +3,7 @@ package com.techprotech.agenda.modulos.citas.aplicacion;
 import com.techprotech.agenda.compartido.correo.ConfirmacionCitaCorreo;
 import com.techprotech.agenda.compartido.correo.ServicioCorreoCitas;
 import com.techprotech.agenda.compartido.correo.ServicioOutboxCorreoCitas;
+import com.techprotech.agenda.compartido.whatsapp.ServicioOutboxWhatsappCitas;
 import com.techprotech.agenda.modulos.citas.api.dto.CitaCreadaResponse;
 import com.techprotech.agenda.modulos.citas.api.dto.CrearCitaRequest;
 import com.techprotech.agenda.modulos.autenticacion.infraestructura.entidad.ClienteEntidad;
@@ -40,6 +41,7 @@ import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.util.List;
+import java.util.UUID;
 
 import static org.springframework.http.HttpStatus.BAD_REQUEST;
 import static org.springframework.http.HttpStatus.CONFLICT;
@@ -47,6 +49,8 @@ import static org.springframework.http.HttpStatus.NOT_FOUND;
 
 @Service
 public class ServicioCitas {
+
+    private static final String PREFIJO_CONTRASENA_PROVISIONAL = "registro-cita";
 
     private final ServicioConsultaDisponibilidad servicioConsultaDisponibilidad;
     private final SucursalRepositorio sucursalRepositorio;
@@ -63,6 +67,7 @@ public class ServicioCitas {
     private final PasswordEncoder passwordEncoder;
     private final ServicioCorreoCitas servicioCorreoCitas;
     private final ServicioOutboxCorreoCitas servicioOutboxCorreoCitas;
+    private final ServicioOutboxWhatsappCitas servicioOutboxWhatsappCitas;
 
     public ServicioCitas(
             ServicioConsultaDisponibilidad servicioConsultaDisponibilidad,
@@ -79,7 +84,8 @@ public class ServicioCitas {
             HistorialEstadoCitaRepositorio historialEstadoCitaRepositorio,
             PasswordEncoder passwordEncoder,
             ServicioCorreoCitas servicioCorreoCitas,
-            ServicioOutboxCorreoCitas servicioOutboxCorreoCitas
+            ServicioOutboxCorreoCitas servicioOutboxCorreoCitas,
+            ServicioOutboxWhatsappCitas servicioOutboxWhatsappCitas
     ) {
         this.servicioConsultaDisponibilidad = servicioConsultaDisponibilidad;
         this.sucursalRepositorio = sucursalRepositorio;
@@ -96,6 +102,7 @@ public class ServicioCitas {
         this.passwordEncoder = passwordEncoder;
         this.servicioCorreoCitas = servicioCorreoCitas;
         this.servicioOutboxCorreoCitas = servicioOutboxCorreoCitas;
+        this.servicioOutboxWhatsappCitas = servicioOutboxWhatsappCitas;
     }
 
     @Transactional
@@ -184,6 +191,12 @@ public class ServicioCitas {
                     cita.getMoneda()
                 )
         );
+        servicioOutboxWhatsappCitas.programarConfirmacion(
+                empresaId,
+                cita.getId(),
+                request.telefonoCliente().trim(),
+                cita.getInicio()
+        );
 
         return new CitaCreadaResponse(
                 cita.getId(),
@@ -234,8 +247,31 @@ public class ServicioCitas {
     private Long resolverOCrearCliente(Long empresaId, String nombreCliente, String correoCliente, String telefonoCliente) {
         String correo = correoCliente.trim().toLowerCase();
         return usuarioRepositorio.findByEmpresaIdAndCorreo(empresaId, correo)
-                .map(UsuarioEntidad::getId)
+                .map(usuario -> actualizarClienteExistente(usuario.getId(), nombreCliente, telefonoCliente))
                 .orElseGet(() -> crearCliente(empresaId, nombreCliente, correo, telefonoCliente));
+    }
+
+    private Long actualizarClienteExistente(Long usuarioId, String nombreCliente, String telefonoCliente) {
+        clienteRepositorio.findById(usuarioId).ifPresent(cliente -> {
+            String nombreNormalizado = nombreCliente.trim();
+            String telefonoNormalizado = telefonoCliente.trim();
+            boolean actualizado = false;
+
+            if (!nombreNormalizado.equals(cliente.getNombreCompleto())) {
+                cliente.setNombreCompleto(nombreNormalizado);
+                actualizado = true;
+            }
+
+            if (!telefonoNormalizado.equals(cliente.getTelefono())) {
+                cliente.setTelefono(telefonoNormalizado);
+                actualizado = true;
+            }
+
+            if (actualizado) {
+                clienteRepositorio.save(cliente);
+            }
+        });
+        return usuarioId;
     }
 
     private Long crearCliente(Long empresaId, String nombreCliente, String correo, String telefono) {
@@ -245,8 +281,8 @@ public class ServicioCitas {
         UsuarioEntidad usuario = new UsuarioEntidad();
         usuario.setEmpresaId(empresaId);
         usuario.setCorreo(correo);
-        usuario.setContrasenaHash(passwordEncoder.encode("Temporal123!"));
-        usuario.setHabilitado(true);
+        usuario.setContrasenaHash(passwordEncoder.encode(generarContrasenaProvisional()));
+        usuario.setHabilitado(false);
         usuario.setBloqueado(false);
         usuario = usuarioRepositorio.save(usuario);
 
@@ -264,5 +300,9 @@ public class ServicioCitas {
         ));
 
         return usuario.getId();
+    }
+
+    private String generarContrasenaProvisional() {
+        return PREFIJO_CONTRASENA_PROVISIONAL + "-" + UUID.randomUUID();
     }
 }

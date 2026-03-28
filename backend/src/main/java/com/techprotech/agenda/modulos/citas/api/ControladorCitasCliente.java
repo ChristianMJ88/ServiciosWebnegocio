@@ -33,6 +33,14 @@ public class ControladorCitasCliente {
         return servicioCitasCliente.listarMisCitas(usuario.empresaId(), usuario.usuarioId());
     }
 
+    @PatchMapping("/{citaId}/confirmar")
+    public CitaClienteResponse confirmar(
+            @PathVariable Long citaId,
+            @AuthenticationPrincipal UsuarioAutenticado usuario
+    ) {
+        return servicioCitasCliente.confirmar(usuario.empresaId(), usuario.usuarioId(), citaId);
+    }
+
     @PatchMapping("/{citaId}/cancelar")
     public ResponseEntity<Void> cancelar(
             @PathVariable Long citaId,

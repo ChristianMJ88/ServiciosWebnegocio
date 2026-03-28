@@ -63,6 +63,12 @@ public class CitaEntidad {
     @Column(name = "reprogramada_desde_id")
     private Long reprogramadaDesdeId;
 
+    @Column(name = "check_in_en")
+    private LocalDateTime checkInEn;
+
+    @Column(name = "check_in_por_usuario_id")
+    private Long checkInPorUsuarioId;
+
     public Long getId() {
         return id;
     }
@@ -186,5 +192,20 @@ public class CitaEntidad {
     public void setReprogramadaDesdeId(Long reprogramadaDesdeId) {
         this.reprogramadaDesdeId = reprogramadaDesdeId;
     }
-}
 
+    public LocalDateTime getCheckInEn() {
+        return checkInEn;
+    }
+
+    public void setCheckInEn(LocalDateTime checkInEn) {
+        this.checkInEn = checkInEn;
+    }
+
+    public Long getCheckInPorUsuarioId() {
+        return checkInPorUsuarioId;
+    }
+
+    public void setCheckInPorUsuarioId(Long checkInPorUsuarioId) {
+        this.checkInPorUsuarioId = checkInPorUsuarioId;
+    }
+}
