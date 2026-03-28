@@ -44,7 +44,7 @@ export class App {
     } else if (option === 'citas') {
       this.chatMsg.set('Haz clic en "Agendar Cita" en el menú para reservar tu espacio.');
     } else if (option === 'ubicacion') {
-      this.chatMsg.set('Estamos ubicados en Calle Principal #123. ¡Te esperamos!');
+      this.chatMsg.set('Estamos ubicados en Diagonal Benito Juarez #19. ¡Te esperamos!');
     }
   }
 
@@ -55,7 +55,7 @@ export class App {
     }
 
     const urlNormalizada = this.normalizarUrl(this.router.url);
-    return ['/admin', '/staff', '/mi-cuenta'].some(ruta => urlNormalizada.startsWith(ruta));
+    return ['/admin', '/staff', '/recepcion', '/caja', '/mi-cuenta'].some(ruta => urlNormalizada.startsWith(ruta));
   }
 
   private obtenerRutaActiva(snapshot: ActivatedRouteSnapshot): ActivatedRouteSnapshot {

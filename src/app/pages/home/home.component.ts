@@ -1,6 +1,6 @@
-import { CommonModule } from '@angular/common';
-import { Component } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import {CommonModule} from '@angular/common';
+import {Component} from '@angular/core';
+import {RouterLink} from '@angular/router';
 
 @Component({
   selector: 'app-home',
@@ -11,9 +11,9 @@ import { RouterLink } from '@angular/router';
 })
 export class HomeComponent {
   readonly estadisticas = [
-    { valor: '10+', etiqueta: 'años de experiencia' },
-    { valor: '1.2k', etiqueta: 'citas atendidas' },
-    { valor: '98%', etiqueta: 'clientas recurrentes' }
+    {valor: '10+', etiqueta: 'años de experiencia'},
+    {valor: '1.2k', etiqueta: 'citas atendidas'},
+    {valor: '98%', etiqueta: 'clientas recurrentes'}
   ];
 
   readonly heroHighlights = [

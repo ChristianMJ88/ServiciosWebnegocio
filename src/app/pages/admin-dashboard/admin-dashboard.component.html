@@ -53,6 +53,10 @@
               <svg *ngSwitchCase="'correo'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
                 <path d="M4 7.5 12 13l8-5.5M5 19h14a1 1 0 0 0 1-1V7a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v11a1 1 0 0 0 1 1Z" stroke-linecap="round" stroke-linejoin="round"/>
               </svg>
+              <svg *ngSwitchCase="'whatsapp'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                <path d="M12 20a8 8 0 0 0 6.64-12.46A8 8 0 1 0 5.6 18.77L4 21l2.4-.8A7.96 7.96 0 0 0 12 20Z" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M9.4 9.2c.32-.7.66-.72.97-.72.2 0 .43 0 .65.01.2.01.48-.07.74.55.28.67.94 2.31 1.02 2.48.08.17.14.37.03.58-.11.21-.17.34-.34.52-.17.18-.36.4-.51.54-.17.16-.35.33-.15.65.2.32.9 1.48 1.94 2.39 1.33 1.16 2.45 1.52 2.79 1.69.34.17.53.15.73-.09.2-.24.85-.99 1.08-1.33.23-.34.46-.28.77-.17.31.11 1.98.94 2.32 1.11.34.17.57.25.66.39.08.14.08.81-.19 1.6-.27.79-1.55 1.55-2.12 1.64-.56.09-1.27.13-2.05-.11-.47-.14-1.07-.35-1.84-.68-3.24-1.4-5.36-4.85-5.53-5.08-.17-.23-1.31-1.74-1.31-3.32 0-1.58.83-2.35 1.12-2.68Z" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
               <svg *ngSwitchCase="'contactos'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
                 <path d="M5 6h14a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2H9l-4 3v-3H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2Z" stroke-linecap="round" stroke-linejoin="round"/>
                 <path d="M8 10h8M8 13h5" stroke-linecap="round" stroke-linejoin="round"/>
@@ -629,6 +633,484 @@
           </section>
         </ng-container>
 
+        <ng-container *ngIf="seccionActiva() === 'whatsapp'">
+          <section class="section-stack">
+            <div class="workspace-grid two-columns">
+              <mat-card class="workspace-card form-card">
+                <div class="section-header">
+                  <div>
+                    <div class="section-eyebrow">Canal conversacional</div>
+                    <h3>Configuración de WhatsApp por tenant</h3>
+                  </div>
+                </div>
+
+                <form class="admin-form-grid admin-form-shell" (ngSubmit)="guardarConfiguracionWhatsapp()">
+                  <div class="form-block-title full-width">Estado general</div>
+
+                  <div class="helper-text full-width">
+                    Recomendación SaaS: usa "Subcuenta Twilio" para cada empresa. Así separas sender, plantillas y operación por tenant sin mezclar todo en una sola cuenta operativa.
+                  </div>
+
+                  <mat-slide-toggle name="whatsappHabilitado" [(ngModel)]="formularioWhatsapp.habilitado" class="full-width">
+                    Habilitar notificaciones y conversación por WhatsApp para este tenant
+                  </mat-slide-toggle>
+
+                  <mat-form-field appearance="outline">
+                    <mat-label>Account SID</mat-label>
+                    <input matInput name="whatsappAccountSid" [(ngModel)]="formularioWhatsapp.accountSid" maxlength="80">
+                  </mat-form-field>
+
+                  <mat-form-field appearance="outline">
+                    <mat-label>Auth Token nuevo (opcional)</mat-label>
+                    <input matInput type="password" name="whatsappAuthToken" [(ngModel)]="formularioWhatsapp.authToken" maxlength="120">
+                  </mat-form-field>
+
+                  <mat-form-field appearance="outline">
+                    <mat-label>Modelo de cuenta Twilio</mat-label>
+                    <mat-select name="whatsappTipoCuentaTwilio" [(ngModel)]="formularioWhatsapp.tipoCuentaTwilio">
+                      <mat-option value="PLATAFORMA">Cuenta plataforma</mat-option>
+                      <mat-option value="SUBCUENTA">Subcuenta Twilio</mat-option>
+                      <mat-option value="CUENTA_PROPIA">Cuenta propia del tenant</mat-option>
+                    </mat-select>
+                  </mat-form-field>
+
+                  <mat-form-field appearance="outline">
+                    <mat-label>Subaccount SID (opcional)</mat-label>
+                    <input matInput name="whatsappSubaccountSid" [(ngModel)]="formularioWhatsapp.subaccountSid" maxlength="80">
+                  </mat-form-field>
+
+                  <div class="form-block-title full-width">Provisionamiento guiado</div>
+
+                  <mat-form-field appearance="outline" class="full-width">
+                    <mat-label>Friendly name de la subcuenta</mat-label>
+                    <input matInput name="whatsappProvisionFriendlyName" [(ngModel)]="formularioProvisionSubcuentaWhatsapp.friendlyName" maxlength="64" placeholder="Agenda SaaS - Nombre del negocio">
+                  </mat-form-field>
+
+                  <div class="helper-text full-width">
+                    Este botón crea la subcuenta en Twilio usando tu cuenta plataforma y guarda el `Subaccount SID` cifrando el `Auth Token` del tenant. Después aún debes registrar el sender de WhatsApp, el Messaging Service y las plantillas del negocio.
+                  </div>
+
+                  <div class="form-actions full-width">
+                    <button
+                      mat-stroked-button
+                      type="button"
+                      (click)="provisionarSubcuentaWhatsapp()"
+                      [disabled]="provisionandoSubcuentaWhatsapp || formularioWhatsapp.tipoCuentaTwilio === 'CUENTA_PROPIA'">
+                      Provisionar subcuenta Twilio
+                    </button>
+                  </div>
+
+                  <mat-form-field appearance="outline" class="full-width">
+                    <mat-label>Friendly name del Messaging Service</mat-label>
+                    <input matInput name="whatsappProvisionMessagingServiceFriendlyName" [(ngModel)]="formularioProvisionMessagingServiceWhatsapp.friendlyName" maxlength="64" placeholder="WhatsApp - Nombre del negocio">
+                  </mat-form-field>
+
+                  <mat-form-field appearance="outline" class="full-width">
+                    <mat-label>Webhook entrante del Messaging Service (opcional)</mat-label>
+                    <input matInput name="whatsappProvisionMessagingServiceInboundUrl" [(ngModel)]="formularioProvisionMessagingServiceWhatsapp.inboundRequestUrl" maxlength="255" placeholder="https://tu-dominio/api/v1/publico/whatsapp/twilio/webhook">
+                  </mat-form-field>
+
+                  <div class="helper-text full-width">
+                    Este botón crea el `Messaging Service` dentro de la cuenta efectiva del tenant. El siguiente paso es capturar el `Channel Sender SID` (`XE...`) del sender de WhatsApp y asociarlo al servicio.
+                  </div>
+
+                  <div class="form-actions full-width">
+                    <button
+                      mat-stroked-button
+                      type="button"
+                      (click)="provisionarMessagingServiceWhatsapp()"
+                      [disabled]="provisionandoMessagingServiceWhatsapp || formularioWhatsapp.tipoCuentaTwilio === 'PLATAFORMA' && !formularioWhatsapp.accountSid">
+                      Provisionar Messaging Service
+                    </button>
+                  </div>
+
+                  <mat-form-field appearance="outline" class="full-width">
+                    <mat-label>Channel Sender SID (XE...)</mat-label>
+                    <input matInput name="whatsappChannelSenderSid" [(ngModel)]="formularioAsociacionChannelSenderWhatsapp.channelSenderSid" maxlength="80" placeholder="XExxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx">
+                  </mat-form-field>
+
+                  <div class="helper-text full-width">
+                    Puedes obtener este `XE...` desde Twilio Console o Senders API. Este paso conecta el sender de WhatsApp del negocio con el `Messaging Service` del tenant.
+                  </div>
+
+                  <div class="form-actions full-width">
+                    <button
+                      mat-stroked-button
+                      type="button"
+                      (click)="detectarChannelSenderWhatsapp()"
+                      [disabled]="detectandoChannelSenderWhatsapp">
+                      Detectar sender desde Twilio
+                    </button>
+
+                    <button
+                      mat-stroked-button
+                      type="button"
+                      (click)="asociarChannelSenderWhatsapp()"
+                      [disabled]="asociandoChannelSenderWhatsapp || !formularioWhatsapp.messagingServiceSid">
+                      Asociar sender al Messaging Service
+                    </button>
+                  </div>
+
+                  <div class="form-block-title full-width">Remitente y mensajería</div>
+
+                  <mat-form-field appearance="outline">
+                    <mat-label>Número remitente</mat-label>
+                    <input matInput name="whatsappFrom" [(ngModel)]="formularioWhatsapp.numeroRemitente" maxlength="40" placeholder="whatsapp:+5212204292573">
+                  </mat-form-field>
+
+                  <mat-form-field appearance="outline">
+                    <mat-label>Messaging Service SID</mat-label>
+                    <input matInput name="whatsappMessagingServiceSid" [(ngModel)]="formularioWhatsapp.messagingServiceSid" maxlength="80">
+                  </mat-form-field>
+
+                  <mat-form-field appearance="outline">
+                    <mat-label>Channel Sender SID</mat-label>
+                    <input matInput name="whatsappConfigChannelSenderSid" [(ngModel)]="formularioWhatsapp.channelSenderSid" maxlength="80">
+                  </mat-form-field>
+
+                  <mat-form-field appearance="outline" class="full-width">
+                    <mat-label>Status callback URL</mat-label>
+                    <input matInput name="whatsappStatusCallbackUrl" [(ngModel)]="formularioWhatsapp.statusCallbackUrl" maxlength="255">
+                  </mat-form-field>
+
+                  <div class="form-block-title full-width">Meta y sender</div>
+
+                  <mat-form-field appearance="outline">
+                    <mat-label>Business display name</mat-label>
+                    <input matInput name="whatsappSenderDisplayName" [(ngModel)]="formularioWhatsapp.senderDisplayName" maxlength="150">
+                  </mat-form-field>
+
+                  <mat-form-field appearance="outline">
+                    <mat-label>Sender phone number</mat-label>
+                    <input matInput name="whatsappSenderPhoneNumber" [(ngModel)]="formularioWhatsapp.senderPhoneNumber" maxlength="40">
+                  </mat-form-field>
+
+                  <mat-form-field appearance="outline">
+                    <mat-label>Sender status</mat-label>
+                    <input matInput name="whatsappSenderStatus" [(ngModel)]="formularioWhatsapp.senderStatus" maxlength="40">
+                  </mat-form-field>
+
+                  <mat-form-field appearance="outline">
+                    <mat-label>Quality rating</mat-label>
+                    <input matInput name="whatsappQualityRating" [(ngModel)]="formularioWhatsapp.qualityRating" maxlength="40">
+                  </mat-form-field>
+
+                  <mat-form-field appearance="outline">
+                    <mat-label>Throughput (MPS)</mat-label>
+                    <input matInput type="number" min="0" name="whatsappThroughputMps" [(ngModel)]="formularioWhatsapp.throughputMps">
+                  </mat-form-field>
+
+                  <mat-form-field appearance="outline">
+                    <mat-label>WABA ID</mat-label>
+                    <input matInput name="whatsappWabaId" [(ngModel)]="formularioWhatsapp.wabaId" maxlength="100">
+                  </mat-form-field>
+
+                  <mat-form-field appearance="outline" class="full-width">
+                    <mat-label>Meta Business Manager ID</mat-label>
+                    <input matInput name="whatsappBusinessManagerId" [(ngModel)]="formularioWhatsapp.metaBusinessManagerId" maxlength="100">
+                  </mat-form-field>
+
+                  <div class="form-block-title full-width">Plantillas activas</div>
+
+                  <mat-form-field appearance="outline">
+                    <mat-label>SID plantilla solicitud de confirmación</mat-label>
+                    <input matInput name="whatsappTemplateSolicitudConfirmacion" [(ngModel)]="formularioWhatsapp.plantillaSolicitudConfirmacionSid" maxlength="80">
+                  </mat-form-field>
+
+                  <mat-form-field appearance="outline">
+                    <mat-label>SID plantilla cita reprogramada pendiente</mat-label>
+                    <input matInput name="whatsappTemplateReprogramadaPendiente" [(ngModel)]="formularioWhatsapp.plantillaReprogramadaPendienteSid" maxlength="80">
+                  </mat-form-field>
+
+                  <mat-form-field appearance="outline">
+                    <mat-label>SID plantilla recordar confirmar cita</mat-label>
+                    <input matInput name="whatsappTemplateRecordatorioConfirmacion" [(ngModel)]="formularioWhatsapp.plantillaRecordatorioConfirmacionSid" maxlength="80">
+                  </mat-form-field>
+
+                  <mat-form-field appearance="outline">
+                    <mat-label>SID plantilla cita confirmada</mat-label>
+                    <input matInput name="whatsappTemplateConfirmacion" [(ngModel)]="formularioWhatsapp.plantillaCitaConfirmadaSid" maxlength="80">
+                  </mat-form-field>
+
+                  <mat-form-field appearance="outline">
+                    <mat-label>SID plantilla recordatorio</mat-label>
+                    <input matInput name="whatsappTemplateRecordatorio" [(ngModel)]="formularioWhatsapp.plantillaRecordatorioSid" maxlength="80">
+                  </mat-form-field>
+
+                  <mat-form-field appearance="outline">
+                    <mat-label>SID plantilla cancelación por negocio</mat-label>
+                    <input matInput name="whatsappTemplateCancelacion" [(ngModel)]="formularioWhatsapp.plantillaCancelacionSid" maxlength="80">
+                  </mat-form-field>
+
+                  <mat-form-field appearance="outline">
+                    <mat-label>SID plantilla liberada sin confirmación</mat-label>
+                    <input matInput name="whatsappTemplateLiberadaSinConfirmacion" [(ngModel)]="formularioWhatsapp.plantillaLiberadaSinConfirmacionSid" maxlength="80">
+                  </mat-form-field>
+
+                  <mat-form-field appearance="outline">
+                    <mat-label>SID plantilla gracias por tu visita</mat-label>
+                    <input matInput name="whatsappTemplateGraciasVisita" [(ngModel)]="formularioWhatsapp.plantillaGraciasVisitaSid" maxlength="80">
+                  </mat-form-field>
+
+                  <mat-form-field appearance="outline">
+                    <mat-label>SID plantilla recordatorio de regreso</mat-label>
+                    <input matInput name="whatsappTemplateRecordatorioRegreso" [(ngModel)]="formularioWhatsapp.plantillaRecordatorioRegresoSid" maxlength="80">
+                  </mat-form-field>
+
+                  <div class="helper-text full-width">
+                    Si dejas vacío el Auth Token, el backend puede conservar el secreto actual. Usa "Cuenta plataforma" si operas todo bajo tu Twilio, "Subcuenta" si crearás una por empresa y "Cuenta propia del tenant" si el cliente traerá sus propias credenciales.
+                    La plantilla de solicitud de confirmación se usa al registrar la cita y debe pedir al cliente que responda para confirmar su asistencia. La de cita reprogramada pendiente se usa cuando la cita cambia de fecha y vuelve a estado pendiente. La de recordar confirmar se usa cuando la cita sigue pendiente y se acerca la fecha. La de cancelación se reserva para mensajes iniciados por el negocio. Las nuevas de liberada, agradecimiento y regreso quedan listas para la siguiente fase de automatización.
+                  </div>
+
+                  <div class="form-actions">
+                    <button mat-flat-button color="primary" type="submit" [disabled]="guardandoWhatsapp">
+                      Guardar configuración
+                    </button>
+                  </div>
+                </form>
+              </mat-card>
+
+              <mat-card class="workspace-card list-card">
+                <div class="section-header">
+                  <div>
+                    <div class="section-eyebrow">Salud operativa</div>
+                    <h3>Estado de conexión y plantillas</h3>
+                  </div>
+                </div>
+
+                <div class="entity-list">
+                  <article class="entity-row">
+                    <div class="entity-main">
+                      <div class="entity-title">Onboarding del tenant</div>
+                      <div class="entity-meta">
+                        {{ whatsappOnboardingStats().completados }} de {{ whatsappOnboardingStats().total }} pasos completos.
+                        <span *ngIf="whatsappOnboardingStats().siguiente as siguiente">
+                          Siguiente acción: {{ siguiente.title.toLowerCase() }}.
+                        </span>
+                      </div>
+                      <mat-progress-bar mode="determinate" [value]="whatsappOnboardingStats().porcentaje"></mat-progress-bar>
+                    </div>
+                    <div class="entity-side">
+                      <span class="status-pill" [class.is-active]="whatsappOnboardingStats().porcentaje === 100">
+                        {{ whatsappOnboardingStats().porcentaje }}%
+                      </span>
+                    </div>
+                  </article>
+
+                  <article class="entity-row" *ngFor="let paso of whatsappOnboardingChecklist()">
+                    <div class="entity-main">
+                      <div class="entity-title">{{ paso.title }}</div>
+                      <div class="entity-meta">{{ paso.detail }}</div>
+                    </div>
+                    <div class="entity-side">
+                      <span class="status-pill" [class.is-active]="paso.done">
+                        {{ paso.done ? 'Listo' : 'Pendiente' }}
+                      </span>
+                    </div>
+                  </article>
+                </div>
+
+                <div class="entity-list" *ngIf="configuracionWhatsapp() as config; else whatsappSinDatos">
+                  <article class="entity-row">
+                    <div class="entity-main">
+                      <div class="entity-title">Canal habilitado</div>
+                      <div class="entity-meta">
+                        {{ config.habilitado ? 'WhatsApp está activo para este tenant.' : 'WhatsApp está deshabilitado para este tenant.' }}
+                      </div>
+                    </div>
+                    <div class="entity-side">
+                      <span class="status-pill" [class.is-active]="config.habilitado">{{ config.habilitado ? 'Activo' : 'Inactivo' }}</span>
+                    </div>
+                  </article>
+
+                  <article class="entity-row">
+                    <div class="entity-main">
+                      <div class="entity-title">Sender conectado</div>
+                      <div class="entity-meta">{{ config.senderDisplayName || 'Sin display name' }}</div>
+                      <div class="entity-meta">{{ config.senderPhoneNumber || config.numeroRemitente || 'Sin número remitente' }}</div>
+                      <div class="entity-meta">Messaging Service: {{ config.messagingServiceSid || 'Sin definir' }}</div>
+                    </div>
+                    <div class="entity-side">
+                      <span class="status-pill" [class.is-active]="(config.senderStatus || '').toLowerCase() === 'online'">
+                        {{ config.senderStatus || 'Pendiente' }}
+                      </span>
+                    </div>
+                  </article>
+
+                  <article class="entity-row">
+                    <div class="entity-main">
+                      <div class="entity-title">Meta / WABA</div>
+                      <div class="entity-meta">WABA ID: {{ config.wabaId || 'Sin definir' }}</div>
+                      <div class="entity-meta">Business Manager: {{ config.metaBusinessManagerId || 'Sin definir' }}</div>
+                      <div class="entity-meta">Quality rating: {{ config.qualityRating || 'Sin dato' }}</div>
+                      <div class="entity-meta">Throughput: {{ config.throughputMps || 'Sin dato' }} MPS</div>
+                    </div>
+                    <div class="entity-side">
+                      <span class="status-pill" [class.is-active]="!!config.wabaId && !!config.metaBusinessManagerId">
+                        {{ !!config.wabaId && !!config.metaBusinessManagerId ? 'Listo' : 'Pendiente' }}
+                      </span>
+                    </div>
+                  </article>
+
+                  <article class="entity-row">
+                    <div class="entity-main">
+                      <div class="entity-title">Credenciales y callback</div>
+                      <div class="entity-meta">Account SID: {{ config.accountSid || 'Sin definir' }}</div>
+                      <div class="entity-meta">Auth Token: {{ config.authTokenConfigurado ? 'Configurado' : 'Pendiente' }}</div>
+                      <div class="entity-meta">Status callback: {{ config.statusCallbackUrl || 'Sin definir' }}</div>
+                    </div>
+                    <div class="entity-side">
+                      <span class="status-pill" [class.is-active]="config.authTokenConfigurado && !!config.statusCallbackUrl">
+                        {{ config.authTokenConfigurado && !!config.statusCallbackUrl ? 'Listo' : 'Parcial' }}
+                      </span>
+                    </div>
+                  </article>
+
+                  <article class="entity-row">
+                    <div class="entity-main">
+                      <div class="entity-title">Plantillas configuradas</div>
+                      <div class="entity-meta">Solicitud de confirmación: {{ config.plantillaSolicitudConfirmacionSid || 'Sin definir' }}</div>
+                      <div class="entity-meta">Reprogramada pendiente: {{ config.plantillaReprogramadaPendienteSid || 'Sin definir' }}</div>
+                      <div class="entity-meta">Recordatorio para confirmar: {{ config.plantillaRecordatorioConfirmacionSid || 'Sin definir' }}</div>
+                      <div class="entity-meta">Cita confirmada: {{ config.plantillaCitaConfirmadaSid || 'Sin definir' }}</div>
+                      <div class="entity-meta">Recordatorio: {{ config.plantillaRecordatorioSid || 'Sin definir' }}</div>
+                      <div class="entity-meta">Cancelación: {{ config.plantillaCancelacionSid || 'Sin definir' }}</div>
+                      <div class="entity-meta">Liberada sin confirmación: {{ config.plantillaLiberadaSinConfirmacionSid || 'Sin definir' }}</div>
+                      <div class="entity-meta">Gracias por tu visita: {{ config.plantillaGraciasVisitaSid || 'Sin definir' }}</div>
+                      <div class="entity-meta">Recordatorio de regreso: {{ config.plantillaRecordatorioRegresoSid || 'Sin definir' }}</div>
+                    </div>
+                    <div class="entity-side">
+                      <span class="status-pill" [class.is-active]="!!config.plantillaSolicitudConfirmacionSid && !!config.plantillaReprogramadaPendienteSid && !!config.plantillaRecordatorioConfirmacionSid && !!config.plantillaCitaConfirmadaSid && !!config.plantillaRecordatorioSid && !!config.plantillaCancelacionSid && !!config.plantillaLiberadaSinConfirmacionSid && !!config.plantillaGraciasVisitaSid && !!config.plantillaRecordatorioRegresoSid">
+                        {{ !!config.plantillaSolicitudConfirmacionSid && !!config.plantillaReprogramadaPendienteSid && !!config.plantillaRecordatorioConfirmacionSid && !!config.plantillaCitaConfirmadaSid && !!config.plantillaRecordatorioSid && !!config.plantillaCancelacionSid && !!config.plantillaLiberadaSinConfirmacionSid && !!config.plantillaGraciasVisitaSid && !!config.plantillaRecordatorioRegresoSid ? 'Listas' : 'Parcial' }}
+                      </span>
+                    </div>
+                  </article>
+                </div>
+
+                <ng-template #whatsappSinDatos>
+                  <div class="agenda-empty">
+                    No fue posible cargar la configuración actual de WhatsApp.
+                  </div>
+                </ng-template>
+              </mat-card>
+            </div>
+
+            <div class="workspace-grid two-columns">
+              <mat-card class="workspace-card form-card">
+                <div class="section-header">
+                  <div>
+                    <div class="section-eyebrow">Validación rápida</div>
+                    <h3>Prueba de plantilla</h3>
+                  </div>
+                </div>
+
+                <form class="admin-form-grid admin-form-shell" (ngSubmit)="probarPlantillaWhatsapp()">
+                  <mat-form-field appearance="outline">
+                    <mat-label>Teléfono destino</mat-label>
+                    <input matInput name="whatsappTestPhone" [(ngModel)]="formularioPruebaWhatsapp.telefonoDestino" required maxlength="20">
+                  </mat-form-field>
+
+                  <mat-form-field appearance="outline">
+                    <mat-label>Nombre cliente</mat-label>
+                    <input matInput name="whatsappTestName" [(ngModel)]="formularioPruebaWhatsapp.nombreCliente" required maxlength="150">
+                  </mat-form-field>
+
+                  <mat-form-field appearance="outline">
+                    <mat-label>Fecha</mat-label>
+                    <input matInput name="whatsappTestDate" [(ngModel)]="formularioPruebaWhatsapp.fecha" required maxlength="30" placeholder="03/04/2026">
+                  </mat-form-field>
+
+                  <mat-form-field appearance="outline">
+                    <mat-label>Hora</mat-label>
+                    <input matInput name="whatsappTestTime" [(ngModel)]="formularioPruebaWhatsapp.hora" required maxlength="10" placeholder="09:00">
+                  </mat-form-field>
+
+                  <mat-form-field appearance="outline" class="full-width">
+                    <mat-label>Plantilla a probar</mat-label>
+                    <mat-select name="whatsappTestTemplate" [(ngModel)]="formularioPruebaWhatsapp.plantillaSid">
+                      <mat-option [value]="null">Usar plantilla de solicitud de confirmación configurada</mat-option>
+                      <mat-option *ngFor="let plantilla of plantillasWhatsapp()" [value]="plantilla.sid">
+                        {{ plantilla.nombre }} · {{ plantilla.sid }}
+                      </mat-option>
+                    </mat-select>
+                  </mat-form-field>
+
+                  <div class="form-actions">
+                    <button mat-flat-button color="primary" type="submit" [disabled]="probandoPlantillaWhatsapp">
+                      {{ probandoPlantillaWhatsapp ? 'Enviando...' : 'Enviar prueba' }}
+                    </button>
+                  </div>
+                </form>
+              </mat-card>
+
+              <mat-card class="workspace-card list-card">
+                <div class="section-header">
+                  <div>
+                    <div class="section-eyebrow">Biblioteca</div>
+                    <h3>Plantillas detectadas</h3>
+                  </div>
+                </div>
+
+                <div class="agenda-empty" *ngIf="!plantillasWhatsapp().length">
+                  Aún no hay plantillas cargadas desde el backend.
+                </div>
+
+                <div class="entity-list" *ngIf="plantillasWhatsapp().length">
+                  <article class="entity-row" *ngFor="let plantilla of plantillasWhatsapp()">
+                    <div class="entity-main">
+                      <div class="entity-title">{{ plantilla.nombre }}</div>
+                      <div class="entity-meta">{{ plantilla.sid }}</div>
+                      <div class="entity-meta">{{ plantilla.idioma || 'Idioma no definido' }} · {{ plantilla.categoria || 'Sin categoría' }}</div>
+                    </div>
+                    <div class="entity-side">
+                      <span class="status-pill" [class.is-active]="(plantilla.estado || '').toLowerCase() === 'approved'">
+                        {{ plantilla.estado || 'Sin estado' }}
+                      </span>
+                    </div>
+                  </article>
+                </div>
+              </mat-card>
+            </div>
+
+            <mat-card class="workspace-card workspace-card-emphasis">
+              <div class="section-header">
+                <div>
+                  <div class="section-eyebrow">Trazabilidad</div>
+                  <h3>Logs recientes de mensajes WhatsApp</h3>
+                </div>
+                <span class="agenda-date-pill">{{ logsWhatsapp().length }} registros</span>
+              </div>
+
+              <div class="agenda-empty" *ngIf="!logsWhatsapp().length">
+                Todavía no hay logs cargados para WhatsApp en este tenant.
+              </div>
+
+              <div class="entity-list" *ngIf="logsWhatsapp().length">
+                <article class="entity-row" *ngFor="let log of logsWhatsapp()">
+                  <div class="entity-main">
+                    <div class="entity-meta">Cita #{{ log.agregadoId }} · {{ log.tipoEvento }}</div>
+                    <div class="entity-title">{{ log.destinatario || 'Destino oculto' }}</div>
+                    <div class="entity-meta">Outbox: {{ log.estado }}<span *ngIf="log.estadoEntrega"> · Entrega: {{ log.estadoEntrega }}</span></div>
+                    <div class="entity-meta" *ngIf="log.plantillaSid">Plantilla: {{ log.plantillaSid }}</div>
+                    <div class="entity-meta" *ngIf="log.proveedorMensajeId">Message SID: {{ log.proveedorMensajeId }}</div>
+                    <div class="entity-meta" *ngIf="log.codigoErrorProveedor || log.detalleErrorProveedor">
+                      {{ log.codigoErrorProveedor || 'Sin código' }} · {{ log.detalleErrorProveedor || 'Sin detalle' }}
+                    </div>
+                  </div>
+                  <div class="entity-side">
+                    <span class="status-pill" [class.is-active]="['delivered','read','sent','queued'].includes((log.estadoEntrega || '').toLowerCase())">
+                      {{ log.estadoEntrega || log.estado }}
+                    </span>
+                    <span class="entity-meta" *ngIf="log.estadoEntregaActualizadoEn || log.enviadaEn">
+                      {{ (log.estadoEntregaActualizadoEn || log.enviadaEn) | date:'short':'':'es-MX' }}
+                    </span>
+                  </div>
+                </article>
+              </div>
+            </mat-card>
+          </section>
+        </ng-container>
+
         <ng-container *ngIf="seccionActiva() === 'sucursales'">
           <section class="section-stack">
             <div class="workspace-grid two-columns">
@@ -803,6 +1285,120 @@
                     <div class="entity-side">
                       <span class="status-pill" [class.is-active]="servicio.activo">{{ servicio.activo ? 'Activo' : 'Inactivo' }}</span>
                       <button mat-stroked-button type="button" (click)="editarServicio(servicio)">Editar</button>
+                    </div>
+                  </article>
+                </div>
+              </mat-card>
+            </div>
+          </section>
+        </ng-container>
+
+        <ng-container *ngIf="seccionActiva() === 'usuarios'">
+          <section class="section-stack">
+            <div class="workspace-grid two-columns">
+              <mat-card class="workspace-card form-card">
+                <div class="section-header">
+                  <div>
+                    <div class="section-eyebrow">Operación interna</div>
+                    <h3>{{ usuarioInternoEditandoId ? 'Editar usuario interno' : 'Nuevo usuario interno' }}</h3>
+                  </div>
+                  <button mat-stroked-button type="button" *ngIf="usuarioInternoEditandoId" (click)="cancelarEdicionUsuarioInterno()">
+                    Limpiar formulario
+                  </button>
+                </div>
+
+                <form class="admin-form-grid admin-form-shell" (ngSubmit)="guardarUsuarioInterno()">
+                  <div class="form-block-title full-width">Acceso y perfil</div>
+
+                  <mat-form-field appearance="outline">
+                    <mat-label>Sucursal base</mat-label>
+                    <mat-select
+                      name="usuarioInternoSucursalId"
+                      [(ngModel)]="formularioUsuarioInterno.sucursalId">
+                      <mat-option [value]="null">Sin restricción inicial</mat-option>
+                      <mat-option *ngFor="let sucursal of sucursales()" [value]="sucursal.id">{{ sucursal.nombre }}</mat-option>
+                    </mat-select>
+                  </mat-form-field>
+
+                  <mat-form-field appearance="outline">
+                    <mat-label>Rol</mat-label>
+                    <mat-select name="usuarioInternoRolCodigo" [(ngModel)]="formularioUsuarioInterno.rolCodigo" required>
+                      <mat-option *ngFor="let rol of rolesUsuarioInterno" [value]="rol.codigo">{{ rol.nombre }}</mat-option>
+                    </mat-select>
+                  </mat-form-field>
+
+                  <mat-form-field appearance="outline">
+                    <mat-label>Nombre completo</mat-label>
+                    <input matInput name="usuarioInternoNombreCompleto" [(ngModel)]="formularioUsuarioInterno.nombreCompleto" required maxlength="150">
+                  </mat-form-field>
+
+                  <mat-form-field appearance="outline">
+                    <mat-label>Correo</mat-label>
+                    <input matInput type="email" name="usuarioInternoCorreo" [(ngModel)]="formularioUsuarioInterno.correo" required maxlength="150">
+                  </mat-form-field>
+
+                  <mat-form-field appearance="outline">
+                    <mat-label>Contraseña temporal</mat-label>
+                    <input
+                      matInput
+                      type="password"
+                      name="usuarioInternoPassword"
+                      [(ngModel)]="formularioUsuarioInterno.contrasenaTemporal"
+                      minlength="8"
+                      maxlength="100">
+                    <mat-hint>
+                      {{ usuarioInternoEditandoId ? 'Opcional al editar. Si la cambias, usa mínimo 8 caracteres.' : 'Obligatoria al crear. Usa mínimo 8 caracteres.' }}
+                    </mat-hint>
+                  </mat-form-field>
+
+                  <mat-form-field appearance="outline">
+                    <mat-label>Teléfono</mat-label>
+                    <input matInput name="usuarioInternoTelefono" [(ngModel)]="formularioUsuarioInterno.telefono" maxlength="30">
+                  </mat-form-field>
+
+                  <mat-form-field appearance="outline">
+                    <mat-label>Puesto</mat-label>
+                    <input matInput name="usuarioInternoPuesto" [(ngModel)]="formularioUsuarioInterno.puesto" maxlength="80">
+                  </mat-form-field>
+
+                  <mat-slide-toggle name="usuarioInternoActivo" [(ngModel)]="formularioUsuarioInterno.activo">
+                    Usuario activo
+                  </mat-slide-toggle>
+
+                  <mat-form-field appearance="outline" class="full-width">
+                    <mat-label>Notas internas</mat-label>
+                    <textarea matInput rows="3" name="usuarioInternoNotas" [(ngModel)]="formularioUsuarioInterno.notas" maxlength="500"></textarea>
+                  </mat-form-field>
+
+                  <div class="form-actions">
+                    <button mat-flat-button color="primary" type="submit">
+                      {{ usuarioInternoEditandoId ? 'Actualizar usuario' : 'Crear usuario interno' }}
+                    </button>
+                  </div>
+                </form>
+              </mat-card>
+
+              <mat-card class="workspace-card list-card">
+                <div class="section-header">
+                  <div>
+                    <div class="section-eyebrow">Accesos internos</div>
+                    <h3>Usuarios administrativos y operativos</h3>
+                  </div>
+                </div>
+
+                <div class="entity-list">
+                  <article class="entity-row" *ngFor="let usuario of usuariosInternos()">
+                    <div class="entity-main">
+                      <div class="entity-meta">{{ usuario.sucursalNombre || 'Todas las sucursales' }}</div>
+                      <div class="entity-title">{{ usuario.nombreCompleto }}</div>
+                      <div class="entity-meta">{{ usuario.correo }}</div>
+                      <div class="entity-meta">{{ usuario.rolCodigo }}<span *ngIf="usuario.puesto"> · {{ usuario.puesto }}</span></div>
+                      <div class="entity-meta" *ngIf="usuario.telefono">{{ usuario.telefono }}</div>
+                      <div class="entity-meta" *ngIf="usuario.notas">{{ usuario.notas }}</div>
+                    </div>
+                    <div class="entity-side">
+                      <span class="status-pill" [class.is-active]="usuario.activo">{{ usuario.activo ? 'Activo' : 'Inactivo' }}</span>
+                      <button mat-stroked-button type="button" (click)="editarUsuarioInterno(usuario)">Editar</button>
                     </div>
                   </article>
                 </div>

@@ -49,9 +49,20 @@ export class AuthService {
   readonly esCliente = computed(() => this.sesion()?.roles.includes('CLIENTE') ?? false);
   readonly esStaff = computed(() => this.sesion()?.roles.includes('STAFF') ?? false);
   readonly esAdmin = computed(() => this.sesion()?.roles.includes('ADMIN') ?? false);
+  readonly esRecepcionista = computed(() => this.sesion()?.roles.includes('RECEPCIONISTA') ?? false);
+  readonly esCajero = computed(() => this.sesion()?.roles.includes('CAJERO') ?? false);
+  readonly puedeVerAdmin = computed(() => this.esAdmin());
+  readonly puedeVerRecepcion = computed(() => this.esAdmin() || this.esRecepcionista());
+  readonly puedeVerCaja = computed(() => this.esAdmin() || this.esRecepcionista() || this.esCajero());
   readonly rutaPanel = computed(() => {
-    if (this.esAdmin()) {
+    if (this.puedeVerAdmin()) {
       return '/admin';
+    }
+    if (this.puedeVerRecepcion()) {
+      return '/recepcion';
+    }
+    if (this.puedeVerCaja()) {
+      return '/caja';
     }
     if (this.esStaff()) {
       return '/staff';
@@ -89,6 +100,12 @@ export class AuthService {
     const roles = this.sesion()?.roles ?? this.loadSession()?.roles ?? [];
     if (roles.includes('ADMIN')) {
       return '/admin';
+    }
+    if (roles.includes('RECEPCIONISTA')) {
+      return '/recepcion';
+    }
+    if (roles.includes('CAJERO')) {
+      return '/caja';
     }
     if (roles.includes('STAFF')) {
       return '/staff';

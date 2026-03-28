@@ -83,6 +83,31 @@ export interface GuardarPrestadorPayload {
   servicioIds: number[];
 }
 
+export interface UsuarioInternoAdmin {
+  usuarioId: number;
+  sucursalId: number | null;
+  sucursalNombre: string | null;
+  correo: string;
+  nombreCompleto: string;
+  telefono: string | null;
+  puesto: string | null;
+  rolCodigo: string;
+  activo: boolean;
+  notas: string | null;
+}
+
+export interface GuardarUsuarioInternoPayload {
+  sucursalId: number | null;
+  correo: string;
+  contrasenaTemporal: string | null;
+  nombreCompleto: string;
+  telefono: string | null;
+  puesto: string | null;
+  rolCodigo: string;
+  activo: boolean;
+  notas: string | null;
+}
+
 export interface ReglaDisponibilidadAdmin {
   id: number;
   tipoSujeto: string;
@@ -189,6 +214,149 @@ export interface MigracionSecretosCorreoResponse {
   mensaje: string;
 }
 
+export interface ConfiguracionWhatsappAdmin {
+  habilitado: boolean;
+  accountSid: string | null;
+  authTokenConfigurado: boolean;
+  tipoCuentaTwilio: string | null;
+  subaccountSid: string | null;
+  numeroRemitente: string | null;
+  messagingServiceSid: string | null;
+  channelSenderSid: string | null;
+  statusCallbackUrl: string | null;
+  plantillaSolicitudConfirmacionSid: string | null;
+  plantillaReprogramadaPendienteSid: string | null;
+  plantillaRecordatorioConfirmacionSid: string | null;
+  plantillaCitaConfirmadaSid: string | null;
+  plantillaRecordatorioSid: string | null;
+  plantillaCancelacionSid: string | null;
+  plantillaLiberadaSinConfirmacionSid: string | null;
+  plantillaGraciasVisitaSid: string | null;
+  plantillaRecordatorioRegresoSid: string | null;
+  senderDisplayName: string | null;
+  senderPhoneNumber: string | null;
+  senderStatus: string | null;
+  qualityRating: string | null;
+  throughputMps: number | null;
+  wabaId: string | null;
+  metaBusinessManagerId: string | null;
+}
+
+export interface GuardarConfiguracionWhatsappPayload {
+  habilitado: boolean;
+  accountSid: string | null;
+  authToken: string | null;
+  tipoCuentaTwilio: string | null;
+  subaccountSid: string | null;
+  numeroRemitente: string | null;
+  messagingServiceSid: string | null;
+  channelSenderSid: string | null;
+  statusCallbackUrl: string | null;
+  plantillaSolicitudConfirmacionSid: string | null;
+  plantillaReprogramadaPendienteSid: string | null;
+  plantillaRecordatorioConfirmacionSid: string | null;
+  plantillaCitaConfirmadaSid: string | null;
+  plantillaRecordatorioSid: string | null;
+  plantillaCancelacionSid: string | null;
+  plantillaLiberadaSinConfirmacionSid: string | null;
+  plantillaGraciasVisitaSid: string | null;
+  plantillaRecordatorioRegresoSid: string | null;
+  senderDisplayName: string | null;
+  senderPhoneNumber: string | null;
+  senderStatus: string | null;
+  qualityRating: string | null;
+  throughputMps: number | null;
+  wabaId: string | null;
+  metaBusinessManagerId: string | null;
+}
+
+export interface PlantillaWhatsappAdmin {
+  sid: string;
+  nombre: string;
+  idioma: string | null;
+  categoria: string | null;
+  estado: string | null;
+  tipoPlantilla: string | null;
+}
+
+export interface LogMensajeWhatsappAdmin {
+  id: number;
+  agregadoId: number;
+  tipoEvento: string;
+  estado: string;
+  estadoEntrega: string | null;
+  proveedorMensajeId: string | null;
+  destinatario: string | null;
+  plantillaSid: string | null;
+  codigoErrorProveedor: string | null;
+  detalleErrorProveedor: string | null;
+  enviadaEn: string | null;
+  estadoEntregaActualizadoEn: string | null;
+}
+
+export interface ProbarPlantillaWhatsappPayload {
+  telefonoDestino: string;
+  nombreCliente: string;
+  fecha: string;
+  hora: string;
+  plantillaSid: string | null;
+}
+
+export interface PruebaWhatsappResponse {
+  programado: boolean;
+  mensaje: string;
+}
+
+export interface ProvisionarSubcuentaWhatsappPayload {
+  friendlyName: string | null;
+}
+
+export interface ProvisionarSubcuentaWhatsappResponse {
+  creada: boolean;
+  mensaje: string;
+  friendlyName: string | null;
+  subaccountSid: string | null;
+  estado: string | null;
+  configuracion: ConfiguracionWhatsappAdmin;
+}
+
+export interface ProvisionarMessagingServiceWhatsappPayload {
+  friendlyName: string | null;
+  inboundRequestUrl: string | null;
+}
+
+export interface ProvisionarMessagingServiceWhatsappResponse {
+  creado: boolean;
+  mensaje: string;
+  friendlyName: string | null;
+  messagingServiceSid: string | null;
+  inboundRequestUrl: string | null;
+  configuracion: ConfiguracionWhatsappAdmin;
+}
+
+export interface AsociarChannelSenderWhatsappPayload {
+  channelSenderSid: string;
+}
+
+export interface AsociarChannelSenderWhatsappResponse {
+  asociado: boolean;
+  mensaje: string;
+  messagingServiceSid: string | null;
+  channelSenderSid: string | null;
+  configuracion: ConfiguracionWhatsappAdmin;
+}
+
+export interface DetectarChannelSenderWhatsappResponse {
+  encontrado: boolean;
+  mensaje: string;
+  channelSenderSid: string | null;
+  senderId: string | null;
+  senderStatus: string | null;
+  displayName: string | null;
+  wabaId: string | null;
+  configuracion: ConfiguracionWhatsappAdmin;
+}
+
 export interface SolicitudContactoAdmin {
   id: number;
   empresaId: number;
@@ -262,6 +430,18 @@ export class AdminService {
     return this.http.get<PrestadorAdmin[]>(`${environment.apiBaseUrl}/admin/prestadores`);
   }
 
+  getUsuariosInternos(): Observable<UsuarioInternoAdmin[]> {
+    return this.http.get<UsuarioInternoAdmin[]>(`${environment.apiBaseUrl}/admin/usuarios-internos`);
+  }
+
+  crearUsuarioInterno(payload: GuardarUsuarioInternoPayload): Observable<UsuarioInternoAdmin> {
+    return this.http.post<UsuarioInternoAdmin>(`${environment.apiBaseUrl}/admin/usuarios-internos`, payload);
+  }
+
+  actualizarUsuarioInterno(id: number, payload: GuardarUsuarioInternoPayload): Observable<UsuarioInternoAdmin> {
+    return this.http.patch<UsuarioInternoAdmin>(`${environment.apiBaseUrl}/admin/usuarios-internos/${id}`, payload);
+  }
+
   crearPrestador(payload: GuardarPrestadorPayload): Observable<PrestadorAdmin> {
     return this.http.post<PrestadorAdmin>(`${environment.apiBaseUrl}/admin/prestadores`, payload);
   }
@@ -308,6 +488,42 @@ export class AdminService {
 
   migrarSecretosCorreo(): Observable<MigracionSecretosCorreoResponse> {
     return this.http.post<MigracionSecretosCorreoResponse>(`${environment.apiBaseUrl}/admin/configuracion-correo/migrar-secretos`, {});
+  }
+
+  getConfiguracionWhatsapp(): Observable<ConfiguracionWhatsappAdmin> {
+    return this.http.get<ConfiguracionWhatsappAdmin>(`${environment.apiBaseUrl}/admin/configuracion-whatsapp`);
+  }
+
+  actualizarConfiguracionWhatsapp(payload: GuardarConfiguracionWhatsappPayload): Observable<ConfiguracionWhatsappAdmin> {
+    return this.http.patch<ConfiguracionWhatsappAdmin>(`${environment.apiBaseUrl}/admin/configuracion-whatsapp`, payload);
+  }
+
+  getPlantillasWhatsapp(): Observable<PlantillaWhatsappAdmin[]> {
+    return this.http.get<PlantillaWhatsappAdmin[]>(`${environment.apiBaseUrl}/admin/configuracion-whatsapp/plantillas`);
+  }
+
+  getLogsWhatsapp(): Observable<LogMensajeWhatsappAdmin[]> {
+    return this.http.get<LogMensajeWhatsappAdmin[]>(`${environment.apiBaseUrl}/admin/configuracion-whatsapp/logs`);
+  }
+
+  probarPlantillaWhatsapp(payload: ProbarPlantillaWhatsappPayload): Observable<PruebaWhatsappResponse> {
+    return this.http.post<PruebaWhatsappResponse>(`${environment.apiBaseUrl}/admin/configuracion-whatsapp/probar-plantilla`, payload);
+  }
+
+  provisionarSubcuentaWhatsapp(payload: ProvisionarSubcuentaWhatsappPayload): Observable<ProvisionarSubcuentaWhatsappResponse> {
+    return this.http.post<ProvisionarSubcuentaWhatsappResponse>(`${environment.apiBaseUrl}/admin/configuracion-whatsapp/provisionar-subcuenta`, payload);
+  }
+
+  provisionarMessagingServiceWhatsapp(payload: ProvisionarMessagingServiceWhatsappPayload): Observable<ProvisionarMessagingServiceWhatsappResponse> {
+    return this.http.post<ProvisionarMessagingServiceWhatsappResponse>(`${environment.apiBaseUrl}/admin/configuracion-whatsapp/provisionar-messaging-service`, payload);
+  }
+
+  asociarChannelSenderWhatsapp(payload: AsociarChannelSenderWhatsappPayload): Observable<AsociarChannelSenderWhatsappResponse> {
+    return this.http.post<AsociarChannelSenderWhatsappResponse>(`${environment.apiBaseUrl}/admin/configuracion-whatsapp/asociar-channel-sender`, payload);
+  }
+
+  detectarChannelSenderWhatsapp(): Observable<DetectarChannelSenderWhatsappResponse> {
+    return this.http.post<DetectarChannelSenderWhatsappResponse>(`${environment.apiBaseUrl}/admin/configuracion-whatsapp/detectar-channel-sender`, {});
   }
 
   getContactos(): Observable<SolicitudContactoAdmin[]> {

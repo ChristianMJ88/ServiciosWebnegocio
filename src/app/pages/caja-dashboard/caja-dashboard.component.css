@@ -1,0 +1,383 @@
+:host {
+  display: block;
+}
+
+.caja-shell {
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at top left, rgba(233, 178, 106, 0.28), transparent 28%),
+    radial-gradient(circle at top right, rgba(121, 169, 154, 0.18), transparent 24%),
+    linear-gradient(180deg, #f8f1e8 0%, #f6f5f2 44%, #eef0eb 100%);
+  color: #2b2925;
+}
+
+.caja-toolbar {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  min-height: 78px;
+  padding: 0 1.5rem;
+  background: rgba(255, 252, 246, 0.9);
+  backdrop-filter: blur(16px);
+  border-bottom: 1px solid rgba(75, 62, 48, 0.08);
+}
+
+.caja-toolbar-brand,
+.caja-toolbar-actions,
+.caja-user-button {
+  display: flex;
+  align-items: center;
+}
+
+.caja-toolbar-brand {
+  gap: 0.9rem;
+}
+
+.caja-toolbar-actions {
+  gap: 0.75rem;
+}
+
+.caja-brand-mark,
+.caja-user-avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+}
+
+.caja-brand-mark {
+  background: linear-gradient(135deg, #1f7061, #145043);
+  color: #fefcf7;
+}
+
+.caja-brand-copy,
+.caja-user-copy {
+  display: flex;
+  flex-direction: column;
+}
+
+.caja-brand-eyebrow,
+.caja-card-kicker,
+.caja-eyebrow,
+.label {
+  color: #756556;
+  font-size: 0.78rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.caja-brand-title {
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+
+.caja-user-button {
+  gap: 0.75rem;
+  padding: 0.2rem 0.4rem 0.2rem 0.2rem;
+  border-radius: 999px;
+}
+
+.caja-user-avatar {
+  background: #e6ddd1;
+  color: #2b2925;
+}
+
+.caja-user-copy small {
+  color: #7d7065;
+}
+
+.caja-body {
+  padding: 1.5rem;
+}
+
+.caja-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1.7fr) minmax(320px, 0.9fr);
+  gap: 1.25rem;
+  margin-bottom: 1.25rem;
+}
+
+.caja-hero-copy {
+  padding: 1.6rem 1.75rem;
+  border-radius: 28px;
+  background: linear-gradient(135deg, rgba(29, 72, 64, 0.96), rgba(62, 104, 93, 0.92));
+  color: #faf7f0;
+  box-shadow: 0 20px 40px rgba(31, 46, 43, 0.14);
+}
+
+.caja-hero-copy h1 {
+  margin: 0.35rem 0 0.75rem;
+  font-size: clamp(1.9rem, 2vw + 1rem, 2.8rem);
+  line-height: 1.05;
+}
+
+.caja-hero-copy p {
+  max-width: 62ch;
+  margin: 0;
+  color: rgba(250, 247, 240, 0.86);
+}
+
+.caja-sucursal-card,
+.caja-card,
+.caja-metric-card {
+  border-radius: 24px;
+  box-shadow: 0 14px 30px rgba(43, 41, 37, 0.08);
+  border: 1px solid rgba(86, 75, 63, 0.08);
+}
+
+.caja-sucursal-card {
+  padding: 0.75rem;
+  background: rgba(255, 252, 246, 0.86);
+}
+
+.caja-helper {
+  margin: 0.25rem 0 0;
+  color: #6f6358;
+}
+
+.caja-metric-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.caja-metric-card {
+  padding: 1.05rem 1.15rem;
+  background: rgba(255, 252, 246, 0.92);
+}
+
+.caja-metric-card.primary {
+  background: linear-gradient(135deg, rgba(233, 178, 106, 0.2), rgba(255, 252, 246, 0.96));
+}
+
+.caja-metric-card span {
+  display: block;
+  color: #7b7068;
+  margin-bottom: 0.4rem;
+}
+
+.caja-metric-card strong {
+  font-size: 1.45rem;
+}
+
+.caja-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.3fr) minmax(340px, 0.95fr);
+  gap: 1rem;
+}
+
+.caja-main-column,
+.caja-side-column {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.caja-card {
+  padding: 1.15rem;
+  background: rgba(255, 252, 246, 0.92);
+}
+
+.caja-card-heading {
+  margin-bottom: 1rem;
+}
+
+.caja-card-heading h2 {
+  margin: 0.2rem 0 0;
+  font-size: 1.25rem;
+}
+
+.caja-session-summary,
+.caja-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.9rem;
+  margin-bottom: 1rem;
+}
+
+.caja-session-summary strong,
+.caja-summary-grid strong {
+  display: block;
+  margin-top: 0.2rem;
+  font-size: 1.05rem;
+}
+
+.caja-form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.9rem;
+  margin-top: 1rem;
+}
+
+.full-width,
+.caja-form-actions {
+  grid-column: 1 / -1;
+}
+
+.caja-form-actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.caja-empty {
+  padding: 1rem 1.1rem;
+  border-radius: 18px;
+  background: rgba(226, 220, 209, 0.55);
+  color: #665c55;
+}
+
+.caja-appointments {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+}
+
+.caja-appointment-card {
+  width: 100%;
+  padding: 1rem;
+  border: 1px solid rgba(110, 93, 77, 0.12);
+  border-radius: 20px;
+  background: #fffdf9;
+  text-align: left;
+  transition: transform 120ms ease, box-shadow 120ms ease, border-color 120ms ease;
+}
+
+.caja-appointment-card:hover,
+.caja-appointment-card.active {
+  transform: translateY(-1px);
+  box-shadow: 0 12px 24px rgba(43, 41, 37, 0.08);
+  border-color: rgba(31, 112, 97, 0.32);
+}
+
+.caja-appointment-head,
+.caja-appointment-meta,
+.caja-appointment-money {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.caja-appointment-head span,
+.caja-appointment-meta span,
+.caja-appointment-money small,
+.caja-payment-context span,
+.caja-history-item span,
+.caja-last-movement span {
+  color: #71665d;
+}
+
+.caja-appointment-head {
+  align-items: flex-start;
+  margin-bottom: 0.75rem;
+}
+
+.caja-appointment-head strong,
+.caja-payment-context strong,
+.caja-history-item strong,
+.caja-last-movement strong {
+  display: block;
+}
+
+.caja-appointment-meta {
+  margin-bottom: 0.85rem;
+  font-size: 0.92rem;
+  flex-wrap: wrap;
+}
+
+.caja-appointment-money {
+  gap: 1rem;
+}
+
+.caja-appointment-money div {
+  min-width: 0;
+}
+
+.caja-appointment-money strong {
+  display: block;
+  font-size: 1rem;
+}
+
+mat-chip.is-partial {
+  background: rgba(233, 178, 106, 0.2);
+}
+
+.caja-payment-context,
+.caja-last-movement {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  margin-bottom: 1rem;
+}
+
+.caja-history {
+  margin-top: 1rem;
+}
+
+.caja-subheading {
+  margin-bottom: 0.75rem;
+  font-weight: 600;
+}
+
+.caja-history-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.caja-history-item {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.85rem 0.95rem;
+  border-radius: 16px;
+  background: rgba(245, 240, 232, 0.7);
+}
+
+.alert {
+  margin-bottom: 1rem;
+  border-radius: 16px;
+}
+
+.w-100 {
+  width: 100%;
+}
+
+@media (max-width: 1199px) {
+  .caja-grid,
+  .caja-hero,
+  .caja-metric-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 767px) {
+  .caja-toolbar {
+    padding: 0 1rem;
+  }
+
+  .caja-body {
+    padding: 1rem;
+  }
+
+  .caja-session-summary,
+  .caja-summary-grid,
+  .caja-form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .caja-appointment-head,
+  .caja-appointment-meta,
+  .caja-appointment-money,
+  .caja-history-item {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}

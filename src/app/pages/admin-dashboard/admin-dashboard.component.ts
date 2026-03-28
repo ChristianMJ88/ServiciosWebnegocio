@@ -33,21 +33,36 @@ import {
 import {
   AdminService,
   ConfiguracionCorreoAdmin,
+  ConfiguracionWhatsappAdmin,
+  DetectarChannelSenderWhatsappResponse,
   ExcepcionDisponibilidadAdmin,
   GuardarConfiguracionCorreoPayload,
+  GuardarConfiguracionWhatsappPayload,
   GuardarExcepcionDisponibilidadPayload,
   GuardarPrestadorPayload,
   GuardarReglaDisponibilidadPayload,
   GuardarServicioPayload,
   GuardarSucursalPayload,
+  GuardarUsuarioInternoPayload,
+  LogMensajeWhatsappAdmin,
   MigracionSecretosCorreoResponse,
+  PlantillaWhatsappAdmin,
   PrestadorAdmin,
+  AsociarChannelSenderWhatsappPayload,
+  AsociarChannelSenderWhatsappResponse,
+  ProvisionarMessagingServiceWhatsappPayload,
+  ProvisionarMessagingServiceWhatsappResponse,
+  ProvisionarSubcuentaWhatsappPayload,
+  ProvisionarSubcuentaWhatsappResponse,
+  ProbarPlantillaWhatsappPayload,
+  PruebaWhatsappResponse,
   ReporteServicioAdmin,
   ReglaDisponibilidadAdmin,
   ResumenAdmin,
   SolicitudContactoAdmin,
   ServicioAdmin,
-  SucursalAdmin
+  SucursalAdmin,
+  UsuarioInternoAdmin
 } from '../../core/admin/admin.service';
 import { AuthService } from '../../core/auth/auth.service';
 import { CitaCliente } from '../../core/auth/client-appointments.service';
@@ -55,9 +70,11 @@ import { CitaCliente } from '../../core/auth/client-appointments.service';
 type SeccionAdmin =
   | 'resumen'
   | 'correo'
+  | 'whatsapp'
   | 'contactos'
   | 'sucursales'
   | 'servicios'
+  | 'usuarios'
   | 'prestadores'
   | 'reglas'
   | 'excepciones'
@@ -113,10 +130,121 @@ export class AdminDashboardComponent implements OnInit {
   readonly sucursales = signal<SucursalAdmin[]>([]);
   readonly servicios = signal<ServicioAdmin[]>([]);
   readonly prestadores = signal<PrestadorAdmin[]>([]);
+  readonly usuariosInternos = signal<UsuarioInternoAdmin[]>([]);
   readonly reglasDisponibilidad = signal<ReglaDisponibilidadAdmin[]>([]);
   readonly excepcionesDisponibilidad = signal<ExcepcionDisponibilidadAdmin[]>([]);
   readonly reporteServicios = signal<ReporteServicioAdmin[]>([]);
   readonly configuracionCorreo = signal<ConfiguracionCorreoAdmin | null>(null);
+  readonly configuracionWhatsapp = signal<ConfiguracionWhatsappAdmin | null>(null);
+  readonly plantillasWhatsapp = signal<PlantillaWhatsappAdmin[]>([]);
+  readonly logsWhatsapp = signal<LogMensajeWhatsappAdmin[]>([]);
+  readonly whatsappOnboardingChecklist = computed(() => {
+    const config = this.configuracionWhatsapp();
+    const plantillas = this.plantillasWhatsapp();
+    const tipoCuenta = config?.tipoCuentaTwilio ?? 'PLATAFORMA';
+    const tieneCredenciales = !!config?.accountSid && !!config?.authTokenConfigurado;
+    const subcuentaLista = tipoCuenta !== 'SUBCUENTA' || !!config?.subaccountSid;
+    const messagingServiceListo = !!config?.messagingServiceSid;
+    const channelSenderListo = !!config?.channelSenderSid;
+    const remitenteListo = !!config?.numeroRemitente;
+    const plantillasListas = plantillas.length > 0
+      || !!config?.plantillaSolicitudConfirmacionSid
+      || !!config?.plantillaReprogramadaPendienteSid
+      || !!config?.plantillaRecordatorioConfirmacionSid
+      || !!config?.plantillaCitaConfirmadaSid
+      || !!config?.plantillaRecordatorioSid
+      || !!config?.plantillaCancelacionSid
+      || !!config?.plantillaLiberadaSinConfirmacionSid
+      || !!config?.plantillaGraciasVisitaSid
+      || !!config?.plantillaRecordatorioRegresoSid;
+
+    return [
+      {
+        key: 'modelo',
+        done: !!tipoCuenta,
+        title: 'Modelo de cuenta definido',
+        detail:
+          tipoCuenta === 'SUBCUENTA'
+            ? 'El tenant operará en una subcuenta Twilio aislada.'
+            : tipoCuenta === 'CUENTA_PROPIA'
+              ? 'El tenant usará sus propias credenciales de Twilio.'
+              : 'El tenant opera con la cuenta plataforma.'
+      },
+      {
+        key: 'credenciales',
+        done: tieneCredenciales,
+        title: 'Credenciales operativas listas',
+        detail: tieneCredenciales
+          ? 'El tenant ya tiene Account SID y Auth Token disponibles.'
+          : 'Falta guardar credenciales válidas de Twilio para operar.'
+      },
+      {
+        key: 'subcuenta',
+        done: subcuentaLista,
+        title: 'Subcuenta provisionada',
+        detail:
+          tipoCuenta === 'SUBCUENTA'
+            ? (config?.subaccountSid
+              ? `Subcuenta registrada: ${config.subaccountSid}.`
+              : 'Aún falta crear o capturar la subcuenta del tenant.')
+            : 'No aplica para este modelo de cuenta.'
+      },
+      {
+        key: 'remitente',
+        done: remitenteListo,
+        title: 'Número remitente capturado',
+        detail: remitenteListo
+          ? `Remitente configurado: ${config?.numeroRemitente}.`
+          : 'Falta capturar el número remitente de WhatsApp.'
+      },
+      {
+        key: 'messaging',
+        done: messagingServiceListo,
+        title: 'Messaging Service listo',
+        detail: messagingServiceListo
+          ? `Messaging Service activo: ${config?.messagingServiceSid}.`
+          : 'Aún no se ha creado o capturado el Messaging Service SID.'
+      },
+      {
+        key: 'sender',
+        done: channelSenderListo,
+        title: 'Sender asociado al servicio',
+        detail: channelSenderListo
+          ? `Channel Sender detectado: ${config?.channelSenderSid}.`
+          : 'Falta detectar o asociar el Channel Sender SID (XE...).'
+      },
+      {
+        key: 'plantillas',
+        done: plantillasListas,
+        title: 'Plantillas disponibles',
+        detail: plantillasListas
+          ? `${plantillas.length || [config?.plantillaSolicitudConfirmacionSid, config?.plantillaReprogramadaPendienteSid, config?.plantillaRecordatorioConfirmacionSid, config?.plantillaCitaConfirmadaSid, config?.plantillaRecordatorioSid, config?.plantillaCancelacionSid, config?.plantillaLiberadaSinConfirmacionSid, config?.plantillaGraciasVisitaSid, config?.plantillaRecordatorioRegresoSid].filter(Boolean).length} plantilla(s) visibles para el tenant.`
+          : 'Aún no hay plantillas detectadas o configuradas.'
+      },
+      {
+        key: 'canal',
+        done: !!config?.habilitado,
+        title: 'Canal habilitado',
+        detail: config?.habilitado
+          ? 'WhatsApp ya está habilitado para este tenant.'
+          : 'El canal sigue deshabilitado aunque la configuración exista.'
+      }
+    ];
+  });
+  readonly whatsappOnboardingStats = computed(() => {
+    const checklist = this.whatsappOnboardingChecklist();
+    const completados = checklist.filter(item => item.done).length;
+    const total = checklist.length;
+    const porcentaje = total ? Math.round((completados / total) * 100) : 0;
+    const siguiente = checklist.find(item => !item.done) ?? null;
+
+    return {
+      completados,
+      total,
+      porcentaje,
+      siguiente
+    };
+  });
   readonly diasSemana = [
     { value: 1, label: 'Lunes' },
     { value: 2, label: 'Martes' },
@@ -139,9 +267,11 @@ export class AdminDashboardComponent implements OnInit {
   readonly modulosAdmin: Array<{ id: SeccionAdmin; titulo: string; descripcion: string; abreviatura: string; icono: string }> = [
     { id: 'resumen', titulo: 'Resumen ejecutivo', descripcion: 'Métricas generales y desempeño comercial.', abreviatura: 'RE', icono: 'resumen' },
     { id: 'correo', titulo: 'Correo transaccional', descripcion: 'Graph o SMTP por tenant, con cifrado y migración de secretos.', abreviatura: 'CO', icono: 'correo' },
+    { id: 'whatsapp', titulo: 'WhatsApp y Twilio', descripcion: 'Sender, plantillas, pruebas y trazabilidad por tenant.', abreviatura: 'WA', icono: 'whatsapp' },
     { id: 'contactos', titulo: 'Contactos', descripcion: 'Mensajes recibidos desde el formulario web y seguimiento comercial.', abreviatura: 'CN', icono: 'contactos' },
     { id: 'sucursales', titulo: 'Sucursales', descripcion: 'Alta y mantenimiento de sedes operativas.', abreviatura: 'SU', icono: 'sucursal' },
     { id: 'servicios', titulo: 'Servicios', descripcion: 'Catálogo, duración, buffers y precio.', abreviatura: 'SV', icono: 'servicio' },
+    { id: 'usuarios', titulo: 'Usuarios internos', descripcion: 'Recepción, caja y administradores internos.', abreviatura: 'UI', icono: 'prestador' },
     { id: 'prestadores', titulo: 'Prestadores', descripcion: 'Usuarios staff y asignaciones de servicio.', abreviatura: 'PR', icono: 'prestador' },
     { id: 'reglas', titulo: 'Horarios base', descripcion: 'Reglas semanales por sucursal o prestador.', abreviatura: 'HB', icono: 'horario' },
     { id: 'excepciones', titulo: 'Bloqueos', descripcion: 'Vacaciones, descansos y cierres puntuales.', abreviatura: 'BL', icono: 'bloqueo' },
@@ -161,6 +291,11 @@ export class AdminDashboardComponent implements OnInit {
     atendidos: this.contactos().filter(contacto => contacto.estado === 'ATENDIDO').length
   }));
   readonly estadosContactoDisponibles = ['NUEVO', 'EN_PROCESO', 'ATENDIDO', 'CERRADO'];
+  readonly rolesUsuarioInterno = [
+    { codigo: 'ADMIN', nombre: 'Administrador' },
+    { codigo: 'RECEPCIONISTA', nombre: 'Recepcionista' },
+    { codigo: 'CAJERO', nombre: 'Caja' }
+  ];
   readonly sucursalActivaNombre = computed(() => this.sucursales()[0]?.nombre ?? 'Sucursal principal');
   readonly horasAgenda = Array.from({ length: this.finAgendaHora - this.inicioAgendaHora + 1 }, (_, index) => {
     const hora = this.inicioAgendaHora + index;
@@ -368,14 +503,21 @@ export class AdminDashboardComponent implements OnInit {
   guardandoRegla = false;
   guardandoExcepcion = false;
   guardandoCorreo = false;
+  guardandoWhatsapp = false;
+  provisionandoSubcuentaWhatsapp = false;
+  provisionandoMessagingServiceWhatsapp = false;
+  asociandoChannelSenderWhatsapp = false;
+  detectandoChannelSenderWhatsapp = false;
   actualizandoContactoId: number | null = null;
   migrandoSecretosCorreo = false;
+  probandoPlantillaWhatsapp = false;
   sujetosRegla: Array<{ id: number; nombre: string }> = [];
   sujetosExcepcion: Array<{ id: number; nombre: string }> = [];
   serviciosPrestadorDisponibles: ServicioAdmin[] = [];
   sucursalEditandoId: number | null = null;
   servicioEditandoId: number | null = null;
   prestadorEditandoId: number | null = null;
+  usuarioInternoEditandoId: number | null = null;
   reglaEditandoId: number | null = null;
   excepcionEditandoId: number | null = null;
 
@@ -408,6 +550,18 @@ export class AdminDashboardComponent implements OnInit {
     colorAgenda: '#2563eb',
     activo: true,
     servicioIds: []
+  };
+
+  formularioUsuarioInterno: GuardarUsuarioInternoPayload = {
+    sucursalId: null,
+    correo: '',
+    contrasenaTemporal: '',
+    nombreCompleto: '',
+    telefono: '',
+    puesto: '',
+    rolCodigo: 'RECEPCIONISTA',
+    activo: true,
+    notas: ''
   };
 
   formularioRegla: GuardarReglaDisponibilidadPayload = {
@@ -449,6 +603,55 @@ export class AdminDashboardComponent implements OnInit {
     graphUserId: '',
     graphCertificateThumbprint: '',
     graphPrivateKeyPem: ''
+  };
+
+  formularioWhatsapp: GuardarConfiguracionWhatsappPayload = {
+    habilitado: false,
+    accountSid: '',
+    authToken: '',
+    tipoCuentaTwilio: 'PLATAFORMA',
+    subaccountSid: '',
+    numeroRemitente: '',
+    messagingServiceSid: '',
+    channelSenderSid: '',
+    statusCallbackUrl: '',
+    plantillaSolicitudConfirmacionSid: '',
+    plantillaReprogramadaPendienteSid: '',
+    plantillaRecordatorioConfirmacionSid: '',
+    plantillaCitaConfirmadaSid: '',
+    plantillaRecordatorioSid: '',
+    plantillaCancelacionSid: '',
+    plantillaLiberadaSinConfirmacionSid: '',
+    plantillaGraciasVisitaSid: '',
+    plantillaRecordatorioRegresoSid: '',
+    senderDisplayName: '',
+    senderPhoneNumber: '',
+    senderStatus: '',
+    qualityRating: '',
+    throughputMps: null,
+    wabaId: '',
+    metaBusinessManagerId: ''
+  };
+
+  formularioPruebaWhatsapp: ProbarPlantillaWhatsappPayload = {
+    telefonoDestino: '',
+    nombreCliente: '',
+    fecha: '',
+    hora: '',
+    plantillaSid: null
+  };
+
+  formularioProvisionSubcuentaWhatsapp: ProvisionarSubcuentaWhatsappPayload = {
+    friendlyName: ''
+  };
+
+  formularioProvisionMessagingServiceWhatsapp: ProvisionarMessagingServiceWhatsappPayload = {
+    friendlyName: '',
+    inboundRequestUrl: ''
+  };
+
+  formularioAsociacionChannelSenderWhatsapp: AsociarChannelSenderWhatsappPayload = {
+    channelSenderSid: ''
   };
 
   ngOnInit(): void {
@@ -664,6 +867,12 @@ export class AdminDashboardComponent implements OnInit {
           return of([]);
         })
       ),
+      usuariosInternos: this.adminService.getUsuariosInternos().pipe(
+        catchError(err => {
+          this.marcarErrorCarga(err, 'No se pudieron cargar los usuarios internos.');
+          return of([]);
+        })
+      ),
       reglas: this.adminService.getReglasDisponibilidad().pipe(
         catchError(err => {
           this.marcarErrorCarga(err, 'No se pudieron cargar las reglas de disponibilidad.');
@@ -687,11 +896,29 @@ export class AdminDashboardComponent implements OnInit {
           this.marcarErrorCarga(err, 'No se pudo cargar la configuración de correo.');
           return of(null);
         })
+      ),
+      configuracionWhatsapp: this.adminService.getConfiguracionWhatsapp().pipe(
+        catchError(err => {
+          this.marcarErrorCarga(err, 'No se pudo cargar la configuración de WhatsApp.');
+          return of(null);
+        })
+      ),
+      plantillasWhatsapp: this.adminService.getPlantillasWhatsapp().pipe(
+        catchError(err => {
+          this.marcarErrorCarga(err, 'No se pudieron cargar las plantillas de WhatsApp.');
+          return of([]);
+        })
+      ),
+      logsWhatsapp: this.adminService.getLogsWhatsapp().pipe(
+        catchError(err => {
+          this.marcarErrorCarga(err, 'No se pudieron cargar los logs de WhatsApp.');
+          return of([]);
+        })
       )
     })
       .pipe(finalize(() => this.actualizarVistaEnZona(() => this.loading.set(false))))
       .subscribe({
-        next: ({ resumen, citas, contactos, sucursales, servicios, prestadores, reglas, excepciones, reporteServicios, configuracionCorreo }) => {
+        next: ({ resumen, citas, contactos, sucursales, servicios, prestadores, usuariosInternos, reglas, excepciones, reporteServicios, configuracionCorreo, configuracionWhatsapp, plantillasWhatsapp, logsWhatsapp }) => {
           this.actualizarVistaEnZona(() => {
             this.resumen.set(resumen);
             this.citas.set(citas);
@@ -699,17 +926,25 @@ export class AdminDashboardComponent implements OnInit {
             this.sucursales.set(sucursales);
             this.servicios.set(servicios);
             this.prestadores.set(prestadores);
+            this.usuariosInternos.set(usuariosInternos);
             this.reglasDisponibilidad.set(reglas);
             this.excepcionesDisponibilidad.set(excepciones);
             this.reporteServicios.set(reporteServicios);
             this.configuracionCorreo.set(configuracionCorreo);
+            this.configuracionWhatsapp.set(configuracionWhatsapp);
+            this.plantillasWhatsapp.set(plantillasWhatsapp);
+            this.logsWhatsapp.set(logsWhatsapp);
             if (!this.formularioServicio.sucursalId && sucursales.length > 0) {
               this.formularioServicio.sucursalId = sucursales[0].id;
             }
             if (!this.formularioPrestador.sucursalId && sucursales.length > 0) {
               this.formularioPrestador.sucursalId = sucursales[0].id;
             }
+            if (this.formularioUsuarioInterno.sucursalId === null && sucursales.length === 1) {
+              this.formularioUsuarioInterno.sucursalId = sucursales[0].id;
+            }
             this.sincronizarFormularioCorreo(configuracionCorreo);
+            this.sincronizarFormularioWhatsapp(configuracionWhatsapp);
             this.actualizarServiciosPrestadorDisponibles();
             this.actualizarSujetosRegla();
             this.actualizarSujetosExcepcion();
@@ -830,6 +1065,169 @@ export class AdminDashboardComponent implements OnInit {
       });
   }
 
+  guardarConfiguracionWhatsapp() {
+    this.guardandoWhatsapp = true;
+    this.error = '';
+    this.mensajeExito = '';
+    const payload: GuardarConfiguracionWhatsappPayload = {
+      habilitado: this.formularioWhatsapp.habilitado,
+      accountSid: this.normalizarTexto(this.formularioWhatsapp.accountSid),
+      authToken: this.normalizarTexto(this.formularioWhatsapp.authToken),
+      tipoCuentaTwilio: this.normalizarTexto(this.formularioWhatsapp.tipoCuentaTwilio),
+      subaccountSid: this.normalizarTexto(this.formularioWhatsapp.subaccountSid),
+      numeroRemitente: this.normalizarTexto(this.formularioWhatsapp.numeroRemitente),
+      messagingServiceSid: this.normalizarTexto(this.formularioWhatsapp.messagingServiceSid),
+      channelSenderSid: this.normalizarTexto(this.formularioWhatsapp.channelSenderSid),
+      statusCallbackUrl: this.normalizarTexto(this.formularioWhatsapp.statusCallbackUrl),
+      plantillaSolicitudConfirmacionSid: this.normalizarTexto(this.formularioWhatsapp.plantillaSolicitudConfirmacionSid),
+      plantillaReprogramadaPendienteSid: this.normalizarTexto(this.formularioWhatsapp.plantillaReprogramadaPendienteSid),
+      plantillaRecordatorioConfirmacionSid: this.normalizarTexto(this.formularioWhatsapp.plantillaRecordatorioConfirmacionSid),
+      plantillaCitaConfirmadaSid: this.normalizarTexto(this.formularioWhatsapp.plantillaCitaConfirmadaSid),
+      plantillaRecordatorioSid: this.normalizarTexto(this.formularioWhatsapp.plantillaRecordatorioSid),
+      plantillaCancelacionSid: this.normalizarTexto(this.formularioWhatsapp.plantillaCancelacionSid),
+      plantillaLiberadaSinConfirmacionSid: this.normalizarTexto(this.formularioWhatsapp.plantillaLiberadaSinConfirmacionSid),
+      plantillaGraciasVisitaSid: this.normalizarTexto(this.formularioWhatsapp.plantillaGraciasVisitaSid),
+      plantillaRecordatorioRegresoSid: this.normalizarTexto(this.formularioWhatsapp.plantillaRecordatorioRegresoSid),
+      senderDisplayName: this.normalizarTexto(this.formularioWhatsapp.senderDisplayName),
+      senderPhoneNumber: this.normalizarTexto(this.formularioWhatsapp.senderPhoneNumber),
+      senderStatus: this.normalizarTexto(this.formularioWhatsapp.senderStatus),
+      qualityRating: this.normalizarTexto(this.formularioWhatsapp.qualityRating),
+      throughputMps: this.formularioWhatsapp.throughputMps ? Number(this.formularioWhatsapp.throughputMps) : null,
+      wabaId: this.normalizarTexto(this.formularioWhatsapp.wabaId),
+      metaBusinessManagerId: this.normalizarTexto(this.formularioWhatsapp.metaBusinessManagerId)
+    };
+
+    this.adminService.actualizarConfiguracionWhatsapp(payload)
+      .pipe(finalize(() => this.guardandoWhatsapp = false))
+      .subscribe({
+        next: response => {
+          this.configuracionWhatsapp.set(response);
+          this.sincronizarFormularioWhatsapp(response);
+          this.mensajeExito = 'La configuración de WhatsApp se guardó correctamente.';
+        },
+        error: err => {
+          this.error = err?.error?.mensaje || err?.message || 'No se pudo guardar la configuración de WhatsApp.';
+        }
+      });
+  }
+
+  provisionarSubcuentaWhatsapp() {
+    this.provisionandoSubcuentaWhatsapp = true;
+    this.error = '';
+    this.mensajeExito = '';
+
+    const payload: ProvisionarSubcuentaWhatsappPayload = {
+      friendlyName: this.normalizarTexto(this.formularioProvisionSubcuentaWhatsapp.friendlyName)
+    };
+
+    this.adminService.provisionarSubcuentaWhatsapp(payload)
+      .pipe(finalize(() => this.provisionandoSubcuentaWhatsapp = false))
+      .subscribe({
+        next: response => {
+          this.configuracionWhatsapp.set(response.configuracion);
+          this.sincronizarFormularioWhatsapp(response.configuracion);
+          this.mensajeExito = response.mensaje;
+        },
+        error: err => {
+          this.error = err?.error?.message || err?.error?.mensaje || 'No se pudo provisionar la subcuenta de Twilio.';
+        }
+      });
+  }
+
+  provisionarMessagingServiceWhatsapp() {
+    this.provisionandoMessagingServiceWhatsapp = true;
+    this.error = '';
+    this.mensajeExito = '';
+
+    const payload: ProvisionarMessagingServiceWhatsappPayload = {
+      friendlyName: this.normalizarTexto(this.formularioProvisionMessagingServiceWhatsapp.friendlyName),
+      inboundRequestUrl: this.normalizarTexto(this.formularioProvisionMessagingServiceWhatsapp.inboundRequestUrl)
+    };
+
+    this.adminService.provisionarMessagingServiceWhatsapp(payload)
+      .pipe(finalize(() => this.provisionandoMessagingServiceWhatsapp = false))
+      .subscribe({
+        next: (response: ProvisionarMessagingServiceWhatsappResponse) => {
+          this.configuracionWhatsapp.set(response.configuracion);
+          this.sincronizarFormularioWhatsapp(response.configuracion);
+          this.mensajeExito = response.mensaje;
+        },
+        error: err => {
+          this.error = err?.error?.message || err?.error?.mensaje || 'No se pudo provisionar el Messaging Service de Twilio.';
+        }
+      });
+  }
+
+  asociarChannelSenderWhatsapp() {
+    this.asociandoChannelSenderWhatsapp = true;
+    this.error = '';
+    this.mensajeExito = '';
+
+    const payload: AsociarChannelSenderWhatsappPayload = {
+      channelSenderSid: this.formularioAsociacionChannelSenderWhatsapp.channelSenderSid.trim()
+    };
+
+    this.adminService.asociarChannelSenderWhatsapp(payload)
+      .pipe(finalize(() => this.asociandoChannelSenderWhatsapp = false))
+      .subscribe({
+        next: (response: AsociarChannelSenderWhatsappResponse) => {
+          this.configuracionWhatsapp.set(response.configuracion);
+          this.sincronizarFormularioWhatsapp(response.configuracion);
+          this.mensajeExito = response.mensaje;
+        },
+        error: err => {
+          this.error = err?.error?.message || err?.error?.mensaje || 'No se pudo asociar el Channel Sender al Messaging Service.';
+        }
+      });
+  }
+
+  detectarChannelSenderWhatsapp() {
+    this.detectandoChannelSenderWhatsapp = true;
+    this.error = '';
+    this.mensajeExito = '';
+
+    this.adminService.detectarChannelSenderWhatsapp()
+      .pipe(finalize(() => this.detectandoChannelSenderWhatsapp = false))
+      .subscribe({
+        next: (response: DetectarChannelSenderWhatsappResponse) => {
+          this.configuracionWhatsapp.set(response.configuracion);
+          this.sincronizarFormularioWhatsapp(response.configuracion);
+          this.mensajeExito = response.mensaje;
+        },
+        error: err => {
+          this.error = err?.error?.message || err?.error?.mensaje || 'No se pudo detectar el sender en Twilio.';
+        }
+      });
+  }
+
+  probarPlantillaWhatsapp() {
+    this.probandoPlantillaWhatsapp = true;
+    this.error = '';
+    this.mensajeExito = '';
+    const payload: ProbarPlantillaWhatsappPayload = {
+      telefonoDestino: this.formularioPruebaWhatsapp.telefonoDestino.trim(),
+      nombreCliente: this.formularioPruebaWhatsapp.nombreCliente.trim(),
+      fecha: this.formularioPruebaWhatsapp.fecha.trim(),
+      hora: this.formularioPruebaWhatsapp.hora.trim(),
+      plantillaSid: this.normalizarTexto(this.formularioPruebaWhatsapp.plantillaSid)
+    };
+
+    this.adminService.probarPlantillaWhatsapp(payload)
+      .pipe(finalize(() => this.probandoPlantillaWhatsapp = false))
+      .subscribe({
+        next: (response: PruebaWhatsappResponse) => {
+          this.mensajeExito = response.mensaje || 'La prueba de plantilla fue enviada.';
+          this.adminService.getLogsWhatsapp().subscribe({
+            next: logs => this.logsWhatsapp.set(logs),
+            error: () => undefined
+          });
+        },
+        error: err => {
+          this.error = err?.error?.mensaje || err?.message || 'No se pudo enviar la prueba de WhatsApp.';
+        }
+      });
+  }
+
   editarSucursal(sucursal: SucursalAdmin) {
     this.sucursalEditandoId = sucursal.id;
     this.formularioSucursal = {
@@ -932,6 +1330,77 @@ export class AdminDashboardComponent implements OnInit {
         },
         error: err => {
           this.error = err?.error?.mensaje || err?.message || 'No se pudo guardar el servicio.';
+        }
+      });
+  }
+
+  editarUsuarioInterno(usuario: UsuarioInternoAdmin) {
+    this.usuarioInternoEditandoId = usuario.usuarioId;
+    this.formularioUsuarioInterno = {
+      sucursalId: usuario.sucursalId,
+      correo: usuario.correo,
+      contrasenaTemporal: '',
+      nombreCompleto: usuario.nombreCompleto,
+      telefono: usuario.telefono ?? '',
+      puesto: usuario.puesto ?? '',
+      rolCodigo: usuario.rolCodigo,
+      activo: usuario.activo,
+      notas: usuario.notas ?? ''
+    };
+  }
+
+  cancelarEdicionUsuarioInterno() {
+    this.usuarioInternoEditandoId = null;
+    this.formularioUsuarioInterno = {
+      sucursalId: this.sucursales().length === 1 ? this.sucursales()[0].id : null,
+      correo: '',
+      contrasenaTemporal: '',
+      nombreCompleto: '',
+      telefono: '',
+      puesto: '',
+      rolCodigo: 'RECEPCIONISTA',
+      activo: true,
+      notas: ''
+    };
+  }
+
+  guardarUsuarioInterno() {
+    this.loading.set(true);
+    this.error = '';
+    this.mensajeExito = '';
+    const contrasenaTemporal = this.normalizarTexto(this.formularioUsuarioInterno.contrasenaTemporal);
+    const errorContrasena = this.validarContrasenaUsuarioInterno(contrasenaTemporal);
+    if (errorContrasena) {
+      this.error = errorContrasena;
+      this.loading.set(false);
+      return;
+    }
+
+    const payload: GuardarUsuarioInternoPayload = {
+      ...this.formularioUsuarioInterno,
+      sucursalId: this.formularioUsuarioInterno.sucursalId,
+      correo: this.formularioUsuarioInterno.correo.trim().toLowerCase(),
+      contrasenaTemporal,
+      telefono: this.normalizarTexto(this.formularioUsuarioInterno.telefono),
+      puesto: this.normalizarTexto(this.formularioUsuarioInterno.puesto),
+      notas: this.normalizarTexto(this.formularioUsuarioInterno.notas),
+      nombreCompleto: this.formularioUsuarioInterno.nombreCompleto.trim(),
+      rolCodigo: this.formularioUsuarioInterno.rolCodigo
+    };
+
+    const operacion = this.usuarioInternoEditandoId
+      ? this.adminService.actualizarUsuarioInterno(this.usuarioInternoEditandoId, payload)
+      : this.adminService.crearUsuarioInterno(payload);
+
+    operacion
+      .pipe(finalize(() => this.loading.set(false)))
+      .subscribe({
+        next: () => {
+          this.cancelarEdicionUsuarioInterno();
+          this.recargar();
+        },
+        error: err => {
+          this.error = err?.error?.mensaje || err?.message || 'No se pudo guardar el usuario interno.';
         }
       });
   }
@@ -1217,6 +1686,18 @@ export class AdminDashboardComponent implements OnInit {
     return null;
   }
 
+  private validarContrasenaUsuarioInterno(contrasenaTemporal: string | null): string | null {
+    if (!this.usuarioInternoEditandoId && !contrasenaTemporal) {
+      return 'La contraseña temporal es obligatoria para usuarios internos.';
+    }
+
+    if (contrasenaTemporal && (contrasenaTemporal.length < 8 || contrasenaTemporal.length > 100)) {
+      return 'La contraseña temporal debe tener entre 8 y 100 caracteres.';
+    }
+
+    return null;
+  }
+
   private marcarErrorCarga(err: any, mensajeFallback: string) {
     if (!this.error) {
       this.error = err?.error?.mensaje || err?.message || mensajeFallback;
@@ -1242,6 +1723,57 @@ export class AdminDashboardComponent implements OnInit {
       graphUserId: configuracion?.graphUserId ?? '',
       graphCertificateThumbprint: configuracion?.graphCertificateThumbprint ?? '',
       graphPrivateKeyPem: ''
+    };
+  }
+
+  private sincronizarFormularioWhatsapp(configuracion: ConfiguracionWhatsappAdmin | null) {
+    this.formularioWhatsapp = {
+      habilitado: configuracion?.habilitado ?? false,
+      accountSid: configuracion?.accountSid ?? '',
+      authToken: '',
+      tipoCuentaTwilio: configuracion?.tipoCuentaTwilio ?? 'PLATAFORMA',
+      subaccountSid: configuracion?.subaccountSid ?? '',
+      numeroRemitente: configuracion?.numeroRemitente ?? '',
+      messagingServiceSid: configuracion?.messagingServiceSid ?? '',
+      channelSenderSid: configuracion?.channelSenderSid ?? '',
+      statusCallbackUrl: configuracion?.statusCallbackUrl ?? '',
+      plantillaSolicitudConfirmacionSid: configuracion?.plantillaSolicitudConfirmacionSid ?? '',
+      plantillaReprogramadaPendienteSid: configuracion?.plantillaReprogramadaPendienteSid ?? '',
+      plantillaRecordatorioConfirmacionSid: configuracion?.plantillaRecordatorioConfirmacionSid ?? '',
+      plantillaCitaConfirmadaSid: configuracion?.plantillaCitaConfirmadaSid ?? '',
+      plantillaRecordatorioSid: configuracion?.plantillaRecordatorioSid ?? '',
+      plantillaCancelacionSid: configuracion?.plantillaCancelacionSid ?? '',
+      plantillaLiberadaSinConfirmacionSid: configuracion?.plantillaLiberadaSinConfirmacionSid ?? '',
+      plantillaGraciasVisitaSid: configuracion?.plantillaGraciasVisitaSid ?? '',
+      plantillaRecordatorioRegresoSid: configuracion?.plantillaRecordatorioRegresoSid ?? '',
+      senderDisplayName: configuracion?.senderDisplayName ?? '',
+      senderPhoneNumber: configuracion?.senderPhoneNumber ?? '',
+      senderStatus: configuracion?.senderStatus ?? '',
+      qualityRating: configuracion?.qualityRating ?? '',
+      throughputMps: configuracion?.throughputMps ?? null,
+      wabaId: configuracion?.wabaId ?? '',
+      metaBusinessManagerId: configuracion?.metaBusinessManagerId ?? ''
+    };
+
+    this.formularioPruebaWhatsapp = {
+      telefonoDestino: this.formularioPruebaWhatsapp.telefonoDestino || '',
+      nombreCliente: this.formularioPruebaWhatsapp.nombreCliente || '',
+      fecha: this.formularioPruebaWhatsapp.fecha || '',
+      hora: this.formularioPruebaWhatsapp.hora || '',
+      plantillaSid: configuracion?.plantillaSolicitudConfirmacionSid ?? configuracion?.plantillaCitaConfirmadaSid ?? null
+    };
+
+    this.formularioProvisionSubcuentaWhatsapp = {
+      friendlyName: this.formularioProvisionSubcuentaWhatsapp.friendlyName || ''
+    };
+
+    this.formularioProvisionMessagingServiceWhatsapp = {
+      friendlyName: this.formularioProvisionMessagingServiceWhatsapp.friendlyName || '',
+      inboundRequestUrl: this.formularioProvisionMessagingServiceWhatsapp.inboundRequestUrl || ''
+    };
+
+    this.formularioAsociacionChannelSenderWhatsapp = {
+      channelSenderSid: configuracion?.channelSenderSid ?? (this.formularioAsociacionChannelSenderWhatsapp.channelSenderSid || '')
     };
   }
 

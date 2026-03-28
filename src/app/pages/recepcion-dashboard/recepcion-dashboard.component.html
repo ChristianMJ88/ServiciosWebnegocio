@@ -1,0 +1,210 @@
+<section class="recepcion-shell">
+  <mat-toolbar class="recepcion-toolbar">
+    <div class="recepcion-toolbar-brand">
+      <span class="recepcion-brand-mark">RE</span>
+      <div class="recepcion-brand-copy">
+        <span class="recepcion-brand-eyebrow">Mostrador</span>
+        <span class="recepcion-brand-title">Recepción</span>
+      </div>
+    </div>
+
+    <div class="recepcion-toolbar-actions">
+      <button mat-stroked-button type="button" (click)="recargarAgenda()">Actualizar</button>
+      <button mat-stroked-button type="button" *ngIf="puedeIrCaja()" (click)="irACaja()">Ir a caja</button>
+      <button mat-stroked-button type="button" *ngIf="puedeIrAdmin()" (click)="irAAdmin()">Admin</button>
+      <button mat-button [matMenuTriggerFor]="menuUsuario" class="recepcion-user-button" type="button">
+        <span class="recepcion-user-avatar">{{ inicialesUsuario() }}</span>
+        <span class="recepcion-user-copy" *ngIf="!panelMovil()">
+          <strong>{{ nombreUsuario() }}</strong>
+          <small>{{ correoUsuario() || 'Operación de recepción' }}</small>
+        </span>
+      </button>
+    </div>
+  </mat-toolbar>
+
+  <mat-menu #menuUsuario="matMenu">
+    <button mat-menu-item type="button" (click)="logout()">Cerrar sesión</button>
+  </mat-menu>
+
+  <mat-progress-bar *ngIf="loading()" mode="indeterminate"></mat-progress-bar>
+
+  <div class="recepcion-body">
+    <header class="recepcion-hero">
+      <div class="recepcion-hero-copy">
+        <span class="recepcion-eyebrow">Atención inmediata</span>
+        <h1>Agenda del día, búsqueda rápida y citas de mostrador</h1>
+        <p>
+          Usa esta vista para revisar llegadas, confirmar o cancelar citas y registrar nuevas reservaciones
+          sin salir del flujo operativo.
+        </p>
+      </div>
+
+      <mat-card class="recepcion-filter-card">
+        <div class="recepcion-card-heading">
+          <span class="recepcion-card-kicker">Filtro activo</span>
+          <h2>{{ sucursalActivaNombre() }}</h2>
+        </div>
+
+        <mat-form-field appearance="outline" class="w-100">
+          <mat-label>Sucursal</mat-label>
+          <mat-select [ngModel]="sucursalActivaId()" (ngModelChange)="cambiarSucursal($event)">
+            <mat-option *ngFor="let sucursal of sucursales()" [value]="sucursal.id">
+              {{ sucursal.nombre }}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="w-100">
+          <mat-label>Fecha</mat-label>
+          <input matInput type="date" [ngModel]="fechaAgenda()" (ngModelChange)="cambiarFecha($event)">
+        </mat-form-field>
+      </mat-card>
+    </header>
+
+    <div class="alert alert-danger" *ngIf="error()" role="alert">{{ error() }}</div>
+    <div class="alert alert-success" *ngIf="mensaje()" role="status">{{ mensaje() }}</div>
+
+    <section class="recepcion-metric-grid">
+      <mat-card class="recepcion-metric-card" *ngFor="let metrica of metricas()">
+        <span>{{ metrica.label }}</span>
+        <strong>{{ metrica.value }}</strong>
+      </mat-card>
+    </section>
+
+    <div class="recepcion-grid">
+      <div class="recepcion-main-column">
+        <mat-card class="recepcion-card">
+          <div class="recepcion-card-heading">
+            <span class="recepcion-card-kicker">Agenda del día</span>
+            <h2>Citas activas en mostrador</h2>
+          </div>
+
+          <div class="recepcion-empty" *ngIf="!citas().length">
+            No hay citas registradas para esta fecha en la sucursal seleccionada.
+          </div>
+
+          <div class="recepcion-appointments" *ngIf="citas().length">
+            <div class="recepcion-appointment-card" *ngFor="let cita of citas()">
+              <div class="recepcion-appointment-head">
+                <div>
+                  <strong>{{ cita.clienteNombre }}</strong>
+                  <span>{{ cita.servicioNombre }} · {{ cita.prestadorNombre }}</span>
+                </div>
+                <mat-chip-set>
+                  <mat-chip [class.has-checkin]="!!cita.checkInEn">{{ cita.estado }}</mat-chip>
+                </mat-chip-set>
+              </div>
+
+              <div class="recepcion-appointment-meta">
+                <span>{{ cita.inicio | date:'dd/MM/yyyy HH:mm':'':'es-MX' }}</span>
+                <span>{{ cita.sucursalNombre }}</span>
+                <span>{{ cita.clienteTelefono || 'Sin teléfono' }}</span>
+                <span>{{ cita.clienteCorreo || 'Sin correo' }}</span>
+              </div>
+
+              <div class="recepcion-appointment-note" *ngIf="cita.notas">
+                {{ cita.notas }}
+              </div>
+
+              <div class="recepcion-appointment-actions">
+                <button mat-stroked-button type="button" (click)="hacerCheckIn(cita.id)" [disabled]="guardando() || !!cita.checkInEn">
+                  {{ cita.checkInEn ? 'Check-in realizado' : 'Check-in' }}
+                </button>
+                <button mat-stroked-button type="button" (click)="confirmar(cita.id)" [disabled]="guardando() || cita.estado !== 'PENDIENTE'">
+                  Confirmar
+                </button>
+                <button mat-stroked-button type="button" (click)="finalizar(cita.id)" [disabled]="guardando() || !['PENDIENTE','CONFIRMADA'].includes(cita.estado)">
+                  Finalizar
+                </button>
+                <button mat-stroked-button type="button" class="warn-button" (click)="cancelar(cita.id)" [disabled]="guardando() || !['PENDIENTE','CONFIRMADA'].includes(cita.estado)">
+                  Cancelar
+                </button>
+              </div>
+            </div>
+          </div>
+        </mat-card>
+      </div>
+
+      <div class="recepcion-side-column">
+        <mat-card class="recepcion-card">
+          <div class="recepcion-card-heading">
+            <span class="recepcion-card-kicker">Búsqueda rápida</span>
+            <h2>Cliente existente</h2>
+          </div>
+
+          <mat-form-field appearance="outline" class="w-100">
+            <mat-label>Nombre o teléfono</mat-label>
+            <input
+              matInput
+              [ngModel]="terminoBusquedaCliente()"
+              (ngModelChange)="buscarCliente($event)"
+              placeholder="Ej. Paola o 2213688033">
+          </mat-form-field>
+
+          <div class="recepcion-empty" *ngIf="loadingBusqueda()">Buscando clientes...</div>
+
+          <div class="recepcion-client-search" *ngIf="clientesEncontrados().length">
+            <button type="button" class="recepcion-client-result" *ngFor="let cliente of clientesEncontrados()" (click)="seleccionarCliente(cliente)">
+              <strong>{{ cliente.nombreCompleto }}</strong>
+              <span>{{ cliente.telefono }} · {{ cliente.correo }}</span>
+            </button>
+          </div>
+        </mat-card>
+
+        <mat-card class="recepcion-card">
+          <div class="recepcion-card-heading">
+            <span class="recepcion-card-kicker">Nueva cita</span>
+            <h2>Alta rápida desde recepción</h2>
+          </div>
+
+          <form class="recepcion-form-grid" (ngSubmit)="guardarCita()">
+            <mat-form-field appearance="outline">
+              <mat-label>Sucursal</mat-label>
+              <mat-select name="sucursalCita" [(ngModel)]="formularioCita.sucursalId" (ngModelChange)="cambiarSucursal($event)">
+                <mat-option *ngFor="let sucursal of sucursales()" [value]="sucursal.id">{{ sucursal.nombre }}</mat-option>
+              </mat-select>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+              <mat-label>Servicio</mat-label>
+              <mat-select name="servicioCita" [(ngModel)]="formularioCita.servicioId">
+                <mat-option *ngFor="let servicio of servicios()" [value]="servicio.id">{{ servicio.nombre }}</mat-option>
+              </mat-select>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+              <mat-label>Nombre completo</mat-label>
+              <input matInput name="nombreCliente" [(ngModel)]="formularioCita.nombreCliente" required>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+              <mat-label>Teléfono</mat-label>
+              <input matInput name="telefonoCliente" [(ngModel)]="formularioCita.telefonoCliente" required>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+              <mat-label>Correo</mat-label>
+              <input matInput type="email" name="correoCliente" [(ngModel)]="formularioCita.correoCliente" required>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+              <mat-label>Fecha y hora</mat-label>
+              <input matInput type="datetime-local" name="inicioCita" [(ngModel)]="formularioCita.inicio" required>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Notas</mat-label>
+              <textarea matInput rows="3" name="notasCita" [(ngModel)]="formularioCita.notas"></textarea>
+            </mat-form-field>
+
+            <div class="recepcion-form-actions">
+              <button mat-flat-button color="primary" type="submit" [disabled]="guardando()">
+                Registrar cita
+              </button>
+            </div>
+          </form>
+        </mat-card>
+      </div>
+    </div>
+  </div>
+</section>

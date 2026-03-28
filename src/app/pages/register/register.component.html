@@ -12,9 +12,9 @@
 
         <div class="auth-copy">
           <span class="auth-copy__kicker">Nuevo acceso</span>
-          <h1 class="auth-copy__title">Crea tu cuenta y reserva con una experiencia más cómoda.</h1>
+          <h1 class="auth-copy__title">Crea o activa tu acceso y administra tus citas con más facilidad.</h1>
           <p class="auth-copy__description">
-            Regístrate una sola vez para consultar tus citas, elegir horarios disponibles y gestionar todo desde móvil, iPad o escritorio.
+            Si ya te registramos una cita, aquí mismo puedes activar tu acceso. Si aún no tienes cuenta, este formulario también te permite crearla.
           </p>
         </div>
 
@@ -45,9 +45,9 @@
 
       <div class="auth-panel">
         <div class="auth-panel__header">
-          <span class="auth-panel__eyebrow">Crear cuenta</span>
-          <h2 class="auth-panel__title">Regístrate</h2>
-          <p class="auth-panel__description">Ingresa tus datos para activar tu acceso y comenzar a administrar tus citas.</p>
+          <span class="auth-panel__eyebrow">Crear o activar acceso</span>
+          <h2 class="auth-panel__title">Completa tu registro</h2>
+          <p class="auth-panel__description">Ingresa tus datos para crear tu cuenta o activar el acceso de una cita que ya te registramos.</p>
         </div>
 
         <form [formGroup]="form" (ngSubmit)="onSubmit()" class="auth-form">
@@ -131,12 +131,12 @@
           </div>
 
           <div *ngIf="completed()" class="alert alert-success auth-alert auth-alert--success" role="status">
-            Registro completado. Redirigiendo al inicio de sesión...
+            Acceso listo. Redirigiendo al inicio de sesión...
           </div>
 
           <div class="d-grid auth-submit">
             <button type="submit" class="btn btn-primary auth-submit__button" [disabled]="loading() || completed()">
-              <span *ngIf="!loading()">Crear cuenta</span>
+              <span *ngIf="!loading()">Crear o activar acceso</span>
               <span *ngIf="loading()" class="spinner-border spinner-border-sm me-2"></span>
             </button>
           </div>
