@@ -102,6 +102,15 @@ public class ControladorCaja {
         return servicioCaja.registrarMovimiento(usuario.empresaId(), usuario.usuarioId(), usuario.sucursalesPermitidas(), request);
     }
 
+    @GetMapping("/movimientos")
+    @PreAuthorize("hasAuthority('CAJA_ACCESO')")
+    public List<MovimientoCajaResponse> movimientos(
+            @AuthenticationPrincipal UsuarioAutenticado usuario,
+            @RequestParam(required = false) Long sucursalId
+    ) {
+        return servicioCaja.listarMovimientos(usuario.empresaId(), usuario.sucursalesPermitidas(), sucursalId);
+    }
+
     @GetMapping("/resumen")
     @PreAuthorize("hasAuthority('CAJA_ACCESO')")
     public ResumenCajaResponse resumen(

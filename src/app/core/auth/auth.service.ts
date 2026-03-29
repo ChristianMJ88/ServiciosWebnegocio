@@ -1,4 +1,4 @@
-import { Injectable, computed, inject, signal } from '@angular/core';
+import { Injectable, NgZone, computed, inject, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, catchError, finalize, map, shareReplay, tap, throwError } from 'rxjs';
 import { environment } from '../../../environments/environment';
@@ -45,6 +45,7 @@ interface RespuestaTokenJwt {
 })
 export class AuthService {
   private readonly http = inject(HttpClient);
+  private readonly ngZone = inject(NgZone);
   private readonly storageKey = 'agenda_sesion';
   private readonly sesion = signal<SesionUsuario | null>(this.loadSession());
   private refreshEnCurso$: Observable<string> | null = null;
@@ -79,7 +80,11 @@ export class AuthService {
   readonly puedeGestionarServicios = computed(() => this.tienePermiso(PERMISOS.serviciosGestionar));
   readonly puedeGestionarPrestadores = computed(() => this.tienePermiso(PERMISOS.prestadoresGestionar));
   readonly puedeGestionarUsuariosInternos = computed(() => this.tienePermiso(PERMISOS.usuariosInternosGestionar));
-  readonly sucursalesPermitidas = computed(() => this.sesion()?.sucursalesPermitidas ?? []);
+  readonly sucursalesPermitidas = computed(() =>
+    (this.sesion()?.sucursalesPermitidas ?? [])
+      .map(valor => Number(valor))
+      .filter(valor => Number.isFinite(valor) && valor > 0)
+  );
   readonly rutaPanel = computed(() => {
     if (this.puedeVerAdmin()) {
       return '/admin';
@@ -118,7 +123,9 @@ export class AuthService {
       return false;
     }
 
-    this.sesion.set(sesionPersistida);
+    this.ngZone.run(() => {
+      this.sesion.set(sesionPersistida);
+    });
     return true;
   }
 
@@ -252,13 +259,17 @@ export class AuthService {
   }
 
   limpiarSesion() {
-    localStorage.removeItem(this.storageKey);
-    this.sesion.set(null);
+    this.ngZone.run(() => {
+      localStorage.removeItem(this.storageKey);
+      this.sesion.set(null);
+    });
   }
 
   private saveSession(sesion: SesionUsuario) {
-    localStorage.setItem(this.storageKey, JSON.stringify(sesion));
-    this.sesion.set(sesion);
+    this.ngZone.run(() => {
+      localStorage.setItem(this.storageKey, JSON.stringify(sesion));
+      this.sesion.set(sesion);
+    });
   }
 
   private persistirSesionDesdeRespuesta(response: RespuestaTokenJwt, correoFallback?: string) {

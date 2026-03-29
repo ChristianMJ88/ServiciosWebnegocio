@@ -4,6 +4,7 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { finalize } from 'rxjs/operators';
 import { AuthService } from '../../core/auth/auth.service';
+import { environment } from '../../../environments/environment';
 
 @Component({
   selector: 'app-login',
@@ -64,10 +65,8 @@ export class LoginComponent {
           }
 
           if (err?.status >= 500 || err?.status === 0) {
-            const hostActual = typeof globalThis !== 'undefined' && 'location' in globalThis
-              ? globalThis.location.hostname
-              : 'localhost';
-            this.error = `El backend no está respondiendo correctamente. Verifica que el servidor API esté activo en http://${hostActual}:8080.`;
+            const apiBaseUrl = environment.apiBaseUrl || 'API no configurada';
+            this.error = `El backend no está respondiendo correctamente. Verifica que el servidor API esté activo en ${apiBaseUrl}.`;
             return;
           }
 

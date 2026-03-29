@@ -96,6 +96,9 @@ export interface UsuarioInternoAdmin {
   rolEmpresaId: number | null;
   rolCodigo: string;
   rolNombre: string | null;
+  permisosRol: string[];
+  permisosDirectos: string[];
+  permisosEfectivos: string[];
   activo: boolean;
   notas: string | null;
 }
@@ -163,6 +166,7 @@ export interface GuardarUsuarioInternoPayload {
   telefono: string | null;
   puesto: string | null;
   rolEmpresaId: number | null;
+  permisosDirectos: string[];
   activo: boolean;
   notas: string | null;
 }

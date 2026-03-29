@@ -71,6 +71,24 @@ public class ServicioAgendaStaff {
             throw new ResponseStatusException(BAD_REQUEST, "El estado solicitado no es valido para staff");
         }
 
+        if (!List.of("PENDIENTE", "CONFIRMADA").contains(cita.getEstado())) {
+            throw new ResponseStatusException(BAD_REQUEST, "La cita ya no se puede gestionar desde staff en su estado actual");
+        }
+
+        if ("CONFIRMADA".equals(nuevoEstado) && !"PENDIENTE".equals(cita.getEstado())) {
+            throw new ResponseStatusException(BAD_REQUEST, "Solo puedes confirmar citas pendientes");
+        }
+
+        if (List.of("FINALIZADA", "NO_ASISTIO").contains(nuevoEstado)) {
+            String zonaHoraria = sucursalRepositorio.findById(cita.getSucursalId())
+                    .map(sucursal -> sucursal.getZonaHoraria())
+                    .orElse("America/Mexico_City");
+            LocalDateTime ahoraLocal = LocalDateTime.now(ZoneId.of(zonaHoraria));
+            if (cita.getInicio().isAfter(ahoraLocal)) {
+                throw new ResponseStatusException(BAD_REQUEST, "No puedes cerrar una cita futura antes de que inicie");
+            }
+        }
+
         String estadoAnterior = cita.getEstado();
         cita.setEstado(nuevoEstado);
         citaRepositorio.save(cita);
@@ -106,4 +124,3 @@ public class ServicioAgendaStaff {
         );
     }
 }
-

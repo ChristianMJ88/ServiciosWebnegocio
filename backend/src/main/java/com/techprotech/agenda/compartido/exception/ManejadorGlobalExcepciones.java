@@ -5,6 +5,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.authorization.AuthorizationDeniedException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -64,6 +66,16 @@ public class ManejadorGlobalExcepciones {
         return ResponseEntity.status(ex.getStatusCode()).body(new ErrorApi(
                 "ERROR_NEGOCIO",
                 ex.getReason() != null ? ex.getReason() : ex.getMessage(),
+                OffsetDateTime.now()
+        ));
+    }
+
+    @ExceptionHandler({AccessDeniedException.class, AuthorizationDeniedException.class})
+    public ResponseEntity<ErrorApi> manejarAccesoDenegado(Exception ex) {
+        log.warn("Acceso denegado: {}", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(new ErrorApi(
+                "ACCESO_DENEGADO",
+                "No tienes permisos para realizar esta acción.",
                 OffsetDateTime.now()
         ));
     }

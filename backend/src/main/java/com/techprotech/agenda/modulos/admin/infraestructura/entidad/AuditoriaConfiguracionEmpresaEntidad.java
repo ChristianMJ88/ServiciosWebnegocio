@@ -37,11 +37,11 @@ public class AuditoriaConfiguracionEmpresaEntidad {
     private String resumen;
 
     @Lob
-    @Column(name = "detalle_antes_json")
+    @Column(name = "detalle_antes_json", columnDefinition = "LONGTEXT")
     private String detalleAntesJson;
 
     @Lob
-    @Column(name = "detalle_despues_json")
+    @Column(name = "detalle_despues_json", columnDefinition = "LONGTEXT")
     private String detalleDespuesJson;
 
     @Column(name = "creado_en", nullable = false, insertable = false, updatable = false)

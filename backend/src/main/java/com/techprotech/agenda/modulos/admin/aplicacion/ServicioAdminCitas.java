@@ -61,6 +61,8 @@ import com.techprotech.agenda.modulos.autenticacion.infraestructura.entidad.Usua
 import com.techprotech.agenda.modulos.autenticacion.infraestructura.entidad.UsuarioInternoPerfilEntidad;
 import com.techprotech.agenda.modulos.autenticacion.infraestructura.entidad.UsuarioInternoSucursalEntidad;
 import com.techprotech.agenda.modulos.autenticacion.infraestructura.entidad.UsuarioInternoSucursalId;
+import com.techprotech.agenda.modulos.autenticacion.infraestructura.entidad.UsuarioPermisoEmpresaEntidad;
+import com.techprotech.agenda.modulos.autenticacion.infraestructura.entidad.UsuarioPermisoEmpresaId;
 import com.techprotech.agenda.modulos.autenticacion.infraestructura.entidad.UsuarioRolEmpresaEntidad;
 import com.techprotech.agenda.modulos.autenticacion.infraestructura.entidad.EmpresaEntidad;
 import com.techprotech.agenda.modulos.autenticacion.infraestructura.repositorio.EmpresaRepositorio;
@@ -69,6 +71,7 @@ import com.techprotech.agenda.modulos.autenticacion.infraestructura.repositorio.
 import com.techprotech.agenda.modulos.autenticacion.infraestructura.repositorio.RolEmpresaRepositorio;
 import com.techprotech.agenda.modulos.autenticacion.infraestructura.repositorio.UsuarioInternoPerfilRepositorio;
 import com.techprotech.agenda.modulos.autenticacion.infraestructura.repositorio.UsuarioInternoSucursalRepositorio;
+import com.techprotech.agenda.modulos.autenticacion.infraestructura.repositorio.UsuarioPermisoEmpresaRepositorio;
 import com.techprotech.agenda.modulos.autenticacion.infraestructura.repositorio.UsuarioRepositorio;
 import com.techprotech.agenda.modulos.autenticacion.infraestructura.repositorio.UsuarioRolEmpresaRepositorio;
 import com.techprotech.agenda.modulos.citas.api.dto.CitaClienteResponse;
@@ -100,6 +103,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.List;
 import java.util.Set;
@@ -133,6 +137,7 @@ public class ServicioAdminCitas {
     private final UsuarioRepositorio usuarioRepositorio;
     private final UsuarioInternoPerfilRepositorio usuarioInternoPerfilRepositorio;
     private final UsuarioInternoSucursalRepositorio usuarioInternoSucursalRepositorio;
+    private final UsuarioPermisoEmpresaRepositorio usuarioPermisoEmpresaRepositorio;
     private final UsuarioRolEmpresaRepositorio usuarioRolEmpresaRepositorio;
     private final RolEmpresaRepositorio rolEmpresaRepositorio;
     private final RolEmpresaPermisoRepositorio rolEmpresaPermisoRepositorio;
@@ -162,6 +167,7 @@ public class ServicioAdminCitas {
             UsuarioRepositorio usuarioRepositorio,
             UsuarioInternoPerfilRepositorio usuarioInternoPerfilRepositorio,
             UsuarioInternoSucursalRepositorio usuarioInternoSucursalRepositorio,
+            UsuarioPermisoEmpresaRepositorio usuarioPermisoEmpresaRepositorio,
             UsuarioRolEmpresaRepositorio usuarioRolEmpresaRepositorio,
             RolEmpresaRepositorio rolEmpresaRepositorio,
             RolEmpresaPermisoRepositorio rolEmpresaPermisoRepositorio,
@@ -190,6 +196,7 @@ public class ServicioAdminCitas {
         this.usuarioRepositorio = usuarioRepositorio;
         this.usuarioInternoPerfilRepositorio = usuarioInternoPerfilRepositorio;
         this.usuarioInternoSucursalRepositorio = usuarioInternoSucursalRepositorio;
+        this.usuarioPermisoEmpresaRepositorio = usuarioPermisoEmpresaRepositorio;
         this.usuarioRolEmpresaRepositorio = usuarioRolEmpresaRepositorio;
         this.rolEmpresaRepositorio = rolEmpresaRepositorio;
         this.rolEmpresaPermisoRepositorio = rolEmpresaPermisoRepositorio;
@@ -931,6 +938,15 @@ public class ServicioAdminCitas {
         List<Long> usuarioIds = usuarios.stream().map(UsuarioEntidad::getId).toList();
         Map<Long, List<UsuarioRolEmpresaEntidad>> rolesPorUsuario = servicioRolesEmpresa.listarAsignacionesUsuarios(empresaId, usuarioIds).stream()
                 .collect(Collectors.groupingBy(usuarioRol -> usuarioRol.getUsuario().getId()));
+        Map<Long, List<String>> permisosPorRol = servicioRolesEmpresa.obtenerPermisosPorRolEmpresa(
+                rolesPorUsuario.values().stream()
+                        .flatMap(List::stream)
+                        .map(UsuarioRolEmpresaEntidad::getRolEmpresa)
+                        .map(RolEmpresaEntidad::getId)
+                        .distinct()
+                        .toList()
+        );
+        Map<Long, List<String>> permisosDirectosPorUsuario = servicioRolesEmpresa.obtenerPermisosDirectosUsuarios(empresaId, usuarioIds);
         Map<Long, UsuarioInternoPerfilEntidad> perfilesPorUsuario = usuarioInternoPerfilRepositorio.findByUsuarioIdIn(usuarioIds).stream()
                 .collect(Collectors.toMap(UsuarioInternoPerfilEntidad::getUsuarioId, perfil -> perfil));
         Map<Long, List<Long>> sucursalesScopePorUsuario = usuarioInternoSucursalRepositorio.findByUsuario_IdIn(usuarioIds).stream()
@@ -948,7 +964,9 @@ public class ServicioAdminCitas {
                         perfilesPorUsuario.get(usuario.getId()),
                         rolesPorUsuario.getOrDefault(usuario.getId(), List.of()),
                         sucursalesScopePorUsuario.getOrDefault(usuario.getId(), List.of()),
-                        sucursalNombres
+                        sucursalNombres,
+                        permisosPorRol,
+                        permisosDirectosPorUsuario.getOrDefault(usuario.getId(), List.of())
                 ))
                 .filter(java.util.Objects::nonNull)
                 .toList();
@@ -1245,6 +1263,7 @@ public class ServicioAdminCitas {
         RolEmpresaEntidad rolEmpresa = resolverRolUsuarioInterno(empresaId, request.rolEmpresaId());
         validarSucursalUsuarioInterno(empresaId, request.sucursalId());
         List<Long> sucursalesPermitidas = validarSucursalesPermitidasUsuarioInterno(empresaId, request.sucursalIds(), request.sucursalId());
+        List<String> permisosDirectos = normalizarPermisosDirectosUsuario(request.permisosDirectos(), rolEmpresa);
 
         String correoNormalizado = request.correo().trim().toLowerCase();
         usuarioRepositorio.findByEmpresaIdAndCorreo(empresaId, correoNormalizado)
@@ -1271,6 +1290,7 @@ public class ServicioAdminCitas {
         sincronizarSucursalesPermitidas(usuario, sucursalesPermitidas);
 
         asignarRolUsuarioInterno(usuario, empresaId, rolEmpresa);
+        guardarPermisosDirectosUsuario(usuario, permisosDirectos);
         registrarAuditoriaRol(
                 empresaId,
                 usuarioActorId,
@@ -1278,7 +1298,7 @@ public class ServicioAdminCitas {
                 "Se creó el usuario interno " + perfil.getNombreCompleto() + " con el rol " + rolEmpresa.getNombre(),
                 rolEmpresa,
                 null,
-                snapshotUsuarioInterno(usuario, perfil, rolEmpresa, sucursalesPermitidas)
+                snapshotUsuarioInterno(usuario, perfil, rolEmpresa, sucursalesPermitidas, permisosDirectos)
         );
         return construirUsuarioInternoResponse(usuario, perfil, rolEmpresa, empresaId);
     }
@@ -1288,6 +1308,7 @@ public class ServicioAdminCitas {
         RolEmpresaEntidad rolEmpresa = resolverRolUsuarioInterno(empresaId, request.rolEmpresaId());
         validarSucursalUsuarioInterno(empresaId, request.sucursalId());
         List<Long> sucursalesPermitidas = validarSucursalesPermitidasUsuarioInterno(empresaId, request.sucursalIds(), request.sucursalId());
+        List<String> permisosDirectos = normalizarPermisosDirectosUsuario(request.permisosDirectos(), rolEmpresa);
 
         UsuarioEntidad usuario = usuarioRepositorio.findByIdAndEmpresaId(usuarioId, empresaId)
                 .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "El usuario interno no existe para la empresa"));
@@ -1301,7 +1322,8 @@ public class ServicioAdminCitas {
                 .map(asignacion -> asignacion.getSucursal().getId())
                 .sorted()
                 .toList();
-        String snapshotAntes = snapshotUsuarioInterno(usuario, perfil, rolActual, sucursalesActuales);
+        List<String> permisosDirectosActuales = servicioRolesEmpresa.obtenerPermisosDirectosUsuario(empresaId, usuarioId);
+        String snapshotAntes = snapshotUsuarioInterno(usuario, perfil, rolActual, sucursalesActuales, permisosDirectosActuales);
 
         String correoNormalizado = request.correo().trim().toLowerCase();
         usuarioRepositorio.findByEmpresaIdAndCorreo(empresaId, correoNormalizado)
@@ -1323,6 +1345,7 @@ public class ServicioAdminCitas {
         sincronizarSucursalesPermitidas(usuario, sucursalesPermitidas);
 
         reasignarRolUsuarioInterno(usuario, empresaId, rolEmpresa);
+        guardarPermisosDirectosUsuario(usuario, permisosDirectos);
         registrarAuditoriaRol(
                 empresaId,
                 usuarioActorId,
@@ -1330,7 +1353,7 @@ public class ServicioAdminCitas {
                 "Se actualizó el acceso interno de " + perfil.getNombreCompleto() + " al rol " + rolEmpresa.getNombre(),
                 rolEmpresa,
                 snapshotAntes,
-                snapshotUsuarioInterno(usuario, perfil, rolEmpresa, sucursalesPermitidas)
+                snapshotUsuarioInterno(usuario, perfil, rolEmpresa, sucursalesPermitidas, permisosDirectos)
         );
         return construirUsuarioInternoResponse(usuario, perfil, rolEmpresa, empresaId);
     }
@@ -1808,8 +1831,12 @@ public class ServicioAdminCitas {
             UsuarioEntidad usuario,
             UsuarioInternoPerfilEntidad perfil,
             RolEmpresaEntidad rolEmpresa,
-            List<Long> sucursalesPermitidas
+            List<Long> sucursalesPermitidas,
+            List<String> permisosDirectos
     ) {
+        List<String> permisosRol = rolEmpresa != null
+                ? servicioRolesEmpresa.obtenerPermisosPorRolEmpresa(List.of(rolEmpresa.getId())).getOrDefault(rolEmpresa.getId(), List.of())
+                : List.of();
         Map<String, Object> snapshot = new LinkedHashMap<>();
         snapshot.put("usuarioId", usuario.getId());
         snapshot.put("correo", usuario.getCorreo());
@@ -1819,6 +1846,9 @@ public class ServicioAdminCitas {
         snapshot.put("rolNombre", rolEmpresa != null ? rolEmpresa.getNombre() : null);
         snapshot.put("sucursalBaseId", perfil.getSucursalId());
         snapshot.put("sucursalesPermitidas", sucursalesPermitidas);
+        snapshot.put("permisosRol", permisosRol);
+        snapshot.put("permisosDirectos", permisosDirectos);
+        snapshot.put("permisosEfectivos", combinarPermisos(permisosRol, permisosDirectos));
         snapshot.put("activo", usuario.isHabilitado());
         return serializarAuditoria(snapshot);
     }
@@ -1955,6 +1985,40 @@ public class ServicioAdminCitas {
         rolEmpresaPermisoRepositorio.saveAll(permisosRol);
     }
 
+    private List<String> normalizarPermisosDirectosUsuario(List<String> permisosDirectos, RolEmpresaEntidad rolEmpresa) {
+        List<String> permisosNormalizados = normalizarPermisosRol(permisosDirectos);
+        if (permisosNormalizados.isEmpty() || rolEmpresa == null) {
+            return permisosNormalizados;
+        }
+
+        List<String> permisosRol = servicioRolesEmpresa.obtenerPermisosPorRolEmpresa(List.of(rolEmpresa.getId()))
+                .getOrDefault(rolEmpresa.getId(), List.of());
+        return permisosNormalizados.stream()
+                .filter(permiso -> !permisosRol.contains(permiso))
+                .toList();
+    }
+
+    private void guardarPermisosDirectosUsuario(UsuarioEntidad usuario, List<String> codigosPermiso) {
+        usuarioPermisoEmpresaRepositorio.deleteByUsuario_Id(usuario.getId());
+        if (codigosPermiso == null || codigosPermiso.isEmpty()) {
+            return;
+        }
+
+        List<PermisoEntidad> permisos = permisoRepositorio.findByCodigoIn(codigosPermiso);
+        if (permisos.size() != codigosPermiso.size()) {
+            throw new ResponseStatusException(BAD_REQUEST, "Uno o más permisos directos indicados no existen");
+        }
+
+        List<UsuarioPermisoEmpresaEntidad> permisosUsuario = permisos.stream()
+                .map(permiso -> new UsuarioPermisoEmpresaEntidad(
+                        new UsuarioPermisoEmpresaId(usuario.getId(), permiso.getId()),
+                        usuario,
+                        permiso
+                ))
+                .toList();
+        usuarioPermisoEmpresaRepositorio.saveAll(permisosUsuario);
+    }
+
     private void validarEmpresaExiste(Long empresaId) {
         if (!empresaRepositorio.existsById(empresaId)) {
             throw new ResponseStatusException(NOT_FOUND, "La empresa indicada no existe");
@@ -1995,7 +2059,11 @@ public class ServicioAdminCitas {
                 .distinct()
                 .sorted()
                 .toList();
-        return mapearUsuarioInterno(usuario, perfil, rolEmpresa, sucursalesScope, sucursalNombres);
+        List<String> permisosRol = rolEmpresa != null
+                ? servicioRolesEmpresa.obtenerPermisosPorRolEmpresa(List.of(rolEmpresa.getId())).getOrDefault(rolEmpresa.getId(), List.of())
+                : List.of();
+        List<String> permisosDirectos = servicioRolesEmpresa.obtenerPermisosDirectosUsuario(empresaId, usuario.getId());
+        return mapearUsuarioInterno(usuario, perfil, rolEmpresa, sucursalesScope, sucursalNombres, permisosRol, permisosDirectos);
     }
 
     private UsuarioInternoAdminResponse mapearUsuarioInterno(
@@ -2003,20 +2071,28 @@ public class ServicioAdminCitas {
             UsuarioInternoPerfilEntidad perfil,
             List<UsuarioRolEmpresaEntidad> roles,
             List<Long> sucursalesScope,
-            Map<Long, String> sucursalNombres
+            Map<Long, String> sucursalNombres,
+            Map<Long, List<String>> permisosPorRol,
+            List<String> permisosDirectos
     ) {
         RolEmpresaEntidad rolEmpresa = roles.stream()
                 .map(UsuarioRolEmpresaEntidad::getRolEmpresa)
-                .filter(rol -> listarRolesInternos(usuario.getEmpresaId()).stream()
-                        .map(RolInternoAdminResponse::codigo)
-                        .anyMatch(rol.getCodigo()::equals))
+                .filter(rol -> esRolInternoAsignable(permisosPorRol.getOrDefault(rol.getId(), List.of())))
                 .findFirst()
                 .orElse(null);
         if (rolEmpresa == null || perfil == null) {
             return null;
         }
 
-        return mapearUsuarioInterno(usuario, perfil, rolEmpresa, sucursalesScope, sucursalNombres);
+        return mapearUsuarioInterno(
+                usuario,
+                perfil,
+                rolEmpresa,
+                sucursalesScope,
+                sucursalNombres,
+                permisosPorRol.getOrDefault(rolEmpresa.getId(), List.of()),
+                permisosDirectos
+        );
     }
 
     private UsuarioInternoAdminResponse mapearUsuarioInterno(
@@ -2024,12 +2100,16 @@ public class ServicioAdminCitas {
             UsuarioInternoPerfilEntidad perfil,
             RolEmpresaEntidad rolEmpresa,
             List<Long> sucursalesScope,
-            Map<Long, String> sucursalNombres
+            Map<Long, String> sucursalNombres,
+            List<String> permisosRol,
+            List<String> permisosDirectos
     ) {
         if (perfil == null) {
             return null;
         }
 
+        List<String> permisosRolOrdenados = permisosRol.stream().distinct().sorted().toList();
+        List<String> permisosDirectosOrdenados = permisosDirectos.stream().distinct().sorted().toList();
         return new UsuarioInternoAdminResponse(
                 usuario.getId(),
                 perfil.getSucursalId(),
@@ -2045,9 +2125,19 @@ public class ServicioAdminCitas {
                 rolEmpresa != null ? rolEmpresa.getId() : null,
                 rolEmpresa != null ? rolEmpresa.getCodigo() : null,
                 rolEmpresa != null ? rolEmpresa.getNombre() : null,
+                permisosRolOrdenados,
+                permisosDirectosOrdenados,
+                combinarPermisos(permisosRolOrdenados, permisosDirectosOrdenados),
                 usuario.isHabilitado() && !usuario.isBloqueado(),
                 perfil.getNotas()
         );
+    }
+
+    private List<String> combinarPermisos(List<String> permisosRol, List<String> permisosDirectos) {
+        LinkedHashSet<String> permisos = new LinkedHashSet<>();
+        permisos.addAll(permisosRol != null ? permisosRol : List.of());
+        permisos.addAll(permisosDirectos != null ? permisosDirectos : List.of());
+        return permisos.stream().sorted().toList();
     }
 
     private List<Long> validarSucursalesPermitidasUsuarioInterno(Long empresaId, List<Long> sucursalIds, Long sucursalBaseId) {

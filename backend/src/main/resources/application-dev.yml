@@ -8,6 +8,6 @@ server:
 
 aplicacion:
   cors:
-    origenes-permitidos: ${CORS_ORIGENES:http://localhost:4200,http://127.0.0.1:4200,http://192.168.*:4200,http://10.*:4200,http://172.*:4200}
+    origenes-permitidos: ${CORS_ORIGENES:http://localhost:4200,http://127.0.0.1:4200,http://192.168.*:4200,http://10.*:4200,http://172.*:4200,https://fir-serviciosweb-b2901.web.app,https://fir-serviciosweb-b2901.firebaseapp.com}
   correo:
     habilitado: true

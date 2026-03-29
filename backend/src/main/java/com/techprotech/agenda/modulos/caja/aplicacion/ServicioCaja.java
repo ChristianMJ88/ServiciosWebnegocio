@@ -26,7 +26,9 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
@@ -119,10 +121,12 @@ public class ServicioCaja {
 
     @Transactional(readOnly = true)
     public List<CitaPorCobrarResponse> listarCitasPorCobrar(Long empresaId, List<Long> sucursalesPermitidas, Long sucursalId) {
-        validarAccesoSucursal(sucursalesPermitidas, sucursalId);
-        return citaRepositorio.findByEmpresaIdAndEstadoInOrderByInicioDesc(empresaId, List.of("FINALIZADA")).stream()
-                .filter(cita -> sucursalId == null || sucursalId.equals(cita.getSucursalId()))
+        Long sucursalConsulta = resolverSucursalConsulta(sucursalesPermitidas, sucursalId);
+        return citaRepositorio.findByEmpresaIdAndEstadoInOrderByInicioDesc(empresaId, List.of("PENDIENTE", "CONFIRMADA", "FINALIZADA")).stream()
+                .filter(cita -> sucursalConsulta == null || sucursalConsulta.equals(cita.getSucursalId()))
                 .filter(cita -> !tieneScopeSucursales(sucursalesPermitidas) || sucursalesPermitidas.contains(cita.getSucursalId()))
+                .filter(this::esDelDiaOperativo)
+                .filter(this::esCitaCobrable)
                 .map(this::mapearCitaPorCobrar)
                 .filter(cita -> cita.pendiente().compareTo(BigDecimal.ZERO) > 0)
                 .sorted(Comparator.comparing(CitaPorCobrarResponse::inicio).reversed())
@@ -134,8 +138,8 @@ public class ServicioCaja {
         CitaEntidad cita = citaRepositorio.findByIdAndEmpresaId(citaId, empresaId)
                 .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "La cita no existe para la empresa"));
         validarAccesoSucursal(sucursalesPermitidas, cita.getSucursalId());
-        if (!"FINALIZADA".equalsIgnoreCase(cita.getEstado())) {
-            throw new ResponseStatusException(CONFLICT, "Solo se pueden cobrar citas finalizadas");
+        if (!esCitaCobrable(cita)) {
+            throw new ResponseStatusException(CONFLICT, "La cita solo se puede cobrar después del check-in o cuando haya sido finalizada");
         }
 
         BigDecimal pagado = montoSeguro(pagoCitaRepositorio.sumarPagadoPorCita(empresaId, citaId));
@@ -208,11 +212,24 @@ public class ServicioCaja {
     }
 
     @Transactional(readOnly = true)
-    public ResumenCajaResponse resumen(Long empresaId, List<Long> sucursalesPermitidas, Long sucursalId) {
+    public List<MovimientoCajaResponse> listarMovimientos(Long empresaId, List<Long> sucursalesPermitidas, Long sucursalId) {
         Long sucursalConsulta = resolverSucursalConsulta(sucursalesPermitidas, sucursalId);
         CajaSesionEntidad sesion = resolverSesionAbierta(empresaId, sucursalConsulta).orElse(null);
         if (sesion == null) {
-            return new ResumenCajaResponse(null, BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO, 0);
+            return List.of();
+        }
+        return movimientoCajaRepositorio.findByEmpresaIdAndCajaSesionIdOrderByRegistradoEnDesc(empresaId, sesion.getId()).stream()
+                .map(this::mapearMovimiento)
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public ResumenCajaResponse resumen(Long empresaId, List<Long> sucursalesPermitidas, Long sucursalId) {
+        Long sucursalConsulta = resolverSucursalConsulta(sucursalesPermitidas, sucursalId);
+        int citasPendientes = listarCitasPorCobrar(empresaId, sucursalesPermitidas, sucursalConsulta).size();
+        CajaSesionEntidad sesion = resolverSesionAbierta(empresaId, sucursalConsulta).orElse(null);
+        if (sesion == null) {
+            return new ResumenCajaResponse(null, BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO, citasPendientes);
         }
 
         List<PagoCitaEntidad> pagos = pagoCitaRepositorio.findByEmpresaIdAndCajaSesionIdOrderByRegistradoEnDesc(empresaId, sesion.getId());
@@ -240,7 +257,7 @@ public class ServicioCaja {
                 totalGastos,
                 totalRetiros,
                 calcularSaldoEsperado(sesion),
-                listarCitasPorCobrar(empresaId, sucursalesPermitidas, sucursalConsulta).size()
+                citasPendientes
         );
     }
 
@@ -316,6 +333,25 @@ public class ServicioCaja {
             }
         }
         return saldo;
+    }
+
+    private boolean esCitaCobrable(CitaEntidad cita) {
+        if (cita == null) {
+            return false;
+        }
+        if (List.of("CANCELADA", "NO_ASISTIO").contains(cita.getEstado())) {
+            return false;
+        }
+        return cita.getCheckInEn() != null || "FINALIZADA".equalsIgnoreCase(cita.getEstado());
+    }
+
+    private boolean esDelDiaOperativo(CitaEntidad cita) {
+        String zonaHoraria = sucursalRepositorio.findById(cita.getSucursalId())
+                .map(sucursal -> sucursal.getZonaHoraria())
+                .orElse("America/Mexico_City");
+        ZoneId zoneId = ZoneId.of(zonaHoraria);
+        LocalDate hoy = LocalDate.now(zoneId);
+        return cita.getInicio().atZone(zoneId).toLocalDate().equals(hoy);
     }
 
     private CitaPorCobrarResponse mapearCitaPorCobrar(CitaEntidad cita) {

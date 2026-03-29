@@ -79,7 +79,9 @@ public class ServicioRecepcion {
     @Transactional(readOnly = true)
     public List<CitaRecepcionResponse> agenda(Long empresaId, List<Long> sucursalesPermitidas, LocalDate fecha, Long sucursalId) {
         LocalDate fechaOperativa = fecha != null ? fecha : LocalDate.now();
-        validarAccesoSucursal(sucursalesPermitidas, sucursalId);
+        if (sucursalId != null) {
+            validarAccesoSucursal(sucursalesPermitidas, sucursalId);
+        }
         List<CitaEntidad> citas = citaRepositorio.findByEmpresaIdAndInicioBetweenOrderByInicioAsc(
                 empresaId,
                 fechaOperativa.atStartOfDay(),

@@ -94,18 +94,18 @@
 }
 
 .caja-body {
-  padding: 1.5rem;
+  padding: 1.25rem 1.5rem 1.75rem;
 }
 
 .caja-hero {
   display: grid;
-  grid-template-columns: minmax(0, 1.7fr) minmax(320px, 0.9fr);
+  grid-template-columns: minmax(0, 1.8fr) minmax(320px, 0.92fr);
   gap: 1.25rem;
   margin-bottom: 1.25rem;
 }
 
 .caja-hero-copy {
-  padding: 1.6rem 1.75rem;
+  padding: 1.35rem 1.5rem;
   border-radius: 28px;
   background: linear-gradient(135deg, rgba(29, 72, 64, 0.96), rgba(62, 104, 93, 0.92));
   color: #faf7f0;
@@ -114,14 +114,15 @@
 
 .caja-hero-copy h1 {
   margin: 0.35rem 0 0.75rem;
-  font-size: clamp(1.9rem, 2vw + 1rem, 2.8rem);
-  line-height: 1.05;
+  font-size: clamp(1.7rem, 1.3vw + 1rem, 2.35rem);
+  line-height: 1.08;
 }
 
 .caja-hero-copy p {
-  max-width: 62ch;
+  max-width: 58ch;
   margin: 0;
   color: rgba(250, 247, 240, 0.86);
+  font-size: 0.98rem;
 }
 
 .caja-sucursal-card,
@@ -142,6 +143,68 @@
   color: #6f6358;
 }
 
+.caja-sucursal-fixed {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  padding: 0.9rem 1rem;
+  border-radius: 18px;
+  background: rgba(31, 112, 97, 0.08);
+  color: #245247;
+}
+
+.caja-sucursal-fixed span {
+  color: #5f665f;
+  font-size: 0.92rem;
+}
+
+.caja-status-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+  margin-top: 0.9rem;
+}
+
+.caja-status-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.45rem 0.8rem;
+  border-radius: 999px;
+  background: rgba(101, 91, 81, 0.09);
+  color: #64584f;
+  font-size: 0.86rem;
+  font-weight: 600;
+}
+
+.caja-status-pill.is-open {
+  background: rgba(31, 112, 97, 0.12);
+  color: #1d5d52;
+}
+
+.caja-view-switcher {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.caja-view-chip {
+  border: 1px solid rgba(110, 93, 77, 0.12);
+  background: rgba(255, 252, 246, 0.88);
+  color: #5f564d;
+  border-radius: 999px;
+  padding: 0.65rem 1rem;
+  font-weight: 600;
+  transition: all 120ms ease;
+}
+
+.caja-view-chip.active {
+  background: linear-gradient(135deg, #1f7061, #145043);
+  border-color: transparent;
+  color: #fefcf7;
+  box-shadow: 0 10px 22px rgba(31, 112, 97, 0.18);
+}
+
 .caja-metric-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -150,7 +213,7 @@
 }
 
 .caja-metric-card {
-  padding: 1.05rem 1.15rem;
+  padding: 0.95rem 1.05rem;
   background: rgba(255, 252, 246, 0.92);
 }
 
@@ -165,13 +228,18 @@
 }
 
 .caja-metric-card strong {
-  font-size: 1.45rem;
+  font-size: 1.55rem;
 }
 
 .caja-grid {
   display: grid;
-  grid-template-columns: minmax(0, 1.3fr) minmax(340px, 0.95fr);
+  grid-template-columns: minmax(0, 1.35fr) minmax(360px, 0.92fr);
   gap: 1rem;
+  align-items: start;
+}
+
+.caja-grid-focus {
+  align-items: start;
 }
 
 .caja-main-column,
@@ -181,9 +249,24 @@
   gap: 1rem;
 }
 
+.caja-side-column {
+  position: sticky;
+  top: 94px;
+}
+
 .caja-card {
   padding: 1.15rem;
   background: rgba(255, 252, 246, 0.92);
+}
+
+.caja-card-emphasis {
+  background:
+    linear-gradient(180deg, rgba(255, 252, 246, 0.96), rgba(249, 244, 236, 0.96));
+}
+
+.caja-card-payment {
+  border-color: rgba(31, 112, 97, 0.14);
+  box-shadow: 0 20px 36px rgba(31, 46, 43, 0.1);
 }
 
 .caja-card-heading {
@@ -193,6 +276,31 @@
 .caja-card-heading h2 {
   margin: 0.2rem 0 0;
   font-size: 1.25rem;
+}
+
+.caja-inline-note {
+  margin-bottom: 1rem;
+  padding: 0.85rem 1rem;
+  border-radius: 16px;
+  background: rgba(233, 178, 106, 0.16);
+  color: #6c5640;
+}
+
+.caja-list-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 0.9rem;
+  padding: 0.85rem 1rem;
+  border-radius: 16px;
+  background: rgba(231, 225, 214, 0.52);
+  color: #6c6259;
+}
+
+.caja-list-toolbar strong {
+  color: #2f312d;
+  font-size: 0.95rem;
 }
 
 .caja-session-summary,
@@ -227,6 +335,28 @@
   justify-content: flex-end;
 }
 
+.caja-payment-result {
+  grid-column: 1 / -1;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.9rem 1rem;
+  border-radius: 16px;
+  background: rgba(31, 112, 97, 0.08);
+  color: #245247;
+}
+
+.caja-payment-result span {
+  color: #5f665f;
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.caja-payment-result strong {
+  font-size: 1.35rem;
+}
+
 .caja-empty {
   padding: 1rem 1.1rem;
   border-radius: 18px;
@@ -238,11 +368,14 @@
   display: flex;
   flex-direction: column;
   gap: 0.9rem;
+  max-height: 980px;
+  overflow: auto;
+  padding-right: 0.15rem;
 }
 
 .caja-appointment-card {
   width: 100%;
-  padding: 1rem;
+  padding: 1rem 1.05rem;
   border: 1px solid rgba(110, 93, 77, 0.12);
   border-radius: 20px;
   background: #fffdf9;
@@ -255,6 +388,10 @@
   transform: translateY(-1px);
   box-shadow: 0 12px 24px rgba(43, 41, 37, 0.08);
   border-color: rgba(31, 112, 97, 0.32);
+}
+
+.caja-appointment-card.active {
+  background: linear-gradient(180deg, rgba(255, 252, 246, 1), rgba(243, 248, 245, 0.92));
 }
 
 .caja-appointment-head,
@@ -279,7 +416,6 @@
   margin-bottom: 0.75rem;
 }
 
-.caja-appointment-head strong,
 .caja-payment-context strong,
 .caja-history-item strong,
 .caja-last-movement strong {
@@ -309,12 +445,55 @@ mat-chip.is-partial {
   background: rgba(233, 178, 106, 0.2);
 }
 
+.caja-table-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.45rem 0.7rem;
+  border-radius: 999px;
+  background: rgba(101, 91, 81, 0.09);
+  color: #64584f;
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+.caja-table-badge.is-partial {
+  background: rgba(233, 178, 106, 0.2);
+  color: #7a5a27;
+}
+
 .caja-payment-context,
 .caja-last-movement {
   display: flex;
   flex-direction: column;
   gap: 0.25rem;
   margin-bottom: 1rem;
+}
+
+.caja-payment-context {
+  padding: 1rem 1.05rem;
+  border-radius: 18px;
+  background: linear-gradient(180deg, rgba(242, 246, 244, 0.95), rgba(255, 252, 246, 0.96));
+  border: 1px solid rgba(31, 112, 97, 0.14);
+}
+
+.caja-payment-highlight {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  margin-top: 0.45rem;
+  padding-top: 0.55rem;
+  border-top: 1px dashed rgba(110, 93, 77, 0.18);
+}
+
+.caja-payment-highlight small {
+  color: #6f6358;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.caja-payment-highlight strong {
+  font-size: 1.4rem;
+  color: #184b42;
 }
 
 .caja-history {
@@ -341,6 +520,15 @@ mat-chip.is-partial {
   background: rgba(245, 240, 232, 0.7);
 }
 
+.caja-history-amount {
+  text-align: right;
+}
+
+.caja-history-amount small {
+  display: block;
+  margin-top: 0.2rem;
+}
+
 .alert {
   margin-bottom: 1rem;
   border-radius: 16px;
@@ -355,6 +543,10 @@ mat-chip.is-partial {
   .caja-hero,
   .caja-metric-grid {
     grid-template-columns: 1fr;
+  }
+
+  .caja-side-column {
+    position: static;
   }
 }
 
@@ -376,8 +568,15 @@ mat-chip.is-partial {
   .caja-appointment-head,
   .caja-appointment-meta,
   .caja-appointment-money,
-  .caja-history-item {
+  .caja-history-item,
+  .caja-list-toolbar {
     flex-direction: column;
     align-items: flex-start;
+  }
+
+  .caja-payment-result {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.35rem;
   }
 }

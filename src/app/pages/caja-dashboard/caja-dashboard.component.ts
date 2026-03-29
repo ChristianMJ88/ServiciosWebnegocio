@@ -1,5 +1,5 @@
 import { CommonModule, CurrencyPipe, DatePipe } from '@angular/common';
-import { ChangeDetectorRef, Component, NgZone, OnInit, computed, inject, signal } from '@angular/core';
+import { ChangeDetectorRef, Component, NgZone, OnInit, afterNextRender, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { BreakpointObserver } from '@angular/cdk/layout';
 import { FormsModule } from '@angular/forms';
@@ -29,6 +29,7 @@ import {
 
 type MetodoPago = 'EFECTIVO' | 'TARJETA' | 'TRANSFERENCIA';
 type TipoMovimiento = 'GASTO_MENOR' | 'RETIRO' | 'INGRESO_EXTRA' | 'AJUSTE_POSITIVO' | 'AJUSTE_NEGATIVO';
+type VistaCaja = 'cobros' | 'sesion' | 'movimientos';
 
 @Component({
   selector: 'app-caja-dashboard',
@@ -66,12 +67,14 @@ export class CajaDashboardComponent implements OnInit {
   readonly guardandoPago = signal(false);
   readonly guardandoMovimiento = signal(false);
   readonly panelMovil = signal(false);
+  readonly vistaActiva = signal<VistaCaja>('cobros');
   readonly sucursales = signal<SucursalCaja[]>([]);
   readonly sucursalActivaId = signal<number | null>(null);
   readonly sesionActual = signal<CajaSesion | null>(null);
   readonly citasPorCobrar = signal<CitaPorCobrar[]>([]);
   readonly resumen = signal<ResumenCaja | null>(null);
   readonly pagosCitaSeleccionada = signal<PagoCita[]>([]);
+  readonly movimientosDelTurno = signal<MovimientoCaja[]>([]);
   readonly ultimoMovimiento = signal<MovimientoCaja | null>(null);
   readonly citaSeleccionadaId = signal<number | null>(null);
   readonly error = signal('');
@@ -95,15 +98,55 @@ export class CajaDashboardComponent implements OnInit {
   readonly puedeGestionarMovimientos = computed(() => this.authService.puedeGestionarMovimientosCaja());
   readonly sucursalesPermitidas = computed(() => this.authService.sucursalesPermitidas());
   readonly cajaAbierta = computed(() => this.sesionActual()?.estado === 'ABIERTA');
-  readonly sucursalActiva = computed(() =>
-    this.sucursales().find(sucursal => sucursal.id === this.sucursalActivaId()) ?? this.sucursales()[0] ?? null
+  readonly sucursalOperativaId = computed(() =>
+    this.sucursalActivaId()
+    ?? this.sucursales()[0]?.id
+    ?? this.sucursalesPermitidas()[0]
+    ?? null
   );
-  readonly sucursalActivaNombre = computed(() => this.sucursalActiva()?.nombre ?? 'Selecciona una sucursal');
+  readonly sucursalActiva = computed(() => {
+    const operativaId = this.sucursalOperativaId();
+    return this.sucursales().find(sucursal => sucursal.id === operativaId) ?? this.sucursales()[0] ?? null;
+  });
+  readonly sucursalActivaNombre = computed(() => {
+    const sucursal = this.sucursalActiva();
+    if (sucursal?.nombre) {
+      return sucursal.nombre;
+    }
+    const desdeSesion = this.sesionActual()?.sucursalNombre?.trim();
+    if (desdeSesion) {
+      return desdeSesion;
+    }
+    const desdeCita = this.citasPorCobrar()[0]?.sucursalNombre?.trim();
+    if (desdeCita) {
+      return desdeCita;
+    }
+    return this.sucursalOperativaId() ? `Sucursal ${this.sucursalOperativaId()}` : '';
+  });
   readonly sucursalActivaDireccion = computed(() => this.sucursalActiva()?.direccion ?? '');
+  readonly sucursalActivaResuelta = computed(() => Boolean(this.sucursalActivaNombre()));
+  readonly mensajePagoBloqueado = computed(() =>
+    this.cajaAbierta()
+      ? ''
+      : `Abre caja${this.sucursalOperativaId() ? ' en la sucursal activa' : ''} para registrar cobros.`
+  );
   readonly citaSeleccionada = computed(() =>
     this.citasPorCobrar().find(cita => cita.citaId === this.citaSeleccionadaId()) ?? this.citasPorCobrar()[0] ?? null
   );
   readonly citaSeleccionadaActualId = computed(() => this.citaSeleccionada()?.citaId ?? null);
+  readonly vistasDisponibles = computed(() => {
+    const vistas: Array<{ id: VistaCaja; label: string }> = [];
+    if (this.puedeCobrar()) {
+      vistas.push({ id: 'cobros', label: 'Cobros' });
+    }
+    if (this.puedeGestionarSesion()) {
+      vistas.push({ id: 'sesion', label: 'Apertura y cierre' });
+    }
+    if (this.puedeGestionarMovimientos()) {
+      vistas.push({ id: 'movimientos', label: 'Caja chica' });
+    }
+    return vistas;
+  });
   readonly totalPendiente = computed(() =>
     this.citasPorCobrar().reduce((total, cita) => total + (Number(cita.pendiente) || 0), 0)
   );
@@ -126,6 +169,7 @@ export class CajaDashboardComponent implements OnInit {
 
   formularioPago = {
     monto: 0,
+    montoRecibido: 0,
     metodoPago: 'EFECTIVO' as MetodoPago,
     referencia: '',
     observaciones: ''
@@ -140,7 +184,14 @@ export class CajaDashboardComponent implements OnInit {
     observaciones: ''
   };
 
+  sucursalSeleccionadaModel: number | null = null;
+
   ngOnInit(): void {
+    this.actualizarVistaEnZona(() => {
+      this.sincronizarSucursalOperativa(this.sucursalesPermitidas()[0] ?? null);
+      this.vistaActiva.set(this.obtenerVistaInicial());
+    });
+
     this.breakpointObserver
       .observe('(max-width: 991px)')
       .pipe(takeUntilDestroyed())
@@ -151,6 +202,19 @@ export class CajaDashboardComponent implements OnInit {
       });
 
     this.cargarSucursales();
+    afterNextRender(() => {
+      const sucursalId = this.obtenerSucursalOperativaId();
+      if (sucursalId) {
+        this.recargarTablero(sucursalId);
+      }
+    });
+  }
+
+  private actualizarVistaEnZona(actualizacion: () => void) {
+    this.ngZone.run(() => {
+      actualizacion();
+      this.changeDetectorRef.detectChanges();
+    });
   }
 
   cargarSucursales() {
@@ -161,15 +225,18 @@ export class CajaDashboardComponent implements OnInit {
       .pipe(finalize(() => this.loading.set(false)))
       .subscribe({
         next: sucursales => {
-          const sucursalesVisibles = this.filtrarSucursalesPorScope(sucursales);
-          this.sucursales.set(sucursalesVisibles);
-          if (!this.sucursalActivaId() && sucursalesVisibles.length) {
-            this.sucursalActivaId.set(sucursalesVisibles[0].id);
-          }
-          this.recargarTablero();
+          this.actualizarVistaEnZona(() => {
+            const sucursalesVisibles = this.filtrarSucursalesPorScope(sucursales);
+            this.sucursales.set(sucursalesVisibles);
+            const sucursalInicial = this.resolverSucursalOperativaInicial(sucursalesVisibles);
+            this.sincronizarSucursalOperativa(sucursalInicial);
+            this.recargarTablero(sucursalInicial);
+          });
         },
         error: error => {
-          this.error.set(this.extraerMensaje(error, 'No pude cargar las sucursales para Caja.'));
+          this.actualizarVistaEnZona(() => {
+            this.error.set(this.extraerMensaje(error, 'No pude cargar las sucursales para Caja.'));
+          });
         }
       });
   }
@@ -182,40 +249,48 @@ export class CajaDashboardComponent implements OnInit {
     return sucursales.filter(sucursal => permitidas.includes(sucursal.id));
   }
 
-  recargarTablero() {
-    const sucursalId = this.sucursalActivaId();
+  recargarTablero(sucursalIdForzado?: number | null) {
+    const sucursalId = sucursalIdForzado ?? this.sucursalOperativaId();
     this.loading.set(true);
     this.error.set('');
 
     forkJoin({
       sesion: this.cajaService.getSesionActual(sucursalId),
       citas: this.cajaService.getCitasPorCobrar(sucursalId),
-      resumen: this.cajaService.getResumen(sucursalId)
+      resumen: this.cajaService.getResumen(sucursalId),
+      movimientos: this.cajaService.listarMovimientos(sucursalId)
     })
       .pipe(finalize(() => this.loading.set(false)))
       .subscribe({
-        next: ({ sesion, citas, resumen }) => {
-          this.sesionActual.set(sesion);
-          this.citasPorCobrar.set(citas);
-          this.resumen.set(resumen);
-          this.sincronizarCitaSeleccionada();
-          this.formularioCierre.montoContado = Number(resumen.saldoEsperadoCaja ?? sesion?.montoEsperado ?? 0);
+        next: ({ sesion, citas, resumen, movimientos }) => {
+          this.actualizarVistaEnZona(() => {
+            this.sesionActual.set(sesion);
+            this.citasPorCobrar.set(citas);
+            this.resumen.set(resumen);
+            this.movimientosDelTurno.set(movimientos);
+            this.ultimoMovimiento.set(movimientos[0] ?? null);
+            this.sincronizarCitaSeleccionada();
+            this.formularioCierre.montoContado = Number(resumen.saldoEsperadoCaja ?? sesion?.montoEsperado ?? 0);
+          });
         },
         error: error => {
-          this.error.set(this.extraerMensaje(error, 'No pude actualizar el tablero de Caja.'));
+          this.actualizarVistaEnZona(() => {
+            this.error.set(this.extraerMensaje(error, 'No pude actualizar el tablero de Caja.'));
+          });
         }
       });
   }
 
   seleccionarSucursal(sucursalId: number | null) {
-    this.sucursalActivaId.set(sucursalId);
+    this.sincronizarSucursalOperativa(sucursalId);
     this.citaSeleccionadaId.set(null);
     this.pagosCitaSeleccionada.set([]);
     this.recargarTablero();
   }
 
   abrirCaja() {
-    if (!this.sucursalActivaId()) {
+    const sucursalId = this.obtenerSucursalOperativaId();
+    if (!sucursalId) {
       this.error.set('Selecciona una sucursal antes de abrir la caja.');
       return;
     }
@@ -225,7 +300,7 @@ export class CajaDashboardComponent implements OnInit {
     this.mensaje.set('');
 
     this.cajaService.abrirCaja({
-      sucursalId: this.sucursalActivaId()!,
+      sucursalId,
       montoInicial: Number(this.formularioApertura.montoInicial),
       observaciones: this.formularioApertura.observaciones.trim() || null
     })
@@ -276,14 +351,19 @@ export class CajaDashboardComponent implements OnInit {
     const cita = this.citasPorCobrar().find(item => item.citaId === citaId);
     if (cita) {
       this.formularioPago.monto = Number(cita.pendiente);
+      this.formularioPago.montoRecibido = Number(cita.pendiente);
     }
 
     this.cajaService.listarPagosCita(citaId).subscribe({
       next: pagos => {
-        this.pagosCitaSeleccionada.set(pagos);
+        this.actualizarVistaEnZona(() => {
+          this.pagosCitaSeleccionada.set(pagos);
+        });
       },
       error: error => {
-        this.error.set(this.extraerMensaje(error, 'No pude cargar el historial de pagos de la cita.'));
+        this.actualizarVistaEnZona(() => {
+          this.error.set(this.extraerMensaje(error, 'No pude cargar el historial de pagos de la cita.'));
+        });
       }
     });
   }
@@ -309,6 +389,7 @@ export class CajaDashboardComponent implements OnInit {
       .subscribe({
         next: pago => {
           this.mensaje.set('Pago registrado correctamente.');
+          this.formularioPago.montoRecibido = this.formularioPago.monto;
           this.formularioPago.referencia = '';
           this.formularioPago.observaciones = '';
           this.pagosCitaSeleccionada.set([pago, ...this.pagosCitaSeleccionada()]);
@@ -321,7 +402,8 @@ export class CajaDashboardComponent implements OnInit {
   }
 
   registrarMovimiento() {
-    if (!this.sucursalActivaId()) {
+    const sucursalId = this.obtenerSucursalOperativaId();
+    if (!sucursalId) {
       this.error.set('Selecciona una sucursal antes de registrar movimientos de caja.');
       return;
     }
@@ -331,7 +413,7 @@ export class CajaDashboardComponent implements OnInit {
     this.mensaje.set('');
 
     this.cajaService.registrarMovimiento({
-      sucursalId: this.sucursalActivaId()!,
+      sucursalId,
       tipoMovimiento: this.formularioMovimiento.tipoMovimiento,
       monto: Number(this.formularioMovimiento.monto),
       metodoPago: this.formularioMovimiento.metodoPago,
@@ -342,7 +424,6 @@ export class CajaDashboardComponent implements OnInit {
       .pipe(finalize(() => this.guardandoMovimiento.set(false)))
       .subscribe({
         next: movimiento => {
-          this.ultimoMovimiento.set(movimiento);
           this.formularioMovimiento = {
             tipoMovimiento: 'GASTO_MENOR',
             monto: 0,
@@ -373,6 +454,157 @@ export class CajaDashboardComponent implements OnInit {
     this.router.navigateByUrl('/admin');
   }
 
+  seleccionarVista(vista: VistaCaja) {
+    this.vistaActiva.set(vista);
+  }
+
+  imprimirComprobante() {
+    const cita = this.citaSeleccionada();
+    if (!cita) {
+      this.error.set('Selecciona una cita para imprimir el comprobante.');
+      return;
+    }
+
+    const pagos = this.pagosCitaSeleccionada();
+    if (!pagos.length) {
+      this.error.set('Todavía no hay pagos registrados para imprimir un comprobante.');
+      return;
+    }
+
+    const totalPagado = pagos.reduce((total, pago) => total + Number(pago.monto || 0), 0);
+    const pendiente = Math.max(Number(cita.total || 0) - totalPagado, 0);
+    const ventana = window.open('', '_blank', 'width=820,height=900');
+    if (!ventana) {
+      this.error.set('No pude abrir la ventana de impresión. Revisa si el navegador está bloqueando ventanas emergentes.');
+      return;
+    }
+
+    const filasPagos = pagos
+      .map(pago => `
+        <tr>
+          <td>${this.formatearFechaHora(pago.registradoEn)}</td>
+          <td>${pago.metodoPago}</td>
+          <td>${pago.referencia ?? '-'}</td>
+          <td style="text-align:right;">${this.formatearMoneda(Number(pago.monto || 0))}</td>
+        </tr>
+      `)
+      .join('');
+
+    ventana.document.write(`
+      <html lang="es">
+        <head>
+          <title>Comprobante de cobro</title>
+          <style>
+            body { font-family: Arial, sans-serif; padding: 28px; color: #1f2937; }
+            h1, h2, p { margin: 0; }
+            .header { margin-bottom: 24px; }
+            .header small { color: #6b7280; display: block; margin-top: 6px; }
+            .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 20px 0; }
+            .card { border: 1px solid #e5e7eb; border-radius: 12px; padding: 14px; }
+            .label { display: block; font-size: 12px; text-transform: uppercase; color: #6b7280; margin-bottom: 6px; }
+            .value { font-size: 18px; font-weight: 700; }
+            table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+            th, td { padding: 10px 8px; border-bottom: 1px solid #e5e7eb; font-size: 14px; text-align: left; }
+            th { color: #6b7280; text-transform: uppercase; font-size: 12px; }
+            .totals { margin-top: 24px; width: 280px; margin-left: auto; }
+            .totals div { display: flex; justify-content: space-between; margin-bottom: 8px; }
+            .totals strong { font-size: 18px; }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <h1>NailArt Studio</h1>
+            <small>Comprobante de cobro</small>
+          </div>
+
+          <div class="grid">
+            <div class="card">
+              <span class="label">Cliente</span>
+              <div class="value">${cita.clienteNombre}</div>
+            </div>
+            <div class="card">
+              <span class="label">Sucursal</span>
+              <div class="value">${cita.sucursalNombre}</div>
+            </div>
+            <div class="card">
+              <span class="label">Servicio</span>
+              <div class="value">${cita.servicioNombre}</div>
+            </div>
+            <div class="card">
+              <span class="label">Cita</span>
+              <div class="value">${this.formatearFechaHora(cita.inicio)}</div>
+            </div>
+          </div>
+
+          <h2>Pagos registrados</h2>
+          <table>
+            <thead>
+              <tr>
+                <th>Fecha</th>
+                <th>Método</th>
+                <th>Referencia</th>
+                <th style="text-align:right;">Monto</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${filasPagos}
+            </tbody>
+          </table>
+
+          <div class="totals">
+            <div><span>Total cita</span><span>${this.formatearMoneda(Number(cita.total || 0))}</span></div>
+            <div><span>Total pagado</span><span>${this.formatearMoneda(totalPagado)}</span></div>
+            <div><span>Pendiente</span><strong>${this.formatearMoneda(pendiente)}</strong></div>
+          </div>
+        </body>
+      </html>
+    `);
+    ventana.document.close();
+    ventana.focus();
+    ventana.print();
+  }
+
+  calcularCambioPago(): number {
+    if (this.formularioPago.metodoPago !== 'EFECTIVO') {
+      return 0;
+    }
+    const monto = Number(this.formularioPago.monto || 0);
+    const recibido = Number(this.formularioPago.montoRecibido || 0);
+    if (!Number.isFinite(monto) || !Number.isFinite(recibido) || recibido <= monto) {
+      return 0;
+    }
+    return recibido - monto;
+  }
+
+  private obtenerSucursalOperativaId(): number | null {
+    return this.sucursalActivaId()
+      ?? this.sucursales()[0]?.id
+      ?? this.sucursalesPermitidas()[0]
+      ?? null;
+  }
+
+  private resolverSucursalOperativaInicial(sucursalesVisibles: SucursalCaja[]): number | null {
+    return this.sucursalActivaId()
+      ?? sucursalesVisibles[0]?.id
+      ?? this.sucursalesPermitidas()[0]
+      ?? null;
+  }
+
+  private obtenerVistaInicial(): VistaCaja {
+    if (this.puedeCobrar()) {
+      return 'cobros';
+    }
+    if (this.puedeGestionarSesion()) {
+      return 'sesion';
+    }
+    return 'movimientos';
+  }
+
+  private sincronizarSucursalOperativa(sucursalId: number | null) {
+    this.sucursalActivaId.set(sucursalId);
+    this.sucursalSeleccionadaModel = sucursalId;
+  }
+
   private sincronizarCitaSeleccionada() {
     const citas = this.citasPorCobrar();
     if (!citas.length) {
@@ -392,18 +624,25 @@ export class CajaDashboardComponent implements OnInit {
     const cita = citas.find(item => item.citaId === citaId);
     if (cita && this.formularioPago.monto <= 0) {
       this.formularioPago.monto = Number(cita.pendiente);
+      this.formularioPago.montoRecibido = Number(cita.pendiente);
     }
   }
-
-  private actualizarVistaEnZona(actualizacion: () => void) {
-    this.ngZone.run(() => {
-      actualizacion();
-      this.changeDetectorRef.detectChanges();
-    });
-  }
-
   private extraerMensaje(error: unknown, fallback: string): string {
     const httpError = error as { error?: { message?: string }; message?: string };
     return httpError?.error?.message || httpError?.message || fallback;
+  }
+
+  private formatearMoneda(valor: number): string {
+    return new Intl.NumberFormat('es-MX', {
+      style: 'currency',
+      currency: 'MXN'
+    }).format(valor || 0);
+  }
+
+  private formatearFechaHora(valor: string): string {
+    return new Intl.DateTimeFormat('es-MX', {
+      dateStyle: 'medium',
+      timeStyle: 'short'
+    }).format(new Date(valor));
   }
 }

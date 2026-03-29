@@ -109,7 +109,9 @@ export class RecepcionDashboardComponent implements OnInit {
       )
       .subscribe(texto => {
         if (texto.trim().length < 2) {
-          this.clientesEncontrados.set([]);
+          this.actualizarVistaEnZona(() => {
+            this.clientesEncontrados.set([]);
+          });
           return;
         }
 
@@ -117,8 +119,8 @@ export class RecepcionDashboardComponent implements OnInit {
         this.recepcionService.buscarClientes(texto.trim())
           .pipe(finalize(() => this.loadingBusqueda.set(false)))
           .subscribe({
-            next: clientes => this.clientesEncontrados.set(clientes),
-            error: () => this.clientesEncontrados.set([])
+            next: clientes => this.actualizarVistaEnZona(() => this.clientesEncontrados.set(clientes)),
+            error: () => this.actualizarVistaEnZona(() => this.clientesEncontrados.set([]))
           });
       });
   }
@@ -127,9 +129,16 @@ export class RecepcionDashboardComponent implements OnInit {
     this.breakpointObserver
       .observe('(max-width: 991px)')
       .pipe(takeUntilDestroyed())
-      .subscribe(({ matches }) => this.actualizarVista(() => this.panelMovil.set(matches)));
+      .subscribe(({ matches }) => this.actualizarVistaEnZona(() => this.panelMovil.set(matches)));
 
     this.cargarCatalogosYAgenda();
+  }
+
+  private actualizarVistaEnZona(actualizacion: () => void) {
+    this.ngZone.run(() => {
+      actualizacion();
+      this.changeDetectorRef.detectChanges();
+    });
   }
 
   cargarCatalogosYAgenda() {
@@ -143,20 +152,24 @@ export class RecepcionDashboardComponent implements OnInit {
       .pipe(finalize(() => this.loading.set(false)))
       .subscribe({
         next: ({ sucursales, agenda }) => {
-          const sucursalesVisibles = this.filtrarSucursalesPorScope(sucursales);
-          this.sucursales.set(sucursalesVisibles);
-          if (!this.sucursalActivaId() && sucursalesVisibles.length) {
-            this.sucursalActivaId.set(sucursalesVisibles[0].id);
-            this.formularioCita.sucursalId = sucursalesVisibles[0].id;
-            this.cargarServiciosSucursal(sucursalesVisibles[0].id);
-          } else if (this.sucursalActivaId()) {
-            this.formularioCita.sucursalId = this.sucursalActivaId();
-            this.cargarServiciosSucursal(this.sucursalActivaId()!);
-          }
-          this.citas.set(agenda);
+          this.actualizarVistaEnZona(() => {
+            const sucursalesVisibles = this.filtrarSucursalesPorScope(sucursales);
+            this.sucursales.set(sucursalesVisibles);
+            if (!this.sucursalActivaId() && sucursalesVisibles.length) {
+              this.sucursalActivaId.set(sucursalesVisibles[0].id);
+              this.formularioCita.sucursalId = sucursalesVisibles[0].id;
+              this.cargarServiciosSucursal(sucursalesVisibles[0].id);
+            } else if (this.sucursalActivaId()) {
+              this.formularioCita.sucursalId = this.sucursalActivaId();
+              this.cargarServiciosSucursal(this.sucursalActivaId()!);
+            }
+            this.citas.set(agenda);
+          });
         },
         error: error => {
-          this.error.set(this.extraerMensaje(error, 'No pude cargar la agenda de recepción.'));
+          this.actualizarVistaEnZona(() => {
+            this.error.set(this.extraerMensaje(error, 'No pude cargar la agenda de recepción.'));
+          });
         }
       });
   }
@@ -176,8 +189,8 @@ export class RecepcionDashboardComponent implements OnInit {
     this.recepcionService.getAgenda(this.fechaAgenda(), this.sucursalActivaId())
       .pipe(finalize(() => this.loading.set(false)))
       .subscribe({
-        next: agenda => this.citas.set(agenda),
-        error: error => this.error.set(this.extraerMensaje(error, 'No pude actualizar la agenda.'))
+        next: agenda => this.actualizarVistaEnZona(() => this.citas.set(agenda)),
+        error: error => this.actualizarVistaEnZona(() => this.error.set(this.extraerMensaje(error, 'No pude actualizar la agenda.')))
       });
   }
 
@@ -303,15 +316,10 @@ export class RecepcionDashboardComponent implements OnInit {
     this.bookingDataService.getServices(sucursalId)
       .pipe(catchError(() => of([])))
       .subscribe(servicios => {
-        this.servicios.set(servicios);
+        this.actualizarVistaEnZona(() => {
+          this.servicios.set(servicios);
+        });
       });
-  }
-
-  private actualizarVista(actualizacion: () => void) {
-    this.ngZone.run(() => {
-      actualizacion();
-      this.changeDetectorRef.detectChanges();
-    });
   }
 
   private fechaHoy(): string {

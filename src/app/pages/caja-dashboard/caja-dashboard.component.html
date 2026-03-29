@@ -42,23 +42,51 @@
       <mat-card class="caja-sucursal-card">
         <div class="caja-card-heading">
           <span class="caja-card-kicker">Sucursal activa</span>
-          <h2>{{ sucursalActivaNombre() }}</h2>
+          <h2>{{ sucursalActivaNombre() || 'Cargando sucursal operativa...' }}</h2>
         </div>
 
-        <mat-form-field appearance="outline" class="w-100">
-          <mat-label>Sucursal</mat-label>
-          <mat-select
-            [ngModel]="sucursalActivaId()"
-            (ngModelChange)="seleccionarSucursal($event)">
-            <mat-option *ngFor="let sucursal of sucursales()" [value]="sucursal.id">
-              {{ sucursal.nombre }}
-            </mat-option>
-          </mat-select>
-        </mat-form-field>
+        <p class="caja-helper" *ngIf="sucursales().length === 1">
+          Operas en {{ sucursalActivaNombre() }}. La sucursal se selecciona automáticamente.
+        </p>
+
+        <ng-container *ngIf="sucursales().length > 1; else sucursalUnica">
+          <mat-form-field appearance="outline" class="w-100">
+            <mat-label>Sucursal</mat-label>
+            <mat-select
+              [(ngModel)]="sucursalSeleccionadaModel"
+              (ngModelChange)="seleccionarSucursal($event)">
+              <mat-option *ngFor="let sucursal of sucursales()" [value]="sucursal.id">
+                {{ sucursal.nombre }}
+              </mat-option>
+            </mat-select>
+          </mat-form-field>
+        </ng-container>
+
+        <ng-template #sucursalUnica>
+          <div class="caja-sucursal-fixed" *ngIf="sucursalActivaResuelta(); else sucursalPendiente">
+            <strong>{{ sucursalActivaNombre() }}</strong>
+            <span>Sucursal operativa bloqueada por tu acceso.</span>
+          </div>
+        </ng-template>
+
+        <ng-template #sucursalPendiente>
+          <div class="caja-empty">
+            Cargando sucursal operativa...
+          </div>
+        </ng-template>
 
         <p class="caja-helper" *ngIf="sucursalActivaDireccion()">
           {{ sucursalActivaDireccion() }}
         </p>
+
+        <div class="caja-status-pills">
+          <span class="caja-status-pill" [class.is-open]="cajaAbierta()">
+            {{ cajaAbierta() ? 'Caja abierta' : 'Caja cerrada' }}
+          </span>
+          <span class="caja-status-pill" *ngIf="sucursalActivaResuelta()">
+            Sucursal {{ sucursalOperativaId() }}
+          </span>
+        </div>
       </mat-card>
     </header>
 
@@ -77,12 +105,180 @@
       </mat-card>
     </section>
 
-    <div class="caja-grid">
+    <section class="caja-view-switcher" *ngIf="vistasDisponibles().length > 1">
+      <button
+        type="button"
+        class="caja-view-chip"
+        *ngFor="let vista of vistasDisponibles()"
+        [class.active]="vistaActiva() === vista.id"
+        (click)="seleccionarVista(vista.id)">
+        {{ vista.label }}
+      </button>
+    </section>
+
+    <div class="caja-grid" *ngIf="vistaActiva() === 'cobros'">
       <div class="caja-main-column">
-        <mat-card class="caja-card">
+        <mat-card class="caja-card" *ngIf="puedeCobrar()">
+          <div class="caja-card-heading">
+            <span class="caja-card-kicker">Cobros</span>
+            <h2>Citas pendientes de cobro</h2>
+          </div>
+
+          <div class="caja-list-toolbar" *ngIf="citasPorCobrar().length">
+            <span>Selecciona una cita para trabajarla en el panel de cobro.</span>
+            <strong>{{ citasPorCobrar().length }} pendientes</strong>
+          </div>
+
+          <div class="caja-empty" *ngIf="!citasPorCobrar().length">
+            No hay citas cobrables hoy. Una cita aparece aquí después del check-in o cuando queda finalizada.
+          </div>
+
+          <div class="caja-appointments" *ngIf="citasPorCobrar().length">
+            <button
+              type="button"
+              class="caja-appointment-card"
+              *ngFor="let cita of citasPorCobrar()"
+              [class.active]="citaSeleccionadaActualId() === cita.citaId"
+              (click)="seleccionarCita(cita.citaId)">
+              <div class="caja-appointment-head">
+                <div>
+                  <strong>{{ cita.clienteNombre }}</strong>
+                  <span>{{ cita.servicioNombre }} · {{ cita.sucursalNombre }}</span>
+                </div>
+                <span class="caja-table-badge" [class.is-partial]="cita.estadoPago === 'PARCIAL'">{{ cita.estadoPago }}</span>
+              </div>
+
+              <div class="caja-appointment-meta">
+                <span>{{ cita.inicio | date:'dd/MM/yyyy HH:mm':'':'es-MX' }}</span>
+                <span>{{ cita.clienteTelefono || 'Sin teléfono' }}</span>
+              </div>
+
+              <div class="caja-appointment-money">
+                <div>
+                  <small>Total</small>
+                  <strong>{{ cita.total | currency:'MXN':'symbol':'1.2-2':'es-MX' }}</strong>
+                </div>
+                <div>
+                  <small>Pagado</small>
+                  <strong>{{ cita.pagado | currency:'MXN':'symbol':'1.2-2':'es-MX' }}</strong>
+                </div>
+                <div>
+                  <small>Pendiente</small>
+                  <strong>{{ cita.pendiente | currency:'MXN':'symbol':'1.2-2':'es-MX' }}</strong>
+                </div>
+              </div>
+            </button>
+          </div>
+        </mat-card>
+      </div>
+
+      <div class="caja-side-column">
+        <mat-card class="caja-card caja-card-payment" *ngIf="puedeCobrar()">
+          <div class="caja-card-heading">
+            <span class="caja-card-kicker">Pago</span>
+            <h2>{{ citaSeleccionada() ? 'Registrar cobro' : 'Selecciona una cita' }}</h2>
+          </div>
+
+          <ng-container *ngIf="citaSeleccionada() as citaActiva; else bloqueSinCita">
+            <div class="caja-payment-context">
+              <strong>{{ citaActiva.clienteNombre }}</strong>
+              <span>{{ citaActiva.servicioNombre }} · {{ citaActiva.sucursalNombre }}</span>
+              <span>{{ citaActiva.inicio | date:'dd/MM/yyyy HH:mm':'':'es-MX' }}</span>
+              <div class="caja-payment-highlight">
+                <small>Saldo pendiente</small>
+                <strong>{{ citaActiva.pendiente | currency:'MXN':'symbol':'1.2-2':'es-MX' }}</strong>
+              </div>
+            </div>
+
+            <form class="caja-form-grid" (ngSubmit)="registrarPago()">
+              <mat-form-field appearance="outline">
+                <mat-label>Monto</mat-label>
+                <input matInput type="number" min="0.01" step="0.01" name="montoPago" [(ngModel)]="formularioPago.monto" required>
+              </mat-form-field>
+
+              <mat-form-field appearance="outline">
+                <mat-label>Método de pago</mat-label>
+                <mat-select name="metodoPago" [(ngModel)]="formularioPago.metodoPago">
+                  <mat-option *ngFor="let metodo of metodosPago" [value]="metodo">{{ metodo }}</mat-option>
+                </mat-select>
+              </mat-form-field>
+
+              <mat-form-field appearance="outline" *ngIf="formularioPago.metodoPago === 'EFECTIVO'">
+                <mat-label>Recibido</mat-label>
+                <input matInput type="number" min="0.01" step="0.01" name="montoRecibido" [(ngModel)]="formularioPago.montoRecibido">
+              </mat-form-field>
+
+              <div class="caja-payment-result" *ngIf="formularioPago.metodoPago === 'EFECTIVO'">
+                <span>Cambio</span>
+                <strong>{{ calcularCambioPago() | currency:'MXN':'symbol':'1.2-2':'es-MX' }}</strong>
+              </div>
+
+              <mat-form-field appearance="outline">
+                <mat-label>Referencia</mat-label>
+                <input matInput name="referenciaPago" [(ngModel)]="formularioPago.referencia">
+              </mat-form-field>
+
+              <mat-form-field appearance="outline" class="full-width">
+                <mat-label>Observaciones</mat-label>
+                <textarea matInput rows="3" name="observacionesPago" [(ngModel)]="formularioPago.observaciones"></textarea>
+              </mat-form-field>
+
+              <div class="caja-form-actions">
+                <button mat-flat-button color="primary" type="submit" [disabled]="guardandoPago() || !cajaAbierta()">
+                  Registrar pago
+                </button>
+                <button mat-stroked-button type="button" *ngIf="pagosCitaSeleccionada().length" (click)="imprimirComprobante()">
+                  Imprimir comprobante
+                </button>
+              </div>
+            </form>
+
+            <div class="caja-empty" *ngIf="!cajaAbierta()">
+              {{ mensajePagoBloqueado() }}
+            </div>
+
+            <mat-divider></mat-divider>
+
+            <div class="caja-history">
+              <div class="caja-subheading">
+                <span>Pagos registrados</span>
+              </div>
+
+              <div class="caja-empty" *ngIf="!pagosCitaSeleccionada().length">
+                Aún no hay pagos registrados para esta cita.
+              </div>
+
+              <div class="caja-history-list" *ngIf="pagosCitaSeleccionada().length">
+                <div class="caja-history-item" *ngFor="let pago of pagosCitaSeleccionada()">
+                  <div>
+                    <strong>{{ pago.monto | currency:'MXN':'symbol':'1.2-2':'es-MX' }}</strong>
+                    <span>{{ pago.metodoPago }}{{ pago.referencia ? ' · ' + pago.referencia : '' }}</span>
+                  </div>
+                  <small>{{ pago.registradoEn | date:'dd/MM HH:mm':'':'es-MX' }}</small>
+                </div>
+              </div>
+            </div>
+          </ng-container>
+
+          <ng-template #bloqueSinCita>
+            <div class="caja-empty">
+              Elige una cita por cobrar para registrar pago, anticipo o liquidación.
+            </div>
+          </ng-template>
+        </mat-card>
+      </div>
+    </div>
+
+    <div class="caja-grid caja-grid-focus" *ngIf="vistaActiva() === 'sesion'">
+      <div class="caja-main-column">
+        <mat-card class="caja-card caja-card-emphasis">
           <div class="caja-card-heading">
             <span class="caja-card-kicker">Sesión</span>
-            <h2>{{ cajaAbierta() ? 'Caja abierta' : 'Abrir caja' }}</h2>
+            <h2>{{ cajaAbierta() ? 'Caja abierta' : 'Apertura de caja' }}</h2>
+          </div>
+
+          <div class="caja-inline-note" *ngIf="!cajaAbierta()">
+            Abre la caja de la sucursal activa antes de registrar cobros o movimientos.
           </div>
 
           <ng-container *ngIf="sesionActual(); else bloqueApertura">
@@ -174,137 +370,52 @@
             </div>
           </ng-template>
         </mat-card>
-
-        <mat-card class="caja-card" *ngIf="puedeCobrar()">
-          <div class="caja-card-heading">
-            <span class="caja-card-kicker">Cobros</span>
-            <h2>Citas pendientes de cobro</h2>
-          </div>
-
-          <div class="caja-empty" *ngIf="!citasPorCobrar().length">
-            No hay citas finalizadas pendientes de cobro en este momento.
-          </div>
-
-          <div class="caja-appointments" *ngIf="citasPorCobrar().length">
-            <button
-              type="button"
-              class="caja-appointment-card"
-              *ngFor="let cita of citasPorCobrar()"
-              [class.active]="citaSeleccionadaActualId() === cita.citaId"
-              (click)="seleccionarCita(cita.citaId)">
-              <div class="caja-appointment-head">
-                <div>
-                  <strong>{{ cita.clienteNombre }}</strong>
-                  <span>{{ cita.servicioNombre }} · {{ cita.sucursalNombre }}</span>
-                </div>
-                <mat-chip-set>
-                  <mat-chip [class.is-partial]="cita.estadoPago === 'PARCIAL'">{{ cita.estadoPago }}</mat-chip>
-                </mat-chip-set>
-              </div>
-
-              <div class="caja-appointment-meta">
-                <span>{{ cita.inicio | date:'dd/MM/yyyy HH:mm':'':'es-MX' }}</span>
-                <span>{{ cita.clienteTelefono || 'Sin teléfono' }}</span>
-              </div>
-
-              <div class="caja-appointment-money">
-                <div>
-                  <small>Total</small>
-                  <strong>{{ cita.total | currency:'MXN':'symbol':'1.2-2':'es-MX' }}</strong>
-                </div>
-                <div>
-                  <small>Pagado</small>
-                  <strong>{{ cita.pagado | currency:'MXN':'symbol':'1.2-2':'es-MX' }}</strong>
-                </div>
-                <div>
-                  <small>Pendiente</small>
-                  <strong>{{ cita.pendiente | currency:'MXN':'symbol':'1.2-2':'es-MX' }}</strong>
-                </div>
-              </div>
-            </button>
-          </div>
-        </mat-card>
       </div>
 
       <div class="caja-side-column">
-        <mat-card class="caja-card" *ngIf="puedeGestionarMovimientos()">
-          <div class="caja-card-heading">
-            <span class="caja-card-kicker">Pago</span>
-            <h2>{{ citaSeleccionada() ? 'Registrar cobro' : 'Selecciona una cita' }}</h2>
-          </div>
-
-          <ng-container *ngIf="citaSeleccionada() as citaActiva; else bloqueSinCita">
-            <div class="caja-payment-context">
-              <strong>{{ citaActiva.clienteNombre }}</strong>
-              <span>{{ citaActiva.servicioNombre }} · {{ citaActiva.inicio | date:'dd/MM/yyyy HH:mm':'':'es-MX' }}</span>
-              <span>Pendiente: {{ citaActiva.pendiente | currency:'MXN':'symbol':'1.2-2':'es-MX' }}</span>
-            </div>
-
-            <form class="caja-form-grid" (ngSubmit)="registrarPago()">
-              <mat-form-field appearance="outline">
-                <mat-label>Monto</mat-label>
-                <input matInput type="number" min="0.01" step="0.01" name="montoPago" [(ngModel)]="formularioPago.monto" required>
-              </mat-form-field>
-
-              <mat-form-field appearance="outline">
-                <mat-label>Método de pago</mat-label>
-                <mat-select name="metodoPago" [(ngModel)]="formularioPago.metodoPago">
-                  <mat-option *ngFor="let metodo of metodosPago" [value]="metodo">{{ metodo }}</mat-option>
-                </mat-select>
-              </mat-form-field>
-
-              <mat-form-field appearance="outline">
-                <mat-label>Referencia</mat-label>
-                <input matInput name="referenciaPago" [(ngModel)]="formularioPago.referencia">
-              </mat-form-field>
-
-              <mat-form-field appearance="outline" class="full-width">
-                <mat-label>Observaciones</mat-label>
-                <textarea matInput rows="3" name="observacionesPago" [(ngModel)]="formularioPago.observaciones"></textarea>
-              </mat-form-field>
-
-              <div class="caja-form-actions">
-                <button mat-flat-button color="primary" type="submit" [disabled]="guardandoPago() || !cajaAbierta()">
-                  Registrar pago
-                </button>
-              </div>
-            </form>
-
-            <mat-divider></mat-divider>
-
-            <div class="caja-history">
-              <div class="caja-subheading">
-                <span>Pagos registrados</span>
-              </div>
-
-              <div class="caja-empty" *ngIf="!pagosCitaSeleccionada().length">
-                Aún no hay pagos registrados para esta cita.
-              </div>
-
-              <div class="caja-history-list" *ngIf="pagosCitaSeleccionada().length">
-                <div class="caja-history-item" *ngFor="let pago of pagosCitaSeleccionada()">
-                  <div>
-                    <strong>{{ pago.monto | currency:'MXN':'symbol':'1.2-2':'es-MX' }}</strong>
-                    <span>{{ pago.metodoPago }}{{ pago.referencia ? ' · ' + pago.referencia : '' }}</span>
-                  </div>
-                  <small>{{ pago.registradoEn | date:'dd/MM HH:mm':'':'es-MX' }}</small>
-                </div>
-              </div>
-            </div>
-          </ng-container>
-
-          <ng-template #bloqueSinCita>
-            <div class="caja-empty">
-              Elige una cita por cobrar para registrar pago, anticipo o liquidación.
-            </div>
-          </ng-template>
-        </mat-card>
-
         <mat-card class="caja-card">
           <div class="caja-card-heading">
-            <span class="caja-card-kicker">Caja chica</span>
-            <h2>Movimientos del turno</h2>
+            <span class="caja-card-kicker">Resumen</span>
+            <h2>Cierre operativo</h2>
           </div>
+
+          <div class="caja-summary-grid">
+            <div>
+              <span class="label">Cobrado en efectivo</span>
+              <strong>{{ resumen()?.totalCobradoEfectivo | currency:'MXN':'symbol':'1.2-2':'es-MX' }}</strong>
+            </div>
+            <div>
+              <span class="label">Cobrado con tarjeta</span>
+              <strong>{{ resumen()?.totalCobradoTarjeta | currency:'MXN':'symbol':'1.2-2':'es-MX' }}</strong>
+            </div>
+            <div>
+              <span class="label">Cobrado por transferencia</span>
+              <strong>{{ resumen()?.totalCobradoTransferencia | currency:'MXN':'symbol':'1.2-2':'es-MX' }}</strong>
+            </div>
+            <div>
+              <span class="label">Gastos menores</span>
+              <strong>{{ resumen()?.totalGastos | currency:'MXN':'symbol':'1.2-2':'es-MX' }}</strong>
+            </div>
+            <div>
+              <span class="label">Retiros</span>
+              <strong>{{ resumen()?.totalRetiros | currency:'MXN':'symbol':'1.2-2':'es-MX' }}</strong>
+            </div>
+            <div>
+              <span class="label">Saldo esperado</span>
+              <strong>{{ resumen()?.saldoEsperadoCaja | currency:'MXN':'symbol':'1.2-2':'es-MX' }}</strong>
+            </div>
+          </div>
+        </mat-card>
+      </div>
+    </div>
+
+    <div class="caja-grid caja-grid-focus" *ngIf="vistaActiva() === 'movimientos'">
+      <div class="caja-main-column">
+        <mat-card class="caja-card" *ngIf="puedeGestionarMovimientos()">
+            <div class="caja-card-heading">
+              <span class="caja-card-kicker">Caja chica</span>
+              <h2>Movimientos del día</h2>
+            </div>
 
           <form class="caja-form-grid" (ngSubmit)="registrarMovimiento()">
             <mat-form-field appearance="outline">
@@ -350,32 +461,45 @@
             </div>
           </form>
 
-          <div class="caja-last-movement" *ngIf="ultimoMovimiento()">
-            <span class="label">Último movimiento</span>
-            <strong>{{ ultimoMovimiento()?.concepto }}</strong>
-            <span>{{ ultimoMovimiento()?.tipoMovimiento }} · {{ ultimoMovimiento()?.monto | currency:'MXN':'symbol':'1.2-2':'es-MX' }}</span>
-          </div>
-        </mat-card>
+            <div class="caja-last-movement" *ngIf="ultimoMovimiento()">
+              <span class="label">Último movimiento</span>
+              <strong>{{ ultimoMovimiento()?.concepto }}</strong>
+              <span>{{ ultimoMovimiento()?.tipoMovimiento }} · {{ ultimoMovimiento()?.monto | currency:'MXN':'symbol':'1.2-2':'es-MX' }}</span>
+            </div>
 
+            <div class="caja-history">
+              <div class="caja-subheading">
+                <span>Historial del turno</span>
+              </div>
+
+              <div class="caja-empty" *ngIf="!movimientosDelTurno().length">
+                Aún no hay movimientos registrados en el turno actual.
+              </div>
+
+              <div class="caja-history-list" *ngIf="movimientosDelTurno().length">
+                <div class="caja-history-item" *ngFor="let movimiento of movimientosDelTurno()">
+                  <div>
+                    <strong>{{ movimiento.concepto }}</strong>
+                    <span>{{ movimiento.tipoMovimiento }}{{ movimiento.referencia ? ' · ' + movimiento.referencia : '' }}</span>
+                  </div>
+                  <div class="caja-history-amount">
+                    <strong>{{ movimiento.monto | currency:'MXN':'symbol':'1.2-2':'es-MX' }}</strong>
+                    <small>{{ movimiento.registradoEn | date:'dd/MM HH:mm':'':'es-MX' }}</small>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </mat-card>
+        </div>
+
+      <div class="caja-side-column">
         <mat-card class="caja-card">
           <div class="caja-card-heading">
             <span class="caja-card-kicker">Resumen</span>
-            <h2>Cierre operativo</h2>
+            <h2>Impacto en caja</h2>
           </div>
 
           <div class="caja-summary-grid">
-            <div>
-              <span class="label">Cobrado en efectivo</span>
-              <strong>{{ resumen()?.totalCobradoEfectivo | currency:'MXN':'symbol':'1.2-2':'es-MX' }}</strong>
-            </div>
-            <div>
-              <span class="label">Cobrado con tarjeta</span>
-              <strong>{{ resumen()?.totalCobradoTarjeta | currency:'MXN':'symbol':'1.2-2':'es-MX' }}</strong>
-            </div>
-            <div>
-              <span class="label">Cobrado por transferencia</span>
-              <strong>{{ resumen()?.totalCobradoTransferencia | currency:'MXN':'symbol':'1.2-2':'es-MX' }}</strong>
-            </div>
             <div>
               <span class="label">Gastos menores</span>
               <strong>{{ resumen()?.totalGastos | currency:'MXN':'symbol':'1.2-2':'es-MX' }}</strong>
@@ -387,6 +511,10 @@
             <div>
               <span class="label">Saldo esperado</span>
               <strong>{{ resumen()?.saldoEsperadoCaja | currency:'MXN':'symbol':'1.2-2':'es-MX' }}</strong>
+            </div>
+            <div>
+              <span class="label">Caja</span>
+              <strong>{{ cajaAbierta() ? 'Abierta' : 'Cerrada' }}</strong>
             </div>
           </div>
         </mat-card>

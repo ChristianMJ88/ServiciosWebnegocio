@@ -15,6 +15,7 @@ public record UsuarioInternoAdminRequest(
         @Size(max = 30) String telefono,
         @Size(max = 80) String puesto,
         Long rolEmpresaId,
+        List<String> permisosDirectos,
         boolean activo,
         @Size(max = 500) String notas
 ) {

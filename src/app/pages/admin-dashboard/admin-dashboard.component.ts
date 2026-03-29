@@ -86,6 +86,8 @@ type SeccionAdmin =
   | 'excepciones'
   | 'citas';
 
+type SubseccionUsuariosAdmin = 'usuarios' | 'roles' | 'actividad';
+
 type ModuloAdminDef = {
   id: SeccionAdmin;
   titulo: string;
@@ -136,6 +138,9 @@ export class AdminDashboardComponent implements OnInit {
   readonly fechaAgendaSeleccionada = signal<string | null>(null);
   readonly citaAgendaSeleccionadaId = signal<number | null>(null);
   readonly seccionActiva = signal<SeccionAdmin>('resumen');
+  readonly subseccionUsuariosActiva = signal<SubseccionUsuariosAdmin>('usuarios');
+  readonly filtroUsuariosInternos = signal('');
+  readonly formularioUsuarioInternoRevision = signal(0);
   readonly panelMovil = signal(false);
   readonly sidebarAbierto = signal(true);
   readonly sidebarCompacto = signal(false);
@@ -147,6 +152,7 @@ export class AdminDashboardComponent implements OnInit {
   readonly prestadores = signal<PrestadorAdmin[]>([]);
   readonly usuariosInternos = signal<UsuarioInternoAdmin[]>([]);
   readonly rolesInternos = signal<RolInternoAdmin[]>([]);
+  readonly rolesInternosPorId = computed(() => new Map(this.rolesInternos().map(rol => [rol.id, rol])));
   readonly plantillasRolesInternos = signal<PlantillaRolInternoAdmin[]>([]);
   readonly auditoriaRolesInternos = signal<AuditoriaRolInternoAdmin[]>([]);
   readonly permisos = signal<PermisoAdmin[]>([]);
@@ -335,6 +341,73 @@ export class AdminDashboardComponent implements OnInit {
   }));
   readonly estadosContactoDisponibles = ['NUEVO', 'EN_PROCESO', 'ATENDIDO', 'CERRADO'];
   readonly rolesUsuarioInterno = computed(() => this.rolesInternos());
+  readonly rolUsuarioInternoSeleccionado = computed(() => {
+    this.formularioUsuarioInternoRevision();
+    return this.rolesInternos().find(rol => rol.id === this.formularioUsuarioInterno.rolEmpresaId) ?? null;
+  });
+  readonly permisosDirectosUsuarioInterno = computed(() => {
+    this.formularioUsuarioInternoRevision();
+    return [...this.formularioUsuarioInterno.permisosDirectos].sort((a, b) => a.localeCompare(b, 'es-MX'));
+  });
+  readonly permisosEfectivosUsuarioInterno = computed(() => {
+    this.formularioUsuarioInternoRevision();
+    const permisos = new Set<string>([
+      ...(this.rolUsuarioInternoSeleccionado()?.permisos ?? []),
+      ...this.formularioUsuarioInterno.permisosDirectos
+    ]);
+    return Array.from(permisos).sort((a, b) => a.localeCompare(b, 'es-MX'));
+  });
+  readonly gruposPermisosDirectosUsuarioInterno = computed(() => {
+    this.formularioUsuarioInternoRevision();
+    const heredados = new Set(this.rolUsuarioInternoSeleccionado()?.permisos ?? []);
+    return this.gruposPermisos()
+      .map(grupo => ({
+        ...grupo,
+        permisos: grupo.permisos.filter(permiso => !heredados.has(permiso.codigo))
+      }))
+      .filter(grupo => grupo.permisos.length);
+  });
+  readonly resumenUsuariosInternos = computed(() => ({
+    total: this.usuariosInternos().length,
+    activos: this.usuariosInternos().filter(usuario => usuario.activo).length,
+    roles: this.rolesInternos().length
+  }));
+  readonly usuariosInternosFiltrados = computed(() => {
+    const filtro = this.filtroUsuariosInternos().trim().toLowerCase();
+    if (!filtro) {
+      return this.usuariosInternos();
+    }
+
+    return this.usuariosInternos().filter(usuario =>
+      [
+        usuario.nombreCompleto,
+        usuario.correo,
+        usuario.rolNombre,
+        usuario.rolCodigo,
+        usuario.puesto,
+        usuario.sucursalNombre,
+        ...(usuario.sucursalNombresScope ?? [])
+      ]
+        .filter((valor): valor is string => !!valor)
+        .some(valor => valor.toLowerCase().includes(filtro))
+    );
+  });
+  readonly resumenAccesoUsuarioInterno = computed(() => {
+    const rol = this.rolUsuarioInternoSeleccionado();
+    const sucursalesScope = this.formularioUsuarioInterno.sucursalIds.length
+      ? this.sucursales()
+        .filter(sucursal => this.formularioUsuarioInterno.sucursalIds.includes(sucursal.id))
+        .map(sucursal => sucursal.nombre)
+      : [];
+
+    return {
+      rolNombre: rol?.nombre ?? 'Sin rol asignado',
+      permisosRol: rol?.permisos.length ?? 0,
+      permisosDirectos: this.permisosDirectosUsuarioInterno().length,
+      permisosEfectivos: this.permisosEfectivosUsuarioInterno().length,
+      scopeTexto: sucursalesScope.length ? sucursalesScope.join(', ') : 'Todas las sucursales'
+    };
+  });
   readonly sucursalActivaNombre = computed(() => this.sucursales()[0]?.nombre ?? 'Sucursal principal');
   readonly horasAgenda = Array.from({ length: this.finAgendaHora - this.inicioAgendaHora + 1 }, (_, index) => {
     const hora = this.inicioAgendaHora + index;
@@ -603,6 +676,7 @@ export class AdminDashboardComponent implements OnInit {
     telefono: '',
     puesto: '',
     rolEmpresaId: null,
+    permisosDirectos: [],
     activo: true,
     notas: ''
   };
@@ -744,9 +818,20 @@ export class AdminDashboardComponent implements OnInit {
       return;
     }
     this.seccionActiva.set(seccion);
+    if (seccion === 'usuarios') {
+      this.subseccionUsuariosActiva.set('usuarios');
+    }
     if (this.panelMovil()) {
       this.sidebarAbierto.set(false);
     }
+  }
+
+  seleccionarSubseccionUsuarios(subseccion: SubseccionUsuariosAdmin) {
+    this.subseccionUsuariosActiva.set(subseccion);
+  }
+
+  limpiarFiltroUsuariosInternos() {
+    this.filtroUsuariosInternos.set('');
   }
 
   alternarSidebar() {
@@ -1031,10 +1116,12 @@ export class AdminDashboardComponent implements OnInit {
             this.auditoriaRolesInternos.set(auditoriaRolesInternos);
             this.permisos.set(permisos);
             if (
-              rolesInternos.length > 0 &&
-              (!this.formularioUsuarioInterno.rolEmpresaId || !rolesInternos.some(rol => rol.id === this.formularioUsuarioInterno.rolEmpresaId))
+              this.formularioUsuarioInterno.rolEmpresaId &&
+              !rolesInternos.some(rol => rol.id === this.formularioUsuarioInterno.rolEmpresaId)
             ) {
-              this.formularioUsuarioInterno.rolEmpresaId = rolesInternos[0].id;
+              this.formularioUsuarioInterno.rolEmpresaId = null;
+              this.formularioUsuarioInterno.permisosDirectos = [];
+              this.marcarCambioFormularioUsuarioInterno();
             }
             this.usuariosInternos.set(usuariosInternos);
             this.reglasDisponibilidad.set(reglas);
@@ -1456,9 +1543,12 @@ export class AdminDashboardComponent implements OnInit {
       telefono: usuario.telefono ?? '',
       puesto: usuario.puesto ?? '',
       rolEmpresaId: usuario.rolEmpresaId,
+      permisosDirectos: [...(usuario.permisosDirectos ?? [])],
       activo: usuario.activo,
       notas: usuario.notas ?? ''
     };
+    this.marcarCambioFormularioUsuarioInterno();
+    this.enfocarFormularioUsuariosInternos();
   }
 
   cancelarEdicionUsuarioInterno() {
@@ -1472,9 +1562,16 @@ export class AdminDashboardComponent implements OnInit {
       telefono: '',
       puesto: '',
       rolEmpresaId: this.rolInternoPorDefecto()?.id ?? null,
+      permisosDirectos: [],
       activo: true,
       notas: ''
     };
+    this.marcarCambioFormularioUsuarioInterno();
+  }
+
+  editarAccesoUsuarioInterno(usuario: UsuarioInternoAdmin) {
+    this.seleccionarSubseccionUsuarios('usuarios');
+    this.editarUsuarioInterno(usuario);
   }
 
   editarRolInterno(rol: RolInternoAdmin) {
@@ -1605,6 +1702,11 @@ export class AdminDashboardComponent implements OnInit {
     this.loading.set(true);
     this.error = '';
     this.mensajeExito = '';
+    if (!this.formularioUsuarioInterno.rolEmpresaId) {
+      this.error = 'Selecciona explícitamente un rol para el usuario interno.';
+      this.loading.set(false);
+      return;
+    }
     const contrasenaTemporal = this.normalizarTexto(this.formularioUsuarioInterno.contrasenaTemporal);
     const errorContrasena = this.validarContrasenaUsuarioInterno(contrasenaTemporal);
     if (errorContrasena) {
@@ -1623,7 +1725,8 @@ export class AdminDashboardComponent implements OnInit {
       puesto: this.normalizarTexto(this.formularioUsuarioInterno.puesto),
       notas: this.normalizarTexto(this.formularioUsuarioInterno.notas),
       nombreCompleto: this.formularioUsuarioInterno.nombreCompleto.trim(),
-      rolEmpresaId: this.formularioUsuarioInterno.rolEmpresaId
+      rolEmpresaId: this.formularioUsuarioInterno.rolEmpresaId,
+      permisosDirectos: [...this.formularioUsuarioInterno.permisosDirectos]
     };
 
     const operacion = this.usuarioInternoEditandoId
@@ -1985,6 +2088,63 @@ export class AdminDashboardComponent implements OnInit {
   cambiarRolUsuarioInterno(rolEmpresaId: number | null) {
     const rol = this.rolesInternos().find(item => item.id === rolEmpresaId) ?? null;
     this.formularioUsuarioInterno.rolEmpresaId = rol?.id ?? null;
+    const heredados = new Set(rol?.permisos ?? []);
+    this.formularioUsuarioInterno.permisosDirectos = this.formularioUsuarioInterno.permisosDirectos
+      .filter(permiso => !heredados.has(permiso))
+      .sort((a, b) => a.localeCompare(b, 'es-MX'));
+    this.marcarCambioFormularioUsuarioInterno();
+  }
+
+  editarRolSeleccionadoUsuarioInterno() {
+    const rol = this.rolUsuarioInternoSeleccionado();
+    if (!rol) {
+      return;
+    }
+    this.editarRolInterno(rol);
+    this.subseccionUsuariosActiva.set('roles');
+  }
+
+  etiquetaPermiso(codigo: string): string {
+    return this.humanizarCodigoPermiso(codigo);
+  }
+
+  resumenPermisosRol(rol: RolInternoAdmin | null | undefined, limite = 3): string {
+    if (!rol || !rol.permisos.length) {
+      return 'Sin permisos configurados';
+    }
+
+    const visibles = rol.permisos.slice(0, limite).map(permiso => this.etiquetaPermiso(permiso));
+    const restantes = rol.permisos.length - visibles.length;
+    return restantes > 0 ? `${visibles.join(', ')} y ${restantes} más` : visibles.join(', ');
+  }
+
+  resumenPermisosLista(permisos: string[] | null | undefined, limite = 3): string {
+    if (!permisos?.length) {
+      return 'Sin permisos adicionales';
+    }
+
+    const visibles = permisos.slice(0, limite).map(permiso => this.etiquetaPermiso(permiso));
+    const restantes = permisos.length - visibles.length;
+    return restantes > 0 ? `${visibles.join(', ')} y ${restantes} más` : visibles.join(', ');
+  }
+
+  rolInternoDeUsuario(usuario: UsuarioInternoAdmin): RolInternoAdmin | null {
+    return this.rolesInternosPorId().get(usuario.rolEmpresaId ?? -1) ?? null;
+  }
+
+  permisoDirectoUsuarioSeleccionado(codigo: string): boolean {
+    return this.formularioUsuarioInterno.permisosDirectos.includes(codigo);
+  }
+
+  cambiarPermisoDirectoUsuario(codigo: string, seleccionado: boolean) {
+    const permisos = new Set(this.formularioUsuarioInterno.permisosDirectos);
+    if (seleccionado) {
+      permisos.add(codigo);
+    } else {
+      permisos.delete(codigo);
+    }
+    this.formularioUsuarioInterno.permisosDirectos = Array.from(permisos).sort((a, b) => a.localeCompare(b, 'es-MX'));
+    this.marcarCambioFormularioUsuarioInterno();
   }
 
   cambiarSucursalesUsuarioInterno(sucursalIds: number[] | null) {
@@ -1996,10 +2156,15 @@ export class AdminDashboardComponent implements OnInit {
     ) {
       this.formularioUsuarioInterno.sucursalId = null;
     }
+    this.marcarCambioFormularioUsuarioInterno();
   }
 
   private rolInternoPorDefecto(): RolInternoAdmin | null {
-    return this.rolesInternos()[0] ?? null;
+    return this.rolesInternos().length === 1 ? this.rolesInternos()[0] : null;
+  }
+
+  private marcarCambioFormularioUsuarioInterno() {
+    this.formularioUsuarioInternoRevision.update(valor => valor + 1);
   }
 
   private generarCodigoClonadoRol(codigoOrigen: string): string {
@@ -2198,6 +2363,13 @@ export class AdminDashboardComponent implements OnInit {
     if (!this.sujetosExcepcion.some(sujeto => sujeto.id === this.formularioExcepcion.sujetoId)) {
       this.formularioExcepcion.sujetoId = this.sujetosExcepcion[0]?.id ?? 0;
     }
+  }
+
+  private enfocarFormularioUsuariosInternos() {
+    setTimeout(() => {
+      const formulario = globalThis.document?.getElementById('usuarios-internos-form-card');
+      formulario?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 0);
   }
 
   private inicializarFechaAgenda() {

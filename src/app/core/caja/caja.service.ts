@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, map } from 'rxjs';
 import { environment } from '../../../environments/environment';
 
 export interface SucursalCaja {
@@ -125,7 +125,17 @@ export class CajaService {
     if (sucursalId) {
       params = params.set('sucursalId', sucursalId);
     }
-    return this.http.get<CajaSesion | null>(`${environment.apiBaseUrl}/caja/sesiones/actual`, { params });
+    return this.http
+      .get(`${environment.apiBaseUrl}/caja/sesiones/actual`, {
+        params,
+        responseType: 'text'
+      })
+      .pipe(
+        map(response => {
+          const body = response?.trim();
+          return body ? JSON.parse(body) as CajaSesion : null;
+        })
+      );
   }
 
   abrirCaja(payload: AbrirCajaPayload): Observable<CajaSesion> {
@@ -154,6 +164,14 @@ export class CajaService {
 
   registrarMovimiento(payload: RegistrarMovimientoCajaPayload): Observable<MovimientoCaja> {
     return this.http.post<MovimientoCaja>(`${environment.apiBaseUrl}/caja/movimientos`, payload);
+  }
+
+  listarMovimientos(sucursalId?: number | null): Observable<MovimientoCaja[]> {
+    let params = new HttpParams();
+    if (sucursalId) {
+      params = params.set('sucursalId', sucursalId);
+    }
+    return this.http.get<MovimientoCaja[]>(`${environment.apiBaseUrl}/caja/movimientos`, { params });
   }
 
   getResumen(sucursalId?: number | null): Observable<ResumenCaja> {

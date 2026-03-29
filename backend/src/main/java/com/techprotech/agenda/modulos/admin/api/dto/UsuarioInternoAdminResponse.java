@@ -15,6 +15,9 @@ public record UsuarioInternoAdminResponse(
         Long rolEmpresaId,
         String rolCodigo,
         String rolNombre,
+        List<String> permisosRol,
+        List<String> permisosDirectos,
+        List<String> permisosEfectivos,
         boolean activo,
         String notas
 ) {
