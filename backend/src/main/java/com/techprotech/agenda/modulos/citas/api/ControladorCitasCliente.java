@@ -19,7 +19,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/cliente/citas")
-@PreAuthorize("hasRole('CLIENTE')")
+@PreAuthorize("hasAuthority('CLIENTE_PANEL_ACCESO')")
 public class ControladorCitasCliente {
 
     private final ServicioCitasCliente servicioCitasCliente;

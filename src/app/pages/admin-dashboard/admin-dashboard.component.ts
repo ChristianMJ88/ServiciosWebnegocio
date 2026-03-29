@@ -32,10 +32,13 @@ import {
 } from '../../components/agenda/agenda.types';
 import {
   AdminService,
+  AuditoriaConfiguracionAdmin,
+  AuditoriaRolInternoAdmin,
   ConfiguracionCorreoAdmin,
   ConfiguracionWhatsappAdmin,
   DetectarChannelSenderWhatsappResponse,
   ExcepcionDisponibilidadAdmin,
+  GuardarRolInternoPayload,
   GuardarConfiguracionCorreoPayload,
   GuardarConfiguracionWhatsappPayload,
   GuardarExcepcionDisponibilidadPayload,
@@ -46,6 +49,7 @@ import {
   GuardarUsuarioInternoPayload,
   LogMensajeWhatsappAdmin,
   MigracionSecretosCorreoResponse,
+  PlantillaRolInternoAdmin,
   PlantillaWhatsappAdmin,
   PrestadorAdmin,
   AsociarChannelSenderWhatsappPayload,
@@ -57,6 +61,8 @@ import {
   ProbarPlantillaWhatsappPayload,
   PruebaWhatsappResponse,
   ReporteServicioAdmin,
+  PermisoAdmin,
+  RolInternoAdmin,
   ReglaDisponibilidadAdmin,
   ResumenAdmin,
   SolicitudContactoAdmin,
@@ -79,6 +85,15 @@ type SeccionAdmin =
   | 'reglas'
   | 'excepciones'
   | 'citas';
+
+type ModuloAdminDef = {
+  id: SeccionAdmin;
+  titulo: string;
+  descripcion: string;
+  abreviatura: string;
+  icono: string;
+  permiso?: string;
+};
 
 @Component({
   selector: 'app-admin-dashboard',
@@ -131,13 +146,38 @@ export class AdminDashboardComponent implements OnInit {
   readonly servicios = signal<ServicioAdmin[]>([]);
   readonly prestadores = signal<PrestadorAdmin[]>([]);
   readonly usuariosInternos = signal<UsuarioInternoAdmin[]>([]);
+  readonly rolesInternos = signal<RolInternoAdmin[]>([]);
+  readonly plantillasRolesInternos = signal<PlantillaRolInternoAdmin[]>([]);
+  readonly auditoriaRolesInternos = signal<AuditoriaRolInternoAdmin[]>([]);
+  readonly permisos = signal<PermisoAdmin[]>([]);
+  readonly gruposPermisos = computed(() => {
+    const grupos = new Map<string, { titulo: string; permisos: PermisoAdmin[] }>();
+
+    for (const permiso of this.permisos()) {
+      const clave = this.obtenerGrupoPermiso(permiso.codigo);
+      const actual = grupos.get(clave.id) ?? { titulo: clave.titulo, permisos: [] };
+      actual.permisos.push(permiso);
+      grupos.set(clave.id, actual);
+    }
+
+    return Array.from(grupos.entries())
+      .map(([id, grupo]) => ({
+        id,
+        titulo: grupo.titulo,
+        permisos: grupo.permisos.sort((a, b) => a.nombre.localeCompare(b.nombre, 'es-MX'))
+      }))
+      .sort((a, b) => a.titulo.localeCompare(b.titulo, 'es-MX'));
+  });
   readonly reglasDisponibilidad = signal<ReglaDisponibilidadAdmin[]>([]);
   readonly excepcionesDisponibilidad = signal<ExcepcionDisponibilidadAdmin[]>([]);
   readonly reporteServicios = signal<ReporteServicioAdmin[]>([]);
   readonly configuracionCorreo = signal<ConfiguracionCorreoAdmin | null>(null);
   readonly configuracionWhatsapp = signal<ConfiguracionWhatsappAdmin | null>(null);
+  readonly auditoriaConfiguracion = signal<AuditoriaConfiguracionAdmin[]>([]);
   readonly plantillasWhatsapp = signal<PlantillaWhatsappAdmin[]>([]);
   readonly logsWhatsapp = signal<LogMensajeWhatsappAdmin[]>([]);
+  readonly auditoriaCorreo = computed(() => this.auditoriaConfiguracion().filter(item => item.modulo === 'CORREO'));
+  readonly auditoriaWhatsapp = computed(() => this.auditoriaConfiguracion().filter(item => item.modulo === 'WHATSAPP'));
   readonly whatsappOnboardingChecklist = computed(() => {
     const config = this.configuracionWhatsapp();
     const plantillas = this.plantillasWhatsapp();
@@ -264,20 +304,23 @@ export class AdminDashboardComponent implements OnInit {
     7: 'Domingo'
   };
   readonly tiposBloqueo = ['BLOQUEO', 'DESCANSO', 'VACACIONES', 'HORARIO_ESPECIAL'];
-  readonly modulosAdmin: Array<{ id: SeccionAdmin; titulo: string; descripcion: string; abreviatura: string; icono: string }> = [
+  readonly modulosAdminBase: ModuloAdminDef[] = [
     { id: 'resumen', titulo: 'Resumen ejecutivo', descripcion: 'Métricas generales y desempeño comercial.', abreviatura: 'RE', icono: 'resumen' },
-    { id: 'correo', titulo: 'Correo transaccional', descripcion: 'Graph o SMTP por tenant, con cifrado y migración de secretos.', abreviatura: 'CO', icono: 'correo' },
-    { id: 'whatsapp', titulo: 'WhatsApp y Twilio', descripcion: 'Sender, plantillas, pruebas y trazabilidad por tenant.', abreviatura: 'WA', icono: 'whatsapp' },
-    { id: 'contactos', titulo: 'Contactos', descripcion: 'Mensajes recibidos desde el formulario web y seguimiento comercial.', abreviatura: 'CN', icono: 'contactos' },
-    { id: 'sucursales', titulo: 'Sucursales', descripcion: 'Alta y mantenimiento de sedes operativas.', abreviatura: 'SU', icono: 'sucursal' },
-    { id: 'servicios', titulo: 'Servicios', descripcion: 'Catálogo, duración, buffers y precio.', abreviatura: 'SV', icono: 'servicio' },
-    { id: 'usuarios', titulo: 'Usuarios internos', descripcion: 'Recepción, caja y administradores internos.', abreviatura: 'UI', icono: 'prestador' },
-    { id: 'prestadores', titulo: 'Prestadores', descripcion: 'Usuarios staff y asignaciones de servicio.', abreviatura: 'PR', icono: 'prestador' },
-    { id: 'reglas', titulo: 'Horarios base', descripcion: 'Reglas semanales por sucursal o prestador.', abreviatura: 'HB', icono: 'horario' },
-    { id: 'excepciones', titulo: 'Bloqueos', descripcion: 'Vacaciones, descansos y cierres puntuales.', abreviatura: 'BL', icono: 'bloqueo' },
-    { id: 'citas', titulo: 'Citas', descripcion: 'Seguimiento operativo de reservas creadas.', abreviatura: 'CT', icono: 'agenda' }
+    { id: 'correo', titulo: 'Correo transaccional', descripcion: 'Graph o SMTP por tenant, con cifrado y migración de secretos.', abreviatura: 'CO', icono: 'correo', permiso: 'CONFIGURACION_EMPRESA_GESTIONAR' },
+    { id: 'whatsapp', titulo: 'WhatsApp y Twilio', descripcion: 'Sender, plantillas, pruebas y trazabilidad por tenant.', abreviatura: 'WA', icono: 'whatsapp', permiso: 'WHATSAPP_CONFIGURAR' },
+    { id: 'contactos', titulo: 'Contactos', descripcion: 'Mensajes recibidos desde el formulario web y seguimiento comercial.', abreviatura: 'CN', icono: 'contactos', permiso: 'CONTACTOS_ADMIN_VER' },
+    { id: 'sucursales', titulo: 'Sucursales', descripcion: 'Alta y mantenimiento de sedes operativas.', abreviatura: 'SU', icono: 'sucursal', permiso: 'SUCURSALES_GESTIONAR' },
+    { id: 'servicios', titulo: 'Servicios', descripcion: 'Catálogo, duración, buffers y precio.', abreviatura: 'SV', icono: 'servicio', permiso: 'SERVICIOS_GESTIONAR' },
+    { id: 'usuarios', titulo: 'Usuarios internos', descripcion: 'Recepción, caja y administradores internos.', abreviatura: 'UI', icono: 'prestador', permiso: 'USUARIOS_INTERNOS_GESTIONAR' },
+    { id: 'prestadores', titulo: 'Prestadores', descripcion: 'Usuarios staff y asignaciones de servicio.', abreviatura: 'PR', icono: 'prestador', permiso: 'PRESTADORES_GESTIONAR' },
+    { id: 'reglas', titulo: 'Horarios base', descripcion: 'Reglas semanales por sucursal o prestador.', abreviatura: 'HB', icono: 'horario', permiso: 'PRESTADORES_GESTIONAR' },
+    { id: 'excepciones', titulo: 'Bloqueos', descripcion: 'Vacaciones, descansos y cierres puntuales.', abreviatura: 'BL', icono: 'bloqueo', permiso: 'PRESTADORES_GESTIONAR' },
+    { id: 'citas', titulo: 'Citas', descripcion: 'Seguimiento operativo de reservas creadas.', abreviatura: 'CT', icono: 'agenda', permiso: 'CITAS_ADMIN_GESTIONAR' }
   ];
-  readonly moduloActivo = computed(() => this.modulosAdmin.find(modulo => modulo.id === this.seccionActiva()) ?? this.modulosAdmin[0]);
+  readonly modulosAdmin = computed(() =>
+    this.modulosAdminBase.filter(modulo => !modulo.permiso || this.authService.tienePermiso(modulo.permiso))
+  );
+  readonly moduloActivo = computed(() => this.modulosAdmin().find(modulo => modulo.id === this.seccionActiva()) ?? this.modulosAdmin()[0]);
   readonly nombreUsuarioAdmin = computed(() => this.authService.nombreUsuarioVisible());
   readonly correoUsuarioAdmin = computed(() => this.authService.sesionActual()?.correo ?? '');
   readonly inicialesUsuarioAdmin = computed(() => this.authService.inicialesUsuarioVisible());
@@ -291,11 +334,7 @@ export class AdminDashboardComponent implements OnInit {
     atendidos: this.contactos().filter(contacto => contacto.estado === 'ATENDIDO').length
   }));
   readonly estadosContactoDisponibles = ['NUEVO', 'EN_PROCESO', 'ATENDIDO', 'CERRADO'];
-  readonly rolesUsuarioInterno = [
-    { codigo: 'ADMIN', nombre: 'Administrador' },
-    { codigo: 'RECEPCIONISTA', nombre: 'Recepcionista' },
-    { codigo: 'CAJERO', nombre: 'Caja' }
-  ];
+  readonly rolesUsuarioInterno = computed(() => this.rolesInternos());
   readonly sucursalActivaNombre = computed(() => this.sucursales()[0]?.nombre ?? 'Sucursal principal');
   readonly horasAgenda = Array.from({ length: this.finAgendaHora - this.inicioAgendaHora + 1 }, (_, index) => {
     const hora = this.inicioAgendaHora + index;
@@ -518,6 +557,9 @@ export class AdminDashboardComponent implements OnInit {
   servicioEditandoId: number | null = null;
   prestadorEditandoId: number | null = null;
   usuarioInternoEditandoId: number | null = null;
+  rolInternoEditandoId: number | null = null;
+  rolInternoClonandoDesdeId: number | null = null;
+  rolInternoClonandoNombreOrigen: string | null = null;
   reglaEditandoId: number | null = null;
   excepcionEditandoId: number | null = null;
 
@@ -554,14 +596,23 @@ export class AdminDashboardComponent implements OnInit {
 
   formularioUsuarioInterno: GuardarUsuarioInternoPayload = {
     sucursalId: null,
+    sucursalIds: [],
     correo: '',
     contrasenaTemporal: '',
     nombreCompleto: '',
     telefono: '',
     puesto: '',
-    rolCodigo: 'RECEPCIONISTA',
+    rolEmpresaId: null,
     activo: true,
     notas: ''
+  };
+
+  formularioRolInterno: GuardarRolInternoPayload = {
+    codigo: '',
+    nombre: '',
+    descripcion: '',
+    activo: true,
+    permisos: []
   };
 
   formularioRegla: GuardarReglaDisponibilidadPayload = {
@@ -689,6 +740,9 @@ export class AdminDashboardComponent implements OnInit {
   }
 
   seleccionarSeccion(seccion: SeccionAdmin) {
+    if (!this.modulosAdmin().some(modulo => modulo.id === seccion)) {
+      return;
+    }
     this.seccionActiva.set(seccion);
     if (this.panelMovil()) {
       this.sidebarAbierto.set(false);
@@ -712,11 +766,11 @@ export class AdminDashboardComponent implements OnInit {
   }
 
   tituloSeccionActual(): string {
-    return this.modulosAdmin.find(modulo => modulo.id === this.seccionActiva())?.titulo ?? 'Panel Admin';
+    return this.modulosAdmin().find(modulo => modulo.id === this.seccionActiva())?.titulo ?? 'Panel Admin';
   }
 
   descripcionSeccionActual(): string {
-    return this.modulosAdmin.find(modulo => modulo.id === this.seccionActiva())?.descripcion ?? '';
+    return this.modulosAdmin().find(modulo => modulo.id === this.seccionActiva())?.descripcion ?? '';
   }
 
   claseEstadoCita(estado: string): string {
@@ -829,6 +883,7 @@ export class AdminDashboardComponent implements OnInit {
       this.loading.set(true);
       this.error = '';
       this.mensajeExito = '';
+      this.asegurarSeccionActivaDisponible();
     });
     forkJoin({
       resumen: this.adminService.getResumen().pipe(
@@ -837,79 +892,124 @@ export class AdminDashboardComponent implements OnInit {
           return of(null);
         })
       ),
-      citas: this.adminService.getCitas().pipe(
+      citas: this.cargarAdminSi(this.authService.puedeGestionarCitasAdmin(), this.adminService.getCitas(), []).pipe(
         catchError(err => {
           this.marcarErrorCarga(err, 'No se pudieron cargar las citas.');
           return of([]);
         })
       ),
-      contactos: this.adminService.getContactos().pipe(
+      contactos: this.cargarAdminSi(this.authService.puedeVerContactosAdmin(), this.adminService.getContactos(), []).pipe(
         catchError(err => {
           this.marcarErrorCarga(err, 'No se pudieron cargar los contactos.');
           return of([]);
         })
       ),
-      sucursales: this.adminService.getSucursales().pipe(
+      sucursales: this.cargarAdminSi(
+        this.authService.puedeGestionarSucursales() ||
+        this.authService.puedeGestionarServicios() ||
+        this.authService.puedeGestionarPrestadores() ||
+        this.authService.puedeGestionarUsuariosInternos(),
+        this.adminService.getSucursales(),
+        []
+      ).pipe(
         catchError(err => {
           this.marcarErrorCarga(err, 'No se pudieron cargar las sucursales.');
           return of([]);
         })
       ),
-      servicios: this.adminService.getServicios().pipe(
+      servicios: this.cargarAdminSi(
+        this.authService.puedeGestionarServicios() || this.authService.puedeGestionarPrestadores(),
+        this.adminService.getServicios(),
+        []
+      ).pipe(
         catchError(err => {
           this.marcarErrorCarga(err, 'No se pudieron cargar los servicios.');
           return of([]);
         })
       ),
-      prestadores: this.adminService.getPrestadores().pipe(
+      prestadores: this.cargarAdminSi(this.authService.puedeGestionarPrestadores(), this.adminService.getPrestadores(), []).pipe(
         catchError(err => {
           this.marcarErrorCarga(err, 'No se pudieron cargar los prestadores.');
           return of([]);
         })
       ),
-      usuariosInternos: this.adminService.getUsuariosInternos().pipe(
+      rolesInternos: this.cargarAdminSi(this.authService.puedeGestionarUsuariosInternos(), this.adminService.getRolesInternos(), []).pipe(
+        catchError(err => {
+          this.marcarErrorCarga(err, 'No se pudieron cargar los roles internos.');
+          return of([]);
+        })
+      ),
+      plantillasRolesInternos: this.cargarAdminSi(this.authService.puedeGestionarUsuariosInternos(), this.adminService.getPlantillasRolesInternos(), []).pipe(
+        catchError(err => {
+          this.marcarErrorCarga(err, 'No se pudieron cargar las plantillas de roles.');
+          return of([]);
+        })
+      ),
+      auditoriaRolesInternos: this.cargarAdminSi(this.authService.puedeGestionarUsuariosInternos(), this.adminService.getAuditoriaRolesInternos(), []).pipe(
+        catchError(err => {
+          this.marcarErrorCarga(err, 'No se pudo cargar la auditoría de roles.');
+          return of([]);
+        })
+      ),
+      permisos: this.cargarAdminSi(this.authService.puedeGestionarUsuariosInternos(), this.adminService.getPermisos(), []).pipe(
+        catchError(err => {
+          this.marcarErrorCarga(err, 'No se pudo cargar el catálogo de permisos.');
+          return of([]);
+        })
+      ),
+      usuariosInternos: this.cargarAdminSi(this.authService.puedeGestionarUsuariosInternos(), this.adminService.getUsuariosInternos(), []).pipe(
         catchError(err => {
           this.marcarErrorCarga(err, 'No se pudieron cargar los usuarios internos.');
           return of([]);
         })
       ),
-      reglas: this.adminService.getReglasDisponibilidad().pipe(
+      reglas: this.cargarAdminSi(this.authService.puedeGestionarPrestadores(), this.adminService.getReglasDisponibilidad(), []).pipe(
         catchError(err => {
           this.marcarErrorCarga(err, 'No se pudieron cargar las reglas de disponibilidad.');
           return of([]);
         })
       ),
-      excepciones: this.adminService.getExcepcionesDisponibilidad().pipe(
+      excepciones: this.cargarAdminSi(this.authService.puedeGestionarPrestadores(), this.adminService.getExcepcionesDisponibilidad(), []).pipe(
         catchError(err => {
           this.marcarErrorCarga(err, 'No se pudieron cargar las excepciones.');
           return of([]);
         })
       ),
-      reporteServicios: this.adminService.getReporteServicios().pipe(
+      reporteServicios: this.cargarAdminSi(this.authService.puedeVerReportesAdmin(), this.adminService.getReporteServicios(), []).pipe(
         catchError(err => {
           this.marcarErrorCarga(err, 'No se pudo cargar el reporte de servicios.');
           return of([]);
         })
       ),
-      configuracionCorreo: this.adminService.getConfiguracionCorreo().pipe(
+      configuracionCorreo: this.cargarAdminSi(this.authService.puedeGestionarConfiguracionEmpresa(), this.adminService.getConfiguracionCorreo(), null).pipe(
         catchError(err => {
           this.marcarErrorCarga(err, 'No se pudo cargar la configuración de correo.');
           return of(null);
         })
       ),
-      configuracionWhatsapp: this.adminService.getConfiguracionWhatsapp().pipe(
+      auditoriaConfiguracion: this.cargarAdminSi(
+        this.authService.puedeGestionarConfiguracionEmpresa() || this.authService.puedeGestionarWhatsapp(),
+        this.adminService.getAuditoriaConfiguracion(),
+        []
+      ).pipe(
+        catchError(err => {
+          this.marcarErrorCarga(err, 'No se pudo cargar la auditoría de configuración.');
+          return of([]);
+        })
+      ),
+      configuracionWhatsapp: this.cargarAdminSi(this.authService.puedeGestionarWhatsapp(), this.adminService.getConfiguracionWhatsapp(), null).pipe(
         catchError(err => {
           this.marcarErrorCarga(err, 'No se pudo cargar la configuración de WhatsApp.');
           return of(null);
         })
       ),
-      plantillasWhatsapp: this.adminService.getPlantillasWhatsapp().pipe(
+      plantillasWhatsapp: this.cargarAdminSi(this.authService.puedeGestionarWhatsapp(), this.adminService.getPlantillasWhatsapp(), []).pipe(
         catchError(err => {
           this.marcarErrorCarga(err, 'No se pudieron cargar las plantillas de WhatsApp.');
           return of([]);
         })
       ),
-      logsWhatsapp: this.adminService.getLogsWhatsapp().pipe(
+      logsWhatsapp: this.cargarAdminSi(this.authService.puedeGestionarWhatsapp(), this.adminService.getLogsWhatsapp(), []).pipe(
         catchError(err => {
           this.marcarErrorCarga(err, 'No se pudieron cargar los logs de WhatsApp.');
           return of([]);
@@ -918,7 +1018,7 @@ export class AdminDashboardComponent implements OnInit {
     })
       .pipe(finalize(() => this.actualizarVistaEnZona(() => this.loading.set(false))))
       .subscribe({
-        next: ({ resumen, citas, contactos, sucursales, servicios, prestadores, usuariosInternos, reglas, excepciones, reporteServicios, configuracionCorreo, configuracionWhatsapp, plantillasWhatsapp, logsWhatsapp }) => {
+        next: ({ resumen, citas, contactos, sucursales, servicios, prestadores, rolesInternos, plantillasRolesInternos, auditoriaRolesInternos, permisos, usuariosInternos, reglas, excepciones, reporteServicios, configuracionCorreo, auditoriaConfiguracion, configuracionWhatsapp, plantillasWhatsapp, logsWhatsapp }) => {
           this.actualizarVistaEnZona(() => {
             this.resumen.set(resumen);
             this.citas.set(citas);
@@ -926,11 +1026,22 @@ export class AdminDashboardComponent implements OnInit {
             this.sucursales.set(sucursales);
             this.servicios.set(servicios);
             this.prestadores.set(prestadores);
+            this.rolesInternos.set(rolesInternos);
+            this.plantillasRolesInternos.set(plantillasRolesInternos);
+            this.auditoriaRolesInternos.set(auditoriaRolesInternos);
+            this.permisos.set(permisos);
+            if (
+              rolesInternos.length > 0 &&
+              (!this.formularioUsuarioInterno.rolEmpresaId || !rolesInternos.some(rol => rol.id === this.formularioUsuarioInterno.rolEmpresaId))
+            ) {
+              this.formularioUsuarioInterno.rolEmpresaId = rolesInternos[0].id;
+            }
             this.usuariosInternos.set(usuariosInternos);
             this.reglasDisponibilidad.set(reglas);
             this.excepcionesDisponibilidad.set(excepciones);
             this.reporteServicios.set(reporteServicios);
             this.configuracionCorreo.set(configuracionCorreo);
+            this.auditoriaConfiguracion.set(auditoriaConfiguracion);
             this.configuracionWhatsapp.set(configuracionWhatsapp);
             this.plantillasWhatsapp.set(plantillasWhatsapp);
             this.logsWhatsapp.set(logsWhatsapp);
@@ -1338,12 +1449,13 @@ export class AdminDashboardComponent implements OnInit {
     this.usuarioInternoEditandoId = usuario.usuarioId;
     this.formularioUsuarioInterno = {
       sucursalId: usuario.sucursalId,
+      sucursalIds: [...(usuario.sucursalIds ?? [])],
       correo: usuario.correo,
       contrasenaTemporal: '',
       nombreCompleto: usuario.nombreCompleto,
       telefono: usuario.telefono ?? '',
       puesto: usuario.puesto ?? '',
-      rolCodigo: usuario.rolCodigo,
+      rolEmpresaId: usuario.rolEmpresaId,
       activo: usuario.activo,
       notas: usuario.notas ?? ''
     };
@@ -1353,15 +1465,140 @@ export class AdminDashboardComponent implements OnInit {
     this.usuarioInternoEditandoId = null;
     this.formularioUsuarioInterno = {
       sucursalId: this.sucursales().length === 1 ? this.sucursales()[0].id : null,
+      sucursalIds: [],
       correo: '',
       contrasenaTemporal: '',
       nombreCompleto: '',
       telefono: '',
       puesto: '',
-      rolCodigo: 'RECEPCIONISTA',
+      rolEmpresaId: this.rolInternoPorDefecto()?.id ?? null,
       activo: true,
       notas: ''
     };
+  }
+
+  editarRolInterno(rol: RolInternoAdmin) {
+    this.rolInternoClonandoDesdeId = null;
+    this.rolInternoClonandoNombreOrigen = null;
+    this.rolInternoEditandoId = rol.id;
+    this.formularioRolInterno = {
+      codigo: rol.codigo,
+      nombre: rol.nombre,
+      descripcion: rol.descripcion ?? '',
+      activo: rol.activo,
+      permisos: [...rol.permisos]
+    };
+  }
+
+  clonarRolInterno(rol: RolInternoAdmin) {
+    this.rolInternoEditandoId = null;
+    this.rolInternoClonandoDesdeId = rol.id;
+    this.rolInternoClonandoNombreOrigen = rol.nombre;
+    this.formularioRolInterno = {
+      codigo: this.generarCodigoClonadoRol(rol.codigo),
+      nombre: this.generarNombreClonadoRol(rol.nombre),
+      descripcion: rol.descripcion ?? '',
+      activo: rol.activo,
+      permisos: [...rol.permisos]
+    };
+  }
+
+  usarPlantillaRolInterno(plantilla: PlantillaRolInternoAdmin) {
+    this.rolInternoEditandoId = null;
+    this.rolInternoClonandoDesdeId = null;
+    this.rolInternoClonandoNombreOrigen = null;
+    this.formularioRolInterno = {
+      codigo: this.generarCodigoSugeridoPlantilla(plantilla.codigoSugerido),
+      nombre: this.generarNombreSugeridoPlantilla(plantilla.nombreSugerido),
+      descripcion: plantilla.descripcion,
+      activo: true,
+      permisos: [...plantilla.permisos]
+    };
+  }
+
+  etiquetaAccionAuditoriaRol(accion: string): string {
+    switch (accion) {
+      case 'ROL_CREADO':
+        return 'Rol creado';
+      case 'ROL_ACTUALIZADO':
+        return 'Rol actualizado';
+      case 'ROL_CLONADO':
+        return 'Rol clonado';
+      case 'ROL_ELIMINADO':
+        return 'Rol eliminado';
+      case 'USUARIO_INTERNO_CREADO':
+        return 'Usuario interno creado';
+      case 'USUARIO_INTERNO_ACTUALIZADO':
+        return 'Acceso interno actualizado';
+      default:
+        return this.humanizarCodigoPermiso(accion);
+    }
+  }
+
+  etiquetaAccionAuditoriaConfiguracion(accion: string): string {
+    switch (accion) {
+      case 'CONFIGURACION_CORREO_ACTUALIZADA':
+        return 'Correo actualizado';
+      case 'SECRETOS_CORREO_MIGRADOS':
+        return 'Secretos de correo migrados';
+      case 'CONFIGURACION_WHATSAPP_ACTUALIZADA':
+        return 'WhatsApp actualizado';
+      case 'WHATSAPP_SUBCUENTA_PROVISIONADA':
+        return 'Subcuenta provisionada';
+      case 'WHATSAPP_MESSAGING_SERVICE_PROVISIONADO':
+        return 'Messaging Service provisionado';
+      case 'WHATSAPP_CHANNEL_SENDER_ASOCIADO':
+        return 'Sender asociado';
+      case 'WHATSAPP_CHANNEL_SENDER_DETECTADO':
+        return 'Sender detectado';
+      default:
+        return this.humanizarCodigoPermiso(accion);
+    }
+  }
+
+  cancelarEdicionRolInterno() {
+    this.rolInternoEditandoId = null;
+    this.rolInternoClonandoDesdeId = null;
+    this.rolInternoClonandoNombreOrigen = null;
+    this.formularioRolInterno = {
+      codigo: '',
+      nombre: '',
+      descripcion: '',
+      activo: true,
+      permisos: []
+    };
+  }
+
+  eliminarRolInterno(rol: RolInternoAdmin) {
+    if (!rol.sePuedeEliminar) {
+      this.error = rol.usuariosAsignados > 0
+        ? 'No puedes eliminar un rol que todavía tiene usuarios asignados.'
+        : 'No puedes eliminar este rol.';
+      return;
+    }
+
+    const confirmado = window.confirm(`¿Quieres eliminar el rol "${rol.nombre}"? Esta acción no se puede deshacer.`);
+    if (!confirmado) {
+      return;
+    }
+
+    this.loading.set(true);
+    this.error = '';
+    this.mensajeExito = '';
+
+    this.adminService.eliminarRolInterno(rol.id)
+      .pipe(finalize(() => this.loading.set(false)))
+      .subscribe({
+        next: () => {
+          if (this.rolInternoEditandoId === rol.id) {
+            this.cancelarEdicionRolInterno();
+          }
+          this.recargar();
+        },
+        error: err => {
+          this.error = err?.error?.mensaje || err?.message || 'No se pudo eliminar el rol interno.';
+        }
+      });
   }
 
   guardarUsuarioInterno() {
@@ -1379,13 +1616,14 @@ export class AdminDashboardComponent implements OnInit {
     const payload: GuardarUsuarioInternoPayload = {
       ...this.formularioUsuarioInterno,
       sucursalId: this.formularioUsuarioInterno.sucursalId,
+      sucursalIds: [...this.formularioUsuarioInterno.sucursalIds],
       correo: this.formularioUsuarioInterno.correo.trim().toLowerCase(),
       contrasenaTemporal,
       telefono: this.normalizarTexto(this.formularioUsuarioInterno.telefono),
       puesto: this.normalizarTexto(this.formularioUsuarioInterno.puesto),
       notas: this.normalizarTexto(this.formularioUsuarioInterno.notas),
       nombreCompleto: this.formularioUsuarioInterno.nombreCompleto.trim(),
-      rolCodigo: this.formularioUsuarioInterno.rolCodigo
+      rolEmpresaId: this.formularioUsuarioInterno.rolEmpresaId
     };
 
     const operacion = this.usuarioInternoEditandoId
@@ -1403,6 +1641,52 @@ export class AdminDashboardComponent implements OnInit {
           this.error = err?.error?.mensaje || err?.message || 'No se pudo guardar el usuario interno.';
         }
       });
+  }
+
+  guardarRolInterno() {
+    this.loading.set(true);
+    this.error = '';
+    this.mensajeExito = '';
+
+    const payload: GuardarRolInternoPayload = {
+      codigo: this.formularioRolInterno.codigo.trim().toUpperCase(),
+      nombre: this.formularioRolInterno.nombre.trim(),
+      descripcion: this.normalizarTexto(this.formularioRolInterno.descripcion),
+      activo: this.formularioRolInterno.activo,
+      permisos: [...this.formularioRolInterno.permisos]
+    };
+
+    const operacion = this.rolInternoEditandoId
+      ? this.adminService.actualizarRolInterno(this.rolInternoEditandoId, payload)
+      : this.rolInternoClonandoDesdeId
+        ? this.adminService.clonarRolInterno(this.rolInternoClonandoDesdeId, payload)
+      : this.adminService.crearRolInterno(payload);
+
+    operacion
+      .pipe(finalize(() => this.loading.set(false)))
+      .subscribe({
+        next: () => {
+          this.cancelarEdicionRolInterno();
+          this.recargar();
+        },
+        error: err => {
+          this.error = err?.error?.mensaje || err?.message || 'No se pudo guardar el rol interno.';
+        }
+      });
+  }
+
+  permisoRolSeleccionado(codigo: string): boolean {
+    return this.formularioRolInterno.permisos.includes(codigo);
+  }
+
+  cambiarPermisoRol(codigo: string, seleccionado: boolean) {
+    const permisos = new Set(this.formularioRolInterno.permisos);
+    if (seleccionado) {
+      permisos.add(codigo);
+    } else {
+      permisos.delete(codigo);
+    }
+    this.formularioRolInterno.permisos = Array.from(permisos).sort((a, b) => a.localeCompare(b, 'es-MX'));
   }
 
   editarPrestador(prestador: PrestadorAdmin) {
@@ -1698,10 +1982,129 @@ export class AdminDashboardComponent implements OnInit {
     return null;
   }
 
+  cambiarRolUsuarioInterno(rolEmpresaId: number | null) {
+    const rol = this.rolesInternos().find(item => item.id === rolEmpresaId) ?? null;
+    this.formularioUsuarioInterno.rolEmpresaId = rol?.id ?? null;
+  }
+
+  cambiarSucursalesUsuarioInterno(sucursalIds: number[] | null) {
+    this.formularioUsuarioInterno.sucursalIds = (sucursalIds ?? []).map(Number);
+    if (
+      this.formularioUsuarioInterno.sucursalId &&
+      this.formularioUsuarioInterno.sucursalIds.length &&
+      !this.formularioUsuarioInterno.sucursalIds.includes(this.formularioUsuarioInterno.sucursalId)
+    ) {
+      this.formularioUsuarioInterno.sucursalId = null;
+    }
+  }
+
+  private rolInternoPorDefecto(): RolInternoAdmin | null {
+    return this.rolesInternos()[0] ?? null;
+  }
+
+  private generarCodigoClonadoRol(codigoOrigen: string): string {
+    const codigoBase = `${codigoOrigen}_COPIA`;
+    let codigo = codigoBase;
+    let consecutivo = 2;
+
+    while (this.rolesInternos().some(rol => rol.codigo === codigo)) {
+      codigo = `${codigoBase}_${consecutivo}`;
+      consecutivo += 1;
+    }
+
+    return codigo;
+  }
+
+  private generarNombreClonadoRol(nombreOrigen: string): string {
+    const nombreBase = `${nombreOrigen} copia`;
+    let nombre = nombreBase;
+    let consecutivo = 2;
+
+    while (this.rolesInternos().some(rol => rol.nombre.toLowerCase() === nombre.toLowerCase())) {
+      nombre = `${nombreBase} ${consecutivo}`;
+      consecutivo += 1;
+    }
+
+    return nombre;
+  }
+
+  private generarCodigoSugeridoPlantilla(codigoBase: string): string {
+    const base = codigoBase.trim().toUpperCase();
+    let codigo = base;
+    let consecutivo = 2;
+
+    while (this.rolesInternos().some(rol => rol.codigo === codigo)) {
+      codigo = `${base}_${consecutivo}`;
+      consecutivo += 1;
+    }
+
+    return codigo;
+  }
+
+  private generarNombreSugeridoPlantilla(nombreBase: string): string {
+    const base = nombreBase.trim();
+    let nombre = base;
+    let consecutivo = 2;
+
+    while (this.rolesInternos().some(rol => rol.nombre.toLowerCase() === nombre.toLowerCase())) {
+      nombre = `${base} ${consecutivo}`;
+      consecutivo += 1;
+    }
+
+    return nombre;
+  }
+
+  private obtenerGrupoPermiso(codigo: string): { id: string; titulo: string } {
+    const prefijo = codigo.split('_')[0] ?? 'GENERAL';
+    switch (prefijo) {
+      case 'PANEL':
+      case 'CONFIGURACION':
+      case 'SUCURSALES':
+      case 'SERVICIOS':
+      case 'PRESTADORES':
+      case 'USUARIOS':
+      case 'CONTACTOS':
+      case 'REPORTES':
+        return { id: 'admin', titulo: 'Administración' };
+      case 'RECEPCION':
+        return { id: 'recepcion', titulo: 'Recepción' };
+      case 'CAJA':
+        return { id: 'caja', titulo: 'Caja' };
+      case 'STAFF':
+        return { id: 'staff', titulo: 'Staff' };
+      case 'CLIENTE':
+        return { id: 'cliente', titulo: 'Cliente' };
+      case 'CITAS':
+        return { id: 'citas', titulo: 'Citas' };
+      default:
+        return { id: prefijo.toLowerCase(), titulo: this.humanizarCodigoPermiso(prefijo) };
+    }
+  }
+
+  private humanizarCodigoPermiso(codigo: string): string {
+    return codigo
+      .toLowerCase()
+      .split('_')
+      .filter(Boolean)
+      .map(parte => parte.charAt(0).toUpperCase() + parte.slice(1))
+      .join(' ');
+  }
+
   private marcarErrorCarga(err: any, mensajeFallback: string) {
     if (!this.error) {
       this.error = err?.error?.mensaje || err?.message || mensajeFallback;
     }
+  }
+
+  private asegurarSeccionActivaDisponible() {
+    const modulos = this.modulosAdmin();
+    if (!modulos.some(modulo => modulo.id === this.seccionActiva()) && modulos.length > 0) {
+      this.seccionActiva.set(modulos[0].id);
+    }
+  }
+
+  private cargarAdminSi<T>(permitido: boolean, peticion$: Observable<T>, fallback: T): Observable<T> {
+    return permitido ? peticion$ : of(fallback);
   }
 
   private sincronizarFormularioCorreo(configuracion: ConfiguracionCorreoAdmin | null) {

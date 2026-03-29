@@ -5,14 +5,14 @@ import { AuthService } from './auth.service';
 export const roleGuard: CanActivateFn = (route: ActivatedRouteSnapshot) => {
   const authService = inject(AuthService);
   const router = inject(Router);
-  const expectedRoles = (route.data['roles'] as string[] | undefined) ?? [];
+  const expectedPermissions = (route.data['permissions'] as string[] | undefined) ?? [];
 
   if (!authService.asegurarSesion()) {
     return router.createUrlTree(['/login']);
   }
 
-  const currentRoles = authService.sesionActual()?.roles ?? [];
-  if (expectedRoles.some(role => currentRoles.includes(role))) {
+  const currentPermissions = authService.sesionActual()?.permisos ?? [];
+  if (expectedPermissions.length > 0 && expectedPermissions.some(permission => currentPermissions.includes(permission))) {
     return true;
   }
 

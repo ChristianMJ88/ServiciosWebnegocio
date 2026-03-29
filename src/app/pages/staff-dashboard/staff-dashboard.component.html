@@ -21,7 +21,7 @@
           <button
             type="button"
             class="staff-nav-item"
-            *ngFor="let modulo of modulosStaff"
+            *ngFor="let modulo of modulosStaff()"
             (click)="seleccionarSeccion(modulo.id)"
             [class.active-nav-item]="seccionActiva() === modulo.id"
             [attr.aria-current]="seccionActiva() === modulo.id ? 'page' : null"

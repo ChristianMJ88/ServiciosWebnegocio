@@ -21,7 +21,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/admin/disponibilidad")
-@PreAuthorize("hasRole('ADMIN')")
+@PreAuthorize("hasAuthority('PANEL_ADMIN_ACCESO')")
 public class ControladorDisponibilidadAdmin {
 
     private final ServicioGestionDisponibilidad servicioGestionDisponibilidad;
@@ -31,11 +31,13 @@ public class ControladorDisponibilidadAdmin {
     }
 
     @GetMapping("/reglas")
+    @PreAuthorize("hasAuthority('PRESTADORES_GESTIONAR')")
     public List<ReglaDisponibilidadResponse> reglas(@AuthenticationPrincipal UsuarioAutenticado usuario) {
         return servicioGestionDisponibilidad.listarReglasAdmin(usuario.empresaId());
     }
 
     @PostMapping("/reglas")
+    @PreAuthorize("hasAuthority('PRESTADORES_GESTIONAR')")
     public ReglaDisponibilidadResponse crearRegla(
             @AuthenticationPrincipal UsuarioAutenticado usuario,
             @Valid @RequestBody ReglaDisponibilidadRequest request
@@ -44,6 +46,7 @@ public class ControladorDisponibilidadAdmin {
     }
 
     @PatchMapping("/reglas/{id}")
+    @PreAuthorize("hasAuthority('PRESTADORES_GESTIONAR')")
     public ReglaDisponibilidadResponse actualizarRegla(
             @AuthenticationPrincipal UsuarioAutenticado usuario,
             @PathVariable Long id,
@@ -53,11 +56,13 @@ public class ControladorDisponibilidadAdmin {
     }
 
     @GetMapping("/excepciones")
+    @PreAuthorize("hasAuthority('PRESTADORES_GESTIONAR')")
     public List<ExcepcionDisponibilidadResponse> excepciones(@AuthenticationPrincipal UsuarioAutenticado usuario) {
         return servicioGestionDisponibilidad.listarExcepcionesAdmin(usuario.empresaId());
     }
 
     @PostMapping("/excepciones")
+    @PreAuthorize("hasAuthority('PRESTADORES_GESTIONAR')")
     public ExcepcionDisponibilidadResponse crearExcepcion(
             @AuthenticationPrincipal UsuarioAutenticado usuario,
             @Valid @RequestBody ExcepcionDisponibilidadRequest request
@@ -66,6 +71,7 @@ public class ControladorDisponibilidadAdmin {
     }
 
     @PatchMapping("/excepciones/{id}")
+    @PreAuthorize("hasAuthority('PRESTADORES_GESTIONAR')")
     public ExcepcionDisponibilidadResponse actualizarExcepcion(
             @AuthenticationPrincipal UsuarioAutenticado usuario,
             @PathVariable Long id,

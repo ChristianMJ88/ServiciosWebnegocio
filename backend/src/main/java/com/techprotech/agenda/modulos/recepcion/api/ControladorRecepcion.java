@@ -26,7 +26,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/recepcion")
-@PreAuthorize("hasAnyRole('ADMIN','RECEPCIONISTA')")
+@PreAuthorize("hasAuthority('RECEPCION_ACCESO')")
 public class ControladorRecepcion {
 
     private final ServicioRecepcion servicioRecepcion;
@@ -36,15 +36,17 @@ public class ControladorRecepcion {
     }
 
     @GetMapping("/agenda")
+    @PreAuthorize("hasAuthority('RECEPCION_ACCESO')")
     public List<CitaRecepcionResponse> agenda(
             @AuthenticationPrincipal UsuarioAutenticado usuario,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fecha,
             @RequestParam(required = false) Long sucursalId
     ) {
-        return servicioRecepcion.agenda(usuario.empresaId(), fecha, sucursalId);
+        return servicioRecepcion.agenda(usuario.empresaId(), usuario.sucursalesPermitidas(), fecha, sucursalId);
     }
 
     @GetMapping("/clientes")
+    @PreAuthorize("hasAuthority('RECEPCION_CLIENTES_VER')")
     public List<ClienteRecepcionResponse> clientes(
             @AuthenticationPrincipal UsuarioAutenticado usuario,
             @RequestParam String texto
@@ -53,51 +55,57 @@ public class ControladorRecepcion {
     }
 
     @PostMapping("/citas")
+    @PreAuthorize("hasAuthority('RECEPCION_CITAS_GESTIONAR')")
     public CitaCreadaResponse crearCita(
             @AuthenticationPrincipal UsuarioAutenticado usuario,
             @Valid @RequestBody CrearCitaRecepcionRequest request
     ) {
-        return servicioRecepcion.crearCita(usuario.empresaId(), request);
+        return servicioRecepcion.crearCita(usuario.empresaId(), usuario.sucursalesPermitidas(), request);
     }
 
     @PatchMapping("/citas/{citaId}/check-in")
+    @PreAuthorize("hasAuthority('RECEPCION_CHECKIN')")
     public CitaRecepcionResponse checkIn(
             @AuthenticationPrincipal UsuarioAutenticado usuario,
             @PathVariable Long citaId
     ) {
-        return servicioRecepcion.checkIn(usuario.empresaId(), usuario.usuarioId(), citaId);
+        return servicioRecepcion.checkIn(usuario.empresaId(), usuario.usuarioId(), usuario.sucursalesPermitidas(), citaId);
     }
 
     @PatchMapping("/citas/{citaId}/confirmar")
+    @PreAuthorize("hasAuthority('RECEPCION_CITAS_GESTIONAR')")
     public CitaRecepcionResponse confirmar(
             @AuthenticationPrincipal UsuarioAutenticado usuario,
             @PathVariable Long citaId
     ) {
-        return servicioRecepcion.confirmar(usuario.empresaId(), usuario.usuarioId(), citaId);
+        return servicioRecepcion.confirmar(usuario.empresaId(), usuario.usuarioId(), usuario.sucursalesPermitidas(), citaId);
     }
 
     @PatchMapping("/citas/{citaId}/cancelar")
+    @PreAuthorize("hasAuthority('RECEPCION_CITAS_GESTIONAR')")
     public CitaRecepcionResponse cancelar(
             @AuthenticationPrincipal UsuarioAutenticado usuario,
             @PathVariable Long citaId
     ) {
-        return servicioRecepcion.cancelar(usuario.empresaId(), usuario.usuarioId(), citaId);
+        return servicioRecepcion.cancelar(usuario.empresaId(), usuario.usuarioId(), usuario.sucursalesPermitidas(), citaId);
     }
 
     @PatchMapping("/citas/{citaId}/reagendar")
+    @PreAuthorize("hasAuthority('RECEPCION_CITAS_GESTIONAR')")
     public CitaClienteResponse reagendar(
             @AuthenticationPrincipal UsuarioAutenticado usuario,
             @PathVariable Long citaId,
             @Valid @RequestBody ReagendarRecepcionRequest request
     ) {
-        return servicioRecepcion.reprogramar(usuario.empresaId(), usuario.usuarioId(), citaId, request);
+        return servicioRecepcion.reprogramar(usuario.empresaId(), usuario.usuarioId(), usuario.sucursalesPermitidas(), citaId, request);
     }
 
     @PatchMapping("/citas/{citaId}/finalizar")
+    @PreAuthorize("hasAuthority('RECEPCION_CITAS_GESTIONAR')")
     public CitaRecepcionResponse finalizar(
             @AuthenticationPrincipal UsuarioAutenticado usuario,
             @PathVariable Long citaId
     ) {
-        return servicioRecepcion.finalizar(usuario.empresaId(), usuario.usuarioId(), citaId);
+        return servicioRecepcion.finalizar(usuario.empresaId(), usuario.usuarioId(), usuario.sucursalesPermitidas(), citaId);
     }
 }

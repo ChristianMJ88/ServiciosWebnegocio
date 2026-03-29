@@ -12,6 +12,7 @@ import { StaffDashboardComponent } from './pages/staff-dashboard/staff-dashboard
 import { AdminDashboardComponent } from './pages/admin-dashboard/admin-dashboard.component';
 import { CajaDashboardComponent } from './pages/caja-dashboard/caja-dashboard.component';
 import { RecepcionDashboardComponent } from './pages/recepcion-dashboard/recepcion-dashboard.component';
+import { PERMISOS } from './core/auth/permissions';
 
 export const routes: Routes = [
   { path: '', component: HomeComponent },
@@ -20,10 +21,10 @@ export const routes: Routes = [
   { path: 'login', component: LoginComponent },
   { path: 'registro', component: RegisterComponent },
   { path: 'mi-cuenta', component: AccountComponent, canActivate: [authGuard], data: { layout: 'panel' } },
-  { path: 'staff', component: StaffDashboardComponent, canActivate: [roleGuard], data: { roles: ['STAFF'], layout: 'panel' } },
-  { path: 'admin', component: AdminDashboardComponent, canActivate: [roleGuard], data: { roles: ['ADMIN'], layout: 'panel' } },
-  { path: 'recepcion', component: RecepcionDashboardComponent, canActivate: [roleGuard], data: { roles: ['ADMIN', 'RECEPCIONISTA'], layout: 'panel' } },
-  { path: 'caja', component: CajaDashboardComponent, canActivate: [roleGuard], data: { roles: ['ADMIN', 'CAJERO', 'RECEPCIONISTA'], layout: 'panel' } },
+  { path: 'staff', component: StaffDashboardComponent, canActivate: [roleGuard], data: { permissions: [PERMISOS.staffPanel], layout: 'panel' } },
+  { path: 'admin', component: AdminDashboardComponent, canActivate: [roleGuard], data: { permissions: [PERMISOS.panelAdmin], layout: 'panel' } },
+  { path: 'recepcion', component: RecepcionDashboardComponent, canActivate: [roleGuard], data: { permissions: [PERMISOS.recepcionAcceso], layout: 'panel' } },
+  { path: 'caja', component: CajaDashboardComponent, canActivate: [roleGuard], data: { permissions: [PERMISOS.cajaAcceso], layout: 'panel' } },
   { path: 'contacto', component: ContactComponent },
   { path: '**', redirectTo: '' }
 ];

@@ -32,6 +32,7 @@ import java.util.List;
 import java.util.Locale;
 
 import static org.springframework.http.HttpStatus.CONFLICT;
+import static org.springframework.http.HttpStatus.FORBIDDEN;
 import static org.springframework.http.HttpStatus.NOT_FOUND;
 
 @Service
@@ -67,7 +68,8 @@ public class ServicioCaja {
     }
 
     @Transactional
-    public CajaSesionResponse abrirSesion(Long empresaId, Long usuarioId, AbrirCajaRequest request) {
+    public CajaSesionResponse abrirSesion(Long empresaId, Long usuarioId, List<Long> sucursalesPermitidas, AbrirCajaRequest request) {
+        validarAccesoSucursal(sucursalesPermitidas, request.sucursalId());
         cajaSesionRepositorio.findByEmpresaIdAndSucursalIdAndEstado(empresaId, request.sucursalId(), ESTADO_ABIERTA)
                 .ifPresent(sesion -> {
                     throw new ResponseStatusException(CONFLICT, "Ya existe una caja abierta para esa sucursal");
@@ -86,9 +88,10 @@ public class ServicioCaja {
     }
 
     @Transactional
-    public CajaSesionResponse cerrarSesion(Long empresaId, Long usuarioId, Long cajaSesionId, CerrarCajaRequest request) {
+    public CajaSesionResponse cerrarSesion(Long empresaId, Long usuarioId, List<Long> sucursalesPermitidas, Long cajaSesionId, CerrarCajaRequest request) {
         CajaSesionEntidad sesion = cajaSesionRepositorio.findByIdAndEmpresaId(cajaSesionId, empresaId)
                 .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "La sesión de caja no existe para la empresa"));
+        validarAccesoSucursal(sucursalesPermitidas, sesion.getSucursalId());
         if (!ESTADO_ABIERTA.equalsIgnoreCase(sesion.getEstado())) {
             throw new ResponseStatusException(CONFLICT, "La caja indicada ya está cerrada");
         }
@@ -107,16 +110,19 @@ public class ServicioCaja {
     }
 
     @Transactional(readOnly = true)
-    public CajaSesionResponse obtenerSesionActual(Long empresaId, Long sucursalId) {
-        return resolverSesionAbierta(empresaId, sucursalId)
+    public CajaSesionResponse obtenerSesionActual(Long empresaId, List<Long> sucursalesPermitidas, Long sucursalId) {
+        Long sucursalConsulta = resolverSucursalConsulta(sucursalesPermitidas, sucursalId);
+        return resolverSesionAbierta(empresaId, sucursalConsulta)
                 .map(this::mapearSesion)
                 .orElse(null);
     }
 
     @Transactional(readOnly = true)
-    public List<CitaPorCobrarResponse> listarCitasPorCobrar(Long empresaId, Long sucursalId) {
+    public List<CitaPorCobrarResponse> listarCitasPorCobrar(Long empresaId, List<Long> sucursalesPermitidas, Long sucursalId) {
+        validarAccesoSucursal(sucursalesPermitidas, sucursalId);
         return citaRepositorio.findByEmpresaIdAndEstadoInOrderByInicioDesc(empresaId, List.of("FINALIZADA")).stream()
                 .filter(cita -> sucursalId == null || sucursalId.equals(cita.getSucursalId()))
+                .filter(cita -> !tieneScopeSucursales(sucursalesPermitidas) || sucursalesPermitidas.contains(cita.getSucursalId()))
                 .map(this::mapearCitaPorCobrar)
                 .filter(cita -> cita.pendiente().compareTo(BigDecimal.ZERO) > 0)
                 .sorted(Comparator.comparing(CitaPorCobrarResponse::inicio).reversed())
@@ -124,9 +130,10 @@ public class ServicioCaja {
     }
 
     @Transactional
-    public PagoCitaResponse registrarPago(Long empresaId, Long usuarioId, Long citaId, RegistrarPagoRequest request) {
+    public PagoCitaResponse registrarPago(Long empresaId, Long usuarioId, List<Long> sucursalesPermitidas, Long citaId, RegistrarPagoRequest request) {
         CitaEntidad cita = citaRepositorio.findByIdAndEmpresaId(citaId, empresaId)
                 .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "La cita no existe para la empresa"));
+        validarAccesoSucursal(sucursalesPermitidas, cita.getSucursalId());
         if (!"FINALIZADA".equalsIgnoreCase(cita.getEstado())) {
             throw new ResponseStatusException(CONFLICT, "Solo se pueden cobrar citas finalizadas");
         }
@@ -172,16 +179,18 @@ public class ServicioCaja {
     }
 
     @Transactional(readOnly = true)
-    public List<PagoCitaResponse> listarPagosCita(Long empresaId, Long citaId) {
-        citaRepositorio.findByIdAndEmpresaId(citaId, empresaId)
+    public List<PagoCitaResponse> listarPagosCita(Long empresaId, List<Long> sucursalesPermitidas, Long citaId) {
+        CitaEntidad cita = citaRepositorio.findByIdAndEmpresaId(citaId, empresaId)
                 .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "La cita no existe para la empresa"));
+        validarAccesoSucursal(sucursalesPermitidas, cita.getSucursalId());
         return pagoCitaRepositorio.findByEmpresaIdAndCitaIdOrderByRegistradoEnDesc(empresaId, citaId).stream()
                 .map(this::mapearPago)
                 .toList();
     }
 
     @Transactional
-    public MovimientoCajaResponse registrarMovimiento(Long empresaId, Long usuarioId, RegistrarMovimientoCajaRequest request) {
+    public MovimientoCajaResponse registrarMovimiento(Long empresaId, Long usuarioId, List<Long> sucursalesPermitidas, RegistrarMovimientoCajaRequest request) {
+        validarAccesoSucursal(sucursalesPermitidas, request.sucursalId());
         CajaSesionEntidad sesion = obtenerSesionAbiertaObligatoria(empresaId, request.sucursalId());
         MovimientoCajaEntidad movimiento = registrarMovimientoInterno(
                 empresaId,
@@ -199,8 +208,9 @@ public class ServicioCaja {
     }
 
     @Transactional(readOnly = true)
-    public ResumenCajaResponse resumen(Long empresaId, Long sucursalId) {
-        CajaSesionEntidad sesion = resolverSesionAbierta(empresaId, sucursalId).orElse(null);
+    public ResumenCajaResponse resumen(Long empresaId, List<Long> sucursalesPermitidas, Long sucursalId) {
+        Long sucursalConsulta = resolverSucursalConsulta(sucursalesPermitidas, sucursalId);
+        CajaSesionEntidad sesion = resolverSesionAbierta(empresaId, sucursalConsulta).orElse(null);
         if (sesion == null) {
             return new ResumenCajaResponse(null, BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO, 0);
         }
@@ -230,8 +240,29 @@ public class ServicioCaja {
                 totalGastos,
                 totalRetiros,
                 calcularSaldoEsperado(sesion),
-                listarCitasPorCobrar(empresaId, sucursalId).size()
+                listarCitasPorCobrar(empresaId, sucursalesPermitidas, sucursalConsulta).size()
         );
+    }
+
+    private boolean tieneScopeSucursales(List<Long> sucursalesPermitidas) {
+        return sucursalesPermitidas != null && !sucursalesPermitidas.isEmpty();
+    }
+
+    private void validarAccesoSucursal(List<Long> sucursalesPermitidas, Long sucursalId) {
+        if (tieneScopeSucursales(sucursalesPermitidas) && (sucursalId == null || !sucursalesPermitidas.contains(sucursalId))) {
+            throw new ResponseStatusException(FORBIDDEN, "No tienes acceso a la sucursal indicada");
+        }
+    }
+
+    private Long resolverSucursalConsulta(List<Long> sucursalesPermitidas, Long sucursalId) {
+        if (sucursalId != null) {
+            validarAccesoSucursal(sucursalesPermitidas, sucursalId);
+            return sucursalId;
+        }
+        if (tieneScopeSucursales(sucursalesPermitidas) && sucursalesPermitidas.size() == 1) {
+            return sucursalesPermitidas.get(0);
+        }
+        return null;
     }
 
     private java.util.Optional<CajaSesionEntidad> resolverSesionAbierta(Long empresaId, Long sucursalId) {

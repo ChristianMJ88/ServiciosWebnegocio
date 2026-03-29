@@ -8,7 +8,8 @@ public record RespuestaTokenJwt(
         String tipoToken,
         Long usuarioId,
         Long empresaId,
-        List<String> roles
+        List<String> roles,
+        List<String> permisos,
+        List<Long> sucursalesPermitidas
 ) {
 }
-

@@ -2,6 +2,7 @@ import { Injectable, computed, inject, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, catchError, finalize, map, shareReplay, tap, throwError } from 'rxjs';
 import { environment } from '../../../environments/environment';
+import { PERMISOS } from './permissions';
 
 export interface SesionUsuario {
   tokenAcceso: string;
@@ -9,6 +10,8 @@ export interface SesionUsuario {
   usuarioId: number;
   empresaId: number;
   roles: string[];
+  permisos: string[];
+  sucursalesPermitidas: number[];
   correo: string;
 }
 
@@ -33,6 +36,8 @@ interface RespuestaTokenJwt {
   usuarioId: number;
   empresaId: number;
   roles: string[];
+  permisos: string[];
+  sucursalesPermitidas: number[];
 }
 
 @Injectable({
@@ -46,14 +51,35 @@ export class AuthService {
 
   readonly sesionActual = computed(() => this.sesion());
   readonly autenticado = computed(() => Boolean(this.sesion()));
-  readonly esCliente = computed(() => this.sesion()?.roles.includes('CLIENTE') ?? false);
-  readonly esStaff = computed(() => this.sesion()?.roles.includes('STAFF') ?? false);
-  readonly esAdmin = computed(() => this.sesion()?.roles.includes('ADMIN') ?? false);
-  readonly esRecepcionista = computed(() => this.sesion()?.roles.includes('RECEPCIONISTA') ?? false);
-  readonly esCajero = computed(() => this.sesion()?.roles.includes('CAJERO') ?? false);
-  readonly puedeVerAdmin = computed(() => this.esAdmin());
-  readonly puedeVerRecepcion = computed(() => this.esAdmin() || this.esRecepcionista());
-  readonly puedeVerCaja = computed(() => this.esAdmin() || this.esRecepcionista() || this.esCajero());
+  readonly esCliente = computed(() => this.tienePermiso(PERMISOS.clientePanel));
+  readonly esStaff = computed(() => this.tienePermiso(PERMISOS.staffPanel));
+  readonly esAdmin = computed(() => this.tienePermiso(PERMISOS.panelAdmin));
+  readonly esRecepcionista = computed(() => this.tienePermiso(PERMISOS.recepcionAcceso));
+  readonly esCajero = computed(() => this.tienePermiso(PERMISOS.cajaAcceso));
+  readonly puedeVerAdmin = computed(() => this.tienePermiso(PERMISOS.panelAdmin));
+  readonly puedeVerRecepcion = computed(() => this.tienePermiso(PERMISOS.recepcionAcceso));
+  readonly puedeVerCaja = computed(() => this.tienePermiso(PERMISOS.cajaAcceso));
+  readonly puedeVerStaff = computed(() => this.tienePermiso(PERMISOS.staffPanel));
+  readonly puedeVerPanelCliente = computed(() => this.tienePermiso(PERMISOS.clientePanel));
+  readonly puedeGestionarRecepcionCitas = computed(() => this.tienePermiso(PERMISOS.recepcionCitasGestionar));
+  readonly puedeBuscarClientesRecepcion = computed(() => this.tienePermiso(PERMISOS.recepcionClientesVer));
+  readonly puedeRegistrarCheckInRecepcion = computed(() => this.tienePermiso(PERMISOS.recepcionCheckin));
+  readonly puedeCobrarCaja = computed(() => this.tienePermiso(PERMISOS.cajaCobrar));
+  readonly puedeGestionarSesionCaja = computed(() => this.tienePermiso(PERMISOS.cajaSesionGestionar));
+  readonly puedeGestionarMovimientosCaja = computed(() => this.tienePermiso(PERMISOS.cajaMovimientosGestionar));
+  readonly puedeVerAgendaStaff = computed(() => this.tienePermiso(PERMISOS.staffAgendaVer));
+  readonly puedeGestionarCitasStaff = computed(() => this.tienePermiso(PERMISOS.staffCitasGestionar));
+  readonly puedeGestionarDisponibilidadStaff = computed(() => this.tienePermiso(PERMISOS.staffDisponibilidadGestionar));
+  readonly puedeGestionarConfiguracionEmpresa = computed(() => this.tienePermiso(PERMISOS.configuracionEmpresaGestionar));
+  readonly puedeGestionarWhatsapp = computed(() => this.tienePermiso(PERMISOS.whatsappConfigurar));
+  readonly puedeVerContactosAdmin = computed(() => this.tienePermiso(PERMISOS.contactosAdminVer));
+  readonly puedeVerReportesAdmin = computed(() => this.tienePermiso(PERMISOS.reportesAdminVer));
+  readonly puedeGestionarCitasAdmin = computed(() => this.tienePermiso(PERMISOS.citasAdminGestionar));
+  readonly puedeGestionarSucursales = computed(() => this.tienePermiso(PERMISOS.sucursalesGestionar));
+  readonly puedeGestionarServicios = computed(() => this.tienePermiso(PERMISOS.serviciosGestionar));
+  readonly puedeGestionarPrestadores = computed(() => this.tienePermiso(PERMISOS.prestadoresGestionar));
+  readonly puedeGestionarUsuariosInternos = computed(() => this.tienePermiso(PERMISOS.usuariosInternosGestionar));
+  readonly sucursalesPermitidas = computed(() => this.sesion()?.sucursalesPermitidas ?? []);
   readonly rutaPanel = computed(() => {
     if (this.puedeVerAdmin()) {
       return '/admin';
@@ -64,7 +90,7 @@ export class AuthService {
     if (this.puedeVerCaja()) {
       return '/caja';
     }
-    if (this.esStaff()) {
+    if (this.puedeVerStaff()) {
       return '/staff';
     }
     return '/mi-cuenta';
@@ -97,20 +123,28 @@ export class AuthService {
   }
 
   rutaPanelPersistida(): string {
-    const roles = this.sesion()?.roles ?? this.loadSession()?.roles ?? [];
-    if (roles.includes('ADMIN')) {
+    const sesion = this.sesion() ?? this.loadSession();
+    const permisos = sesion?.permisos ?? [];
+    if (permisos.includes(PERMISOS.panelAdmin)) {
       return '/admin';
     }
-    if (roles.includes('RECEPCIONISTA')) {
+    if (permisos.includes(PERMISOS.recepcionAcceso)) {
       return '/recepcion';
     }
-    if (roles.includes('CAJERO')) {
+    if (permisos.includes(PERMISOS.cajaAcceso)) {
       return '/caja';
     }
-    if (roles.includes('STAFF')) {
+    if (permisos.includes(PERMISOS.staffPanel)) {
       return '/staff';
     }
+    if (permisos.includes(PERMISOS.clientePanel)) {
+      return '/mi-cuenta';
+    }
     return '/mi-cuenta';
+  }
+
+  tienePermiso(permiso: string): boolean {
+    return this.sesion()?.permisos.includes(permiso) ?? false;
   }
 
   nombreUsuarioVisible(): string {
@@ -235,6 +269,8 @@ export class AuthService {
       usuarioId: response.usuarioId,
       empresaId: response.empresaId,
       roles: response.roles,
+      permisos: response.permisos ?? [],
+      sucursalesPermitidas: response.sucursalesPermitidas ?? [],
       correo: payload?.sub || correoFallback || this.sesion()?.correo || ''
     };
     this.saveSession(sesion);

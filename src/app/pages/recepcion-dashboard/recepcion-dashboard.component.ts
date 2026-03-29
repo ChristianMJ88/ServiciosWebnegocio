@@ -71,6 +71,10 @@ export class RecepcionDashboardComponent implements OnInit {
   readonly inicialesUsuario = computed(() => this.authService.inicialesUsuarioVisible());
   readonly puedeIrCaja = computed(() => this.authService.puedeVerCaja());
   readonly puedeIrAdmin = computed(() => this.authService.puedeVerAdmin());
+  readonly puedeBuscarClientes = computed(() => this.authService.puedeBuscarClientesRecepcion());
+  readonly puedeGestionarCitas = computed(() => this.authService.puedeGestionarRecepcionCitas());
+  readonly puedeRegistrarCheckIn = computed(() => this.authService.puedeRegistrarCheckInRecepcion());
+  readonly sucursalesPermitidas = computed(() => this.authService.sucursalesPermitidas());
   readonly sucursalActiva = computed(() =>
     this.sucursales().find(sucursal => sucursal.id === this.sucursalActivaId()) ?? this.sucursales()[0] ?? null
   );
@@ -139,11 +143,12 @@ export class RecepcionDashboardComponent implements OnInit {
       .pipe(finalize(() => this.loading.set(false)))
       .subscribe({
         next: ({ sucursales, agenda }) => {
-          this.sucursales.set(sucursales);
-          if (!this.sucursalActivaId() && sucursales.length) {
-            this.sucursalActivaId.set(sucursales[0].id);
-            this.formularioCita.sucursalId = sucursales[0].id;
-            this.cargarServiciosSucursal(sucursales[0].id);
+          const sucursalesVisibles = this.filtrarSucursalesPorScope(sucursales);
+          this.sucursales.set(sucursalesVisibles);
+          if (!this.sucursalActivaId() && sucursalesVisibles.length) {
+            this.sucursalActivaId.set(sucursalesVisibles[0].id);
+            this.formularioCita.sucursalId = sucursalesVisibles[0].id;
+            this.cargarServiciosSucursal(sucursalesVisibles[0].id);
           } else if (this.sucursalActivaId()) {
             this.formularioCita.sucursalId = this.sucursalActivaId();
             this.cargarServiciosSucursal(this.sucursalActivaId()!);
@@ -154,6 +159,14 @@ export class RecepcionDashboardComponent implements OnInit {
           this.error.set(this.extraerMensaje(error, 'No pude cargar la agenda de recepción.'));
         }
       });
+  }
+
+  private filtrarSucursalesPorScope(sucursales: SucursalCatalogo[]): SucursalCatalogo[] {
+    const permitidas = this.sucursalesPermitidas();
+    if (!permitidas.length) {
+      return sucursales;
+    }
+    return sucursales.filter(sucursal => permitidas.includes(sucursal.id));
   }
 
   recargarAgenda() {

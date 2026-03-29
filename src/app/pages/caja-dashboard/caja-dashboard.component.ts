@@ -90,6 +90,10 @@ export class CajaDashboardComponent implements OnInit {
   readonly inicialesUsuario = computed(() => this.authService.inicialesUsuarioVisible());
   readonly puedeIrRecepcion = computed(() => this.authService.puedeVerRecepcion());
   readonly puedeIrAdmin = computed(() => this.authService.puedeVerAdmin());
+  readonly puedeCobrar = computed(() => this.authService.puedeCobrarCaja());
+  readonly puedeGestionarSesion = computed(() => this.authService.puedeGestionarSesionCaja());
+  readonly puedeGestionarMovimientos = computed(() => this.authService.puedeGestionarMovimientosCaja());
+  readonly sucursalesPermitidas = computed(() => this.authService.sucursalesPermitidas());
   readonly cajaAbierta = computed(() => this.sesionActual()?.estado === 'ABIERTA');
   readonly sucursalActiva = computed(() =>
     this.sucursales().find(sucursal => sucursal.id === this.sucursalActivaId()) ?? this.sucursales()[0] ?? null
@@ -157,9 +161,10 @@ export class CajaDashboardComponent implements OnInit {
       .pipe(finalize(() => this.loading.set(false)))
       .subscribe({
         next: sucursales => {
-          this.sucursales.set(sucursales);
-          if (!this.sucursalActivaId() && sucursales.length) {
-            this.sucursalActivaId.set(sucursales[0].id);
+          const sucursalesVisibles = this.filtrarSucursalesPorScope(sucursales);
+          this.sucursales.set(sucursalesVisibles);
+          if (!this.sucursalActivaId() && sucursalesVisibles.length) {
+            this.sucursalActivaId.set(sucursalesVisibles[0].id);
           }
           this.recargarTablero();
         },
@@ -167,6 +172,14 @@ export class CajaDashboardComponent implements OnInit {
           this.error.set(this.extraerMensaje(error, 'No pude cargar las sucursales para Caja.'));
         }
       });
+  }
+
+  private filtrarSucursalesPorScope(sucursales: SucursalCaja[]): SucursalCaja[] {
+    const permitidas = this.sucursalesPermitidas();
+    if (!permitidas.length) {
+      return sucursales;
+    }
+    return sucursales.filter(sucursal => permitidas.includes(sucursal.id));
   }
 
   recargarTablero() {

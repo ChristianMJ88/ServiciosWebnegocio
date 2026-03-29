@@ -4,19 +4,15 @@ import com.techprotech.agenda.compartido.correo.ConfirmacionCitaCorreo;
 import com.techprotech.agenda.compartido.correo.ServicioCorreoCitas;
 import com.techprotech.agenda.compartido.correo.ServicioOutboxCorreoCitas;
 import com.techprotech.agenda.compartido.whatsapp.ServicioOutboxWhatsappCitas;
+import com.techprotech.agenda.modulos.autenticacion.aplicacion.ServicioRolesEmpresa;
 import com.techprotech.agenda.modulos.citas.api.dto.CitaCreadaResponse;
 import com.techprotech.agenda.modulos.citas.api.dto.CrearCitaRequest;
 import com.techprotech.agenda.modulos.autenticacion.infraestructura.entidad.ClienteEntidad;
 import com.techprotech.agenda.modulos.autenticacion.infraestructura.entidad.EmpresaEntidad;
-import com.techprotech.agenda.modulos.autenticacion.infraestructura.entidad.RolEntidad;
 import com.techprotech.agenda.modulos.autenticacion.infraestructura.entidad.UsuarioEntidad;
-import com.techprotech.agenda.modulos.autenticacion.infraestructura.entidad.UsuarioRolEntidad;
-import com.techprotech.agenda.modulos.autenticacion.infraestructura.entidad.UsuarioRolId;
 import com.techprotech.agenda.modulos.autenticacion.infraestructura.repositorio.ClienteRepositorio;
 import com.techprotech.agenda.modulos.autenticacion.infraestructura.repositorio.EmpresaRepositorio;
-import com.techprotech.agenda.modulos.autenticacion.infraestructura.repositorio.RolRepositorio;
 import com.techprotech.agenda.modulos.autenticacion.infraestructura.repositorio.UsuarioRepositorio;
-import com.techprotech.agenda.modulos.autenticacion.infraestructura.repositorio.UsuarioRolRepositorio;
 import com.techprotech.agenda.modulos.citas.infraestructura.entidad.CitaEntidad;
 import com.techprotech.agenda.modulos.citas.infraestructura.entidad.HistorialEstadoCitaEntidad;
 import com.techprotech.agenda.modulos.citas.infraestructura.repositorio.CitaRepositorio;
@@ -60,8 +56,7 @@ public class ServicioCitas {
     private final UsuarioRepositorio usuarioRepositorio;
     private final ClienteRepositorio clienteRepositorio;
     private final EmpresaRepositorio empresaRepositorio;
-    private final RolRepositorio rolRepositorio;
-    private final UsuarioRolRepositorio usuarioRolRepositorio;
+    private final ServicioRolesEmpresa servicioRolesEmpresa;
     private final CitaRepositorio citaRepositorio;
     private final HistorialEstadoCitaRepositorio historialEstadoCitaRepositorio;
     private final PasswordEncoder passwordEncoder;
@@ -78,8 +73,7 @@ public class ServicioCitas {
             UsuarioRepositorio usuarioRepositorio,
             ClienteRepositorio clienteRepositorio,
             EmpresaRepositorio empresaRepositorio,
-            RolRepositorio rolRepositorio,
-            UsuarioRolRepositorio usuarioRolRepositorio,
+            ServicioRolesEmpresa servicioRolesEmpresa,
             CitaRepositorio citaRepositorio,
             HistorialEstadoCitaRepositorio historialEstadoCitaRepositorio,
             PasswordEncoder passwordEncoder,
@@ -95,8 +89,7 @@ public class ServicioCitas {
         this.usuarioRepositorio = usuarioRepositorio;
         this.clienteRepositorio = clienteRepositorio;
         this.empresaRepositorio = empresaRepositorio;
-        this.rolRepositorio = rolRepositorio;
-        this.usuarioRolRepositorio = usuarioRolRepositorio;
+        this.servicioRolesEmpresa = servicioRolesEmpresa;
         this.citaRepositorio = citaRepositorio;
         this.historialEstadoCitaRepositorio = historialEstadoCitaRepositorio;
         this.passwordEncoder = passwordEncoder;
@@ -275,9 +268,6 @@ public class ServicioCitas {
     }
 
     private Long crearCliente(Long empresaId, String nombreCliente, String correo, String telefono) {
-        RolEntidad rolCliente = rolRepositorio.findByCodigo("CLIENTE")
-                .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "No existe el rol CLIENTE"));
-
         UsuarioEntidad usuario = new UsuarioEntidad();
         usuario.setEmpresaId(empresaId);
         usuario.setCorreo(correo);
@@ -293,11 +283,7 @@ public class ServicioCitas {
         cliente.setAceptaWhatsapp(true);
         clienteRepositorio.save(cliente);
 
-        usuarioRolRepositorio.save(new UsuarioRolEntidad(
-                new UsuarioRolId(usuario.getId(), rolCliente.getId(), empresaId),
-                usuario,
-                rolCliente
-        ));
+        servicioRolesEmpresa.asignarRolEmpresa(usuario, empresaId, "CLIENTE");
 
         return usuario.getId();
     }

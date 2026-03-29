@@ -21,7 +21,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/staff/disponibilidad")
-@PreAuthorize("hasRole('STAFF')")
+@PreAuthorize("hasAuthority('STAFF_PANEL_ACCESO')")
 public class ControladorDisponibilidadStaff {
 
     private final ServicioGestionDisponibilidad servicioGestionDisponibilidad;
@@ -31,11 +31,13 @@ public class ControladorDisponibilidadStaff {
     }
 
     @GetMapping("/reglas")
+    @PreAuthorize("hasAuthority('STAFF_DISPONIBILIDAD_GESTIONAR')")
     public List<ReglaDisponibilidadResponse> reglas(@AuthenticationPrincipal UsuarioAutenticado usuario) {
         return servicioGestionDisponibilidad.listarReglasStaff(usuario.empresaId(), usuario.usuarioId());
     }
 
     @PostMapping("/reglas")
+    @PreAuthorize("hasAuthority('STAFF_DISPONIBILIDAD_GESTIONAR')")
     public ReglaDisponibilidadResponse crearRegla(
             @AuthenticationPrincipal UsuarioAutenticado usuario,
             @Valid @RequestBody ReglaDisponibilidadRequest request
@@ -44,6 +46,7 @@ public class ControladorDisponibilidadStaff {
     }
 
     @PatchMapping("/reglas/{id}")
+    @PreAuthorize("hasAuthority('STAFF_DISPONIBILIDAD_GESTIONAR')")
     public ReglaDisponibilidadResponse actualizarRegla(
             @AuthenticationPrincipal UsuarioAutenticado usuario,
             @PathVariable Long id,
@@ -53,11 +56,13 @@ public class ControladorDisponibilidadStaff {
     }
 
     @GetMapping("/excepciones")
+    @PreAuthorize("hasAuthority('STAFF_DISPONIBILIDAD_GESTIONAR')")
     public List<ExcepcionDisponibilidadResponse> excepciones(@AuthenticationPrincipal UsuarioAutenticado usuario) {
         return servicioGestionDisponibilidad.listarExcepcionesStaff(usuario.empresaId(), usuario.usuarioId());
     }
 
     @PostMapping("/excepciones")
+    @PreAuthorize("hasAuthority('STAFF_DISPONIBILIDAD_GESTIONAR')")
     public ExcepcionDisponibilidadResponse crearExcepcion(
             @AuthenticationPrincipal UsuarioAutenticado usuario,
             @Valid @RequestBody ExcepcionDisponibilidadRequest request
@@ -66,6 +71,7 @@ public class ControladorDisponibilidadStaff {
     }
 
     @PatchMapping("/excepciones/{id}")
+    @PreAuthorize("hasAuthority('STAFF_DISPONIBILIDAD_GESTIONAR')")
     public ExcepcionDisponibilidadResponse actualizarExcepcion(
             @AuthenticationPrincipal UsuarioAutenticado usuario,
             @PathVariable Long id,

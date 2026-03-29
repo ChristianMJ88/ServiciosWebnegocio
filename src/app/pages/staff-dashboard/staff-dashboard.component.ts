@@ -16,7 +16,7 @@ import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatSelectModule } from '@angular/material/select';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatTooltipModule } from '@angular/material/tooltip';
-import { forkJoin } from 'rxjs';
+import { Observable, forkJoin, of } from 'rxjs';
 import { finalize } from 'rxjs/operators';
 import { AgendaOperationsSectionComponent } from '../../components/agenda/agenda-operations-section.component';
 import { buildWhatsAppUrl, formatAgendaStatusLabel, getDurationMinutes, getInitials } from '../../components/agenda/agenda.helpers';
@@ -38,6 +38,7 @@ import {
 } from '../../core/staff/staff.service';
 
 type SeccionStaff = 'agenda' | 'horarios' | 'bloqueos';
+type ModuloStaffDef = { id: SeccionStaff; titulo: string; descripcion: string; icono: string; permiso: string };
 
 @Component({
   selector: 'app-staff-dashboard',
@@ -95,15 +96,30 @@ export class StaffDashboardComponent implements OnInit {
     { value: 7, label: 'Domingo' }
   ];
   readonly tiposBloqueo = ['BLOQUEO', 'DESCANSO', 'VACACIONES', 'HORARIO_ESPECIAL'];
-  readonly modulosStaff: Array<{ id: SeccionStaff; titulo: string; descripcion: string; icono: string }> = [
-    { id: 'agenda', titulo: 'Agenda', descripcion: 'Citas del día y acciones operativas.', icono: 'agenda' },
-    { id: 'horarios', titulo: 'Horarios', descripcion: 'Define tu disponibilidad base.', icono: 'horario' },
-    { id: 'bloqueos', titulo: 'Bloqueos', descripcion: 'Descansos, vacaciones y cierres.', icono: 'bloqueo' }
+  readonly moduloStaffFallback: ModuloStaffDef = {
+    id: 'agenda',
+    titulo: 'Panel Staff',
+    descripcion: 'No tienes módulos operativos asignados todavía.',
+    icono: 'agenda',
+    permiso: 'STAFF_PANEL_ACCESO'
+  };
+  readonly modulosStaffBase: ModuloStaffDef[] = [
+    { id: 'agenda', titulo: 'Agenda', descripcion: 'Citas del día y acciones operativas.', icono: 'agenda', permiso: 'STAFF_AGENDA_VER' },
+    { id: 'horarios', titulo: 'Horarios', descripcion: 'Define tu disponibilidad base.', icono: 'horario', permiso: 'STAFF_DISPONIBILIDAD_GESTIONAR' },
+    { id: 'bloqueos', titulo: 'Bloqueos', descripcion: 'Descansos, vacaciones y cierres.', icono: 'bloqueo', permiso: 'STAFF_DISPONIBILIDAD_GESTIONAR' }
   ];
-  readonly moduloActivo = computed(() => this.modulosStaff.find(modulo => modulo.id === this.seccionActiva()) ?? this.modulosStaff[0]);
+  readonly modulosStaff = computed(() =>
+    this.modulosStaffBase.filter(modulo => this.authService.tienePermiso(modulo.permiso))
+  );
+  readonly moduloActivo = computed(() =>
+    this.modulosStaff().find(modulo => modulo.id === this.seccionActiva()) ?? this.modulosStaff()[0] ?? this.moduloStaffFallback
+  );
   readonly nombreUsuario = computed(() => this.authService.nombreUsuarioVisible());
   readonly correoUsuario = computed(() => this.authService.sesionActual()?.correo ?? '');
   readonly inicialesUsuario = computed(() => this.authService.inicialesUsuarioVisible());
+  readonly puedeVerAgenda = computed(() => this.authService.puedeVerAgendaStaff());
+  readonly puedeGestionarCitas = computed(() => this.authService.puedeGestionarCitasStaff());
+  readonly puedeGestionarDisponibilidad = computed(() => this.authService.puedeGestionarDisponibilidadStaff());
   readonly notificaciones = computed(() => this.agenda().filter(cita => cita.estado === 'PENDIENTE').length);
   readonly horasAgenda = Array.from({ length: this.finAgendaHora - this.inicioAgendaHora + 1 }, (_, index) => {
     const hora = this.inicioAgendaHora + index;
@@ -294,6 +310,9 @@ export class StaffDashboardComponent implements OnInit {
   }
 
   seleccionarSeccion(seccion: SeccionStaff) {
+    if (!this.modulosStaff().some(modulo => modulo.id === seccion)) {
+      return;
+    }
     this.seccionActiva.set(seccion);
     if (this.panelMovil()) {
       this.sidebarAbierto.set(false);
@@ -313,11 +332,11 @@ export class StaffDashboardComponent implements OnInit {
   }
 
   tituloSeccionActual(): string {
-    return this.modulosStaff.find(modulo => modulo.id === this.seccionActiva())?.titulo ?? 'Panel Staff';
+    return this.modulosStaff().find(modulo => modulo.id === this.seccionActiva())?.titulo ?? 'Panel Staff';
   }
 
   descripcionSeccionActual(): string {
-    return this.modulosStaff.find(modulo => modulo.id === this.seccionActiva())?.descripcion ?? '';
+    return this.modulosStaff().find(modulo => modulo.id === this.seccionActiva())?.descripcion ?? '';
   }
 
   claseEstadoCita(estado: string): string {
@@ -420,27 +439,37 @@ export class StaffDashboardComponent implements OnInit {
   }
 
   confirmar(id: number) {
+    if (!this.puedeGestionarCitas()) {
+      return;
+    }
     this.actualizarEstado(() => this.staffService.confirmar(id));
   }
 
   finalizar(id: number) {
+    if (!this.puedeGestionarCitas()) {
+      return;
+    }
     this.actualizarEstado(() => this.staffService.finalizar(id));
   }
 
   noAsistio(id: number) {
+    if (!this.puedeGestionarCitas()) {
+      return;
+    }
     this.actualizarEstado(() => this.staffService.noAsistio(id));
   }
 
   recargar() {
+    this.asegurarSeccionActivaDisponible();
     const { desde, hasta } = this.obtenerRangoAgenda(this.fechaAgendaSeleccionada() ?? this.obtenerFechaAgendaInicial());
     this.actualizarVistaEnZona(() => {
       this.loading.set(true);
       this.error = '';
     });
     forkJoin({
-      agenda: this.staffService.getAgenda(desde, hasta),
-      reglas: this.staffService.getReglasDisponibilidad(),
-      excepciones: this.staffService.getExcepcionesDisponibilidad()
+      agenda: this.cargarStaffSi(this.puedeVerAgenda(), this.staffService.getAgenda(desde, hasta), [] as CitaStaff[]),
+      reglas: this.cargarStaffSi(this.puedeGestionarDisponibilidad(), this.staffService.getReglasDisponibilidad(), [] as ReglaDisponibilidadStaff[]),
+      excepciones: this.cargarStaffSi(this.puedeGestionarDisponibilidad(), this.staffService.getExcepcionesDisponibilidad(), [] as ExcepcionDisponibilidadStaff[])
     })
       .pipe(finalize(() => this.actualizarVistaEnZona(() => this.loading.set(false))))
       .subscribe({
@@ -464,6 +493,9 @@ export class StaffDashboardComponent implements OnInit {
   }
 
   editarRegla(regla: ReglaDisponibilidadStaff) {
+    if (!this.puedeGestionarDisponibilidad()) {
+      return;
+    }
     this.reglaEditandoId = regla.id;
     this.formularioRegla = {
       tipoSujeto: 'PRESTADOR',
@@ -493,6 +525,9 @@ export class StaffDashboardComponent implements OnInit {
   }
 
   guardarRegla() {
+    if (!this.puedeGestionarDisponibilidad()) {
+      return;
+    }
     this.guardandoRegla = true;
     this.error = '';
     const payload: GuardarReglaDisponibilidadStaffPayload = {
@@ -519,6 +554,9 @@ export class StaffDashboardComponent implements OnInit {
   }
 
   editarExcepcion(excepcion: ExcepcionDisponibilidadStaff) {
+    if (!this.puedeGestionarDisponibilidad()) {
+      return;
+    }
     this.excepcionEditandoId = excepcion.id;
     this.formularioExcepcion = {
       tipoSujeto: 'PRESTADOR',
@@ -546,6 +584,9 @@ export class StaffDashboardComponent implements OnInit {
   }
 
   guardarExcepcion() {
+    if (!this.puedeGestionarDisponibilidad()) {
+      return;
+    }
     this.guardandoExcepcion = true;
     this.error = '';
     const payload: GuardarExcepcionDisponibilidadStaffPayload = {
@@ -597,11 +638,11 @@ export class StaffDashboardComponent implements OnInit {
   private construirAccionesAgendaStaff(citaId: number, estado: string, whatsappUrl: string | null): AgendaActionVm[] {
     const acciones: AgendaActionVm[] = [];
 
-    if (estado === 'PENDIENTE') {
+    if (this.puedeGestionarCitas() && estado === 'PENDIENTE') {
       acciones.push({ id: 'confirm', label: 'Confirmar', kind: 'primary' });
     }
 
-    if (estado === 'CONFIRMADA') {
+    if (this.puedeGestionarCitas() && estado === 'CONFIRMADA') {
       acciones.push({ id: 'finalize', label: 'Finalizar', kind: 'primary' });
       acciones.push({ id: 'no_show', label: 'No asistió', kind: 'secondary' });
     }
@@ -625,6 +666,9 @@ export class StaffDashboardComponent implements OnInit {
   }
 
   private cargarAgendaParaFecha(fecha: string) {
+    if (!this.puedeVerAgenda()) {
+      return;
+    }
     const { desde, hasta } = this.obtenerRangoAgenda(fecha);
     this.loading.set(true);
     this.error = '';
@@ -644,9 +688,24 @@ export class StaffDashboardComponent implements OnInit {
   }
 
   private inicializarFechaAgenda() {
+    this.asegurarSeccionActivaDisponible();
     if (!this.fechaAgendaSeleccionada()) {
       this.fechaAgendaSeleccionada.set(this.obtenerFechaAgendaInicial());
     }
+  }
+
+  private asegurarSeccionActivaDisponible() {
+    const modulos = this.modulosStaff();
+    if (!modulos.length) {
+      return;
+    }
+    if (!modulos.some(modulo => modulo.id === this.seccionActiva())) {
+      this.seccionActiva.set(modulos[0].id);
+    }
+  }
+
+  private cargarStaffSi<T>(permitido: boolean, peticion$: Observable<T>, fallback: T): Observable<T> {
+    return permitido ? peticion$ : of(fallback);
   }
 
   private obtenerFechaAgendaInicial(): string {

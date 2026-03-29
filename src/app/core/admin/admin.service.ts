@@ -87,23 +87,82 @@ export interface UsuarioInternoAdmin {
   usuarioId: number;
   sucursalId: number | null;
   sucursalNombre: string | null;
+  sucursalIds: number[];
+  sucursalNombresScope: string[];
   correo: string;
   nombreCompleto: string;
   telefono: string | null;
   puesto: string | null;
+  rolEmpresaId: number | null;
   rolCodigo: string;
+  rolNombre: string | null;
   activo: boolean;
   notas: string | null;
 }
 
+export interface RolInternoAdmin {
+  id: number;
+  codigo: string;
+  nombre: string;
+  descripcion: string | null;
+  activo: boolean;
+  editable: boolean;
+  usuariosAsignados: number;
+  sePuedeEliminar: boolean;
+  permisos: string[];
+}
+
+export interface PlantillaRolInternoAdmin {
+  codigoSugerido: string;
+  nombreSugerido: string;
+  descripcion: string;
+  categoria: string;
+  permisos: string[];
+}
+
+export interface AuditoriaRolInternoAdmin {
+  id: number;
+  accion: string;
+  resumen: string;
+  actorCorreo: string | null;
+  rolCodigo: string | null;
+  rolNombre: string | null;
+  creadoEn: string;
+}
+
+export interface AuditoriaConfiguracionAdmin {
+  id: number;
+  modulo: string;
+  accion: string;
+  resumen: string;
+  actorCorreo: string | null;
+  creadoEn: string;
+}
+
+export interface GuardarRolInternoPayload {
+  codigo: string;
+  nombre: string;
+  descripcion: string | null;
+  activo: boolean;
+  permisos: string[];
+}
+
+export interface PermisoAdmin {
+  id: number;
+  codigo: string;
+  nombre: string;
+  descripcion: string | null;
+}
+
 export interface GuardarUsuarioInternoPayload {
   sucursalId: number | null;
+  sucursalIds: number[];
   correo: string;
   contrasenaTemporal: string | null;
   nombreCompleto: string;
   telefono: string | null;
   puesto: string | null;
-  rolCodigo: string;
+  rolEmpresaId: number | null;
   activo: boolean;
   notas: string | null;
 }
@@ -432,6 +491,42 @@ export class AdminService {
 
   getUsuariosInternos(): Observable<UsuarioInternoAdmin[]> {
     return this.http.get<UsuarioInternoAdmin[]>(`${environment.apiBaseUrl}/admin/usuarios-internos`);
+  }
+
+  getRolesInternos(): Observable<RolInternoAdmin[]> {
+    return this.http.get<RolInternoAdmin[]>(`${environment.apiBaseUrl}/admin/roles-internos`);
+  }
+
+  getPlantillasRolesInternos(): Observable<PlantillaRolInternoAdmin[]> {
+    return this.http.get<PlantillaRolInternoAdmin[]>(`${environment.apiBaseUrl}/admin/roles-internos/plantillas`);
+  }
+
+  getAuditoriaRolesInternos(): Observable<AuditoriaRolInternoAdmin[]> {
+    return this.http.get<AuditoriaRolInternoAdmin[]>(`${environment.apiBaseUrl}/admin/roles-internos/auditoria`);
+  }
+
+  getAuditoriaConfiguracion(): Observable<AuditoriaConfiguracionAdmin[]> {
+    return this.http.get<AuditoriaConfiguracionAdmin[]>(`${environment.apiBaseUrl}/admin/configuracion/auditoria`);
+  }
+
+  getPermisos(): Observable<PermisoAdmin[]> {
+    return this.http.get<PermisoAdmin[]>(`${environment.apiBaseUrl}/admin/permisos`);
+  }
+
+  crearRolInterno(payload: GuardarRolInternoPayload): Observable<RolInternoAdmin> {
+    return this.http.post<RolInternoAdmin>(`${environment.apiBaseUrl}/admin/roles-internos`, payload);
+  }
+
+  actualizarRolInterno(id: number, payload: GuardarRolInternoPayload): Observable<RolInternoAdmin> {
+    return this.http.patch<RolInternoAdmin>(`${environment.apiBaseUrl}/admin/roles-internos/${id}`, payload);
+  }
+
+  clonarRolInterno(id: number, payload: GuardarRolInternoPayload): Observable<RolInternoAdmin> {
+    return this.http.post<RolInternoAdmin>(`${environment.apiBaseUrl}/admin/roles-internos/${id}/clonar`, payload);
+  }
+
+  eliminarRolInterno(id: number): Observable<void> {
+    return this.http.delete<void>(`${environment.apiBaseUrl}/admin/roles-internos/${id}`);
   }
 
   crearUsuarioInterno(payload: GuardarUsuarioInternoPayload): Observable<UsuarioInternoAdmin> {

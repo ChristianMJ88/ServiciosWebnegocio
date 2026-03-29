@@ -19,7 +19,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/staff")
-@PreAuthorize("hasRole('STAFF')")
+@PreAuthorize("hasAuthority('STAFF_PANEL_ACCESO')")
 public class ControladorAgendaStaff {
 
     private final ServicioAgendaStaff servicioAgendaStaff;
@@ -29,6 +29,7 @@ public class ControladorAgendaStaff {
     }
 
     @GetMapping("/agenda")
+    @PreAuthorize("hasAuthority('STAFF_AGENDA_VER')")
     public List<CitaAgendaResponse> agenda(
             @AuthenticationPrincipal UsuarioAutenticado usuario,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate desde,
@@ -38,21 +39,23 @@ public class ControladorAgendaStaff {
     }
 
     @PatchMapping("/citas/{citaId}/confirmar")
+    @PreAuthorize("hasAuthority('STAFF_CITAS_GESTIONAR')")
     public ResponseEntity<Void> confirmar(@PathVariable Long citaId, @AuthenticationPrincipal UsuarioAutenticado usuario) {
         servicioAgendaStaff.cambiarEstado(usuario.empresaId(), usuario.usuarioId(), citaId, "CONFIRMADA");
         return ResponseEntity.noContent().build();
     }
 
     @PatchMapping("/citas/{citaId}/finalizar")
+    @PreAuthorize("hasAuthority('STAFF_CITAS_GESTIONAR')")
     public ResponseEntity<Void> finalizar(@PathVariable Long citaId, @AuthenticationPrincipal UsuarioAutenticado usuario) {
         servicioAgendaStaff.cambiarEstado(usuario.empresaId(), usuario.usuarioId(), citaId, "FINALIZADA");
         return ResponseEntity.noContent().build();
     }
 
     @PatchMapping("/citas/{citaId}/no-asistio")
+    @PreAuthorize("hasAuthority('STAFF_CITAS_GESTIONAR')")
     public ResponseEntity<Void> noAsistio(@PathVariable Long citaId, @AuthenticationPrincipal UsuarioAutenticado usuario) {
         servicioAgendaStaff.cambiarEstado(usuario.empresaId(), usuario.usuarioId(), citaId, "NO_ASISTIO");
         return ResponseEntity.noContent().build();
     }
 }
-

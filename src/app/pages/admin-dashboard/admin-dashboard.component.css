@@ -238,6 +238,46 @@
   height: 18px;
 }
 
+.permission-groups {
+  display: grid;
+  gap: 1rem;
+}
+
+.permission-group-card {
+  border: 1px solid var(--dashboard-line);
+  background: var(--dashboard-surface-strong);
+  border-radius: 18px;
+  padding: 1rem 1rem 0.9rem;
+}
+
+.permission-group-title {
+  font-family: var(--dashboard-heading-font);
+  font-weight: 700;
+  font-size: 0.96rem;
+  color: var(--dashboard-ink);
+  margin-bottom: 0.75rem;
+}
+
+.permission-group-list {
+  display: grid;
+  gap: 0.65rem;
+}
+
+.permission-label,
+.permission-code {
+  display: block;
+}
+
+.permission-label {
+  font-weight: 600;
+  color: var(--dashboard-ink);
+}
+
+.permission-code {
+  font-size: 0.76rem;
+  color: var(--dashboard-ink-soft);
+}
+
 .active-nav-item .sidebar-nav-icon {
   background: rgba(94, 168, 255, 0.16);
   border-color: rgba(94, 168, 255, 0.2);

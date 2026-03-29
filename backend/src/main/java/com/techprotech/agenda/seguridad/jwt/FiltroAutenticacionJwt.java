@@ -29,17 +29,24 @@ public class FiltroAutenticacionJwt extends OncePerRequestFilter {
         String token = resolverToken(request);
         if (StringUtils.hasText(token) && servicioTokenJwt.esValido(token)) {
             var roles = servicioTokenJwt.obtenerRoles(token);
-            var authorities = servicioTokenJwt.obtenerRoles(token)
+            var permisos = servicioTokenJwt.obtenerPermisos(token);
+            var sucursalesPermitidas = servicioTokenJwt.obtenerSucursalesPermitidas(token);
+            var authorities = permisos.stream()
+                    .map(SimpleGrantedAuthority::new)
+                    .collect(Collectors.toSet());
+            authorities.addAll(servicioTokenJwt.obtenerRoles(token)
                     .stream()
                     .map(rol -> rol.startsWith("ROLE_") ? rol : "ROLE_" + rol)
                     .map(SimpleGrantedAuthority::new)
-                    .collect(Collectors.toSet());
+                    .collect(Collectors.toSet()));
 
             UsuarioAutenticado usuarioAutenticado = new UsuarioAutenticado(
                     servicioTokenJwt.obtenerSujeto(token),
                     servicioTokenJwt.obtenerUsuarioId(token),
                     servicioTokenJwt.obtenerEmpresaId(token),
-                    roles
+                    roles,
+                    permisos,
+                    sucursalesPermitidas
             );
 
             var autenticacion = new UsernamePasswordAuthenticationToken(

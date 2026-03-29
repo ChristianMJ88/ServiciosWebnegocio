@@ -5,17 +5,12 @@ import com.techprotech.agenda.modulos.autenticacion.api.dto.RefrescarTokenReques
 import com.techprotech.agenda.modulos.autenticacion.api.dto.RegistrarClienteRequest;
 import com.techprotech.agenda.modulos.autenticacion.api.dto.RespuestaTokenJwt;
 import com.techprotech.agenda.modulos.autenticacion.infraestructura.entidad.ClienteEntidad;
-import com.techprotech.agenda.modulos.autenticacion.infraestructura.entidad.RolEntidad;
 import com.techprotech.agenda.modulos.autenticacion.infraestructura.entidad.TokenActualizacionEntidad;
 import com.techprotech.agenda.modulos.autenticacion.infraestructura.entidad.UsuarioEntidad;
-import com.techprotech.agenda.modulos.autenticacion.infraestructura.entidad.UsuarioRolEntidad;
-import com.techprotech.agenda.modulos.autenticacion.infraestructura.entidad.UsuarioRolId;
 import com.techprotech.agenda.modulos.autenticacion.infraestructura.repositorio.ClienteRepositorio;
 import com.techprotech.agenda.modulos.autenticacion.infraestructura.repositorio.EmpresaRepositorio;
-import com.techprotech.agenda.modulos.autenticacion.infraestructura.repositorio.RolRepositorio;
 import com.techprotech.agenda.modulos.autenticacion.infraestructura.repositorio.TokenActualizacionRepositorio;
 import com.techprotech.agenda.modulos.autenticacion.infraestructura.repositorio.UsuarioRepositorio;
-import com.techprotech.agenda.modulos.autenticacion.infraestructura.repositorio.UsuarioRolRepositorio;
 import com.techprotech.agenda.seguridad.jwt.PropiedadesJwt;
 import com.techprotech.agenda.seguridad.jwt.ServicioTokenJwt;
 import org.slf4j.Logger;
@@ -45,8 +40,7 @@ public class ServicioAutenticacionImpl implements ServicioAutenticacion {
     private final EmpresaRepositorio empresaRepositorio;
     private final UsuarioRepositorio usuarioRepositorio;
     private final ClienteRepositorio clienteRepositorio;
-    private final RolRepositorio rolRepositorio;
-    private final UsuarioRolRepositorio usuarioRolRepositorio;
+    private final ServicioRolesEmpresa servicioRolesEmpresa;
     private final TokenActualizacionRepositorio tokenActualizacionRepositorio;
     private final PasswordEncoder passwordEncoder;
 
@@ -56,8 +50,7 @@ public class ServicioAutenticacionImpl implements ServicioAutenticacion {
             EmpresaRepositorio empresaRepositorio,
             UsuarioRepositorio usuarioRepositorio,
             ClienteRepositorio clienteRepositorio,
-            RolRepositorio rolRepositorio,
-            UsuarioRolRepositorio usuarioRolRepositorio,
+            ServicioRolesEmpresa servicioRolesEmpresa,
             TokenActualizacionRepositorio tokenActualizacionRepositorio,
             PasswordEncoder passwordEncoder
     ) {
@@ -66,8 +59,7 @@ public class ServicioAutenticacionImpl implements ServicioAutenticacion {
         this.empresaRepositorio = empresaRepositorio;
         this.usuarioRepositorio = usuarioRepositorio;
         this.clienteRepositorio = clienteRepositorio;
-        this.rolRepositorio = rolRepositorio;
-        this.usuarioRolRepositorio = usuarioRolRepositorio;
+        this.servicioRolesEmpresa = servicioRolesEmpresa;
         this.tokenActualizacionRepositorio = tokenActualizacionRepositorio;
         this.passwordEncoder = passwordEncoder;
     }
@@ -98,7 +90,7 @@ public class ServicioAutenticacionImpl implements ServicioAutenticacion {
             throw new ResponseStatusException(FORBIDDEN, "El usuario no tiene acceso habilitado");
         }
 
-        if (esClientePendienteActivacion(usuario) && tieneRolCliente(usuario.getId())) {
+        if (esClientePendienteActivacion(usuario) && tieneRolCliente(usuario.getEmpresaId(), usuario.getId())) {
             throw new ResponseStatusException(FORBIDDEN, "Tu acceso aun no esta activado. Completa tu registro para continuar.");
         }
 
@@ -107,10 +99,7 @@ public class ServicioAutenticacionImpl implements ServicioAutenticacion {
             throw new ResponseStatusException(UNAUTHORIZED, "Credenciales invalidas");
         }
 
-        List<String> roles = usuarioRolRepositorio.findByUsuario_Id(usuario.getId())
-                .stream()
-                .map(usuarioRol -> usuarioRol.getRol().getCodigo())
-                .toList();
+        List<String> roles = servicioRolesEmpresa.obtenerCodigosRolUsuario(usuario.getEmpresaId(), usuario.getId());
 
         usuario.setUltimoAccesoEn(LocalDateTime.now());
         usuarioRepositorio.save(usuario);
@@ -143,10 +132,7 @@ public class ServicioAutenticacionImpl implements ServicioAutenticacion {
         tokenGuardado.setRevocadoEn(LocalDateTime.now());
         tokenActualizacionRepositorio.save(tokenGuardado);
 
-        List<String> roles = usuarioRolRepositorio.findByUsuario_Id(usuario.getId())
-                .stream()
-                .map(usuarioRol -> usuarioRol.getRol().getCodigo())
-                .toList();
+        List<String> roles = servicioRolesEmpresa.obtenerCodigosRolUsuario(usuario.getEmpresaId(), usuario.getId());
 
         return emitirTokens(usuario, roles);
     }
@@ -173,20 +159,17 @@ public class ServicioAutenticacionImpl implements ServicioAutenticacion {
 
         String correoNormalizado = request.correo().trim().toLowerCase();
 
-        RolEntidad rolCliente = rolRepositorio.findByCodigo("CLIENTE")
-                .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "No existe el rol CLIENTE"));
-
         Optional<UsuarioEntidad> usuarioExistente = usuarioRepositorio.findByEmpresaIdAndCorreo(request.empresaId(), correoNormalizado);
         if (usuarioExistente.isPresent()) {
-            activarClientePendiente(usuarioExistente.get(), rolCliente, request);
+            activarClientePendiente(usuarioExistente.get(), request);
             return;
         }
 
-        UsuarioEntidad usuario = crearNuevoCliente(rolCliente, request, correoNormalizado);
+        UsuarioEntidad usuario = crearNuevoCliente(request, correoNormalizado);
         crearPerfilCliente(usuario.getId(), request.nombreCompleto().trim(), request.telefono().trim());
     }
 
-    private UsuarioEntidad crearNuevoCliente(RolEntidad rolCliente, RegistrarClienteRequest request, String correoNormalizado) {
+    private UsuarioEntidad crearNuevoCliente(RegistrarClienteRequest request, String correoNormalizado) {
         UsuarioEntidad usuario = new UsuarioEntidad();
         usuario.setEmpresaId(request.empresaId());
         usuario.setCorreo(correoNormalizado);
@@ -194,13 +177,7 @@ public class ServicioAutenticacionImpl implements ServicioAutenticacion {
         usuario.setHabilitado(true);
         usuario.setBloqueado(false);
         usuario = usuarioRepositorio.save(usuario);
-
-        UsuarioRolEntidad usuarioRol = new UsuarioRolEntidad(
-                new UsuarioRolId(usuario.getId(), rolCliente.getId(), request.empresaId()),
-                usuario,
-                rolCliente
-        );
-        usuarioRolRepositorio.save(usuarioRol);
+        servicioRolesEmpresa.asignarRolEmpresa(usuario, request.empresaId(), "CLIENTE");
         return usuario;
     }
 
@@ -213,8 +190,8 @@ public class ServicioAutenticacionImpl implements ServicioAutenticacion {
         clienteRepositorio.save(cliente);
     }
 
-    private void activarClientePendiente(UsuarioEntidad usuario, RolEntidad rolCliente, RegistrarClienteRequest request) {
-        if (!tieneRolCliente(usuario.getId())) {
+    private void activarClientePendiente(UsuarioEntidad usuario, RegistrarClienteRequest request) {
+        if (!tieneRolCliente(request.empresaId(), usuario.getId())) {
             throw new ResponseStatusException(CONFLICT, "Ya existe un usuario con ese correo en la empresa");
         }
         if (!esClientePendienteActivacion(usuario)) {
@@ -232,19 +209,11 @@ public class ServicioAutenticacionImpl implements ServicioAutenticacion {
             clienteRepositorio.save(cliente);
         });
 
-        if (usuarioRolRepositorio.findByUsuario_Id(usuario.getId()).isEmpty()) {
-            usuarioRolRepositorio.save(new UsuarioRolEntidad(
-                    new UsuarioRolId(usuario.getId(), rolCliente.getId(), request.empresaId()),
-                    usuario,
-                    rolCliente
-            ));
-        }
+        servicioRolesEmpresa.asignarRolEmpresa(usuario, request.empresaId(), "CLIENTE");
     }
 
-    private boolean tieneRolCliente(Long usuarioId) {
-        return usuarioRolRepositorio.findByUsuario_Id(usuarioId)
-                .stream()
-                .anyMatch(usuarioRol -> "CLIENTE".equals(usuarioRol.getRol().getCodigo()));
+    private boolean tieneRolCliente(Long empresaId, Long usuarioId) {
+        return servicioRolesEmpresa.usuarioTieneRol(empresaId, usuarioId, "CLIENTE");
     }
 
     private boolean esClientePendienteActivacion(UsuarioEntidad usuario) {
@@ -258,11 +227,15 @@ public class ServicioAutenticacionImpl implements ServicioAutenticacion {
     }
 
     private RespuestaTokenJwt emitirTokens(UsuarioEntidad usuario, List<String> roles) {
+        List<String> permisos = servicioRolesEmpresa.obtenerPermisosUsuario(usuario.getEmpresaId(), usuario.getId());
+        List<Long> sucursalesPermitidas = servicioRolesEmpresa.obtenerSucursalesPermitidas(usuario.getEmpresaId(), usuario.getId());
         String tokenAcceso = servicioTokenJwt.generarTokenAcceso(
                 usuario.getCorreo(),
                 usuario.getId(),
                 usuario.getEmpresaId(),
-                roles
+                roles,
+                permisos,
+                sucursalesPermitidas
         );
         String tokenActualizacion = servicioTokenJwt.generarTokenActualizacion(
                 usuario.getCorreo(),
@@ -282,7 +255,9 @@ public class ServicioAutenticacionImpl implements ServicioAutenticacion {
                 "Bearer",
                 usuario.getId(),
                 usuario.getEmpresaId(),
-                roles
+                roles,
+                permisos,
+                sucursalesPermitidas
         );
     }
 

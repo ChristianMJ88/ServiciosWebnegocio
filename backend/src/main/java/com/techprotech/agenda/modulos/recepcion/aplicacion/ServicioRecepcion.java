@@ -35,6 +35,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import static org.springframework.http.HttpStatus.BAD_REQUEST;
+import static org.springframework.http.HttpStatus.FORBIDDEN;
 import static org.springframework.http.HttpStatus.NOT_FOUND;
 
 @Service
@@ -76,8 +77,9 @@ public class ServicioRecepcion {
     }
 
     @Transactional(readOnly = true)
-    public List<CitaRecepcionResponse> agenda(Long empresaId, LocalDate fecha, Long sucursalId) {
+    public List<CitaRecepcionResponse> agenda(Long empresaId, List<Long> sucursalesPermitidas, LocalDate fecha, Long sucursalId) {
         LocalDate fechaOperativa = fecha != null ? fecha : LocalDate.now();
+        validarAccesoSucursal(sucursalesPermitidas, sucursalId);
         List<CitaEntidad> citas = citaRepositorio.findByEmpresaIdAndInicioBetweenOrderByInicioAsc(
                 empresaId,
                 fechaOperativa.atStartOfDay(),
@@ -86,6 +88,7 @@ public class ServicioRecepcion {
 
         return citas.stream()
                 .filter(cita -> sucursalId == null || sucursalId.equals(cita.getSucursalId()))
+                .filter(cita -> !tieneScopeSucursales(sucursalesPermitidas) || sucursalesPermitidas.contains(cita.getSucursalId()))
                 .map(this::mapearCita)
                 .toList();
     }
@@ -118,7 +121,8 @@ public class ServicioRecepcion {
     }
 
     @Transactional
-    public CitaCreadaResponse crearCita(Long empresaId, CrearCitaRecepcionRequest request) {
+    public CitaCreadaResponse crearCita(Long empresaId, List<Long> sucursalesPermitidas, CrearCitaRecepcionRequest request) {
+        validarAccesoSucursal(sucursalesPermitidas, request.sucursalId());
         return servicioCitas.crearCita(new CrearCitaRequest(
                 empresaId,
                 request.sucursalId(),
@@ -133,8 +137,8 @@ public class ServicioRecepcion {
     }
 
     @Transactional
-    public CitaRecepcionResponse checkIn(Long empresaId, Long usuarioId, Long citaId) {
-        CitaEntidad cita = obtenerCitaEmpresa(empresaId, citaId);
+    public CitaRecepcionResponse checkIn(Long empresaId, Long usuarioId, List<Long> sucursalesPermitidas, Long citaId) {
+        CitaEntidad cita = obtenerCitaEmpresa(empresaId, sucursalesPermitidas, citaId);
         if (!List.of("PENDIENTE", "CONFIRMADA").contains(cita.getEstado())) {
             throw new ResponseStatusException(BAD_REQUEST, "Solo se puede hacer check-in a citas pendientes o confirmadas");
         }
@@ -150,8 +154,8 @@ public class ServicioRecepcion {
     }
 
     @Transactional
-    public CitaRecepcionResponse confirmar(Long empresaId, Long usuarioId, Long citaId) {
-        CitaEntidad cita = obtenerCitaEmpresa(empresaId, citaId);
+    public CitaRecepcionResponse confirmar(Long empresaId, Long usuarioId, List<Long> sucursalesPermitidas, Long citaId) {
+        CitaEntidad cita = obtenerCitaEmpresa(empresaId, sucursalesPermitidas, citaId);
         if (!"PENDIENTE".equals(cita.getEstado())) {
             throw new ResponseStatusException(BAD_REQUEST, "Solo se pueden confirmar citas pendientes");
         }
@@ -164,8 +168,8 @@ public class ServicioRecepcion {
     }
 
     @Transactional
-    public CitaRecepcionResponse finalizar(Long empresaId, Long usuarioId, Long citaId) {
-        CitaEntidad cita = obtenerCitaEmpresa(empresaId, citaId);
+    public CitaRecepcionResponse finalizar(Long empresaId, Long usuarioId, List<Long> sucursalesPermitidas, Long citaId) {
+        CitaEntidad cita = obtenerCitaEmpresa(empresaId, sucursalesPermitidas, citaId);
         if (!List.of("PENDIENTE", "CONFIRMADA").contains(cita.getEstado())) {
             throw new ResponseStatusException(BAD_REQUEST, "Solo se pueden finalizar citas pendientes o confirmadas");
         }
@@ -186,8 +190,8 @@ public class ServicioRecepcion {
     }
 
     @Transactional
-    public CitaRecepcionResponse cancelar(Long empresaId, Long usuarioId, Long citaId) {
-        CitaEntidad cita = obtenerCitaEmpresa(empresaId, citaId);
+    public CitaRecepcionResponse cancelar(Long empresaId, Long usuarioId, List<Long> sucursalesPermitidas, Long citaId) {
+        CitaEntidad cita = obtenerCitaEmpresa(empresaId, sucursalesPermitidas, citaId);
         if (!List.of("PENDIENTE", "CONFIRMADA").contains(cita.getEstado())) {
             throw new ResponseStatusException(BAD_REQUEST, "Solo se pueden cancelar citas pendientes o confirmadas");
         }
@@ -210,14 +214,26 @@ public class ServicioRecepcion {
     }
 
     @Transactional
-    public CitaClienteResponse reprogramar(Long empresaId, Long usuarioId, Long citaId, ReagendarRecepcionRequest request) {
-        CitaEntidad cita = obtenerCitaEmpresa(empresaId, citaId);
+    public CitaClienteResponse reprogramar(Long empresaId, Long usuarioId, List<Long> sucursalesPermitidas, Long citaId, ReagendarRecepcionRequest request) {
+        CitaEntidad cita = obtenerCitaEmpresa(empresaId, sucursalesPermitidas, citaId);
         return servicioCitasCliente.reprogramar(empresaId, cita.getClienteId(), citaId, request.nuevoInicio());
     }
 
-    private CitaEntidad obtenerCitaEmpresa(Long empresaId, Long citaId) {
-        return citaRepositorio.findByIdAndEmpresaId(citaId, empresaId)
+    private CitaEntidad obtenerCitaEmpresa(Long empresaId, List<Long> sucursalesPermitidas, Long citaId) {
+        CitaEntidad cita = citaRepositorio.findByIdAndEmpresaId(citaId, empresaId)
                 .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "La cita no existe para la empresa"));
+        validarAccesoSucursal(sucursalesPermitidas, cita.getSucursalId());
+        return cita;
+    }
+
+    private boolean tieneScopeSucursales(List<Long> sucursalesPermitidas) {
+        return sucursalesPermitidas != null && !sucursalesPermitidas.isEmpty();
+    }
+
+    private void validarAccesoSucursal(List<Long> sucursalesPermitidas, Long sucursalId) {
+        if (tieneScopeSucursales(sucursalesPermitidas) && (sucursalId == null || !sucursalesPermitidas.contains(sucursalId))) {
+            throw new ResponseStatusException(FORBIDDEN, "No tienes acceso a la sucursal indicada");
+        }
     }
 
     private void guardarHistorial(Long citaId, String estadoAnterior, String estadoNuevo, Long usuarioId, String motivo) {

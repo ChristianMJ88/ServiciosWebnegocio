@@ -105,9 +105,9 @@
               </div>
             </div>
 
-            <mat-divider></mat-divider>
+            <mat-divider *ngIf="puedeGestionarSesion()"></mat-divider>
 
-            <form class="caja-form-grid" (ngSubmit)="cerrarCaja()">
+            <form class="caja-form-grid" *ngIf="puedeGestionarSesion()" (ngSubmit)="cerrarCaja()">
               <mat-form-field appearance="outline">
                 <mat-label>Monto contado</mat-label>
                 <input
@@ -138,7 +138,7 @@
           </ng-container>
 
           <ng-template #bloqueApertura>
-            <form class="caja-form-grid" (ngSubmit)="abrirCaja()">
+            <form class="caja-form-grid" *ngIf="puedeGestionarSesion(); else cajaSoloLectura" (ngSubmit)="abrirCaja()">
               <mat-form-field appearance="outline">
                 <mat-label>Monto inicial</mat-label>
                 <input
@@ -167,9 +167,15 @@
               </div>
             </form>
           </ng-template>
+
+          <ng-template #cajaSoloLectura>
+            <div class="caja-empty">
+              Tienes acceso de consulta a caja, pero no permiso para abrir o cerrar sesión.
+            </div>
+          </ng-template>
         </mat-card>
 
-        <mat-card class="caja-card">
+        <mat-card class="caja-card" *ngIf="puedeCobrar()">
           <div class="caja-card-heading">
             <span class="caja-card-kicker">Cobros</span>
             <h2>Citas pendientes de cobro</h2>
@@ -221,7 +227,7 @@
       </div>
 
       <div class="caja-side-column">
-        <mat-card class="caja-card">
+        <mat-card class="caja-card" *ngIf="puedeGestionarMovimientos()">
           <div class="caja-card-heading">
             <span class="caja-card-kicker">Pago</span>
             <h2>{{ citaSeleccionada() ? 'Registrar cobro' : 'Selecciona una cita' }}</h2>

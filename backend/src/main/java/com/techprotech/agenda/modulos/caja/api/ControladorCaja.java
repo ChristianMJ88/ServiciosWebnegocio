@@ -28,7 +28,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/caja")
-@PreAuthorize("hasAnyRole('ADMIN','CAJERO','RECEPCIONISTA')")
+@PreAuthorize("hasAuthority('CAJA_ACCESO')")
 public class ControladorCaja {
 
     private final ServicioCaja servicioCaja;
@@ -38,68 +38,76 @@ public class ControladorCaja {
     }
 
     @PostMapping("/sesiones/abrir")
+    @PreAuthorize("hasAuthority('CAJA_SESION_GESTIONAR')")
     public CajaSesionResponse abrirCaja(
             @AuthenticationPrincipal UsuarioAutenticado usuario,
             @Valid @RequestBody AbrirCajaRequest request
     ) {
-        return servicioCaja.abrirSesion(usuario.empresaId(), usuario.usuarioId(), request);
+        return servicioCaja.abrirSesion(usuario.empresaId(), usuario.usuarioId(), usuario.sucursalesPermitidas(), request);
     }
 
     @PostMapping("/sesiones/{id}/cerrar")
+    @PreAuthorize("hasAuthority('CAJA_SESION_GESTIONAR')")
     public CajaSesionResponse cerrarCaja(
             @AuthenticationPrincipal UsuarioAutenticado usuario,
             @PathVariable Long id,
             @Valid @RequestBody CerrarCajaRequest request
     ) {
-        return servicioCaja.cerrarSesion(usuario.empresaId(), usuario.usuarioId(), id, request);
+        return servicioCaja.cerrarSesion(usuario.empresaId(), usuario.usuarioId(), usuario.sucursalesPermitidas(), id, request);
     }
 
     @GetMapping("/sesiones/actual")
+    @PreAuthorize("hasAuthority('CAJA_ACCESO')")
     public CajaSesionResponse sesionActual(
             @AuthenticationPrincipal UsuarioAutenticado usuario,
             @RequestParam(required = false) Long sucursalId
     ) {
-        return servicioCaja.obtenerSesionActual(usuario.empresaId(), sucursalId);
+        return servicioCaja.obtenerSesionActual(usuario.empresaId(), usuario.sucursalesPermitidas(), sucursalId);
     }
 
     @GetMapping("/citas-por-cobrar")
+    @PreAuthorize("hasAuthority('CAJA_ACCESO')")
     public List<CitaPorCobrarResponse> citasPorCobrar(
             @AuthenticationPrincipal UsuarioAutenticado usuario,
             @RequestParam(required = false) Long sucursalId
     ) {
-        return servicioCaja.listarCitasPorCobrar(usuario.empresaId(), sucursalId);
+        return servicioCaja.listarCitasPorCobrar(usuario.empresaId(), usuario.sucursalesPermitidas(), sucursalId);
     }
 
     @PostMapping("/citas/{citaId}/pagos")
+    @PreAuthorize("hasAuthority('CAJA_COBRAR')")
     public PagoCitaResponse registrarPago(
             @AuthenticationPrincipal UsuarioAutenticado usuario,
             @PathVariable Long citaId,
             @Valid @RequestBody RegistrarPagoRequest request
     ) {
-        return servicioCaja.registrarPago(usuario.empresaId(), usuario.usuarioId(), citaId, request);
+        return servicioCaja.registrarPago(usuario.empresaId(), usuario.usuarioId(), usuario.sucursalesPermitidas(), citaId, request);
     }
 
     @GetMapping("/citas/{citaId}/pagos")
+    @PreAuthorize("hasAuthority('CAJA_ACCESO')")
     public List<PagoCitaResponse> pagosCita(
             @AuthenticationPrincipal UsuarioAutenticado usuario,
             @PathVariable Long citaId
     ) {
-        return servicioCaja.listarPagosCita(usuario.empresaId(), citaId);
+        return servicioCaja.listarPagosCita(usuario.empresaId(), usuario.sucursalesPermitidas(), citaId);
     }
 
     @PostMapping("/movimientos")
+    @PreAuthorize("hasAuthority('CAJA_MOVIMIENTOS_GESTIONAR')")
     public MovimientoCajaResponse registrarMovimiento(
             @AuthenticationPrincipal UsuarioAutenticado usuario,
             @Valid @RequestBody RegistrarMovimientoCajaRequest request
     ) {
-        return servicioCaja.registrarMovimiento(usuario.empresaId(), usuario.usuarioId(), request);
+        return servicioCaja.registrarMovimiento(usuario.empresaId(), usuario.usuarioId(), usuario.sucursalesPermitidas(), request);
     }
 
     @GetMapping("/resumen")
+    @PreAuthorize("hasAuthority('CAJA_ACCESO')")
     public ResumenCajaResponse resumen(
             @AuthenticationPrincipal UsuarioAutenticado usuario,
             @RequestParam(required = false) Long sucursalId
     ) {
-        return servicioCaja.resumen(usuario.empresaId(), sucursalId);
+        return servicioCaja.resumen(usuario.empresaId(), usuario.sucursalesPermitidas(), sucursalId);
     }
 }

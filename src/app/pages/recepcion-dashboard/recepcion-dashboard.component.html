@@ -107,16 +107,16 @@
               </div>
 
               <div class="recepcion-appointment-actions">
-                <button mat-stroked-button type="button" (click)="hacerCheckIn(cita.id)" [disabled]="guardando() || !!cita.checkInEn">
+                <button mat-stroked-button type="button" *ngIf="puedeRegistrarCheckIn()" (click)="hacerCheckIn(cita.id)" [disabled]="guardando() || !!cita.checkInEn">
                   {{ cita.checkInEn ? 'Check-in realizado' : 'Check-in' }}
                 </button>
-                <button mat-stroked-button type="button" (click)="confirmar(cita.id)" [disabled]="guardando() || cita.estado !== 'PENDIENTE'">
+                <button mat-stroked-button type="button" *ngIf="puedeGestionarCitas()" (click)="confirmar(cita.id)" [disabled]="guardando() || cita.estado !== 'PENDIENTE'">
                   Confirmar
                 </button>
-                <button mat-stroked-button type="button" (click)="finalizar(cita.id)" [disabled]="guardando() || !['PENDIENTE','CONFIRMADA'].includes(cita.estado)">
+                <button mat-stroked-button type="button" *ngIf="puedeGestionarCitas()" (click)="finalizar(cita.id)" [disabled]="guardando() || !['PENDIENTE','CONFIRMADA'].includes(cita.estado)">
                   Finalizar
                 </button>
-                <button mat-stroked-button type="button" class="warn-button" (click)="cancelar(cita.id)" [disabled]="guardando() || !['PENDIENTE','CONFIRMADA'].includes(cita.estado)">
+                <button mat-stroked-button type="button" *ngIf="puedeGestionarCitas()" class="warn-button" (click)="cancelar(cita.id)" [disabled]="guardando() || !['PENDIENTE','CONFIRMADA'].includes(cita.estado)">
                   Cancelar
                 </button>
               </div>
@@ -126,7 +126,7 @@
       </div>
 
       <div class="recepcion-side-column">
-        <mat-card class="recepcion-card">
+        <mat-card class="recepcion-card" *ngIf="puedeBuscarClientes()">
           <div class="recepcion-card-heading">
             <span class="recepcion-card-kicker">Búsqueda rápida</span>
             <h2>Cliente existente</h2>
@@ -151,7 +151,7 @@
           </div>
         </mat-card>
 
-        <mat-card class="recepcion-card">
+        <mat-card class="recepcion-card" *ngIf="puedeGestionarCitas()">
           <div class="recepcion-card-heading">
             <span class="recepcion-card-kicker">Nueva cita</span>
             <h2>Alta rápida desde recepción</h2>

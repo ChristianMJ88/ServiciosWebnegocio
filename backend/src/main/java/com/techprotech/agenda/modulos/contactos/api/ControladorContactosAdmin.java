@@ -18,7 +18,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/admin/contactos")
-@PreAuthorize("hasRole('ADMIN')")
+@PreAuthorize("hasAuthority('PANEL_ADMIN_ACCESO')")
 public class ControladorContactosAdmin {
 
     private final ServicioGestionSolicitudesContacto servicioGestionSolicitudesContacto;
@@ -28,11 +28,13 @@ public class ControladorContactosAdmin {
     }
 
     @GetMapping
+    @PreAuthorize("hasAuthority('CONTACTOS_ADMIN_VER')")
     public List<SolicitudContactoAdminResponse> listar(@AuthenticationPrincipal UsuarioAutenticado usuario) {
         return servicioGestionSolicitudesContacto.listarPorEmpresa(usuario.empresaId());
     }
 
     @PatchMapping("/{id}/estado")
+    @PreAuthorize("hasAuthority('CONTACTOS_ADMIN_VER')")
     public SolicitudContactoAdminResponse actualizarEstado(
             @AuthenticationPrincipal UsuarioAutenticado usuario,
             @PathVariable Long id,

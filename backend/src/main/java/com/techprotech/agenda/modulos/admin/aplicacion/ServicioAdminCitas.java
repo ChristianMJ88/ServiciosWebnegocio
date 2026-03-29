@@ -22,6 +22,10 @@ import com.techprotech.agenda.modulos.admin.api.dto.LogMensajeWhatsappAdminRespo
 import com.techprotech.agenda.modulos.admin.api.dto.MigracionSecretosCorreoResponse;
 import com.techprotech.agenda.modulos.admin.api.dto.AsociarChannelSenderWhatsappRequest;
 import com.techprotech.agenda.modulos.admin.api.dto.AsociarChannelSenderWhatsappResponse;
+import com.techprotech.agenda.modulos.admin.api.dto.AuditoriaConfiguracionAdminResponse;
+import com.techprotech.agenda.modulos.admin.api.dto.AuditoriaRolInternoAdminResponse;
+import com.techprotech.agenda.modulos.admin.api.dto.PermisoAdminResponse;
+import com.techprotech.agenda.modulos.admin.api.dto.PlantillaRolInternoAdminResponse;
 import com.techprotech.agenda.modulos.admin.api.dto.PlantillaWhatsappAdminResponse;
 import com.techprotech.agenda.modulos.admin.api.dto.PrestadorAdminRequest;
 import com.techprotech.agenda.modulos.admin.api.dto.PrestadorAdminResponse;
@@ -32,6 +36,8 @@ import com.techprotech.agenda.modulos.admin.api.dto.ProvisionarSubcuentaWhatsapp
 import com.techprotech.agenda.modulos.admin.api.dto.PruebaPlantillaWhatsappRequest;
 import com.techprotech.agenda.modulos.admin.api.dto.PruebaPlantillaWhatsappResponse;
 import com.techprotech.agenda.modulos.admin.api.dto.ReporteServicioAdminResponse;
+import com.techprotech.agenda.modulos.admin.api.dto.RolInternoAdminRequest;
+import com.techprotech.agenda.modulos.admin.api.dto.RolInternoAdminResponse;
 import com.techprotech.agenda.modulos.admin.api.dto.ServicioAdminRequest;
 import com.techprotech.agenda.modulos.admin.api.dto.ServicioAdminResponse;
 import com.techprotech.agenda.modulos.admin.api.dto.SucursalAdminRequest;
@@ -39,20 +45,32 @@ import com.techprotech.agenda.modulos.admin.api.dto.SucursalAdminResponse;
 import com.techprotech.agenda.modulos.admin.api.dto.UsuarioInternoAdminRequest;
 import com.techprotech.agenda.modulos.admin.api.dto.UsuarioInternoAdminResponse;
 import com.techprotech.agenda.modulos.admin.api.dto.ResumenAdminResponse;
+import com.techprotech.agenda.modulos.admin.infraestructura.entidad.AuditoriaRolEmpresaEntidad;
+import com.techprotech.agenda.modulos.admin.infraestructura.entidad.AuditoriaConfiguracionEmpresaEntidad;
+import com.techprotech.agenda.modulos.admin.infraestructura.repositorio.AuditoriaConfiguracionEmpresaRepositorio;
+import com.techprotech.agenda.modulos.admin.infraestructura.repositorio.AuditoriaRolEmpresaRepositorio;
+import com.techprotech.agenda.modulos.autenticacion.aplicacion.ServicioRolesEmpresa;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.techprotech.agenda.modulos.autenticacion.infraestructura.repositorio.ClienteRepositorio;
-import com.techprotech.agenda.modulos.autenticacion.infraestructura.entidad.RolEntidad;
+import com.techprotech.agenda.modulos.autenticacion.infraestructura.entidad.PermisoEntidad;
+import com.techprotech.agenda.modulos.autenticacion.infraestructura.entidad.RolEmpresaEntidad;
+import com.techprotech.agenda.modulos.autenticacion.infraestructura.entidad.RolEmpresaPermisoEntidad;
+import com.techprotech.agenda.modulos.autenticacion.infraestructura.entidad.RolEmpresaPermisoId;
 import com.techprotech.agenda.modulos.autenticacion.infraestructura.entidad.UsuarioEntidad;
 import com.techprotech.agenda.modulos.autenticacion.infraestructura.entidad.UsuarioInternoPerfilEntidad;
-import com.techprotech.agenda.modulos.autenticacion.infraestructura.entidad.UsuarioRolEntidad;
-import com.techprotech.agenda.modulos.autenticacion.infraestructura.entidad.UsuarioRolId;
+import com.techprotech.agenda.modulos.autenticacion.infraestructura.entidad.UsuarioInternoSucursalEntidad;
+import com.techprotech.agenda.modulos.autenticacion.infraestructura.entidad.UsuarioInternoSucursalId;
+import com.techprotech.agenda.modulos.autenticacion.infraestructura.entidad.UsuarioRolEmpresaEntidad;
 import com.techprotech.agenda.modulos.autenticacion.infraestructura.entidad.EmpresaEntidad;
 import com.techprotech.agenda.modulos.autenticacion.infraestructura.repositorio.EmpresaRepositorio;
-import com.techprotech.agenda.modulos.autenticacion.infraestructura.repositorio.RolRepositorio;
+import com.techprotech.agenda.modulos.autenticacion.infraestructura.repositorio.PermisoRepositorio;
+import com.techprotech.agenda.modulos.autenticacion.infraestructura.repositorio.RolEmpresaPermisoRepositorio;
+import com.techprotech.agenda.modulos.autenticacion.infraestructura.repositorio.RolEmpresaRepositorio;
 import com.techprotech.agenda.modulos.autenticacion.infraestructura.repositorio.UsuarioInternoPerfilRepositorio;
+import com.techprotech.agenda.modulos.autenticacion.infraestructura.repositorio.UsuarioInternoSucursalRepositorio;
 import com.techprotech.agenda.modulos.autenticacion.infraestructura.repositorio.UsuarioRepositorio;
-import com.techprotech.agenda.modulos.autenticacion.infraestructura.repositorio.UsuarioRolRepositorio;
+import com.techprotech.agenda.modulos.autenticacion.infraestructura.repositorio.UsuarioRolEmpresaRepositorio;
 import com.techprotech.agenda.modulos.citas.api.dto.CitaClienteResponse;
 import com.techprotech.agenda.modulos.citas.infraestructura.entidad.CitaEntidad;
 import com.techprotech.agenda.modulos.citas.infraestructura.entidad.HistorialEstadoCitaEntidad;
@@ -79,6 +97,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -97,7 +116,12 @@ import static org.springframework.http.HttpStatus.BAD_REQUEST;
 public class ServicioAdminCitas {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ServicioAdminCitas.class);
-    private static final Set<String> ROLES_USUARIO_INTERNO = Set.of("ADMIN", "RECEPCIONISTA", "CAJERO");
+    private static final Set<String> PERMISOS_ACCESO_INTERNO = Set.of(
+            "PANEL_ADMIN_ACCESO",
+            "RECEPCION_ACCESO",
+            "CAJA_ACCESO",
+            "STAFF_PANEL_ACCESO"
+    );
 
     private final CitaRepositorio citaRepositorio;
     private final HistorialEstadoCitaRepositorio historialEstadoCitaRepositorio;
@@ -108,8 +132,12 @@ public class ServicioAdminCitas {
     private final ClienteRepositorio clienteRepositorio;
     private final UsuarioRepositorio usuarioRepositorio;
     private final UsuarioInternoPerfilRepositorio usuarioInternoPerfilRepositorio;
-    private final UsuarioRolRepositorio usuarioRolRepositorio;
-    private final RolRepositorio rolRepositorio;
+    private final UsuarioInternoSucursalRepositorio usuarioInternoSucursalRepositorio;
+    private final UsuarioRolEmpresaRepositorio usuarioRolEmpresaRepositorio;
+    private final RolEmpresaRepositorio rolEmpresaRepositorio;
+    private final RolEmpresaPermisoRepositorio rolEmpresaPermisoRepositorio;
+    private final PermisoRepositorio permisoRepositorio;
+    private final ServicioRolesEmpresa servicioRolesEmpresa;
     private final PasswordEncoder passwordEncoder;
     private final EmpresaRepositorio empresaRepositorio;
     private final ConfiguracionCorreoEmpresaRepositorio configuracionCorreoEmpresaRepositorio;
@@ -118,6 +146,8 @@ public class ServicioAdminCitas {
     private final ClienteWhatsappTwilio clienteWhatsappTwilio;
     private final ServicioOutboxWhatsappCitas servicioOutboxWhatsappCitas;
     private final BandejaSalidaNotificacionRepositorio bandejaSalidaNotificacionRepositorio;
+    private final AuditoriaConfiguracionEmpresaRepositorio auditoriaConfiguracionEmpresaRepositorio;
+    private final AuditoriaRolEmpresaRepositorio auditoriaRolEmpresaRepositorio;
     private final ObjectMapper objectMapper;
     private final ProtectorSecretosCorreo protectorSecretosCorreo;
 
@@ -131,8 +161,12 @@ public class ServicioAdminCitas {
             ClienteRepositorio clienteRepositorio,
             UsuarioRepositorio usuarioRepositorio,
             UsuarioInternoPerfilRepositorio usuarioInternoPerfilRepositorio,
-            UsuarioRolRepositorio usuarioRolRepositorio,
-            RolRepositorio rolRepositorio,
+            UsuarioInternoSucursalRepositorio usuarioInternoSucursalRepositorio,
+            UsuarioRolEmpresaRepositorio usuarioRolEmpresaRepositorio,
+            RolEmpresaRepositorio rolEmpresaRepositorio,
+            RolEmpresaPermisoRepositorio rolEmpresaPermisoRepositorio,
+            PermisoRepositorio permisoRepositorio,
+            ServicioRolesEmpresa servicioRolesEmpresa,
             PasswordEncoder passwordEncoder,
             EmpresaRepositorio empresaRepositorio,
             ConfiguracionCorreoEmpresaRepositorio configuracionCorreoEmpresaRepositorio,
@@ -141,6 +175,8 @@ public class ServicioAdminCitas {
             ClienteWhatsappTwilio clienteWhatsappTwilio,
             ServicioOutboxWhatsappCitas servicioOutboxWhatsappCitas,
             BandejaSalidaNotificacionRepositorio bandejaSalidaNotificacionRepositorio,
+            AuditoriaConfiguracionEmpresaRepositorio auditoriaConfiguracionEmpresaRepositorio,
+            AuditoriaRolEmpresaRepositorio auditoriaRolEmpresaRepositorio,
             ObjectMapper objectMapper,
             ProtectorSecretosCorreo protectorSecretosCorreo
     ) {
@@ -153,8 +189,12 @@ public class ServicioAdminCitas {
         this.clienteRepositorio = clienteRepositorio;
         this.usuarioRepositorio = usuarioRepositorio;
         this.usuarioInternoPerfilRepositorio = usuarioInternoPerfilRepositorio;
-        this.usuarioRolRepositorio = usuarioRolRepositorio;
-        this.rolRepositorio = rolRepositorio;
+        this.usuarioInternoSucursalRepositorio = usuarioInternoSucursalRepositorio;
+        this.usuarioRolEmpresaRepositorio = usuarioRolEmpresaRepositorio;
+        this.rolEmpresaRepositorio = rolEmpresaRepositorio;
+        this.rolEmpresaPermisoRepositorio = rolEmpresaPermisoRepositorio;
+        this.permisoRepositorio = permisoRepositorio;
+        this.servicioRolesEmpresa = servicioRolesEmpresa;
         this.passwordEncoder = passwordEncoder;
         this.empresaRepositorio = empresaRepositorio;
         this.configuracionCorreoEmpresaRepositorio = configuracionCorreoEmpresaRepositorio;
@@ -163,6 +203,8 @@ public class ServicioAdminCitas {
         this.clienteWhatsappTwilio = clienteWhatsappTwilio;
         this.servicioOutboxWhatsappCitas = servicioOutboxWhatsappCitas;
         this.bandejaSalidaNotificacionRepositorio = bandejaSalidaNotificacionRepositorio;
+        this.auditoriaConfiguracionEmpresaRepositorio = auditoriaConfiguracionEmpresaRepositorio;
+        this.auditoriaRolEmpresaRepositorio = auditoriaRolEmpresaRepositorio;
         this.objectMapper = objectMapper;
         this.protectorSecretosCorreo = protectorSecretosCorreo;
     }
@@ -225,13 +267,14 @@ public class ServicioAdminCitas {
     }
 
     @Transactional
-    public ConfiguracionCorreoAdminResponse actualizarConfiguracionCorreo(Long empresaId, ConfiguracionCorreoAdminRequest request) {
+    public ConfiguracionCorreoAdminResponse actualizarConfiguracionCorreo(Long empresaId, Long usuarioActorId, ConfiguracionCorreoAdminRequest request) {
         ConfiguracionCorreoEmpresaEntidad configuracion = configuracionCorreoEmpresaRepositorio.findById(empresaId)
                 .orElseGet(() -> {
                     ConfiguracionCorreoEmpresaEntidad nueva = new ConfiguracionCorreoEmpresaEntidad();
                     nueva.setEmpresaId(empresaId);
                     return nueva;
         });
+        String snapshotAntes = snapshotConfiguracionCorreo(configuracion);
 
         ProveedorCorreo proveedor = ProveedorCorreo.desdeValor(request.proveedor(), ProveedorCorreo.SMTP);
         configuracion.setHabilitado(request.habilitado());
@@ -270,13 +313,24 @@ public class ServicioAdminCitas {
             );
         }
 
-        return mapearConfiguracionCorreo(configuracionCorreoEmpresaRepositorio.save(configuracion));
+        ConfiguracionCorreoEmpresaEntidad guardada = configuracionCorreoEmpresaRepositorio.save(configuracion);
+        registrarAuditoriaConfiguracion(
+                empresaId,
+                usuarioActorId,
+                "CORREO",
+                "CONFIGURACION_CORREO_ACTUALIZADA",
+                "Se actualizó la configuración de correo transaccional",
+                snapshotAntes,
+                snapshotConfiguracionCorreo(guardada)
+        );
+        return mapearConfiguracionCorreo(guardada);
     }
 
     @Transactional
-    public MigracionSecretosCorreoResponse migrarSecretosCorreo(Long empresaId) {
+    public MigracionSecretosCorreoResponse migrarSecretosCorreo(Long empresaId, Long usuarioActorId) {
         ConfiguracionCorreoEmpresaEntidad configuracion = configuracionCorreoEmpresaRepositorio.findById(empresaId)
                 .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "No existe configuracion de correo para la empresa"));
+        String snapshotAntes = snapshotConfiguracionCorreo(configuracion);
 
         boolean actualizada = false;
         StringBuilder mensaje = new StringBuilder();
@@ -312,7 +366,16 @@ public class ServicioAdminCitas {
             return new MigracionSecretosCorreoResponse(false, "No hay secretos legacy por migrar");
         }
 
-        configuracionCorreoEmpresaRepositorio.save(configuracion);
+        ConfiguracionCorreoEmpresaEntidad guardada = configuracionCorreoEmpresaRepositorio.save(configuracion);
+        registrarAuditoriaConfiguracion(
+                empresaId,
+                usuarioActorId,
+                "CORREO",
+                "SECRETOS_CORREO_MIGRADOS",
+                "Se migraron secretos legacy de correo a formato cifrado",
+                snapshotAntes,
+                snapshotConfiguracionCorreo(guardada)
+        );
         return new MigracionSecretosCorreoResponse(true, mensaje + " a formato cifrado");
     }
 
@@ -329,13 +392,14 @@ public class ServicioAdminCitas {
     }
 
     @Transactional
-    public ConfiguracionWhatsappAdminResponse actualizarConfiguracionWhatsapp(Long empresaId, ConfiguracionWhatsappAdminRequest request) {
+    public ConfiguracionWhatsappAdminResponse actualizarConfiguracionWhatsapp(Long empresaId, Long usuarioActorId, ConfiguracionWhatsappAdminRequest request) {
         ConfiguracionWhatsappEmpresaEntidad configuracion = configuracionWhatsappEmpresaRepositorio.findById(empresaId)
                 .orElseGet(() -> {
                     ConfiguracionWhatsappEmpresaEntidad nueva = new ConfiguracionWhatsappEmpresaEntidad();
                     nueva.setEmpresaId(empresaId);
                     return nueva;
                 });
+        String snapshotAntes = snapshotConfiguracionWhatsapp(configuracion);
 
         configuracion.setHabilitado(request.habilitado());
         configuracion.setAccountSid(normalizarOpcional(request.accountSid()));
@@ -369,7 +433,17 @@ public class ServicioAdminCitas {
             );
         }
 
-        return mapearConfiguracionWhatsapp(configuracionWhatsappEmpresaRepositorio.save(configuracion));
+        ConfiguracionWhatsappEmpresaEntidad guardada = configuracionWhatsappEmpresaRepositorio.save(configuracion);
+        registrarAuditoriaConfiguracion(
+                empresaId,
+                usuarioActorId,
+                "WHATSAPP",
+                "CONFIGURACION_WHATSAPP_ACTUALIZADA",
+                "Se actualizó la configuración operativa de WhatsApp",
+                snapshotAntes,
+                snapshotConfiguracionWhatsapp(guardada)
+        );
+        return mapearConfiguracionWhatsapp(guardada);
     }
 
     private String cifrarSecretosWhatsappSiEsPosible(String valorPlano, Long empresaId) {
@@ -427,6 +501,7 @@ public class ServicioAdminCitas {
     @Transactional
     public ProvisionarSubcuentaWhatsappResponse provisionarSubcuentaWhatsapp(
             Long empresaId,
+            Long usuarioActorId,
             ProvisionarSubcuentaWhatsappRequest request
     ) {
         EmpresaEntidad empresa = empresaRepositorio.findById(empresaId)
@@ -461,7 +536,17 @@ public class ServicioAdminCitas {
             configuracion.setSenderStatus("PENDIENTE_CONFIGURACION");
         }
 
+        String snapshotAntes = snapshotConfiguracionWhatsapp(configuracion);
         ConfiguracionWhatsappEmpresaEntidad guardada = configuracionWhatsappEmpresaRepositorio.save(configuracion);
+        registrarAuditoriaConfiguracion(
+                empresaId,
+                usuarioActorId,
+                "WHATSAPP",
+                "WHATSAPP_SUBCUENTA_PROVISIONADA",
+                "Se provisionó una subcuenta Twilio para el tenant",
+                snapshotAntes,
+                snapshotConfiguracionWhatsapp(guardada)
+        );
         ConfiguracionWhatsappAdminResponse respuestaConfiguracion = mapearConfiguracionWhatsapp(guardada);
 
         return new ProvisionarSubcuentaWhatsappResponse(
@@ -477,6 +562,7 @@ public class ServicioAdminCitas {
     @Transactional
     public ProvisionarMessagingServiceWhatsappResponse provisionarMessagingServiceWhatsapp(
             Long empresaId,
+            Long usuarioActorId,
             ProvisionarMessagingServiceWhatsappRequest request
     ) {
         EmpresaEntidad empresa = empresaRepositorio.findById(empresaId)
@@ -509,8 +595,18 @@ public class ServicioAdminCitas {
                 statusCallbackUrl
         );
 
+        String snapshotAntes = snapshotConfiguracionWhatsapp(configuracion);
         configuracion.setMessagingServiceSid(messagingService.sid());
         ConfiguracionWhatsappEmpresaEntidad guardada = configuracionWhatsappEmpresaRepositorio.save(configuracion);
+        registrarAuditoriaConfiguracion(
+                empresaId,
+                usuarioActorId,
+                "WHATSAPP",
+                "WHATSAPP_MESSAGING_SERVICE_PROVISIONADO",
+                "Se creó un Messaging Service para el tenant",
+                snapshotAntes,
+                snapshotConfiguracionWhatsapp(guardada)
+        );
         ConfiguracionWhatsappAdminResponse respuestaConfiguracion = mapearConfiguracionWhatsapp(guardada);
 
         return new ProvisionarMessagingServiceWhatsappResponse(
@@ -526,6 +622,7 @@ public class ServicioAdminCitas {
     @Transactional
     public AsociarChannelSenderWhatsappResponse asociarChannelSenderWhatsapp(
             Long empresaId,
+            Long usuarioActorId,
             AsociarChannelSenderWhatsappRequest request
     ) {
         ConfiguracionWhatsappEmpresaEntidad configuracion = configuracionWhatsappEmpresaRepositorio.findById(empresaId)
@@ -536,10 +633,20 @@ public class ServicioAdminCitas {
             throw new ResponseStatusException(BAD_REQUEST, "Primero debes crear o capturar el Messaging Service SID del tenant");
         }
 
+        String snapshotAntes = snapshotConfiguracionWhatsapp(configuracion);
         String channelSenderSid = request.channelSenderSid().trim();
         clienteWhatsappTwilio.asociarChannelSenderAMessagingService(empresaId, messagingServiceSid, channelSenderSid);
         configuracion.setChannelSenderSid(channelSenderSid);
         ConfiguracionWhatsappEmpresaEntidad guardada = configuracionWhatsappEmpresaRepositorio.save(configuracion);
+        registrarAuditoriaConfiguracion(
+                empresaId,
+                usuarioActorId,
+                "WHATSAPP",
+                "WHATSAPP_CHANNEL_SENDER_ASOCIADO",
+                "Se asoció un Channel Sender al Messaging Service del tenant",
+                snapshotAntes,
+                snapshotConfiguracionWhatsapp(guardada)
+        );
         ConfiguracionWhatsappAdminResponse respuestaConfiguracion = mapearConfiguracionWhatsapp(guardada);
 
         return new AsociarChannelSenderWhatsappResponse(
@@ -552,7 +659,7 @@ public class ServicioAdminCitas {
     }
 
     @Transactional
-    public DetectarChannelSenderWhatsappResponse detectarChannelSenderWhatsapp(Long empresaId) {
+    public DetectarChannelSenderWhatsappResponse detectarChannelSenderWhatsapp(Long empresaId, Long usuarioActorId) {
         ConfiguracionWhatsappEmpresaEntidad configuracion = configuracionWhatsappEmpresaRepositorio.findById(empresaId)
                 .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "No existe configuracion de WhatsApp para este tenant"));
 
@@ -575,6 +682,7 @@ public class ServicioAdminCitas {
             );
         }
 
+        String snapshotAntes = snapshotConfiguracionWhatsapp(configuracion);
         configuracion.setChannelSenderSid(sender.sid());
         if ((configuracion.getSenderPhoneNumber() == null || configuracion.getSenderPhoneNumber().isBlank()) && sender.senderId() != null) {
             configuracion.setSenderPhoneNumber(sender.senderId());
@@ -590,6 +698,15 @@ public class ServicioAdminCitas {
         }
 
         ConfiguracionWhatsappEmpresaEntidad guardada = configuracionWhatsappEmpresaRepositorio.save(configuracion);
+        registrarAuditoriaConfiguracion(
+                empresaId,
+                usuarioActorId,
+                "WHATSAPP",
+                "WHATSAPP_CHANNEL_SENDER_DETECTADO",
+                "Se detectó y guardó el sender de WhatsApp del tenant",
+                snapshotAntes,
+                snapshotConfiguracionWhatsapp(guardada)
+        );
         return new DetectarChannelSenderWhatsappResponse(
                 true,
                 "Sender detectado correctamente en Twilio.",
@@ -812,23 +929,322 @@ public class ServicioAdminCitas {
         }
 
         List<Long> usuarioIds = usuarios.stream().map(UsuarioEntidad::getId).toList();
-        Map<Long, List<UsuarioRolEntidad>> rolesPorUsuario = usuarioRolRepositorio.findByUsuario_IdIn(usuarioIds).stream()
+        Map<Long, List<UsuarioRolEmpresaEntidad>> rolesPorUsuario = servicioRolesEmpresa.listarAsignacionesUsuarios(empresaId, usuarioIds).stream()
                 .collect(Collectors.groupingBy(usuarioRol -> usuarioRol.getUsuario().getId()));
         Map<Long, UsuarioInternoPerfilEntidad> perfilesPorUsuario = usuarioInternoPerfilRepositorio.findByUsuarioIdIn(usuarioIds).stream()
                 .collect(Collectors.toMap(UsuarioInternoPerfilEntidad::getUsuarioId, perfil -> perfil));
+        Map<Long, List<Long>> sucursalesScopePorUsuario = usuarioInternoSucursalRepositorio.findByUsuario_IdIn(usuarioIds).stream()
+                .filter(asignacion -> asignacion.getSucursal().getEmpresaId().equals(empresaId))
+                .collect(Collectors.groupingBy(
+                        asignacion -> asignacion.getUsuario().getId(),
+                        Collectors.mapping(asignacion -> asignacion.getSucursal().getId(), Collectors.collectingAndThen(Collectors.toList(), ids -> ids.stream().distinct().sorted().toList()))
+                ));
         Map<Long, String> sucursalNombres = sucursalRepositorio.findByEmpresaIdOrderByNombreAsc(empresaId).stream()
                 .collect(Collectors.toMap(SucursalEntidad::getId, SucursalEntidad::getNombre));
 
         return usuarios.stream()
-                .map(usuario -> mapearUsuarioInterno(usuario, perfilesPorUsuario.get(usuario.getId()), rolesPorUsuario.getOrDefault(usuario.getId(), List.of()), sucursalNombres))
+                .map(usuario -> mapearUsuarioInterno(
+                        usuario,
+                        perfilesPorUsuario.get(usuario.getId()),
+                        rolesPorUsuario.getOrDefault(usuario.getId(), List.of()),
+                        sucursalesScopePorUsuario.getOrDefault(usuario.getId(), List.of()),
+                        sucursalNombres
+                ))
                 .filter(java.util.Objects::nonNull)
                 .toList();
     }
 
+    @Transactional(readOnly = true)
+    public List<RolInternoAdminResponse> listarRolesInternos(Long empresaId) {
+        if (empresaId == null) {
+            return List.of();
+        }
+
+        List<RolEmpresaEntidad> roles = servicioRolesEmpresa.listarRolesEmpresa(empresaId);
+        if (roles.isEmpty()) {
+            return List.of();
+        }
+
+        Map<Long, List<String>> permisosPorRol = servicioRolesEmpresa.obtenerPermisosPorRolEmpresa(
+                roles.stream().map(RolEmpresaEntidad::getId).toList()
+        );
+        Map<Long, Long> usuariosAsignadosPorRol = roles.stream()
+                .collect(Collectors.toMap(RolEmpresaEntidad::getId, rol -> usuarioRolEmpresaRepositorio.countByRolEmpresa_Id(rol.getId())));
+
+        return roles.stream()
+                .map(rol -> mapearRolInterno(rol, permisosPorRol, usuariosAsignadosPorRol))
+                .filter(rol -> esRolInternoAsignable(rol.permisos()))
+                .sorted(Comparator.comparing(RolInternoAdminResponse::nombre))
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public List<PermisoAdminResponse> listarPermisos(Long empresaId) {
+        validarEmpresaExiste(empresaId);
+        return permisoRepositorio.findAllByOrderByNombreAsc().stream()
+                .map(permiso -> new PermisoAdminResponse(
+                        permiso.getId(),
+                        permiso.getCodigo(),
+                        permiso.getNombre(),
+                        permiso.getDescripcion()
+                ))
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public List<PlantillaRolInternoAdminResponse> listarPlantillasRolesInternos(Long empresaId) {
+        validarEmpresaExiste(empresaId);
+        Set<String> permisosDisponibles = permisoRepositorio.findAllByOrderByNombreAsc().stream()
+                .map(PermisoEntidad::getCodigo)
+                .collect(Collectors.toCollection(HashSet::new));
+
+        return List.of(
+                plantillaRolInterno(
+                        "RECEPCION",
+                        "Recepción",
+                        "Atiende agenda, búsqueda de clientes y check-in sin acceder a configuración administrativa.",
+                        "Operación",
+                        List.of("RECEPCION_ACCESO", "RECEPCION_CLIENTES_VER", "RECEPCION_CITAS_GESTIONAR", "RECEPCION_CHECKIN"),
+                        permisosDisponibles
+                ),
+                plantillaRolInterno(
+                        "CAJA",
+                        "Caja",
+                        "Opera cobros, sesiones y movimientos de caja sin exponer módulos administrativos.",
+                        "Operación",
+                        List.of("CAJA_ACCESO", "CAJA_COBRAR", "CAJA_SESION_GESTIONAR", "CAJA_MOVIMIENTOS_GESTIONAR"),
+                        permisosDisponibles
+                ),
+                plantillaRolInterno(
+                        "RECEPCION_CAJA",
+                        "Recepción y caja",
+                        "Pensado para mostrador cuando la misma persona agenda, confirma llegada y cobra.",
+                        "Operación",
+                        List.of(
+                                "RECEPCION_ACCESO",
+                                "RECEPCION_CLIENTES_VER",
+                                "RECEPCION_CITAS_GESTIONAR",
+                                "RECEPCION_CHECKIN",
+                                "CAJA_ACCESO",
+                                "CAJA_COBRAR"
+                        ),
+                        permisosDisponibles
+                ),
+                plantillaRolInterno(
+                        "STAFF_OPERATIVO",
+                        "Staff operativo",
+                        "Consulta agenda propia, gestiona citas del día y administra su disponibilidad.",
+                        "Staff",
+                        List.of("STAFF_PANEL_ACCESO", "STAFF_AGENDA_VER", "STAFF_CITAS_GESTIONAR", "STAFF_DISPONIBILIDAD_GESTIONAR"),
+                        permisosDisponibles
+                ),
+                plantillaRolInterno(
+                        "SUPERVISOR_OPERATIVO",
+                        "Supervisor operativo",
+                        "Supervisa operación, reportes y gestión de citas sin tocar toda la configuración del negocio.",
+                        "Supervisión",
+                        List.of("PANEL_ADMIN_ACCESO", "CITAS_ADMIN_GESTIONAR", "PRESTADORES_GESTIONAR", "SERVICIOS_GESTIONAR", "REPORTES_ADMIN_VER"),
+                        permisosDisponibles
+                ),
+                plantillaRolInterno(
+                        "ADMIN_OPERATIVO",
+                        "Administrador operativo",
+                        "Gestiona módulos operativos, usuarios internos y canales sin ser necesariamente dueño total del tenant.",
+                        "Administración",
+                        List.of(
+                                "PANEL_ADMIN_ACCESO",
+                                "CITAS_ADMIN_GESTIONAR",
+                                "SUCURSALES_GESTIONAR",
+                                "SERVICIOS_GESTIONAR",
+                                "PRESTADORES_GESTIONAR",
+                                "USUARIOS_INTERNOS_GESTIONAR",
+                                "REPORTES_ADMIN_VER",
+                                "WHATSAPP_CONFIGURAR",
+                                "CONFIGURACION_EMPRESA_GESTIONAR"
+                        ),
+                        permisosDisponibles
+                )
+        );
+    }
+
+    @Transactional(readOnly = true)
+    public List<AuditoriaRolInternoAdminResponse> listarAuditoriaRolesInternos(Long empresaId) {
+        validarEmpresaExiste(empresaId);
+        return auditoriaRolEmpresaRepositorio.findTop30ByEmpresaIdOrderByCreadoEnDesc(empresaId).stream()
+                .map(item -> new AuditoriaRolInternoAdminResponse(
+                        item.getId(),
+                        item.getAccion(),
+                        item.getResumen(),
+                        item.getActorCorreo(),
+                        item.getRolCodigo(),
+                        item.getRolNombre(),
+                        item.getCreadoEn()
+                ))
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public List<AuditoriaConfiguracionAdminResponse> listarAuditoriaConfiguracion(Long empresaId) {
+        validarEmpresaExiste(empresaId);
+        return auditoriaConfiguracionEmpresaRepositorio.findTop30ByEmpresaIdOrderByCreadoEnDesc(empresaId).stream()
+                .map(item -> new AuditoriaConfiguracionAdminResponse(
+                        item.getId(),
+                        item.getModulo(),
+                        item.getAccion(),
+                        item.getResumen(),
+                        item.getActorCorreo(),
+                        item.getCreadoEn()
+                ))
+                .toList();
+    }
+
     @Transactional
-    public UsuarioInternoAdminResponse crearUsuarioInterno(Long empresaId, UsuarioInternoAdminRequest request) {
-        validarRolUsuarioInterno(request.rolCodigo());
+    public RolInternoAdminResponse crearRolInterno(Long empresaId, Long usuarioActorId, RolInternoAdminRequest request) {
+        validarEmpresaExiste(empresaId);
+        String codigo = normalizarCodigoRolEmpresa(request.codigo());
+        if (rolEmpresaRepositorio.existsByEmpresaIdAndCodigo(empresaId, codigo)) {
+            throw new ResponseStatusException(CONFLICT, "Ya existe un rol con ese codigo en la empresa");
+        }
+
+        List<String> permisos = normalizarPermisosRol(request.permisos());
+        validarPermisosRolInterno(permisos);
+
+        RolEmpresaEntidad rolEmpresa = new RolEmpresaEntidad();
+        rolEmpresa.setEmpresaId(empresaId);
+        rolEmpresa.setRolBase(null);
+        rolEmpresa.setCodigo(codigo);
+        rolEmpresa.setNombre(request.nombre().trim());
+        rolEmpresa.setDescripcion(normalizarOpcional(request.descripcion()));
+        rolEmpresa.setActivo(request.activo());
+        rolEmpresa.setEditable(true);
+        rolEmpresa = rolEmpresaRepositorio.save(rolEmpresa);
+
+        guardarPermisosRolEmpresa(rolEmpresa, permisos);
+        registrarAuditoriaRol(empresaId, usuarioActorId, "ROL_CREADO", "Se creó el rol " + rolEmpresa.getNombre(), rolEmpresa, null, snapshotRol(rolEmpresa, permisos));
+        return construirRolInternoResponse(rolEmpresa);
+    }
+
+    @Transactional
+    public RolInternoAdminResponse actualizarRolInterno(Long empresaId, Long usuarioActorId, Long rolEmpresaId, RolInternoAdminRequest request) {
+        validarEmpresaExiste(empresaId);
+        RolEmpresaEntidad rolEmpresa = rolEmpresaRepositorio.findById(rolEmpresaId)
+                .filter(rol -> rol.getEmpresaId().equals(empresaId))
+                .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "El rol interno no existe para la empresa"));
+        long usuariosAsignados = usuarioRolEmpresaRepositorio.countByRolEmpresa_Id(rolEmpresaId);
+        List<String> permisosAntes = servicioRolesEmpresa.obtenerPermisosPorRolEmpresa(List.of(rolEmpresa.getId()))
+                .getOrDefault(rolEmpresa.getId(), List.of())
+                .stream()
+                .sorted()
+                .toList();
+        String snapshotAntes = snapshotRol(rolEmpresa, permisosAntes);
+
+        String codigo = normalizarCodigoRolEmpresa(request.codigo());
+        if (!rolEmpresa.isEditable() && !rolEmpresa.getCodigo().equals(codigo)) {
+            throw new ResponseStatusException(BAD_REQUEST, "El codigo del rol base no se puede modificar");
+        }
+        if (!rolEmpresa.getCodigo().equals(codigo) && rolEmpresaRepositorio.existsByEmpresaIdAndCodigo(empresaId, codigo)) {
+            throw new ResponseStatusException(CONFLICT, "Ya existe otro rol con ese codigo en la empresa");
+        }
+
+        List<String> permisos = normalizarPermisosRol(request.permisos());
+        validarPermisosRolInterno(permisos);
+        if (!request.activo() && usuariosAsignados > 0) {
+            throw new ResponseStatusException(CONFLICT, "No puedes desactivar un rol que todavía tiene usuarios asignados");
+        }
+
+        rolEmpresa.setCodigo(codigo);
+        rolEmpresa.setNombre(request.nombre().trim());
+        rolEmpresa.setDescripcion(normalizarOpcional(request.descripcion()));
+        rolEmpresa.setActivo(request.activo());
+        rolEmpresa = rolEmpresaRepositorio.save(rolEmpresa);
+
+        guardarPermisosRolEmpresa(rolEmpresa, permisos);
+        registrarAuditoriaRol(empresaId, usuarioActorId, "ROL_ACTUALIZADO", "Se actualizó el rol " + rolEmpresa.getNombre(), rolEmpresa, snapshotAntes, snapshotRol(rolEmpresa, permisos));
+        return construirRolInternoResponse(rolEmpresa);
+    }
+
+    @Transactional
+    public RolInternoAdminResponse clonarRolInterno(Long empresaId, Long usuarioActorId, Long rolEmpresaOrigenId, RolInternoAdminRequest request) {
+        validarEmpresaExiste(empresaId);
+        RolEmpresaEntidad rolOrigen = rolEmpresaRepositorio.findById(rolEmpresaOrigenId)
+                .filter(rol -> rol.getEmpresaId().equals(empresaId))
+                .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "El rol origen no existe para la empresa"));
+
+        List<String> permisosOrigen = servicioRolesEmpresa
+                .obtenerPermisosPorRolEmpresa(List.of(rolOrigen.getId()))
+                .getOrDefault(rolOrigen.getId(), List.of())
+                .stream()
+                .sorted()
+                .toList();
+
+        if (!esRolInternoAsignable(permisosOrigen)) {
+            throw new ResponseStatusException(BAD_REQUEST, "Solo puedes clonar roles internos operativos");
+        }
+
+        String codigo = normalizarCodigoRolEmpresa(request.codigo());
+        if (rolEmpresaRepositorio.existsByEmpresaIdAndCodigo(empresaId, codigo)) {
+            throw new ResponseStatusException(CONFLICT, "Ya existe un rol con ese codigo en la empresa");
+        }
+
+        List<String> permisos = request.permisos() == null || request.permisos().isEmpty()
+                ? permisosOrigen
+                : normalizarPermisosRol(request.permisos());
+        validarPermisosRolInterno(permisos);
+
+        RolEmpresaEntidad rolEmpresa = new RolEmpresaEntidad();
+        rolEmpresa.setEmpresaId(empresaId);
+        rolEmpresa.setRolBase(rolOrigen.getRolBase());
+        rolEmpresa.setCodigo(codigo);
+        rolEmpresa.setNombre(request.nombre().trim());
+        rolEmpresa.setDescripcion(normalizarOpcional(request.descripcion()));
+        rolEmpresa.setActivo(request.activo());
+        rolEmpresa.setEditable(true);
+        rolEmpresa = rolEmpresaRepositorio.save(rolEmpresa);
+
+        guardarPermisosRolEmpresa(rolEmpresa, permisos);
+        registrarAuditoriaRol(
+                empresaId,
+                usuarioActorId,
+                "ROL_CLONADO",
+                "Se clonó el rol " + rolOrigen.getNombre() + " como " + rolEmpresa.getNombre(),
+                rolEmpresa,
+                snapshotRol(rolOrigen, permisosOrigen),
+                snapshotRol(rolEmpresa, permisos)
+        );
+        return construirRolInternoResponse(rolEmpresa);
+    }
+
+    @Transactional
+    public void eliminarRolInterno(Long empresaId, Long usuarioActorId, Long rolEmpresaId) {
+        validarEmpresaExiste(empresaId);
+        RolEmpresaEntidad rolEmpresa = rolEmpresaRepositorio.findById(rolEmpresaId)
+                .filter(rol -> rol.getEmpresaId().equals(empresaId))
+                .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "El rol interno no existe para la empresa"));
+
+        if (!rolEmpresa.isEditable()) {
+            throw new ResponseStatusException(BAD_REQUEST, "No puedes eliminar un rol base del sistema");
+        }
+        long usuariosAsignados = usuarioRolEmpresaRepositorio.countByRolEmpresa_Id(rolEmpresaId);
+        List<String> permisosAntes = servicioRolesEmpresa.obtenerPermisosPorRolEmpresa(List.of(rolEmpresa.getId()))
+                .getOrDefault(rolEmpresa.getId(), List.of())
+                .stream()
+                .sorted()
+                .toList();
+        if (usuariosAsignados > 0) {
+            throw new ResponseStatusException(CONFLICT, "No puedes eliminar un rol que todavía tiene usuarios asignados");
+        }
+
+        registrarAuditoriaRol(empresaId, usuarioActorId, "ROL_ELIMINADO", "Se eliminó el rol " + rolEmpresa.getNombre(), rolEmpresa, snapshotRol(rolEmpresa, permisosAntes), null);
+        rolEmpresaPermisoRepositorio.deleteByRolEmpresa_Id(rolEmpresaId);
+        usuarioRolEmpresaRepositorio.deleteByRolEmpresa_Id(rolEmpresaId);
+        rolEmpresaRepositorio.delete(rolEmpresa);
+    }
+
+    @Transactional
+    public UsuarioInternoAdminResponse crearUsuarioInterno(Long empresaId, Long usuarioActorId, UsuarioInternoAdminRequest request) {
+        RolEmpresaEntidad rolEmpresa = resolverRolUsuarioInterno(empresaId, request.rolEmpresaId());
         validarSucursalUsuarioInterno(empresaId, request.sucursalId());
+        List<Long> sucursalesPermitidas = validarSucursalesPermitidasUsuarioInterno(empresaId, request.sucursalIds(), request.sucursalId());
 
         String correoNormalizado = request.correo().trim().toLowerCase();
         usuarioRepositorio.findByEmpresaIdAndCorreo(empresaId, correoNormalizado)
@@ -852,20 +1268,40 @@ public class ServicioAdminCitas {
         perfil.setUsuarioId(usuario.getId());
         aplicarUsuarioInterno(perfil, request);
         usuarioInternoPerfilRepositorio.save(perfil);
+        sincronizarSucursalesPermitidas(usuario, sucursalesPermitidas);
 
-        asignarRolUsuarioInterno(usuario, empresaId, request.rolCodigo().trim().toUpperCase());
-        return construirUsuarioInternoResponse(usuario, perfil, request.rolCodigo().trim().toUpperCase(), empresaId);
+        asignarRolUsuarioInterno(usuario, empresaId, rolEmpresa);
+        registrarAuditoriaRol(
+                empresaId,
+                usuarioActorId,
+                "USUARIO_INTERNO_CREADO",
+                "Se creó el usuario interno " + perfil.getNombreCompleto() + " con el rol " + rolEmpresa.getNombre(),
+                rolEmpresa,
+                null,
+                snapshotUsuarioInterno(usuario, perfil, rolEmpresa, sucursalesPermitidas)
+        );
+        return construirUsuarioInternoResponse(usuario, perfil, rolEmpresa, empresaId);
     }
 
     @Transactional
-    public UsuarioInternoAdminResponse actualizarUsuarioInterno(Long empresaId, Long usuarioId, UsuarioInternoAdminRequest request) {
-        validarRolUsuarioInterno(request.rolCodigo());
+    public UsuarioInternoAdminResponse actualizarUsuarioInterno(Long empresaId, Long usuarioActorId, Long usuarioId, UsuarioInternoAdminRequest request) {
+        RolEmpresaEntidad rolEmpresa = resolverRolUsuarioInterno(empresaId, request.rolEmpresaId());
         validarSucursalUsuarioInterno(empresaId, request.sucursalId());
+        List<Long> sucursalesPermitidas = validarSucursalesPermitidasUsuarioInterno(empresaId, request.sucursalIds(), request.sucursalId());
 
         UsuarioEntidad usuario = usuarioRepositorio.findByIdAndEmpresaId(usuarioId, empresaId)
                 .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "El usuario interno no existe para la empresa"));
         UsuarioInternoPerfilEntidad perfil = usuarioInternoPerfilRepositorio.findById(usuarioId)
                 .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "El perfil interno no existe"));
+        RolEmpresaEntidad rolActual = usuarioRolEmpresaRepositorio.findByUsuario_IdAndRolEmpresa_EmpresaId(usuarioId, empresaId).stream()
+                .map(UsuarioRolEmpresaEntidad::getRolEmpresa)
+                .findFirst()
+                .orElse(null);
+        List<Long> sucursalesActuales = usuarioInternoSucursalRepositorio.findByUsuario_Id(usuarioId).stream()
+                .map(asignacion -> asignacion.getSucursal().getId())
+                .sorted()
+                .toList();
+        String snapshotAntes = snapshotUsuarioInterno(usuario, perfil, rolActual, sucursalesActuales);
 
         String correoNormalizado = request.correo().trim().toLowerCase();
         usuarioRepositorio.findByEmpresaIdAndCorreo(empresaId, correoNormalizado)
@@ -884,9 +1320,19 @@ public class ServicioAdminCitas {
 
         aplicarUsuarioInterno(perfil, request);
         usuarioInternoPerfilRepositorio.save(perfil);
+        sincronizarSucursalesPermitidas(usuario, sucursalesPermitidas);
 
-        reasignarRolUsuarioInterno(usuario, empresaId, request.rolCodigo().trim().toUpperCase());
-        return construirUsuarioInternoResponse(usuario, perfil, request.rolCodigo().trim().toUpperCase(), empresaId);
+        reasignarRolUsuarioInterno(usuario, empresaId, rolEmpresa);
+        registrarAuditoriaRol(
+                empresaId,
+                usuarioActorId,
+                "USUARIO_INTERNO_ACTUALIZADO",
+                "Se actualizó el acceso interno de " + perfil.getNombreCompleto() + " al rol " + rolEmpresa.getNombre(),
+                rolEmpresa,
+                snapshotAntes,
+                snapshotUsuarioInterno(usuario, perfil, rolEmpresa, sucursalesPermitidas)
+        );
+        return construirUsuarioInternoResponse(usuario, perfil, rolEmpresa, empresaId);
     }
 
     @Transactional
@@ -1244,12 +1690,7 @@ public class ServicioAdminCitas {
     }
 
     private void asignarRolStaff(UsuarioEntidad usuario, Long empresaId) {
-        RolEntidad rolStaff = rolRepositorio.findByCodigo("STAFF")
-                .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "No existe el rol STAFF"));
-        UsuarioRolId usuarioRolId = new UsuarioRolId(usuario.getId(), rolStaff.getId(), empresaId);
-        if (!usuarioRolRepositorio.existsById(usuarioRolId)) {
-            usuarioRolRepositorio.save(new UsuarioRolEntidad(usuarioRolId, usuario, rolStaff));
-        }
+        servicioRolesEmpresa.asignarRolEmpresa(usuario, empresaId, "STAFF");
     }
 
     private void aplicarUsuarioInterno(UsuarioInternoPerfilEntidad perfil, UsuarioInternoAdminRequest request) {
@@ -1260,10 +1701,263 @@ public class ServicioAdminCitas {
         perfil.setNotas(request.notas() != null && !request.notas().isBlank() ? request.notas().trim() : null);
     }
 
-    private void validarRolUsuarioInterno(String rolCodigo) {
-        String rolNormalizado = rolCodigo != null ? rolCodigo.trim().toUpperCase() : "";
-        if (!ROLES_USUARIO_INTERNO.contains(rolNormalizado)) {
-            throw new ResponseStatusException(BAD_REQUEST, "El rol interno indicado no es valido");
+    private RolInternoAdminResponse construirRolInternoResponse(RolEmpresaEntidad rolEmpresa) {
+        return mapearRolInterno(
+                rolEmpresa,
+                servicioRolesEmpresa.obtenerPermisosPorRolEmpresa(List.of(rolEmpresa.getId())),
+                Map.of(rolEmpresa.getId(), usuarioRolEmpresaRepositorio.countByRolEmpresa_Id(rolEmpresa.getId()))
+        );
+    }
+
+    private RolInternoAdminResponse mapearRolInterno(
+            RolEmpresaEntidad rolEmpresa,
+            Map<Long, List<String>> permisosPorRol,
+            Map<Long, Long> usuariosAsignadosPorRol
+    ) {
+        long usuariosAsignados = usuariosAsignadosPorRol.getOrDefault(rolEmpresa.getId(), 0L);
+        return new RolInternoAdminResponse(
+                rolEmpresa.getId(),
+                rolEmpresa.getCodigo(),
+                rolEmpresa.getNombre(),
+                rolEmpresa.getDescripcion(),
+                rolEmpresa.isActivo(),
+                rolEmpresa.isEditable(),
+                usuariosAsignados,
+                rolEmpresa.isEditable() && usuariosAsignados == 0,
+                permisosPorRol.getOrDefault(rolEmpresa.getId(), List.of()).stream().sorted().toList()
+        );
+    }
+
+    private RolEmpresaEntidad resolverRolUsuarioInterno(Long empresaId, Long rolEmpresaId) {
+        List<RolEmpresaEntidad> rolesInternos = servicioRolesEmpresa.listarRolesEmpresa(empresaId).stream()
+                .filter(RolEmpresaEntidad::isActivo)
+                .filter(rol -> esRolInternoAsignable(servicioRolesEmpresa.obtenerPermisosPorRolEmpresa(List.of(rol.getId())).getOrDefault(rol.getId(), List.of())))
+                .toList();
+
+        if (rolEmpresaId == null) {
+            throw new ResponseStatusException(BAD_REQUEST, "Debes seleccionar un rol interno");
+        }
+        return rolesInternos.stream()
+                .filter(rol -> rol.getId().equals(rolEmpresaId))
+                .findFirst()
+                .orElseThrow(() -> new ResponseStatusException(BAD_REQUEST, "El rol interno indicado no es valido"));
+    }
+
+    private PlantillaRolInternoAdminResponse plantillaRolInterno(
+            String codigoSugerido,
+            String nombreSugerido,
+            String descripcion,
+            String categoria,
+            List<String> permisos,
+            Set<String> permisosDisponibles
+    ) {
+        List<String> permisosFiltrados = permisos.stream()
+                .filter(permisosDisponibles::contains)
+                .distinct()
+                .sorted()
+                .toList();
+        return new PlantillaRolInternoAdminResponse(
+                codigoSugerido,
+                nombreSugerido,
+                descripcion,
+                categoria,
+                permisosFiltrados
+        );
+    }
+
+    private void registrarAuditoriaRol(
+            Long empresaId,
+            Long usuarioActorId,
+            String accion,
+            String resumen,
+            RolEmpresaEntidad rolEmpresa,
+            String detalleAntesJson,
+            String detalleDespuesJson
+    ) {
+        AuditoriaRolEmpresaEntidad auditoria = new AuditoriaRolEmpresaEntidad();
+        auditoria.setEmpresaId(empresaId);
+        auditoria.setRolEmpresaId(rolEmpresa != null ? rolEmpresa.getId() : null);
+        auditoria.setUsuarioActorId(usuarioActorId);
+        auditoria.setActorCorreo(
+                usuarioActorId != null
+                        ? usuarioRepositorio.findById(usuarioActorId).map(UsuarioEntidad::getCorreo).orElse(null)
+                        : null
+        );
+        auditoria.setRolCodigo(rolEmpresa != null ? rolEmpresa.getCodigo() : null);
+        auditoria.setRolNombre(rolEmpresa != null ? rolEmpresa.getNombre() : null);
+        auditoria.setAccion(accion);
+        auditoria.setResumen(resumen);
+        auditoria.setDetalleAntesJson(detalleAntesJson);
+        auditoria.setDetalleDespuesJson(detalleDespuesJson);
+        auditoriaRolEmpresaRepositorio.save(auditoria);
+    }
+
+    private String snapshotRol(RolEmpresaEntidad rolEmpresa, List<String> permisos) {
+        Map<String, Object> snapshot = new LinkedHashMap<>();
+        snapshot.put("rolEmpresaId", rolEmpresa.getId());
+        snapshot.put("codigo", rolEmpresa.getCodigo());
+        snapshot.put("nombre", rolEmpresa.getNombre());
+        snapshot.put("descripcion", rolEmpresa.getDescripcion());
+        snapshot.put("activo", rolEmpresa.isActivo());
+        snapshot.put("editable", rolEmpresa.isEditable());
+        snapshot.put("permisos", permisos);
+        return serializarAuditoria(snapshot);
+    }
+
+    private String snapshotUsuarioInterno(
+            UsuarioEntidad usuario,
+            UsuarioInternoPerfilEntidad perfil,
+            RolEmpresaEntidad rolEmpresa,
+            List<Long> sucursalesPermitidas
+    ) {
+        Map<String, Object> snapshot = new LinkedHashMap<>();
+        snapshot.put("usuarioId", usuario.getId());
+        snapshot.put("correo", usuario.getCorreo());
+        snapshot.put("nombreCompleto", perfil.getNombreCompleto());
+        snapshot.put("rolEmpresaId", rolEmpresa != null ? rolEmpresa.getId() : null);
+        snapshot.put("rolCodigo", rolEmpresa != null ? rolEmpresa.getCodigo() : null);
+        snapshot.put("rolNombre", rolEmpresa != null ? rolEmpresa.getNombre() : null);
+        snapshot.put("sucursalBaseId", perfil.getSucursalId());
+        snapshot.put("sucursalesPermitidas", sucursalesPermitidas);
+        snapshot.put("activo", usuario.isHabilitado());
+        return serializarAuditoria(snapshot);
+    }
+
+    private String serializarAuditoria(Object payload) {
+        try {
+            return objectMapper.writeValueAsString(payload);
+        } catch (Exception exception) {
+            LOGGER.warn("No se pudo serializar detalle de auditoria", exception);
+            return null;
+        }
+    }
+
+    private void registrarAuditoriaConfiguracion(
+            Long empresaId,
+            Long usuarioActorId,
+            String modulo,
+            String accion,
+            String resumen,
+            String detalleAntesJson,
+            String detalleDespuesJson
+    ) {
+        AuditoriaConfiguracionEmpresaEntidad auditoria = new AuditoriaConfiguracionEmpresaEntidad();
+        auditoria.setEmpresaId(empresaId);
+        auditoria.setUsuarioActorId(usuarioActorId);
+        auditoria.setActorCorreo(
+                usuarioActorId != null
+                        ? usuarioRepositorio.findById(usuarioActorId).map(UsuarioEntidad::getCorreo).orElse(null)
+                        : null
+        );
+        auditoria.setModulo(modulo);
+        auditoria.setAccion(accion);
+        auditoria.setResumen(resumen);
+        auditoria.setDetalleAntesJson(detalleAntesJson);
+        auditoria.setDetalleDespuesJson(detalleDespuesJson);
+        auditoriaConfiguracionEmpresaRepositorio.save(auditoria);
+    }
+
+    private String snapshotConfiguracionCorreo(ConfiguracionCorreoEmpresaEntidad configuracion) {
+        Map<String, Object> snapshot = new LinkedHashMap<>();
+        snapshot.put("habilitado", configuracion.isHabilitado());
+        snapshot.put("proveedor", configuracion.getProveedor());
+        snapshot.put("remitente", configuracion.getRemitente());
+        snapshot.put("nombreRemitente", configuracion.getNombreRemitente());
+        snapshot.put("responderA", configuracion.getResponderA());
+        snapshot.put("smtpHost", configuracion.getSmtpHost());
+        snapshot.put("smtpPort", configuracion.getSmtpPort());
+        snapshot.put("smtpUsername", configuracion.getSmtpUsername());
+        snapshot.put("smtpAuth", configuracion.getSmtpAuth());
+        snapshot.put("smtpStartTls", configuracion.getSmtpStartTls());
+        snapshot.put("smtpPasswordConfigurada", configuracion.getSmtpPassword() != null && !configuracion.getSmtpPassword().isBlank());
+        snapshot.put("graphTenantId", configuracion.getGraphTenantId());
+        snapshot.put("graphClientId", configuracion.getGraphClientId());
+        snapshot.put("graphUserId", configuracion.getGraphUserId());
+        snapshot.put("graphCertificateThumbprint", configuracion.getGraphCertificateThumbprint());
+        snapshot.put("graphClientSecretConfigurado", configuracion.getGraphClientSecret() != null && !configuracion.getGraphClientSecret().isBlank());
+        snapshot.put("graphPrivateKeyConfigurada", configuracion.getGraphPrivateKeyPem() != null && !configuracion.getGraphPrivateKeyPem().isBlank());
+        return serializarAuditoria(snapshot);
+    }
+
+    private String snapshotConfiguracionWhatsapp(ConfiguracionWhatsappEmpresaEntidad configuracion) {
+        Map<String, Object> snapshot = new LinkedHashMap<>();
+        snapshot.put("habilitado", configuracion.isHabilitado());
+        snapshot.put("accountSid", configuracion.getAccountSid());
+        snapshot.put("authTokenConfigurado", configuracion.getAuthToken() != null && !configuracion.getAuthToken().isBlank());
+        snapshot.put("tipoCuentaTwilio", configuracion.getTipoCuentaTwilio());
+        snapshot.put("subaccountSid", configuracion.getSubaccountSid());
+        snapshot.put("numeroRemitente", configuracion.getNumeroRemitente());
+        snapshot.put("messagingServiceSid", configuracion.getMessagingServiceSid());
+        snapshot.put("channelSenderSid", configuracion.getChannelSenderSid());
+        snapshot.put("statusCallbackUrl", configuracion.getStatusCallbackUrl());
+        snapshot.put("senderDisplayName", configuracion.getSenderDisplayName());
+        snapshot.put("senderPhoneNumber", configuracion.getSenderPhoneNumber());
+        snapshot.put("senderStatus", configuracion.getSenderStatus());
+        snapshot.put("qualityRating", configuracion.getQualityRating());
+        snapshot.put("throughputMps", configuracion.getThroughputMps());
+        snapshot.put("wabaId", configuracion.getWabaId());
+        snapshot.put("metaBusinessManagerId", configuracion.getMetaBusinessManagerId());
+        snapshot.put("plantillaSolicitudConfirmacionSid", configuracion.getPlantillaSolicitudConfirmacionSid());
+        snapshot.put("plantillaReprogramadaPendienteSid", configuracion.getPlantillaReprogramadaPendienteSid());
+        snapshot.put("plantillaRecordatorioConfirmacionSid", configuracion.getPlantillaRecordatorioConfirmacionSid());
+        snapshot.put("plantillaCitaConfirmadaSid", configuracion.getPlantillaCitaConfirmadaSid());
+        snapshot.put("plantillaRecordatorioSid", configuracion.getPlantillaRecordatorioSid());
+        snapshot.put("plantillaCancelacionSid", configuracion.getPlantillaCancelacionSid());
+        snapshot.put("plantillaLiberadaSinConfirmacionSid", configuracion.getPlantillaLiberadaSinConfirmacionSid());
+        snapshot.put("plantillaGraciasVisitaSid", configuracion.getPlantillaGraciasVisitaSid());
+        snapshot.put("plantillaRecordatorioRegresoSid", configuracion.getPlantillaRecordatorioRegresoSid());
+        return serializarAuditoria(snapshot);
+    }
+
+    private String normalizarCodigoRolEmpresa(String codigo) {
+        if (codigo == null || codigo.isBlank()) {
+            throw new ResponseStatusException(BAD_REQUEST, "Debes indicar un codigo para el rol");
+        }
+        return codigo.trim().toUpperCase().replaceAll("[^A-Z0-9_]", "_");
+    }
+
+    private List<String> normalizarPermisosRol(List<String> permisos) {
+        return permisos != null
+                ? permisos.stream()
+                .filter(java.util.Objects::nonNull)
+                .map(String::trim)
+                .filter(valor -> !valor.isBlank())
+                .map(String::toUpperCase)
+                .distinct()
+                .sorted()
+                .toList()
+                : List.of();
+    }
+
+    private void validarPermisosRolInterno(List<String> permisos) {
+        if (permisos.isEmpty()) {
+            throw new ResponseStatusException(BAD_REQUEST, "Debes seleccionar al menos un permiso para el rol");
+        }
+        if (permisos.stream().noneMatch(PERMISOS_ACCESO_INTERNO::contains)) {
+            throw new ResponseStatusException(BAD_REQUEST, "El rol debe incluir al menos un permiso de acceso interno");
+        }
+    }
+
+    private void guardarPermisosRolEmpresa(RolEmpresaEntidad rolEmpresa, List<String> codigosPermiso) {
+        List<PermisoEntidad> permisos = permisoRepositorio.findByCodigoIn(codigosPermiso);
+        if (permisos.size() != codigosPermiso.size()) {
+            throw new ResponseStatusException(BAD_REQUEST, "Uno o más permisos indicados no existen");
+        }
+
+        rolEmpresaPermisoRepositorio.deleteByRolEmpresa_Id(rolEmpresa.getId());
+        List<RolEmpresaPermisoEntidad> permisosRol = permisos.stream()
+                .map(permiso -> new RolEmpresaPermisoEntidad(
+                        new RolEmpresaPermisoId(rolEmpresa.getId(), permiso.getId()),
+                        rolEmpresa,
+                        permiso
+                ))
+                .toList();
+        rolEmpresaPermisoRepositorio.saveAll(permisosRol);
+    }
+
+    private void validarEmpresaExiste(Long empresaId) {
+        if (!empresaRepositorio.existsById(empresaId)) {
+            throw new ResponseStatusException(NOT_FOUND, "La empresa indicada no existe");
         }
     }
 
@@ -1275,53 +1969,61 @@ public class ServicioAdminCitas {
                 .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "La sucursal indicada no existe para la empresa"));
     }
 
-    private void asignarRolUsuarioInterno(UsuarioEntidad usuario, Long empresaId, String rolCodigo) {
-        RolEntidad rol = rolRepositorio.findByCodigo(rolCodigo)
-                .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "No existe el rol " + rolCodigo));
-        UsuarioRolId usuarioRolId = new UsuarioRolId(usuario.getId(), rol.getId(), empresaId);
-        if (!usuarioRolRepositorio.existsById(usuarioRolId)) {
-            usuarioRolRepositorio.save(new UsuarioRolEntidad(usuarioRolId, usuario, rol));
-        }
+    private void asignarRolUsuarioInterno(UsuarioEntidad usuario, Long empresaId, RolEmpresaEntidad rolEmpresa) {
+        servicioRolesEmpresa.asignarRolEmpresa(usuario, empresaId, rolEmpresa.getCodigo());
     }
 
-    private void reasignarRolUsuarioInterno(UsuarioEntidad usuario, Long empresaId, String rolCodigo) {
-        usuarioRolRepositorio.deleteByUsuario_IdAndIdEmpresaIdAndRol_CodigoIn(usuario.getId(), empresaId, ROLES_USUARIO_INTERNO);
-        asignarRolUsuarioInterno(usuario, empresaId, rolCodigo);
+    private void reasignarRolUsuarioInterno(UsuarioEntidad usuario, Long empresaId, RolEmpresaEntidad rolEmpresa) {
+        List<String> rolesInternos = listarRolesInternos(empresaId).stream()
+                .map(RolInternoAdminResponse::codigo)
+                .toList();
+        servicioRolesEmpresa.reasignarRolesPorCodigo(usuario, empresaId, rolesInternos, rolEmpresa.getCodigo());
+        asignarRolUsuarioInterno(usuario, empresaId, rolEmpresa);
     }
 
     private UsuarioInternoAdminResponse construirUsuarioInternoResponse(
             UsuarioEntidad usuario,
             UsuarioInternoPerfilEntidad perfil,
-            String rolCodigo,
+            RolEmpresaEntidad rolEmpresa,
             Long empresaId
     ) {
         Map<Long, String> sucursalNombres = sucursalRepositorio.findByEmpresaIdOrderByNombreAsc(empresaId).stream()
                 .collect(Collectors.toMap(SucursalEntidad::getId, SucursalEntidad::getNombre));
-        return mapearUsuarioInterno(usuario, perfil, rolCodigo, sucursalNombres);
+        List<Long> sucursalesScope = usuarioInternoSucursalRepositorio.findByUsuario_Id(usuario.getId()).stream()
+                .filter(asignacion -> asignacion.getSucursal().getEmpresaId().equals(empresaId))
+                .map(asignacion -> asignacion.getSucursal().getId())
+                .distinct()
+                .sorted()
+                .toList();
+        return mapearUsuarioInterno(usuario, perfil, rolEmpresa, sucursalesScope, sucursalNombres);
     }
 
     private UsuarioInternoAdminResponse mapearUsuarioInterno(
             UsuarioEntidad usuario,
             UsuarioInternoPerfilEntidad perfil,
-            List<UsuarioRolEntidad> roles,
+            List<UsuarioRolEmpresaEntidad> roles,
+            List<Long> sucursalesScope,
             Map<Long, String> sucursalNombres
     ) {
-        String rolCodigo = roles.stream()
-                .map(usuarioRol -> usuarioRol.getRol().getCodigo())
-                .filter(ROLES_USUARIO_INTERNO::contains)
+        RolEmpresaEntidad rolEmpresa = roles.stream()
+                .map(UsuarioRolEmpresaEntidad::getRolEmpresa)
+                .filter(rol -> listarRolesInternos(usuario.getEmpresaId()).stream()
+                        .map(RolInternoAdminResponse::codigo)
+                        .anyMatch(rol.getCodigo()::equals))
                 .findFirst()
                 .orElse(null);
-        if (rolCodigo == null || perfil == null) {
+        if (rolEmpresa == null || perfil == null) {
             return null;
         }
 
-        return mapearUsuarioInterno(usuario, perfil, rolCodigo, sucursalNombres);
+        return mapearUsuarioInterno(usuario, perfil, rolEmpresa, sucursalesScope, sucursalNombres);
     }
 
     private UsuarioInternoAdminResponse mapearUsuarioInterno(
             UsuarioEntidad usuario,
             UsuarioInternoPerfilEntidad perfil,
-            String rolCodigo,
+            RolEmpresaEntidad rolEmpresa,
+            List<Long> sucursalesScope,
             Map<Long, String> sucursalNombres
     ) {
         if (perfil == null) {
@@ -1332,14 +2034,64 @@ public class ServicioAdminCitas {
                 usuario.getId(),
                 perfil.getSucursalId(),
                 perfil.getSucursalId() != null ? sucursalNombres.getOrDefault(perfil.getSucursalId(), "Sucursal") : null,
+                sucursalesScope,
+                sucursalesScope.stream()
+                        .map(id -> sucursalNombres.getOrDefault(id, "Sucursal"))
+                        .toList(),
                 usuario.getCorreo(),
                 perfil.getNombreCompleto(),
                 perfil.getTelefono(),
                 perfil.getPuesto(),
-                rolCodigo,
+                rolEmpresa != null ? rolEmpresa.getId() : null,
+                rolEmpresa != null ? rolEmpresa.getCodigo() : null,
+                rolEmpresa != null ? rolEmpresa.getNombre() : null,
                 usuario.isHabilitado() && !usuario.isBloqueado(),
                 perfil.getNotas()
         );
+    }
+
+    private List<Long> validarSucursalesPermitidasUsuarioInterno(Long empresaId, List<Long> sucursalIds, Long sucursalBaseId) {
+        List<Long> ids = sucursalIds != null
+                ? sucursalIds.stream().filter(java.util.Objects::nonNull).distinct().sorted().toList()
+                : List.of();
+        if (ids.isEmpty()) {
+            return List.of();
+        }
+
+        List<SucursalEntidad> sucursales = sucursalRepositorio.findByEmpresaIdOrderByNombreAsc(empresaId).stream()
+                .filter(sucursal -> ids.contains(sucursal.getId()))
+                .toList();
+        if (sucursales.size() != ids.size()) {
+            throw new ResponseStatusException(NOT_FOUND, "Una o mas sucursales permitidas no existen para la empresa");
+        }
+        if (sucursalBaseId != null && ids.stream().noneMatch(sucursalBaseId::equals)) {
+            throw new ResponseStatusException(BAD_REQUEST, "La sucursal base debe formar parte de las sucursales permitidas");
+        }
+        return ids;
+    }
+
+    private void sincronizarSucursalesPermitidas(UsuarioEntidad usuario, List<Long> sucursalIds) {
+        usuarioInternoSucursalRepositorio.deleteByUsuario_Id(usuario.getId());
+        if (sucursalIds == null || sucursalIds.isEmpty()) {
+            return;
+        }
+
+        Map<Long, SucursalEntidad> sucursalesPorId = sucursalRepositorio.findByEmpresaIdOrderByNombreAsc(usuario.getEmpresaId()).stream()
+                .filter(sucursal -> sucursalIds.contains(sucursal.getId()))
+                .collect(Collectors.toMap(SucursalEntidad::getId, sucursal -> sucursal));
+
+        List<UsuarioInternoSucursalEntidad> asignaciones = sucursalIds.stream()
+                .map(sucursalId -> new UsuarioInternoSucursalEntidad(
+                        new UsuarioInternoSucursalId(usuario.getId(), sucursalId),
+                        usuario,
+                        sucursalesPorId.get(sucursalId)
+                ))
+                .toList();
+        usuarioInternoSucursalRepositorio.saveAll(asignaciones);
+    }
+
+    private boolean esRolInternoAsignable(List<String> permisos) {
+        return permisos.stream().anyMatch(PERMISOS_ACCESO_INTERNO::contains);
     }
 
     private Map<Long, ServicioEntidad> validarServiciosAsignados(Long empresaId, Long sucursalId, List<Long> servicioIds) {

@@ -22,7 +22,14 @@ public class ServicioTokenJwt {
         this.propiedadesJwt = propiedadesJwt;
     }
 
-    public String generarTokenAcceso(String sujeto, Long usuarioId, Long empresaId, Collection<String> roles) {
+    public String generarTokenAcceso(
+            String sujeto,
+            Long usuarioId,
+            Long empresaId,
+            Collection<String> roles,
+            Collection<String> permisos,
+            Collection<Long> sucursalesPermitidas
+    ) {
         Instant ahora = Instant.now();
         return Jwts.builder()
                 .subject(sujeto)
@@ -32,6 +39,8 @@ public class ServicioTokenJwt {
                 .claim("usuarioId", usuarioId)
                 .claim("empresaId", empresaId)
                 .claim("roles", roles)
+                .claim("permisos", permisos)
+                .claim("sucursales", sucursalesPermitidas)
                 .signWith(claveFirma())
                 .compact();
     }
@@ -79,6 +88,30 @@ public class ServicioTokenJwt {
         return List.of();
     }
 
+    @SuppressWarnings("unchecked")
+    public List<String> obtenerPermisos(String token) {
+        Object permisos = obtenerClaims(token).get("permisos");
+        if (permisos instanceof List<?> lista) {
+            return lista.stream().map(String::valueOf).toList();
+        }
+        return List.of();
+    }
+
+    public List<Long> obtenerSucursalesPermitidas(String token) {
+        Object sucursales = obtenerClaims(token).get("sucursales");
+        if (sucursales instanceof List<?> lista) {
+            return lista.stream()
+                    .map(valor -> {
+                        if (valor instanceof Number numero) {
+                            return numero.longValue();
+                        }
+                        return Long.valueOf(String.valueOf(valor));
+                    })
+                    .toList();
+        }
+        return List.of();
+    }
+
     private Claims obtenerClaims(String token) {
         return Jwts.parser()
                 .verifyWith(claveFirma())
@@ -95,4 +128,3 @@ public class ServicioTokenJwt {
         return Keys.hmacShaKeyFor(secreto.getBytes(StandardCharsets.UTF_8));
     }
 }
-
