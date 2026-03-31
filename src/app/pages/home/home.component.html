@@ -4,17 +4,21 @@
       <div class="hero-shell">
         <div class="row align-items-center g-4 hero-grid">
           <div class="col-xl-6 col-lg-6 hero-copy-column">
-            <p class="hero-eyebrow">Manicure con técnica, orden y estilo</p>
+            <p class="hero-eyebrow">Uñas cuidadas, diseño elegante y una cita que se disfruta</p>
             <h1>
-              Uñas impecables con un diseño que se sienta
-              <span class="hero-title-accent">tuyo desde la primera cita.</span>
+              Diseños que se sienten tuyos
+              <span class="hero-title-accent">desde el primer vistazo.</span>
             </h1>
             <p class="hero-copy">
-              Cada sesión combina preparación técnica, asesoría real y acabados limpios para que salgas con un resultado bonito, durable y coherente con tu estilo.
+              Elegantes, duraderos y cuidados hasta el último detalle.
+            </p>
+            <p class="hero-copy hero-copy-secondary">
+              En NailArt Studio te ofrecemos una experiencia de belleza con técnica, dedicación y sensibilidad estética para lograr un acabado sofisticado y fiel a tu estilo.
             </p>
 
             <div class="hero-actions">
-              <a routerLink="/agendar" class="btn btn-primary btn-lg rounded-pill">Reservar cita</a>
+              <a routerLink="/agendar" class="btn btn-primary btn-lg rounded-pill">Agendar ahora</a>
+              <a href="https://wa.me/522204292573?text=Hola%20quiero%20agendar" target="_blank" rel="noreferrer" class="btn btn-outline-primary btn-lg rounded-pill">WhatsApp</a>
               <a routerLink="/servicios" class="btn btn-outline-light btn-lg rounded-pill">Explorar servicios</a>
             </div>
 
@@ -34,26 +38,34 @@
           <div class="col-xl-6 col-lg-6 hero-visual-column">
             <div class="hero-visual">
               <article class="hero-story card-custom">
-                <div class="hero-story-image">
-                  <img
-                    src="https://images.unsplash.com/photo-1604654894610-df63bc536371?ixlib=rb-1.2.1&auto=format&fit=crop&w=1200&q=80"
-                    alt="Diseño premium de uñas con acabado elegante"
-                  >
-                  <span class="hero-story-badge">Set favorito de la semana</span>
-                </div>
                 <div class="hero-story-body">
-                  <span class="hero-story-kicker">Qué pasa en tu cita</span>
-                  <h2>Elegimos contigo el acabado antes de empezar.</h2>
+                  <span class="hero-story-kicker">La experiencia en tu cita</span>
+                  <h2>Elegimos contigo el estilo antes de empezar.</h2>
                   <p>
-                    Antes de empezar revisamos largo, forma y acabado para proponerte un diseño que se vea bien hoy y también aguante bonito los próximos días.
+                    Antes de comenzar revisamos forma, color y acabado para proponerte un diseño que se vea bien hoy y siga luciendo bonito los próximos días.
                   </p>
                   <ul class="hero-story-points">
                     <li *ngFor="let point of heroStoryPoints">{{ point }}</li>
                   </ul>
                   <div class="hero-story-footer">
                     <i class="bi bi-clock-history"></i>
-                    <span>Sesiones guiadas de 60 a 90 minutos según el servicio.</span>
+                    <span>Servicios guiados con atención tranquila y acabados bien trabajados.</span>
                   </div>
+                </div>
+                <div class="hero-story-side">
+                  <div class="hero-story-stat">
+                    <span>Diseño</span>
+                    <strong>Asesorado contigo</strong>
+                  </div>
+                  <div class="hero-story-stat">
+                    <span>Acabado</span>
+                    <strong>Limpio y duradero</strong>
+                  </div>
+                  <div class="hero-story-stat">
+                    <span>Reserva</span>
+                    <strong>Online o por WhatsApp</strong>
+                  </div>
+                  <a routerLink="/agendar" class="btn btn-primary rounded-pill w-100">Ver disponibilidad</a>
                 </div>
               </article>
             </div>
@@ -63,7 +75,7 @@
         <div class="hero-meta">
           <p class="hero-note">
             <i class="bi bi-heart-pulse"></i>
-            Atención puntual, asesoría cercana y un espacio pensado para que tu cita se sienta clara, cómoda y bien guiada.
+            Atención puntual, proceso claro y una experiencia pensada para que reservar se sienta simple y segura.
           </p>
 
           <div class="hero-stats">
@@ -80,10 +92,10 @@
   <section class="section-padding">
     <div class="container">
       <div class="section-header section-header-centered">
-        <span class="section-kicker">Especialidades</span>
-        <h2>Servicios que más te piden</h2>
+        <span class="section-kicker">Servicios</span>
+        <h2>Elige el servicio que mejor va contigo</h2>
         <p>
-          Tres favoritos para resolver desde una cita elegante hasta un set especial.
+          Una selección clara de servicios para reservar más rápido y saber qué esperar desde el inicio.
         </p>
       </div>
 
@@ -120,10 +132,10 @@
       <div class="row align-items-center g-5">
         <div class="col-lg-5">
           <div class="section-header">
-            <span class="section-kicker">Ventajas reales</span>
-            <h2>Lo que hace distinta la experiencia NailArt.</h2>
+            <span class="section-kicker">Confianza</span>
+            <h2>Una experiencia más clara desde antes de llegar.</h2>
             <p>
-              Calidad, higiene y una experiencia cómoda desde la reserva hasta el resultado final.
+              Queremos que la persona entienda el servicio, encuentre horario y reserve sin fricción ni dudas innecesarias.
             </p>
           </div>
         </div>
@@ -147,16 +159,16 @@
     <div class="container">
       <div class="section-header section-header-split">
         <div>
-          <span class="section-kicker">Portafolio</span>
-          <h2>Diseños que hablan por sí solos</h2>
+          <span class="section-kicker">Inspiración</span>
+          <h2>Algunas ideas para tu próxima cita</h2>
         </div>
         <p>
-          Una selección de estilos para inspirarte antes de reservar.
+          Mira estilos, guarda referencias y elige con más confianza antes de reservar.
         </p>
       </div>
 
       <div class="gallery-grid">
-        <article class="gallery-card" *ngFor="let trabajo of trabajos">
+        <article class="gallery-card" *ngFor="let trabajo of trabajos | slice:0:4">
           <div class="gallery-card-media">
             <img [src]="trabajo.imagen" [alt]="trabajo.titulo">
             <div class="gallery-card-overlay">
@@ -193,16 +205,14 @@
         <div class="col-lg-6">
           <div class="section-header">
             <span class="section-kicker">Sobre el estudio</span>
-            <h2>Detalle, técnica y una atención que se siente cercana.</h2>
+            <h2>Diseño, técnica y una atención que se siente tranquila.</h2>
           </div>
 
           <p class="about-copy">
             NailArt Studio nace del gusto por los acabados limpios, el diseño bien hecho y una atención pensada para que quieras volver.
           </p>
 
-          <p class="about-copy">
-            Trabajamos con técnica, higiene y asesoría real para ayudarte a elegir un estilo que vaya contigo y dure bonito.
-          </p>
+          <p class="about-copy">Trabajamos con técnica, higiene y asesoría real para ayudarte a elegir un estilo que vaya contigo y se vea bien desde el primer momento.</p>
 
           <div class="about-values">
             <div class="about-value">
@@ -235,36 +245,10 @@
   <section class="section-padding">
     <div class="container">
       <div class="section-header section-header-centered">
-        <span class="section-kicker">Contenido útil</span>
-        <h2>Tips rápidos para cuidar tu manicure</h2>
-        <p>
-          Consejos simples para mantener tus uñas lindas por más tiempo.
-        </p>
-      </div>
-
-      <div class="row g-4">
-        <div class="col-lg-4" *ngFor="let consejo of consejos">
-          <article class="article-card card-custom">
-            <span class="article-tag">{{ consejo.etiqueta }}</span>
-            <h3>{{ consejo.titulo }}</h3>
-            <p>{{ consejo.descripcion }}</p>
-            <div class="article-meta">
-              <i class="bi bi-clock"></i>
-              <span>{{ consejo.lectura }} de lectura</span>
-            </div>
-          </article>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <section class="section-padding section-surface">
-    <div class="container">
-      <div class="section-header section-header-centered">
         <span class="section-kicker">Prueba social</span>
-        <h2>Lo que dicen nuestras clientas</h2>
+        <h2>Lo que más valoran quienes ya reservaron</h2>
         <p>
-          Confianza, puntualidad y resultados que sí se notan.
+          Puntualidad, limpieza y una experiencia que se siente bien cuidada.
         </p>
       </div>
 
@@ -278,6 +262,18 @@
               <span>{{ testimonio.resumen }}</span>
             </div>
           </article>
+        </div>
+      </div>
+
+      <div class="home-final-cta card-custom">
+        <div>
+          <span class="section-kicker">Reserva hoy</span>
+          <h2>¿Lista para elegir horario?</h2>
+          <p>Reserva en línea o escríbenos por WhatsApp si prefieres que te ayudemos a elegir servicio y horario.</p>
+        </div>
+        <div class="home-final-cta__actions">
+          <a routerLink="/agendar" class="btn btn-primary rounded-pill">Agendar cita</a>
+          <a href="https://wa.me/522204292573?text=Hola%20quiero%20agendar" target="_blank" rel="noreferrer" class="btn btn-outline-primary rounded-pill">Hablar por WhatsApp</a>
         </div>
       </div>
     </div>
