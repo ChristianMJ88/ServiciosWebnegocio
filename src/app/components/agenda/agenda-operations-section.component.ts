@@ -7,7 +7,8 @@ import {
   AgendaCollaboratorVm,
   AgendaOccupancyVm,
   AgendaStatCardVm,
-  AgendaThemeMode
+  AgendaThemeMode,
+  AgendaViewMode
 } from './agenda.types';
 
 @Component({
@@ -18,7 +19,9 @@ import {
   styleUrl: './agenda-operations-section.component.css'
 })
 export class AgendaOperationsSectionComponent {
-  readonly theme = input<AgendaThemeMode>('dark');
+  readonly theme = input<AgendaThemeMode>('light');
+  readonly viewMode = input<AgendaViewMode>('day');
+  readonly availableViews = input<AgendaViewMode[]>(['day', 'week']);
   readonly eyebrow = input('Operación diaria');
   readonly title = input('Centro operativo de agenda');
   readonly dateLabel = input('Fecha seleccionada');
@@ -41,10 +44,26 @@ export class AgendaOperationsSectionComponent {
   readonly dateValueChange = output<string>();
   readonly appointmentSelected = output<number>();
   readonly appointmentAction = output<{ actionId: string; appointmentId: number }>();
+  readonly appointmentClosed = output<void>();
+  readonly viewModeChange = output<AgendaViewMode>();
 
   readonly occupancyPercent = computed(() => Math.max(0, Math.min(100, this.occupancy()?.percent ?? 0)));
+  readonly viewOptions = computed(() =>
+    this.availableViews().map(view => ({
+      id: view,
+      label: view === 'day' ? 'Día' : 'Semana'
+    }))
+  );
 
   onDateChange(value: string): void {
     this.dateValueChange.emit(value);
+  }
+
+  onViewModeChange(view: AgendaViewMode): void {
+    this.viewModeChange.emit(view);
+  }
+
+  closeAppointment(): void {
+    this.appointmentClosed.emit();
   }
 }

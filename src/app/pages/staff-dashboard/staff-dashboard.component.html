@@ -127,54 +127,41 @@
 
         <ng-container *ngIf="seccionActiva() === 'agenda'">
           <section class="section-stack">
-            <div class="staff-overview">
-              <mat-card class="staff-hero-card">
-                <div class="staff-hero-copy">
-                  <div class="staff-eyebrow">Operación del día</div>
-                  <h2>Tu agenda en tiempo real</h2>
-                  <p>Gestiona confirmaciones, cierres y ausencias desde una vista más clara y enfocada.</p>
-                </div>
-
-                <div class="staff-hero-stats">
-                  <div class="staff-hero-stat staff-hero-stat-primary">
-                    <span>Total citas</span>
-                    <strong>{{ totalAgenda() }}</strong>
-                  </div>
-                  <div class="staff-hero-stat">
-                    <span>Pendientes</span>
-                    <strong>{{ notificaciones() }}</strong>
-                  </div>
-                  <div class="staff-hero-stat">
-                    <span>Finalizadas</span>
-                    <strong>{{ totalFinalizadas() }}</strong>
-                  </div>
-                </div>
-              </mat-card>
-
-              <div class="staff-metric-grid">
-                <mat-card class="staff-metric-card staff-metric-card-highlight">
-                  <span>Pendientes</span>
-                  <strong>{{ notificaciones() }}</strong>
-                </mat-card>
-                <mat-card class="staff-metric-card">
-                  <span>Confirmadas</span>
-                  <strong>{{ totalConfirmadas() }}</strong>
-                </mat-card>
-                <mat-card class="staff-metric-card">
-                  <span>Finalizadas</span>
-                  <strong>{{ totalFinalizadas() }}</strong>
-                </mat-card>
-              </div>
-            </div>
+            <section class="staff-kpi-strip">
+              <article class="staff-kpi-card staff-kpi-card--wide">
+                <span class="staff-kpi-label">Operación del día</span>
+                <strong class="staff-kpi-value">Agenda en tiempo real</strong>
+                <small class="staff-kpi-helper">Confirma, finaliza y gestiona tu jornada sin perder foco.</small>
+              </article>
+              <article class="staff-kpi-card staff-kpi-card--accent">
+                <span class="staff-kpi-label">Total citas</span>
+                <strong class="staff-kpi-value">{{ totalAgenda() }}</strong>
+              </article>
+              <article class="staff-kpi-card">
+                <span class="staff-kpi-label">Pendientes</span>
+                <strong class="staff-kpi-value">{{ notificaciones() }}</strong>
+              </article>
+              <article class="staff-kpi-card">
+                <span class="staff-kpi-label">Confirmadas</span>
+                <strong class="staff-kpi-value">{{ totalConfirmadas() }}</strong>
+              </article>
+              <article class="staff-kpi-card">
+                <span class="staff-kpi-label">Finalizadas</span>
+                <strong class="staff-kpi-value">{{ totalFinalizadas() }}</strong>
+              </article>
+            </section>
 
             <app-agenda-operations-section
+              [theme]="'light'"
+              [viewMode]="agendaViewMode()"
+              [availableViews]="['day', 'week']"
               [eyebrow]="'Agenda visual'"
               [title]="'Agenda por fecha'"
               [dateLabel]="'Fecha seleccionada'"
               [dateValue]="agendaFechaActiva()"
               [dateDisplay]="agendaFechaActivaTexto()"
-              [summaryCards]="resumenAgendaCards()"
-              [occupancy]="agendaOccupancyVm()"
+              [summaryCards]="[]"
+              [occupancy]="null"
               [hourLabels]="agendaHourLabels"
               [collaborators]="agendaCollaboratorsVm()"
               [appointments]="agendaAppointmentsVm()"
@@ -186,8 +173,10 @@
               (previousDay)="desplazarFechaAgenda(-1)"
               (goToToday)="irAHoyAgenda()"
               (nextDay)="desplazarFechaAgenda(1)"
+              (viewModeChange)="cambiarVistaAgenda($event)"
               (dateValueChange)="seleccionarFechaAgenda($event)"
               (appointmentSelected)="seleccionarCitaAgenda($event)"
+              (appointmentClosed)="cerrarDetalleAgenda()"
               (appointmentAction)="gestionarAccionAgenda($event)" />
           </section>
         </ng-container>

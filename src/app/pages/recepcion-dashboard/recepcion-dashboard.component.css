@@ -93,34 +93,52 @@
 }
 
 .recepcion-body {
-  padding: 1.5rem;
+  max-width: 1460px;
+  margin: 0 auto;
+  padding: 1.2rem 1.35rem 1.75rem;
 }
 
-.recepcion-hero {
+.recepcion-top-strip {
   display: grid;
-  grid-template-columns: minmax(0, 1.65fr) minmax(320px, 0.9fr);
-  gap: 1.25rem;
-  margin-bottom: 1.25rem;
+  grid-template-columns: minmax(0, 0.95fr) minmax(360px, 1.1fr);
+  gap: 1rem;
+  margin-bottom: 0.95rem;
 }
 
-.recepcion-hero-copy {
-  padding: 1.6rem 1.75rem;
-  border-radius: 28px;
-  background: linear-gradient(135deg, rgba(24, 55, 84, 0.96), rgba(39, 81, 123, 0.9));
-  color: #fbfcfe;
-  box-shadow: 0 20px 40px rgba(35, 52, 72, 0.15);
+.recepcion-top-copy {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.95rem 1.05rem;
+  border-radius: 24px;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.9), rgba(244, 248, 252, 0.9));
+  box-shadow: 0 14px 30px rgba(39, 49, 58, 0.08);
+  border: 1px solid rgba(60, 77, 94, 0.08);
 }
 
-.recepcion-hero-copy h1 {
-  margin: 0.35rem 0 0.75rem;
-  font-size: clamp(1.9rem, 2vw + 1rem, 2.75rem);
-  line-height: 1.08;
+.recepcion-top-copy h1 {
+  margin: 0.18rem 0 0;
+  font-size: clamp(1.35rem, 0.9vw + 1rem, 1.7rem);
+  line-height: 1.06;
 }
 
-.recepcion-hero-copy p {
-  margin: 0;
-  max-width: 60ch;
-  color: rgba(251, 252, 254, 0.84);
+.recepcion-top-meta {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.55rem;
+}
+
+.recepcion-top-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.48rem 0.8rem;
+  border-radius: 999px;
+  background: rgba(39, 81, 123, 0.08);
+  color: #34516a;
+  font-size: 0.84rem;
+  font-weight: 600;
 }
 
 .recepcion-filter-card,
@@ -133,19 +151,72 @@
 
 .recepcion-filter-card,
 .recepcion-card {
-  padding: 1rem;
+  padding: 1.05rem;
   background: rgba(255, 255, 255, 0.88);
+}
+
+.recepcion-filter-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.85rem;
+  margin-bottom: 0.7rem;
+}
+
+.recepcion-filter-head h2 {
+  margin: 0.16rem 0 0;
+  font-size: 1.08rem;
+}
+
+.recepcion-filter-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.42rem 0.72rem;
+  border-radius: 999px;
+  background: rgba(39, 81, 123, 0.08);
+  color: #34516a;
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+.recepcion-filter-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+.recepcion-filter-static {
+  display: grid;
+  gap: 0.18rem;
+  align-content: center;
+  min-height: 56px;
+  padding: 0.8rem 0.95rem;
+  border-radius: 18px;
+  background: rgba(39, 81, 123, 0.06);
+  border: 1px solid rgba(39, 81, 123, 0.1);
+}
+
+.recepcion-filter-static small {
+  color: #708091;
+  font-size: 0.76rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.recepcion-filter-static strong {
+  font-size: 0.98rem;
+  color: #22384c;
 }
 
 .recepcion-metric-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 1rem;
-  margin-bottom: 1rem;
+  gap: 0.85rem;
+  margin-bottom: 0.95rem;
 }
 
 .recepcion-metric-card {
-  padding: 1rem 1.1rem;
+  padding: 0.82rem 0.95rem;
 }
 
 .recepcion-metric-card span {
@@ -155,7 +226,8 @@
 }
 
 .recepcion-metric-card strong {
-  font-size: 1.4rem;
+  font-size: 1.32rem;
+  line-height: 1.05;
 }
 
 .recepcion-grid {
@@ -171,37 +243,66 @@
   gap: 1rem;
 }
 
+.recepcion-side-column {
+  position: sticky;
+  top: 94px;
+}
+
 .recepcion-card-heading {
-  margin-bottom: 1rem;
+  margin-bottom: 0.65rem;
 }
 
 .recepcion-card-heading h2 {
   margin: 0.2rem 0 0;
-  font-size: 1.25rem;
+  font-size: 1.08rem;
 }
 
 .recepcion-empty {
-  padding: 1rem 1.1rem;
+  padding: 0.9rem 1rem;
   border-radius: 18px;
   background: rgba(226, 233, 241, 0.7);
   color: #607182;
+  font-size: 0.94rem;
 }
 
 .recepcion-appointments,
 .recepcion-client-search {
   display: flex;
   flex-direction: column;
-  gap: 0.9rem;
+  gap: 0.75rem;
 }
 
 .recepcion-appointment-card,
 .recepcion-client-result {
   width: 100%;
-  padding: 1rem;
+  padding: 0.9rem 0.95rem;
   border-radius: 20px;
   border: 1px solid rgba(85, 105, 125, 0.12);
   background: #fff;
   text-align: left;
+  transition: transform 120ms ease, border-color 120ms ease, box-shadow 120ms ease;
+}
+
+.recepcion-appointment-card {
+  position: relative;
+}
+
+.recepcion-appointment-card::before {
+  content: "";
+  position: absolute;
+  left: 0.85rem;
+  top: 0.95rem;
+  bottom: 0.95rem;
+  width: 3px;
+  border-radius: 999px;
+  background: rgba(39, 81, 123, 0.14);
+}
+
+.recepcion-appointment-card:hover,
+.recepcion-client-result:hover {
+  transform: translateY(-1px);
+  border-color: rgba(39, 81, 123, 0.24);
+  box-shadow: 0 12px 24px rgba(35, 52, 72, 0.08);
 }
 
 .recepcion-appointment-head,
@@ -210,11 +311,12 @@
   display: flex;
   justify-content: space-between;
   gap: 0.75rem;
+  padding-left: 0.55rem;
 }
 
 .recepcion-appointment-head {
   align-items: flex-start;
-  margin-bottom: 0.75rem;
+  margin-bottom: 0.65rem;
 }
 
 .recepcion-appointment-head strong,
@@ -231,12 +333,13 @@
 
 .recepcion-appointment-meta {
   flex-wrap: wrap;
-  margin-bottom: 0.75rem;
-  font-size: 0.92rem;
+  margin-bottom: 0.7rem;
+  font-size: 0.89rem;
 }
 
 .recepcion-appointment-note {
-  margin-bottom: 0.8rem;
+  margin-bottom: 0.75rem;
+  padding-left: 0.55rem;
 }
 
 .recepcion-appointment-actions {
@@ -255,7 +358,30 @@ mat-chip.has-checkin {
 .recepcion-form-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.9rem;
+  gap: 0.85rem;
+}
+
+.recepcion-form-static {
+  display: grid;
+  gap: 0.2rem;
+  align-content: center;
+  min-height: 56px;
+  padding: 0.8rem 0.95rem;
+  border-radius: 18px;
+  background: rgba(39, 81, 123, 0.06);
+  border: 1px solid rgba(39, 81, 123, 0.1);
+}
+
+.recepcion-form-static small {
+  color: #708091;
+  font-size: 0.76rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.recepcion-form-static strong {
+  font-size: 0.98rem;
+  color: #22384c;
 }
 
 .full-width,
@@ -278,10 +404,18 @@ mat-chip.has-checkin {
 }
 
 @media (max-width: 1199px) {
-  .recepcion-hero,
+  .recepcion-top-strip,
   .recepcion-metric-grid,
   .recepcion-grid {
     grid-template-columns: 1fr;
+  }
+
+  .recepcion-filter-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .recepcion-side-column {
+    position: static;
   }
 }
 
@@ -294,8 +428,28 @@ mat-chip.has-checkin {
     padding: 1rem;
   }
 
+  .recepcion-toolbar-actions {
+    flex-wrap: wrap;
+    justify-content: flex-end;
+  }
+
+  .recepcion-top-copy {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 1rem 1.05rem;
+  }
+
   .recepcion-form-grid {
     grid-template-columns: 1fr;
+  }
+
+  .recepcion-filter-head {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .recepcion-top-meta {
+    justify-content: flex-start;
   }
 
   .recepcion-appointment-head,

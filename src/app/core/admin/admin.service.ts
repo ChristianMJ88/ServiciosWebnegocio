@@ -228,6 +228,20 @@ export interface ReporteServicioAdmin {
   ingresosFinalizados: number;
 }
 
+export interface ReportePrestadorAdmin {
+  prestadorId: number;
+  prestadorNombre: string;
+  totalCitas: number;
+  pendientes: number;
+  confirmadas: number;
+  finalizadas: number;
+  canceladas: number;
+  noAsistio: number;
+  ingresosProgramados: number;
+  ingresosFinalizados: number;
+  ticketPromedio: number;
+}
+
 export interface ConfiguracionCorreoAdmin {
   habilitado: boolean;
   proveedor: 'SMTP' | 'GRAPH' | string | null;
@@ -575,6 +589,10 @@ export class AdminService {
 
   getReporteServicios(): Observable<ReporteServicioAdmin[]> {
     return this.http.get<ReporteServicioAdmin[]>(`${environment.apiBaseUrl}/admin/reportes/servicios`);
+  }
+
+  getReportePrestadores(): Observable<ReportePrestadorAdmin[]> {
+    return this.http.get<ReportePrestadorAdmin[]>(`${environment.apiBaseUrl}/admin/reportes/prestadores`);
   }
 
   getConfiguracionCorreo(): Observable<ConfiguracionCorreoAdmin> {

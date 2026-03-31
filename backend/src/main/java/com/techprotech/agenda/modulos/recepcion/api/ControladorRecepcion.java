@@ -2,6 +2,7 @@ package com.techprotech.agenda.modulos.recepcion.api;
 
 import com.techprotech.agenda.modulos.citas.api.dto.CitaClienteResponse;
 import com.techprotech.agenda.modulos.citas.api.dto.CitaCreadaResponse;
+import com.techprotech.agenda.modulos.recepcion.api.dto.CatalogoRecepcionResponse;
 import com.techprotech.agenda.modulos.recepcion.api.dto.CitaRecepcionResponse;
 import com.techprotech.agenda.modulos.recepcion.api.dto.ClienteRecepcionResponse;
 import com.techprotech.agenda.modulos.recepcion.api.dto.CrearCitaRecepcionRequest;
@@ -33,6 +34,15 @@ public class ControladorRecepcion {
 
     public ControladorRecepcion(ServicioRecepcion servicioRecepcion) {
         this.servicioRecepcion = servicioRecepcion;
+    }
+
+    @GetMapping("/catalogo")
+    @PreAuthorize("hasAuthority('RECEPCION_ACCESO')")
+    public CatalogoRecepcionResponse catalogo(
+            @AuthenticationPrincipal UsuarioAutenticado usuario,
+            @RequestParam(required = false) Long sucursalId
+    ) {
+        return servicioRecepcion.catalogo(usuario.empresaId(), usuario.sucursalesPermitidas(), sucursalId);
     }
 
     @GetMapping("/agenda")

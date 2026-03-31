@@ -8,10 +8,23 @@
   </header>
 
   <div class="agenda-operations__toolbar">
-    <div class="agenda-operations__nav">
-      <button type="button" class="agenda-operations__nav-button" (click)="previousDay.emit()">Anterior</button>
-      <button type="button" class="agenda-operations__nav-button" (click)="goToToday.emit()">Hoy</button>
-      <button type="button" class="agenda-operations__nav-button" (click)="nextDay.emit()">Siguiente</button>
+    <div class="agenda-operations__toolbar-main">
+      <div class="agenda-operations__view-switcher" *ngIf="viewOptions().length > 1">
+        <button
+          type="button"
+          class="agenda-operations__view-button"
+          *ngFor="let option of viewOptions()"
+          [class.is-active]="viewMode() === option.id"
+          (click)="onViewModeChange(option.id)">
+          {{ option.label }}
+        </button>
+      </div>
+
+      <div class="agenda-operations__nav">
+        <button type="button" class="agenda-operations__nav-button" (click)="previousDay.emit()">Anterior</button>
+        <button type="button" class="agenda-operations__nav-button" (click)="goToToday.emit()">Hoy</button>
+        <button type="button" class="agenda-operations__nav-button" (click)="nextDay.emit()">Siguiente</button>
+      </div>
     </div>
 
     <label class="agenda-operations__date-field">
@@ -46,15 +59,23 @@
       [appointments]="appointments()"
       [hourLabels]="hourLabels()"
       [selectedAppointmentId]="selectedAppointmentId()"
+      [viewMode]="viewMode()"
+      [anchorDate]="dateValue()"
       [timelineWidthPx]="timelineWidthPx()"
       [hourSlotHeight]="hourSlotHeight()"
       [emptyMessage]="emptyMessage()"
       (appointmentSelected)="appointmentSelected.emit($event)" />
+  </div>
 
+  <div class="agenda-operations__modal-backdrop" *ngIf="selectedAppointment()" (click)="closeAppointment()"></div>
+
+  <div class="agenda-operations__modal-shell" *ngIf="selectedAppointment() as selected" role="dialog" aria-modal="true">
     <app-agenda-detail-panel
-      class="agenda-operations__detail"
+      class="agenda-operations__detail-modal"
       [theme]="theme()"
-      [appointment]="selectedAppointment()"
+      [modal]="true"
+      [appointment]="selected"
+      (closed)="closeAppointment()"
       (actionTriggered)="appointmentAction.emit($event)" />
   </div>
 </section>

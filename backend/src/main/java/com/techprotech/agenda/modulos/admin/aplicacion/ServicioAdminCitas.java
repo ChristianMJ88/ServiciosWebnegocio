@@ -35,6 +35,7 @@ import com.techprotech.agenda.modulos.admin.api.dto.ProvisionarMessagingServiceW
 import com.techprotech.agenda.modulos.admin.api.dto.ProvisionarSubcuentaWhatsappResponse;
 import com.techprotech.agenda.modulos.admin.api.dto.PruebaPlantillaWhatsappRequest;
 import com.techprotech.agenda.modulos.admin.api.dto.PruebaPlantillaWhatsappResponse;
+import com.techprotech.agenda.modulos.admin.api.dto.ReportePrestadorAdminResponse;
 import com.techprotech.agenda.modulos.admin.api.dto.ReporteServicioAdminResponse;
 import com.techprotech.agenda.modulos.admin.api.dto.RolInternoAdminRequest;
 import com.techprotech.agenda.modulos.admin.api.dto.RolInternoAdminResponse;
@@ -257,6 +258,47 @@ public class ServicioAdminCitas {
                     );
                 })
                 .sorted(Comparator.comparing(ReporteServicioAdminResponse::totalCitas).reversed())
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public List<ReportePrestadorAdminResponse> reportePrestadores(Long empresaId) {
+        List<CitaEntidad> citas = citaRepositorio.findByEmpresaIdOrderByInicioDesc(empresaId);
+        Set<Long> prestadorIds = citas.stream()
+                .map(CitaEntidad::getPrestadorId)
+                .filter(java.util.Objects::nonNull)
+                .collect(Collectors.toCollection(LinkedHashSet::new));
+        Map<Long, PrestadorServicioEntidad> prestadores = prestadorServicioRepositorio.findAllById(prestadorIds).stream()
+                .collect(Collectors.toMap(PrestadorServicioEntidad::getUsuarioId, prestador -> prestador));
+
+        return citas.stream()
+                .filter(cita -> cita.getPrestadorId() != null)
+                .collect(Collectors.groupingBy(CitaEntidad::getPrestadorId, LinkedHashMap::new, Collectors.toList()))
+                .entrySet()
+                .stream()
+                .map(entry -> {
+                    PrestadorServicioEntidad prestador = prestadores.get(entry.getKey());
+                    List<CitaEntidad> citasPrestador = entry.getValue();
+                    BigDecimal ingresosFinalizados = sumarIngresos(citasPrestador, Set.of("FINALIZADA"));
+                    long finalizadas = contarEstado(citasPrestador, "FINALIZADA");
+                    return new ReportePrestadorAdminResponse(
+                            entry.getKey(),
+                            prestador != null ? prestador.getNombreMostrar() : "Prestador",
+                            citasPrestador.size(),
+                            contarEstado(citasPrestador, "PENDIENTE"),
+                            contarEstado(citasPrestador, "CONFIRMADA"),
+                            finalizadas,
+                            contarEstado(citasPrestador, "CANCELADA"),
+                            contarEstado(citasPrestador, "NO_ASISTIO"),
+                            sumarIngresos(citasPrestador, Set.of("PENDIENTE", "CONFIRMADA", "FINALIZADA")),
+                            ingresosFinalizados,
+                            calcularPromedio(ingresosFinalizados, finalizadas)
+                    );
+                })
+                .sorted(
+                        Comparator.comparing(ReportePrestadorAdminResponse::ingresosFinalizados).reversed()
+                                .thenComparing(ReportePrestadorAdminResponse::totalCitas, Comparator.reverseOrder())
+                )
                 .toList();
     }
 
@@ -2268,5 +2310,12 @@ public class ServicioAdminCitas {
                 .filter(cita -> estados.contains(cita.getEstado()))
                 .map(CitaEntidad::getPrecio)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
+    }
+
+    private BigDecimal calcularPromedio(BigDecimal total, long cantidad) {
+        if (cantidad <= 0) {
+            return BigDecimal.ZERO;
+        }
+        return total.divide(BigDecimal.valueOf(cantidad), 2, java.math.RoundingMode.HALF_UP);
     }
 }

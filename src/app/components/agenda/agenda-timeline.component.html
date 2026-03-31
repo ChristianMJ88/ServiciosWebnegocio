@@ -3,7 +3,7 @@
     {{ emptyMessage() }}
   </div>
 
-  <ng-container *ngIf="appointments().length">
+  <ng-container *ngIf="appointments().length && viewMode() === 'day'">
     <div class="agenda-timeline-shell agenda-timeline-shell--desktop" *ngIf="collaborators().length">
       <div class="agenda-timeline-scroll">
         <div class="agenda-timeline-track" [style.width.px]="timelineWidthPx()">
@@ -53,21 +53,19 @@
                 (click)="selectAppointment(appointment.id)">
                 <div class="agenda-timeline-appointment__top">
                   <div class="agenda-timeline-appointment__time">
-                    {{ appointment.start | date:'shortTime':'':'es-MX' }} - {{ appointment.end | date:'shortTime':'':'es-MX' }}
+                    {{ formatTimeRange(appointment.start, appointment.end) }}
                   </div>
-                  <span class="agenda-timeline-appointment__status">{{ appointment.statusLabel }}</span>
                 </div>
 
-                <strong class="agenda-timeline-appointment__title">{{ appointment.title }}</strong>
-                <div class="agenda-timeline-appointment__meta">{{ appointment.subtitle }}</div>
+                <strong class="agenda-timeline-appointment__title">{{ visibleAppointmentLabel(appointment) }}</strong>
 
-                <div class="agenda-timeline-appointment__meta" *ngIf="appointment.supportingText">
-                  {{ appointment.supportingText }}
-                </div>
-
-                <div class="agenda-timeline-appointment__footer" *ngIf="appointment.priceLabel || appointment.supportingTextSecondary">
-                  <span>{{ appointment.supportingTextSecondary }}</span>
-                  <strong *ngIf="appointment.priceLabel">{{ appointment.priceLabel }}</strong>
+                <div class="agenda-timeline-appointment__hovercard">
+                  <div class="agenda-timeline-appointment__hovercard-time">{{ formatTimeRange(appointment.start, appointment.end) }}</div>
+                  <strong>{{ appointment.title }}</strong>
+                  <div>{{ appointment.subtitle }}</div>
+                  <div *ngIf="appointment.supportingText">{{ appointment.supportingText }}</div>
+                  <div *ngIf="appointment.supportingTextSecondary">{{ appointment.supportingTextSecondary }}</div>
+                  <div *ngIf="appointment.priceLabel">{{ appointment.priceLabel }}</div>
                 </div>
               </button>
             </div>
@@ -86,22 +84,141 @@
         <div class="agenda-timeline-mobile-card__top">
           <div>
             <div class="agenda-timeline-mobile-card__time">
-              {{ appointment.start | date:'shortTime':'':'es-MX' }} - {{ appointment.end | date:'shortTime':'':'es-MX' }}
+              {{ formatTimeRange(appointment.start, appointment.end) }}
             </div>
-            <strong class="agenda-timeline-mobile-card__title">{{ appointment.title }}</strong>
-            <div class="agenda-timeline-mobile-card__meta">{{ appointment.subtitle }}</div>
+            <strong class="agenda-timeline-mobile-card__title">{{ visibleAppointmentLabel(appointment) }}</strong>
           </div>
           <span class="agenda-timeline-mobile-card__status">{{ appointment.statusLabel }}</span>
         </div>
 
-        <div class="agenda-timeline-mobile-card__meta" *ngIf="appointment.supportingText">
-          {{ appointment.supportingText }}
+        <div class="agenda-timeline-mobile-card__meta" *ngIf="appointment.title !== visibleAppointmentLabel(appointment)">
+          {{ appointment.title }}
         </div>
 
         <div class="agenda-timeline-mobile-card__footer" *ngIf="appointment.priceLabel || appointment.supportingTextSecondary">
           <span>{{ appointment.supportingTextSecondary }}</span>
           <strong *ngIf="appointment.priceLabel">{{ appointment.priceLabel }}</strong>
         </div>
+      </article>
+    </div>
+  </ng-container>
+
+  <ng-container *ngIf="appointments().length && viewMode() === 'week'">
+    <div class="agenda-week-shell agenda-week-shell--desktop">
+      <div class="agenda-week-scroll">
+        <div class="agenda-week-track">
+          <div class="agenda-week-header">
+            <div class="agenda-week-hour-column"></div>
+            <div class="agenda-week-days" [style.gridTemplateColumns]="weekHeaderGridTemplate()">
+              <article class="agenda-week-day-header" *ngFor="let day of weekAppointmentsPositioned()" [class.is-today]="day.isToday">
+                <span>{{ day.weekday }}</span>
+                <strong>{{ day.dayLabel }}</strong>
+                <div class="agenda-week-day-header__tracks" *ngIf="showWeekCollaboratorTracks()">
+                  <span
+                    class="agenda-week-day-header__track"
+                    *ngFor="let track of day.tracks"
+                    [style.borderColor]="track.accentColor || null">
+                    {{ track.shortLabel }}
+                  </span>
+                </div>
+              </article>
+            </div>
+          </div>
+
+          <div class="agenda-week-body">
+            <div class="agenda-week-hours">
+              <div class="agenda-week-hour" *ngFor="let hour of hourLabels()" [style.height.px]="hourSlotHeight()">
+                {{ hour }}
+              </div>
+            </div>
+
+            <div class="agenda-week-grid">
+              <div class="agenda-week-columns" [style.gridTemplateColumns]="weekHeaderGridTemplate()">
+                <div class="agenda-week-column" *ngFor="let day of weekAppointmentsPositioned()" [class.is-today]="day.isToday">
+                  <div class="agenda-week-day-tracks" [style.gridTemplateColumns]="weekTrackGridTemplate()">
+                    <div class="agenda-week-day-track" *ngFor="let track of day.tracks"></div>
+                  </div>
+                  <div class="agenda-week-lines">
+                    <div class="agenda-week-line" *ngFor="let hour of hourLabels()" [style.height.px]="hourSlotHeight()"></div>
+                  </div>
+
+                  <button
+                    type="button"
+                    class="agenda-week-appointment"
+                    *ngFor="let appointment of day.appointments"
+                    [attr.data-status]="appointment.status.toLowerCase()"
+                    [class.is-selected]="isSelected(appointment.id)"
+                    [style.top.px]="appointment.top"
+                    [style.height.px]="appointment.height"
+                    [style.left.%]="appointment.leftPct"
+                    [style.width.%]="appointment.widthPct"
+                    (click)="selectAppointment(appointment.id)">
+                    <div class="agenda-week-appointment__time">
+                      {{ formatTimeRange(appointment.start, appointment.end) }}
+                    </div>
+                    <strong class="agenda-week-appointment__title">{{ visibleAppointmentLabel(appointment) }}</strong>
+
+                    <div class="agenda-week-appointment__hovercard">
+                      <div class="agenda-week-appointment__hovercard-time">{{ formatTimeRange(appointment.start, appointment.end) }}</div>
+                      <strong>{{ appointment.title }}</strong>
+                      <div>{{ appointment.subtitle }}</div>
+                      <div *ngIf="appointment.collaboratorLabel">{{ appointment.collaboratorLabel }}</div>
+                      <div *ngIf="appointment.supportingText">{{ appointment.supportingText }}</div>
+                      <div *ngIf="appointment.supportingTextSecondary">{{ appointment.supportingTextSecondary }}</div>
+                      <div *ngIf="appointment.priceLabel">{{ appointment.priceLabel }}</div>
+                    </div>
+                  </button>
+
+                  <div class="agenda-week-day__empty agenda-week-day__empty--overlay" *ngIf="!day.appointments.length">
+                    Sin citas
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="agenda-week-mobile">
+      <article class="agenda-week-mobile-day" *ngFor="let day of weekAppointmentsPositioned()" [class.is-today]="day.isToday">
+        <header class="agenda-week-mobile-day__header">
+          <span>{{ day.weekday }}</span>
+          <strong>{{ day.dayLabel }}</strong>
+        </header>
+
+        <div class="agenda-week-mobile-day__body" *ngIf="day.appointments.length; else weekMobileEmpty">
+          <button
+            type="button"
+            class="agenda-timeline-mobile-card"
+            *ngFor="let appointment of day.appointments"
+            [attr.data-status]="appointment.status.toLowerCase()"
+            [class.is-selected]="isSelected(appointment.id)"
+            (click)="selectAppointment(appointment.id)">
+            <div class="agenda-timeline-mobile-card__top">
+              <div>
+                <div class="agenda-timeline-mobile-card__time">
+                  {{ formatTimeRange(appointment.start, appointment.end) }}
+                </div>
+                <strong class="agenda-timeline-mobile-card__title">{{ visibleAppointmentLabel(appointment) }}</strong>
+              </div>
+              <span class="agenda-timeline-mobile-card__status">{{ appointment.statusLabel }}</span>
+            </div>
+
+            <div class="agenda-timeline-mobile-card__meta" *ngIf="appointment.title !== visibleAppointmentLabel(appointment)">
+              {{ appointment.title }}
+            </div>
+
+            <div class="agenda-timeline-mobile-card__footer" *ngIf="appointment.priceLabel || appointment.supportingTextSecondary">
+              <span>{{ appointment.supportingTextSecondary }}</span>
+              <strong *ngIf="appointment.priceLabel">{{ appointment.priceLabel }}</strong>
+            </div>
+          </button>
+        </div>
+
+        <ng-template #weekMobileEmpty>
+          <div class="agenda-week-day__empty">Sin citas</div>
+        </ng-template>
       </article>
     </div>
   </ng-container>

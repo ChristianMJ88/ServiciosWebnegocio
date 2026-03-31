@@ -77,22 +77,33 @@ export class BookingDataService {
 
   constructor(private http: HttpClient) {}
 
-  getBranches(): Observable<SucursalCatalogo[]> {
+  getBranches(empresaId?: number | null): Observable<SucursalCatalogo[]> {
+    const empresaObjetivo = empresaId ?? environment.empresaId;
     if (environment.useBackendCatalog && environment.apiBaseUrl) {
       return this.http.get<SucursalCatalogo[]>(
-        `${environment.apiBaseUrl}/publico/sucursales?empresaId=${environment.empresaId}`
+        `${environment.apiBaseUrl}/publico/sucursales?empresaId=${empresaObjetivo}`
       ).pipe(
         catchError(error => {
           if (environment.allowLegacyFallback) {
             console.warn('Fallo el catálogo backend, usando fallback legacy.', error);
-            return of([...this.LEGACY_BRANCHES]);
+            return of(
+              [...this.LEGACY_BRANCHES].map(branch => ({
+                ...branch,
+                empresaId: empresaObjetivo
+              }))
+            );
           }
           throw error;
         })
       );
     }
 
-    return of([...this.LEGACY_BRANCHES]);
+    return of(
+      [...this.LEGACY_BRANCHES].map(branch => ({
+        ...branch,
+        empresaId: empresaObjetivo
+      }))
+    );
   }
 
   getServices(branchId: number): Observable<ServicioCatalogo[]> {

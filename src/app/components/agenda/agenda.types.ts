@@ -1,4 +1,5 @@
 export type AgendaThemeMode = 'dark' | 'light';
+export type AgendaViewMode = 'day' | 'week';
 
 export interface AgendaStatCardVm {
   label: string;
@@ -39,6 +40,10 @@ export interface AgendaAppointmentVm {
   statusLabel: string;
   title: string;
   subtitle: string;
+  compactLabel?: string;
+  collaboratorId?: number | string | null;
+  collaboratorLabel?: string | null;
+  collaboratorAccentColor?: string | null;
   supportingText?: string;
   supportingTextSecondary?: string;
   priceLabel?: string;

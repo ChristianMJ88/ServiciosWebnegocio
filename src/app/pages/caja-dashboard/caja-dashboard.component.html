@@ -29,25 +29,35 @@
   <mat-progress-bar *ngIf="loading()" mode="indeterminate"></mat-progress-bar>
 
   <div class="caja-body">
-    <header class="caja-hero">
-      <div class="caja-hero-copy">
-        <span class="caja-eyebrow">Turno actual</span>
-        <h1>Cobros, caja chica y control del día</h1>
-        <p>
-          Mantén el turno claro desde una sola pantalla: abre caja, cobra citas finalizadas,
-          registra gastos menores y cierra con diferencia controlada.
-        </p>
+    <header class="caja-top-strip">
+      <div class="caja-top-copy">
+        <div>
+          <span class="caja-eyebrow">Turno actual</span>
+          <h1>Caja</h1>
+        </div>
+
+        <div class="caja-top-meta">
+          <span class="caja-top-pill">{{ cajaAbierta() ? 'Caja abierta' : 'Caja cerrada' }}</span>
+          <span class="caja-top-pill" *ngIf="sucursalActivaNombre()">{{ sucursalActivaNombre() }}</span>
+          <span class="caja-top-pill">{{ citasPorCobrar().length }} cobrables</span>
+        </div>
       </div>
 
       <mat-card class="caja-sucursal-card">
-        <div class="caja-card-heading">
-          <span class="caja-card-kicker">Sucursal activa</span>
-          <h2>{{ sucursalActivaNombre() || 'Cargando sucursal operativa...' }}</h2>
+        <div class="caja-top-card-head">
+          <div>
+            <span class="caja-card-kicker">Sucursal activa</span>
+            <h2>{{ sucursalActivaNombre() || 'Cargando sucursal operativa...' }}</h2>
+          </div>
+          <div class="caja-status-pills caja-status-pills--head">
+            <span class="caja-status-pill" [class.is-open]="cajaAbierta()">
+              {{ cajaAbierta() ? 'Caja abierta' : 'Caja cerrada' }}
+            </span>
+            <span class="caja-status-pill" *ngIf="sucursalActivaResuelta()">
+              Sucursal {{ sucursalOperativaId() }}
+            </span>
+          </div>
         </div>
-
-        <p class="caja-helper" *ngIf="sucursales().length === 1">
-          Operas en {{ sucursalActivaNombre() }}. La sucursal se selecciona automáticamente.
-        </p>
 
         <ng-container *ngIf="sucursales().length > 1; else sucursalUnica">
           <mat-form-field appearance="outline" class="w-100">
@@ -79,14 +89,6 @@
           {{ sucursalActivaDireccion() }}
         </p>
 
-        <div class="caja-status-pills">
-          <span class="caja-status-pill" [class.is-open]="cajaAbierta()">
-            {{ cajaAbierta() ? 'Caja abierta' : 'Caja cerrada' }}
-          </span>
-          <span class="caja-status-pill" *ngIf="sucursalActivaResuelta()">
-            Sucursal {{ sucursalOperativaId() }}
-          </span>
-        </div>
       </mat-card>
     </header>
 
@@ -105,16 +107,24 @@
       </mat-card>
     </section>
 
-    <section class="caja-view-switcher" *ngIf="vistasDisponibles().length > 1">
-      <button
-        type="button"
-        class="caja-view-chip"
-        *ngFor="let vista of vistasDisponibles()"
-        [class.active]="vistaActiva() === vista.id"
-        (click)="seleccionarVista(vista.id)">
-        {{ vista.label }}
-      </button>
-    </section>
+    <div class="caja-control-strip">
+      <section class="caja-view-switcher" *ngIf="vistasDisponibles().length > 1">
+        <button
+          type="button"
+          class="caja-view-chip"
+          *ngFor="let vista of vistasDisponibles()"
+          [class.active]="vistaActiva() === vista.id"
+          (click)="seleccionarVista(vista.id)">
+          {{ vista.label }}
+        </button>
+      </section>
+
+      <div class="caja-inline-context" *ngIf="citaSeleccionada() as citaActiva">
+        <span class="caja-inline-context-label">Cobro activo</span>
+        <strong>{{ citaActiva.clienteNombre }}</strong>
+        <small>{{ citaActiva.servicioNombre }} · {{ citaActiva.pendiente | currency:'MXN':'symbol':'1.2-2':'es-MX' }}</small>
+      </div>
+    </div>
 
     <div class="caja-grid" *ngIf="vistaActiva() === 'cobros'">
       <div class="caja-main-column">
@@ -376,7 +386,7 @@
         <mat-card class="caja-card">
           <div class="caja-card-heading">
             <span class="caja-card-kicker">Resumen</span>
-            <h2>Cierre operativo</h2>
+            <h2>Apertura y cierre</h2>
           </div>
 
           <div class="caja-summary-grid">
@@ -496,7 +506,7 @@
         <mat-card class="caja-card">
           <div class="caja-card-heading">
             <span class="caja-card-kicker">Resumen</span>
-            <h2>Impacto en caja</h2>
+            <h2>Resumen del turno</h2>
           </div>
 
           <div class="caja-summary-grid">

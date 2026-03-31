@@ -29,35 +29,51 @@
   <mat-progress-bar *ngIf="loading()" mode="indeterminate"></mat-progress-bar>
 
   <div class="recepcion-body">
-    <header class="recepcion-hero">
-      <div class="recepcion-hero-copy">
-        <span class="recepcion-eyebrow">Atención inmediata</span>
-        <h1>Agenda del día, búsqueda rápida y citas de mostrador</h1>
-        <p>
-          Usa esta vista para revisar llegadas, confirmar o cancelar citas y registrar nuevas reservaciones
-          sin salir del flujo operativo.
-        </p>
+    <header class="recepcion-top-strip">
+      <div class="recepcion-top-copy">
+        <div>
+          <span class="recepcion-eyebrow">Atención inmediata</span>
+          <h1>Recepción</h1>
+        </div>
+
+        <div class="recepcion-top-meta">
+          <span class="recepcion-top-pill">{{ fechaAgenda() | date:'EEEE, dd MMM':'':'es-MX' }}</span>
+          <span class="recepcion-top-pill" *ngIf="sucursalActivaNombre()">{{ sucursalActivaNombre() }}</span>
+          <span class="recepcion-top-pill">{{ citas().length }} citas</span>
+        </div>
       </div>
 
       <mat-card class="recepcion-filter-card">
-        <div class="recepcion-card-heading">
-          <span class="recepcion-card-kicker">Filtro activo</span>
-          <h2>{{ sucursalActivaNombre() }}</h2>
+        <div class="recepcion-filter-head">
+          <div>
+            <span class="recepcion-card-kicker">Contexto activo</span>
+            <h2>Agenda operativa</h2>
+          </div>
+          <span class="recepcion-filter-badge">{{ fechaAgenda() | date:'dd MMM yyyy':'':'es-MX' }}</span>
         </div>
 
-        <mat-form-field appearance="outline" class="w-100">
-          <mat-label>Sucursal</mat-label>
-          <mat-select [ngModel]="sucursalActivaId()" (ngModelChange)="cambiarSucursal($event)">
-            <mat-option *ngFor="let sucursal of sucursales()" [value]="sucursal.id">
-              {{ sucursal.nombre }}
-            </mat-option>
-          </mat-select>
-        </mat-form-field>
+        <div class="recepcion-filter-grid">
+          <mat-form-field appearance="outline" class="w-100" *ngIf="sucursales().length > 1; else recepcionSucursalFija">
+            <mat-label>Sucursal</mat-label>
+            <mat-select [ngModel]="sucursalActivaId()" (ngModelChange)="cambiarSucursal($event)">
+              <mat-option *ngFor="let sucursal of sucursales()" [value]="sucursal.id">
+                {{ sucursal.nombre }}
+              </mat-option>
+            </mat-select>
+          </mat-form-field>
 
-        <mat-form-field appearance="outline" class="w-100">
-          <mat-label>Fecha</mat-label>
-          <input matInput type="date" [ngModel]="fechaAgenda()" (ngModelChange)="cambiarFecha($event)">
-        </mat-form-field>
+          <ng-template #recepcionSucursalFija>
+            <div class="recepcion-filter-static">
+              <small>Sucursal</small>
+              <strong>{{ sucursalActivaNombre() }}</strong>
+            </div>
+          </ng-template>
+
+          <mat-form-field appearance="outline" class="w-100">
+            <mat-label>Fecha</mat-label>
+            <input matInput type="date" [ngModel]="fechaAgenda()" (ngModelChange)="cambiarFecha($event)">
+          </mat-form-field>
+        </div>
       </mat-card>
     </header>
 
@@ -76,7 +92,7 @@
         <mat-card class="recepcion-card">
           <div class="recepcion-card-heading">
             <span class="recepcion-card-kicker">Agenda del día</span>
-            <h2>Citas activas en mostrador</h2>
+            <h2>Citas activas en recepción</h2>
           </div>
 
           <div class="recepcion-empty" *ngIf="!citas().length">
@@ -129,7 +145,7 @@
         <mat-card class="recepcion-card" *ngIf="puedeBuscarClientes()">
           <div class="recepcion-card-heading">
             <span class="recepcion-card-kicker">Búsqueda rápida</span>
-            <h2>Cliente existente</h2>
+            <h2>Cliente y contexto</h2>
           </div>
 
           <mat-form-field appearance="outline" class="w-100">
@@ -154,16 +170,25 @@
         <mat-card class="recepcion-card" *ngIf="puedeGestionarCitas()">
           <div class="recepcion-card-heading">
             <span class="recepcion-card-kicker">Nueva cita</span>
-            <h2>Alta rápida desde recepción</h2>
+            <h2>Alta rápida en mostrador</h2>
           </div>
 
           <form class="recepcion-form-grid" (ngSubmit)="guardarCita()">
-            <mat-form-field appearance="outline">
-              <mat-label>Sucursal</mat-label>
-              <mat-select name="sucursalCita" [(ngModel)]="formularioCita.sucursalId" (ngModelChange)="cambiarSucursal($event)">
-                <mat-option *ngFor="let sucursal of sucursales()" [value]="sucursal.id">{{ sucursal.nombre }}</mat-option>
-              </mat-select>
-            </mat-form-field>
+            <ng-container *ngIf="sucursales().length > 1; else recepcionSucursalCitaFija">
+              <mat-form-field appearance="outline">
+                <mat-label>Sucursal</mat-label>
+                <mat-select name="sucursalCita" [(ngModel)]="formularioCita.sucursalId" (ngModelChange)="cambiarSucursal($event)">
+                  <mat-option *ngFor="let sucursal of sucursales()" [value]="sucursal.id">{{ sucursal.nombre }}</mat-option>
+                </mat-select>
+              </mat-form-field>
+            </ng-container>
+
+            <ng-template #recepcionSucursalCitaFija>
+              <div class="recepcion-form-static">
+                <small>Sucursal</small>
+                <strong>{{ sucursalActivaNombre() }}</strong>
+              </div>
+            </ng-template>
 
             <mat-form-field appearance="outline">
               <mat-label>Servicio</mat-label>

@@ -1,4 +1,4 @@
-<aside class="agenda-detail" [attr.data-theme]="theme()">
+<section class="agenda-detail" [attr.data-theme]="theme()" [class.is-modal]="modal()">
   <ng-container *ngIf="appointment() as item; else agendaDetailEmpty">
     <div class="agenda-detail__header">
       <div class="agenda-detail__profile">
@@ -8,7 +8,17 @@
           <h4>{{ item.detailTitle }}</h4>
         </div>
       </div>
-      <span class="agenda-detail__status" [attr.data-status]="item.status.toLowerCase()">{{ item.statusLabel }}</span>
+      <div class="agenda-detail__header-actions">
+        <span class="agenda-detail__status" [attr.data-status]="item.status.toLowerCase()">{{ item.statusLabel }}</span>
+        <button
+          *ngIf="modal()"
+          type="button"
+          class="agenda-detail__close"
+          aria-label="Cerrar detalle"
+          (click)="close()">
+          ×
+        </button>
+      </div>
     </div>
 
     <div class="agenda-detail__time">
@@ -59,4 +69,4 @@
       <p>{{ emptyMessage() }}</p>
     </div>
   </ng-template>
-</aside>
+</section>

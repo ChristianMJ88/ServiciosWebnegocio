@@ -163,68 +163,45 @@
 
         <ng-container *ngIf="seccionActiva() === 'resumen'">
           <section class="section-stack">
-            <div class="overview-hero" *ngIf="resumen() as r">
-              <mat-card class="hero-card">
-                <div class="hero-copy">
-                  <div class="hero-eyebrow">Visión general</div>
-                  <h2>Estado actual de la operación</h2>
-                  <p>
-                    Supervisa citas, ocupación e ingresos desde una vista ejecutiva más limpia, enfocada y lista para operación diaria.
-                  </p>
-                </div>
-
-                <div class="hero-stats">
-                  <div class="hero-stat hero-stat-primary">
-                    <span>Total de citas</span>
-                    <strong>{{ r.totalCitas }}</strong>
-                  </div>
-                  <div class="hero-stat">
-                    <span>Citas hoy</span>
-                    <strong>{{ r.citasHoy }}</strong>
-                  </div>
-                  <div class="hero-stat">
-                    <span>Ingreso programado</span>
-                    <strong>{{ r.ingresosProgramados | currency:'MXN':'symbol-narrow':'1.0-0':'es-MX' }}</strong>
-                  </div>
-                </div>
-              </mat-card>
-            </div>
-
-            <div class="metric-grid" *ngIf="resumen() as r">
-              <mat-card class="metric-card metric-card-highlight">
-                <span>Pendientes</span>
-                <strong>{{ r.pendientes }}</strong>
-              </mat-card>
-              <mat-card class="metric-card">
-                <span>Confirmadas</span>
-                <strong>{{ r.confirmadas }}</strong>
-              </mat-card>
-              <mat-card class="metric-card">
-                <span>Finalizadas</span>
-                <strong>{{ r.finalizadas }}</strong>
-              </mat-card>
-              <mat-card class="metric-card">
-                <span>Canceladas</span>
-                <strong>{{ r.canceladas }}</strong>
-              </mat-card>
-              <mat-card class="metric-card">
-                <span>No asistió</span>
-                <strong>{{ r.noAsistio }}</strong>
-              </mat-card>
-              <mat-card class="metric-card">
-                <span>Ingreso finalizado</span>
-                <strong>{{ r.ingresosFinalizados | currency:'MXN':'symbol-narrow':'1.0-0':'es-MX' }}</strong>
-              </mat-card>
-            </div>
+            <section class="dashboard-kpi-strip" *ngIf="resumen() as r">
+              <article class="dashboard-kpi-card dashboard-kpi-card--wide">
+                <span class="dashboard-kpi-label">Visión general</span>
+                <strong class="dashboard-kpi-value">Operación del día</strong>
+                <small class="dashboard-kpi-helper">Seguimiento rápido de agenda, ocupación e ingresos.</small>
+              </article>
+              <article class="dashboard-kpi-card dashboard-kpi-card--accent">
+                <span class="dashboard-kpi-label">Citas hoy</span>
+                <strong class="dashboard-kpi-value">{{ r.citasHoy }}</strong>
+              </article>
+              <article class="dashboard-kpi-card">
+                <span class="dashboard-kpi-label">Pendientes</span>
+                <strong class="dashboard-kpi-value">{{ r.pendientes }}</strong>
+              </article>
+              <article class="dashboard-kpi-card">
+                <span class="dashboard-kpi-label">Confirmadas</span>
+                <strong class="dashboard-kpi-value">{{ r.confirmadas }}</strong>
+              </article>
+              <article class="dashboard-kpi-card">
+                <span class="dashboard-kpi-label">Ingreso programado</span>
+                <strong class="dashboard-kpi-value">{{ r.ingresosProgramados | currency:'MXN':'symbol-narrow':'1.0-0':'es-MX' }}</strong>
+              </article>
+              <article class="dashboard-kpi-card">
+                <span class="dashboard-kpi-label">Ingreso finalizado</span>
+                <strong class="dashboard-kpi-value">{{ r.ingresosFinalizados | currency:'MXN':'symbol-narrow':'1.0-0':'es-MX' }}</strong>
+              </article>
+            </section>
 
             <app-agenda-operations-section
+              [theme]="'light'"
+              [viewMode]="agendaViewMode()"
+              [availableViews]="['day', 'week']"
               [eyebrow]="'Agenda operativa'"
-              [title]="'Vista diaria por colaborador'"
+              [title]="'Agenda diaria y semanal'"
               [dateLabel]="'Fecha seleccionada'"
               [dateValue]="fechaAgendaActiva()"
               [dateDisplay]="fechaAgendaActivaTexto()"
-              [summaryCards]="resumenAgendaCards()"
-              [occupancy]="agendaOccupancyVm()"
+              [summaryCards]="[]"
+              [occupancy]="null"
               [hourLabels]="agendaHourLabels"
               [collaborators]="agendaCollaboratorsVm()"
               [appointments]="agendaAppointmentsVm()"
@@ -236,9 +213,61 @@
               (previousDay)="desplazarFechaAgenda(-1)"
               (goToToday)="irAHoyAgenda()"
               (nextDay)="desplazarFechaAgenda(1)"
+              (viewModeChange)="cambiarVistaAgenda($event)"
               (dateValueChange)="seleccionarFechaAgenda($event)"
               (appointmentSelected)="seleccionarCitaAgenda($event)"
+              (appointmentClosed)="cerrarDetalleAgenda()"
               (appointmentAction)="gestionarAccionAgenda($event)" />
+
+            <div class="dashboard-insights-grid" *ngIf="reportePrestadores().length">
+              <mat-card class="workspace-card workspace-card-emphasis">
+                <div class="section-header">
+                  <div>
+                    <div class="section-eyebrow">Rendimiento del equipo</div>
+                    <h3>Ingresos por prestador</h3>
+                  </div>
+                </div>
+
+                <div class="team-metric-list">
+                  <article class="team-metric-row" *ngFor="let reporte of topPrestadoresPorIngreso()">
+                    <div class="team-metric-copy">
+                      <strong>{{ reporte.prestadorNombre }}</strong>
+                      <small>{{ reporte.finalizadas }} finalizadas · ticket promedio {{ reporte.ticketPromedio | currency:'MXN':'symbol-narrow':'1.0-0':'es-MX' }}</small>
+                    </div>
+                    <div class="team-metric-bar-shell" aria-hidden="true">
+                      <span class="team-metric-bar team-metric-bar--income" [style.width.%]="ratioPrestadorIngresos(reporte.ingresosFinalizados)"></span>
+                    </div>
+                    <div class="team-metric-value">
+                      {{ reporte.ingresosFinalizados | currency:'MXN':'symbol-narrow':'1.0-0':'es-MX' }}
+                    </div>
+                  </article>
+                </div>
+              </mat-card>
+
+              <mat-card class="workspace-card">
+                <div class="section-header">
+                  <div>
+                    <div class="section-eyebrow">Carga operativa</div>
+                    <h3>Citas por prestador</h3>
+                  </div>
+                </div>
+
+                <div class="team-metric-list">
+                  <article class="team-metric-row" *ngFor="let reporte of topPrestadoresPorCitas()">
+                    <div class="team-metric-copy">
+                      <strong>{{ reporte.prestadorNombre }}</strong>
+                      <small>{{ reporte.confirmadas }} confirmadas · {{ reporte.pendientes }} pendientes · {{ reporte.canceladas + reporte.noAsistio }} no concretadas</small>
+                    </div>
+                    <div class="team-metric-bar-shell" aria-hidden="true">
+                      <span class="team-metric-bar team-metric-bar--volume" [style.width.%]="ratioPrestadorCitas(reporte.totalCitas)"></span>
+                    </div>
+                    <div class="team-metric-value">
+                      {{ reporte.totalCitas }} citas
+                    </div>
+                  </article>
+                </div>
+              </mat-card>
+            </div>
 
             <mat-card class="workspace-card">
               <div class="section-header">
@@ -2149,6 +2178,9 @@
         <ng-container *ngIf="seccionActiva() === 'citas'">
           <section class="section-stack">
             <app-agenda-operations-section
+              [theme]="'light'"
+              [viewMode]="agendaViewMode()"
+              [availableViews]="['day', 'week']"
               [eyebrow]="'Operación diaria'"
               [title]="'Agenda detallada de citas'"
               [dateLabel]="'Fecha seleccionada'"
@@ -2167,8 +2199,10 @@
               (previousDay)="desplazarFechaAgenda(-1)"
               (goToToday)="irAHoyAgenda()"
               (nextDay)="desplazarFechaAgenda(1)"
+              (viewModeChange)="cambiarVistaAgenda($event)"
               (dateValueChange)="seleccionarFechaAgenda($event)"
               (appointmentSelected)="seleccionarCitaAgenda($event)"
+              (appointmentClosed)="cerrarDetalleAgenda()"
               (appointmentAction)="gestionarAccionAgenda($event)" />
           </section>
         </ng-container>

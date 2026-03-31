@@ -15,11 +15,17 @@ import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatSelectModule } from '@angular/material/select';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
-import { Subject, forkJoin, of } from 'rxjs';
-import { catchError, finalize } from 'rxjs/operators';
+import { Subject, forkJoin } from 'rxjs';
+import { finalize } from 'rxjs/operators';
 import { AuthService } from '../../core/auth/auth.service';
-import { RecepcionService, CitaRecepcion, ClienteRecepcion } from '../../core/recepcion/recepcion.service';
-import { BookingDataService, ServicioCatalogo, SucursalCatalogo } from '../../services/booking-data.service';
+import {
+  CatalogoRecepcion,
+  CitaRecepcion,
+  ClienteRecepcion,
+  RecepcionService,
+  ServicioRecepcionCatalogo,
+  SucursalRecepcionCatalogo
+} from '../../core/recepcion/recepcion.service';
 
 @Component({
   selector: 'app-recepcion-dashboard',
@@ -44,7 +50,6 @@ import { BookingDataService, ServicioCatalogo, SucursalCatalogo } from '../../se
 })
 export class RecepcionDashboardComponent implements OnInit {
   private readonly recepcionService = inject(RecepcionService);
-  private readonly bookingDataService = inject(BookingDataService);
   private readonly authService = inject(AuthService);
   private readonly router = inject(Router);
   private readonly breakpointObserver = inject(BreakpointObserver);
@@ -62,8 +67,8 @@ export class RecepcionDashboardComponent implements OnInit {
   readonly sucursalActivaId = signal<number | null>(null);
   readonly citas = signal<CitaRecepcion[]>([]);
   readonly clientesEncontrados = signal<ClienteRecepcion[]>([]);
-  readonly sucursales = signal<SucursalCatalogo[]>([]);
-  readonly servicios = signal<ServicioCatalogo[]>([]);
+  readonly sucursales = signal<SucursalRecepcionCatalogo[]>([]);
+  readonly servicios = signal<ServicioRecepcionCatalogo[]>([]);
   readonly terminoBusquedaCliente = signal('');
 
   readonly nombreUsuario = computed(() => this.authService.nombreUsuarioVisible());
@@ -126,6 +131,13 @@ export class RecepcionDashboardComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    this.authService.sincronizarSesionPersistida();
+    const sucursalInicial = this.authService.sucursalesPermitidas()[0] ?? null;
+    if (sucursalInicial) {
+      this.sucursalActivaId.set(sucursalInicial);
+      this.formularioCita.sucursalId = sucursalInicial;
+    }
+
     this.breakpointObserver
       .observe('(max-width: 991px)')
       .pipe(takeUntilDestroyed())
@@ -146,23 +158,14 @@ export class RecepcionDashboardComponent implements OnInit {
     this.error.set('');
 
     forkJoin({
-      sucursales: this.bookingDataService.getBranches(),
+      catalogo: this.recepcionService.getCatalogo(this.sucursalActivaId()),
       agenda: this.recepcionService.getAgenda(this.fechaAgenda(), this.sucursalActivaId())
     })
       .pipe(finalize(() => this.loading.set(false)))
       .subscribe({
-        next: ({ sucursales, agenda }) => {
+        next: ({ catalogo, agenda }) => {
           this.actualizarVistaEnZona(() => {
-            const sucursalesVisibles = this.filtrarSucursalesPorScope(sucursales);
-            this.sucursales.set(sucursalesVisibles);
-            if (!this.sucursalActivaId() && sucursalesVisibles.length) {
-              this.sucursalActivaId.set(sucursalesVisibles[0].id);
-              this.formularioCita.sucursalId = sucursalesVisibles[0].id;
-              this.cargarServiciosSucursal(sucursalesVisibles[0].id);
-            } else if (this.sucursalActivaId()) {
-              this.formularioCita.sucursalId = this.sucursalActivaId();
-              this.cargarServiciosSucursal(this.sucursalActivaId()!);
-            }
+            this.aplicarCatalogo(catalogo);
             this.citas.set(agenda);
           });
         },
@@ -172,14 +175,6 @@ export class RecepcionDashboardComponent implements OnInit {
           });
         }
       });
-  }
-
-  private filtrarSucursalesPorScope(sucursales: SucursalCatalogo[]): SucursalCatalogo[] {
-    const permitidas = this.sucursalesPermitidas();
-    if (!permitidas.length) {
-      return sucursales;
-    }
-    return sucursales.filter(sucursal => permitidas.includes(sucursal.id));
   }
 
   recargarAgenda() {
@@ -195,14 +190,23 @@ export class RecepcionDashboardComponent implements OnInit {
   }
 
   cambiarSucursal(sucursalId: number | null) {
-    this.sucursalActivaId.set(sucursalId);
-    this.formularioCita.sucursalId = sucursalId;
-    this.formularioCita.servicioId = null;
-    this.servicios.set([]);
-    if (sucursalId) {
-      this.cargarServiciosSucursal(sucursalId);
-    }
-    this.recargarAgenda();
+    this.loading.set(true);
+    this.error.set('');
+
+    forkJoin({
+      catalogo: this.recepcionService.getCatalogo(sucursalId),
+      agenda: this.recepcionService.getAgenda(this.fechaAgenda(), sucursalId)
+    })
+      .pipe(finalize(() => this.loading.set(false)))
+      .subscribe({
+        next: ({ catalogo, agenda }) => this.actualizarVistaEnZona(() => {
+          this.aplicarCatalogo(catalogo);
+          this.citas.set(agenda);
+        }),
+        error: error => this.actualizarVistaEnZona(() => {
+          this.error.set(this.extraerMensaje(error, 'No pude cambiar la sucursal de recepción.'));
+        })
+      });
   }
 
   cambiarFecha(fecha: string) {
@@ -312,14 +316,26 @@ export class RecepcionDashboardComponent implements OnInit {
       });
   }
 
-  private cargarServiciosSucursal(sucursalId: number) {
-    this.bookingDataService.getServices(sucursalId)
-      .pipe(catchError(() => of([])))
-      .subscribe(servicios => {
-        this.actualizarVistaEnZona(() => {
-          this.servicios.set(servicios);
-        });
-      });
+  private aplicarCatalogo(catalogo: CatalogoRecepcion) {
+    const sucursalJwt = this.authService.sucursalesPermitidas()[0] ?? null;
+    this.sucursales.set(catalogo.sucursales ?? []);
+    this.servicios.set(catalogo.servicios ?? []);
+
+    const sucursalOperativa = catalogo.sucursalActivaId
+      ?? sucursalJwt
+      ?? this.sucursalActivaId()
+      ?? catalogo.sucursales[0]?.id
+      ?? null;
+
+    this.sucursalActivaId.set(sucursalOperativa);
+    this.formularioCita.sucursalId = sucursalOperativa;
+
+    if (
+      this.formularioCita.servicioId &&
+      !(catalogo.servicios ?? []).some(servicio => servicio.id === this.formularioCita.servicioId)
+    ) {
+      this.formularioCita.servicioId = null;
+    }
   }
 
   private fechaHoy(): string {

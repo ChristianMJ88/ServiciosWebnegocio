@@ -25,7 +25,8 @@ import {
   AgendaAppointmentVm,
   AgendaCollaboratorVm,
   AgendaOccupancyVm,
-  AgendaStatCardVm
+  AgendaStatCardVm,
+  AgendaViewMode
 } from '../../components/agenda/agenda.types';
 import { AuthService } from '../../core/auth/auth.service';
 import {
@@ -76,6 +77,7 @@ export class StaffDashboardComponent implements OnInit {
 
   readonly loading = signal(false);
   readonly fechaAgendaSeleccionada = signal<string | null>(null);
+  readonly agendaViewMode = signal<AgendaViewMode>('day');
   readonly rangoAgendaDesde = signal<string | null>(null);
   readonly rangoAgendaHasta = signal<string | null>(null);
   readonly citaAgendaSeleccionadaId = signal<number | null>(null);
@@ -131,8 +133,12 @@ export class StaffDashboardComponent implements OnInit {
   readonly agendaFechaActiva = computed(() => {
     return this.fechaAgendaSeleccionada() ?? this.obtenerFechaAgendaInicial();
   });
-  readonly agendaFechaActivaTexto = computed(() => this.formatearFechaAgendaLarga(this.agendaFechaActiva()));
-  readonly citasAgenda = computed(() => {
+  readonly agendaFechaActivaTexto = computed(() =>
+    this.agendaViewMode() === 'week'
+      ? this.formatearRangoSemanaAgenda(this.agendaFechaActiva())
+      : this.formatearFechaAgendaLarga(this.agendaFechaActiva())
+  );
+  readonly citasAgendaDia = computed(() => {
     const fecha = this.agendaFechaActiva();
     const citasDelDia = this.agenda()
       .filter(cita => cita.inicio.startsWith(fecha))
@@ -155,8 +161,28 @@ export class StaffDashboardComponent implements OnInit {
         };
       });
   });
+  readonly citasAgendaPeriodo = computed(() => {
+    if (this.agendaViewMode() === 'day') {
+      return this.citasAgendaDia();
+    }
+
+    const { desde, hasta } = this.obtenerRangoSemana(this.agendaFechaActiva());
+    return this.agenda()
+      .filter(cita => {
+        const fecha = cita.inicio.slice(0, 10);
+        return fecha >= desde && fecha <= hasta;
+      })
+      .sort((a, b) => new Date(a.inicio).getTime() - new Date(b.inicio).getTime())
+      .map(cita => ({
+        ...cita,
+        top: 0,
+        height: 0,
+        leftPct: 0,
+        widthPct: 100
+      }));
+  });
   readonly resumenAgendaActiva = computed(() => {
-    const citas = this.agenda().filter(cita => cita.inicio.startsWith(this.agendaFechaActiva()));
+    const citas = this.citasAgendaPeriodo();
     return {
       total: citas.length,
       pendientes: citas.filter(cita => cita.estado === 'PENDIENTE').length,
@@ -165,9 +191,10 @@ export class StaffDashboardComponent implements OnInit {
     };
   });
   readonly analiticaAgendaActiva = computed(() => {
-    const citas = this.citasAgenda();
+    const citas = this.citasAgendaPeriodo();
     const minutosReservados = citas.reduce((total, cita) => total + getDurationMinutes(cita.inicio, cita.fin), 0);
-    const capacidadMinutos = (this.finAgendaHora - this.inicioAgendaHora) * 60;
+    const multiplicador = this.agendaViewMode() === 'week' ? 7 : 1;
+    const capacidadMinutos = ((this.finAgendaHora - this.inicioAgendaHora) * 60) * multiplicador;
     const ocupacion = capacidadMinutos ? Math.min(100, Math.round((minutosReservados / capacidadMinutos) * 100)) : 0;
 
     return {
@@ -177,19 +204,20 @@ export class StaffDashboardComponent implements OnInit {
     };
   });
   readonly citaAgendaSeleccionada = computed(() => {
-    const citas = this.citasAgenda();
-    if (!citas.length) {
+    const citas = this.citasAgendaPeriodo();
+    const seleccionadaId = this.citaAgendaSeleccionadaId();
+    if (!citas.length || seleccionadaId === null) {
       return null;
     }
 
-    return citas.find(cita => cita.id === this.citaAgendaSeleccionadaId()) ?? citas[0];
+    return citas.find(cita => cita.id === seleccionadaId) ?? null;
   });
   readonly totalAgenda = computed(() => this.agenda().length);
   readonly totalConfirmadas = computed(() => this.agenda().filter(cita => cita.estado === 'CONFIRMADA').length);
   readonly totalFinalizadas = computed(() => this.agenda().filter(cita => cita.estado === 'FINALIZADA').length);
   readonly agendaHourLabels = this.horasAgenda.map(hora => hora.etiqueta);
   readonly resumenAgendaCards = computed<AgendaStatCardVm[]>(() => [
-    { label: 'Citas del día', value: this.resumenAgendaActiva().total },
+    { label: this.agendaViewMode() === 'week' ? 'Citas de la semana' : 'Citas del día', value: this.resumenAgendaActiva().total },
     { label: 'Pendientes', value: this.resumenAgendaActiva().pendientes },
     { label: 'Confirmadas', value: this.resumenAgendaActiva().confirmadas },
     { label: 'Finalizadas', value: this.resumenAgendaActiva().finalizadas }
@@ -204,12 +232,12 @@ export class StaffDashboardComponent implements OnInit {
     {
       id: 'staff-owner',
       name: this.nombreUsuario() || 'Staff',
-      meta: `${this.citasAgenda().length} citas programadas`,
+      meta: `${this.citasAgendaPeriodo().length} citas programadas`,
       avatar: getInitials(this.nombreUsuario() || 'Staff')
     }
   ]);
   readonly agendaAppointmentsVm = computed<AgendaAppointmentVm[]>(() =>
-    this.citasAgenda().map(cita => {
+    this.citasAgendaPeriodo().map((cita: CitaStaff & { top: number; height: number; leftPct: number; widthPct: number }) => {
       const whatsappUrl = buildWhatsAppUrl(cita.clienteTelefono);
 
       return {
@@ -218,6 +246,10 @@ export class StaffDashboardComponent implements OnInit {
         statusLabel: formatAgendaStatusLabel(cita.estado),
         title: cita.clienteNombre,
         subtitle: cita.servicioNombre,
+        compactLabel: cita.clienteNombre,
+        collaboratorId: 'staff-owner',
+        collaboratorLabel: this.nombreUsuario() || 'Staff',
+        collaboratorAccentColor: null,
         supportingText: cita.sucursalNombre,
         supportingTextSecondary: cita.clienteTelefono || cita.clienteCorreo || 'Sin contacto',
         avatarLabel: getInitials(cita.clienteNombre),
@@ -244,11 +276,12 @@ export class StaffDashboardComponent implements OnInit {
   );
   readonly citaAgendaDetalleSeleccionada = computed<AgendaAppointmentVm | null>(() => {
     const citas = this.agendaAppointmentsVm();
-    if (!citas.length) {
+    const seleccionadaId = this.citaAgendaSeleccionadaId();
+    if (!citas.length || seleccionadaId === null) {
       return null;
     }
 
-    return citas.find(cita => cita.id === this.citaAgendaSeleccionadaId()) ?? citas[0];
+    return citas.find(cita => cita.id === seleccionadaId) ?? null;
   });
 
   error = '';
@@ -412,7 +445,8 @@ export class StaffDashboardComponent implements OnInit {
   }
 
   desplazarFechaAgenda(dias: number) {
-    const fechaObjetivo = this.sumarDiasAgenda(this.agendaFechaActiva(), dias);
+    const salto = this.agendaViewMode() === 'week' ? dias * 7 : dias;
+    const fechaObjetivo = this.sumarDiasAgenda(this.agendaFechaActiva(), salto);
     this.fechaAgendaSeleccionada.set(fechaObjetivo);
     this.citaAgendaSeleccionadaId.set(null);
     this.asegurarAgendaParaFecha(fechaObjetivo);
@@ -427,6 +461,19 @@ export class StaffDashboardComponent implements OnInit {
 
   seleccionarCitaAgenda(citaId: number) {
     this.citaAgendaSeleccionadaId.set(citaId);
+  }
+
+  cerrarDetalleAgenda() {
+    this.citaAgendaSeleccionadaId.set(null);
+  }
+
+  cambiarVistaAgenda(view: AgendaViewMode) {
+    if (this.agendaViewMode() === view) {
+      return;
+    }
+    this.agendaViewMode.set(view);
+    this.citaAgendaSeleccionadaId.set(null);
+    this.asegurarAgendaParaFecha(this.agendaFechaActiva());
   }
 
   esCitaSeleccionada(citaId: number): boolean {
@@ -723,13 +770,7 @@ export class StaffDashboardComponent implements OnInit {
   }
 
   private obtenerRangoAgenda(fechaIso: string) {
-    const base = new Date(`${fechaIso}T12:00:00`);
-    const inicio = new Date(base.getFullYear(), base.getMonth(), 1, 12, 0, 0);
-    const fin = new Date(base.getFullYear(), base.getMonth() + 1, 0, 12, 0, 0);
-    return {
-      desde: this.obtenerFechaLocalISO(inicio),
-      hasta: this.obtenerFechaLocalISO(fin)
-    };
+    return this.obtenerRangoSemana(fechaIso);
   }
 
   private obtenerFechaLocalISO(fecha = new Date()): string {
@@ -753,5 +794,26 @@ export class StaffDashboardComponent implements OnInit {
       month: 'long',
       year: 'numeric'
     });
+  }
+
+  private obtenerRangoSemana(fechaIso: string) {
+    const fecha = new Date(`${fechaIso}T12:00:00`);
+    const diaActual = fecha.getDay();
+    const ajusteInicio = diaActual === 0 ? -6 : 1 - diaActual;
+    const inicio = new Date(fecha);
+    inicio.setDate(fecha.getDate() + ajusteInicio);
+    const fin = new Date(inicio);
+    fin.setDate(inicio.getDate() + 6);
+    return {
+      desde: this.obtenerFechaLocalISO(inicio),
+      hasta: this.obtenerFechaLocalISO(fin)
+    };
+  }
+
+  private formatearRangoSemanaAgenda(fechaIso: string): string {
+    const { desde, hasta } = this.obtenerRangoSemana(fechaIso);
+    const inicio = new Date(`${desde}T12:00:00`);
+    const fin = new Date(`${hasta}T12:00:00`);
+    return `${inicio.toLocaleDateString('es-MX', { day: 'numeric', month: 'short' })} - ${fin.toLocaleDateString('es-MX', { day: 'numeric', month: 'short', year: 'numeric' })}`;
   }
 }

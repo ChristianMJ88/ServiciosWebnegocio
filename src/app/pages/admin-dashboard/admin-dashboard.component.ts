@@ -28,7 +28,8 @@ import {
   AgendaAppointmentVm,
   AgendaCollaboratorVm,
   AgendaOccupancyVm,
-  AgendaStatCardVm
+  AgendaStatCardVm,
+  AgendaViewMode
 } from '../../components/agenda/agenda.types';
 import {
   AdminService,
@@ -60,6 +61,7 @@ import {
   ProvisionarSubcuentaWhatsappResponse,
   ProbarPlantillaWhatsappPayload,
   PruebaWhatsappResponse,
+  ReportePrestadorAdmin,
   ReporteServicioAdmin,
   PermisoAdmin,
   RolInternoAdmin,
@@ -136,6 +138,7 @@ export class AdminDashboardComponent implements OnInit {
   private readonly alturaHoraAgenda = 86;
   readonly loading = signal(false);
   readonly fechaAgendaSeleccionada = signal<string | null>(null);
+  readonly agendaViewMode = signal<AgendaViewMode>('day');
   readonly citaAgendaSeleccionadaId = signal<number | null>(null);
   readonly seccionActiva = signal<SeccionAdmin>('resumen');
   readonly subseccionUsuariosActiva = signal<SubseccionUsuariosAdmin>('usuarios');
@@ -177,6 +180,7 @@ export class AdminDashboardComponent implements OnInit {
   readonly reglasDisponibilidad = signal<ReglaDisponibilidadAdmin[]>([]);
   readonly excepcionesDisponibilidad = signal<ExcepcionDisponibilidadAdmin[]>([]);
   readonly reporteServicios = signal<ReporteServicioAdmin[]>([]);
+  readonly reportePrestadores = signal<ReportePrestadorAdmin[]>([]);
   readonly configuracionCorreo = signal<ConfiguracionCorreoAdmin | null>(null);
   readonly configuracionWhatsapp = signal<ConfiguracionWhatsappAdmin | null>(null);
   readonly auditoriaConfiguracion = signal<AuditoriaConfiguracionAdmin[]>([]);
@@ -311,7 +315,7 @@ export class AdminDashboardComponent implements OnInit {
   };
   readonly tiposBloqueo = ['BLOQUEO', 'DESCANSO', 'VACACIONES', 'HORARIO_ESPECIAL'];
   readonly modulosAdminBase: ModuloAdminDef[] = [
-    { id: 'resumen', titulo: 'Resumen ejecutivo', descripcion: 'Métricas generales y desempeño comercial.', abreviatura: 'RE', icono: 'resumen' },
+    { id: 'resumen', titulo: 'Dashboard', descripcion: 'Indicadores clave, agenda e ingresos del negocio.', abreviatura: 'DB', icono: 'resumen' },
     { id: 'correo', titulo: 'Correo transaccional', descripcion: 'Graph o SMTP por tenant, con cifrado y migración de secretos.', abreviatura: 'CO', icono: 'correo', permiso: 'CONFIGURACION_EMPRESA_GESTIONAR' },
     { id: 'whatsapp', titulo: 'WhatsApp y Twilio', descripcion: 'Sender, plantillas, pruebas y trazabilidad por tenant.', abreviatura: 'WA', icono: 'whatsapp', permiso: 'WHATSAPP_CONFIGURAR' },
     { id: 'contactos', titulo: 'Contactos', descripcion: 'Mensajes recibidos desde el formulario web y seguimiento comercial.', abreviatura: 'CN', icono: 'contactos', permiso: 'CONTACTOS_ADMIN_VER' },
@@ -321,7 +325,7 @@ export class AdminDashboardComponent implements OnInit {
     { id: 'prestadores', titulo: 'Prestadores', descripcion: 'Usuarios staff y asignaciones de servicio.', abreviatura: 'PR', icono: 'prestador', permiso: 'PRESTADORES_GESTIONAR' },
     { id: 'reglas', titulo: 'Horarios base', descripcion: 'Reglas semanales por sucursal o prestador.', abreviatura: 'HB', icono: 'horario', permiso: 'PRESTADORES_GESTIONAR' },
     { id: 'excepciones', titulo: 'Bloqueos', descripcion: 'Vacaciones, descansos y cierres puntuales.', abreviatura: 'BL', icono: 'bloqueo', permiso: 'PRESTADORES_GESTIONAR' },
-    { id: 'citas', titulo: 'Citas', descripcion: 'Seguimiento operativo de reservas creadas.', abreviatura: 'CT', icono: 'agenda', permiso: 'CITAS_ADMIN_GESTIONAR' }
+    { id: 'citas', titulo: 'Agenda', descripcion: 'Seguimiento operativo y gestión detallada de reservas.', abreviatura: 'AG', icono: 'agenda', permiso: 'CITAS_ADMIN_GESTIONAR' }
   ];
   readonly modulosAdmin = computed(() =>
     this.modulosAdminBase.filter(modulo => !modulo.permiso || this.authService.tienePermiso(modulo.permiso))
@@ -332,6 +336,12 @@ export class AdminDashboardComponent implements OnInit {
   readonly inicialesUsuarioAdmin = computed(() => this.authService.inicialesUsuarioVisible());
   readonly totalNotificaciones = computed(() =>
     (this.resumen()?.pendientes ?? 0) + this.contactos().filter(contacto => contacto.estado === 'NUEVO').length
+  );
+  readonly topPrestadoresPorIngreso = computed(() => this.reportePrestadores().slice(0, 6));
+  readonly topPrestadoresPorCitas = computed(() =>
+    [...this.reportePrestadores()]
+      .sort((a, b) => b.totalCitas - a.totalCitas || b.finalizadas - a.finalizadas)
+      .slice(0, 6)
   );
   readonly resumenContactos = computed(() => ({
     total: this.contactos().length,
@@ -459,13 +469,30 @@ export class AdminDashboardComponent implements OnInit {
   readonly fechaAgendaActiva = computed(() => {
     return this.fechaAgendaSeleccionada() ?? this.obtenerFechaAgendaInicial();
   });
-  readonly fechaAgendaActivaTexto = computed(() => this.formatearFechaAgendaLarga(this.fechaAgendaActiva()));
+  readonly fechaAgendaActivaTexto = computed(() =>
+    this.agendaViewMode() === 'week'
+      ? this.formatearRangoSemanaAgenda(this.fechaAgendaActiva())
+      : this.formatearFechaAgendaLarga(this.fechaAgendaActiva())
+  );
   readonly citasDelDiaActivas = computed(() => {
     const fecha = this.fechaAgendaActiva();
     return this.citasAgrupadas().find(grupo => grupo.fechaClave === fecha)?.items ?? [];
   });
+  readonly citasPeriodoActivas = computed(() => {
+    if (this.agendaViewMode() === 'day') {
+      return this.citasDelDiaActivas();
+    }
+
+    const { desde, hasta } = this.obtenerRangoSemana(this.fechaAgendaActiva());
+    return this.citas()
+      .filter(cita => {
+        const fecha = cita.inicio.slice(0, 10);
+        return fecha >= desde && fecha <= hasta;
+      })
+      .sort((a, b) => new Date(a.inicio).getTime() - new Date(b.inicio).getTime());
+  });
   readonly resumenAgendaActiva = computed(() => {
-    const citas = this.citas().filter(cita => cita.inicio.startsWith(this.fechaAgendaActiva()));
+    const citas = this.citasPeriodoActivas();
     return {
       total: citas.length,
       pendientes: citas.filter(cita => cita.estado === 'PENDIENTE').length,
@@ -474,9 +501,10 @@ export class AdminDashboardComponent implements OnInit {
     };
   });
   readonly analiticaAgendaActiva = computed(() => {
-    const citas = this.citasDelDiaActivas();
+    const citas = this.citasPeriodoActivas();
     const minutosReservados = citas.reduce((total, cita) => total + getDurationMinutes(cita.inicio, cita.fin), 0);
-    const capacidadMinutos = Math.max(this.colaboradoresAgenda().length, 1) * (this.finAgendaHora - this.inicioAgendaHora) * 60;
+    const multiplicador = this.agendaViewMode() === 'week' ? 7 : 1;
+    const capacidadMinutos = Math.max(this.colaboradoresAgenda().length, 1) * (this.finAgendaHora - this.inicioAgendaHora) * 60 * multiplicador;
     const ocupacion = capacidadMinutos ? Math.min(100, Math.round((minutosReservados / capacidadMinutos) * 100)) : 0;
 
     return {
@@ -486,11 +514,16 @@ export class AdminDashboardComponent implements OnInit {
     };
   });
   readonly colaboradoresAgenda = computed(() => {
-    const fecha = this.fechaAgendaActiva();
+    const rangoSemana = this.obtenerRangoSemana(this.fechaAgendaActiva());
     const mapa = new Map<number, { id: number; nombre: string }>();
 
     for (const cita of this.citas()) {
-      if (!cita.inicio.startsWith(fecha)) {
+      const fecha = cita.inicio.slice(0, 10);
+      const mostrar = this.agendaViewMode() === 'day'
+        ? fecha === this.fechaAgendaActiva()
+        : fecha >= rangoSemana.desde && fecha <= rangoSemana.hasta;
+
+      if (!mostrar) {
         continue;
       }
       mapa.set(cita.prestadorId, { id: cita.prestadorId, nombre: cita.prestadorNombre });
@@ -543,7 +576,7 @@ export class AdminDashboardComponent implements OnInit {
       });
   });
   readonly resumenAgendaCards = computed<AgendaStatCardVm[]>(() => [
-    { label: 'Citas del día', value: this.resumenAgendaActiva().total },
+    { label: this.agendaViewMode() === 'week' ? 'Citas de la semana' : 'Citas del día', value: this.resumenAgendaActiva().total },
     { label: 'Pendientes', value: this.resumenAgendaActiva().pendientes },
     { label: 'Confirmadas', value: this.resumenAgendaActiva().confirmadas },
     { label: 'Colaboradores', value: this.resumenAgendaActiva().colaboradores }
@@ -564,7 +597,16 @@ export class AdminDashboardComponent implements OnInit {
     }))
   );
   readonly agendaAppointmentsVm = computed<AgendaAppointmentVm[]>(() =>
-    this.citasAgendaPosicionadas().map(cita => {
+    (this.agendaViewMode() === 'day'
+      ? this.citasAgendaPosicionadas()
+      : this.citasPeriodoActivas().map(cita => ({
+          ...cita,
+          top: 0,
+          height: 0,
+          leftPct: 0,
+          widthPct: 100
+        }))
+    ).map(cita => {
       const clienteNombre = cita.clienteNombre || `Reserva #${cita.id}`;
       const whatsappUrl = buildWhatsAppUrl(cita.clienteTelefono);
 
@@ -574,6 +616,10 @@ export class AdminDashboardComponent implements OnInit {
         statusLabel: formatAgendaStatusLabel(cita.estado),
         title: cita.servicioNombre,
         subtitle: clienteNombre,
+        compactLabel: clienteNombre,
+        collaboratorId: cita.prestadorId,
+        collaboratorLabel: cita.prestadorNombre,
+        collaboratorAccentColor: this.prestadores().find(prestador => prestador.usuarioId === cita.prestadorId)?.colorAgenda ?? null,
         supportingText: `${cita.prestadorNombre} · ${cita.sucursalNombre}`,
         supportingTextSecondary: cita.clienteTelefono || cita.clienteCorreo || `Reserva #${cita.id}`,
         priceLabel: this.formatearMonedaAgenda(cita.precio, cita.moneda),
@@ -601,11 +647,12 @@ export class AdminDashboardComponent implements OnInit {
   );
   readonly citaAgendaSeleccionada = computed<AgendaAppointmentVm | null>(() => {
     const citas = this.agendaAppointmentsVm();
-    if (!citas.length) {
+    const seleccionadaId = this.citaAgendaSeleccionadaId();
+    if (!citas.length || seleccionadaId === null) {
       return null;
     }
 
-    return citas.find(cita => cita.id === this.citaAgendaSeleccionadaId()) ?? citas[0];
+    return citas.find(cita => cita.id === seleccionadaId) ?? null;
   });
   error = '';
   mensajeExito = '';
@@ -945,12 +992,25 @@ export class AdminDashboardComponent implements OnInit {
   }
 
   desplazarFechaAgenda(dias: number) {
-    this.fechaAgendaSeleccionada.set(this.sumarDiasAgenda(this.fechaAgendaActiva(), dias));
+    const salto = this.agendaViewMode() === 'week' ? dias * 7 : dias;
+    this.fechaAgendaSeleccionada.set(this.sumarDiasAgenda(this.fechaAgendaActiva(), salto));
     this.citaAgendaSeleccionadaId.set(null);
   }
 
   irAHoyAgenda() {
     this.fechaAgendaSeleccionada.set(this.obtenerFechaLocalISO());
+    this.citaAgendaSeleccionadaId.set(null);
+  }
+
+  cambiarVistaAgenda(view: AgendaViewMode) {
+    if (this.agendaViewMode() === view) {
+      return;
+    }
+    this.agendaViewMode.set(view);
+    this.citaAgendaSeleccionadaId.set(null);
+  }
+
+  cerrarDetalleAgenda() {
     this.citaAgendaSeleccionadaId.set(null);
   }
 
@@ -1066,6 +1126,12 @@ export class AdminDashboardComponent implements OnInit {
           return of([]);
         })
       ),
+      reportePrestadores: this.cargarAdminSi(this.authService.puedeVerReportesAdmin(), this.adminService.getReportePrestadores(), []).pipe(
+        catchError(err => {
+          this.marcarErrorCarga(err, 'No se pudo cargar el reporte de prestadores.');
+          return of([]);
+        })
+      ),
       configuracionCorreo: this.cargarAdminSi(this.authService.puedeGestionarConfiguracionEmpresa(), this.adminService.getConfiguracionCorreo(), null).pipe(
         catchError(err => {
           this.marcarErrorCarga(err, 'No se pudo cargar la configuración de correo.');
@@ -1103,7 +1169,7 @@ export class AdminDashboardComponent implements OnInit {
     })
       .pipe(finalize(() => this.actualizarVistaEnZona(() => this.loading.set(false))))
       .subscribe({
-        next: ({ resumen, citas, contactos, sucursales, servicios, prestadores, rolesInternos, plantillasRolesInternos, auditoriaRolesInternos, permisos, usuariosInternos, reglas, excepciones, reporteServicios, configuracionCorreo, auditoriaConfiguracion, configuracionWhatsapp, plantillasWhatsapp, logsWhatsapp }) => {
+        next: ({ resumen, citas, contactos, sucursales, servicios, prestadores, rolesInternos, plantillasRolesInternos, auditoriaRolesInternos, permisos, usuariosInternos, reglas, excepciones, reporteServicios, reportePrestadores, configuracionCorreo, auditoriaConfiguracion, configuracionWhatsapp, plantillasWhatsapp, logsWhatsapp }) => {
           this.actualizarVistaEnZona(() => {
             this.resumen.set(resumen);
             this.citas.set(citas);
@@ -1127,6 +1193,7 @@ export class AdminDashboardComponent implements OnInit {
             this.reglasDisponibilidad.set(reglas);
             this.excepcionesDisponibilidad.set(excepciones);
             this.reporteServicios.set(reporteServicios);
+            this.reportePrestadores.set(reportePrestadores);
             this.configuracionCorreo.set(configuracionCorreo);
             this.auditoriaConfiguracion.set(auditoriaConfiguracion);
             this.configuracionWhatsapp.set(configuracionWhatsapp);
@@ -1156,6 +1223,22 @@ export class AdminDashboardComponent implements OnInit {
           });
         }
       });
+  }
+
+  ratioPrestadorIngresos(valor: number): number {
+    const maximo = Math.max(...this.topPrestadoresPorIngreso().map(item => item.ingresosFinalizados), 0);
+    if (!maximo || valor <= 0) {
+      return 0;
+    }
+    return Math.max(12, Math.round((valor / maximo) * 100));
+  }
+
+  ratioPrestadorCitas(valor: number): number {
+    const maximo = Math.max(...this.topPrestadoresPorCitas().map(item => item.totalCitas), 0);
+    if (!maximo || valor <= 0) {
+      return 0;
+    }
+    return Math.max(12, Math.round((valor / maximo) * 100));
   }
 
   actualizarEstadoContacto(contacto: SolicitudContactoAdmin, estado: string) {
@@ -2413,5 +2496,26 @@ export class AdminDashboardComponent implements OnInit {
       month: 'long',
       year: 'numeric'
     });
+  }
+
+  private obtenerRangoSemana(fechaIso: string) {
+    const fecha = new Date(`${fechaIso}T12:00:00`);
+    const diaActual = fecha.getDay();
+    const ajusteInicio = diaActual === 0 ? -6 : 1 - diaActual;
+    const inicio = new Date(fecha);
+    inicio.setDate(fecha.getDate() + ajusteInicio);
+    const fin = new Date(inicio);
+    fin.setDate(inicio.getDate() + 6);
+    return {
+      desde: this.obtenerFechaLocalISO(inicio),
+      hasta: this.obtenerFechaLocalISO(fin)
+    };
+  }
+
+  private formatearRangoSemanaAgenda(fechaIso: string): string {
+    const { desde, hasta } = this.obtenerRangoSemana(fechaIso);
+    const inicio = new Date(`${desde}T12:00:00`);
+    const fin = new Date(`${hasta}T12:00:00`);
+    return `${inicio.toLocaleDateString('es-MX', { day: 'numeric', month: 'short' })} - ${fin.toLocaleDateString('es-MX', { day: 'numeric', month: 'short', year: 'numeric' })}`;
   }
 }

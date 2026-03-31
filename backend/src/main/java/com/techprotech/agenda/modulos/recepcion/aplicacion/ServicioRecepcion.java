@@ -15,10 +15,13 @@ import com.techprotech.agenda.modulos.citas.infraestructura.entidad.HistorialEst
 import com.techprotech.agenda.modulos.citas.infraestructura.repositorio.CitaRepositorio;
 import com.techprotech.agenda.modulos.citas.infraestructura.repositorio.HistorialEstadoCitaRepositorio;
 import com.techprotech.agenda.modulos.prestadores.infraestructura.repositorio.PrestadorServicioRepositorio;
+import com.techprotech.agenda.modulos.recepcion.api.dto.CatalogoRecepcionResponse;
 import com.techprotech.agenda.modulos.recepcion.api.dto.CitaRecepcionResponse;
 import com.techprotech.agenda.modulos.recepcion.api.dto.ClienteRecepcionResponse;
 import com.techprotech.agenda.modulos.recepcion.api.dto.CrearCitaRecepcionRequest;
 import com.techprotech.agenda.modulos.recepcion.api.dto.ReagendarRecepcionRequest;
+import com.techprotech.agenda.modulos.recepcion.api.dto.ServicioRecepcionCatalogoResponse;
+import com.techprotech.agenda.modulos.recepcion.api.dto.SucursalRecepcionCatalogoResponse;
 import com.techprotech.agenda.modulos.servicios.infraestructura.repositorio.ServicioRepositorio;
 import com.techprotech.agenda.modulos.sucursales.infraestructura.entidad.SucursalEntidad;
 import com.techprotech.agenda.modulos.sucursales.infraestructura.repositorio.SucursalRepositorio;
@@ -74,6 +77,60 @@ public class ServicioRecepcion {
         this.servicioCitas = servicioCitas;
         this.servicioCitasCliente = servicioCitasCliente;
         this.servicioOutboxWhatsappCitas = servicioOutboxWhatsappCitas;
+    }
+
+    @Transactional(readOnly = true)
+    public CatalogoRecepcionResponse catalogo(Long empresaId, List<Long> sucursalesPermitidas, Long sucursalId) {
+        if (sucursalId != null) {
+            validarAccesoSucursal(sucursalesPermitidas, sucursalId);
+        }
+
+        List<SucursalEntidad> sucursalesActivas = sucursalRepositorio.findByEmpresaIdAndActivaTrue(empresaId).stream()
+                .filter(sucursal -> !tieneScopeSucursales(sucursalesPermitidas) || sucursalesPermitidas.contains(sucursal.getId()))
+                .toList();
+
+        List<SucursalEntidad> sucursalesDisponibles = !sucursalesActivas.isEmpty()
+                ? sucursalesActivas
+                : sucursalRepositorio.findByEmpresaIdOrderByNombreAsc(empresaId).stream()
+                .filter(sucursal -> !tieneScopeSucursales(sucursalesPermitidas) || sucursalesPermitidas.contains(sucursal.getId()))
+                .toList();
+
+        Long sucursalOperativaId = sucursalId != null
+                ? sucursalId
+                : sucursalesPermitidas != null && !sucursalesPermitidas.isEmpty()
+                ? sucursalesPermitidas.get(0)
+                : sucursalesDisponibles.stream().findFirst().map(SucursalEntidad::getId).orElse(null);
+
+        List<ServicioRecepcionCatalogoResponse> servicios = sucursalOperativaId == null
+                ? List.of()
+                : servicioRepositorio.findBySucursalIdAndActivoTrue(sucursalOperativaId).stream()
+                .map(servicio -> new ServicioRecepcionCatalogoResponse(
+                        servicio.getId(),
+                        servicio.getSucursalId(),
+                        servicio.getNombre(),
+                        servicio.getDescripcion(),
+                        servicio.getDuracionMinutos(),
+                        servicio.getBufferAntesMinutos(),
+                        servicio.getBufferDespuesMinutos(),
+                        servicio.getPrecio(),
+                        servicio.getMoneda()
+                ))
+                .toList();
+
+        return new CatalogoRecepcionResponse(
+                sucursalOperativaId,
+                sucursalesDisponibles.stream()
+                        .map(sucursal -> new SucursalRecepcionCatalogoResponse(
+                                sucursal.getId(),
+                                sucursal.getEmpresaId(),
+                                sucursal.getNombre(),
+                                sucursal.getDireccion(),
+                                sucursal.getTelefono(),
+                                sucursal.getZonaHoraria()
+                        ))
+                        .toList(),
+                servicios
+        );
     }
 
     @Transactional(readOnly = true)

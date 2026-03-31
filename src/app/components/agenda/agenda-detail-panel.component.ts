@@ -10,12 +10,14 @@ import { AgendaActionVm, AgendaAppointmentVm, AgendaThemeMode } from './agenda.t
   styleUrl: './agenda-detail-panel.component.css'
 })
 export class AgendaDetailPanelComponent {
-  readonly theme = input<AgendaThemeMode>('dark');
+  readonly theme = input<AgendaThemeMode>('light');
+  readonly modal = input(false);
   readonly appointment = input<AgendaAppointmentVm | null>(null);
   readonly emptyTitle = input('Selecciona una cita');
   readonly emptyMessage = input('Elige un bloque en el timeline para ver el contexto operativo y las acciones rápidas.');
 
   readonly actionTriggered = output<{ actionId: string; appointmentId: number }>();
+  readonly closed = output<void>();
 
   triggerAction(action: AgendaActionVm, appointmentId: number): void {
     if (action.disabled || action.externalUrl) {
@@ -23,5 +25,9 @@ export class AgendaDetailPanelComponent {
     }
 
     this.actionTriggered.emit({ actionId: action.id, appointmentId });
+  }
+
+  close(): void {
+    this.closed.emit();
   }
 }

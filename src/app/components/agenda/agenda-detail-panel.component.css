@@ -20,6 +20,14 @@
   box-shadow: var(--detail-shadow);
 }
 
+.agenda-detail.is-modal {
+  width: min(100%, 560px);
+  max-height: min(82vh, 760px);
+  overflow: auto;
+  border-radius: 26px;
+  box-shadow: 0 30px 60px rgba(15, 23, 42, 0.18);
+}
+
 .agenda-detail[data-theme='light'] {
   --detail-surface: linear-gradient(180deg, rgba(255, 255, 255, 0.98) 0%, rgba(241, 245, 249, 0.98) 100%);
   --detail-surface-soft: rgba(248, 250, 252, 0.96);
@@ -35,6 +43,12 @@
   align-items: flex-start;
   justify-content: space-between;
   gap: 0.85rem;
+}
+
+.agenda-detail__header-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
 }
 
 .agenda-detail__profile {
@@ -106,6 +120,48 @@
 .agenda-detail__status[data-status='no_asistio'] {
   background: rgba(248, 113, 113, 0.18);
   color: #fecaca;
+}
+
+.agenda-detail[data-theme='light'] .agenda-detail__status {
+  background: rgba(15, 23, 42, 0.08);
+  color: #334155;
+  border-color: rgba(203, 213, 225, 0.86);
+}
+
+.agenda-detail[data-theme='light'] .agenda-detail__status[data-status='pendiente'] {
+  background: rgba(251, 191, 36, 0.16);
+  color: #a16207;
+}
+
+.agenda-detail[data-theme='light'] .agenda-detail__status[data-status='confirmada'] {
+  background: rgba(110, 231, 183, 0.18);
+  color: #047857;
+}
+
+.agenda-detail[data-theme='light'] .agenda-detail__status[data-status='finalizada'] {
+  background: rgba(147, 197, 253, 0.22);
+  color: #1d4ed8;
+}
+
+.agenda-detail[data-theme='light'] .agenda-detail__status[data-status='cancelada'],
+.agenda-detail[data-theme='light'] .agenda-detail__status[data-status='no_asistio'] {
+  background: rgba(252, 165, 165, 0.2);
+  color: #b91c1c;
+}
+
+.agenda-detail__close {
+  width: 34px;
+  height: 34px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  border: 1px solid var(--detail-border);
+  background: var(--detail-surface-soft);
+  color: var(--detail-text);
+  font-size: 1.3rem;
+  line-height: 1;
+  cursor: pointer;
 }
 
 .agenda-detail__time,
@@ -201,7 +257,7 @@
 }
 
 @media (max-width: 991.98px) {
-  .agenda-detail {
+  .agenda-detail:not(.is-modal) {
     display: none;
   }
 }

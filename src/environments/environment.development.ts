@@ -1,7 +1,9 @@
+import { resolveApiBaseUrl } from './api-base-url';
+
 export const environment = {
   production: false,
   empresaId: 1,
-  apiBaseUrl: '/api/v1',
+  apiBaseUrl: resolveApiBaseUrl('/api/v1'),
   useBackendCatalog: true,
   useBackendBooking: true,
   allowLegacyFallback: true,

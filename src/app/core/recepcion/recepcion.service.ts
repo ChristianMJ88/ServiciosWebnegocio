@@ -3,6 +3,33 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
 
+export interface SucursalRecepcionCatalogo {
+  id: number;
+  empresaId: number;
+  nombre: string;
+  direccion: string;
+  telefono: string;
+  zonaHoraria: string;
+}
+
+export interface ServicioRecepcionCatalogo {
+  id: number;
+  sucursalId: number;
+  nombre: string;
+  descripcion: string;
+  duracionMinutos: number;
+  bufferAntesMinutos: number;
+  bufferDespuesMinutos: number;
+  precio: number;
+  moneda: string;
+}
+
+export interface CatalogoRecepcion {
+  sucursalActivaId: number | null;
+  sucursales: SucursalRecepcionCatalogo[];
+  servicios: ServicioRecepcionCatalogo[];
+}
+
 export interface CitaRecepcion {
   id: number;
   estado: string;
@@ -82,6 +109,14 @@ export interface CitaReprogramadaRecepcion {
 })
 export class RecepcionService {
   private readonly http = inject(HttpClient);
+
+  getCatalogo(sucursalId?: number | null): Observable<CatalogoRecepcion> {
+    let params = new HttpParams();
+    if (sucursalId) {
+      params = params.set('sucursalId', sucursalId);
+    }
+    return this.http.get<CatalogoRecepcion>(`${environment.apiBaseUrl}/recepcion/catalogo`, { params });
+  }
 
   getAgenda(fecha?: string | null, sucursalId?: number | null): Observable<CitaRecepcion[]> {
     let params = new HttpParams();

@@ -22,6 +22,7 @@ import com.techprotech.agenda.modulos.admin.api.dto.ProvisionarMessagingServiceW
 import com.techprotech.agenda.modulos.admin.api.dto.ProvisionarSubcuentaWhatsappResponse;
 import com.techprotech.agenda.modulos.admin.api.dto.PruebaPlantillaWhatsappRequest;
 import com.techprotech.agenda.modulos.admin.api.dto.PruebaPlantillaWhatsappResponse;
+import com.techprotech.agenda.modulos.admin.api.dto.ReportePrestadorAdminResponse;
 import com.techprotech.agenda.modulos.admin.api.dto.ReporteServicioAdminResponse;
 import com.techprotech.agenda.modulos.admin.api.dto.RolInternoAdminRequest;
 import com.techprotech.agenda.modulos.admin.api.dto.RolInternoAdminResponse;
@@ -117,6 +118,12 @@ public class ControladorAdminCitas {
     @PreAuthorize("hasAuthority('REPORTES_ADMIN_VER')")
     public List<ReporteServicioAdminResponse> reporteServicios(@AuthenticationPrincipal UsuarioAutenticado usuario) {
         return servicioAdminCitas.reporteServicios(usuario.empresaId());
+    }
+
+    @GetMapping("/reportes/prestadores")
+    @PreAuthorize("hasAuthority('REPORTES_ADMIN_VER')")
+    public List<ReportePrestadorAdminResponse> reportePrestadores(@AuthenticationPrincipal UsuarioAutenticado usuario) {
+        return servicioAdminCitas.reportePrestadores(usuario.empresaId());
     }
 
     @GetMapping("/roles-internos")
