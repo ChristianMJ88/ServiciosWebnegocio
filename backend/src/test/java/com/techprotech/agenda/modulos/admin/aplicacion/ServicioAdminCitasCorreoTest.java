@@ -1,15 +1,19 @@
 package com.techprotech.agenda.modulos.admin.aplicacion;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.techprotech.agenda.compartido.correo.ConfiguracionCorreoEmpresaEntidad;
 import com.techprotech.agenda.compartido.correo.ConfiguracionCorreoEmpresaRepositorio;
 import com.techprotech.agenda.compartido.correo.ProtectorSecretosCorreo;
 import com.techprotech.agenda.modulos.admin.api.dto.ConfiguracionCorreoAdminRequest;
 import com.techprotech.agenda.modulos.admin.api.dto.ConfiguracionCorreoAdminResponse;
 import com.techprotech.agenda.modulos.admin.api.dto.MigracionSecretosCorreoResponse;
+import com.techprotech.agenda.modulos.admin.infraestructura.repositorio.AuditoriaConfiguracionEmpresaRepositorio;
+import com.techprotech.agenda.modulos.admin.infraestructura.repositorio.AuditoriaRolEmpresaRepositorio;
 import org.junit.jupiter.api.Test;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 import java.lang.reflect.Proxy;
+import java.util.List;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -46,6 +50,7 @@ class ServicioAdminCitasCorreoTest {
 
         ConfiguracionCorreoAdminResponse response = servicio.actualizarConfiguracionCorreo(
                 1L,
+                null,
                 new ConfiguracionCorreoAdminRequest(
                         true,
                         "SMTP",
@@ -104,7 +109,7 @@ class ServicioAdminCitasCorreoTest {
         );
         ServicioAdminCitas servicio = crearServicio(store, protector);
 
-        MigracionSecretosCorreoResponse response = servicio.migrarSecretosCorreo(2L);
+        MigracionSecretosCorreoResponse response = servicio.migrarSecretosCorreo(2L, null);
 
         assertTrue(response.actualizada());
         assertTrue(store.get(2L).getSmtpPassword().startsWith("enc:v1:"));
@@ -136,6 +141,7 @@ class ServicioAdminCitasCorreoTest {
 
         ConfiguracionCorreoAdminResponse response = servicio.actualizarConfiguracionCorreo(
                 3L,
+                null,
                 new ConfiguracionCorreoAdminRequest(
                         true,
                         "GRAPH",
@@ -178,8 +184,23 @@ class ServicioAdminCitasCorreoTest {
                 null,
                 null,
                 null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
                 new BCryptPasswordEncoder(),
+                null,
                 crearRepositorio(store),
+                null,
+                null,
+                null,
+                null,
+                null,
+                crearAuditoriaConfiguracionRepositorio(),
+                crearAuditoriaRolRepositorio(),
+                new ObjectMapper(),
                 protector
         );
     }
@@ -196,6 +217,36 @@ class ServicioAdminCitasCorreoTest {
                         yield entidad;
                     }
                     case "toString" -> "RepositorioCorreoAdminStub";
+                    case "hashCode" -> System.identityHashCode(proxy);
+                    case "equals" -> proxy == args[0];
+                    default -> throw new UnsupportedOperationException("Metodo no soportado en prueba: " + method.getName());
+                }
+        );
+    }
+
+    private AuditoriaConfiguracionEmpresaRepositorio crearAuditoriaConfiguracionRepositorio() {
+        return (AuditoriaConfiguracionEmpresaRepositorio) Proxy.newProxyInstance(
+                AuditoriaConfiguracionEmpresaRepositorio.class.getClassLoader(),
+                new Class[]{AuditoriaConfiguracionEmpresaRepositorio.class},
+                (proxy, method, args) -> switch (method.getName()) {
+                    case "save" -> args[0];
+                    case "findTop30ByEmpresaIdOrderByCreadoEnDesc" -> List.of();
+                    case "toString" -> "AuditoriaConfiguracionRepositorioStub";
+                    case "hashCode" -> System.identityHashCode(proxy);
+                    case "equals" -> proxy == args[0];
+                    default -> throw new UnsupportedOperationException("Metodo no soportado en prueba: " + method.getName());
+                }
+        );
+    }
+
+    private AuditoriaRolEmpresaRepositorio crearAuditoriaRolRepositorio() {
+        return (AuditoriaRolEmpresaRepositorio) Proxy.newProxyInstance(
+                AuditoriaRolEmpresaRepositorio.class.getClassLoader(),
+                new Class[]{AuditoriaRolEmpresaRepositorio.class},
+                (proxy, method, args) -> switch (method.getName()) {
+                    case "save" -> args[0];
+                    case "findTop30ByEmpresaIdOrderByCreadoEnDesc" -> List.of();
+                    case "toString" -> "AuditoriaRolRepositorioStub";
                     case "hashCode" -> System.identityHashCode(proxy);
                     case "equals" -> proxy == args[0];
                     default -> throw new UnsupportedOperationException("Metodo no soportado en prueba: " + method.getName());

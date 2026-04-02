@@ -912,9 +912,14 @@
                     <input matInput name="whatsappTemplateRecordatorioRegreso" [(ngModel)]="formularioWhatsapp.plantillaRecordatorioRegresoSid" maxlength="80">
                   </mat-form-field>
 
+                  <mat-form-field appearance="outline">
+                    <mat-label>SID plantilla espacio disponible walk-in</mat-label>
+                    <input matInput name="whatsappTemplateEspacioDisponibleWalkin" [(ngModel)]="formularioWhatsapp.plantillaEspacioDisponibleWalkinSid" maxlength="80">
+                  </mat-form-field>
+
                   <div class="helper-text full-width">
                     Si dejas vacío el Auth Token, el backend puede conservar el secreto actual. Usa "Cuenta plataforma" si operas todo bajo tu Twilio, "Subcuenta" si crearás una por empresa y "Cuenta propia del tenant" si el cliente traerá sus propias credenciales.
-                    La plantilla de solicitud de confirmación se usa al registrar la cita y debe pedir al cliente que responda para confirmar su asistencia. La de cita reprogramada pendiente se usa cuando la cita cambia de fecha y vuelve a estado pendiente. La de recordar confirmar se usa cuando la cita sigue pendiente y se acerca la fecha. La de cancelación se reserva para mensajes iniciados por el negocio. Las nuevas de liberada, agradecimiento y regreso quedan listas para la siguiente fase de automatización.
+                    La plantilla de solicitud de confirmación se usa al registrar la cita y debe pedir al cliente que responda para confirmar su asistencia. La de cita reprogramada pendiente se usa cuando la cita cambia de fecha y vuelve a estado pendiente. La de recordar confirmar se usa cuando la cita sigue pendiente y se acerca la fecha. La de cancelación se reserva para mensajes iniciados por el negocio. La de espacio disponible walk-in debe ser creada por cada empresa según su operación y aprobada por Meta antes de usarla desde recepción.
                   </div>
 
                   <div class="form-actions">
@@ -1033,10 +1038,11 @@
                       <div class="entity-meta">Liberada sin confirmación: {{ config.plantillaLiberadaSinConfirmacionSid || 'Sin definir' }}</div>
                       <div class="entity-meta">Gracias por tu visita: {{ config.plantillaGraciasVisitaSid || 'Sin definir' }}</div>
                       <div class="entity-meta">Recordatorio de regreso: {{ config.plantillaRecordatorioRegresoSid || 'Sin definir' }}</div>
+                      <div class="entity-meta">Espacio disponible walk-in: {{ config.plantillaEspacioDisponibleWalkinSid || 'Sin definir' }}</div>
                     </div>
                     <div class="entity-side">
-                      <span class="status-pill" [class.is-active]="!!config.plantillaSolicitudConfirmacionSid && !!config.plantillaReprogramadaPendienteSid && !!config.plantillaRecordatorioConfirmacionSid && !!config.plantillaCitaConfirmadaSid && !!config.plantillaRecordatorioSid && !!config.plantillaCancelacionSid && !!config.plantillaLiberadaSinConfirmacionSid && !!config.plantillaGraciasVisitaSid && !!config.plantillaRecordatorioRegresoSid">
-                        {{ !!config.plantillaSolicitudConfirmacionSid && !!config.plantillaReprogramadaPendienteSid && !!config.plantillaRecordatorioConfirmacionSid && !!config.plantillaCitaConfirmadaSid && !!config.plantillaRecordatorioSid && !!config.plantillaCancelacionSid && !!config.plantillaLiberadaSinConfirmacionSid && !!config.plantillaGraciasVisitaSid && !!config.plantillaRecordatorioRegresoSid ? 'Listas' : 'Parcial' }}
+                      <span class="status-pill" [class.is-active]="!!config.plantillaSolicitudConfirmacionSid && !!config.plantillaReprogramadaPendienteSid && !!config.plantillaRecordatorioConfirmacionSid && !!config.plantillaCitaConfirmadaSid && !!config.plantillaRecordatorioSid && !!config.plantillaCancelacionSid && !!config.plantillaLiberadaSinConfirmacionSid && !!config.plantillaGraciasVisitaSid && !!config.plantillaRecordatorioRegresoSid && !!config.plantillaEspacioDisponibleWalkinSid">
+                        {{ !!config.plantillaSolicitudConfirmacionSid && !!config.plantillaReprogramadaPendienteSid && !!config.plantillaRecordatorioConfirmacionSid && !!config.plantillaCitaConfirmadaSid && !!config.plantillaRecordatorioSid && !!config.plantillaCancelacionSid && !!config.plantillaLiberadaSinConfirmacionSid && !!config.plantillaGraciasVisitaSid && !!config.plantillaRecordatorioRegresoSid && !!config.plantillaEspacioDisponibleWalkinSid ? 'Listas' : 'Parcial' }}
                       </span>
                     </div>
                   </article>

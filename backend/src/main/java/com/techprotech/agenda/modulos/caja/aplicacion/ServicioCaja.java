@@ -3,6 +3,7 @@ package com.techprotech.agenda.modulos.caja.aplicacion;
 import com.techprotech.agenda.modulos.autenticacion.infraestructura.entidad.ClienteEntidad;
 import com.techprotech.agenda.modulos.autenticacion.infraestructura.repositorio.ClienteRepositorio;
 import com.techprotech.agenda.modulos.caja.api.dto.AbrirCajaRequest;
+import com.techprotech.agenda.modulos.caja.api.dto.CatalogoCajaResponse;
 import com.techprotech.agenda.modulos.caja.api.dto.CajaSesionResponse;
 import com.techprotech.agenda.modulos.caja.api.dto.CerrarCajaRequest;
 import com.techprotech.agenda.modulos.caja.api.dto.CitaPorCobrarResponse;
@@ -11,6 +12,7 @@ import com.techprotech.agenda.modulos.caja.api.dto.PagoCitaResponse;
 import com.techprotech.agenda.modulos.caja.api.dto.RegistrarMovimientoCajaRequest;
 import com.techprotech.agenda.modulos.caja.api.dto.RegistrarPagoRequest;
 import com.techprotech.agenda.modulos.caja.api.dto.ResumenCajaResponse;
+import com.techprotech.agenda.modulos.caja.api.dto.SucursalCajaCatalogoResponse;
 import com.techprotech.agenda.modulos.caja.infraestructura.entidad.CajaSesionEntidad;
 import com.techprotech.agenda.modulos.caja.infraestructura.entidad.MovimientoCajaEntidad;
 import com.techprotech.agenda.modulos.caja.infraestructura.entidad.PagoCitaEntidad;
@@ -67,6 +69,45 @@ public class ServicioCaja {
         this.clienteRepositorio = clienteRepositorio;
         this.servicioRepositorio = servicioRepositorio;
         this.sucursalRepositorio = sucursalRepositorio;
+    }
+
+    @Transactional(readOnly = true)
+    public CatalogoCajaResponse catalogo(Long empresaId, List<Long> sucursalesPermitidas, Long sucursalId) {
+        if (sucursalId != null) {
+            validarAccesoSucursal(sucursalesPermitidas, sucursalId);
+        }
+
+        List<com.techprotech.agenda.modulos.sucursales.infraestructura.entidad.SucursalEntidad> sucursalesActivas =
+                sucursalRepositorio.findByEmpresaIdAndActivaTrue(empresaId).stream()
+                        .filter(sucursal -> !tieneScopeSucursales(sucursalesPermitidas) || sucursalesPermitidas.contains(sucursal.getId()))
+                        .toList();
+
+        List<com.techprotech.agenda.modulos.sucursales.infraestructura.entidad.SucursalEntidad> sucursalesDisponibles =
+                !sucursalesActivas.isEmpty()
+                        ? sucursalesActivas
+                        : sucursalRepositorio.findByEmpresaIdOrderByNombreAsc(empresaId).stream()
+                        .filter(sucursal -> !tieneScopeSucursales(sucursalesPermitidas) || sucursalesPermitidas.contains(sucursal.getId()))
+                        .toList();
+
+        Long sucursalOperativaId = sucursalId != null
+                ? sucursalId
+                : sucursalesPermitidas != null && !sucursalesPermitidas.isEmpty()
+                ? sucursalesPermitidas.get(0)
+                : sucursalesDisponibles.stream().findFirst().map(com.techprotech.agenda.modulos.sucursales.infraestructura.entidad.SucursalEntidad::getId).orElse(null);
+
+        return new CatalogoCajaResponse(
+                sucursalOperativaId,
+                sucursalesDisponibles.stream()
+                        .map(sucursal -> new SucursalCajaCatalogoResponse(
+                                sucursal.getId(),
+                                sucursal.getEmpresaId(),
+                                sucursal.getNombre(),
+                                sucursal.getDireccion(),
+                                sucursal.getTelefono(),
+                                sucursal.getZonaHoraria()
+                        ))
+                        .toList()
+        );
     }
 
     @Transactional

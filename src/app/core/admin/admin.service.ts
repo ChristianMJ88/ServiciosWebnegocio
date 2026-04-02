@@ -310,6 +310,7 @@ export interface ConfiguracionWhatsappAdmin {
   plantillaLiberadaSinConfirmacionSid: string | null;
   plantillaGraciasVisitaSid: string | null;
   plantillaRecordatorioRegresoSid: string | null;
+  plantillaEspacioDisponibleWalkinSid: string | null;
   senderDisplayName: string | null;
   senderPhoneNumber: string | null;
   senderStatus: string | null;
@@ -338,6 +339,7 @@ export interface GuardarConfiguracionWhatsappPayload {
   plantillaLiberadaSinConfirmacionSid: string | null;
   plantillaGraciasVisitaSid: string | null;
   plantillaRecordatorioRegresoSid: string | null;
+  plantillaEspacioDisponibleWalkinSid: string | null;
   senderDisplayName: string | null;
   senderPhoneNumber: string | null;
   senderStatus: string | null;

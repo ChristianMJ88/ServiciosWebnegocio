@@ -220,11 +220,13 @@ export class AuthService {
   }
 
   getTokenAcceso(): string | null {
-    return this.sesion()?.tokenAcceso ?? null;
+    this.sincronizarSesionPersistida();
+    return this.sesion()?.tokenAcceso ?? this.loadSession()?.tokenAcceso ?? null;
   }
 
   getTokenActualizacion(): string | null {
-    return this.sesion()?.tokenActualizacion ?? null;
+    this.sincronizarSesionPersistida();
+    return this.sesion()?.tokenActualizacion ?? this.loadSession()?.tokenActualizacion ?? null;
   }
 
   refrescarToken(): Observable<string> {

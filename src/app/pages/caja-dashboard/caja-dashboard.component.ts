@@ -1,5 +1,5 @@
 import { CommonModule, CurrencyPipe, DatePipe } from '@angular/common';
-import { ChangeDetectorRef, Component, NgZone, OnInit, afterNextRender, computed, inject, signal } from '@angular/core';
+import { AfterViewInit, ChangeDetectorRef, Component, DestroyRef, NgZone, OnInit, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { BreakpointObserver } from '@angular/cdk/layout';
 import { FormsModule } from '@angular/forms';
@@ -14,12 +14,13 @@ import { MatMenuModule } from '@angular/material/menu';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatSelectModule } from '@angular/material/select';
 import { MatToolbarModule } from '@angular/material/toolbar';
-import { forkJoin } from 'rxjs';
-import { finalize } from 'rxjs/operators';
+import { Observable, forkJoin, of } from 'rxjs';
+import { catchError, finalize, switchMap, tap } from 'rxjs/operators';
 import { AuthService } from '../../core/auth/auth.service';
 import {
   CajaService,
   CajaSesion,
+  CatalogoCaja,
   CitaPorCobrar,
   MovimientoCaja,
   PagoCita,
@@ -53,13 +54,15 @@ type VistaCaja = 'cobros' | 'sesion' | 'movimientos';
   templateUrl: './caja-dashboard.component.html',
   styleUrls: ['./caja-dashboard.component.css']
 })
-export class CajaDashboardComponent implements OnInit {
+export class CajaDashboardComponent implements OnInit, AfterViewInit {
   private readonly cajaService = inject(CajaService);
   private readonly authService = inject(AuthService);
   private readonly router = inject(Router);
   private readonly breakpointObserver = inject(BreakpointObserver);
   private readonly ngZone = inject(NgZone);
   private readonly changeDetectorRef = inject(ChangeDetectorRef);
+  private readonly destroyRef = inject(DestroyRef);
+  private reintentoInicialProgramado = false;
 
   readonly loading = signal(false);
   readonly guardandoApertura = signal(false);
@@ -187,6 +190,7 @@ export class CajaDashboardComponent implements OnInit {
   sucursalSeleccionadaModel: number | null = null;
 
   ngOnInit(): void {
+    this.authService.sincronizarSesionPersistida();
     this.actualizarVistaEnZona(() => {
       this.sincronizarSucursalOperativa(this.sucursalesPermitidas()[0] ?? null);
       this.vistaActiva.set(this.obtenerVistaInicial());
@@ -194,20 +198,18 @@ export class CajaDashboardComponent implements OnInit {
 
     this.breakpointObserver
       .observe('(max-width: 991px)')
-      .pipe(takeUntilDestroyed())
+      .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe(({ matches }) => {
         this.actualizarVistaEnZona(() => {
           this.panelMovil.set(matches);
         });
       });
 
-    this.cargarSucursales();
-    afterNextRender(() => {
-      const sucursalId = this.obtenerSucursalOperativaId();
-      if (sucursalId) {
-        this.recargarTablero(sucursalId);
-      }
-    });
+    this.cargarCatalogoYTablero();
+  }
+
+  ngAfterViewInit(): void {
+    this.programarReintentoInicial();
   }
 
   private actualizarVistaEnZona(actualizacion: () => void) {
@@ -217,20 +219,61 @@ export class CajaDashboardComponent implements OnInit {
     });
   }
 
-  cargarSucursales() {
+  private programarReintentoInicial() {
+    if (this.reintentoInicialProgramado) {
+      return;
+    }
+
+    this.reintentoInicialProgramado = true;
+    setTimeout(() => {
+      if (this.tableroInicialIncompleto()) {
+        this.cargarCatalogoYTablero();
+      }
+    }, 180);
+  }
+
+  private tableroInicialIncompleto(): boolean {
+    return !this.loading() && (
+      !this.sucursalOperativaId()
+      || !this.sucursalActivaResuelta()
+      || !this.resumen()
+      || !this.sesionActual() && !this.citasPorCobrar().length && !this.error()
+    );
+  }
+
+  cargarCatalogoYTablero(sucursalIdPreferida?: number | null) {
     this.loading.set(true);
     this.error.set('');
 
-    this.cajaService.getSucursales()
-      .pipe(finalize(() => this.loading.set(false)))
-      .subscribe({
-        next: sucursales => {
+    const sucursalBase = sucursalIdPreferida ?? this.obtenerSucursalOperativaId();
+
+    this.cajaService.getCatalogo(sucursalBase)
+      .pipe(
+        catchError(() => of<CatalogoCaja>({
+          sucursalActivaId: sucursalBase,
+          sucursales: []
+        })),
+        tap(catalogo => {
           this.actualizarVistaEnZona(() => {
-            const sucursalesVisibles = this.filtrarSucursalesPorScope(sucursales);
-            this.sucursales.set(sucursalesVisibles);
-            const sucursalInicial = this.resolverSucursalOperativaInicial(sucursalesVisibles);
-            this.sincronizarSucursalOperativa(sucursalInicial);
-            this.recargarTablero(sucursalInicial);
+            this.aplicarCatalogo(catalogo);
+          });
+        }),
+        switchMap(catalogo => {
+          const sucursalId = catalogo.sucursalActivaId ?? this.obtenerSucursalOperativaId();
+          return this.cargarTablero$(sucursalId);
+        }),
+        finalize(() => this.loading.set(false))
+      )
+      .subscribe({
+        next: ({ sesion, citas, resumen, movimientos }) => {
+          this.actualizarVistaEnZona(() => {
+            this.sesionActual.set(sesion);
+            this.citasPorCobrar.set(citas);
+            this.resumen.set(resumen);
+            this.movimientosDelTurno.set(movimientos);
+            this.ultimoMovimiento.set(movimientos[0] ?? null);
+            this.sincronizarCitaSeleccionada();
+            this.formularioCierre.montoContado = Number(resumen.saldoEsperadoCaja ?? sesion?.montoEsperado ?? 0);
           });
         },
         error: error => {
@@ -241,25 +284,12 @@ export class CajaDashboardComponent implements OnInit {
       });
   }
 
-  private filtrarSucursalesPorScope(sucursales: SucursalCaja[]): SucursalCaja[] {
-    const permitidas = this.sucursalesPermitidas();
-    if (!permitidas.length) {
-      return sucursales;
-    }
-    return sucursales.filter(sucursal => permitidas.includes(sucursal.id));
-  }
-
   recargarTablero(sucursalIdForzado?: number | null) {
     const sucursalId = sucursalIdForzado ?? this.sucursalOperativaId();
     this.loading.set(true);
     this.error.set('');
 
-    forkJoin({
-      sesion: this.cajaService.getSesionActual(sucursalId),
-      citas: this.cajaService.getCitasPorCobrar(sucursalId),
-      resumen: this.cajaService.getResumen(sucursalId),
-      movimientos: this.cajaService.listarMovimientos(sucursalId)
-    })
+    this.cargarTablero$(sucursalId)
       .pipe(finalize(() => this.loading.set(false)))
       .subscribe({
         next: ({ sesion, citas, resumen, movimientos }) => {
@@ -281,11 +311,25 @@ export class CajaDashboardComponent implements OnInit {
       });
   }
 
+  private cargarTablero$(sucursalId?: number | null): Observable<{
+    sesion: CajaSesion | null;
+    citas: CitaPorCobrar[];
+    resumen: ResumenCaja;
+    movimientos: MovimientoCaja[];
+  }> {
+    return forkJoin({
+      sesion: this.cajaService.getSesionActual(sucursalId),
+      citas: this.cajaService.getCitasPorCobrar(sucursalId),
+      resumen: this.cajaService.getResumen(sucursalId),
+      movimientos: this.cajaService.listarMovimientos(sucursalId)
+    });
+  }
+
   seleccionarSucursal(sucursalId: number | null) {
     this.sincronizarSucursalOperativa(sucursalId);
     this.citaSeleccionadaId.set(null);
     this.pagosCitaSeleccionada.set([]);
-    this.recargarTablero();
+    this.cargarCatalogoYTablero(sucursalId);
   }
 
   abrirCaja() {
@@ -447,11 +491,15 @@ export class CajaDashboardComponent implements OnInit {
   }
 
   irARecepcion() {
-    this.router.navigateByUrl('/recepcion');
+    this.ngZone.run(() => {
+      void this.router.navigateByUrl('/recepcion');
+    });
   }
 
   irAAdmin() {
-    this.router.navigateByUrl('/admin');
+    this.ngZone.run(() => {
+      void this.router.navigateByUrl('/admin');
+    });
   }
 
   seleccionarVista(vista: VistaCaja) {
@@ -588,6 +636,15 @@ export class CajaDashboardComponent implements OnInit {
       ?? sucursalesVisibles[0]?.id
       ?? this.sucursalesPermitidas()[0]
       ?? null;
+  }
+
+  private aplicarCatalogo(catalogo: CatalogoCaja) {
+    this.sucursales.set(catalogo.sucursales ?? []);
+    const sucursalOperativa = catalogo.sucursalActivaId
+      ?? this.sucursalesPermitidas()[0]
+      ?? this.sucursales()[0]?.id
+      ?? null;
+    this.sincronizarSucursalOperativa(sucursalOperativa);
   }
 
   private obtenerVistaInicial(): VistaCaja {

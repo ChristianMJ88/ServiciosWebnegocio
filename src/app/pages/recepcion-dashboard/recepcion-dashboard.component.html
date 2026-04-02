@@ -192,7 +192,7 @@
 
             <mat-form-field appearance="outline">
               <mat-label>Servicio</mat-label>
-              <mat-select name="servicioCita" [(ngModel)]="formularioCita.servicioId">
+              <mat-select name="servicioCita" [(ngModel)]="formularioCita.servicioId" (ngModelChange)="actualizarServicioWalkIn($event)">
                 <mat-option *ngFor="let servicio of servicios()" [value]="servicio.id">{{ servicio.nombre }}</mat-option>
               </mat-select>
             </mat-form-field>
@@ -213,9 +213,72 @@
             </mat-form-field>
 
             <mat-form-field appearance="outline">
-              <mat-label>Fecha y hora</mat-label>
-              <input matInput type="datetime-local" name="inicioCita" [(ngModel)]="formularioCita.inicio" required>
+              <mat-label>Fecha del walk-in</mat-label>
+              <input
+                matInput
+                type="date"
+                name="fechaWalkIn"
+                [(ngModel)]="formularioCita.fechaWalkIn"
+                (ngModelChange)="actualizarFechaWalkIn($event)"
+                required>
             </mat-form-field>
+
+            <div class="recepcion-slot-panel full-width">
+              <div class="recepcion-slot-toolbar">
+                <div>
+                  <small>Horario sugerido</small>
+                  <strong *ngIf="formularioCita.inicio; else sinHorario">
+                    {{ formularioCita.inicio | date:'dd/MM/yyyy HH:mm':'':'es-MX' }}
+                  </strong>
+                  <ng-template #sinHorario>
+                    <strong>Selecciona una franja disponible</strong>
+                  </ng-template>
+                </div>
+
+                <button
+                  mat-stroked-button
+                  type="button"
+                  (click)="cargarFranjasWalkIn()"
+                  [disabled]="loadingFranjas() || !formularioCita.sucursalId || !formularioCita.servicioId">
+                  {{ loadingFranjas() ? 'Buscando...' : 'Buscar horarios' }}
+                </button>
+              </div>
+
+              <div class="recepcion-slot-list" *ngIf="franjasDisponibles().length; else sinFranjas">
+                <button
+                  type="button"
+                  class="recepcion-slot-chip"
+                  *ngFor="let franja of franjasDisponibles()"
+                  [class.active]="formularioCita.inicio === franja.inicio"
+                  (click)="seleccionarFranjaWalkIn(franja)">
+                  {{ franja.hora }}
+                </button>
+              </div>
+
+              <ng-template #sinFranjas>
+                <div class="recepcion-slot-empty" *ngIf="formularioCita.servicioId && !loadingFranjas()">
+                  {{ mensajeWalkIn() || 'Selecciona servicio y fecha para ver horarios libres sin chocar con la agenda.' }}
+                </div>
+              </ng-template>
+            </div>
+
+            <div class="recepcion-waitlist-panel full-width" *ngIf="formularioCita.servicioId && !franjasDisponibles().length && !loadingFranjas()">
+              <div class="recepcion-waitlist-copy">
+                <small>Sin espacio inmediato</small>
+                <strong>Registrar intención del cliente</strong>
+                <span>
+                  Si hoy no hay lugar, podemos dejarlo en espera para este día y luego avisarle cuando se libere un espacio.
+                </span>
+              </div>
+
+              <mat-checkbox name="avisarWhatsapp" [(ngModel)]="formularioCita.avisarWhatsapp">
+                Avisar por WhatsApp cuando haya disponibilidad
+              </mat-checkbox>
+
+              <button mat-stroked-button type="button" (click)="registrarEspera()" [disabled]="guardando()">
+                Registrar en espera
+              </button>
+            </div>
 
             <mat-form-field appearance="outline" class="full-width">
               <mat-label>Notas</mat-label>
@@ -228,6 +291,54 @@
               </button>
             </div>
           </form>
+        </mat-card>
+
+        <mat-card class="recepcion-card" *ngIf="solicitudesEspera().length">
+          <div class="recepcion-card-heading">
+            <span class="recepcion-card-kicker">Seguimiento</span>
+            <h2>Clientes en espera para hoy</h2>
+          </div>
+
+          <div class="recepcion-waitlist-list">
+            <div class="recepcion-waitlist-card" *ngFor="let solicitud of solicitudesEspera()">
+              <div class="recepcion-waitlist-head">
+                <div>
+                  <strong>{{ solicitud.nombreCliente }}</strong>
+                  <span>{{ solicitud.servicioNombre }} · {{ solicitud.sucursalNombre }}</span>
+                </div>
+                <mat-chip-set>
+                  <mat-chip>{{ solicitud.estado }}</mat-chip>
+                </mat-chip-set>
+              </div>
+
+              <div class="recepcion-appointment-meta">
+                <span>{{ solicitud.fechaDeseada | date:'dd/MM/yyyy':'':'es-MX' }}</span>
+                <span>{{ solicitud.telefonoCliente }}</span>
+                <span>{{ solicitud.aceptaWhatsapp ? 'Avisar por WhatsApp' : 'Seguimiento manual' }}</span>
+              </div>
+
+              <div class="recepcion-appointment-note" *ngIf="solicitud.notas">
+                {{ solicitud.notas }}
+              </div>
+
+              <div class="recepcion-waitlist-actions">
+                <button
+                  mat-stroked-button
+                  type="button"
+                  *ngIf="solicitud.aceptaWhatsapp && solicitud.estado === 'PENDIENTE'"
+                  (click)="notificarEspera(solicitud.id)"
+                  [disabled]="guardando()">
+                  Notificar por WhatsApp
+                </button>
+                <span class="recepcion-waitlist-hint" *ngIf="solicitud.estado === 'NOTIFICADO'">
+                  Ya fue notificado.
+                </span>
+                <span class="recepcion-waitlist-hint" *ngIf="!solicitud.aceptaWhatsapp">
+                  Seguimiento manual.
+                </span>
+              </div>
+            </div>
+          </div>
         </mat-card>
       </div>
     </div>

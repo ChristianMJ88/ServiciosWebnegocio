@@ -67,6 +67,9 @@ public class ConfiguracionWhatsappEmpresaEntidad {
     @Column(name = "plantilla_recordatorio_regreso_sid", length = 80)
     private String plantillaRecordatorioRegresoSid;
 
+    @Column(name = "plantilla_espacio_disponible_walkin_sid", length = 80)
+    private String plantillaEspacioDisponibleWalkinSid;
+
     @Column(name = "sender_display_name", length = 150)
     private String senderDisplayName;
 
@@ -238,6 +241,14 @@ public class ConfiguracionWhatsappEmpresaEntidad {
 
     public void setPlantillaRecordatorioRegresoSid(String plantillaRecordatorioRegresoSid) {
         this.plantillaRecordatorioRegresoSid = plantillaRecordatorioRegresoSid;
+    }
+
+    public String getPlantillaEspacioDisponibleWalkinSid() {
+        return plantillaEspacioDisponibleWalkinSid;
+    }
+
+    public void setPlantillaEspacioDisponibleWalkinSid(String plantillaEspacioDisponibleWalkinSid) {
+        this.plantillaEspacioDisponibleWalkinSid = plantillaEspacioDisponibleWalkinSid;
     }
 
     public String getSenderDisplayName() {

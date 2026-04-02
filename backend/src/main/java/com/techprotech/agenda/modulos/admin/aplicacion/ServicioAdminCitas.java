@@ -467,6 +467,7 @@ public class ServicioAdminCitas {
         configuracion.setPlantillaLiberadaSinConfirmacionSid(normalizarOpcional(request.plantillaLiberadaSinConfirmacionSid()));
         configuracion.setPlantillaGraciasVisitaSid(normalizarOpcional(request.plantillaGraciasVisitaSid()));
         configuracion.setPlantillaRecordatorioRegresoSid(normalizarOpcional(request.plantillaRecordatorioRegresoSid()));
+        configuracion.setPlantillaEspacioDisponibleWalkinSid(normalizarOpcional(request.plantillaEspacioDisponibleWalkinSid()));
         configuracion.setSenderDisplayName(normalizarOpcional(request.senderDisplayName()));
         configuracion.setSenderPhoneNumber(normalizarOpcional(request.senderPhoneNumber()));
         configuracion.setSenderStatus(normalizarOpcional(request.senderStatus()));
@@ -1536,6 +1537,7 @@ public class ServicioAdminCitas {
                 configuracion.getPlantillaLiberadaSinConfirmacionSid(),
                 configuracion.getPlantillaGraciasVisitaSid(),
                 configuracion.getPlantillaRecordatorioRegresoSid(),
+                configuracion.getPlantillaEspacioDisponibleWalkinSid(),
                 configuracion.getSenderDisplayName(),
                 configuracion.getSenderPhoneNumber(),
                 configuracion.getSenderStatus(),
@@ -1603,6 +1605,7 @@ public class ServicioAdminCitas {
         agregarPlantillaLocal(plantillas, sids, configuracion.plantillaLiberadaSinConfirmacionSid(), "cita_liberada_sin_confirmacion");
         agregarPlantillaLocal(plantillas, sids, configuracion.plantillaGraciasVisitaSid(), "gracias_por_tu_visita");
         agregarPlantillaLocal(plantillas, sids, configuracion.plantillaRecordatorioRegresoSid(), "recordatorio_regreso");
+        agregarPlantillaLocal(plantillas, sids, configuracion.plantillaEspacioDisponibleWalkinSid(), "espacio_disponible_walkin");
 
         return plantillas;
     }
@@ -1655,6 +1658,9 @@ public class ServicioAdminCitas {
         }
         if ("CITA_GRACIAS_VISITA_WHATSAPP".equals(log.getTipoEvento())) {
             return configuracion.plantillaGraciasVisitaSid();
+        }
+        if ("RECEPCION_ESPACIO_DISPONIBLE_WALKIN".equals(log.getTipoEvento())) {
+            return configuracion.plantillaEspacioDisponibleWalkinSid();
         }
         return null;
     }
@@ -1978,6 +1984,7 @@ public class ServicioAdminCitas {
         snapshot.put("plantillaLiberadaSinConfirmacionSid", configuracion.getPlantillaLiberadaSinConfirmacionSid());
         snapshot.put("plantillaGraciasVisitaSid", configuracion.getPlantillaGraciasVisitaSid());
         snapshot.put("plantillaRecordatorioRegresoSid", configuracion.getPlantillaRecordatorioRegresoSid());
+        snapshot.put("plantillaEspacioDisponibleWalkinSid", configuracion.getPlantillaEspacioDisponibleWalkinSid());
         return serializarAuditoria(snapshot);
     }
 

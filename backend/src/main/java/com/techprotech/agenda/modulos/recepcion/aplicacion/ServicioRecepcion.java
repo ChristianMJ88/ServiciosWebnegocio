@@ -1,5 +1,7 @@
 package com.techprotech.agenda.modulos.recepcion.aplicacion;
 
+import com.techprotech.agenda.compartido.whatsapp.ClienteWhatsappTwilio;
+import com.techprotech.agenda.compartido.whatsapp.ServicioConfiguracionWhatsappEmpresa;
 import com.techprotech.agenda.compartido.whatsapp.ServicioOutboxWhatsappCitas;
 import com.techprotech.agenda.modulos.autenticacion.infraestructura.entidad.ClienteEntidad;
 import com.techprotech.agenda.modulos.autenticacion.infraestructura.entidad.UsuarioEntidad;
@@ -19,9 +21,16 @@ import com.techprotech.agenda.modulos.recepcion.api.dto.CatalogoRecepcionRespons
 import com.techprotech.agenda.modulos.recepcion.api.dto.CitaRecepcionResponse;
 import com.techprotech.agenda.modulos.recepcion.api.dto.ClienteRecepcionResponse;
 import com.techprotech.agenda.modulos.recepcion.api.dto.CrearCitaRecepcionRequest;
+import com.techprotech.agenda.modulos.recepcion.api.dto.CrearSolicitudEsperaRecepcionRequest;
+import com.techprotech.agenda.modulos.recepcion.api.dto.FranjaRecepcionDisponibleResponse;
 import com.techprotech.agenda.modulos.recepcion.api.dto.ReagendarRecepcionRequest;
 import com.techprotech.agenda.modulos.recepcion.api.dto.ServicioRecepcionCatalogoResponse;
+import com.techprotech.agenda.modulos.recepcion.api.dto.SolicitudEsperaRecepcionResponse;
 import com.techprotech.agenda.modulos.recepcion.api.dto.SucursalRecepcionCatalogoResponse;
+import com.techprotech.agenda.modulos.recepcion.infraestructura.entidad.SolicitudEsperaRecepcionEntidad;
+import com.techprotech.agenda.modulos.recepcion.infraestructura.repositorio.SolicitudEsperaRecepcionRepositorio;
+import com.techprotech.agenda.modulos.disponibilidad.aplicacion.FranjaDisponibleResponse;
+import com.techprotech.agenda.modulos.disponibilidad.aplicacion.ServicioConsultaDisponibilidad;
 import com.techprotech.agenda.modulos.servicios.infraestructura.repositorio.ServicioRepositorio;
 import com.techprotech.agenda.modulos.sucursales.infraestructura.entidad.SucursalEntidad;
 import com.techprotech.agenda.modulos.sucursales.infraestructura.repositorio.SucursalRepositorio;
@@ -31,7 +40,11 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.OffsetDateTime;
 import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
@@ -54,6 +67,10 @@ public class ServicioRecepcion {
     private final ServicioCitas servicioCitas;
     private final ServicioCitasCliente servicioCitasCliente;
     private final ServicioOutboxWhatsappCitas servicioOutboxWhatsappCitas;
+    private final ServicioConsultaDisponibilidad servicioConsultaDisponibilidad;
+    private final SolicitudEsperaRecepcionRepositorio solicitudEsperaRecepcionRepositorio;
+    private final ClienteWhatsappTwilio clienteWhatsappTwilio;
+    private final ServicioConfiguracionWhatsappEmpresa servicioConfiguracionWhatsappEmpresa;
 
     public ServicioRecepcion(
             CitaRepositorio citaRepositorio,
@@ -65,7 +82,11 @@ public class ServicioRecepcion {
             PrestadorServicioRepositorio prestadorServicioRepositorio,
             ServicioCitas servicioCitas,
             ServicioCitasCliente servicioCitasCliente,
-            ServicioOutboxWhatsappCitas servicioOutboxWhatsappCitas
+            ServicioOutboxWhatsappCitas servicioOutboxWhatsappCitas,
+            ServicioConsultaDisponibilidad servicioConsultaDisponibilidad,
+            SolicitudEsperaRecepcionRepositorio solicitudEsperaRecepcionRepositorio,
+            ClienteWhatsappTwilio clienteWhatsappTwilio,
+            ServicioConfiguracionWhatsappEmpresa servicioConfiguracionWhatsappEmpresa
     ) {
         this.citaRepositorio = citaRepositorio;
         this.historialEstadoCitaRepositorio = historialEstadoCitaRepositorio;
@@ -77,6 +98,10 @@ public class ServicioRecepcion {
         this.servicioCitas = servicioCitas;
         this.servicioCitasCliente = servicioCitasCliente;
         this.servicioOutboxWhatsappCitas = servicioOutboxWhatsappCitas;
+        this.servicioConsultaDisponibilidad = servicioConsultaDisponibilidad;
+        this.solicitudEsperaRecepcionRepositorio = solicitudEsperaRecepcionRepositorio;
+        this.clienteWhatsappTwilio = clienteWhatsappTwilio;
+        this.servicioConfiguracionWhatsappEmpresa = servicioConfiguracionWhatsappEmpresa;
     }
 
     @Transactional(readOnly = true)
@@ -101,21 +126,40 @@ public class ServicioRecepcion {
                 ? sucursalesPermitidas.get(0)
                 : sucursalesDisponibles.stream().findFirst().map(SucursalEntidad::getId).orElse(null);
 
-        List<ServicioRecepcionCatalogoResponse> servicios = sucursalOperativaId == null
-                ? List.of()
-                : servicioRepositorio.findBySucursalIdAndActivoTrue(sucursalOperativaId).stream()
-                .map(servicio -> new ServicioRecepcionCatalogoResponse(
-                        servicio.getId(),
-                        servicio.getSucursalId(),
-                        servicio.getNombre(),
-                        servicio.getDescripcion(),
-                        servicio.getDuracionMinutos(),
-                        servicio.getBufferAntesMinutos(),
-                        servicio.getBufferDespuesMinutos(),
-                        servicio.getPrecio(),
-                        servicio.getMoneda()
-                ))
-                .toList();
+        List<ServicioRecepcionCatalogoResponse> servicios = List.of();
+        if (sucursalOperativaId != null) {
+            servicios = servicioRepositorio.findBySucursalIdAndActivoTrue(sucursalOperativaId).stream()
+                    .map(servicio -> new ServicioRecepcionCatalogoResponse(
+                            servicio.getId(),
+                            servicio.getSucursalId(),
+                            servicio.getNombre(),
+                            servicio.getDescripcion(),
+                            servicio.getDuracionMinutos(),
+                            servicio.getBufferAntesMinutos(),
+                            servicio.getBufferDespuesMinutos(),
+                            servicio.getPrecio(),
+                            servicio.getMoneda()
+                    ))
+                    .toList();
+
+            if (servicios.isEmpty()) {
+                servicios = servicioRepositorio.findByEmpresaIdOrderByNombreAsc(empresaId).stream()
+                        .filter(servicio -> servicio.isActivo())
+                        .filter(servicio -> !tieneScopeSucursales(sucursalesPermitidas) || sucursalesPermitidas.contains(servicio.getSucursalId()))
+                        .map(servicio -> new ServicioRecepcionCatalogoResponse(
+                                servicio.getId(),
+                                servicio.getSucursalId(),
+                                servicio.getNombre(),
+                                servicio.getDescripcion(),
+                                servicio.getDuracionMinutos(),
+                                servicio.getBufferAntesMinutos(),
+                                servicio.getBufferDespuesMinutos(),
+                                servicio.getPrecio(),
+                                servicio.getMoneda()
+                        ))
+                        .toList();
+            }
+        }
 
         return new CatalogoRecepcionResponse(
                 sucursalOperativaId,
@@ -193,6 +237,181 @@ public class ServicioRecepcion {
                 request.inicio(),
                 request.notas()
         ));
+    }
+
+    @Transactional(readOnly = true)
+    public List<SolicitudEsperaRecepcionResponse> solicitudesEspera(
+            Long empresaId,
+            List<Long> sucursalesPermitidas,
+            LocalDate fecha,
+            Long sucursalId
+    ) {
+        LocalDate fechaOperativa = fecha != null ? fecha : LocalDate.now();
+        if (sucursalId != null) {
+            validarAccesoSucursal(sucursalesPermitidas, sucursalId);
+        }
+
+        return solicitudEsperaRecepcionRepositorio.findByEmpresaIdAndFechaDeseadaOrderByCreadaEnAsc(empresaId, fechaOperativa).stream()
+                .filter(solicitud -> sucursalId == null || sucursalId.equals(solicitud.getSucursalId()))
+                .filter(solicitud -> !tieneScopeSucursales(sucursalesPermitidas) || sucursalesPermitidas.contains(solicitud.getSucursalId()))
+                .map(this::mapearSolicitudEspera)
+                .toList();
+    }
+
+    @Transactional
+    public SolicitudEsperaRecepcionResponse registrarEspera(
+            Long empresaId,
+            Long usuarioId,
+            List<Long> sucursalesPermitidas,
+            CrearSolicitudEsperaRecepcionRequest request
+    ) {
+        validarAccesoSucursal(sucursalesPermitidas, request.sucursalId());
+        servicioRepositorio.findById(request.servicioId())
+                .filter(servicio -> servicio.getEmpresaId().equals(empresaId))
+                .orElseThrow(() -> new ResponseStatusException(BAD_REQUEST, "El servicio no pertenece a la empresa"));
+
+        Long clienteId = null;
+        if (request.clienteId() != null) {
+            usuarioRepositorio.findByIdAndEmpresaId(request.clienteId(), empresaId)
+                    .orElseThrow(() -> new ResponseStatusException(BAD_REQUEST, "El cliente indicado no pertenece a la empresa"));
+            clienteId = request.clienteId();
+        }
+
+        SolicitudEsperaRecepcionEntidad solicitud = new SolicitudEsperaRecepcionEntidad();
+        solicitud.setEmpresaId(empresaId);
+        solicitud.setSucursalId(request.sucursalId());
+        solicitud.setServicioId(request.servicioId());
+        solicitud.setClienteId(clienteId);
+        solicitud.setNombreCliente(request.nombreCliente().trim());
+        solicitud.setTelefonoCliente(request.telefonoCliente().trim());
+        solicitud.setFechaDeseada(request.fechaDeseada());
+        solicitud.setHoraDesde(request.horaDesde());
+        solicitud.setHoraHasta(request.horaHasta());
+        solicitud.setAceptaWhatsapp(request.aceptaWhatsapp());
+        solicitud.setCanalOrigen(normalizarCanalOrigen(request.canalOrigen()));
+        solicitud.setEstado("PENDIENTE");
+        solicitud.setNotas(normalizarOpcional(request.notas()));
+        solicitud.setCreadoPorUsuarioId(usuarioId);
+
+        return mapearSolicitudEspera(solicitudEsperaRecepcionRepositorio.save(solicitud));
+    }
+
+    @Transactional
+    public SolicitudEsperaRecepcionResponse notificarEspera(
+            Long empresaId,
+            Long usuarioId,
+            List<Long> sucursalesPermitidas,
+            Long solicitudId
+    ) {
+        SolicitudEsperaRecepcionEntidad solicitud = solicitudEsperaRecepcionRepositorio.findById(solicitudId)
+                .filter(item -> item.getEmpresaId().equals(empresaId))
+                .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "La solicitud de espera no existe para la empresa"));
+
+        validarAccesoSucursal(sucursalesPermitidas, solicitud.getSucursalId());
+
+        if (!"PENDIENTE".equalsIgnoreCase(solicitud.getEstado())) {
+            throw new ResponseStatusException(BAD_REQUEST, "Solo se pueden notificar solicitudes en espera pendientes");
+        }
+        if (!solicitud.isAceptaWhatsapp()) {
+            throw new ResponseStatusException(BAD_REQUEST, "Esta solicitud está marcada para seguimiento sin WhatsApp");
+        }
+
+        String plantillaSid = servicioConfiguracionWhatsappEmpresa.resolver(empresaId).plantillaEspacioDisponibleWalkinSid();
+        if (plantillaSid == null || plantillaSid.isBlank()) {
+            throw new ResponseStatusException(BAD_REQUEST, "La empresa aún no tiene configurada una plantilla aprobada para espacio disponible walk-in");
+        }
+
+        List<FranjaDisponibleResponse> franjas = servicioConsultaDisponibilidad.obtenerFranjasDisponibles(
+                empresaId,
+                solicitud.getSucursalId(),
+                solicitud.getServicioId(),
+                null,
+                solicitud.getFechaDeseada()
+        );
+
+        ZoneId zona = sucursalRepositorio.findById(solicitud.getSucursalId())
+                .map(SucursalEntidad::getZonaHoraria)
+                .map(ZoneId::of)
+                .orElse(ZoneId.of("America/Mexico_City"));
+
+        ZonedDateTime ahora = ZonedDateTime.now(zona);
+        FranjaDisponibleResponse franja = franjas.stream()
+                .filter(item -> !OffsetDateTime.parse(item.inicio()).atZoneSameInstant(zona).isBefore(ahora))
+                .findFirst()
+                .orElseThrow(() -> new ResponseStatusException(BAD_REQUEST, "No hay un horario real disponible para notificar en este momento"));
+
+        String sucursalNombre = sucursalRepositorio.findById(solicitud.getSucursalId())
+                .map(SucursalEntidad::getNombre)
+                .orElse("Sucursal");
+        String servicioNombre = servicioRepositorio.findById(solicitud.getServicioId())
+                .map(servicio -> servicio.getNombre())
+                .orElse("Servicio");
+        OffsetDateTime inicio = OffsetDateTime.parse(franja.inicio());
+        String horaVisible = inicio.atZoneSameInstant(zona).toLocalDateTime().format(DateTimeFormatter.ofPattern("dd/MM HH:mm"));
+
+        clienteWhatsappTwilio.enviarPlantilla(
+                empresaId,
+                solicitud.getTelefonoCliente(),
+                plantillaSid,
+                Map.of(
+                        "1", solicitud.getNombreCliente(),
+                        "2", servicioNombre,
+                        "3", sucursalNombre,
+                        "4", horaVisible
+                )
+        );
+
+        solicitud.setEstado("NOTIFICADO");
+        solicitud.setNotificadaEn(LocalDateTime.now());
+        solicitud.setCreadoPorUsuarioId(usuarioId);
+
+        return mapearSolicitudEspera(solicitudEsperaRecepcionRepositorio.save(solicitud));
+    }
+
+    @Transactional(readOnly = true)
+    public List<FranjaRecepcionDisponibleResponse> franjasDisponibles(
+            Long empresaId,
+            List<Long> sucursalesPermitidas,
+            Long sucursalId,
+            Long servicioId,
+            Long prestadorId,
+            LocalDate fecha
+    ) {
+        validarAccesoSucursal(sucursalesPermitidas, sucursalId);
+
+        List<FranjaDisponibleResponse> franjas = servicioConsultaDisponibilidad.obtenerFranjasDisponibles(
+                empresaId,
+                sucursalId,
+                servicioId,
+                prestadorId,
+                fecha != null ? fecha : LocalDate.now()
+        );
+
+        ZoneId zona = sucursalRepositorio.findById(sucursalId)
+                .map(SucursalEntidad::getZonaHoraria)
+                .map(ZoneId::of)
+                .orElse(ZoneId.of("America/Mexico_City"));
+
+        ZonedDateTime ahora = ZonedDateTime.now(zona);
+
+        return franjas.stream()
+                .map(franja -> {
+                    OffsetDateTime inicio = OffsetDateTime.parse(franja.inicio());
+                    OffsetDateTime fin = OffsetDateTime.parse(franja.fin());
+                    return new FranjaRecepcionDisponibleResponse(
+                            franja.inicio(),
+                            franja.fin(),
+                            String.format("%02d:%02d", inicio.getHour(), inicio.getMinute()),
+                            franja.prestadorId(),
+                            franja.servicioId(),
+                            franja.sucursalId(),
+                            inicio,
+                            fin
+                    );
+                })
+                .filter(franja -> !franja.inicioAt().atZoneSameInstant(zona).isBefore(ahora))
+                .limit(8)
+                .toList();
     }
 
     @Transactional
@@ -303,6 +522,49 @@ public class ServicioRecepcion {
         historial.setCambiadoPorUsuarioId(usuarioId);
         historial.setMotivo(motivo);
         historialEstadoCitaRepositorio.save(historial);
+    }
+
+    private SolicitudEsperaRecepcionResponse mapearSolicitudEspera(SolicitudEsperaRecepcionEntidad solicitud) {
+        String sucursalNombre = sucursalRepositorio.findById(solicitud.getSucursalId())
+                .map(SucursalEntidad::getNombre)
+                .orElse("Sucursal");
+        String servicioNombre = servicioRepositorio.findById(solicitud.getServicioId())
+                .map(servicio -> servicio.getNombre())
+                .orElse("Servicio");
+
+        return new SolicitudEsperaRecepcionResponse(
+                solicitud.getId(),
+                solicitud.getSucursalId(),
+                sucursalNombre,
+                solicitud.getServicioId(),
+                servicioNombre,
+                solicitud.getClienteId(),
+                solicitud.getNombreCliente(),
+                solicitud.getTelefonoCliente(),
+                solicitud.getFechaDeseada(),
+                solicitud.getHoraDesde(),
+                solicitud.getHoraHasta(),
+                solicitud.isAceptaWhatsapp(),
+                solicitud.getCanalOrigen(),
+                solicitud.getEstado(),
+                solicitud.getNotas(),
+                solicitud.getCreadaEn(),
+                solicitud.getNotificadaEn(),
+                solicitud.getCerradoEn()
+        );
+    }
+
+    private String normalizarCanalOrigen(String canalOrigen) {
+        String valor = normalizarOpcional(canalOrigen);
+        return valor != null ? valor.toUpperCase() : "MOSTRADOR";
+    }
+
+    private String normalizarOpcional(String valor) {
+        if (valor == null) {
+            return null;
+        }
+        String limpio = valor.trim();
+        return limpio.isBlank() ? null : limpio;
     }
 
     private CitaRecepcionResponse mapearCita(CitaEntidad cita) {

@@ -177,15 +177,16 @@ public class ServicioWhatsappCitas {
 
     private String bienvenida() {
         return """
-                Hola, gracias por escribir a NailArt Studio.
+                Hola, 👋 Soy el asistente de NailArt Studio.
 
-                Puedo ayudarte con:
-                - Agendar una cita
-                - Ver servicios
-                - Ver horarios disponibles
-                - Ver ubicación
-                - Revisar mis citas
-                - Ver promociones
+                ¿Que te gustaría hacer hoy?:
+
+                1️⃣ Agendar una cita
+                2️⃣ Ver servicios
+                3️⃣ Ver horarios disponibles
+                4️⃣ Ver ubicación
+                5️⃣ Revisar mis citas
+                6️⃣ Ver promociones
 
                 Solo dime qué necesitas y te guío paso a paso.
                 """.trim();
@@ -251,6 +252,7 @@ public class ServicioWhatsappCitas {
                 Muy pronto te compartiremos promociones por este medio.
 
                 Si quieres, por ahora puedo ayudarte a:
+
                 - Agendar una cita
                 - Ver servicios
                 - Ver horarios disponibles

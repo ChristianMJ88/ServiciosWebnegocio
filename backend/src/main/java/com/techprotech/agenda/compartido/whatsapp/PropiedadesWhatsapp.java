@@ -20,6 +20,7 @@ public record PropiedadesWhatsapp(
         String plantillaLiberadaSinConfirmacionSid,
         String plantillaGraciasVisitaSid,
         String plantillaRecordatorioRegresoSid,
+        String plantillaEspacioDisponibleWalkinSid,
         int loteMaximoOutbox,
         long retrasoReintentoSegundos,
         long recordatorioHorasAntes,

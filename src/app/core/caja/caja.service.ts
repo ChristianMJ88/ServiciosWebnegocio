@@ -12,6 +12,11 @@ export interface SucursalCaja {
   zonaHoraria: string;
 }
 
+export interface CatalogoCaja {
+  sucursalActivaId: number | null;
+  sucursales: SucursalCaja[];
+}
+
 export interface CajaSesion {
   id: number;
   sucursalId: number;
@@ -115,9 +120,12 @@ export interface RegistrarMovimientoCajaPayload {
 export class CajaService {
   private readonly http = inject(HttpClient);
 
-  getSucursales(): Observable<SucursalCaja[]> {
-    const params = new HttpParams().set('empresaId', environment.empresaId);
-    return this.http.get<SucursalCaja[]>(`${environment.apiBaseUrl}/publico/sucursales`, { params });
+  getCatalogo(sucursalId?: number | null): Observable<CatalogoCaja> {
+    let params = new HttpParams();
+    if (sucursalId) {
+      params = params.set('sucursalId', sucursalId);
+    }
+    return this.http.get<CatalogoCaja>(`${environment.apiBaseUrl}/caja/catalogo`, { params });
   }
 
   getSesionActual(sucursalId?: number | null): Observable<CajaSesion | null> {

@@ -30,6 +30,17 @@ export interface CatalogoRecepcion {
   servicios: ServicioRecepcionCatalogo[];
 }
 
+export interface FranjaRecepcionDisponible {
+  inicio: string;
+  fin: string;
+  hora: string;
+  prestadorId: number | null;
+  servicioId: number;
+  sucursalId: number;
+  inicioAt: string;
+  finAt: string;
+}
+
 export interface CitaRecepcion {
   id: number;
   estado: string;
@@ -57,6 +68,27 @@ export interface ClienteRecepcion {
   telefono: string;
   correo: string;
   aceptaWhatsapp: boolean;
+}
+
+export interface SolicitudEsperaRecepcion {
+  id: number;
+  sucursalId: number;
+  sucursalNombre: string;
+  servicioId: number;
+  servicioNombre: string;
+  clienteId: number | null;
+  nombreCliente: string;
+  telefonoCliente: string;
+  fechaDeseada: string;
+  horaDesde: string | null;
+  horaHasta: string | null;
+  aceptaWhatsapp: boolean;
+  canalOrigen: string;
+  estado: string;
+  notas: string | null;
+  creadaEn: string;
+  notificadaEn: string | null;
+  cerradoEn: string | null;
 }
 
 export interface CrearCitaRecepcionPayload {
@@ -104,6 +136,20 @@ export interface CitaReprogramadaRecepcion {
   clienteTelefono: string;
 }
 
+export interface CrearSolicitudEsperaRecepcionPayload {
+  sucursalId: number;
+  servicioId: number;
+  clienteId: number | null;
+  nombreCliente: string;
+  telefonoCliente: string;
+  fechaDeseada: string;
+  horaDesde: string | null;
+  horaHasta: string | null;
+  aceptaWhatsapp: boolean;
+  canalOrigen: string;
+  notas: string | null;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -134,8 +180,45 @@ export class RecepcionService {
     return this.http.get<ClienteRecepcion[]>(`${environment.apiBaseUrl}/recepcion/clientes`, { params });
   }
 
+  getFranjasDisponibles(
+    sucursalId: number,
+    servicioId: number,
+    fecha: string,
+    prestadorId?: number | null
+  ): Observable<FranjaRecepcionDisponible[]> {
+    let params = new HttpParams()
+      .set('sucursalId', sucursalId)
+      .set('servicioId', servicioId)
+      .set('fecha', fecha);
+
+    if (prestadorId) {
+      params = params.set('prestadorId', prestadorId);
+    }
+
+    return this.http.get<FranjaRecepcionDisponible[]>(`${environment.apiBaseUrl}/recepcion/franjas-disponibles`, { params });
+  }
+
   crearCita(payload: CrearCitaRecepcionPayload): Observable<CitaCreadaRecepcion> {
     return this.http.post<CitaCreadaRecepcion>(`${environment.apiBaseUrl}/recepcion/citas`, payload);
+  }
+
+  getSolicitudesEspera(fecha?: string | null, sucursalId?: number | null): Observable<SolicitudEsperaRecepcion[]> {
+    let params = new HttpParams();
+    if (fecha) {
+      params = params.set('fecha', fecha);
+    }
+    if (sucursalId) {
+      params = params.set('sucursalId', sucursalId);
+    }
+    return this.http.get<SolicitudEsperaRecepcion[]>(`${environment.apiBaseUrl}/recepcion/espera`, { params });
+  }
+
+  registrarEspera(payload: CrearSolicitudEsperaRecepcionPayload): Observable<SolicitudEsperaRecepcion> {
+    return this.http.post<SolicitudEsperaRecepcion>(`${environment.apiBaseUrl}/recepcion/espera`, payload);
+  }
+
+  notificarEspera(solicitudId: number): Observable<SolicitudEsperaRecepcion> {
+    return this.http.patch<SolicitudEsperaRecepcion>(`${environment.apiBaseUrl}/recepcion/espera/${solicitudId}/notificar`, {});
   }
 
   checkIn(citaId: number): Observable<CitaRecepcion> {

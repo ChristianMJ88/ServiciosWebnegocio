@@ -6,7 +6,10 @@ import com.techprotech.agenda.modulos.recepcion.api.dto.CatalogoRecepcionRespons
 import com.techprotech.agenda.modulos.recepcion.api.dto.CitaRecepcionResponse;
 import com.techprotech.agenda.modulos.recepcion.api.dto.ClienteRecepcionResponse;
 import com.techprotech.agenda.modulos.recepcion.api.dto.CrearCitaRecepcionRequest;
+import com.techprotech.agenda.modulos.recepcion.api.dto.CrearSolicitudEsperaRecepcionRequest;
+import com.techprotech.agenda.modulos.recepcion.api.dto.FranjaRecepcionDisponibleResponse;
 import com.techprotech.agenda.modulos.recepcion.api.dto.ReagendarRecepcionRequest;
+import com.techprotech.agenda.modulos.recepcion.api.dto.SolicitudEsperaRecepcionResponse;
 import com.techprotech.agenda.modulos.recepcion.aplicacion.ServicioRecepcion;
 import com.techprotech.agenda.seguridad.jwt.UsuarioAutenticado;
 import jakarta.validation.Valid;
@@ -64,6 +67,25 @@ public class ControladorRecepcion {
         return servicioRecepcion.buscarClientes(usuario.empresaId(), texto);
     }
 
+    @GetMapping("/franjas-disponibles")
+    @PreAuthorize("hasAuthority('RECEPCION_CITAS_GESTIONAR')")
+    public List<FranjaRecepcionDisponibleResponse> franjasDisponibles(
+            @AuthenticationPrincipal UsuarioAutenticado usuario,
+            @RequestParam Long sucursalId,
+            @RequestParam Long servicioId,
+            @RequestParam(required = false) Long prestadorId,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fecha
+    ) {
+        return servicioRecepcion.franjasDisponibles(
+                usuario.empresaId(),
+                usuario.sucursalesPermitidas(),
+                sucursalId,
+                servicioId,
+                prestadorId,
+                fecha
+        );
+    }
+
     @PostMapping("/citas")
     @PreAuthorize("hasAuthority('RECEPCION_CITAS_GESTIONAR')")
     public CitaCreadaResponse crearCita(
@@ -71,6 +93,44 @@ public class ControladorRecepcion {
             @Valid @RequestBody CrearCitaRecepcionRequest request
     ) {
         return servicioRecepcion.crearCita(usuario.empresaId(), usuario.sucursalesPermitidas(), request);
+    }
+
+    @GetMapping("/espera")
+    @PreAuthorize("hasAuthority('RECEPCION_CITAS_GESTIONAR')")
+    public List<SolicitudEsperaRecepcionResponse> solicitudesEspera(
+            @AuthenticationPrincipal UsuarioAutenticado usuario,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fecha,
+            @RequestParam(required = false) Long sucursalId
+    ) {
+        return servicioRecepcion.solicitudesEspera(usuario.empresaId(), usuario.sucursalesPermitidas(), fecha, sucursalId);
+    }
+
+    @PostMapping("/espera")
+    @PreAuthorize("hasAuthority('RECEPCION_CITAS_GESTIONAR')")
+    public SolicitudEsperaRecepcionResponse registrarEspera(
+            @AuthenticationPrincipal UsuarioAutenticado usuario,
+            @Valid @RequestBody CrearSolicitudEsperaRecepcionRequest request
+    ) {
+        return servicioRecepcion.registrarEspera(
+                usuario.empresaId(),
+                usuario.usuarioId(),
+                usuario.sucursalesPermitidas(),
+                request
+        );
+    }
+
+    @PatchMapping("/espera/{solicitudId}/notificar")
+    @PreAuthorize("hasAuthority('RECEPCION_CITAS_GESTIONAR')")
+    public SolicitudEsperaRecepcionResponse notificarEspera(
+            @AuthenticationPrincipal UsuarioAutenticado usuario,
+            @PathVariable Long solicitudId
+    ) {
+        return servicioRecepcion.notificarEspera(
+                usuario.empresaId(),
+                usuario.usuarioId(),
+                usuario.sucursalesPermitidas(),
+                solicitudId
+        );
     }
 
     @PatchMapping("/citas/{citaId}/check-in")

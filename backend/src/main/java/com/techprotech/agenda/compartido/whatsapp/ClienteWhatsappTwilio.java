@@ -344,6 +344,7 @@ public class ClienteWhatsappTwilio {
                         || sid.equals(configuracion.plantillaLiberadaSinConfirmacionSid())
                         || sid.equals(configuracion.plantillaGraciasVisitaSid())
                         || sid.equals(configuracion.plantillaRecordatorioRegresoSid())
+                        || sid.equals(configuracion.plantillaEspacioDisponibleWalkinSid())
         );
     }
 

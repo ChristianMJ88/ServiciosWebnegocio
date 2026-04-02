@@ -1,5 +1,5 @@
 import { CommonModule, CurrencyPipe } from '@angular/common';
-import { ChangeDetectorRef, Component, NgZone, OnInit, computed, inject, signal } from '@angular/core';
+import { ChangeDetectorRef, Component, DestroyRef, NgZone, OnInit, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { BreakpointObserver } from '@angular/cdk/layout';
 import { FormsModule } from '@angular/forms';
@@ -133,6 +133,7 @@ export class AdminDashboardComponent implements OnInit {
   private readonly router = inject(Router);
   private readonly ngZone = inject(NgZone);
   private readonly changeDetectorRef = inject(ChangeDetectorRef);
+  private readonly destroyRef = inject(DestroyRef);
   private readonly inicioAgendaHora = 8;
   private readonly finAgendaHora = 20;
   private readonly alturaHoraAgenda = 86;
@@ -206,7 +207,8 @@ export class AdminDashboardComponent implements OnInit {
       || !!config?.plantillaCancelacionSid
       || !!config?.plantillaLiberadaSinConfirmacionSid
       || !!config?.plantillaGraciasVisitaSid
-      || !!config?.plantillaRecordatorioRegresoSid;
+      || !!config?.plantillaRecordatorioRegresoSid
+      || !!config?.plantillaEspacioDisponibleWalkinSid;
 
     return [
       {
@@ -268,7 +270,7 @@ export class AdminDashboardComponent implements OnInit {
         done: plantillasListas,
         title: 'Plantillas disponibles',
         detail: plantillasListas
-          ? `${plantillas.length || [config?.plantillaSolicitudConfirmacionSid, config?.plantillaReprogramadaPendienteSid, config?.plantillaRecordatorioConfirmacionSid, config?.plantillaCitaConfirmadaSid, config?.plantillaRecordatorioSid, config?.plantillaCancelacionSid, config?.plantillaLiberadaSinConfirmacionSid, config?.plantillaGraciasVisitaSid, config?.plantillaRecordatorioRegresoSid].filter(Boolean).length} plantilla(s) visibles para el tenant.`
+          ? `${plantillas.length || [config?.plantillaSolicitudConfirmacionSid, config?.plantillaReprogramadaPendienteSid, config?.plantillaRecordatorioConfirmacionSid, config?.plantillaCitaConfirmadaSid, config?.plantillaRecordatorioSid, config?.plantillaCancelacionSid, config?.plantillaLiberadaSinConfirmacionSid, config?.plantillaGraciasVisitaSid, config?.plantillaRecordatorioRegresoSid, config?.plantillaEspacioDisponibleWalkinSid].filter(Boolean).length} plantilla(s) visibles para el tenant.`
           : 'Aún no hay plantillas detectadas o configuradas.'
       },
       {
@@ -796,6 +798,7 @@ export class AdminDashboardComponent implements OnInit {
     plantillaLiberadaSinConfirmacionSid: '',
     plantillaGraciasVisitaSid: '',
     plantillaRecordatorioRegresoSid: '',
+    plantillaEspacioDisponibleWalkinSid: '',
     senderDisplayName: '',
     senderPhoneNumber: '',
     senderStatus: '',
@@ -837,7 +840,7 @@ export class AdminDashboardComponent implements OnInit {
 
     this.breakpointObserver
       .observe('(max-width: 991px)')
-      .pipe(takeUntilDestroyed())
+      .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe(({ matches }) => {
         this.actualizarVistaEnZona(() => {
           this.sincronizarSidebarConViewport(matches);
@@ -1369,6 +1372,7 @@ export class AdminDashboardComponent implements OnInit {
       plantillaLiberadaSinConfirmacionSid: this.normalizarTexto(this.formularioWhatsapp.plantillaLiberadaSinConfirmacionSid),
       plantillaGraciasVisitaSid: this.normalizarTexto(this.formularioWhatsapp.plantillaGraciasVisitaSid),
       plantillaRecordatorioRegresoSid: this.normalizarTexto(this.formularioWhatsapp.plantillaRecordatorioRegresoSid),
+      plantillaEspacioDisponibleWalkinSid: this.normalizarTexto(this.formularioWhatsapp.plantillaEspacioDisponibleWalkinSid),
       senderDisplayName: this.normalizarTexto(this.formularioWhatsapp.senderDisplayName),
       senderPhoneNumber: this.normalizarTexto(this.formularioWhatsapp.senderPhoneNumber),
       senderStatus: this.normalizarTexto(this.formularioWhatsapp.senderStatus),
@@ -2397,6 +2401,7 @@ export class AdminDashboardComponent implements OnInit {
       plantillaLiberadaSinConfirmacionSid: configuracion?.plantillaLiberadaSinConfirmacionSid ?? '',
       plantillaGraciasVisitaSid: configuracion?.plantillaGraciasVisitaSid ?? '',
       plantillaRecordatorioRegresoSid: configuracion?.plantillaRecordatorioRegresoSid ?? '',
+      plantillaEspacioDisponibleWalkinSid: configuracion?.plantillaEspacioDisponibleWalkinSid ?? '',
       senderDisplayName: configuracion?.senderDisplayName ?? '',
       senderPhoneNumber: configuracion?.senderPhoneNumber ?? '',
       senderStatus: configuracion?.senderStatus ?? '',

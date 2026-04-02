@@ -1,6 +1,7 @@
 package com.techprotech.agenda.modulos.caja.api;
 
 import com.techprotech.agenda.modulos.caja.api.dto.AbrirCajaRequest;
+import com.techprotech.agenda.modulos.caja.api.dto.CatalogoCajaResponse;
 import com.techprotech.agenda.modulos.caja.api.dto.CajaSesionResponse;
 import com.techprotech.agenda.modulos.caja.api.dto.CerrarCajaRequest;
 import com.techprotech.agenda.modulos.caja.api.dto.CitaPorCobrarResponse;
@@ -35,6 +36,15 @@ public class ControladorCaja {
 
     public ControladorCaja(ServicioCaja servicioCaja) {
         this.servicioCaja = servicioCaja;
+    }
+
+    @GetMapping("/catalogo")
+    @PreAuthorize("hasAuthority('CAJA_ACCESO')")
+    public CatalogoCajaResponse catalogo(
+            @AuthenticationPrincipal UsuarioAutenticado usuario,
+            @RequestParam(required = false) Long sucursalId
+    ) {
+        return servicioCaja.catalogo(usuario.empresaId(), usuario.sucursalesPermitidas(), sucursalId);
     }
 
     @PostMapping("/sesiones/abrir")

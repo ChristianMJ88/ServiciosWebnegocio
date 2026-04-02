@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { ChangeDetectorRef, Component, NgZone, OnInit, computed, inject, signal } from '@angular/core';
+import { ChangeDetectorRef, Component, DestroyRef, NgZone, OnInit, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { BreakpointObserver } from '@angular/cdk/layout';
 import { FormsModule } from '@angular/forms';
@@ -71,6 +71,7 @@ export class StaffDashboardComponent implements OnInit {
   private readonly breakpointObserver = inject(BreakpointObserver);
   private readonly ngZone = inject(NgZone);
   private readonly changeDetectorRef = inject(ChangeDetectorRef);
+  private readonly destroyRef = inject(DestroyRef);
   private readonly inicioAgendaHora = 8;
   private readonly finAgendaHora = 20;
   private readonly alturaHoraAgenda = 84;
@@ -319,7 +320,7 @@ export class StaffDashboardComponent implements OnInit {
 
     this.breakpointObserver
       .observe('(max-width: 991px)')
-      .pipe(takeUntilDestroyed())
+      .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe(({ matches }) => {
         this.actualizarVistaEnZona(() => {
           this.sincronizarSidebarConViewport(matches);
