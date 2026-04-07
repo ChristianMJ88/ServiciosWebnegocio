@@ -1,0 +1,101 @@
+<section class="section-stack">
+  <div class="workspace-grid two-columns">
+    <mat-card class="workspace-card form-card">
+      <div class="section-header">
+        <div>
+          <div class="section-eyebrow">Disponibilidad base</div>
+          <h3>{{ reglaEditandoId ? 'Editar horario base' : 'Nueva regla' }}</h3>
+        </div>
+        <button mat-stroked-button type="button" *ngIf="reglaEditandoId" (click)="clearEdit.emit()">
+          Limpiar formulario
+        </button>
+      </div>
+
+      <form class="admin-form-grid admin-form-shell" (ngSubmit)="save.emit()">
+        <div class="form-block-title full-width">Asignación</div>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Tipo</mat-label>
+          <mat-select name="reglaTipoSujeto" [(ngModel)]="formularioRegla.tipoSujeto" (ngModelChange)="typeChange.emit($event)">
+            <mat-option value="SUCURSAL">Sucursal</mat-option>
+            <mat-option value="PRESTADOR">Prestador</mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Sujeto</mat-label>
+          <mat-select name="reglaSujetoId" [(ngModel)]="formularioRegla.sujetoId" required>
+            <mat-option *ngFor="let sujeto of sujetosRegla" [value]="sujeto.id">
+              {{ sujeto.nombre }}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <div class="form-block-title full-width">Disponibilidad</div>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Día</mat-label>
+          <mat-select name="reglaDiaSemana" [(ngModel)]="formularioRegla.diaSemana">
+            <mat-option *ngFor="let dia of diasSemana" [value]="dia.value">{{ dia.label }}</mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Hora inicio</mat-label>
+          <input matInput type="time" name="reglaHoraInicio" [(ngModel)]="formularioRegla.horaInicio" required>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Hora fin</mat-label>
+          <input matInput type="time" name="reglaHoraFin" [(ngModel)]="formularioRegla.horaFin" required>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Intervalo</mat-label>
+          <input matInput type="number" min="5" step="5" name="reglaIntervalo" [(ngModel)]="formularioRegla.intervaloMinutos" required>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Vigente desde</mat-label>
+          <input matInput type="date" name="reglaVigenteDesde" [(ngModel)]="formularioRegla.vigenteDesde">
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Vigente hasta</mat-label>
+          <input matInput type="date" name="reglaVigenteHasta" [(ngModel)]="formularioRegla.vigenteHasta">
+        </mat-form-field>
+
+        <div class="form-actions">
+          <button mat-flat-button color="primary" type="submit" [disabled]="guardandoRegla">
+            {{ reglaEditandoId ? 'Actualizar regla' : 'Crear regla' }}
+          </button>
+        </div>
+      </form>
+    </mat-card>
+
+    <mat-card class="workspace-card list-card">
+      <div class="section-header">
+        <div>
+          <div class="section-eyebrow">Capacidad operativa</div>
+          <h3>Reglas configuradas</h3>
+        </div>
+      </div>
+
+      <div class="entity-list">
+        <article class="entity-row" *ngFor="let regla of reglasDisponibilidad">
+          <div class="entity-main">
+            <div class="entity-meta">{{ regla.tipoSujeto }} · {{ regla.sujetoNombre }}</div>
+            <div class="entity-title">{{ diasSemanaTexto[regla.diaSemana] || ('Día ' + regla.diaSemana) }} · {{ regla.horaInicio }} - {{ regla.horaFin }}</div>
+            <div class="entity-meta">Intervalo {{ regla.intervaloMinutos }} min</div>
+            <div class="entity-meta" *ngIf="regla.vigenteDesde || regla.vigenteHasta">
+              Vigencia: {{ regla.vigenteDesde || 'sin inicio' }} a {{ regla.vigenteHasta || 'sin fin' }}
+            </div>
+          </div>
+          <div class="entity-side">
+            <button mat-stroked-button type="button" (click)="editRule.emit(regla)">Editar</button>
+          </div>
+        </article>
+      </div>
+    </mat-card>
+  </div>
+</section>

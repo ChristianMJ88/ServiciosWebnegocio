@@ -1,0 +1,127 @@
+<div class="workspace-grid two-columns">
+  <mat-card class="workspace-card form-card">
+    <div class="section-header">
+      <div>
+        <div class="section-eyebrow">Autorización</div>
+        <h3>{{ rolInternoEditandoId ? 'Editar rol interno' : rolInternoClonandoDesdeId ? 'Clonar rol interno' : 'Nuevo rol interno' }}</h3>
+      </div>
+      <button mat-stroked-button type="button" *ngIf="rolInternoEditandoId || rolInternoClonandoDesdeId" (click)="clearEdit.emit()">
+        Limpiar formulario
+      </button>
+    </div>
+
+    <div class="helper-text full-width" *ngIf="rolInternoClonandoDesdeId && rolInternoClonandoNombreOrigen">
+      Estás creando una copia basada en el rol <strong>{{ rolInternoClonandoNombreOrigen }}</strong>. Puedes ajustar nombre, código y permisos antes de guardar.
+    </div>
+
+    <div class="form-block-title full-width">Plantillas sugeridas</div>
+
+    <div class="permission-groups full-width" *ngIf="plantillasRolesInternos.length">
+      <section class="permission-group-card" *ngFor="let plantilla of plantillasRolesInternos">
+        <div class="permission-group-title">{{ plantilla.nombreSugerido }}</div>
+        <div class="entity-meta">{{ plantilla.categoria }}</div>
+        <div class="helper-text">{{ plantilla.descripcion }}</div>
+        <div class="service-metrics">
+          <span>{{ plantilla.permisos.length }} permiso(s)</span>
+        </div>
+        <button mat-stroked-button type="button" (click)="useTemplate.emit(plantilla)">
+          Usar plantilla
+        </button>
+      </section>
+    </div>
+
+    <form class="admin-form-grid admin-form-shell" (ngSubmit)="save.emit()">
+      <div class="form-block-title full-width">Identidad del rol</div>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Código</mat-label>
+        <input matInput name="rolInternoCodigo" [(ngModel)]="formularioRolInterno.codigo" required maxlength="80" placeholder="EJ. RECEPCION_PLUS">
+        <mat-hint>Usa un código corto y único por empresa.</mat-hint>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Nombre visible</mat-label>
+        <input matInput name="rolInternoNombre" [(ngModel)]="formularioRolInterno.nombre" required maxlength="120" placeholder="Recepción y caja">
+      </mat-form-field>
+
+      <mat-slide-toggle name="rolInternoActivo" [(ngModel)]="formularioRolInterno.activo">
+        Rol activo
+      </mat-slide-toggle>
+
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Descripción</mat-label>
+        <textarea matInput rows="2" name="rolInternoDescripcion" [(ngModel)]="formularioRolInterno.descripcion" maxlength="255"></textarea>
+      </mat-form-field>
+
+      <div class="form-block-title full-width">Permisos del rol</div>
+
+      <div class="permission-groups full-width">
+        <section class="permission-group-card" *ngFor="let grupo of gruposPermisos">
+          <div class="permission-group-title">{{ grupo.titulo }}</div>
+          <div class="permission-group-list">
+            <mat-checkbox
+              *ngFor="let permiso of grupo.permisos"
+              [ngModel]="permisoRolSeleccionado(permiso.codigo)"
+              (ngModelChange)="rolePermissionChange.emit({ codigo: permiso.codigo, checked: $event })"
+              [name]="'permiso_' + permiso.codigo">
+              <span class="permission-label">{{ permiso.nombre }}</span>
+              <span class="permission-code">{{ permiso.codigo }}</span>
+            </mat-checkbox>
+          </div>
+        </section>
+      </div>
+
+      <div class="helper-text full-width">
+        Crea roles por empresa sin tocar el catálogo global. Así puedes combinar recepción, caja, staff o administración según lo que necesite cada negocio.
+      </div>
+
+      <div class="form-actions">
+        <button mat-flat-button color="primary" type="submit">
+          {{ rolInternoEditandoId ? 'Actualizar rol' : rolInternoClonandoDesdeId ? 'Crear copia del rol' : 'Crear rol interno' }}
+        </button>
+      </div>
+    </form>
+  </mat-card>
+
+  <mat-card class="workspace-card list-card">
+    <div class="section-header">
+      <div>
+        <div class="section-eyebrow">Catálogo por empresa</div>
+        <h3>Roles y permisos disponibles</h3>
+      </div>
+    </div>
+
+    <div class="entity-list">
+      <article class="entity-row" *ngFor="let rol of rolesInternos">
+        <div class="entity-main">
+          <div class="entity-title">{{ rol.nombre }}</div>
+          <div class="entity-meta">{{ rol.codigo }}</div>
+          <div class="entity-meta" *ngIf="rol.descripcion">{{ rol.descripcion }}</div>
+          <div class="service-metrics">
+            <span>{{ rol.permisos.length }} permiso(s)</span>
+            <span>{{ rol.usuariosAsignados }} usuario(s)</span>
+            <span>{{ rol.activo ? 'Activo' : 'Inactivo' }}</span>
+            <span>{{ rol.editable ? 'Editable' : 'Base del sistema' }}</span>
+          </div>
+          <mat-chip-set aria-label="Permisos del rol">
+            <mat-chip *ngFor="let permiso of rol.permisos.slice(0, 4)">{{ permiso }}</mat-chip>
+            <mat-chip *ngIf="rol.permisos.length > 4">+{{ rol.permisos.length - 4 }} más</mat-chip>
+          </mat-chip-set>
+        </div>
+        <div class="entity-side">
+          <span class="status-pill" [class.is-active]="rol.activo">{{ rol.activo ? 'Activo' : 'Inactivo' }}</span>
+          <button mat-stroked-button type="button" (click)="cloneRole.emit(rol)">Clonar</button>
+          <button mat-stroked-button type="button" (click)="editRole.emit(rol)">Editar</button>
+          <button
+            mat-stroked-button
+            type="button"
+            color="warn"
+            (click)="deleteRole.emit(rol)"
+            [disabled]="!rol.sePuedeEliminar">
+            Eliminar
+          </button>
+        </div>
+      </article>
+    </div>
+  </mat-card>
+</div>

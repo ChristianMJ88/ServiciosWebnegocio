@@ -1,0 +1,119 @@
+<section class="section-stack">
+  <div class="workspace-grid two-columns">
+    <mat-card class="workspace-card form-card">
+      <div class="section-header">
+        <div>
+          <div class="section-eyebrow">Equipo</div>
+          <h3>{{ prestadorEditandoId ? 'Editar prestador' : 'Nuevo prestador' }}</h3>
+        </div>
+        <button mat-stroked-button type="button" *ngIf="prestadorEditandoId" (click)="clearEdit.emit()">
+          Limpiar formulario
+        </button>
+      </div>
+
+      <form class="admin-form-grid admin-form-shell" (ngSubmit)="save.emit()">
+        <div class="form-block-title full-width">Identidad</div>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Sucursal</mat-label>
+          <mat-select
+            name="prestadorSucursalId"
+            [(ngModel)]="formularioPrestador.sucursalId"
+            (ngModelChange)="branchChange.emit($event)"
+            required>
+            <mat-option *ngFor="let sucursal of sucursales" [value]="sucursal.id">{{ sucursal.nombre }}</mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Nombre visible</mat-label>
+          <input matInput name="prestadorNombreMostrar" [(ngModel)]="formularioPrestador.nombreMostrar" required maxlength="150">
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Correo</mat-label>
+          <input matInput type="email" name="prestadorCorreo" [(ngModel)]="formularioPrestador.correo" required maxlength="150">
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Contraseña temporal</mat-label>
+          <input
+            matInput
+            type="password"
+            name="prestadorPassword"
+            [(ngModel)]="formularioPrestador.contrasenaTemporal"
+            minlength="8"
+            maxlength="100">
+          <mat-hint>
+            {{ prestadorEditandoId ? 'Opcional al editar. Si la cambias, usa mínimo 8 caracteres.' : 'Usa una contraseña temporal de al menos 8 caracteres.' }}
+          </mat-hint>
+        </mat-form-field>
+
+        <div class="form-block-title full-width">Perfil operativo</div>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Color de agenda</mat-label>
+          <input matInput type="color" name="prestadorColorAgenda" [(ngModel)]="formularioPrestador.colorAgenda">
+        </mat-form-field>
+
+        <mat-slide-toggle name="prestadorActivo" [(ngModel)]="formularioPrestador.activo">
+          Prestador activo
+        </mat-slide-toggle>
+
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Biografía</mat-label>
+          <textarea matInput rows="3" name="prestadorBiografia" [(ngModel)]="formularioPrestador.biografia" maxlength="500"></textarea>
+        </mat-form-field>
+
+        <div class="form-block-title full-width">Servicios asignados</div>
+
+        <div class="full-width">
+          <div class="checkbox-grid">
+            <mat-checkbox
+              *ngFor="let servicio of serviciosPrestadorDisponibles"
+              [checked]="formularioPrestador.servicioIds.includes(servicio.id)"
+              (change)="serviceToggle.emit({ servicioId: servicio.id, checked: $event.checked })">
+              {{ servicio.nombre }}
+            </mat-checkbox>
+          </div>
+          <div class="helper-text" *ngIf="!serviciosPrestadorDisponibles.length">
+            No hay servicios disponibles en la sucursal seleccionada.
+          </div>
+        </div>
+
+        <div class="form-actions">
+          <button mat-flat-button color="primary" type="submit" [disabled]="guardandoPrestador || !sucursales.length">
+            {{ prestadorEditandoId ? 'Actualizar prestador' : 'Crear prestador' }}
+          </button>
+        </div>
+      </form>
+    </mat-card>
+
+    <mat-card class="workspace-card list-card">
+      <div class="section-header">
+        <div>
+          <div class="section-eyebrow">Staff</div>
+          <h3>Prestadores activos</h3>
+        </div>
+      </div>
+
+      <div class="entity-list">
+        <article class="entity-row" *ngFor="let prestador of prestadores">
+          <div class="entity-main">
+            <div class="entity-meta">{{ prestador.sucursalNombre }}</div>
+            <div class="entity-title">{{ prestador.nombreMostrar }}</div>
+            <div class="entity-meta">{{ prestador.correo }}</div>
+            <div class="entity-meta" *ngIf="prestador.biografia">{{ prestador.biografia }}</div>
+            <mat-chip-set>
+              <mat-chip *ngFor="let nombre of prestador.servicioNombres">{{ nombre }}</mat-chip>
+            </mat-chip-set>
+          </div>
+          <div class="entity-side">
+            <span class="status-pill" [class.is-active]="prestador.activo">{{ prestador.activo ? 'Activo' : 'Inactivo' }}</span>
+            <button mat-stroked-button type="button" (click)="editProvider.emit(prestador)">Editar</button>
+          </div>
+        </article>
+      </div>
+    </mat-card>
+  </div>
+</section>

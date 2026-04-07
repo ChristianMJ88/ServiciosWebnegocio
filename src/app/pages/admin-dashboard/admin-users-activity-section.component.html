@@ -1,0 +1,28 @@
+<mat-card class="workspace-card list-card">
+  <div class="section-header">
+    <div>
+      <div class="section-eyebrow">Trazabilidad</div>
+      <h3>Actividad reciente de roles y accesos</h3>
+    </div>
+  </div>
+
+  <div class="entity-list" *ngIf="auditoriaRolesInternos.length; else sinAuditoriaRoles">
+    <article class="entity-row" *ngFor="let evento of auditoriaRolesInternos">
+      <div class="entity-main">
+        <div class="entity-title">{{ etiquetaAccionAuditoriaRol(evento.accion) }}</div>
+        <div class="entity-meta">{{ evento.resumen }}</div>
+        <div class="entity-meta" *ngIf="evento.rolNombre || evento.rolCodigo">
+          {{ evento.rolNombre || evento.rolCodigo }}<span *ngIf="evento.rolNombre && evento.rolCodigo && evento.rolNombre !== evento.rolCodigo"> · {{ evento.rolCodigo }}</span>
+        </div>
+        <div class="entity-meta" *ngIf="evento.actorCorreo">Por {{ evento.actorCorreo }}</div>
+      </div>
+      <div class="entity-side">
+        <span class="status-pill is-active">{{ evento.creadoEn | date:'dd/MM/yyyy HH:mm':'':'es-MX' }}</span>
+      </div>
+    </article>
+  </div>
+
+  <ng-template #sinAuditoriaRoles>
+    <div class="helper-text">Todavía no hay movimientos auditados de roles o accesos internos.</div>
+  </ng-template>
+</mat-card>

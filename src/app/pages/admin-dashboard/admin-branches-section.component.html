@@ -1,0 +1,75 @@
+<section class="section-stack">
+  <div class="workspace-grid two-columns">
+    <mat-card class="workspace-card form-card">
+      <div class="section-header">
+        <div>
+          <div class="section-eyebrow">Configuración</div>
+          <h3>{{ sucursalEditandoId ? 'Editar sucursal' : 'Nueva sucursal' }}</h3>
+        </div>
+        <button mat-stroked-button type="button" *ngIf="sucursalEditandoId" (click)="clearEdit.emit()">
+          Limpiar formulario
+        </button>
+      </div>
+
+      <form class="admin-form-grid admin-form-shell" (ngSubmit)="save.emit()">
+        <div class="form-block-title full-width">Información general</div>
+
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Nombre</mat-label>
+          <input matInput name="sucursalNombre" [(ngModel)]="formularioSucursal.nombre" required maxlength="150">
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Dirección</mat-label>
+          <input matInput name="sucursalDireccion" [(ngModel)]="formularioSucursal.direccion" maxlength="255">
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Teléfono</mat-label>
+          <input matInput name="sucursalTelefono" [(ngModel)]="formularioSucursal.telefono" maxlength="20">
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Zona horaria</mat-label>
+          <input matInput name="sucursalZonaHoraria" [(ngModel)]="formularioSucursal.zonaHoraria" required maxlength="60">
+        </mat-form-field>
+
+        <div class="form-block-title full-width">Estado operativo</div>
+
+        <mat-slide-toggle name="sucursalActiva" [(ngModel)]="formularioSucursal.activa">
+          Sucursal activa
+        </mat-slide-toggle>
+
+        <div class="form-actions">
+          <button mat-flat-button color="primary" type="submit" [disabled]="guardandoSucursal">
+            {{ sucursalEditandoId ? 'Actualizar sucursal' : 'Crear sucursal' }}
+          </button>
+        </div>
+      </form>
+    </mat-card>
+
+    <mat-card class="workspace-card list-card">
+      <div class="section-header">
+        <div>
+          <div class="section-eyebrow">Operación</div>
+          <h3>Sucursales registradas</h3>
+        </div>
+      </div>
+
+      <div class="entity-list">
+        <article class="entity-row" *ngFor="let sucursal of sucursales">
+          <div class="entity-main">
+            <div class="entity-title">{{ sucursal.nombre }}</div>
+            <div class="entity-meta">{{ sucursal.zonaHoraria }}</div>
+            <div class="entity-meta" *ngIf="sucursal.direccion">{{ sucursal.direccion }}</div>
+            <div class="entity-meta">{{ sucursal.telefono || 'Sin teléfono' }}</div>
+          </div>
+          <div class="entity-side">
+            <span class="status-pill" [class.is-active]="sucursal.activa">{{ sucursal.activa ? 'Activa' : 'Inactiva' }}</span>
+            <button mat-stroked-button type="button" (click)="editBranch.emit(sucursal)">Editar</button>
+          </div>
+        </article>
+      </div>
+    </mat-card>
+  </div>
+</section>

@@ -1,0 +1,74 @@
+<section class="staff-section-stack">
+  <div class="staff-grid two-columns">
+    <mat-card class="staff-workspace-card">
+      <div class="staff-section-header">
+        <div>
+          <div class="staff-eyebrow">Bloqueos</div>
+          <h3>{{ excepcionEditandoId() ? 'Editar bloqueo' : 'Nuevo bloqueo' }}</h3>
+        </div>
+      </div>
+
+      <form class="staff-form-grid staff-form-shell" (ngSubmit)="save.emit()">
+        <div class="form-block-title full-width">Bloqueo programado</div>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Fecha</mat-label>
+          <input matInput type="date" name="staffExcepcionFecha" [(ngModel)]="formularioExcepcion().fechaExcepcion" required>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Hora inicio</mat-label>
+          <input matInput type="time" name="staffExcepcionHoraInicio" [(ngModel)]="formularioExcepcion().horaInicio">
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Hora fin</mat-label>
+          <input matInput type="time" name="staffExcepcionHoraFin" [(ngModel)]="formularioExcepcion().horaFin">
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Tipo</mat-label>
+          <mat-select name="staffExcepcionTipo" [(ngModel)]="formularioExcepcion().tipoBloqueo">
+            <mat-option *ngFor="let tipo of tiposBloqueo()" [value]="tipo">{{ tipo }}</mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Motivo</mat-label>
+          <input matInput name="staffExcepcionMotivo" [(ngModel)]="formularioExcepcion().motivo" maxlength="255">
+        </mat-form-field>
+
+        <div class="staff-form-actions">
+          <button mat-flat-button color="primary" type="submit" [disabled]="guardandoExcepcion()">
+            {{ excepcionEditandoId() ? 'Actualizar bloqueo' : 'Guardar bloqueo' }}
+          </button>
+          <button mat-stroked-button type="button" *ngIf="excepcionEditandoId()" (click)="cancelEdit.emit()">
+            Cancelar
+          </button>
+        </div>
+      </form>
+    </mat-card>
+
+    <mat-card class="staff-workspace-card">
+      <div class="staff-section-header">
+        <div>
+          <div class="staff-eyebrow">Bloqueos registrados</div>
+          <h3>Historial operativo</h3>
+        </div>
+      </div>
+
+      <div class="staff-stack">
+        <article class="staff-entity-card" *ngFor="let excepcion of excepciones()">
+          <div>
+            <div class="staff-entity-title">{{ excepcion.fechaExcepcion }} · {{ excepcion.tipoBloqueo }}</div>
+            <div class="staff-entity-meta">
+              {{ excepcion.horaInicio && excepcion.horaFin ? (excepcion.horaInicio + ' - ' + excepcion.horaFin) : 'Bloqueo de todo el día' }}
+            </div>
+            <div class="staff-entity-meta" *ngIf="excepcion.motivo">{{ excepcion.motivo }}</div>
+          </div>
+          <button mat-stroked-button type="button" (click)="editBlock.emit(excepcion)">Editar</button>
+        </article>
+      </div>
+    </mat-card>
+  </div>
+</section>

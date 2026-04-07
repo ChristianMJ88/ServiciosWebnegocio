@@ -1,0 +1,81 @@
+<section class="staff-section-stack">
+  <div class="staff-grid two-columns">
+    <mat-card class="staff-workspace-card">
+      <div class="staff-section-header">
+        <div>
+          <div class="staff-eyebrow">Disponibilidad base</div>
+          <h3>{{ reglaEditandoId() ? 'Editar horario' : 'Nuevo horario base' }}</h3>
+        </div>
+      </div>
+
+      <form class="staff-form-grid staff-form-shell" (ngSubmit)="save.emit()">
+        <div class="form-block-title full-width">Disponibilidad</div>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Día</mat-label>
+          <mat-select name="staffReglaDiaSemana" [(ngModel)]="formularioRegla().diaSemana">
+            <mat-option *ngFor="let dia of diasSemana()" [value]="dia.value">{{ dia.label }}</mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Inicio</mat-label>
+          <input matInput type="time" name="staffReglaHoraInicio" [(ngModel)]="formularioRegla().horaInicio" required>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Fin</mat-label>
+          <input matInput type="time" name="staffReglaHoraFin" [(ngModel)]="formularioRegla().horaFin" required>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Intervalo</mat-label>
+          <input matInput type="number" min="5" step="5" name="staffReglaIntervalo" [(ngModel)]="formularioRegla().intervaloMinutos" required>
+        </mat-form-field>
+
+        <div class="form-block-title full-width">Vigencia</div>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Vigente desde</mat-label>
+          <input matInput type="date" name="staffReglaVigenteDesde" [(ngModel)]="formularioRegla().vigenteDesde">
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Vigente hasta</mat-label>
+          <input matInput type="date" name="staffReglaVigenteHasta" [(ngModel)]="formularioRegla().vigenteHasta">
+        </mat-form-field>
+
+        <div class="staff-form-actions">
+          <button mat-flat-button color="primary" type="submit" [disabled]="guardandoRegla()">
+            {{ reglaEditandoId() ? 'Actualizar horario' : 'Guardar horario' }}
+          </button>
+          <button mat-stroked-button type="button" *ngIf="reglaEditandoId()" (click)="cancelEdit.emit()">
+            Cancelar
+          </button>
+        </div>
+      </form>
+    </mat-card>
+
+    <mat-card class="staff-workspace-card">
+      <div class="staff-section-header">
+        <div>
+          <div class="staff-eyebrow">Horarios activos</div>
+          <h3>Configuración actual</h3>
+        </div>
+      </div>
+
+      <div class="staff-stack">
+        <article class="staff-entity-card" *ngFor="let regla of reglas()">
+          <div>
+            <div class="staff-entity-title">{{ etiquetaDiaSemana()(regla.diaSemana) }} · {{ regla.horaInicio }} - {{ regla.horaFin }}</div>
+            <div class="staff-entity-meta">Intervalo {{ regla.intervaloMinutos }} min</div>
+            <div class="staff-entity-meta" *ngIf="regla.vigenteDesde || regla.vigenteHasta">
+              Vigencia: {{ regla.vigenteDesde || 'sin inicio' }} a {{ regla.vigenteHasta || 'sin fin' }}
+            </div>
+          </div>
+          <button mat-stroked-button type="button" (click)="editRule.emit(regla)">Editar</button>
+        </article>
+      </div>
+    </mat-card>
+  </div>
+</section>

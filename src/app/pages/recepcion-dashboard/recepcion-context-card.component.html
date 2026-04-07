@@ -1,0 +1,32 @@
+<mat-card class="recepcion-filter-card">
+  <div class="recepcion-filter-head">
+    <div>
+      <span class="recepcion-card-kicker">Contexto activo</span>
+      <h2>Agenda operativa</h2>
+    </div>
+    <span class="recepcion-filter-badge">{{ fechaAgenda | date:'dd MMM yyyy':'':'es-MX' }}</span>
+  </div>
+
+  <div class="recepcion-filter-grid">
+    <mat-form-field appearance="outline" class="w-100" *ngIf="sucursales.length > 1; else recepcionSucursalFija">
+      <mat-label>Sucursal</mat-label>
+      <mat-select [ngModel]="sucursalActivaId" (ngModelChange)="branchChange.emit($event)">
+        <mat-option *ngFor="let sucursal of sucursales" [value]="sucursal.id">
+          {{ sucursal.nombre }}
+        </mat-option>
+      </mat-select>
+    </mat-form-field>
+
+    <ng-template #recepcionSucursalFija>
+      <div class="recepcion-filter-static">
+        <small>Sucursal</small>
+        <strong>{{ sucursalActivaNombre }}</strong>
+      </div>
+    </ng-template>
+
+    <mat-form-field appearance="outline" class="w-100">
+      <mat-label>Fecha</mat-label>
+      <input matInput type="date" [ngModel]="fechaAgenda" (ngModelChange)="dateChange.emit($event)">
+    </mat-form-field>
+  </div>
+</mat-card>

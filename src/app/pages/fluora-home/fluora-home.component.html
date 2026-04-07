@@ -1,0 +1,219 @@
+<main class="refluora-page">
+  <section class="refluora-hero">
+    <div class="container refluora-hero__shell">
+      <div class="refluora-hero__grid">
+        <div class="refluora-hero__copy">
+          <span class="section-kicker section-kicker--hero">WhatsApp, web y redes en un solo sistema</span>
+          <h1>Centraliza conversaciones y automatiza el seguimiento comercial.</h1>
+          <p class="refluora-hero__lead">
+            Refluora te ayuda a responder con más orden, convertir mensajes en oportunidades y dar seguimiento sin depender de tareas manuales.
+          </p>
+
+          <div class="refluora-hero__signals" aria-label="Áreas principales">
+            <span *ngFor="let item of heroSignals">{{ item }}</span>
+          </div>
+
+          <div class="refluora-hero__actions">
+            <a routerLink="/registro" class="btn btn-primary btn-lg rounded-pill">Crear mi empresa</a>
+            <a [attr.href]="platformHost.appUrl('/acceso')" class="btn btn-outline-light btn-lg rounded-pill">Entrar a la app</a>
+          </div>
+
+          <div class="refluora-hero__highlights">
+            <article class="highlight-item" *ngFor="let item of heroHighlights">
+              <i class="bi bi-check2-circle"></i>
+              <span>{{ item }}</span>
+            </article>
+          </div>
+        </div>
+
+        <div class="refluora-hero__visual">
+          <div class="hero-preview">
+            <div class="hero-preview__topbar">
+              <span>Inbox</span>
+              <span>CRM</span>
+              <span>Automatización</span>
+            </div>
+
+            <div class="hero-preview__body">
+              <div class="preview-column">
+                <div class="preview-card preview-card--message">
+                  <small>WhatsApp</small>
+                  <strong>Nuevo lead</strong>
+                  <p>“Hola, quiero información y precios.”</p>
+                </div>
+
+                <div class="preview-card">
+                  <small>Formulario web</small>
+                  <strong>Lead registrado</strong>
+                  <p>Empresa con alto volumen de mensajes entrantes.</p>
+                </div>
+              </div>
+
+              <div class="preview-flow">
+                <div class="preview-step">
+                  <span>1</span>
+                  <div>
+                    <strong>Clasifica intención</strong>
+                    <p>Detecta si la conversación es comercial, soporte o seguimiento.</p>
+                  </div>
+                </div>
+                <div class="preview-step">
+                  <span>2</span>
+                  <div>
+                    <strong>Crea oportunidad</strong>
+                    <p>Registra el lead en CRM con etapa y responsable.</p>
+                  </div>
+                </div>
+                <div class="preview-step">
+                  <span>3</span>
+                  <div>
+                    <strong>Activa seguimiento</strong>
+                    <p>Dispara recordatorio o siguiente acción automáticamente.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="hero-preview__footer">
+              <span>Respuesta inicial automatizada</span>
+              <span>Lead creado en CRM</span>
+              <span>Siguiente paso activado</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="landing-section landing-section--light">
+    <div class="container">
+      <div class="section-head section-head--centered">
+        <span class="section-kicker">El problema</span>
+        <h2>Atender mucho no siempre significa vender mejor.</h2>
+        <p>
+          Cuando las conversaciones viven en varios canales y el seguimiento depende de procesos manuales, lo normal es perder contexto, velocidad y oportunidades.
+        </p>
+      </div>
+
+      <div class="pain-grid">
+        <article class="info-card" *ngFor="let item of painPoints">
+          <h3>{{ item.title }}</h3>
+          <p>{{ item.body }}</p>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <section class="landing-section" id="producto">
+    <div class="container">
+      <div class="section-head">
+        <span class="section-kicker">Qué resuelve Refluora</span>
+        <h2>Una sola plataforma para captar, organizar y mover cada oportunidad.</h2>
+        <p>
+          La propuesta no es sumar otra herramienta. Es darle al equipo una operación más clara para atención, ventas y seguimiento.
+        </p>
+      </div>
+
+      <div class="pillar-grid">
+        <article class="info-card info-card--soft" *ngFor="let item of pillars">
+          <h3>{{ item.title }}</h3>
+          <p>{{ item.body }}</p>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <section class="landing-section landing-section--contrast" id="como-funciona">
+    <div class="container">
+      <div class="section-head section-head--centered">
+        <span class="section-kicker">Cómo funciona</span>
+        <h2>Un flujo simple para pasar de conversación a seguimiento con orden.</h2>
+        <p>
+          Refluora debe sentirse fácil de entender desde la primera visita: entra el mensaje, se organiza la oportunidad y se activa el siguiente paso.
+        </p>
+      </div>
+
+      <div class="workflow-grid">
+        <article class="workflow-card" *ngFor="let item of workflow">
+          <span class="workflow-card__step">{{ item.step }}</span>
+          <h3>{{ item.title }}</h3>
+          <p>{{ item.body }}</p>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <section class="landing-section" id="beneficios">
+    <div class="container">
+      <div class="section-head">
+        <span class="section-kicker">Beneficios</span>
+        <h2>Más claridad para el equipo. Menos fuga de leads en el proceso.</h2>
+        <p>
+          Refluora no necesita prometer magia. Su valor está en ordenar la operación comercial para que responder y seguir oportunidades sea más consistente.
+        </p>
+      </div>
+
+      <div class="capability-grid">
+        <article class="info-card" *ngFor="let item of capabilities">
+          <h3>{{ item.title }}</h3>
+          <p>{{ item.body }}</p>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <section class="landing-section landing-section--light">
+    <div class="container">
+      <div class="section-head section-head--centered">
+        <span class="section-kicker">Capacidades clave</span>
+        <h2>Lo esencial para que la operación conversacional se vea seria, ordenada y escalable.</h2>
+      </div>
+
+      <div class="feature-groups">
+        <article class="feature-group" *ngFor="let group of featureGroups">
+          <h3>{{ group.title }}</h3>
+          <ul>
+            <li *ngFor="let item of group.items">{{ item }}</li>
+          </ul>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <section class="landing-section" id="faq">
+    <div class="container">
+      <div class="faq-shell">
+        <div class="section-head">
+          <span class="section-kicker">Preguntas frecuentes</span>
+          <h2>Las dudas clave deben resolverse antes de pedir acceso.</h2>
+          <p>
+            Esta sección ayuda a aclarar alcance, encaje y expectativas del producto sin forzar promesas que hoy no se puedan sostener.
+          </p>
+        </div>
+
+        <div class="faq-list">
+          <article class="faq-card" *ngFor="let faq of faqs">
+            <h3>{{ faq.question }}</h3>
+            <p>{{ faq.answer }}</p>
+          </article>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="final-cta">
+    <div class="container">
+      <div class="final-cta__card">
+        <span class="section-kicker">Comienza</span>
+        <h2>Ordena tus conversaciones antes de que el crecimiento te complique más la operación.</h2>
+        <p>
+          Refluora está pensado para negocios que necesitan responder mejor, seguir oportunidades con más consistencia y operar con una base más sólida.
+        </p>
+        <div class="final-cta__actions">
+          <a routerLink="/registro" class="btn btn-primary btn-lg rounded-pill">Crear mi empresa</a>
+          <a [attr.href]="platformHost.appUrl('/acceso')" class="btn btn-outline-light btn-lg rounded-pill">Entrar a la app</a>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>

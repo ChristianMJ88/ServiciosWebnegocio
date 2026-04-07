@@ -1,0 +1,101 @@
+<section class="section-stack">
+  <div class="workspace-grid two-columns">
+    <mat-card class="workspace-card form-card">
+      <div class="section-header">
+        <div>
+          <div class="section-eyebrow">Catálogo</div>
+          <h3>{{ servicioEditandoId ? 'Editar servicio' : 'Nuevo servicio' }}</h3>
+        </div>
+        <button mat-stroked-button type="button" *ngIf="servicioEditandoId" (click)="clearEdit.emit()">
+          Limpiar formulario
+        </button>
+      </div>
+
+      <form class="admin-form-grid admin-form-shell" (ngSubmit)="save.emit()">
+        <div class="form-block-title full-width">Datos del servicio</div>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Sucursal</mat-label>
+          <mat-select name="servicioSucursalId" [(ngModel)]="formularioServicio.sucursalId" required>
+            <mat-option *ngFor="let sucursal of sucursales" [value]="sucursal.id">{{ sucursal.nombre }}</mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Nombre</mat-label>
+          <input matInput name="servicioNombre" [(ngModel)]="formularioServicio.nombre" required maxlength="150">
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Descripción</mat-label>
+          <textarea matInput rows="3" name="servicioDescripcion" [(ngModel)]="formularioServicio.descripcion" maxlength="500"></textarea>
+        </mat-form-field>
+
+        <div class="form-block-title full-width">Configuración operativa</div>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Duración (min)</mat-label>
+          <input matInput type="number" min="5" name="servicioDuracion" [(ngModel)]="formularioServicio.duracionMinutos" required>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Buffer antes</mat-label>
+          <input matInput type="number" min="0" name="servicioBufferAntes" [(ngModel)]="formularioServicio.bufferAntesMinutos" required>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Buffer después</mat-label>
+          <input matInput type="number" min="0" name="servicioBufferDespues" [(ngModel)]="formularioServicio.bufferDespuesMinutos" required>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Precio</mat-label>
+          <input matInput type="number" min="0" step="0.01" name="servicioPrecio" [(ngModel)]="formularioServicio.precio" required>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Moneda</mat-label>
+          <input matInput name="servicioMoneda" [(ngModel)]="formularioServicio.moneda" maxlength="10" required>
+        </mat-form-field>
+
+        <mat-slide-toggle name="servicioActivo" [(ngModel)]="formularioServicio.activo">
+          Servicio activo
+        </mat-slide-toggle>
+
+        <div class="form-actions">
+          <button mat-flat-button color="primary" type="submit" [disabled]="guardandoServicio || !sucursales.length">
+            {{ servicioEditandoId ? 'Actualizar servicio' : 'Crear servicio' }}
+          </button>
+        </div>
+      </form>
+    </mat-card>
+
+    <mat-card class="workspace-card list-card">
+      <div class="section-header">
+        <div>
+          <div class="section-eyebrow">Portafolio</div>
+          <h3>Servicios disponibles</h3>
+        </div>
+      </div>
+
+      <div class="entity-list">
+        <article class="entity-row" *ngFor="let servicio of servicios">
+          <div class="entity-main">
+            <div class="entity-meta">{{ servicio.sucursalNombre }}</div>
+            <div class="entity-title">{{ servicio.nombre }}</div>
+            <div class="entity-meta" *ngIf="servicio.descripcion">{{ servicio.descripcion }}</div>
+            <div class="service-metrics">
+              <span>{{ servicio.duracionMinutos }} min</span>
+              <span>Buffers {{ servicio.bufferAntesMinutos }} / {{ servicio.bufferDespuesMinutos }}</span>
+              <span>{{ servicio.precio | appMoney:(servicio.moneda || 'MXN'):0:0 }}</span>
+            </div>
+          </div>
+          <div class="entity-side">
+            <span class="status-pill" [class.is-active]="servicio.activo">{{ servicio.activo ? 'Activo' : 'Inactivo' }}</span>
+            <button mat-stroked-button type="button" (click)="editService.emit(servicio)">Editar</button>
+          </div>
+        </article>
+      </div>
+    </mat-card>
+  </div>
+</section>

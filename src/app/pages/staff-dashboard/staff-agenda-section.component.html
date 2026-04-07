@@ -1,0 +1,53 @@
+<section class="staff-section-stack">
+  <section class="staff-kpi-strip">
+    <article class="staff-kpi-card staff-kpi-card--wide">
+      <span class="staff-kpi-label">Operación del día</span>
+      <strong class="staff-kpi-value">Agenda en tiempo real</strong>
+      <small class="staff-kpi-helper">Confirma, finaliza y gestiona tu jornada sin perder foco.</small>
+    </article>
+    <article class="staff-kpi-card staff-kpi-card--accent">
+      <span class="staff-kpi-label">Total citas</span>
+      <strong class="staff-kpi-value">{{ totalAgenda() }}</strong>
+    </article>
+    <article class="staff-kpi-card">
+      <span class="staff-kpi-label">Pendientes</span>
+      <strong class="staff-kpi-value">{{ totalPendientes() }}</strong>
+    </article>
+    <article class="staff-kpi-card">
+      <span class="staff-kpi-label">Confirmadas</span>
+      <strong class="staff-kpi-value">{{ totalConfirmadas() }}</strong>
+    </article>
+    <article class="staff-kpi-card">
+      <span class="staff-kpi-label">Finalizadas</span>
+      <strong class="staff-kpi-value">{{ totalFinalizadas() }}</strong>
+    </article>
+  </section>
+
+  <app-agenda-operations-section
+    [theme]="theme()"
+    [viewMode]="viewMode()"
+    [availableViews]="['day', 'week']"
+    [eyebrow]="'Agenda visual'"
+    [title]="'Agenda por fecha'"
+    [dateLabel]="'Fecha seleccionada'"
+    [dateValue]="dateValue()"
+    [dateDisplay]="dateDisplay()"
+    [summaryCards]="[]"
+    [occupancy]="null"
+    [hourLabels]="hourLabels()"
+    [collaborators]="collaborators()"
+    [appointments]="appointments()"
+    [selectedAppointment]="selectedAppointment()"
+    [selectedAppointmentId]="selectedAppointmentId()"
+    [timelineWidthPx]="timelineWidthPx()"
+    [hourSlotHeight]="hourSlotHeight()"
+    [emptyMessage]="emptyMessage()"
+    (previousDay)="previousDay.emit()"
+    (goToToday)="goToToday.emit()"
+    (nextDay)="nextDay.emit()"
+    (viewModeChange)="viewModeChange.emit($event)"
+    (dateValueChange)="dateValueChange.emit($event)"
+    (appointmentSelected)="appointmentSelected.emit($event)"
+    (appointmentClosed)="appointmentClosed.emit()"
+    (appointmentAction)="appointmentAction.emit($event)" />
+</section>

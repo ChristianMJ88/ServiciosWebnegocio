@@ -1,0 +1,96 @@
+<section class="section-stack">
+  <div class="workspace-grid two-columns">
+    <mat-card class="workspace-card form-card">
+      <div class="section-header">
+        <div>
+          <div class="section-eyebrow">Bloqueos</div>
+          <h3>{{ excepcionEditandoId ? 'Editar excepción' : 'Nueva excepción' }}</h3>
+        </div>
+        <button mat-stroked-button type="button" *ngIf="excepcionEditandoId" (click)="clearEdit.emit()">
+          Limpiar formulario
+        </button>
+      </div>
+
+      <form class="admin-form-grid admin-form-shell" (ngSubmit)="save.emit()">
+        <div class="form-block-title full-width">Contexto</div>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Tipo</mat-label>
+          <mat-select name="excepcionTipoSujeto" [(ngModel)]="formularioExcepcion.tipoSujeto" (ngModelChange)="typeChange.emit($event)">
+            <mat-option value="SUCURSAL">Sucursal</mat-option>
+            <mat-option value="PRESTADOR">Prestador</mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Sujeto</mat-label>
+          <mat-select name="excepcionSujetoId" [(ngModel)]="formularioExcepcion.sujetoId" required>
+            <mat-option *ngFor="let sujeto of sujetosExcepcion" [value]="sujeto.id">
+              {{ sujeto.nombre }}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <div class="form-block-title full-width">Bloqueo</div>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Fecha</mat-label>
+          <input matInput type="date" name="excepcionFecha" [(ngModel)]="formularioExcepcion.fechaExcepcion" required>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Hora inicio</mat-label>
+          <input matInput type="time" name="excepcionHoraInicio" [(ngModel)]="formularioExcepcion.horaInicio">
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Hora fin</mat-label>
+          <input matInput type="time" name="excepcionHoraFin" [(ngModel)]="formularioExcepcion.horaFin">
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Tipo de bloqueo</mat-label>
+          <mat-select name="excepcionTipoBloqueo" [(ngModel)]="formularioExcepcion.tipoBloqueo">
+            <mat-option *ngFor="let tipo of tiposBloqueo" [value]="tipo">{{ tipo }}</mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Motivo</mat-label>
+          <input matInput name="excepcionMotivo" [(ngModel)]="formularioExcepcion.motivo" maxlength="255">
+        </mat-form-field>
+
+        <div class="form-actions">
+          <button mat-flat-button color="primary" type="submit" [disabled]="guardandoExcepcion">
+            {{ excepcionEditandoId ? 'Actualizar excepción' : 'Crear excepción' }}
+          </button>
+        </div>
+      </form>
+    </mat-card>
+
+    <mat-card class="workspace-card list-card">
+      <div class="section-header">
+        <div>
+          <div class="section-eyebrow">Excepciones activas</div>
+          <h3>Bloqueos registrados</h3>
+        </div>
+      </div>
+
+      <div class="entity-list">
+        <article class="entity-row" *ngFor="let excepcion of excepcionesDisponibilidad">
+          <div class="entity-main">
+            <div class="entity-meta">{{ excepcion.tipoSujeto }} · {{ excepcion.sujetoNombre }}</div>
+            <div class="entity-title">{{ excepcion.fechaExcepcion }} · {{ excepcion.tipoBloqueo }}</div>
+            <div class="entity-meta">
+              {{ excepcion.horaInicio && excepcion.horaFin ? (excepcion.horaInicio + ' - ' + excepcion.horaFin) : 'Bloqueo de todo el día' }}
+            </div>
+            <div class="entity-meta" *ngIf="excepcion.motivo">{{ excepcion.motivo }}</div>
+          </div>
+          <div class="entity-side">
+            <button mat-stroked-button type="button" (click)="editException.emit(excepcion)">Editar</button>
+          </div>
+        </article>
+      </div>
+    </mat-card>
+  </div>
+</section>

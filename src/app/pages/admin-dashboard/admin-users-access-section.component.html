@@ -1,0 +1,255 @@
+<div class="workspace-grid two-columns users-access-grid">
+  <mat-card class="workspace-card form-card users-form-card" id="usuarios-internos-form-card">
+    <div class="section-header">
+      <div>
+        <div class="section-eyebrow">Operación interna</div>
+        <h3>{{ usuarioInternoEditandoId ? 'Editar acceso de usuario' : 'Nuevo usuario interno' }}</h3>
+      </div>
+      <button mat-stroked-button type="button" *ngIf="usuarioInternoEditandoId" (click)="clearEdit.emit()">
+        Limpiar formulario
+      </button>
+    </div>
+
+    <div class="helper-text full-width users-helper-banner">
+      Primero asignas un <strong>rol</strong>. Luego, solo si hace falta, agregas permisos extra para ese usuario.
+    </div>
+
+    <div class="users-access-summary">
+      <article class="users-access-stat">
+        <span>Rol base</span>
+        <strong>{{ resumenAccesoUsuarioInterno.rolNombre }}</strong>
+      </article>
+      <article class="users-access-stat">
+        <span>Permisos del rol</span>
+        <strong>{{ resumenAccesoUsuarioInterno.permisosRol }}</strong>
+      </article>
+      <article class="users-access-stat">
+        <span>Permisos extra</span>
+        <strong>{{ resumenAccesoUsuarioInterno.permisosDirectos }}</strong>
+      </article>
+      <article class="users-access-stat">
+        <span>Acceso efectivo</span>
+        <strong>{{ resumenAccesoUsuarioInterno.permisosEfectivos }}</strong>
+      </article>
+    </div>
+
+    <form class="admin-form-grid admin-form-shell" (ngSubmit)="save.emit()">
+      <div class="form-block-title full-width">1. Acceso del usuario</div>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Sucursal base</mat-label>
+        <mat-select name="usuarioInternoSucursalId" [(ngModel)]="formularioUsuarioInterno.sucursalId">
+          <mat-option [value]="null">Sin restricción inicial</mat-option>
+          <mat-option *ngFor="let sucursal of sucursales" [value]="sucursal.id">{{ sucursal.nombre }}</mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Sucursales permitidas</mat-label>
+        <mat-select
+          multiple
+          name="usuarioInternoSucursalIds"
+          [(ngModel)]="formularioUsuarioInterno.sucursalIds"
+          (ngModelChange)="branchScopeChange.emit($event)">
+          <mat-option *ngFor="let sucursal of sucursales" [value]="sucursal.id">{{ sucursal.nombre }}</mat-option>
+        </mat-select>
+        <mat-hint>Si no eliges ninguna, el usuario podrá operar en todas las sucursales de la empresa.</mat-hint>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Rol</mat-label>
+        <mat-select
+          name="usuarioInternoRolEmpresaId"
+          [(ngModel)]="formularioUsuarioInterno.rolEmpresaId"
+          (ngModelChange)="roleChange.emit($event)"
+          required>
+          <mat-option [value]="null" disabled>Selecciona un rol</mat-option>
+          <mat-option *ngFor="let rol of rolesUsuarioInterno" [value]="rol.id">{{ rol.nombre }}</mat-option>
+        </mat-select>
+        <mat-hint>Selecciona el rol y el usuario heredará esos permisos sin configurarlos manualmente.</mat-hint>
+      </mat-form-field>
+
+      <div class="role-preview-card full-width" *ngIf="rolUsuarioInternoSeleccionado as rol">
+        <div class="role-preview-head">
+          <div>
+            <div class="section-eyebrow">Vista previa del acceso</div>
+            <h4>{{ rol.nombre }}</h4>
+            <p>{{ rol.permisos.length }} permiso(s) heredados. Scope actual: {{ resumenAccesoUsuarioInterno.scopeTexto }}.</p>
+          </div>
+          <button mat-stroked-button type="button" (click)="editSelectedRole.emit()">
+            Revisar rol
+          </button>
+        </div>
+
+        <mat-chip-set aria-label="Permisos heredados del rol">
+          <mat-chip *ngFor="let permiso of rol.permisos.slice(0, 4)">{{ etiquetaPermiso(permiso) }}</mat-chip>
+          <mat-chip *ngIf="rol.permisos.length > 4">+{{ rol.permisos.length - 4 }} más</mat-chip>
+        </mat-chip-set>
+      </div>
+
+      <details class="user-extra-permissions full-width" *ngIf="rolUsuarioInternoSeleccionado as rol" [open]="!!permisosDirectosUsuarioInterno.length">
+        <summary>
+          2. Permisos extra por usuario
+          <span>{{ permisosDirectosUsuarioInterno.length }} seleccionado(s)</span>
+        </summary>
+
+        <div class="helper-text">
+          Usa este bloque solo para excepciones. El rol sigue siendo la base y aquí solo agregas permisos puntuales para este usuario.
+        </div>
+
+        <div class="user-permissions-summary" *ngIf="permisosDirectosUsuarioInterno.length">
+          <div>
+            <strong>Extras directos</strong>
+            <p>{{ permisosDirectosUsuarioInterno.length }} permiso(s). {{ resumenPermisosLista(permisosDirectosUsuarioInterno, 4) }}.</p>
+          </div>
+          <mat-chip-set aria-label="Permisos directos del usuario">
+            <mat-chip *ngFor="let permiso of permisosDirectosUsuarioInterno.slice(0, 6)">{{ etiquetaPermiso(permiso) }}</mat-chip>
+            <mat-chip *ngIf="permisosDirectosUsuarioInterno.length > 6">+{{ permisosDirectosUsuarioInterno.length - 6 }} más</mat-chip>
+          </mat-chip-set>
+        </div>
+
+        <div class="user-permissions-summary user-permissions-summary-secondary">
+          <div>
+            <strong>Acceso efectivo</strong>
+            <p>{{ permisosEfectivosUsuarioInterno.length }} permiso(s) combinando rol + extras.</p>
+          </div>
+          <mat-chip-set aria-label="Acceso efectivo del usuario">
+            <mat-chip *ngFor="let permiso of permisosEfectivosUsuarioInterno.slice(0, 6)">{{ etiquetaPermiso(permiso) }}</mat-chip>
+            <mat-chip *ngIf="permisosEfectivosUsuarioInterno.length > 6">+{{ permisosEfectivosUsuarioInterno.length - 6 }} más</mat-chip>
+          </mat-chip-set>
+        </div>
+
+        <div class="permission-groups" *ngIf="gruposPermisosDirectosUsuarioInterno.length; else sinPermisosExtrasDisponibles">
+          <section class="permission-group-card" *ngFor="let grupo of gruposPermisosDirectosUsuarioInterno">
+            <div class="permission-group-title">{{ grupo.titulo }}</div>
+            <div class="permission-group-list">
+              <mat-checkbox
+                *ngFor="let permiso of grupo.permisos"
+                [ngModel]="permisoDirectoUsuarioSeleccionado(permiso.codigo)"
+                (ngModelChange)="directPermissionChange.emit({ codigo: permiso.codigo, checked: $event })"
+                [name]="'permiso_directo_' + permiso.codigo">
+                <span class="permission-label">{{ permiso.nombre }}</span>
+                <span class="permission-code">{{ permiso.codigo }}</span>
+              </mat-checkbox>
+            </div>
+          </section>
+        </div>
+
+        <ng-template #sinPermisosExtrasDisponibles>
+          <div class="helper-text">
+            Este rol ya cubre todos los permisos internos disponibles para esta empresa.
+          </div>
+        </ng-template>
+
+        <div class="helper-text">
+          Los cambios de acceso aplican en el siguiente inicio de sesión de ese usuario.
+        </div>
+      </details>
+
+      <div class="form-block-title full-width">3. Datos del usuario</div>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Nombre completo</mat-label>
+        <input matInput name="usuarioInternoNombreCompleto" [(ngModel)]="formularioUsuarioInterno.nombreCompleto" required maxlength="150">
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Correo</mat-label>
+        <input matInput type="email" name="usuarioInternoCorreo" [(ngModel)]="formularioUsuarioInterno.correo" required maxlength="150">
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Contraseña temporal</mat-label>
+        <input
+          matInput
+          type="password"
+          name="usuarioInternoPassword"
+          [(ngModel)]="formularioUsuarioInterno.contrasenaTemporal"
+          minlength="8"
+          maxlength="100">
+        <mat-hint>
+          {{ usuarioInternoEditandoId ? 'Opcional al editar. Si la cambias, usa mínimo 8 caracteres.' : 'Obligatoria al crear. Usa mínimo 8 caracteres.' }}
+        </mat-hint>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Teléfono</mat-label>
+        <input matInput name="usuarioInternoTelefono" [(ngModel)]="formularioUsuarioInterno.telefono" maxlength="30">
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Puesto</mat-label>
+        <input matInput name="usuarioInternoPuesto" [(ngModel)]="formularioUsuarioInterno.puesto" maxlength="80">
+      </mat-form-field>
+
+      <mat-slide-toggle name="usuarioInternoActivo" [(ngModel)]="formularioUsuarioInterno.activo">
+        Usuario activo
+      </mat-slide-toggle>
+
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Notas internas</mat-label>
+        <textarea matInput rows="3" name="usuarioInternoNotas" [(ngModel)]="formularioUsuarioInterno.notas" maxlength="500"></textarea>
+      </mat-form-field>
+
+      <div class="form-actions">
+        <button mat-flat-button color="primary" type="submit">
+          {{ usuarioInternoEditandoId ? 'Actualizar usuario' : 'Crear usuario interno' }}
+        </button>
+      </div>
+    </form>
+  </mat-card>
+
+  <mat-card class="workspace-card list-card">
+    <div class="section-header">
+      <div>
+        <div class="section-eyebrow">Accesos internos</div>
+        <h3>Usuarios administrativos y operativos</h3>
+      </div>
+    </div>
+
+    <div class="users-list-toolbar">
+      <mat-form-field appearance="outline" class="users-search-field">
+        <mat-label>Buscar usuario</mat-label>
+        <input matInput [ngModel]="filtroUsuariosInternos" (ngModelChange)="filterChange.emit($event)" placeholder="Nombre, correo, rol o sucursal">
+      </mat-form-field>
+      <button mat-stroked-button type="button" *ngIf="filtroUsuariosInternos" (click)="clearFilter.emit()">
+        Limpiar
+      </button>
+    </div>
+
+    <div class="entity-list">
+      <article class="entity-row entity-row-user" *ngFor="let usuario of usuariosInternosFiltrados">
+        <div class="entity-main">
+          <div class="entity-row-head">
+            <div class="entity-title">{{ usuario.nombreCompleto }}</div>
+            <div class="entity-meta">{{ usuario.rolNombre || usuario.rolCodigo }}<span *ngIf="usuario.puesto"> · {{ usuario.puesto }}</span></div>
+          </div>
+          <div class="entity-meta">{{ usuario.correo }}</div>
+          <div class="entity-meta">
+            Alcance: {{ usuario.sucursalNombresScope.length ? usuario.sucursalNombresScope.join(', ') : (usuario.sucursalNombre || 'Todas las sucursales') }}
+          </div>
+          <div class="entity-meta">
+            Acceso efectivo: {{ usuario.permisosEfectivos.length }} permiso(s)
+            <span *ngIf="usuario.permisosDirectos.length"> · {{ usuario.permisosDirectos.length }} extra(s)</span>
+          </div>
+          <div class="entity-meta" *ngIf="rolInternoDeUsuario(usuario) as rolAsignado">
+            Hereda {{ rolAsignado.permisos.length }} del rol. {{ resumenPermisosRol(rolAsignado, 3) }}
+          </div>
+          <div class="entity-meta" *ngIf="usuario.permisosDirectos.length">
+            Extras directos: {{ resumenPermisosLista(usuario.permisosDirectos, 3) }}
+          </div>
+          <div class="entity-meta" *ngIf="usuario.telefono">{{ usuario.telefono }}</div>
+          <div class="entity-meta" *ngIf="usuario.notas">{{ usuario.notas }}</div>
+        </div>
+        <div class="entity-side">
+          <span class="status-pill" [class.is-active]="usuario.activo">{{ usuario.activo ? 'Activo' : 'Inactivo' }}</span>
+          <button mat-stroked-button type="button" (click)="editAccess.emit(usuario)">Editar acceso</button>
+        </div>
+      </article>
+    </div>
+
+    <div class="agenda-empty" *ngIf="!usuariosInternosFiltrados.length">
+      No encontré usuarios con ese filtro.
+    </div>
+  </mat-card>
+</div>

@@ -1,0 +1,285 @@
+<section class="section-stack">
+  <div class="workspace-grid two-columns">
+    <mat-card class="workspace-card form-card">
+      <div class="section-header">
+        <div>
+          <div class="section-eyebrow">Entrega transaccional</div>
+          <h3>Configuración de correo del tenant</h3>
+        </div>
+      </div>
+
+      <form class="admin-form-grid admin-form-shell" (ngSubmit)="save.emit()">
+        <div class="form-block-title full-width">Proveedor</div>
+
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Proveedor de envío</mat-label>
+          <mat-select name="correoProveedor" [(ngModel)]="formularioCorreo().proveedor">
+            <mat-option value="GRAPH">Microsoft Graph</mat-option>
+            <mat-option value="SMTP">SMTP</mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <div class="form-block-title full-width">Identidad de envío</div>
+
+        <mat-slide-toggle name="correoHabilitado" [(ngModel)]="formularioCorreo().habilitado" class="full-width">
+          Habilitar confirmaciones por correo para este tenant
+        </mat-slide-toggle>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Remitente</mat-label>
+          <input matInput type="email" name="correoRemitente" [(ngModel)]="formularioCorreo().remitente" maxlength="150">
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Nombre remitente</mat-label>
+          <input matInput name="correoNombreRemitente" [(ngModel)]="formularioCorreo().nombreRemitente" maxlength="150">
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Responder a</mat-label>
+          <input matInput type="email" name="correoResponderA" [(ngModel)]="formularioCorreo().responderA" maxlength="150">
+        </mat-form-field>
+
+        @if (formularioCorreo().proveedor === 'GRAPH') {
+          <div class="form-block-title full-width">Microsoft Graph</div>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Tenant ID</mat-label>
+            <input matInput name="correoGraphTenantId" [(ngModel)]="formularioCorreo().graphTenantId" maxlength="120">
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Client ID</mat-label>
+            <input matInput name="correoGraphClientId" [(ngModel)]="formularioCorreo().graphClientId" maxlength="120">
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Client secret nuevo (opcional)</mat-label>
+            <input matInput type="password" name="correoGraphClientSecret" [(ngModel)]="formularioCorreo().graphClientSecret" maxlength="255">
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Mailbox o User ID de Graph</mat-label>
+            <input matInput name="correoGraphUserId" [(ngModel)]="formularioCorreo().graphUserId" maxlength="150">
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Thumbprint del certificado</mat-label>
+            <input matInput name="correoGraphCertificateThumbprint" [(ngModel)]="formularioCorreo().graphCertificateThumbprint" maxlength="255">
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Llave privada PEM nueva</mat-label>
+            <textarea matInput rows="5" name="correoGraphPrivateKeyPem" [(ngModel)]="formularioCorreo().graphPrivateKeyPem"></textarea>
+          </mat-form-field>
+
+          <div class="helper-text full-width">
+            Si dejas client secret o PEM vacíos, se conserva el secreto actual guardado.
+          </div>
+        } @else {
+          <div class="form-block-title full-width">SMTP</div>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Host SMTP</mat-label>
+            <input matInput name="correoSmtpHost" [(ngModel)]="formularioCorreo().smtpHost" maxlength="150">
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Puerto SMTP</mat-label>
+            <input matInput type="number" min="1" max="65535" name="correoSmtpPort" [(ngModel)]="formularioCorreo().smtpPort">
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Usuario SMTP</mat-label>
+            <input matInput name="correoSmtpUsername" [(ngModel)]="formularioCorreo().smtpUsername" maxlength="150">
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Nueva contraseña SMTP</mat-label>
+            <input matInput type="password" name="correoSmtpPassword" [(ngModel)]="formularioCorreo().smtpPassword" maxlength="255">
+          </mat-form-field>
+
+          <mat-slide-toggle name="correoSmtpAuth" [(ngModel)]="formularioCorreo().smtpAuth">
+            Requiere autenticación
+          </mat-slide-toggle>
+
+          <mat-slide-toggle name="correoSmtpTls" [(ngModel)]="formularioCorreo().smtpStartTls">
+            Usar STARTTLS
+          </mat-slide-toggle>
+
+          <div class="helper-text full-width">
+            Si dejas la contraseña vacía, se conserva la configurada actualmente.
+          </div>
+        }
+
+        <div class="form-actions">
+          <button mat-flat-button color="primary" type="submit" [disabled]="guardandoCorreo()">
+            Guardar configuración
+          </button>
+        </div>
+      </form>
+    </mat-card>
+
+    <mat-card class="workspace-card list-card">
+      <div class="section-header">
+        <div>
+          <div class="section-eyebrow">Estado del tenant</div>
+          <h3>Salud de configuración</h3>
+        </div>
+      </div>
+
+      <div class="entity-list" *ngIf="configuracionCorreo() as config; else correoSinDatos">
+        <article class="entity-row">
+          <div class="entity-main">
+            <div class="entity-title">Proveedor activo</div>
+            <div class="entity-meta">{{ config.proveedor || 'SMTP' }}</div>
+          </div>
+          <div class="entity-side">
+            <span class="status-pill" [class.is-active]="!!config.proveedor">
+              {{ config.proveedor || 'SMTP' }}
+            </span>
+          </div>
+        </article>
+
+        <article class="entity-row" *ngIf="(config.proveedor || 'SMTP') === 'GRAPH'; else estadoSmtp">
+          <div class="entity-main">
+            <div class="entity-title">Secreto de Graph</div>
+            <div class="entity-meta" *ngIf="config.graphClientSecretConfigurado">Existe un client secret guardado para Microsoft Graph.</div>
+            <div class="entity-meta" *ngIf="!config.graphClientSecretConfigurado">No hay client secret guardado. Esto es válido si usas certificado.</div>
+            <div class="entity-meta" *ngIf="config.graphClientSecretConfigurado">
+              {{ config.graphClientSecretCifrado ? 'El secreto está cifrado.' : 'El secreto sigue en texto plano y requiere migración.' }}
+            </div>
+          </div>
+          <div class="entity-side">
+            <span class="status-pill" [class.is-active]="config.graphClientSecretCifrado">
+              {{ config.graphClientSecretCifrado ? 'Cifrado' : 'Legacy' }}
+            </span>
+          </div>
+        </article>
+
+        <article class="entity-row" *ngIf="(config.proveedor || 'SMTP') === 'GRAPH'">
+          <div class="entity-main">
+            <div class="entity-title">Llave privada de Graph</div>
+            <div class="entity-meta" *ngIf="config.graphPrivateKeyConfigurada">Existe una llave privada PEM guardada para Microsoft Graph.</div>
+            <div class="entity-meta" *ngIf="!config.graphPrivateKeyConfigurada">Todavía no se ha configurado una llave privada PEM para Microsoft Graph.</div>
+            <div class="entity-meta" *ngIf="config.graphPrivateKeyConfigurada">
+              {{ config.graphPrivateKeyCifrada ? 'La llave está cifrada.' : 'La llave sigue en texto plano y requiere migración.' }}
+            </div>
+          </div>
+          <div class="entity-side">
+            <span class="status-pill" [class.is-active]="config.graphPrivateKeyCifrada">
+              {{ config.graphPrivateKeyCifrada ? 'Cifrada' : 'Legacy' }}
+            </span>
+          </div>
+        </article>
+
+        <ng-template #estadoSmtp>
+          <article class="entity-row">
+            <div class="entity-main">
+              <div class="entity-title">Secreto SMTP</div>
+              <div class="entity-meta" *ngIf="config.smtpPasswordConfigurada">Existe una contraseña SMTP guardada para este tenant.</div>
+              <div class="entity-meta" *ngIf="!config.smtpPasswordConfigurada">Todavía no se ha configurado una contraseña SMTP.</div>
+              <div class="entity-meta" *ngIf="config.smtpPasswordConfigurada">
+                {{ config.smtpPasswordCifrada ? 'El secreto está cifrado.' : 'El secreto sigue en texto plano y requiere migración.' }}
+              </div>
+            </div>
+            <div class="entity-side">
+              <span class="status-pill" [class.is-active]="config.smtpPasswordCifrada">
+                {{ config.smtpPasswordCifrada ? 'Cifrado' : 'Legacy' }}
+              </span>
+            </div>
+          </article>
+        </ng-template>
+
+        <article class="entity-row" *ngIf="config.requiereMigracionSecretos">
+          <div class="entity-main">
+            <div class="entity-title">Migración recomendada</div>
+            <div class="entity-meta">
+              Migra los secretos legacy del proveedor actual a formato cifrado sin cambiar el resto de la configuración.
+            </div>
+          </div>
+          <div class="entity-side">
+            <button mat-stroked-button type="button" (click)="migrateSecrets.emit()" [disabled]="migrandoSecretosCorreo()">
+              {{ migrandoSecretosCorreo() ? 'Migrando...' : 'Migrar secretos' }}
+            </button>
+          </div>
+        </article>
+
+        <article class="entity-row" *ngIf="(config.proveedor || 'SMTP') === 'GRAPH'; else resumenSmtp">
+          <div class="entity-main">
+            <div class="entity-title">Resumen técnico</div>
+            <div class="entity-meta">Tenant ID: {{ config.graphTenantId || 'Sin definir' }}</div>
+            <div class="entity-meta">Client ID: {{ config.graphClientId || 'Sin definir' }}</div>
+            <div class="entity-meta">Mailbox Graph: {{ config.graphUserId || 'Sin definir' }}</div>
+            <div class="entity-meta">Thumbprint: {{ config.graphCertificateThumbprint || 'Sin definir' }}</div>
+          </div>
+          <div class="entity-side">
+            <span class="status-pill" [class.is-active]="!!config.graphTenantId && !!config.graphClientId && !!config.graphUserId && (!!config.graphClientSecretConfigurado || (!!config.graphCertificateThumbprint && !!config.graphPrivateKeyConfigurada))">
+              {{ !!config.graphTenantId && !!config.graphClientId && !!config.graphUserId && (!!config.graphClientSecretConfigurado || (!!config.graphCertificateThumbprint && !!config.graphPrivateKeyConfigurada)) ? 'Listo' : 'Pendiente' }}
+            </span>
+          </div>
+        </article>
+
+        <ng-template #resumenSmtp>
+          <article class="entity-row">
+            <div class="entity-main">
+              <div class="entity-title">Resumen técnico</div>
+              <div class="entity-meta">Host: {{ config.smtpHost || 'Sin definir' }}</div>
+              <div class="entity-meta">Puerto: {{ config.smtpPort || 'Sin definir' }}</div>
+              <div class="entity-meta">Usuario: {{ config.smtpUsername || 'Sin definir' }}</div>
+            </div>
+            <div class="entity-side">
+              <span class="status-pill" [class.is-active]="!!config.smtpHost && !!config.smtpPort">
+                {{ !!config.smtpHost && !!config.smtpPort ? 'Listo' : 'Pendiente' }}
+              </span>
+            </div>
+          </article>
+        </ng-template>
+
+        <article class="entity-row">
+          <div class="entity-main">
+            <div class="entity-title">Estado general</div>
+            <div class="entity-meta">
+              {{ config.habilitado ? 'Las confirmaciones por correo están habilitadas.' : 'Las confirmaciones por correo están deshabilitadas.' }}
+            </div>
+          </div>
+          <div class="entity-side">
+            <span class="status-pill" [class.is-active]="config.habilitado">{{ config.habilitado ? 'Activo' : 'Inactivo' }}</span>
+          </div>
+        </article>
+      </div>
+
+      <ng-template #correoSinDatos>
+        <div class="agenda-empty">
+          No fue posible cargar la configuración actual de correo.
+        </div>
+      </ng-template>
+    </mat-card>
+  </div>
+
+  <mat-card class="workspace-card list-card">
+    <div class="section-header">
+      <div>
+        <div class="section-eyebrow">Trazabilidad</div>
+        <h3>Actividad reciente de correo</h3>
+      </div>
+    </div>
+
+    <div class="entity-list" *ngIf="auditoriaCorreo().length; else sinAuditoriaCorreo">
+      <article class="entity-row" *ngFor="let evento of auditoriaCorreo()">
+        <div class="entity-main">
+          <div class="entity-title">{{ etiquetaAccionAuditoriaConfiguracion()(evento.accion) }}</div>
+          <div class="entity-meta">{{ evento.resumen }}</div>
+          <div class="entity-meta" *ngIf="evento.actorCorreo">Por {{ evento.actorCorreo }}</div>
+        </div>
+        <div class="entity-side">
+          <span class="status-pill is-active">{{ evento.creadoEn | date:'dd/MM/yyyy HH:mm':'':'es-MX' }}</span>
+        </div>
+      </article>
+    </div>
+
+    <ng-template #sinAuditoriaCorreo>
+      <div class="helper-text">Todavía no hay cambios auditados de configuración de correo.</div>
+    </ng-template>
+  </mat-card>
+</section>

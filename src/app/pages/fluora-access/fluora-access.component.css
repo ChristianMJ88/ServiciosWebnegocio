@@ -1,0 +1,250 @@
+.fluora-access {
+  padding: 2rem 0;
+  background:
+    radial-gradient(circle at top, rgba(209, 79, 125, 0.16), transparent 28%),
+    radial-gradient(circle at right, rgba(64, 213, 255, 0.12), transparent 24%),
+    linear-gradient(180deg, #153242 0%, #0f2028 100%);
+  color: #f8f6f2;
+}
+
+.fluora-access__layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.04fr) minmax(380px, 0.88fr);
+  gap: 1.4rem;
+  align-items: stretch;
+}
+
+.fluora-access__aside,
+.fluora-access__card {
+  position: relative;
+  padding: 2.2rem;
+  border-radius: 1.8rem;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  backdrop-filter: blur(10px);
+}
+
+.fluora-access__aside {
+  display: grid;
+  gap: 1.5rem;
+  align-content: start;
+  background:
+    radial-gradient(circle at top left, rgba(166, 77, 255, 0.16), transparent 24%),
+    rgba(255, 255, 255, 0.08);
+}
+
+.fluora-access__logo {
+  width: min(280px, 100%);
+}
+
+.fluora-access__eyebrow {
+  display: inline-flex;
+  margin-bottom: 0.8rem;
+  color: #ffd7a3;
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.fluora-access h1,
+.fluora-access h2 {
+  margin-bottom: 0.9rem;
+  font-size: clamp(2rem, 1.5rem + 1vw, 3rem);
+  line-height: 1.04;
+}
+
+.fluora-access h2 {
+  font-size: clamp(1.85rem, 1.45rem + 0.8vw, 2.4rem);
+}
+
+.fluora-access p {
+  color: rgba(248, 246, 242, 0.8);
+  line-height: 1.7;
+}
+
+.fluora-access__copy {
+  margin-bottom: 0;
+}
+
+.fluora-access__role-list,
+.fluora-access__form {
+  display: grid;
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
+.fluora-access__role {
+  display: grid;
+  grid-template-columns: 42px minmax(0, 1fr);
+  gap: 0.85rem;
+  align-items: start;
+  padding: 1rem 1.05rem;
+  border-radius: 1.2rem;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.fluora-access__role i {
+  width: 42px;
+  height: 42px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 14px;
+  background: rgba(255, 215, 163, 0.14);
+  color: #ffd7a3;
+}
+
+.fluora-access__reference {
+  display: grid;
+  gap: 1rem;
+  margin-top: 0.5rem;
+}
+
+.fluora-access__reference img {
+  width: 100%;
+  display: block;
+  border-radius: 1.4rem;
+}
+
+.fluora-access__reference-card {
+  padding: 1.15rem;
+  border-radius: 1.25rem;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.fluora-access__reference-card span,
+.fluora-access__reference-card strong,
+.fluora-access__reference-card a {
+  display: block;
+}
+
+.fluora-access__reference-card span {
+  margin-bottom: 0.45rem;
+  color: #ffd7a3;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.fluora-access__reference-card strong {
+  margin-bottom: 0.35rem;
+  font-size: 1.1rem;
+}
+
+.fluora-access__reference-card a,
+.fluora-access__footer a,
+.fluora-access__microcopy a {
+  color: #7edcff;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.fluora-access__form {
+  margin-top: 1.5rem;
+}
+
+.fluora-access__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-top: 1.2rem;
+}
+
+.fluora-access__actions .btn {
+  min-width: 11rem;
+  min-height: 52px;
+}
+
+.fluora-access__footer,
+.fluora-access__microcopy {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem 1rem;
+}
+
+.fluora-access__footer {
+  margin-top: 1.2rem;
+  color: rgba(248, 246, 242, 0.75);
+}
+
+.fluora-access__microcopy {
+  margin-top: 1.4rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.fluora-access__companies {
+  display: grid;
+  gap: 0.85rem;
+  margin-top: 1.5rem;
+}
+
+.fluora-access__companies-head {
+  display: grid;
+  gap: 0.2rem;
+}
+
+.fluora-access__companies-head span {
+  color: rgba(248, 246, 242, 0.72);
+  font-size: 0.92rem;
+}
+
+.fluora-access__company {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  width: 100%;
+  padding: 1rem 1.1rem;
+  border-radius: 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.08);
+  color: inherit;
+  text-align: left;
+}
+
+.fluora-access__company strong,
+.fluora-access__company span,
+.fluora-access__company small {
+  display: block;
+}
+
+.fluora-access__company span,
+.fluora-access__company small {
+  color: rgba(248, 246, 242, 0.74);
+}
+
+@media (max-width: 991.98px) {
+  .fluora-access__layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 767.98px) {
+  .fluora-access {
+    padding: 1rem 0;
+    align-items: start !important;
+  }
+
+  .fluora-access__aside,
+  .fluora-access__card {
+    padding: 1.3rem;
+    border-radius: 1.4rem;
+  }
+
+  .fluora-access__actions,
+  .fluora-access__footer,
+  .fluora-access__microcopy {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .fluora-access__company {
+    flex-direction: column;
+    align-items: start;
+  }
+}
