@@ -1,7 +1,8 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, catchError, of } from 'rxjs';
 import { environment } from '../../environments/environment';
+import { TenantContextService } from '../core/tenant/tenant-context.service';
 
 export interface SucursalCatalogo {
   id: number;
@@ -28,6 +29,7 @@ export interface ServicioCatalogo {
   providedIn: 'root'
 })
 export class BookingDataService {
+  private readonly tenantContext = inject(TenantContextService);
   private readonly LEGACY_BRANCHES: SucursalCatalogo[] = [
     {
       id: 1,
@@ -78,7 +80,7 @@ export class BookingDataService {
   constructor(private http: HttpClient) {}
 
   getBranches(empresaId?: number | null): Observable<SucursalCatalogo[]> {
-    const empresaObjetivo = empresaId ?? environment.empresaId;
+    const empresaObjetivo = empresaId ?? this.tenantContext.empresaId() ?? environment.empresaId;
     if (environment.useBackendCatalog && environment.apiBaseUrl) {
       return this.http.get<SucursalCatalogo[]>(
         `${environment.apiBaseUrl}/publico/sucursales?empresaId=${empresaObjetivo}`

@@ -1,24 +1,16 @@
 import { CommonModule } from '@angular/common';
-import { ChangeDetectorRef, Component, DestroyRef, NgZone, OnInit, computed, inject, signal } from '@angular/core';
+import { ChangeDetectorRef, Component, DestroyRef, NgZone, OnInit, ViewEncapsulation, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { BreakpointObserver } from '@angular/cdk/layout';
-import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { MatBadgeModule } from '@angular/material/badge';
 import { MatButtonModule } from '@angular/material/button';
-import { MatCardModule } from '@angular/material/card';
-import { MatDividerModule } from '@angular/material/divider';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
-import { MatListModule } from '@angular/material/list';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
-import { MatSelectModule } from '@angular/material/select';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { Observable, forkJoin, of } from 'rxjs';
 import { finalize } from 'rxjs/operators';
-import { AgendaOperationsSectionComponent } from '../../components/agenda/agenda-operations-section.component';
 import { buildWhatsAppUrl, formatAgendaStatusLabel, getDurationMinutes, getInitials } from '../../components/agenda/agenda.helpers';
 import {
   AgendaActionVm,
@@ -37,6 +29,9 @@ import {
   ReglaDisponibilidadStaff,
   StaffService
 } from '../../core/staff/staff.service';
+import { StaffAgendaSectionComponent } from './staff-agenda-section.component';
+import { StaffSchedulesSectionComponent } from './staff-schedules-section.component';
+import { StaffBlocksSectionComponent } from './staff-blocks-section.component';
 
 type SeccionStaff = 'agenda' | 'horarios' | 'bloqueos';
 type ModuloStaffDef = { id: SeccionStaff; titulo: string; descripcion: string; icono: string; permiso: string };
@@ -46,23 +41,19 @@ type ModuloStaffDef = { id: SeccionStaff; titulo: string; descripcion: string; i
   standalone: true,
   imports: [
     CommonModule,
-    FormsModule,
     MatBadgeModule,
     MatButtonModule,
-    MatCardModule,
-    MatDividerModule,
-    MatFormFieldModule,
-    MatInputModule,
-    MatListModule,
     MatMenuModule,
     MatProgressBarModule,
-    MatSelectModule,
     MatToolbarModule,
     MatTooltipModule,
-    AgendaOperationsSectionComponent
+    StaffAgendaSectionComponent,
+    StaffSchedulesSectionComponent,
+    StaffBlocksSectionComponent
   ],
   templateUrl: './staff-dashboard.component.html',
-  styleUrls: ['./staff-dashboard.component.css']
+  styleUrls: ['./staff-dashboard.component.css'],
+  encapsulation: ViewEncapsulation.None
 })
 export class StaffDashboardComponent implements OnInit {
   private readonly staffService = inject(StaffService);
@@ -117,6 +108,8 @@ export class StaffDashboardComponent implements OnInit {
   readonly moduloActivo = computed(() =>
     this.modulosStaff().find(modulo => modulo.id === this.seccionActiva()) ?? this.modulosStaff()[0] ?? this.moduloStaffFallback
   );
+  readonly nombreEmpresa = computed(() => this.authService.sesionActual()?.empresaNombre?.trim() || 'Empresa');
+  readonly inicialesEmpresa = computed(() => getInitials(this.nombreEmpresa()));
   readonly nombreUsuario = computed(() => this.authService.nombreUsuarioVisible());
   readonly correoUsuario = computed(() => this.authService.sesionActual()?.correo ?? '');
   readonly inicialesUsuario = computed(() => this.authService.inicialesUsuarioVisible());

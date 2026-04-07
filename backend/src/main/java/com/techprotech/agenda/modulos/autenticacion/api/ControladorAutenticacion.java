@@ -1,8 +1,10 @@
 package com.techprotech.agenda.modulos.autenticacion.api;
 
+import com.techprotech.agenda.modulos.autenticacion.api.dto.IniciarSesionAppRequest;
 import com.techprotech.agenda.modulos.autenticacion.api.dto.IniciarSesionRequest;
 import com.techprotech.agenda.modulos.autenticacion.api.dto.RefrescarTokenRequest;
 import com.techprotech.agenda.modulos.autenticacion.api.dto.RegistrarClienteRequest;
+import com.techprotech.agenda.modulos.autenticacion.api.dto.RespuestaAccesoApp;
 import com.techprotech.agenda.modulos.autenticacion.api.dto.RespuestaTokenJwt;
 import com.techprotech.agenda.modulos.autenticacion.aplicacion.ServicioAutenticacion;
 import jakarta.validation.Valid;
@@ -25,6 +27,11 @@ public class ControladorAutenticacion {
     @PostMapping("/iniciar-sesion")
     public ResponseEntity<RespuestaTokenJwt> iniciarSesion(@Valid @RequestBody IniciarSesionRequest request) {
         return ResponseEntity.ok(servicioAutenticacion.iniciarSesion(request));
+    }
+
+    @PostMapping("/app-login")
+    public ResponseEntity<RespuestaAccesoApp> iniciarSesionApp(@Valid @RequestBody IniciarSesionAppRequest request) {
+        return ResponseEntity.ok(servicioAutenticacion.iniciarSesionApp(request));
     }
 
     @PostMapping("/registrar-cliente")

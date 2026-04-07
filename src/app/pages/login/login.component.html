@@ -3,9 +3,9 @@
     <div class="auth-shell">
       <aside class="auth-aside">
         <div class="auth-brand">
-          <span class="auth-brand__mark">NA</span>
+          <span class="auth-brand__mark">{{ tenantContext.initials() }}</span>
           <div>
-            <div class="auth-brand__eyebrow">NailArt Studio</div>
+            <div class="auth-brand__eyebrow">{{ tenantContext.nombreComercial() }}</div>
             <div class="auth-brand__name">Acceso clientes</div>
           </div>
         </div>
@@ -14,7 +14,7 @@
           <span class="auth-copy__kicker">Bienvenida de vuelta</span>
           <h1 class="auth-copy__title">Vuelve a entrar y revisa tus próximas citas.</h1>
           <p class="auth-copy__description">
-            Inicia sesión para consultar tus reservas, revisar tus horarios y mantener tu experiencia con el estudio en un solo lugar.
+            Inicia sesión para consultar tus reservas, revisar tus horarios y mantener tu experiencia con {{ tenantContext.nombreComercial() }} en un solo lugar.
           </p>
         </div>
 
@@ -101,7 +101,7 @@
 
         <div class="auth-panel__footer">
           <span class="text-light opacity-75">¿No tienes cuenta?</span>
-          <a routerLink="/registro" class="text-accent text-decoration-none fw-semibold">Regístrate aquí</a>
+          <a [routerLink]="tenantContext.routeFor('registro')" class="text-accent text-decoration-none fw-semibold">Regístrate aquí</a>
         </div>
       </div>
     </div>

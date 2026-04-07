@@ -3,41 +3,36 @@
     <div class="auth-shell auth-shell--register">
       <aside class="auth-aside">
         <div class="auth-brand">
-          <span class="auth-brand__mark">NA</span>
+          <span class="auth-brand__mark" *ngIf="!marketingMode(); else fluoraRegisterMark">{{ tenantContext.initials() }}</span>
+          <ng-template #fluoraRegisterMark>
+            <img src="/fluora-mark.svg" alt="Marca Fluora" class="auth-brand__logo">
+          </ng-template>
           <div>
-            <div class="auth-brand__eyebrow">NailArt Studio</div>
-            <div class="auth-brand__name">Registro de clientes</div>
+            <div class="auth-brand__eyebrow">{{ marketingMode() ? 'Fluora' : tenantContext.nombreComercial() }}</div>
+            <div class="auth-brand__name">{{ marketingMode() ? 'Registro inicial de empresa' : 'Registro de clientes' }}</div>
           </div>
         </div>
 
         <div class="auth-copy">
-          <span class="auth-copy__kicker">Nuevo acceso</span>
-          <h1 class="auth-copy__title">Crea tu acceso y mantén tus citas a la mano.</h1>
+          <span class="auth-copy__kicker">{{ marketingMode() ? 'Comienza en Fluora' : 'Nuevo acceso' }}</span>
+          <h1 class="auth-copy__title">
+            {{ marketingMode()
+              ? 'Crea tu acceso principal y empieza a configurar tu empresa.'
+              : 'Crea tu acceso y mantén tus citas a la mano.' }}
+          </h1>
           <p class="auth-copy__description">
-            Si ya te registramos una cita, aquí puedes activar tu acceso. Si aún no tienes cuenta, este mismo formulario te permite crearla.
+            {{ marketingMode()
+              ? 'Este es el primer paso para entrar a Fluora. Después podrás continuar con la configuración de tu empresa, tu equipo y tu web pública.'
+              : 'Si ya te registramos una cita, aquí puedes activar tu acceso. Si aún no tienes cuenta, este mismo formulario te permite crearla.' }}
           </p>
         </div>
 
         <div class="auth-feature-list" aria-label="Ventajas del registro">
-          <div class="auth-feature-item">
-            <i class="bi bi-lightning-charge"></i>
+          <div class="auth-feature-item" *ngFor="let item of featureItems()">
+            <i class="bi" [ngClass]="item.icon"></i>
             <div>
-              <strong>Registro simple</strong>
-              <span>Completa tus datos en pocos pasos y deja listo tu acceso.</span>
-            </div>
-          </div>
-          <div class="auth-feature-item">
-            <i class="bi bi-journal-check"></i>
-            <div>
-              <strong>Historial centralizado</strong>
-              <span>Consulta tus próximas citas desde tu cuenta.</span>
-            </div>
-          </div>
-          <div class="auth-feature-item">
-            <i class="bi bi-tablet-landscape"></i>
-            <div>
-              <strong>Acceso cómodo</strong>
-              <span>Tu cuenta queda disponible en móvil, tablet y escritorio.</span>
+              <strong>{{ item.title }}</strong>
+              <span>{{ item.body }}</span>
             </div>
           </div>
         </div>
@@ -45,9 +40,13 @@
 
       <div class="auth-panel">
         <div class="auth-panel__header">
-          <span class="auth-panel__eyebrow">Crear o activar acceso</span>
-          <h2 class="auth-panel__title">Completa tu registro</h2>
-          <p class="auth-panel__description">Ingresa tus datos para crear tu cuenta o activar el acceso de una cita que ya te registramos.</p>
+          <span class="auth-panel__eyebrow">{{ marketingMode() ? 'Crear acceso principal' : 'Crear o activar acceso' }}</span>
+          <h2 class="auth-panel__title">{{ marketingMode() ? 'Completa tu alta en Fluora' : 'Completa tu registro' }}</h2>
+          <p class="auth-panel__description">
+            {{ marketingMode()
+              ? 'Ingresa tus datos para crear la cuenta con la que empezarás la configuración de tu empresa dentro de Fluora.'
+              : 'Ingresa tus datos para crear tu cuenta o activar el acceso de una cita que ya te registramos.' }}
+          </p>
         </div>
 
         <form [formGroup]="form" (ngSubmit)="onSubmit()" class="auth-form">
@@ -131,20 +130,22 @@
           </div>
 
           <div *ngIf="completed()" class="alert alert-success auth-alert auth-alert--success" role="status">
-            Acceso listo. Redirigiendo al inicio de sesión...
+            {{ marketingMode()
+              ? 'Acceso principal listo. Redirigiendo al inicio de sesión de Fluora...'
+              : 'Acceso listo. Redirigiendo al inicio de sesión...' }}
           </div>
 
           <div class="d-grid auth-submit">
             <button type="submit" class="btn btn-primary auth-submit__button" [disabled]="loading() || completed()">
-              <span *ngIf="!loading()">Crear o activar acceso</span>
+              <span *ngIf="!loading()">{{ marketingMode() ? 'Crear acceso principal' : 'Crear o activar acceso' }}</span>
               <span *ngIf="loading()" class="spinner-border spinner-border-sm me-2"></span>
             </button>
           </div>
         </form>
 
         <div class="auth-panel__footer">
-          <span class="text-light opacity-75">¿Ya tienes cuenta?</span>
-          <a routerLink="/login" class="text-accent text-decoration-none fw-semibold">Inicia sesión</a>
+          <span class="text-light opacity-75">{{ marketingMode() ? '¿Ya tienes acceso?' : '¿Ya tienes cuenta?' }}</span>
+          <a [attr.href]="platformHost.appUrl('/acceso')" class="text-accent text-decoration-none fw-semibold">Inicia sesión</a>
         </div>
       </div>
     </div>

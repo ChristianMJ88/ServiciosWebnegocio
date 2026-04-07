@@ -6,6 +6,8 @@ import { HeaderComponent } from './components/header/header.component';
 import { FooterComponent } from './components/footer/footer.component';
 import { CommonModule } from '@angular/common';
 import { AuthService } from './core/auth/auth.service';
+import { TenantContextService } from './core/tenant/tenant-context.service';
+import { PlatformHostService } from './core/platform/platform-host.service';
 
 @Component({
   selector: 'app-root',
@@ -17,6 +19,8 @@ import { AuthService } from './core/auth/auth.service';
 export class App {
   private readonly authService = inject(AuthService);
   private readonly router = inject(Router);
+  readonly tenantContext = inject(TenantContextService);
+  private readonly platformHost = inject(PlatformHostService);
   protected readonly title = signal('ServiciosWebnegocio');
   esPanelInterno = signal(this.calcularEsPanelInterno());
   isChatOpen = signal(false);
@@ -24,12 +28,14 @@ export class App {
 
   constructor() {
     this.authService.sincronizarSesionPersistida();
+    this.sincronizarTenantConRuta(this.router.url);
     this.router.events
       .pipe(
         filter((event): event is NavigationEnd => event instanceof NavigationEnd),
         takeUntilDestroyed()
       )
       .subscribe(() => {
+        this.sincronizarTenantConRuta(this.router.url);
         this.esPanelInterno.set(this.calcularEsPanelInterno());
       });
   }
@@ -44,7 +50,7 @@ export class App {
     } else if (option === 'citas') {
       this.chatMsg.set('Haz clic en "Agendar Cita" en el menú para reservar tu espacio.');
     } else if (option === 'ubicacion') {
-      this.chatMsg.set('Estamos ubicados en Diagonal Benito Juarez #19. ¡Te esperamos!');
+      this.chatMsg.set(this.tenantContext.direccion() || 'Consulta la sección de contacto para ver la ubicación.');
     }
   }
 
@@ -70,5 +76,16 @@ export class App {
     const [sinQuery] = url.split('?');
     const [sinHash] = sinQuery.split('#');
     return sinHash.endsWith('/') && sinHash.length > 1 ? sinHash.slice(0, -1) : sinHash;
+  }
+
+  private sincronizarTenantConRuta(url: string) {
+    const urlNormalizada = this.normalizarUrl(url);
+    const esRutaTenant = urlNormalizada.startsWith('/e/');
+    const esRutaPanel = ['/admin', '/staff', '/recepcion', '/caja', '/mi-cuenta'].some(ruta => urlNormalizada.startsWith(ruta));
+    const esHostTenant = this.platformHost.isCustomTenantHost();
+
+    if (!esRutaTenant && !esRutaPanel && !esHostTenant) {
+      this.tenantContext.clearTenant();
+    }
   }
 }

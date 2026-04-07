@@ -69,6 +69,14 @@
   letter-spacing: 0.08em;
 }
 
+.auth-brand__logo {
+  width: 52px;
+  height: 52px;
+  display: block;
+  border-radius: 16px;
+  box-shadow: 0 12px 28px rgba(103, 79, 88, 0.12);
+}
+
 .auth-brand__eyebrow {
   color: #64748b;
   font-size: 0.78rem;

@@ -2,6 +2,8 @@ package com.techprotech.agenda.modulos.autenticacion.infraestructura.entidad;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
@@ -10,6 +12,7 @@ import jakarta.persistence.Table;
 public class EmpresaEntidad {
 
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @Column(nullable = false, length = 150)
@@ -43,5 +46,20 @@ public class EmpresaEntidad {
     public String getEstado() {
         return estado;
     }
-}
 
+    public void setNombre(String nombre) {
+        this.nombre = nombre;
+    }
+
+    public void setSlug(String slug) {
+        this.slug = slug;
+    }
+
+    public void setZonaHoraria(String zonaHoraria) {
+        this.zonaHoraria = zonaHoraria;
+    }
+
+    public void setEstado(String estado) {
+        this.estado = estado;
+    }
+}

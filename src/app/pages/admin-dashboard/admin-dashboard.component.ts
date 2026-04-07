@@ -1,22 +1,13 @@
-import { CommonModule, CurrencyPipe } from '@angular/common';
-import { ChangeDetectorRef, Component, DestroyRef, NgZone, OnInit, computed, inject, signal } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { ChangeDetectorRef, Component, DestroyRef, NgZone, OnInit, ViewEncapsulation, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { BreakpointObserver } from '@angular/cdk/layout';
-import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { MatBadgeModule } from '@angular/material/badge';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
-import { MatCheckboxModule } from '@angular/material/checkbox';
-import { MatChipsModule } from '@angular/material/chips';
-import { MatDividerModule } from '@angular/material/divider';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
-import { MatListModule } from '@angular/material/list';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
-import { MatSelectModule } from '@angular/material/select';
-import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { Observable, forkJoin, of } from 'rxjs';
@@ -74,6 +65,18 @@ import {
 } from '../../core/admin/admin.service';
 import { AuthService } from '../../core/auth/auth.service';
 import { CitaCliente } from '../../core/auth/client-appointments.service';
+import { AdminBranchesSectionComponent } from './admin-branches-section.component';
+import { AdminContactsSectionComponent } from './admin-contacts-section.component';
+import { AdminEmailSectionComponent } from './admin-email-section.component';
+import { AdminExceptionsSectionComponent } from './admin-exceptions-section.component';
+import { AdminProvidersSectionComponent } from './admin-providers-section.component';
+import { AdminRulesSectionComponent } from './admin-rules-section.component';
+import { AdminServicesSectionComponent } from './admin-services-section.component';
+import { AdminSummarySectionComponent } from './admin-summary-section.component';
+import { AdminUsersActivitySectionComponent } from './admin-users-activity-section.component';
+import { AdminUsersAccessSectionComponent } from './admin-users-access-section.component';
+import { AdminUsersRolesSectionComponent } from './admin-users-roles-section.component';
+import { AdminWhatsappSectionComponent } from './admin-whatsapp-section.component';
 
 type SeccionAdmin =
   | 'resumen'
@@ -104,27 +107,30 @@ type ModuloAdminDef = {
   standalone: true,
   imports: [
     CommonModule,
-    CurrencyPipe,
-    FormsModule,
     MatBadgeModule,
     MatToolbarModule,
-    MatListModule,
     MatButtonModule,
     MatCardModule,
-    MatFormFieldModule,
-    MatInputModule,
-    MatSelectModule,
-    MatSlideToggleModule,
-    MatCheckboxModule,
-    MatChipsModule,
     MatMenuModule,
     MatTooltipModule,
-    MatDividerModule,
     MatProgressBarModule,
-    AgendaOperationsSectionComponent
+    AgendaOperationsSectionComponent,
+    AdminBranchesSectionComponent,
+    AdminEmailSectionComponent,
+    AdminContactsSectionComponent,
+    AdminExceptionsSectionComponent,
+    AdminProvidersSectionComponent,
+    AdminRulesSectionComponent,
+    AdminServicesSectionComponent,
+    AdminSummarySectionComponent,
+    AdminUsersActivitySectionComponent,
+    AdminUsersAccessSectionComponent,
+    AdminUsersRolesSectionComponent,
+    AdminWhatsappSectionComponent
   ],
   templateUrl: './admin-dashboard.component.html',
-  styleUrls: ['./admin-dashboard.component.css']
+  styleUrls: ['./admin-dashboard.component.css'],
+  encapsulation: ViewEncapsulation.None
 })
 export class AdminDashboardComponent implements OnInit {
   private readonly adminService = inject(AdminService);
@@ -333,6 +339,8 @@ export class AdminDashboardComponent implements OnInit {
     this.modulosAdminBase.filter(modulo => !modulo.permiso || this.authService.tienePermiso(modulo.permiso))
   );
   readonly moduloActivo = computed(() => this.modulosAdmin().find(modulo => modulo.id === this.seccionActiva()) ?? this.modulosAdmin()[0]);
+  readonly nombreEmpresa = computed(() => this.authService.sesionActual()?.empresaNombre?.trim() || 'Empresa');
+  readonly inicialesEmpresa = computed(() => getInitials(this.nombreEmpresa()));
   readonly nombreUsuarioAdmin = computed(() => this.authService.nombreUsuarioVisible());
   readonly correoUsuarioAdmin = computed(() => this.authService.sesionActual()?.correo ?? '');
   readonly inicialesUsuarioAdmin = computed(() => this.authService.inicialesUsuarioVisible());

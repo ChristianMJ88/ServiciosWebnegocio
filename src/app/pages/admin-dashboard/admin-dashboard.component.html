@@ -11,11 +11,11 @@
       [class.is-hidden]="panelMovil() && !sidebarAbierto()"
       aria-label="Navegación principal del panel administrativo">
       <div class="sidebar-brand">
-        <span class="sidebar-brand-mark" aria-hidden="true">NA</span>
+        <span class="sidebar-brand-mark" aria-hidden="true">{{ inicialesEmpresa() }}</span>
         <div class="sidebar-brand-copy" *ngIf="!sidebarCompacto() || panelMovil()">
-          <span class="sidebar-brand-eyebrow">Sistema de citas</span>
-          <span class="sidebar-brand-title">NailArt Studio</span>
-          <span class="sidebar-brand-subtitle">Administración central</span>
+          <span class="sidebar-brand-chip">ADMIN</span>
+          <span class="sidebar-brand-title">Backoffice</span>
+          <span class="sidebar-brand-subtitle">{{ nombreEmpresa() }}</span>
         </div>
       </div>
 
@@ -90,14 +90,19 @@
             aria-label="Alternar menú lateral"
             aria-controls="admin-sidebar"
             [attr.aria-expanded]="panelMovil() ? sidebarAbierto() : !sidebarCompacto()">
-            <span></span>
-            <span></span>
-            <span></span>
+            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path d="M4 7h16" />
+              <path d="M4 12h16" />
+              <path d="M4 17h16" />
+            </svg>
           </button>
 
-          <div class="topbar-brand" aria-label="NailArt Studio Backoffice">
-            <span class="topbar-brand-mark" aria-hidden="true">NA</span>
-            <span class="topbar-brand-title">NailArt Studio</span>
+          <div class="topbar-brand topbar-brand--context" [attr.aria-label]="nombreEmpresa() + ' Backoffice'">
+            <span class="topbar-brand-chip">ADMIN</span>
+            <div class="topbar-brand-copy">
+              <span class="topbar-brand-title">Backoffice</span>
+              <span class="topbar-brand-subtitle">{{ nombreEmpresa() }}</span>
+            </div>
           </div>
         </div>
 
@@ -131,8 +136,6 @@
       </mat-toolbar>
 
       <mat-menu #menuUsuario="matMenu" class="toolbar-user-menu">
-        <button mat-menu-item type="button">Perfil</button>
-        <button mat-menu-item type="button">Configuración</button>
         <button mat-menu-item type="button" (click)="logout()">Cerrar sesión</button>
       </mat-menu>
 
@@ -162,54 +165,21 @@
         </div>
 
         <ng-container *ngIf="seccionActiva() === 'resumen'">
-          <section class="section-stack">
-            <section class="dashboard-kpi-strip" *ngIf="resumen() as r">
-              <article class="dashboard-kpi-card dashboard-kpi-card--wide">
-                <span class="dashboard-kpi-label">Visión general</span>
-                <strong class="dashboard-kpi-value">Operación del día</strong>
-                <small class="dashboard-kpi-helper">Seguimiento rápido de agenda, ocupación e ingresos.</small>
-              </article>
-              <article class="dashboard-kpi-card dashboard-kpi-card--accent">
-                <span class="dashboard-kpi-label">Citas hoy</span>
-                <strong class="dashboard-kpi-value">{{ r.citasHoy }}</strong>
-              </article>
-              <article class="dashboard-kpi-card">
-                <span class="dashboard-kpi-label">Pendientes</span>
-                <strong class="dashboard-kpi-value">{{ r.pendientes }}</strong>
-              </article>
-              <article class="dashboard-kpi-card">
-                <span class="dashboard-kpi-label">Confirmadas</span>
-                <strong class="dashboard-kpi-value">{{ r.confirmadas }}</strong>
-              </article>
-              <article class="dashboard-kpi-card">
-                <span class="dashboard-kpi-label">Ingreso programado</span>
-                <strong class="dashboard-kpi-value">{{ r.ingresosProgramados | currency:'MXN':'symbol-narrow':'1.0-0':'es-MX' }}</strong>
-              </article>
-              <article class="dashboard-kpi-card">
-                <span class="dashboard-kpi-label">Ingreso finalizado</span>
-                <strong class="dashboard-kpi-value">{{ r.ingresosFinalizados | currency:'MXN':'symbol-narrow':'1.0-0':'es-MX' }}</strong>
-              </article>
-            </section>
-
-            <app-agenda-operations-section
-              [theme]="'light'"
+          @defer {
+            <app-admin-summary-section
+              [resumen]="resumen()"
               [viewMode]="agendaViewMode()"
-              [availableViews]="['day', 'week']"
-              [eyebrow]="'Agenda operativa'"
-              [title]="'Agenda diaria y semanal'"
-              [dateLabel]="'Fecha seleccionada'"
               [dateValue]="fechaAgendaActiva()"
               [dateDisplay]="fechaAgendaActivaTexto()"
-              [summaryCards]="[]"
-              [occupancy]="null"
               [hourLabels]="agendaHourLabels"
               [collaborators]="agendaCollaboratorsVm()"
               [appointments]="agendaAppointmentsVm()"
               [selectedAppointment]="citaAgendaSeleccionada()"
               [selectedAppointmentId]="citaAgendaSeleccionadaId()"
               [timelineWidthPx]="anchoAgendaTimeline()"
-              [hourSlotHeight]="86"
-              [emptyMessage]="'Aún no hay colaboradores o citas suficientes para construir la agenda visual.'"
+              [topPrestadoresPorIngreso]="topPrestadoresPorIngreso()"
+              [topPrestadoresPorCitas]="topPrestadoresPorCitas()"
+              [reporteServicios]="reporteServicios()"
               (previousDay)="desplazarFechaAgenda(-1)"
               (goToToday)="irAHoyAgenda()"
               (nextDay)="desplazarFechaAgenda(1)"
@@ -218,1166 +188,163 @@
               (appointmentSelected)="seleccionarCitaAgenda($event)"
               (appointmentClosed)="cerrarDetalleAgenda()"
               (appointmentAction)="gestionarAccionAgenda($event)" />
-
-            <div class="dashboard-insights-grid" *ngIf="reportePrestadores().length">
-              <mat-card class="workspace-card workspace-card-emphasis">
+          } @placeholder {
+            <section class="section-stack">
+              <div class="workspace-card">
                 <div class="section-header">
                   <div>
-                    <div class="section-eyebrow">Rendimiento del equipo</div>
-                    <h3>Ingresos por prestador</h3>
+                    <div class="section-eyebrow">Dashboard</div>
+                    <h3>Cargando resumen operativo</h3>
                   </div>
                 </div>
-
-                <div class="team-metric-list">
-                  <article class="team-metric-row" *ngFor="let reporte of topPrestadoresPorIngreso()">
-                    <div class="team-metric-copy">
-                      <strong>{{ reporte.prestadorNombre }}</strong>
-                      <small>{{ reporte.finalizadas }} finalizadas · ticket promedio {{ reporte.ticketPromedio | currency:'MXN':'symbol-narrow':'1.0-0':'es-MX' }}</small>
-                    </div>
-                    <div class="team-metric-bar-shell" aria-hidden="true">
-                      <span class="team-metric-bar team-metric-bar--income" [style.width.%]="ratioPrestadorIngresos(reporte.ingresosFinalizados)"></span>
-                    </div>
-                    <div class="team-metric-value">
-                      {{ reporte.ingresosFinalizados | currency:'MXN':'symbol-narrow':'1.0-0':'es-MX' }}
-                    </div>
-                  </article>
-                </div>
-              </mat-card>
-
-              <mat-card class="workspace-card">
-                <div class="section-header">
-                  <div>
-                    <div class="section-eyebrow">Carga operativa</div>
-                    <h3>Citas por prestador</h3>
-                  </div>
-                </div>
-
-                <div class="team-metric-list">
-                  <article class="team-metric-row" *ngFor="let reporte of topPrestadoresPorCitas()">
-                    <div class="team-metric-copy">
-                      <strong>{{ reporte.prestadorNombre }}</strong>
-                      <small>{{ reporte.confirmadas }} confirmadas · {{ reporte.pendientes }} pendientes · {{ reporte.canceladas + reporte.noAsistio }} no concretadas</small>
-                    </div>
-                    <div class="team-metric-bar-shell" aria-hidden="true">
-                      <span class="team-metric-bar team-metric-bar--volume" [style.width.%]="ratioPrestadorCitas(reporte.totalCitas)"></span>
-                    </div>
-                    <div class="team-metric-value">
-                      {{ reporte.totalCitas }} citas
-                    </div>
-                  </article>
-                </div>
-              </mat-card>
-            </div>
-
-            <mat-card class="workspace-card">
-              <div class="section-header">
-                <div>
-                  <div class="section-eyebrow">Analítica comercial</div>
-                  <h3>Rendimiento por servicio</h3>
-                </div>
+                <p class="helper-text mb-0">Estamos preparando indicadores, agenda e insights del negocio.</p>
               </div>
-
-              <div class="report-grid">
-                <mat-card class="report-card" *ngFor="let reporte of reporteServicios()">
-                  <div class="report-title">{{ reporte.servicioNombre }}</div>
-                  <div class="report-subtitle">{{ reporte.totalCitas }} citas totales</div>
-
-                  <div class="report-rows">
-                    <div><span>Pendientes</span><strong>{{ reporte.pendientes }}</strong></div>
-                    <div><span>Confirmadas</span><strong>{{ reporte.confirmadas }}</strong></div>
-                    <div><span>Finalizadas</span><strong>{{ reporte.finalizadas }}</strong></div>
-                  </div>
-
-                  <mat-divider></mat-divider>
-
-                  <div class="report-money">
-                    <div>
-                      <span>Programado</span>
-                      <strong>{{ reporte.ingresosProgramados | currency:'MXN':'symbol-narrow':'1.0-0':'es-MX' }}</strong>
-                    </div>
-                    <div>
-                      <span>Finalizado</span>
-                      <strong>{{ reporte.ingresosFinalizados | currency:'MXN':'symbol-narrow':'1.0-0':'es-MX' }}</strong>
-                    </div>
-                  </div>
-                </mat-card>
-              </div>
-            </mat-card>
-          </section>
+            </section>
+          }
         </ng-container>
 
         <ng-container *ngIf="seccionActiva() === 'correo'">
-          <section class="section-stack">
-            <div class="workspace-grid two-columns">
-              <mat-card class="workspace-card form-card">
+          @defer {
+            <app-admin-email-section
+              [formularioCorreo]="formularioCorreo"
+              [guardandoCorreo]="guardandoCorreo"
+              [configuracionCorreo]="configuracionCorreo()"
+              [migrandoSecretosCorreo]="migrandoSecretosCorreo"
+              [auditoriaCorreo]="auditoriaCorreo()"
+              [etiquetaAccionAuditoriaConfiguracion]="etiquetaAccionAuditoriaConfiguracion.bind(this)"
+              (save)="guardarConfiguracionCorreo()"
+              (migrateSecrets)="migrarSecretosCorreo()" />
+          } @placeholder {
+            <section class="section-stack">
+              <div class="workspace-card">
                 <div class="section-header">
                   <div>
-                    <div class="section-eyebrow">Entrega transaccional</div>
-                    <h3>Configuración de correo del tenant</h3>
+                    <div class="section-eyebrow">Correo</div>
+                    <h3>Cargando configuración de correo</h3>
                   </div>
                 </div>
-
-                <form class="admin-form-grid admin-form-shell" (ngSubmit)="guardarConfiguracionCorreo()">
-                  <div class="form-block-title full-width">Proveedor</div>
-
-                  <mat-form-field appearance="outline" class="full-width">
-                    <mat-label>Proveedor de envío</mat-label>
-                    <mat-select name="correoProveedor" [(ngModel)]="formularioCorreo.proveedor">
-                      <mat-option value="GRAPH">Microsoft Graph</mat-option>
-                      <mat-option value="SMTP">SMTP</mat-option>
-                    </mat-select>
-                  </mat-form-field>
-
-                  <div class="form-block-title full-width">Identidad de envío</div>
-
-                  <mat-slide-toggle name="correoHabilitado" [(ngModel)]="formularioCorreo.habilitado" class="full-width">
-                    Habilitar confirmaciones por correo para este tenant
-                  </mat-slide-toggle>
-
-                  <mat-form-field appearance="outline">
-                    <mat-label>Remitente</mat-label>
-                    <input matInput type="email" name="correoRemitente" [(ngModel)]="formularioCorreo.remitente" maxlength="150">
-                  </mat-form-field>
-
-                  <mat-form-field appearance="outline">
-                    <mat-label>Nombre remitente</mat-label>
-                    <input matInput name="correoNombreRemitente" [(ngModel)]="formularioCorreo.nombreRemitente" maxlength="150">
-                  </mat-form-field>
-
-                  <mat-form-field appearance="outline" class="full-width">
-                    <mat-label>Responder a</mat-label>
-                    <input matInput type="email" name="correoResponderA" [(ngModel)]="formularioCorreo.responderA" maxlength="150">
-                  </mat-form-field>
-
-                  <ng-container *ngIf="formularioCorreo.proveedor === 'GRAPH'; else bloqueSmtp">
-                    <div class="form-block-title full-width">Microsoft Graph</div>
-
-                    <mat-form-field appearance="outline">
-                      <mat-label>Tenant ID</mat-label>
-                      <input matInput name="correoGraphTenantId" [(ngModel)]="formularioCorreo.graphTenantId" maxlength="100">
-                    </mat-form-field>
-
-                    <mat-form-field appearance="outline">
-                      <mat-label>Client ID</mat-label>
-                      <input matInput name="correoGraphClientId" [(ngModel)]="formularioCorreo.graphClientId" maxlength="100">
-                    </mat-form-field>
-
-                    <mat-form-field appearance="outline" class="full-width">
-                      <mat-label>Client secret nuevo (opcional)</mat-label>
-                      <input matInput type="password" name="correoGraphClientSecret" [(ngModel)]="formularioCorreo.graphClientSecret" maxlength="255">
-                    </mat-form-field>
-
-                    <mat-form-field appearance="outline" class="full-width">
-                      <mat-label>Mailbox o User ID de Graph</mat-label>
-                      <input matInput name="correoGraphUserId" [(ngModel)]="formularioCorreo.graphUserId" maxlength="150">
-                    </mat-form-field>
-
-                    <mat-form-field appearance="outline" class="full-width">
-                      <mat-label>Thumbprint del certificado</mat-label>
-                      <input matInput name="correoGraphCertificateThumbprint" [(ngModel)]="formularioCorreo.graphCertificateThumbprint" maxlength="100">
-                    </mat-form-field>
-
-                    <mat-form-field appearance="outline" class="full-width">
-                      <mat-label>Llave privada PEM nueva</mat-label>
-                      <textarea matInput rows="6" name="correoGraphPrivateKeyPem" [(ngModel)]="formularioCorreo.graphPrivateKeyPem"></textarea>
-                    </mat-form-field>
-
-                    <div class="helper-text full-width">
-                      Usa el buzón autenticado en Microsoft 365, por ejemplo `no-reply@tecprotech.com.mx`.
-                    </div>
-
-                    <div class="helper-text full-width">
-                      Si dejas vacía la llave privada PEM, se conserva la configurada actualmente.
-                    </div>
-
-                    <div class="helper-text full-width">
-                      Si tu tenant bloquea client secrets, deja ese campo vacío y usa certificado con llave privada PEM.
-                    </div>
-                  </ng-container>
-
-                  <ng-template #bloqueSmtp>
-                    <div class="form-block-title full-width">Servidor SMTP</div>
-
-                    <mat-form-field appearance="outline">
-                      <mat-label>Host SMTP</mat-label>
-                      <input matInput name="correoSmtpHost" [(ngModel)]="formularioCorreo.smtpHost" maxlength="150">
-                    </mat-form-field>
-
-                    <mat-form-field appearance="outline">
-                      <mat-label>Puerto SMTP</mat-label>
-                      <input matInput type="number" min="1" max="65535" name="correoSmtpPort" [(ngModel)]="formularioCorreo.smtpPort">
-                    </mat-form-field>
-
-                    <mat-form-field appearance="outline">
-                      <mat-label>Usuario SMTP</mat-label>
-                      <input matInput name="correoSmtpUsername" [(ngModel)]="formularioCorreo.smtpUsername" maxlength="150">
-                    </mat-form-field>
-
-                    <mat-form-field appearance="outline">
-                      <mat-label>Nueva contraseña SMTP</mat-label>
-                      <input matInput type="password" name="correoSmtpPassword" [(ngModel)]="formularioCorreo.smtpPassword" maxlength="255">
-                    </mat-form-field>
-
-                    <mat-slide-toggle name="correoSmtpAuth" [(ngModel)]="formularioCorreo.smtpAuth">
-                      Requiere autenticación
-                    </mat-slide-toggle>
-
-                    <mat-slide-toggle name="correoSmtpTls" [(ngModel)]="formularioCorreo.smtpStartTls">
-                      Usar STARTTLS
-                    </mat-slide-toggle>
-
-                    <div class="helper-text full-width">
-                      Si dejas la contraseña vacía, se conserva la configurada actualmente.
-                    </div>
-                  </ng-template>
-
-                  <div class="form-actions">
-                    <button mat-flat-button color="primary" type="submit" [disabled]="guardandoCorreo">
-                      Guardar configuración
-                    </button>
-                  </div>
-                </form>
-              </mat-card>
-
-              <mat-card class="workspace-card list-card">
-                <div class="section-header">
-                  <div>
-                    <div class="section-eyebrow">Estado del tenant</div>
-                    <h3>Salud de configuración</h3>
-                  </div>
-                </div>
-
-                <div class="entity-list" *ngIf="configuracionCorreo() as config; else correoSinDatos">
-                  <article class="entity-row">
-                    <div class="entity-main">
-                      <div class="entity-title">Proveedor activo</div>
-                      <div class="entity-meta">{{ config.proveedor || 'SMTP' }}</div>
-                    </div>
-                    <div class="entity-side">
-                      <span class="status-pill" [class.is-active]="!!config.proveedor">
-                        {{ config.proveedor || 'SMTP' }}
-                      </span>
-                    </div>
-                  </article>
-
-                  <article class="entity-row" *ngIf="(config.proveedor || 'SMTP') === 'GRAPH'; else estadoSmtp">
-                    <div class="entity-main">
-                      <div class="entity-title">Secreto de Graph</div>
-                      <div class="entity-meta" *ngIf="config.graphClientSecretConfigurado">Existe un client secret guardado para Microsoft Graph.</div>
-                      <div class="entity-meta" *ngIf="!config.graphClientSecretConfigurado">No hay client secret guardado. Esto es válido si usas certificado.</div>
-                      <div class="entity-meta" *ngIf="config.graphClientSecretConfigurado">
-                        {{ config.graphClientSecretCifrado ? 'El secreto está cifrado.' : 'El secreto sigue en texto plano y requiere migración.' }}
-                      </div>
-                    </div>
-                    <div class="entity-side">
-                      <span class="status-pill" [class.is-active]="config.graphClientSecretCifrado">
-                        {{ config.graphClientSecretCifrado ? 'Cifrado' : 'Legacy' }}
-                      </span>
-                    </div>
-                  </article>
-
-                  <article class="entity-row" *ngIf="(config.proveedor || 'SMTP') === 'GRAPH'">
-                    <div class="entity-main">
-                      <div class="entity-title">Llave privada de Graph</div>
-                      <div class="entity-meta" *ngIf="config.graphPrivateKeyConfigurada">Existe una llave privada PEM guardada para Microsoft Graph.</div>
-                      <div class="entity-meta" *ngIf="!config.graphPrivateKeyConfigurada">Todavía no se ha configurado una llave privada PEM para Microsoft Graph.</div>
-                      <div class="entity-meta" *ngIf="config.graphPrivateKeyConfigurada">
-                        {{ config.graphPrivateKeyCifrada ? 'La llave está cifrada.' : 'La llave sigue en texto plano y requiere migración.' }}
-                      </div>
-                    </div>
-                    <div class="entity-side">
-                      <span class="status-pill" [class.is-active]="config.graphPrivateKeyCifrada">
-                        {{ config.graphPrivateKeyCifrada ? 'Cifrada' : 'Legacy' }}
-                      </span>
-                    </div>
-                  </article>
-
-                  <ng-template #estadoSmtp>
-                    <article class="entity-row">
-                      <div class="entity-main">
-                        <div class="entity-title">Secreto SMTP</div>
-                        <div class="entity-meta" *ngIf="config.smtpPasswordConfigurada">Existe una contraseña SMTP guardada para este tenant.</div>
-                        <div class="entity-meta" *ngIf="!config.smtpPasswordConfigurada">Todavía no se ha configurado una contraseña SMTP.</div>
-                        <div class="entity-meta" *ngIf="config.smtpPasswordConfigurada">
-                          {{ config.smtpPasswordCifrada ? 'El secreto está cifrado.' : 'El secreto sigue en texto plano y requiere migración.' }}
-                        </div>
-                      </div>
-                      <div class="entity-side">
-                        <span class="status-pill" [class.is-active]="config.smtpPasswordCifrada">
-                          {{ config.smtpPasswordCifrada ? 'Cifrado' : 'Legacy' }}
-                        </span>
-                      </div>
-                    </article>
-                  </ng-template>
-
-                  <article class="entity-row" *ngIf="config.requiereMigracionSecretos">
-                    <div class="entity-main">
-                      <div class="entity-title">Migración recomendada</div>
-                      <div class="entity-meta">
-                        Migra los secretos legacy del proveedor actual a formato cifrado sin cambiar el resto de la configuración.
-                      </div>
-                    </div>
-                    <div class="entity-side">
-                      <button mat-stroked-button type="button" (click)="migrarSecretosCorreo()" [disabled]="migrandoSecretosCorreo">
-                        {{ migrandoSecretosCorreo ? 'Migrando...' : 'Migrar secretos' }}
-                      </button>
-                    </div>
-                  </article>
-
-                  <article class="entity-row" *ngIf="(config.proveedor || 'SMTP') === 'GRAPH'; else resumenSmtp">
-                    <div class="entity-main">
-                      <div class="entity-title">Resumen técnico</div>
-                      <div class="entity-meta">Tenant ID: {{ config.graphTenantId || 'Sin definir' }}</div>
-                      <div class="entity-meta">Client ID: {{ config.graphClientId || 'Sin definir' }}</div>
-                      <div class="entity-meta">Mailbox Graph: {{ config.graphUserId || 'Sin definir' }}</div>
-                      <div class="entity-meta">Thumbprint: {{ config.graphCertificateThumbprint || 'Sin definir' }}</div>
-                    </div>
-                    <div class="entity-side">
-                      <span class="status-pill" [class.is-active]="!!config.graphTenantId && !!config.graphClientId && !!config.graphUserId && (!!config.graphClientSecretConfigurado || (!!config.graphCertificateThumbprint && !!config.graphPrivateKeyConfigurada))">
-                        {{ !!config.graphTenantId && !!config.graphClientId && !!config.graphUserId && (!!config.graphClientSecretConfigurado || (!!config.graphCertificateThumbprint && !!config.graphPrivateKeyConfigurada)) ? 'Listo' : 'Pendiente' }}
-                      </span>
-                    </div>
-                  </article>
-
-                  <ng-template #resumenSmtp>
-                    <article class="entity-row">
-                      <div class="entity-main">
-                        <div class="entity-title">Resumen técnico</div>
-                        <div class="entity-meta">Host: {{ config.smtpHost || 'Sin definir' }}</div>
-                        <div class="entity-meta">Puerto: {{ config.smtpPort || 'Sin definir' }}</div>
-                        <div class="entity-meta">Usuario: {{ config.smtpUsername || 'Sin definir' }}</div>
-                      </div>
-                      <div class="entity-side">
-                        <span class="status-pill" [class.is-active]="!!config.smtpHost && !!config.smtpPort">
-                          {{ !!config.smtpHost && !!config.smtpPort ? 'Listo' : 'Pendiente' }}
-                        </span>
-                      </div>
-                    </article>
-                  </ng-template>
-
-                  <article class="entity-row">
-                    <div class="entity-main">
-                      <div class="entity-title">Estado general</div>
-                      <div class="entity-meta">
-                        {{ config.habilitado ? 'Las confirmaciones por correo están habilitadas.' : 'Las confirmaciones por correo están deshabilitadas.' }}
-                      </div>
-                    </div>
-                    <div class="entity-side">
-                      <span class="status-pill" [class.is-active]="config.habilitado">{{ config.habilitado ? 'Activo' : 'Inactivo' }}</span>
-                    </div>
-                  </article>
-
-                </div>
-
-                <ng-template #correoSinDatos>
-                  <div class="agenda-empty">
-                    No fue posible cargar la configuración actual de correo.
-                  </div>
-                </ng-template>
-              </mat-card>
-            </div>
-
-            <mat-card class="workspace-card list-card">
-              <div class="section-header">
-                <div>
-                  <div class="section-eyebrow">Trazabilidad</div>
-                  <h3>Actividad reciente de correo</h3>
-                </div>
+                <p class="helper-text mb-0">Estamos preparando la configuración y la trazabilidad de correo.</p>
               </div>
-
-              <div class="entity-list" *ngIf="auditoriaCorreo().length; else sinAuditoriaCorreo">
-                <article class="entity-row" *ngFor="let evento of auditoriaCorreo()">
-                  <div class="entity-main">
-                    <div class="entity-title">{{ etiquetaAccionAuditoriaConfiguracion(evento.accion) }}</div>
-                    <div class="entity-meta">{{ evento.resumen }}</div>
-                    <div class="entity-meta" *ngIf="evento.actorCorreo">Por {{ evento.actorCorreo }}</div>
-                  </div>
-                  <div class="entity-side">
-                    <span class="status-pill is-active">{{ evento.creadoEn | date:'dd/MM/yyyy HH:mm':'':'es-MX' }}</span>
-                  </div>
-                </article>
-              </div>
-
-              <ng-template #sinAuditoriaCorreo>
-                <div class="helper-text">Todavía no hay cambios auditados de configuración de correo.</div>
-              </ng-template>
-            </mat-card>
-          </section>
+            </section>
+          }
         </ng-container>
 
         <ng-container *ngIf="seccionActiva() === 'contactos'">
-          <section class="section-stack">
-            <div class="metric-grid">
-              <mat-card class="metric-card metric-card-highlight">
-                <span>Total de mensajes</span>
-                <strong>{{ resumenContactos().total }}</strong>
-              </mat-card>
-              <mat-card class="metric-card">
-                <span>Nuevos</span>
-                <strong>{{ resumenContactos().nuevos }}</strong>
-              </mat-card>
-              <mat-card class="metric-card">
-                <span>En proceso</span>
-                <strong>{{ resumenContactos().enProceso }}</strong>
-              </mat-card>
-              <mat-card class="metric-card">
-                <span>Atendidos</span>
-                <strong>{{ resumenContactos().atendidos }}</strong>
-              </mat-card>
-            </div>
-
-            <mat-card class="workspace-card workspace-card-emphasis">
-              <div class="section-header">
-                <div>
-                  <div class="section-eyebrow">Bandeja comercial</div>
-                  <h3>Mensajes recibidos desde la web</h3>
+          @defer {
+            <app-admin-contacts-section
+              [resumen]="resumenContactos()"
+              [contactos]="contactos()"
+              [estadosContactoDisponibles]="estadosContactoDisponibles"
+              [actualizandoContactoId]="actualizandoContactoId"
+              [claseEstadoContacto]="claseEstadoContacto.bind(this)"
+              [formatearEstadoContacto]="formatearEstadoContacto.bind(this)"
+              (updateStatus)="actualizarEstadoContacto($event.contacto, $event.estado)" />
+          } @placeholder {
+            <section class="section-stack">
+              <div class="workspace-card workspace-card-emphasis">
+                <div class="section-header">
+                  <div>
+                    <div class="section-eyebrow">Contactos</div>
+                    <h3>Cargando bandeja comercial</h3>
+                  </div>
                 </div>
-                <span class="agenda-date-pill">{{ contactos().length }} registros</span>
+                <p class="helper-text mb-0">Estamos preparando los mensajes y su seguimiento comercial.</p>
               </div>
-
-              <div class="agenda-empty" *ngIf="!contactos().length">
-                Aún no se han recibido mensajes desde el formulario de contacto.
-              </div>
-
-              <div class="entity-list" *ngIf="contactos().length">
-                <article class="entity-row contacto-row" *ngFor="let contacto of contactos()">
-                  <div class="entity-main contacto-row__main">
-                    <div class="contacto-row__header">
-                      <div>
-                        <div class="entity-title">{{ contacto.nombreCompleto }}</div>
-                        <div class="entity-meta">{{ contacto.correo }}<span *ngIf="contacto.telefono"> · {{ contacto.telefono }}</span></div>
-                      </div>
-                      <span class="status-pill contacto-status-pill" [ngClass]="claseEstadoContacto(contacto.estado)">
-                        {{ formatearEstadoContacto(contacto.estado) }}
-                      </span>
-                    </div>
-
-                    <div class="service-metrics contacto-row__meta">
-                      <span>Asunto: {{ contacto.asunto }}</span>
-                      <span>Canal: {{ contacto.canal }}</span>
-                      <span>Recibido: {{ contacto.creadaEn | date:'medium':'':'es-MX' }}</span>
-                      <span *ngIf="contacto.notificadaEn">Notificado: {{ contacto.notificadaEn | date:'short':'':'es-MX' }}</span>
-                      <span *ngIf="!contacto.notificadaEn && contacto.notificacionCorreoProgramada">Notificación pendiente</span>
-                    </div>
-
-                    <div class="contacto-row__message">
-                      {{ contacto.mensaje }}
-                    </div>
-                  </div>
-
-                  <div class="entity-side contacto-row__side">
-                    <mat-form-field appearance="outline" class="contacto-row__field">
-                      <mat-label>Estado</mat-label>
-                      <mat-select
-                        [ngModel]="contacto.estado"
-                        (ngModelChange)="actualizarEstadoContacto(contacto, $event)"
-                        [disabled]="actualizandoContactoId === contacto.id">
-                        <mat-option *ngFor="let estado of estadosContactoDisponibles" [value]="estado">
-                          {{ formatearEstadoContacto(estado) }}
-                        </mat-option>
-                      </mat-select>
-                    </mat-form-field>
-
-                    <a mat-stroked-button [href]="'mailto:' + contacto.correo + '?subject=Re: ' + contacto.asunto">
-                      Responder
-                    </a>
-                  </div>
-                </article>
-              </div>
-            </mat-card>
-          </section>
+            </section>
+          }
         </ng-container>
 
         <ng-container *ngIf="seccionActiva() === 'whatsapp'">
-          <section class="section-stack">
-            <div class="workspace-grid two-columns">
-              <mat-card class="workspace-card form-card">
+          @defer {
+            <app-admin-whatsapp-section
+              [formularioWhatsapp]="formularioWhatsapp"
+              [formularioProvisionSubcuentaWhatsapp]="formularioProvisionSubcuentaWhatsapp"
+              [formularioProvisionMessagingServiceWhatsapp]="formularioProvisionMessagingServiceWhatsapp"
+              [formularioAsociacionChannelSenderWhatsapp]="formularioAsociacionChannelSenderWhatsapp"
+              [formularioPruebaWhatsapp]="formularioPruebaWhatsapp"
+              [guardandoWhatsapp]="guardandoWhatsapp"
+              [provisionandoSubcuentaWhatsapp]="provisionandoSubcuentaWhatsapp"
+              [provisionandoMessagingServiceWhatsapp]="provisionandoMessagingServiceWhatsapp"
+              [asociandoChannelSenderWhatsapp]="asociandoChannelSenderWhatsapp"
+              [detectandoChannelSenderWhatsapp]="detectandoChannelSenderWhatsapp"
+              [probandoPlantillaWhatsapp]="probandoPlantillaWhatsapp"
+              [configuracionWhatsapp]="configuracionWhatsapp()"
+              [whatsappOnboardingStats]="whatsappOnboardingStats()"
+              [whatsappOnboardingChecklist]="whatsappOnboardingChecklist()"
+              [auditoriaWhatsapp]="auditoriaWhatsapp()"
+              [plantillasWhatsapp]="plantillasWhatsapp()"
+              [logsWhatsapp]="logsWhatsapp()"
+              [etiquetaAccionAuditoriaConfiguracion]="etiquetaAccionAuditoriaConfiguracion.bind(this)"
+              (save)="guardarConfiguracionWhatsapp()"
+              (provisionSubaccount)="provisionarSubcuentaWhatsapp()"
+              (provisionMessagingService)="provisionarMessagingServiceWhatsapp()"
+              (detectChannelSender)="detectarChannelSenderWhatsapp()"
+              (associateChannelSender)="asociarChannelSenderWhatsapp()"
+              (testTemplate)="probarPlantillaWhatsapp()" />
+          } @placeholder {
+            <section class="section-stack">
+              <div class="workspace-card workspace-card-emphasis">
                 <div class="section-header">
                   <div>
-                    <div class="section-eyebrow">Canal conversacional</div>
-                    <h3>Configuración de WhatsApp por tenant</h3>
+                    <div class="section-eyebrow">WhatsApp</div>
+                    <h3>Cargando configuración conversacional</h3>
                   </div>
                 </div>
-
-                <form class="admin-form-grid admin-form-shell" (ngSubmit)="guardarConfiguracionWhatsapp()">
-                  <div class="form-block-title full-width">Estado general</div>
-
-                  <div class="helper-text full-width">
-                    Recomendación SaaS: usa "Subcuenta Twilio" para cada empresa. Así separas sender, plantillas y operación por tenant sin mezclar todo en una sola cuenta operativa.
-                  </div>
-
-                  <mat-slide-toggle name="whatsappHabilitado" [(ngModel)]="formularioWhatsapp.habilitado" class="full-width">
-                    Habilitar notificaciones y conversación por WhatsApp para este tenant
-                  </mat-slide-toggle>
-
-                  <mat-form-field appearance="outline">
-                    <mat-label>Account SID</mat-label>
-                    <input matInput name="whatsappAccountSid" [(ngModel)]="formularioWhatsapp.accountSid" maxlength="80">
-                  </mat-form-field>
-
-                  <mat-form-field appearance="outline">
-                    <mat-label>Auth Token nuevo (opcional)</mat-label>
-                    <input matInput type="password" name="whatsappAuthToken" [(ngModel)]="formularioWhatsapp.authToken" maxlength="120">
-                  </mat-form-field>
-
-                  <mat-form-field appearance="outline">
-                    <mat-label>Modelo de cuenta Twilio</mat-label>
-                    <mat-select name="whatsappTipoCuentaTwilio" [(ngModel)]="formularioWhatsapp.tipoCuentaTwilio">
-                      <mat-option value="PLATAFORMA">Cuenta plataforma</mat-option>
-                      <mat-option value="SUBCUENTA">Subcuenta Twilio</mat-option>
-                      <mat-option value="CUENTA_PROPIA">Cuenta propia del tenant</mat-option>
-                    </mat-select>
-                  </mat-form-field>
-
-                  <mat-form-field appearance="outline">
-                    <mat-label>Subaccount SID (opcional)</mat-label>
-                    <input matInput name="whatsappSubaccountSid" [(ngModel)]="formularioWhatsapp.subaccountSid" maxlength="80">
-                  </mat-form-field>
-
-                  <div class="form-block-title full-width">Provisionamiento guiado</div>
-
-                  <mat-form-field appearance="outline" class="full-width">
-                    <mat-label>Friendly name de la subcuenta</mat-label>
-                    <input matInput name="whatsappProvisionFriendlyName" [(ngModel)]="formularioProvisionSubcuentaWhatsapp.friendlyName" maxlength="64" placeholder="Agenda SaaS - Nombre del negocio">
-                  </mat-form-field>
-
-                  <div class="helper-text full-width">
-                    Este botón crea la subcuenta en Twilio usando tu cuenta plataforma y guarda el `Subaccount SID` cifrando el `Auth Token` del tenant. Después aún debes registrar el sender de WhatsApp, el Messaging Service y las plantillas del negocio.
-                  </div>
-
-                  <div class="form-actions full-width">
-                    <button
-                      mat-stroked-button
-                      type="button"
-                      (click)="provisionarSubcuentaWhatsapp()"
-                      [disabled]="provisionandoSubcuentaWhatsapp || formularioWhatsapp.tipoCuentaTwilio === 'CUENTA_PROPIA'">
-                      Provisionar subcuenta Twilio
-                    </button>
-                  </div>
-
-                  <mat-form-field appearance="outline" class="full-width">
-                    <mat-label>Friendly name del Messaging Service</mat-label>
-                    <input matInput name="whatsappProvisionMessagingServiceFriendlyName" [(ngModel)]="formularioProvisionMessagingServiceWhatsapp.friendlyName" maxlength="64" placeholder="WhatsApp - Nombre del negocio">
-                  </mat-form-field>
-
-                  <mat-form-field appearance="outline" class="full-width">
-                    <mat-label>Webhook entrante del Messaging Service (opcional)</mat-label>
-                    <input matInput name="whatsappProvisionMessagingServiceInboundUrl" [(ngModel)]="formularioProvisionMessagingServiceWhatsapp.inboundRequestUrl" maxlength="255" placeholder="https://tu-dominio/api/v1/publico/whatsapp/twilio/webhook">
-                  </mat-form-field>
-
-                  <div class="helper-text full-width">
-                    Este botón crea el `Messaging Service` dentro de la cuenta efectiva del tenant. El siguiente paso es capturar el `Channel Sender SID` (`XE...`) del sender de WhatsApp y asociarlo al servicio.
-                  </div>
-
-                  <div class="form-actions full-width">
-                    <button
-                      mat-stroked-button
-                      type="button"
-                      (click)="provisionarMessagingServiceWhatsapp()"
-                      [disabled]="provisionandoMessagingServiceWhatsapp || formularioWhatsapp.tipoCuentaTwilio === 'PLATAFORMA' && !formularioWhatsapp.accountSid">
-                      Provisionar Messaging Service
-                    </button>
-                  </div>
-
-                  <mat-form-field appearance="outline" class="full-width">
-                    <mat-label>Channel Sender SID (XE...)</mat-label>
-                    <input matInput name="whatsappChannelSenderSid" [(ngModel)]="formularioAsociacionChannelSenderWhatsapp.channelSenderSid" maxlength="80" placeholder="XExxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx">
-                  </mat-form-field>
-
-                  <div class="helper-text full-width">
-                    Puedes obtener este `XE...` desde Twilio Console o Senders API. Este paso conecta el sender de WhatsApp del negocio con el `Messaging Service` del tenant.
-                  </div>
-
-                  <div class="form-actions full-width">
-                    <button
-                      mat-stroked-button
-                      type="button"
-                      (click)="detectarChannelSenderWhatsapp()"
-                      [disabled]="detectandoChannelSenderWhatsapp">
-                      Detectar sender desde Twilio
-                    </button>
-
-                    <button
-                      mat-stroked-button
-                      type="button"
-                      (click)="asociarChannelSenderWhatsapp()"
-                      [disabled]="asociandoChannelSenderWhatsapp || !formularioWhatsapp.messagingServiceSid">
-                      Asociar sender al Messaging Service
-                    </button>
-                  </div>
-
-                  <div class="form-block-title full-width">Remitente y mensajería</div>
-
-                  <mat-form-field appearance="outline">
-                    <mat-label>Número remitente</mat-label>
-                    <input matInput name="whatsappFrom" [(ngModel)]="formularioWhatsapp.numeroRemitente" maxlength="40" placeholder="whatsapp:+5212204292573">
-                  </mat-form-field>
-
-                  <mat-form-field appearance="outline">
-                    <mat-label>Messaging Service SID</mat-label>
-                    <input matInput name="whatsappMessagingServiceSid" [(ngModel)]="formularioWhatsapp.messagingServiceSid" maxlength="80">
-                  </mat-form-field>
-
-                  <mat-form-field appearance="outline">
-                    <mat-label>Channel Sender SID</mat-label>
-                    <input matInput name="whatsappConfigChannelSenderSid" [(ngModel)]="formularioWhatsapp.channelSenderSid" maxlength="80">
-                  </mat-form-field>
-
-                  <mat-form-field appearance="outline" class="full-width">
-                    <mat-label>Status callback URL</mat-label>
-                    <input matInput name="whatsappStatusCallbackUrl" [(ngModel)]="formularioWhatsapp.statusCallbackUrl" maxlength="255">
-                  </mat-form-field>
-
-                  <div class="form-block-title full-width">Meta y sender</div>
-
-                  <mat-form-field appearance="outline">
-                    <mat-label>Business display name</mat-label>
-                    <input matInput name="whatsappSenderDisplayName" [(ngModel)]="formularioWhatsapp.senderDisplayName" maxlength="150">
-                  </mat-form-field>
-
-                  <mat-form-field appearance="outline">
-                    <mat-label>Sender phone number</mat-label>
-                    <input matInput name="whatsappSenderPhoneNumber" [(ngModel)]="formularioWhatsapp.senderPhoneNumber" maxlength="40">
-                  </mat-form-field>
-
-                  <mat-form-field appearance="outline">
-                    <mat-label>Sender status</mat-label>
-                    <input matInput name="whatsappSenderStatus" [(ngModel)]="formularioWhatsapp.senderStatus" maxlength="40">
-                  </mat-form-field>
-
-                  <mat-form-field appearance="outline">
-                    <mat-label>Quality rating</mat-label>
-                    <input matInput name="whatsappQualityRating" [(ngModel)]="formularioWhatsapp.qualityRating" maxlength="40">
-                  </mat-form-field>
-
-                  <mat-form-field appearance="outline">
-                    <mat-label>Throughput (MPS)</mat-label>
-                    <input matInput type="number" min="0" name="whatsappThroughputMps" [(ngModel)]="formularioWhatsapp.throughputMps">
-                  </mat-form-field>
-
-                  <mat-form-field appearance="outline">
-                    <mat-label>WABA ID</mat-label>
-                    <input matInput name="whatsappWabaId" [(ngModel)]="formularioWhatsapp.wabaId" maxlength="100">
-                  </mat-form-field>
-
-                  <mat-form-field appearance="outline" class="full-width">
-                    <mat-label>Meta Business Manager ID</mat-label>
-                    <input matInput name="whatsappBusinessManagerId" [(ngModel)]="formularioWhatsapp.metaBusinessManagerId" maxlength="100">
-                  </mat-form-field>
-
-                  <div class="form-block-title full-width">Plantillas activas</div>
-
-                  <mat-form-field appearance="outline">
-                    <mat-label>SID plantilla solicitud de confirmación</mat-label>
-                    <input matInput name="whatsappTemplateSolicitudConfirmacion" [(ngModel)]="formularioWhatsapp.plantillaSolicitudConfirmacionSid" maxlength="80">
-                  </mat-form-field>
-
-                  <mat-form-field appearance="outline">
-                    <mat-label>SID plantilla cita reprogramada pendiente</mat-label>
-                    <input matInput name="whatsappTemplateReprogramadaPendiente" [(ngModel)]="formularioWhatsapp.plantillaReprogramadaPendienteSid" maxlength="80">
-                  </mat-form-field>
-
-                  <mat-form-field appearance="outline">
-                    <mat-label>SID plantilla recordar confirmar cita</mat-label>
-                    <input matInput name="whatsappTemplateRecordatorioConfirmacion" [(ngModel)]="formularioWhatsapp.plantillaRecordatorioConfirmacionSid" maxlength="80">
-                  </mat-form-field>
-
-                  <mat-form-field appearance="outline">
-                    <mat-label>SID plantilla cita confirmada</mat-label>
-                    <input matInput name="whatsappTemplateConfirmacion" [(ngModel)]="formularioWhatsapp.plantillaCitaConfirmadaSid" maxlength="80">
-                  </mat-form-field>
-
-                  <mat-form-field appearance="outline">
-                    <mat-label>SID plantilla recordatorio</mat-label>
-                    <input matInput name="whatsappTemplateRecordatorio" [(ngModel)]="formularioWhatsapp.plantillaRecordatorioSid" maxlength="80">
-                  </mat-form-field>
-
-                  <mat-form-field appearance="outline">
-                    <mat-label>SID plantilla cancelación por negocio</mat-label>
-                    <input matInput name="whatsappTemplateCancelacion" [(ngModel)]="formularioWhatsapp.plantillaCancelacionSid" maxlength="80">
-                  </mat-form-field>
-
-                  <mat-form-field appearance="outline">
-                    <mat-label>SID plantilla liberada sin confirmación</mat-label>
-                    <input matInput name="whatsappTemplateLiberadaSinConfirmacion" [(ngModel)]="formularioWhatsapp.plantillaLiberadaSinConfirmacionSid" maxlength="80">
-                  </mat-form-field>
-
-                  <mat-form-field appearance="outline">
-                    <mat-label>SID plantilla gracias por tu visita</mat-label>
-                    <input matInput name="whatsappTemplateGraciasVisita" [(ngModel)]="formularioWhatsapp.plantillaGraciasVisitaSid" maxlength="80">
-                  </mat-form-field>
-
-                  <mat-form-field appearance="outline">
-                    <mat-label>SID plantilla recordatorio de regreso</mat-label>
-                    <input matInput name="whatsappTemplateRecordatorioRegreso" [(ngModel)]="formularioWhatsapp.plantillaRecordatorioRegresoSid" maxlength="80">
-                  </mat-form-field>
-
-                  <mat-form-field appearance="outline">
-                    <mat-label>SID plantilla espacio disponible walk-in</mat-label>
-                    <input matInput name="whatsappTemplateEspacioDisponibleWalkin" [(ngModel)]="formularioWhatsapp.plantillaEspacioDisponibleWalkinSid" maxlength="80">
-                  </mat-form-field>
-
-                  <div class="helper-text full-width">
-                    Si dejas vacío el Auth Token, el backend puede conservar el secreto actual. Usa "Cuenta plataforma" si operas todo bajo tu Twilio, "Subcuenta" si crearás una por empresa y "Cuenta propia del tenant" si el cliente traerá sus propias credenciales.
-                    La plantilla de solicitud de confirmación se usa al registrar la cita y debe pedir al cliente que responda para confirmar su asistencia. La de cita reprogramada pendiente se usa cuando la cita cambia de fecha y vuelve a estado pendiente. La de recordar confirmar se usa cuando la cita sigue pendiente y se acerca la fecha. La de cancelación se reserva para mensajes iniciados por el negocio. La de espacio disponible walk-in debe ser creada por cada empresa según su operación y aprobada por Meta antes de usarla desde recepción.
-                  </div>
-
-                  <div class="form-actions">
-                    <button mat-flat-button color="primary" type="submit" [disabled]="guardandoWhatsapp">
-                      Guardar configuración
-                    </button>
-                  </div>
-                </form>
-              </mat-card>
-
-              <mat-card class="workspace-card list-card">
-                <div class="section-header">
-                  <div>
-                    <div class="section-eyebrow">Salud operativa</div>
-                    <h3>Estado de conexión y plantillas</h3>
-                  </div>
-                </div>
-
-                <div class="entity-list">
-                  <article class="entity-row">
-                    <div class="entity-main">
-                      <div class="entity-title">Onboarding del tenant</div>
-                      <div class="entity-meta">
-                        {{ whatsappOnboardingStats().completados }} de {{ whatsappOnboardingStats().total }} pasos completos.
-                        <span *ngIf="whatsappOnboardingStats().siguiente as siguiente">
-                          Siguiente acción: {{ siguiente.title.toLowerCase() }}.
-                        </span>
-                      </div>
-                      <mat-progress-bar mode="determinate" [value]="whatsappOnboardingStats().porcentaje"></mat-progress-bar>
-                    </div>
-                    <div class="entity-side">
-                      <span class="status-pill" [class.is-active]="whatsappOnboardingStats().porcentaje === 100">
-                        {{ whatsappOnboardingStats().porcentaje }}%
-                      </span>
-                    </div>
-                  </article>
-
-                  <article class="entity-row" *ngFor="let paso of whatsappOnboardingChecklist()">
-                    <div class="entity-main">
-                      <div class="entity-title">{{ paso.title }}</div>
-                      <div class="entity-meta">{{ paso.detail }}</div>
-                    </div>
-                    <div class="entity-side">
-                      <span class="status-pill" [class.is-active]="paso.done">
-                        {{ paso.done ? 'Listo' : 'Pendiente' }}
-                      </span>
-                    </div>
-                  </article>
-                </div>
-
-                <div class="entity-list" *ngIf="configuracionWhatsapp() as config; else whatsappSinDatos">
-                  <article class="entity-row">
-                    <div class="entity-main">
-                      <div class="entity-title">Canal habilitado</div>
-                      <div class="entity-meta">
-                        {{ config.habilitado ? 'WhatsApp está activo para este tenant.' : 'WhatsApp está deshabilitado para este tenant.' }}
-                      </div>
-                    </div>
-                    <div class="entity-side">
-                      <span class="status-pill" [class.is-active]="config.habilitado">{{ config.habilitado ? 'Activo' : 'Inactivo' }}</span>
-                    </div>
-                  </article>
-
-                  <article class="entity-row">
-                    <div class="entity-main">
-                      <div class="entity-title">Sender conectado</div>
-                      <div class="entity-meta">{{ config.senderDisplayName || 'Sin display name' }}</div>
-                      <div class="entity-meta">{{ config.senderPhoneNumber || config.numeroRemitente || 'Sin número remitente' }}</div>
-                      <div class="entity-meta">Messaging Service: {{ config.messagingServiceSid || 'Sin definir' }}</div>
-                    </div>
-                    <div class="entity-side">
-                      <span class="status-pill" [class.is-active]="(config.senderStatus || '').toLowerCase() === 'online'">
-                        {{ config.senderStatus || 'Pendiente' }}
-                      </span>
-                    </div>
-                  </article>
-
-                  <article class="entity-row">
-                    <div class="entity-main">
-                      <div class="entity-title">Meta / WABA</div>
-                      <div class="entity-meta">WABA ID: {{ config.wabaId || 'Sin definir' }}</div>
-                      <div class="entity-meta">Business Manager: {{ config.metaBusinessManagerId || 'Sin definir' }}</div>
-                      <div class="entity-meta">Quality rating: {{ config.qualityRating || 'Sin dato' }}</div>
-                      <div class="entity-meta">Throughput: {{ config.throughputMps || 'Sin dato' }} MPS</div>
-                    </div>
-                    <div class="entity-side">
-                      <span class="status-pill" [class.is-active]="!!config.wabaId && !!config.metaBusinessManagerId">
-                        {{ !!config.wabaId && !!config.metaBusinessManagerId ? 'Listo' : 'Pendiente' }}
-                      </span>
-                    </div>
-                  </article>
-
-                  <article class="entity-row">
-                    <div class="entity-main">
-                      <div class="entity-title">Credenciales y callback</div>
-                      <div class="entity-meta">Account SID: {{ config.accountSid || 'Sin definir' }}</div>
-                      <div class="entity-meta">Auth Token: {{ config.authTokenConfigurado ? 'Configurado' : 'Pendiente' }}</div>
-                      <div class="entity-meta">Status callback: {{ config.statusCallbackUrl || 'Sin definir' }}</div>
-                    </div>
-                    <div class="entity-side">
-                      <span class="status-pill" [class.is-active]="config.authTokenConfigurado && !!config.statusCallbackUrl">
-                        {{ config.authTokenConfigurado && !!config.statusCallbackUrl ? 'Listo' : 'Parcial' }}
-                      </span>
-                    </div>
-                  </article>
-
-                  <article class="entity-row">
-                    <div class="entity-main">
-                      <div class="entity-title">Plantillas configuradas</div>
-                      <div class="entity-meta">Solicitud de confirmación: {{ config.plantillaSolicitudConfirmacionSid || 'Sin definir' }}</div>
-                      <div class="entity-meta">Reprogramada pendiente: {{ config.plantillaReprogramadaPendienteSid || 'Sin definir' }}</div>
-                      <div class="entity-meta">Recordatorio para confirmar: {{ config.plantillaRecordatorioConfirmacionSid || 'Sin definir' }}</div>
-                      <div class="entity-meta">Cita confirmada: {{ config.plantillaCitaConfirmadaSid || 'Sin definir' }}</div>
-                      <div class="entity-meta">Recordatorio: {{ config.plantillaRecordatorioSid || 'Sin definir' }}</div>
-                      <div class="entity-meta">Cancelación: {{ config.plantillaCancelacionSid || 'Sin definir' }}</div>
-                      <div class="entity-meta">Liberada sin confirmación: {{ config.plantillaLiberadaSinConfirmacionSid || 'Sin definir' }}</div>
-                      <div class="entity-meta">Gracias por tu visita: {{ config.plantillaGraciasVisitaSid || 'Sin definir' }}</div>
-                      <div class="entity-meta">Recordatorio de regreso: {{ config.plantillaRecordatorioRegresoSid || 'Sin definir' }}</div>
-                      <div class="entity-meta">Espacio disponible walk-in: {{ config.plantillaEspacioDisponibleWalkinSid || 'Sin definir' }}</div>
-                    </div>
-                    <div class="entity-side">
-                      <span class="status-pill" [class.is-active]="!!config.plantillaSolicitudConfirmacionSid && !!config.plantillaReprogramadaPendienteSid && !!config.plantillaRecordatorioConfirmacionSid && !!config.plantillaCitaConfirmadaSid && !!config.plantillaRecordatorioSid && !!config.plantillaCancelacionSid && !!config.plantillaLiberadaSinConfirmacionSid && !!config.plantillaGraciasVisitaSid && !!config.plantillaRecordatorioRegresoSid && !!config.plantillaEspacioDisponibleWalkinSid">
-                        {{ !!config.plantillaSolicitudConfirmacionSid && !!config.plantillaReprogramadaPendienteSid && !!config.plantillaRecordatorioConfirmacionSid && !!config.plantillaCitaConfirmadaSid && !!config.plantillaRecordatorioSid && !!config.plantillaCancelacionSid && !!config.plantillaLiberadaSinConfirmacionSid && !!config.plantillaGraciasVisitaSid && !!config.plantillaRecordatorioRegresoSid && !!config.plantillaEspacioDisponibleWalkinSid ? 'Listas' : 'Parcial' }}
-                      </span>
-                    </div>
-                  </article>
-                </div>
-
-                <ng-template #whatsappSinDatos>
-                  <div class="agenda-empty">
-                    No fue posible cargar la configuración actual de WhatsApp.
-                  </div>
-                </ng-template>
-              </mat-card>
-            </div>
-
-            <mat-card class="workspace-card list-card">
-              <div class="section-header">
-                <div>
-                  <div class="section-eyebrow">Trazabilidad</div>
-                  <h3>Actividad reciente de WhatsApp</h3>
-                </div>
+                <p class="helper-text mb-0">Estamos preparando plantillas, trazabilidad y estado del canal WhatsApp.</p>
               </div>
-
-              <div class="entity-list" *ngIf="auditoriaWhatsapp().length; else sinAuditoriaWhatsapp">
-                <article class="entity-row" *ngFor="let evento of auditoriaWhatsapp()">
-                  <div class="entity-main">
-                    <div class="entity-title">{{ etiquetaAccionAuditoriaConfiguracion(evento.accion) }}</div>
-                    <div class="entity-meta">{{ evento.resumen }}</div>
-                    <div class="entity-meta" *ngIf="evento.actorCorreo">Por {{ evento.actorCorreo }}</div>
-                  </div>
-                  <div class="entity-side">
-                    <span class="status-pill is-active">{{ evento.creadoEn | date:'dd/MM/yyyy HH:mm':'':'es-MX' }}</span>
-                  </div>
-                </article>
-              </div>
-
-              <ng-template #sinAuditoriaWhatsapp>
-                <div class="helper-text">Todavía no hay cambios auditados de configuración de WhatsApp.</div>
-              </ng-template>
-            </mat-card>
-
-            <div class="workspace-grid two-columns">
-              <mat-card class="workspace-card form-card">
-                <div class="section-header">
-                  <div>
-                    <div class="section-eyebrow">Validación rápida</div>
-                    <h3>Prueba de plantilla</h3>
-                  </div>
-                </div>
-
-                <form class="admin-form-grid admin-form-shell" (ngSubmit)="probarPlantillaWhatsapp()">
-                  <mat-form-field appearance="outline">
-                    <mat-label>Teléfono destino</mat-label>
-                    <input matInput name="whatsappTestPhone" [(ngModel)]="formularioPruebaWhatsapp.telefonoDestino" required maxlength="20">
-                  </mat-form-field>
-
-                  <mat-form-field appearance="outline">
-                    <mat-label>Nombre cliente</mat-label>
-                    <input matInput name="whatsappTestName" [(ngModel)]="formularioPruebaWhatsapp.nombreCliente" required maxlength="150">
-                  </mat-form-field>
-
-                  <mat-form-field appearance="outline">
-                    <mat-label>Fecha</mat-label>
-                    <input matInput name="whatsappTestDate" [(ngModel)]="formularioPruebaWhatsapp.fecha" required maxlength="30" placeholder="03/04/2026">
-                  </mat-form-field>
-
-                  <mat-form-field appearance="outline">
-                    <mat-label>Hora</mat-label>
-                    <input matInput name="whatsappTestTime" [(ngModel)]="formularioPruebaWhatsapp.hora" required maxlength="10" placeholder="09:00">
-                  </mat-form-field>
-
-                  <mat-form-field appearance="outline" class="full-width">
-                    <mat-label>Plantilla a probar</mat-label>
-                    <mat-select name="whatsappTestTemplate" [(ngModel)]="formularioPruebaWhatsapp.plantillaSid">
-                      <mat-option [value]="null">Usar plantilla de solicitud de confirmación configurada</mat-option>
-                      <mat-option *ngFor="let plantilla of plantillasWhatsapp()" [value]="plantilla.sid">
-                        {{ plantilla.nombre }} · {{ plantilla.sid }}
-                      </mat-option>
-                    </mat-select>
-                  </mat-form-field>
-
-                  <div class="form-actions">
-                    <button mat-flat-button color="primary" type="submit" [disabled]="probandoPlantillaWhatsapp">
-                      {{ probandoPlantillaWhatsapp ? 'Enviando...' : 'Enviar prueba' }}
-                    </button>
-                  </div>
-                </form>
-              </mat-card>
-
-              <mat-card class="workspace-card list-card">
-                <div class="section-header">
-                  <div>
-                    <div class="section-eyebrow">Biblioteca</div>
-                    <h3>Plantillas detectadas</h3>
-                  </div>
-                </div>
-
-                <div class="agenda-empty" *ngIf="!plantillasWhatsapp().length">
-                  Aún no hay plantillas cargadas desde el backend.
-                </div>
-
-                <div class="entity-list" *ngIf="plantillasWhatsapp().length">
-                  <article class="entity-row" *ngFor="let plantilla of plantillasWhatsapp()">
-                    <div class="entity-main">
-                      <div class="entity-title">{{ plantilla.nombre }}</div>
-                      <div class="entity-meta">{{ plantilla.sid }}</div>
-                      <div class="entity-meta">{{ plantilla.idioma || 'Idioma no definido' }} · {{ plantilla.categoria || 'Sin categoría' }}</div>
-                    </div>
-                    <div class="entity-side">
-                      <span class="status-pill" [class.is-active]="(plantilla.estado || '').toLowerCase() === 'approved'">
-                        {{ plantilla.estado || 'Sin estado' }}
-                      </span>
-                    </div>
-                  </article>
-                </div>
-              </mat-card>
-            </div>
-
-            <mat-card class="workspace-card workspace-card-emphasis">
-              <div class="section-header">
-                <div>
-                  <div class="section-eyebrow">Trazabilidad</div>
-                  <h3>Logs recientes de mensajes WhatsApp</h3>
-                </div>
-                <span class="agenda-date-pill">{{ logsWhatsapp().length }} registros</span>
-              </div>
-
-              <div class="agenda-empty" *ngIf="!logsWhatsapp().length">
-                Todavía no hay logs cargados para WhatsApp en este tenant.
-              </div>
-
-              <div class="entity-list" *ngIf="logsWhatsapp().length">
-                <article class="entity-row" *ngFor="let log of logsWhatsapp()">
-                  <div class="entity-main">
-                    <div class="entity-meta">Cita #{{ log.agregadoId }} · {{ log.tipoEvento }}</div>
-                    <div class="entity-title">{{ log.destinatario || 'Destino oculto' }}</div>
-                    <div class="entity-meta">Outbox: {{ log.estado }}<span *ngIf="log.estadoEntrega"> · Entrega: {{ log.estadoEntrega }}</span></div>
-                    <div class="entity-meta" *ngIf="log.plantillaSid">Plantilla: {{ log.plantillaSid }}</div>
-                    <div class="entity-meta" *ngIf="log.proveedorMensajeId">Message SID: {{ log.proveedorMensajeId }}</div>
-                    <div class="entity-meta" *ngIf="log.codigoErrorProveedor || log.detalleErrorProveedor">
-                      {{ log.codigoErrorProveedor || 'Sin código' }} · {{ log.detalleErrorProveedor || 'Sin detalle' }}
-                    </div>
-                  </div>
-                  <div class="entity-side">
-                    <span class="status-pill" [class.is-active]="['delivered','read','sent','queued'].includes((log.estadoEntrega || '').toLowerCase())">
-                      {{ log.estadoEntrega || log.estado }}
-                    </span>
-                    <span class="entity-meta" *ngIf="log.estadoEntregaActualizadoEn || log.enviadaEn">
-                      {{ (log.estadoEntregaActualizadoEn || log.enviadaEn) | date:'short':'':'es-MX' }}
-                    </span>
-                  </div>
-                </article>
-              </div>
-            </mat-card>
-          </section>
+            </section>
+          }
         </ng-container>
 
         <ng-container *ngIf="seccionActiva() === 'sucursales'">
-          <section class="section-stack">
-            <div class="workspace-grid two-columns">
-              <mat-card class="workspace-card form-card">
+          @defer {
+            <app-admin-branches-section
+              [sucursalEditandoId]="sucursalEditandoId"
+              [formularioSucursal]="formularioSucursal"
+              [guardandoSucursal]="guardandoSucursal"
+              [sucursales]="sucursales()"
+              (clearEdit)="cancelarEdicionSucursal()"
+              (save)="guardarSucursal()"
+              (editBranch)="editarSucursal($event)" />
+          } @placeholder {
+            <section class="section-stack">
+              <div class="workspace-card">
                 <div class="section-header">
                   <div>
-                    <div class="section-eyebrow">Configuración</div>
-                    <h3>{{ sucursalEditandoId ? 'Editar sucursal' : 'Nueva sucursal' }}</h3>
-                  </div>
-                  <button mat-stroked-button type="button" *ngIf="sucursalEditandoId" (click)="cancelarEdicionSucursal()">
-                    Limpiar formulario
-                  </button>
-                </div>
-
-                <form class="admin-form-grid admin-form-shell" (ngSubmit)="guardarSucursal()">
-                  <div class="form-block-title full-width">Información general</div>
-
-                  <mat-form-field appearance="outline" class="full-width">
-                    <mat-label>Nombre</mat-label>
-                    <input matInput name="sucursalNombre" [(ngModel)]="formularioSucursal.nombre" required maxlength="150">
-                  </mat-form-field>
-
-                  <mat-form-field appearance="outline" class="full-width">
-                    <mat-label>Dirección</mat-label>
-                    <input matInput name="sucursalDireccion" [(ngModel)]="formularioSucursal.direccion" maxlength="255">
-                  </mat-form-field>
-
-                  <mat-form-field appearance="outline">
-                    <mat-label>Teléfono</mat-label>
-                    <input matInput name="sucursalTelefono" [(ngModel)]="formularioSucursal.telefono" maxlength="20">
-                  </mat-form-field>
-
-                  <mat-form-field appearance="outline">
-                    <mat-label>Zona horaria</mat-label>
-                    <input matInput name="sucursalZonaHoraria" [(ngModel)]="formularioSucursal.zonaHoraria" required maxlength="60">
-                  </mat-form-field>
-
-                  <div class="form-block-title full-width">Estado operativo</div>
-
-                  <mat-slide-toggle name="sucursalActiva" [(ngModel)]="formularioSucursal.activa">
-                    Sucursal activa
-                  </mat-slide-toggle>
-
-                  <div class="form-actions">
-                    <button mat-flat-button color="primary" type="submit" [disabled]="guardandoSucursal">
-                      {{ sucursalEditandoId ? 'Actualizar sucursal' : 'Crear sucursal' }}
-                    </button>
-                  </div>
-                </form>
-              </mat-card>
-
-              <mat-card class="workspace-card list-card">
-                <div class="section-header">
-                  <div>
-                    <div class="section-eyebrow">Operación</div>
-                    <h3>Sucursales registradas</h3>
+                    <div class="section-eyebrow">Sucursales</div>
+                    <h3>Cargando sedes operativas</h3>
                   </div>
                 </div>
-
-                <div class="entity-list">
-                  <article class="entity-row" *ngFor="let sucursal of sucursales()">
-                    <div class="entity-main">
-                      <div class="entity-title">{{ sucursal.nombre }}</div>
-                      <div class="entity-meta">{{ sucursal.zonaHoraria }}</div>
-                      <div class="entity-meta" *ngIf="sucursal.direccion">{{ sucursal.direccion }}</div>
-                      <div class="entity-meta">{{ sucursal.telefono || 'Sin teléfono' }}</div>
-                    </div>
-                    <div class="entity-side">
-                      <span class="status-pill" [class.is-active]="sucursal.activa">{{ sucursal.activa ? 'Activa' : 'Inactiva' }}</span>
-                      <button mat-stroked-button type="button" (click)="editarSucursal(sucursal)">Editar</button>
-                    </div>
-                  </article>
-                </div>
-              </mat-card>
-            </div>
-          </section>
+                <p class="helper-text mb-0">Estamos preparando la configuración y el listado de sucursales registradas.</p>
+              </div>
+            </section>
+          }
         </ng-container>
 
         <ng-container *ngIf="seccionActiva() === 'servicios'">
-          <section class="section-stack">
-            <div class="workspace-grid two-columns">
-              <mat-card class="workspace-card form-card">
+          @defer {
+            <app-admin-services-section
+              [servicioEditandoId]="servicioEditandoId"
+              [formularioServicio]="formularioServicio"
+              [sucursales]="sucursales()"
+              [guardandoServicio]="guardandoServicio"
+              [servicios]="servicios()"
+              (clearEdit)="cancelarEdicionServicio()"
+              (save)="guardarServicio()"
+              (editService)="editarServicio($event)" />
+          } @placeholder {
+            <section class="section-stack">
+              <div class="workspace-card">
                 <div class="section-header">
                   <div>
-                    <div class="section-eyebrow">Catálogo</div>
-                    <h3>{{ servicioEditandoId ? 'Editar servicio' : 'Nuevo servicio' }}</h3>
-                  </div>
-                  <button mat-stroked-button type="button" *ngIf="servicioEditandoId" (click)="cancelarEdicionServicio()">
-                    Limpiar formulario
-                  </button>
-                </div>
-
-                <form class="admin-form-grid admin-form-shell" (ngSubmit)="guardarServicio()">
-                  <div class="form-block-title full-width">Datos del servicio</div>
-
-                  <mat-form-field appearance="outline">
-                    <mat-label>Sucursal</mat-label>
-                    <mat-select name="servicioSucursalId" [(ngModel)]="formularioServicio.sucursalId" required>
-                      <mat-option *ngFor="let sucursal of sucursales()" [value]="sucursal.id">{{ sucursal.nombre }}</mat-option>
-                    </mat-select>
-                  </mat-form-field>
-
-                  <mat-form-field appearance="outline">
-                    <mat-label>Nombre</mat-label>
-                    <input matInput name="servicioNombre" [(ngModel)]="formularioServicio.nombre" required maxlength="150">
-                  </mat-form-field>
-
-                  <mat-form-field appearance="outline" class="full-width">
-                    <mat-label>Descripción</mat-label>
-                    <textarea matInput rows="3" name="servicioDescripcion" [(ngModel)]="formularioServicio.descripcion" maxlength="500"></textarea>
-                  </mat-form-field>
-
-                  <div class="form-block-title full-width">Configuración operativa</div>
-
-                  <mat-form-field appearance="outline">
-                    <mat-label>Duración (min)</mat-label>
-                    <input matInput type="number" min="5" name="servicioDuracion" [(ngModel)]="formularioServicio.duracionMinutos" required>
-                  </mat-form-field>
-
-                  <mat-form-field appearance="outline">
-                    <mat-label>Buffer antes</mat-label>
-                    <input matInput type="number" min="0" name="servicioBufferAntes" [(ngModel)]="formularioServicio.bufferAntesMinutos" required>
-                  </mat-form-field>
-
-                  <mat-form-field appearance="outline">
-                    <mat-label>Buffer después</mat-label>
-                    <input matInput type="number" min="0" name="servicioBufferDespues" [(ngModel)]="formularioServicio.bufferDespuesMinutos" required>
-                  </mat-form-field>
-
-                  <mat-form-field appearance="outline">
-                    <mat-label>Precio</mat-label>
-                    <input matInput type="number" min="0" step="0.01" name="servicioPrecio" [(ngModel)]="formularioServicio.precio" required>
-                  </mat-form-field>
-
-                  <mat-form-field appearance="outline">
-                    <mat-label>Moneda</mat-label>
-                    <input matInput name="servicioMoneda" [(ngModel)]="formularioServicio.moneda" maxlength="10" required>
-                  </mat-form-field>
-
-                  <mat-slide-toggle name="servicioActivo" [(ngModel)]="formularioServicio.activo">
-                    Servicio activo
-                  </mat-slide-toggle>
-
-                  <div class="form-actions">
-                    <button mat-flat-button color="primary" type="submit" [disabled]="guardandoServicio || !sucursales().length">
-                      {{ servicioEditandoId ? 'Actualizar servicio' : 'Crear servicio' }}
-                    </button>
-                  </div>
-                </form>
-              </mat-card>
-
-              <mat-card class="workspace-card list-card">
-                <div class="section-header">
-                  <div>
-                    <div class="section-eyebrow">Portafolio</div>
-                    <h3>Servicios disponibles</h3>
+                    <div class="section-eyebrow">Servicios</div>
+                    <h3>Cargando catálogo</h3>
                   </div>
                 </div>
-
-                <div class="entity-list">
-                  <article class="entity-row" *ngFor="let servicio of servicios()">
-                    <div class="entity-main">
-                      <div class="entity-meta">{{ servicio.sucursalNombre }}</div>
-                      <div class="entity-title">{{ servicio.nombre }}</div>
-                      <div class="entity-meta" *ngIf="servicio.descripcion">{{ servicio.descripcion }}</div>
-                      <div class="service-metrics">
-                        <span>{{ servicio.duracionMinutos }} min</span>
-                        <span>Buffers {{ servicio.bufferAntesMinutos }} / {{ servicio.bufferDespuesMinutos }}</span>
-                        <span>{{ servicio.precio | currency:(servicio.moneda || 'MXN'):'symbol-narrow':'1.0-0':'es-MX' }}</span>
-                      </div>
-                    </div>
-                    <div class="entity-side">
-                      <span class="status-pill" [class.is-active]="servicio.activo">{{ servicio.activo ? 'Activo' : 'Inactivo' }}</span>
-                      <button mat-stroked-button type="button" (click)="editarServicio(servicio)">Editar</button>
-                    </div>
-                  </article>
-                </div>
-              </mat-card>
-            </div>
-          </section>
+                <p class="helper-text mb-0">Estamos preparando el formulario del servicio y el portafolio disponible.</p>
+              </div>
+            </section>
+          }
         </ng-container>
 
         <ng-container *ngIf="seccionActiva() === 'usuarios'">
@@ -1438,747 +405,188 @@
               </div>
             </mat-card>
 
-            <div class="workspace-grid two-columns users-access-grid" *ngIf="subseccionUsuariosActiva() === 'usuarios'">
-              <mat-card class="workspace-card form-card users-form-card" id="usuarios-internos-form-card">
-                <div class="section-header">
-                  <div>
-                    <div class="section-eyebrow">Operación interna</div>
-                    <h3>{{ usuarioInternoEditandoId ? 'Editar acceso de usuario' : 'Nuevo usuario interno' }}</h3>
-                  </div>
-                  <button mat-stroked-button type="button" *ngIf="usuarioInternoEditandoId" (click)="cancelarEdicionUsuarioInterno()">
-                    Limpiar formulario
-                  </button>
-                </div>
-
-                <div class="helper-text full-width users-helper-banner">
-                  Primero asignas un <strong>rol</strong>. Luego, solo si hace falta, agregas permisos extra para ese usuario.
-                </div>
-
-                <div class="users-access-summary">
-                  <article class="users-access-stat">
-                    <span>Rol base</span>
-                    <strong>{{ resumenAccesoUsuarioInterno().rolNombre }}</strong>
-                  </article>
-                  <article class="users-access-stat">
-                    <span>Permisos del rol</span>
-                    <strong>{{ resumenAccesoUsuarioInterno().permisosRol }}</strong>
-                  </article>
-                  <article class="users-access-stat">
-                    <span>Permisos extra</span>
-                    <strong>{{ resumenAccesoUsuarioInterno().permisosDirectos }}</strong>
-                  </article>
-                  <article class="users-access-stat">
-                    <span>Acceso efectivo</span>
-                    <strong>{{ resumenAccesoUsuarioInterno().permisosEfectivos }}</strong>
-                  </article>
-                </div>
-
-                <form class="admin-form-grid admin-form-shell" (ngSubmit)="guardarUsuarioInterno()">
-                  <div class="form-block-title full-width">1. Acceso del usuario</div>
-
-                  <mat-form-field appearance="outline">
-                    <mat-label>Sucursal base</mat-label>
-                    <mat-select
-                      name="usuarioInternoSucursalId"
-                      [(ngModel)]="formularioUsuarioInterno.sucursalId">
-                      <mat-option [value]="null">Sin restricción inicial</mat-option>
-                      <mat-option *ngFor="let sucursal of sucursales()" [value]="sucursal.id">{{ sucursal.nombre }}</mat-option>
-                    </mat-select>
-                  </mat-form-field>
-
-                  <mat-form-field appearance="outline">
-                    <mat-label>Sucursales permitidas</mat-label>
-                    <mat-select
-                      multiple
-                      name="usuarioInternoSucursalIds"
-                      [(ngModel)]="formularioUsuarioInterno.sucursalIds"
-                      (ngModelChange)="cambiarSucursalesUsuarioInterno($event)">
-                      <mat-option *ngFor="let sucursal of sucursales()" [value]="sucursal.id">{{ sucursal.nombre }}</mat-option>
-                    </mat-select>
-                    <mat-hint>Si no eliges ninguna, el usuario podrá operar en todas las sucursales de la empresa.</mat-hint>
-                  </mat-form-field>
-
-                  <mat-form-field appearance="outline">
-                    <mat-label>Rol</mat-label>
-                    <mat-select
-                      name="usuarioInternoRolEmpresaId"
-                      [(ngModel)]="formularioUsuarioInterno.rolEmpresaId"
-                      (ngModelChange)="cambiarRolUsuarioInterno($event)"
-                      required>
-                      <mat-option [value]="null" disabled>Selecciona un rol</mat-option>
-                      <mat-option *ngFor="let rol of rolesUsuarioInterno()" [value]="rol.id">{{ rol.nombre }}</mat-option>
-                    </mat-select>
-                    <mat-hint>Selecciona el rol y el usuario heredará esos permisos sin configurarlos manualmente.</mat-hint>
-                  </mat-form-field>
-
-                  <div class="role-preview-card full-width" *ngIf="rolUsuarioInternoSeleccionado() as rol">
-                    <div class="role-preview-head">
+            <ng-container *ngIf="subseccionUsuariosActiva() === 'usuarios'">
+              @defer {
+                <app-admin-users-access-section
+                  [usuarioInternoEditandoId]="usuarioInternoEditandoId"
+                  [formularioUsuarioInterno]="formularioUsuarioInterno"
+                  [sucursales]="sucursales()"
+                  [rolesUsuarioInterno]="rolesUsuarioInterno()"
+                  [rolUsuarioInternoSeleccionado]="rolUsuarioInternoSeleccionado()"
+                  [resumenAccesoUsuarioInterno]="resumenAccesoUsuarioInterno()"
+                  [permisosDirectosUsuarioInterno]="permisosDirectosUsuarioInterno()"
+                  [permisosEfectivosUsuarioInterno]="permisosEfectivosUsuarioInterno()"
+                  [gruposPermisosDirectosUsuarioInterno]="gruposPermisosDirectosUsuarioInterno()"
+                  [usuariosInternosFiltrados]="usuariosInternosFiltrados()"
+                  [filtroUsuariosInternos]="filtroUsuariosInternos()"
+                  [etiquetaPermiso]="etiquetaPermiso.bind(this)"
+                  [resumenPermisosLista]="resumenPermisosLista.bind(this)"
+                  [resumenPermisosRol]="resumenPermisosRol.bind(this)"
+                  [rolInternoDeUsuario]="rolInternoDeUsuario.bind(this)"
+                  [permisoDirectoUsuarioSeleccionado]="permisoDirectoUsuarioSeleccionado.bind(this)"
+                  (save)="guardarUsuarioInterno()"
+                  (clearEdit)="cancelarEdicionUsuarioInterno()"
+                  (branchScopeChange)="cambiarSucursalesUsuarioInterno($event)"
+                  (roleChange)="cambiarRolUsuarioInterno($event)"
+                  (editSelectedRole)="editarRolSeleccionadoUsuarioInterno()"
+                  (directPermissionChange)="cambiarPermisoDirectoUsuario($event.codigo, $event.checked)"
+                  (filterChange)="filtroUsuariosInternos.set($event)"
+                  (clearFilter)="limpiarFiltroUsuariosInternos()"
+                  (editAccess)="editarAccesoUsuarioInterno($event)" />
+              } @placeholder {
+                <section class="section-stack">
+                  <div class="workspace-card">
+                    <div class="section-header">
                       <div>
-                        <div class="section-eyebrow">Vista previa del acceso</div>
-                        <h4>{{ rol.nombre }}</h4>
-                        <p>{{ rol.permisos.length }} permiso(s) heredados. Scope actual: {{ resumenAccesoUsuarioInterno().scopeTexto }}.</p>
+                        <div class="section-eyebrow">Usuarios</div>
+                        <h3>Cargando accesos internos</h3>
                       </div>
-                      <button mat-stroked-button type="button" (click)="editarRolSeleccionadoUsuarioInterno()">
-                        Revisar rol
-                      </button>
                     </div>
-
-                    <mat-chip-set aria-label="Permisos heredados del rol">
-                      <mat-chip *ngFor="let permiso of rol.permisos.slice(0, 4)">{{ etiquetaPermiso(permiso) }}</mat-chip>
-                      <mat-chip *ngIf="rol.permisos.length > 4">+{{ rol.permisos.length - 4 }} más</mat-chip>
-                    </mat-chip-set>
+                    <p class="helper-text mb-0">Estamos preparando el formulario, roles heredados y la lista de usuarios internos.</p>
                   </div>
+                </section>
+              }
+            </ng-container>
 
-                  <details class="user-extra-permissions full-width" *ngIf="rolUsuarioInternoSeleccionado() as rol" [open]="!!permisosDirectosUsuarioInterno().length">
-                    <summary>
-                      2. Permisos extra por usuario
-                      <span>{{ permisosDirectosUsuarioInterno().length }} seleccionado(s)</span>
-                    </summary>
-
-                    <div class="helper-text">
-                      Usa este bloque solo para excepciones. El rol sigue siendo la base y aquí solo agregas permisos puntuales para este usuario.
-                    </div>
-
-                    <div class="user-permissions-summary" *ngIf="permisosDirectosUsuarioInterno().length">
+            <ng-container *ngIf="subseccionUsuariosActiva() === 'roles'">
+              @defer {
+                <app-admin-users-roles-section
+                  [rolInternoEditandoId]="rolInternoEditandoId"
+                  [rolInternoClonandoDesdeId]="rolInternoClonandoDesdeId"
+                  [rolInternoClonandoNombreOrigen]="rolInternoClonandoNombreOrigen"
+                  [plantillasRolesInternos]="plantillasRolesInternos()"
+                  [formularioRolInterno]="formularioRolInterno"
+                  [gruposPermisos]="gruposPermisos()"
+                  [rolesInternos]="rolesInternos()"
+                  [permisoRolSeleccionado]="permisoRolSeleccionado.bind(this)"
+                  (clearEdit)="cancelarEdicionRolInterno()"
+                  (useTemplate)="usarPlantillaRolInterno($event)"
+                  (save)="guardarRolInterno()"
+                  (rolePermissionChange)="cambiarPermisoRol($event.codigo, $event.checked)"
+                  (cloneRole)="clonarRolInterno($event)"
+                  (editRole)="editarRolInterno($event)"
+                  (deleteRole)="eliminarRolInterno($event)" />
+              } @placeholder {
+                <section class="section-stack">
+                  <div class="workspace-card">
+                    <div class="section-header">
                       <div>
-                        <strong>Extras directos</strong>
-                        <p>{{ permisosDirectosUsuarioInterno().length }} permiso(s). {{ resumenPermisosLista(permisosDirectosUsuarioInterno(), 4) }}.</p>
+                        <div class="section-eyebrow">Roles</div>
+                        <h3>Cargando roles y permisos</h3>
                       </div>
-                      <mat-chip-set aria-label="Permisos directos del usuario">
-                        <mat-chip *ngFor="let permiso of permisosDirectosUsuarioInterno().slice(0, 6)">{{ etiquetaPermiso(permiso) }}</mat-chip>
-                        <mat-chip *ngIf="permisosDirectosUsuarioInterno().length > 6">+{{ permisosDirectosUsuarioInterno().length - 6 }} más</mat-chip>
-                      </mat-chip-set>
                     </div>
+                    <p class="helper-text mb-0">Estamos preparando plantillas, permisos y catálogo de roles internos.</p>
+                  </div>
+                </section>
+              }
+            </ng-container>
 
-                    <div class="user-permissions-summary user-permissions-summary-secondary">
+            <ng-container *ngIf="subseccionUsuariosActiva() === 'actividad'">
+              @defer {
+                <app-admin-users-activity-section
+                  [auditoriaRolesInternos]="auditoriaRolesInternos()"
+                  [etiquetaAccionAuditoriaRol]="etiquetaAccionAuditoriaRol.bind(this)" />
+              } @placeholder {
+                <section class="section-stack">
+                  <div class="workspace-card">
+                    <div class="section-header">
                       <div>
-                        <strong>Acceso efectivo</strong>
-                        <p>{{ permisosEfectivosUsuarioInterno().length }} permiso(s) combinando rol + extras.</p>
+                        <div class="section-eyebrow">Actividad</div>
+                        <h3>Cargando trazabilidad de accesos</h3>
                       </div>
-                      <mat-chip-set aria-label="Acceso efectivo del usuario">
-                        <mat-chip *ngFor="let permiso of permisosEfectivosUsuarioInterno().slice(0, 6)">{{ etiquetaPermiso(permiso) }}</mat-chip>
-                        <mat-chip *ngIf="permisosEfectivosUsuarioInterno().length > 6">+{{ permisosEfectivosUsuarioInterno().length - 6 }} más</mat-chip>
-                      </mat-chip-set>
                     </div>
-
-                    <div class="permission-groups" *ngIf="gruposPermisosDirectosUsuarioInterno().length; else sinPermisosExtrasDisponibles">
-                      <section class="permission-group-card" *ngFor="let grupo of gruposPermisosDirectosUsuarioInterno()">
-                        <div class="permission-group-title">{{ grupo.titulo }}</div>
-                        <div class="permission-group-list">
-                          <mat-checkbox
-                            *ngFor="let permiso of grupo.permisos"
-                            [ngModel]="permisoDirectoUsuarioSeleccionado(permiso.codigo)"
-                            (ngModelChange)="cambiarPermisoDirectoUsuario(permiso.codigo, $event)"
-                            [name]="'permiso_directo_' + permiso.codigo">
-                            <span class="permission-label">{{ permiso.nombre }}</span>
-                            <span class="permission-code">{{ permiso.codigo }}</span>
-                          </mat-checkbox>
-                        </div>
-                      </section>
-                    </div>
-
-                    <ng-template #sinPermisosExtrasDisponibles>
-                      <div class="helper-text">
-                        Este rol ya cubre todos los permisos internos disponibles para esta empresa.
-                      </div>
-                    </ng-template>
-
-                    <div class="helper-text">
-                      Los cambios de acceso aplican en el siguiente inicio de sesión de ese usuario.
-                    </div>
-                  </details>
-
-                  <div class="form-block-title full-width">3. Datos del usuario</div>
-
-                  <mat-form-field appearance="outline">
-                    <mat-label>Nombre completo</mat-label>
-                    <input matInput name="usuarioInternoNombreCompleto" [(ngModel)]="formularioUsuarioInterno.nombreCompleto" required maxlength="150">
-                  </mat-form-field>
-
-                  <mat-form-field appearance="outline">
-                    <mat-label>Correo</mat-label>
-                    <input matInput type="email" name="usuarioInternoCorreo" [(ngModel)]="formularioUsuarioInterno.correo" required maxlength="150">
-                  </mat-form-field>
-
-                  <mat-form-field appearance="outline">
-                    <mat-label>Contraseña temporal</mat-label>
-                    <input
-                      matInput
-                      type="password"
-                      name="usuarioInternoPassword"
-                      [(ngModel)]="formularioUsuarioInterno.contrasenaTemporal"
-                      minlength="8"
-                      maxlength="100">
-                    <mat-hint>
-                      {{ usuarioInternoEditandoId ? 'Opcional al editar. Si la cambias, usa mínimo 8 caracteres.' : 'Obligatoria al crear. Usa mínimo 8 caracteres.' }}
-                    </mat-hint>
-                  </mat-form-field>
-
-                  <mat-form-field appearance="outline">
-                    <mat-label>Teléfono</mat-label>
-                    <input matInput name="usuarioInternoTelefono" [(ngModel)]="formularioUsuarioInterno.telefono" maxlength="30">
-                  </mat-form-field>
-
-                  <mat-form-field appearance="outline">
-                    <mat-label>Puesto</mat-label>
-                    <input matInput name="usuarioInternoPuesto" [(ngModel)]="formularioUsuarioInterno.puesto" maxlength="80">
-                  </mat-form-field>
-
-                  <mat-slide-toggle name="usuarioInternoActivo" [(ngModel)]="formularioUsuarioInterno.activo">
-                    Usuario activo
-                  </mat-slide-toggle>
-
-                  <mat-form-field appearance="outline" class="full-width">
-                    <mat-label>Notas internas</mat-label>
-                    <textarea matInput rows="3" name="usuarioInternoNotas" [(ngModel)]="formularioUsuarioInterno.notas" maxlength="500"></textarea>
-                  </mat-form-field>
-
-                  <div class="form-actions">
-                    <button mat-flat-button color="primary" type="submit">
-                      {{ usuarioInternoEditandoId ? 'Actualizar usuario' : 'Crear usuario interno' }}
-                    </button>
+                    <p class="helper-text mb-0">Estamos preparando el historial reciente de cambios en roles y accesos internos.</p>
                   </div>
-                </form>
-              </mat-card>
-
-              <mat-card class="workspace-card list-card">
-                <div class="section-header">
-                  <div>
-                    <div class="section-eyebrow">Accesos internos</div>
-                    <h3>Usuarios administrativos y operativos</h3>
-                  </div>
-                </div>
-
-                <div class="users-list-toolbar">
-                  <mat-form-field appearance="outline" class="users-search-field">
-                    <mat-label>Buscar usuario</mat-label>
-                    <input matInput [ngModel]="filtroUsuariosInternos()" (ngModelChange)="filtroUsuariosInternos.set($event)" placeholder="Nombre, correo, rol o sucursal">
-                  </mat-form-field>
-                  <button mat-stroked-button type="button" *ngIf="filtroUsuariosInternos()" (click)="limpiarFiltroUsuariosInternos()">
-                    Limpiar
-                  </button>
-                </div>
-
-                <div class="entity-list">
-                  <article class="entity-row entity-row-user" *ngFor="let usuario of usuariosInternosFiltrados()">
-                    <div class="entity-main">
-                      <div class="entity-row-head">
-                        <div class="entity-title">{{ usuario.nombreCompleto }}</div>
-                        <div class="entity-meta">{{ usuario.rolNombre || usuario.rolCodigo }}<span *ngIf="usuario.puesto"> · {{ usuario.puesto }}</span></div>
-                      </div>
-                      <div class="entity-meta">{{ usuario.correo }}</div>
-                      <div class="entity-meta">
-                        Alcance: {{ usuario.sucursalNombresScope.length ? usuario.sucursalNombresScope.join(', ') : (usuario.sucursalNombre || 'Todas las sucursales') }}
-                      </div>
-                      <div class="entity-meta">
-                        Acceso efectivo: {{ usuario.permisosEfectivos.length }} permiso(s)
-                        <span *ngIf="usuario.permisosDirectos.length"> · {{ usuario.permisosDirectos.length }} extra(s)</span>
-                      </div>
-                      <div class="entity-meta" *ngIf="rolInternoDeUsuario(usuario) as rolAsignado">
-                        Hereda {{ rolAsignado.permisos.length }} del rol. {{ resumenPermisosRol(rolAsignado, 3) }}
-                      </div>
-                      <div class="entity-meta" *ngIf="usuario.permisosDirectos.length">
-                        Extras directos: {{ resumenPermisosLista(usuario.permisosDirectos, 3) }}
-                      </div>
-                      <div class="entity-meta" *ngIf="usuario.telefono">{{ usuario.telefono }}</div>
-                      <div class="entity-meta" *ngIf="usuario.notas">{{ usuario.notas }}</div>
-                    </div>
-                    <div class="entity-side">
-                      <span class="status-pill" [class.is-active]="usuario.activo">{{ usuario.activo ? 'Activo' : 'Inactivo' }}</span>
-                      <button mat-stroked-button type="button" (click)="editarAccesoUsuarioInterno(usuario)">Editar acceso</button>
-                    </div>
-                  </article>
-                </div>
-
-                <div class="agenda-empty" *ngIf="!usuariosInternosFiltrados().length">
-                  No encontré usuarios con ese filtro.
-                </div>
-              </mat-card>
-            </div>
-
-            <div class="workspace-grid two-columns" *ngIf="subseccionUsuariosActiva() === 'roles'">
-              <mat-card class="workspace-card form-card">
-                <div class="section-header">
-                  <div>
-                    <div class="section-eyebrow">Autorización</div>
-                    <h3>{{ rolInternoEditandoId ? 'Editar rol interno' : rolInternoClonandoDesdeId ? 'Clonar rol interno' : 'Nuevo rol interno' }}</h3>
-                  </div>
-                  <button mat-stroked-button type="button" *ngIf="rolInternoEditandoId || rolInternoClonandoDesdeId" (click)="cancelarEdicionRolInterno()">
-                    Limpiar formulario
-                  </button>
-                </div>
-
-                <div class="helper-text full-width" *ngIf="rolInternoClonandoDesdeId && rolInternoClonandoNombreOrigen">
-                  Estás creando una copia basada en el rol <strong>{{ rolInternoClonandoNombreOrigen }}</strong>. Puedes ajustar nombre, código y permisos antes de guardar.
-                </div>
-
-                <div class="form-block-title full-width">Plantillas sugeridas</div>
-
-                <div class="permission-groups full-width" *ngIf="plantillasRolesInternos().length">
-                  <section class="permission-group-card" *ngFor="let plantilla of plantillasRolesInternos()">
-                    <div class="permission-group-title">{{ plantilla.nombreSugerido }}</div>
-                    <div class="entity-meta">{{ plantilla.categoria }}</div>
-                    <div class="helper-text">{{ plantilla.descripcion }}</div>
-                    <div class="service-metrics">
-                      <span>{{ plantilla.permisos.length }} permiso(s)</span>
-                    </div>
-                    <button mat-stroked-button type="button" (click)="usarPlantillaRolInterno(plantilla)">
-                      Usar plantilla
-                    </button>
-                  </section>
-                </div>
-
-                <form class="admin-form-grid admin-form-shell" (ngSubmit)="guardarRolInterno()">
-                  <div class="form-block-title full-width">Identidad del rol</div>
-
-                  <mat-form-field appearance="outline">
-                    <mat-label>Código</mat-label>
-                    <input matInput name="rolInternoCodigo" [(ngModel)]="formularioRolInterno.codigo" required maxlength="80" placeholder="EJ. RECEPCION_PLUS">
-                    <mat-hint>Usa un código corto y único por empresa.</mat-hint>
-                  </mat-form-field>
-
-                  <mat-form-field appearance="outline">
-                    <mat-label>Nombre visible</mat-label>
-                    <input matInput name="rolInternoNombre" [(ngModel)]="formularioRolInterno.nombre" required maxlength="120" placeholder="Recepción y caja">
-                  </mat-form-field>
-
-                  <mat-slide-toggle name="rolInternoActivo" [(ngModel)]="formularioRolInterno.activo">
-                    Rol activo
-                  </mat-slide-toggle>
-
-                  <mat-form-field appearance="outline" class="full-width">
-                    <mat-label>Descripción</mat-label>
-                    <textarea matInput rows="2" name="rolInternoDescripcion" [(ngModel)]="formularioRolInterno.descripcion" maxlength="255"></textarea>
-                  </mat-form-field>
-
-                  <div class="form-block-title full-width">Permisos del rol</div>
-
-                  <div class="permission-groups full-width">
-                    <section class="permission-group-card" *ngFor="let grupo of gruposPermisos()">
-                      <div class="permission-group-title">{{ grupo.titulo }}</div>
-                      <div class="permission-group-list">
-                        <mat-checkbox
-                          *ngFor="let permiso of grupo.permisos"
-                          [ngModel]="permisoRolSeleccionado(permiso.codigo)"
-                          (ngModelChange)="cambiarPermisoRol(permiso.codigo, $event)"
-                          [name]="'permiso_' + permiso.codigo">
-                          <span class="permission-label">{{ permiso.nombre }}</span>
-                          <span class="permission-code">{{ permiso.codigo }}</span>
-                        </mat-checkbox>
-                      </div>
-                    </section>
-                  </div>
-
-                  <div class="helper-text full-width">
-                    Crea roles por empresa sin tocar el catálogo global. Así puedes combinar recepción, caja, staff o administración según lo que necesite cada negocio.
-                  </div>
-
-                  <div class="form-actions">
-                    <button mat-flat-button color="primary" type="submit">
-                      {{ rolInternoEditandoId ? 'Actualizar rol' : rolInternoClonandoDesdeId ? 'Crear copia del rol' : 'Crear rol interno' }}
-                    </button>
-                  </div>
-                </form>
-              </mat-card>
-
-              <mat-card class="workspace-card list-card">
-                <div class="section-header">
-                  <div>
-                    <div class="section-eyebrow">Catálogo por empresa</div>
-                    <h3>Roles y permisos disponibles</h3>
-                  </div>
-                </div>
-
-                <div class="entity-list">
-                  <article class="entity-row" *ngFor="let rol of rolesInternos()">
-                    <div class="entity-main">
-                      <div class="entity-title">{{ rol.nombre }}</div>
-                      <div class="entity-meta">{{ rol.codigo }}</div>
-                      <div class="entity-meta" *ngIf="rol.descripcion">{{ rol.descripcion }}</div>
-                      <div class="service-metrics">
-                        <span>{{ rol.permisos.length }} permiso(s)</span>
-                        <span>{{ rol.usuariosAsignados }} usuario(s)</span>
-                        <span>{{ rol.activo ? 'Activo' : 'Inactivo' }}</span>
-                        <span>{{ rol.editable ? 'Editable' : 'Base del sistema' }}</span>
-                      </div>
-                      <mat-chip-set aria-label="Permisos del rol">
-                        <mat-chip *ngFor="let permiso of rol.permisos.slice(0, 4)">{{ permiso }}</mat-chip>
-                        <mat-chip *ngIf="rol.permisos.length > 4">+{{ rol.permisos.length - 4 }} más</mat-chip>
-                      </mat-chip-set>
-                    </div>
-                    <div class="entity-side">
-                      <span class="status-pill" [class.is-active]="rol.activo">{{ rol.activo ? 'Activo' : 'Inactivo' }}</span>
-                      <button mat-stroked-button type="button" (click)="clonarRolInterno(rol)">Clonar</button>
-                      <button mat-stroked-button type="button" (click)="editarRolInterno(rol)">Editar</button>
-                      <button
-                        mat-stroked-button
-                        type="button"
-                        color="warn"
-                        (click)="eliminarRolInterno(rol)"
-                        [disabled]="!rol.sePuedeEliminar">
-                        Eliminar
-                      </button>
-                    </div>
-                  </article>
-                </div>
-              </mat-card>
-            </div>
-
-            <mat-card class="workspace-card list-card" *ngIf="subseccionUsuariosActiva() === 'actividad'">
-              <div class="section-header">
-                <div>
-                  <div class="section-eyebrow">Trazabilidad</div>
-                  <h3>Actividad reciente de roles y accesos</h3>
-                </div>
-              </div>
-
-              <div class="entity-list" *ngIf="auditoriaRolesInternos().length; else sinAuditoriaRoles">
-                <article class="entity-row" *ngFor="let evento of auditoriaRolesInternos()">
-                  <div class="entity-main">
-                    <div class="entity-title">{{ etiquetaAccionAuditoriaRol(evento.accion) }}</div>
-                    <div class="entity-meta">{{ evento.resumen }}</div>
-                    <div class="entity-meta" *ngIf="evento.rolNombre || evento.rolCodigo">
-                      {{ evento.rolNombre || evento.rolCodigo }}<span *ngIf="evento.rolNombre && evento.rolCodigo && evento.rolNombre !== evento.rolCodigo"> · {{ evento.rolCodigo }}</span>
-                    </div>
-                    <div class="entity-meta" *ngIf="evento.actorCorreo">Por {{ evento.actorCorreo }}</div>
-                  </div>
-                  <div class="entity-side">
-                    <span class="status-pill is-active">{{ evento.creadoEn | date:'dd/MM/yyyy HH:mm':'':'es-MX' }}</span>
-                  </div>
-                </article>
-              </div>
-
-              <ng-template #sinAuditoriaRoles>
-                <div class="helper-text">Todavía no hay movimientos auditados de roles o accesos internos.</div>
-              </ng-template>
-            </mat-card>
+                </section>
+              }
+            </ng-container>
           </section>
         </ng-container>
 
         <ng-container *ngIf="seccionActiva() === 'prestadores'">
-          <section class="section-stack">
-            <div class="workspace-grid two-columns">
-              <mat-card class="workspace-card form-card">
+          @defer {
+            <app-admin-providers-section
+              [prestadorEditandoId]="prestadorEditandoId"
+              [formularioPrestador]="formularioPrestador"
+              [sucursales]="sucursales()"
+              [guardandoPrestador]="guardandoPrestador"
+              [serviciosPrestadorDisponibles]="serviciosPrestadorDisponibles"
+              [prestadores]="prestadores()"
+              (clearEdit)="cancelarEdicionPrestador()"
+              (save)="guardarPrestador()"
+              (branchChange)="cambiarSucursalPrestador($event)"
+              (serviceToggle)="alternarServicioPrestador($event.servicioId, $event.checked)"
+              (editProvider)="editarPrestador($event)" />
+          } @placeholder {
+            <section class="section-stack">
+              <div class="workspace-card">
                 <div class="section-header">
                   <div>
-                    <div class="section-eyebrow">Equipo</div>
-                    <h3>{{ prestadorEditandoId ? 'Editar prestador' : 'Nuevo prestador' }}</h3>
-                  </div>
-                  <button mat-stroked-button type="button" *ngIf="prestadorEditandoId" (click)="cancelarEdicionPrestador()">
-                    Limpiar formulario
-                  </button>
-                </div>
-
-                <form class="admin-form-grid admin-form-shell" (ngSubmit)="guardarPrestador()">
-                  <div class="form-block-title full-width">Identidad</div>
-
-                  <mat-form-field appearance="outline">
-                    <mat-label>Sucursal</mat-label>
-                    <mat-select
-                      name="prestadorSucursalId"
-                      [(ngModel)]="formularioPrestador.sucursalId"
-                      (ngModelChange)="cambiarSucursalPrestador($event)"
-                      required>
-                      <mat-option *ngFor="let sucursal of sucursales()" [value]="sucursal.id">{{ sucursal.nombre }}</mat-option>
-                    </mat-select>
-                  </mat-form-field>
-
-                  <mat-form-field appearance="outline">
-                    <mat-label>Nombre visible</mat-label>
-                    <input matInput name="prestadorNombreMostrar" [(ngModel)]="formularioPrestador.nombreMostrar" required maxlength="150">
-                  </mat-form-field>
-
-                  <mat-form-field appearance="outline">
-                    <mat-label>Correo</mat-label>
-                    <input matInput type="email" name="prestadorCorreo" [(ngModel)]="formularioPrestador.correo" required maxlength="150">
-                  </mat-form-field>
-
-                  <mat-form-field appearance="outline">
-                    <mat-label>Contraseña temporal</mat-label>
-                    <input
-                      matInput
-                      type="password"
-                      name="prestadorPassword"
-                      [(ngModel)]="formularioPrestador.contrasenaTemporal"
-                      minlength="8"
-                      maxlength="100"
-                    >
-                    <mat-hint>
-                      {{ prestadorEditandoId ? 'Opcional al editar. Si la cambias, usa mínimo 8 caracteres.' : 'Usa una contraseña temporal de al menos 8 caracteres.' }}
-                    </mat-hint>
-                  </mat-form-field>
-
-                  <div class="form-block-title full-width">Perfil operativo</div>
-
-                  <mat-form-field appearance="outline">
-                    <mat-label>Color de agenda</mat-label>
-                    <input matInput type="color" name="prestadorColorAgenda" [(ngModel)]="formularioPrestador.colorAgenda">
-                  </mat-form-field>
-
-                  <mat-slide-toggle name="prestadorActivo" [(ngModel)]="formularioPrestador.activo">
-                    Prestador activo
-                  </mat-slide-toggle>
-
-                  <mat-form-field appearance="outline" class="full-width">
-                    <mat-label>Biografía</mat-label>
-                    <textarea matInput rows="3" name="prestadorBiografia" [(ngModel)]="formularioPrestador.biografia" maxlength="500"></textarea>
-                  </mat-form-field>
-
-                  <div class="form-block-title full-width">Servicios asignados</div>
-
-                  <div class="full-width">
-                    <div class="checkbox-grid">
-                      <mat-checkbox
-                        *ngFor="let servicio of serviciosPrestadorDisponibles"
-                        [checked]="formularioPrestador.servicioIds.includes(servicio.id)"
-                        (change)="alternarServicioPrestador(servicio.id, $event.checked)">
-                        {{ servicio.nombre }}
-                      </mat-checkbox>
-                    </div>
-                    <div class="helper-text" *ngIf="!serviciosPrestadorDisponibles.length">
-                      No hay servicios disponibles en la sucursal seleccionada.
-                    </div>
-                  </div>
-
-                  <div class="form-actions">
-                    <button mat-flat-button color="primary" type="submit" [disabled]="guardandoPrestador || !sucursales().length">
-                      {{ prestadorEditandoId ? 'Actualizar prestador' : 'Crear prestador' }}
-                    </button>
-                  </div>
-                </form>
-              </mat-card>
-
-              <mat-card class="workspace-card list-card">
-                <div class="section-header">
-                  <div>
-                    <div class="section-eyebrow">Staff</div>
-                    <h3>Prestadores activos</h3>
+                    <div class="section-eyebrow">Prestadores</div>
+                    <h3>Cargando equipo operativo</h3>
                   </div>
                 </div>
-
-                <div class="entity-list">
-                  <article class="entity-row" *ngFor="let prestador of prestadores()">
-                    <div class="entity-main">
-                      <div class="entity-meta">{{ prestador.sucursalNombre }}</div>
-                      <div class="entity-title">{{ prestador.nombreMostrar }}</div>
-                      <div class="entity-meta">{{ prestador.correo }}</div>
-                      <div class="entity-meta" *ngIf="prestador.biografia">{{ prestador.biografia }}</div>
-                      <mat-chip-set>
-                        <mat-chip *ngFor="let nombre of prestador.servicioNombres">{{ nombre }}</mat-chip>
-                      </mat-chip-set>
-                    </div>
-                    <div class="entity-side">
-                      <span class="status-pill" [class.is-active]="prestador.activo">{{ prestador.activo ? 'Activo' : 'Inactivo' }}</span>
-                      <button mat-stroked-button type="button" (click)="editarPrestador(prestador)">Editar</button>
-                    </div>
-                  </article>
-                </div>
-              </mat-card>
-            </div>
-          </section>
+                <p class="helper-text mb-0">Estamos preparando el formulario del staff y la lista de prestadores activos.</p>
+              </div>
+            </section>
+          }
         </ng-container>
 
         <ng-container *ngIf="seccionActiva() === 'reglas'">
-          <section class="section-stack">
-            <div class="workspace-grid two-columns">
-              <mat-card class="workspace-card form-card">
+          @defer {
+            <app-admin-rules-section
+              [reglaEditandoId]="reglaEditandoId"
+              [formularioRegla]="formularioRegla"
+              [guardandoRegla]="guardandoRegla"
+              [sujetosRegla]="sujetosRegla"
+              [diasSemana]="diasSemana"
+              [reglasDisponibilidad]="reglasDisponibilidad()"
+              [diasSemanaTexto]="diasSemanaTexto"
+              (clearEdit)="cancelarEdicionRegla()"
+              (save)="guardarRegla()"
+              (typeChange)="cambiarTipoSujetoRegla($event)"
+              (editRule)="editarRegla($event)" />
+          } @placeholder {
+            <section class="section-stack">
+              <div class="workspace-card">
                 <div class="section-header">
                   <div>
-                    <div class="section-eyebrow">Disponibilidad base</div>
-                    <h3>{{ reglaEditandoId ? 'Editar horario base' : 'Nueva regla' }}</h3>
-                  </div>
-                  <button mat-stroked-button type="button" *ngIf="reglaEditandoId" (click)="cancelarEdicionRegla()">
-                    Limpiar formulario
-                  </button>
-                </div>
-
-                <form class="admin-form-grid admin-form-shell" (ngSubmit)="guardarRegla()">
-                  <div class="form-block-title full-width">Asignación</div>
-
-                  <mat-form-field appearance="outline">
-                    <mat-label>Tipo</mat-label>
-                    <mat-select name="reglaTipoSujeto" [(ngModel)]="formularioRegla.tipoSujeto" (ngModelChange)="cambiarTipoSujetoRegla($event)">
-                      <mat-option value="SUCURSAL">Sucursal</mat-option>
-                      <mat-option value="PRESTADOR">Prestador</mat-option>
-                    </mat-select>
-                  </mat-form-field>
-
-                  <mat-form-field appearance="outline">
-                    <mat-label>Sujeto</mat-label>
-                    <mat-select name="reglaSujetoId" [(ngModel)]="formularioRegla.sujetoId" required>
-                      <mat-option *ngFor="let sujeto of sujetosRegla" [value]="sujeto.id">
-                        {{ sujeto.nombre }}
-                      </mat-option>
-                    </mat-select>
-                  </mat-form-field>
-
-                  <div class="form-block-title full-width">Disponibilidad</div>
-
-                  <mat-form-field appearance="outline">
-                    <mat-label>Día</mat-label>
-                    <mat-select name="reglaDiaSemana" [(ngModel)]="formularioRegla.diaSemana">
-                      <mat-option *ngFor="let dia of diasSemana" [value]="dia.value">{{ dia.label }}</mat-option>
-                    </mat-select>
-                  </mat-form-field>
-
-                  <mat-form-field appearance="outline">
-                    <mat-label>Hora inicio</mat-label>
-                    <input matInput type="time" name="reglaHoraInicio" [(ngModel)]="formularioRegla.horaInicio" required>
-                  </mat-form-field>
-
-                  <mat-form-field appearance="outline">
-                    <mat-label>Hora fin</mat-label>
-                    <input matInput type="time" name="reglaHoraFin" [(ngModel)]="formularioRegla.horaFin" required>
-                  </mat-form-field>
-
-                  <mat-form-field appearance="outline">
-                    <mat-label>Intervalo</mat-label>
-                    <input matInput type="number" min="5" step="5" name="reglaIntervalo" [(ngModel)]="formularioRegla.intervaloMinutos" required>
-                  </mat-form-field>
-
-                  <mat-form-field appearance="outline">
-                    <mat-label>Vigente desde</mat-label>
-                    <input matInput type="date" name="reglaVigenteDesde" [(ngModel)]="formularioRegla.vigenteDesde">
-                  </mat-form-field>
-
-                  <mat-form-field appearance="outline">
-                    <mat-label>Vigente hasta</mat-label>
-                    <input matInput type="date" name="reglaVigenteHasta" [(ngModel)]="formularioRegla.vigenteHasta">
-                  </mat-form-field>
-
-                  <div class="form-actions">
-                    <button mat-flat-button color="primary" type="submit" [disabled]="guardandoRegla">
-                      {{ reglaEditandoId ? 'Actualizar regla' : 'Crear regla' }}
-                    </button>
-                  </div>
-                </form>
-              </mat-card>
-
-              <mat-card class="workspace-card list-card">
-                <div class="section-header">
-                  <div>
-                    <div class="section-eyebrow">Capacidad operativa</div>
-                    <h3>Reglas configuradas</h3>
+                    <div class="section-eyebrow">Reglas</div>
+                    <h3>Cargando horarios base</h3>
                   </div>
                 </div>
-
-                <div class="entity-list">
-                  <article class="entity-row" *ngFor="let regla of reglasDisponibilidad()">
-                    <div class="entity-main">
-                      <div class="entity-meta">{{ regla.tipoSujeto }} · {{ regla.sujetoNombre }}</div>
-                      <div class="entity-title">{{ diasSemanaTexto[regla.diaSemana] || ('Día ' + regla.diaSemana) }} · {{ regla.horaInicio }} - {{ regla.horaFin }}</div>
-                      <div class="entity-meta">Intervalo {{ regla.intervaloMinutos }} min</div>
-                      <div class="entity-meta" *ngIf="regla.vigenteDesde || regla.vigenteHasta">
-                        Vigencia: {{ regla.vigenteDesde || 'sin inicio' }} a {{ regla.vigenteHasta || 'sin fin' }}
-                      </div>
-                    </div>
-                    <div class="entity-side">
-                      <button mat-stroked-button type="button" (click)="editarRegla(regla)">Editar</button>
-                    </div>
-                  </article>
-                </div>
-              </mat-card>
-            </div>
-          </section>
+                <p class="helper-text mb-0">Estamos preparando las reglas semanales y su capacidad operativa.</p>
+              </div>
+            </section>
+          }
         </ng-container>
 
         <ng-container *ngIf="seccionActiva() === 'excepciones'">
-          <section class="section-stack">
-            <div class="workspace-grid two-columns">
-              <mat-card class="workspace-card form-card">
+          @defer {
+            <app-admin-exceptions-section
+              [excepcionEditandoId]="excepcionEditandoId"
+              [formularioExcepcion]="formularioExcepcion"
+              [guardandoExcepcion]="guardandoExcepcion"
+              [sujetosExcepcion]="sujetosExcepcion"
+              [tiposBloqueo]="tiposBloqueo"
+              [excepcionesDisponibilidad]="excepcionesDisponibilidad()"
+              (clearEdit)="cancelarEdicionExcepcion()"
+              (save)="guardarExcepcion()"
+              (typeChange)="cambiarTipoSujetoExcepcion($event)"
+              (editException)="editarExcepcion($event)" />
+          } @placeholder {
+            <section class="section-stack">
+              <div class="workspace-card">
                 <div class="section-header">
                   <div>
-                    <div class="section-eyebrow">Bloqueos</div>
-                    <h3>{{ excepcionEditandoId ? 'Editar excepción' : 'Nueva excepción' }}</h3>
-                  </div>
-                  <button mat-stroked-button type="button" *ngIf="excepcionEditandoId" (click)="cancelarEdicionExcepcion()">
-                    Limpiar formulario
-                  </button>
-                </div>
-
-                <form class="admin-form-grid admin-form-shell" (ngSubmit)="guardarExcepcion()">
-                  <div class="form-block-title full-width">Contexto</div>
-
-                  <mat-form-field appearance="outline">
-                    <mat-label>Tipo</mat-label>
-                    <mat-select name="excepcionTipoSujeto" [(ngModel)]="formularioExcepcion.tipoSujeto" (ngModelChange)="cambiarTipoSujetoExcepcion($event)">
-                      <mat-option value="SUCURSAL">Sucursal</mat-option>
-                      <mat-option value="PRESTADOR">Prestador</mat-option>
-                    </mat-select>
-                  </mat-form-field>
-
-                  <mat-form-field appearance="outline">
-                    <mat-label>Sujeto</mat-label>
-                    <mat-select name="excepcionSujetoId" [(ngModel)]="formularioExcepcion.sujetoId" required>
-                      <mat-option *ngFor="let sujeto of sujetosExcepcion" [value]="sujeto.id">
-                        {{ sujeto.nombre }}
-                      </mat-option>
-                    </mat-select>
-                  </mat-form-field>
-
-                  <div class="form-block-title full-width">Bloqueo</div>
-
-                  <mat-form-field appearance="outline">
-                    <mat-label>Fecha</mat-label>
-                    <input matInput type="date" name="excepcionFecha" [(ngModel)]="formularioExcepcion.fechaExcepcion" required>
-                  </mat-form-field>
-
-                  <mat-form-field appearance="outline">
-                    <mat-label>Hora inicio</mat-label>
-                    <input matInput type="time" name="excepcionHoraInicio" [(ngModel)]="formularioExcepcion.horaInicio">
-                  </mat-form-field>
-
-                  <mat-form-field appearance="outline">
-                    <mat-label>Hora fin</mat-label>
-                    <input matInput type="time" name="excepcionHoraFin" [(ngModel)]="formularioExcepcion.horaFin">
-                  </mat-form-field>
-
-                  <mat-form-field appearance="outline">
-                    <mat-label>Tipo de bloqueo</mat-label>
-                    <mat-select name="excepcionTipoBloqueo" [(ngModel)]="formularioExcepcion.tipoBloqueo">
-                      <mat-option *ngFor="let tipo of tiposBloqueo" [value]="tipo">{{ tipo }}</mat-option>
-                    </mat-select>
-                  </mat-form-field>
-
-                  <mat-form-field appearance="outline" class="full-width">
-                    <mat-label>Motivo</mat-label>
-                    <input matInput name="excepcionMotivo" [(ngModel)]="formularioExcepcion.motivo" maxlength="255">
-                  </mat-form-field>
-
-                  <div class="form-actions">
-                    <button mat-flat-button color="primary" type="submit" [disabled]="guardandoExcepcion">
-                      {{ excepcionEditandoId ? 'Actualizar excepción' : 'Crear excepción' }}
-                    </button>
-                  </div>
-                </form>
-              </mat-card>
-
-              <mat-card class="workspace-card list-card">
-                <div class="section-header">
-                  <div>
-                    <div class="section-eyebrow">Excepciones activas</div>
-                    <h3>Bloqueos registrados</h3>
+                    <div class="section-eyebrow">Excepciones</div>
+                    <h3>Cargando bloqueos</h3>
                   </div>
                 </div>
-
-                <div class="entity-list">
-                  <article class="entity-row" *ngFor="let excepcion of excepcionesDisponibilidad()">
-                    <div class="entity-main">
-                      <div class="entity-meta">{{ excepcion.tipoSujeto }} · {{ excepcion.sujetoNombre }}</div>
-                      <div class="entity-title">{{ excepcion.fechaExcepcion }} · {{ excepcion.tipoBloqueo }}</div>
-                      <div class="entity-meta">
-                        {{ excepcion.horaInicio && excepcion.horaFin ? (excepcion.horaInicio + ' - ' + excepcion.horaFin) : 'Bloqueo de todo el día' }}
-                      </div>
-                      <div class="entity-meta" *ngIf="excepcion.motivo">{{ excepcion.motivo }}</div>
-                    </div>
-                    <div class="entity-side">
-                      <button mat-stroked-button type="button" (click)="editarExcepcion(excepcion)">Editar</button>
-                    </div>
-                  </article>
-                </div>
-              </mat-card>
-            </div>
-          </section>
+                <p class="helper-text mb-0">Estamos preparando cierres puntuales, vacaciones y bloqueos especiales.</p>
+              </div>
+            </section>
+          }
         </ng-container>
 
         <ng-container *ngIf="seccionActiva() === 'citas'">

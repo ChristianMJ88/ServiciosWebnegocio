@@ -26,6 +26,7 @@ public class ServicioTokenJwt {
             String sujeto,
             Long usuarioId,
             Long empresaId,
+            String empresaSlug,
             Collection<String> roles,
             Collection<String> permisos,
             Collection<Long> sucursalesPermitidas
@@ -38,6 +39,7 @@ public class ServicioTokenJwt {
                 .expiration(Date.from(ahora.plus(propiedadesJwt.minutosAcceso(), ChronoUnit.MINUTES)))
                 .claim("usuarioId", usuarioId)
                 .claim("empresaId", empresaId)
+                .claim("empresaSlug", empresaSlug)
                 .claim("roles", roles)
                 .claim("permisos", permisos)
                 .claim("sucursales", sucursalesPermitidas)
@@ -77,6 +79,10 @@ public class ServicioTokenJwt {
 
     public Long obtenerEmpresaId(String token) {
         return obtenerClaims(token).get("empresaId", Long.class);
+    }
+
+    public String obtenerEmpresaSlug(String token) {
+        return obtenerClaims(token).get("empresaSlug", String.class);
     }
 
     @SuppressWarnings("unchecked")

@@ -3,12 +3,15 @@ import { HttpClient } from '@angular/common/http';
 import { Observable, catchError, finalize, map, shareReplay, tap, throwError } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { PERMISOS } from './permissions';
+import { TenantContextService } from '../tenant/tenant-context.service';
 
 export interface SesionUsuario {
   tokenAcceso: string;
   tokenActualizacion: string;
   usuarioId: number;
   empresaId: number;
+  empresaSlug?: string;
+  empresaNombre?: string;
   roles: string[];
   permisos: string[];
   sucursalesPermitidas: number[];
@@ -35,9 +38,26 @@ interface RespuestaTokenJwt {
   tipoToken: string;
   usuarioId: number;
   empresaId: number;
+  empresaSlug?: string;
+  empresaNombre?: string;
   roles: string[];
   permisos: string[];
   sucursalesPermitidas: number[];
+}
+
+export interface EmpresaAccesoApp {
+  empresaId: number;
+  empresaSlug: string;
+  empresaNombre: string;
+  roles: string[];
+  permisos: string[];
+}
+
+export interface RespuestaAccesoApp {
+  estado: 'AUTENTICADO' | 'SELECCION_EMPRESA';
+  mensaje: string;
+  empresas: EmpresaAccesoApp[] | null;
+  sesion: RespuestaTokenJwt | null;
 }
 
 @Injectable({
@@ -46,6 +66,7 @@ interface RespuestaTokenJwt {
 export class AuthService {
   private readonly http = inject(HttpClient);
   private readonly ngZone = inject(NgZone);
+  private readonly tenantContext = inject(TenantContextService);
   private readonly storageKey = 'agenda_sesion';
   private readonly sesion = signal<SesionUsuario | null>(this.loadSession());
   private refreshEnCurso$: Observable<string> | null = null;
@@ -177,9 +198,10 @@ export class AuthService {
       return throwError(() => new Error('La autenticación todavía no está disponible en este entorno.'));
     }
 
+    const empresaId = this.obtenerEmpresaIdActual();
     return this.http
       .post<RespuestaTokenJwt>(`${environment.apiBaseUrl}/auth/iniciar-sesion`, {
-        empresaId: environment.empresaId,
+        empresaId,
         correo: credentials.correo.trim().toLowerCase(),
         contrasena: credentials.contrasena
       })
@@ -190,13 +212,34 @@ export class AuthService {
       );
   }
 
+  appLogin(payload: { correo: string; contrasena: string; empresaId?: number | null }): Observable<RespuestaAccesoApp> {
+    if (!environment.apiBaseUrl) {
+      return throwError(() => new Error('La autenticación todavía no está disponible en este entorno.'));
+    }
+
+    return this.http
+      .post<RespuestaAccesoApp>(`${environment.apiBaseUrl}/auth/app-login`, {
+        correo: payload.correo.trim().toLowerCase(),
+        contrasena: payload.contrasena,
+        empresaId: payload.empresaId ?? null
+      })
+      .pipe(
+        tap(response => {
+          if (response.estado === 'AUTENTICADO' && response.sesion) {
+            this.persistirSesionDesdeRespuesta(response.sesion, payload.correo.trim().toLowerCase());
+          }
+        })
+      );
+  }
+
   register(data: Omit<RegistroRequest, 'empresaId'>): Observable<void> {
     if (!environment.apiBaseUrl) {
       return throwError(() => new Error('El registro todavía no está disponible en este entorno.'));
     }
 
+    const empresaId = this.obtenerEmpresaIdActual();
     return this.http.post<void>(`${environment.apiBaseUrl}/auth/registrar-cliente`, {
-      empresaId: environment.empresaId,
+      empresaId,
       ...data,
       correo: data.correo.trim().toLowerCase()
     });
@@ -281,6 +324,8 @@ export class AuthService {
       tokenActualizacion: response.tokenActualizacion,
       usuarioId: response.usuarioId,
       empresaId: response.empresaId,
+      empresaSlug: response.empresaSlug,
+      empresaNombre: response.empresaNombre,
       roles: response.roles,
       permisos: response.permisos ?? [],
       sucursalesPermitidas: response.sucursalesPermitidas ?? [],
@@ -323,5 +368,9 @@ export class AuthService {
       .filter(Boolean)
       .map(fragmento => fragmento.charAt(0).toUpperCase() + fragmento.slice(1))
       .join(' ');
+  }
+
+  private obtenerEmpresaIdActual(): number {
+    return this.tenantContext.empresaId() ?? environment.empresaId;
   }
 }

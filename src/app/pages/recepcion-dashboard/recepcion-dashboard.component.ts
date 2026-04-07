@@ -2,22 +2,18 @@ import { CommonModule, DatePipe } from '@angular/common';
 import { AfterViewInit, ChangeDetectorRef, Component, DestroyRef, NgZone, OnInit, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { BreakpointObserver } from '@angular/cdk/layout';
-import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
-import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatChipsModule } from '@angular/material/chips';
-import { MatDividerModule } from '@angular/material/divider';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
-import { MatSelectModule } from '@angular/material/select';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { Observable, Subject, forkJoin, of } from 'rxjs';
 import { catchError, debounceTime, distinctUntilChanged, finalize, switchMap, tap } from 'rxjs/operators';
 import { AuthService } from '../../core/auth/auth.service';
+import { RecepcionContextCardComponent } from './recepcion-context-card.component';
+import { RecepcionSidePanelComponent } from './recepcion-side-panel.component';
 import {
   CatalogoRecepcion,
   CitaRecepcion,
@@ -35,18 +31,14 @@ import {
   imports: [
     CommonModule,
     DatePipe,
-    FormsModule,
     MatButtonModule,
     MatCardModule,
-    MatCheckboxModule,
     MatChipsModule,
-    MatDividerModule,
-    MatFormFieldModule,
-    MatInputModule,
     MatMenuModule,
     MatProgressBarModule,
-    MatSelectModule,
-    MatToolbarModule
+    MatToolbarModule,
+    RecepcionContextCardComponent,
+    RecepcionSidePanelComponent
   ],
   templateUrl: './recepcion-dashboard.component.html',
   styleUrls: ['./recepcion-dashboard.component.css']

@@ -1,9 +1,10 @@
 import { CommonModule } from '@angular/common';
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { FormsModule, NgForm } from '@angular/forms';
 import { finalize } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
 import { ContactService } from '../../services/contact.service';
+import { TenantContextService } from '../../core/tenant/tenant-context.service';
 
 @Component({
   selector: 'app-contact',
@@ -13,6 +14,7 @@ import { ContactService } from '../../services/contact.service';
   styleUrl: './contact.component.css'
 })
 export class ContactComponent {
+  readonly tenantContext = inject(TenantContextService);
   sending = false;
   successMessage = '';
   errorMessage = '';
@@ -38,7 +40,7 @@ export class ContactComponent {
 
     this.contactService
       .sendContact({
-        empresaId: environment.empresaId,
+        empresaId: this.tenantContext.empresaId() ?? environment.empresaId,
         nombreCompleto: this.contactData.fullName.trim(),
         telefono: this.contactData.phone.trim() || null,
         correo: this.contactData.email.trim(),

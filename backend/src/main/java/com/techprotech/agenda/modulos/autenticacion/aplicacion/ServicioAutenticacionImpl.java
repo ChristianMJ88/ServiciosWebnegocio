@@ -1,9 +1,13 @@
 package com.techprotech.agenda.modulos.autenticacion.aplicacion;
 
+import com.techprotech.agenda.modulos.autenticacion.api.dto.EmpresaAccesoAppResponse;
+import com.techprotech.agenda.modulos.autenticacion.api.dto.IniciarSesionAppRequest;
 import com.techprotech.agenda.modulos.autenticacion.api.dto.IniciarSesionRequest;
 import com.techprotech.agenda.modulos.autenticacion.api.dto.RefrescarTokenRequest;
 import com.techprotech.agenda.modulos.autenticacion.api.dto.RegistrarClienteRequest;
+import com.techprotech.agenda.modulos.autenticacion.api.dto.RespuestaAccesoApp;
 import com.techprotech.agenda.modulos.autenticacion.api.dto.RespuestaTokenJwt;
+import com.techprotech.agenda.modulos.autenticacion.infraestructura.entidad.EmpresaEntidad;
 import com.techprotech.agenda.modulos.autenticacion.infraestructura.entidad.ClienteEntidad;
 import com.techprotech.agenda.modulos.autenticacion.infraestructura.entidad.TokenActualizacionEntidad;
 import com.techprotech.agenda.modulos.autenticacion.infraestructura.entidad.UsuarioEntidad;
@@ -21,7 +25,10 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
+import java.util.Comparator;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import static org.springframework.http.HttpStatus.CONFLICT;
@@ -105,6 +112,52 @@ public class ServicioAutenticacionImpl implements ServicioAutenticacion {
         usuarioRepositorio.save(usuario);
 
         return emitirTokens(usuario, roles);
+    }
+
+    @Override
+    @Transactional
+    public RespuestaAccesoApp iniciarSesionApp(IniciarSesionAppRequest request) {
+        String correoNormalizado = request.correo().trim().toLowerCase();
+        List<UsuarioEntidad> coincidencias = usuarioRepositorio.findByCorreoOrderByEmpresaIdAsc(correoNormalizado);
+        if (coincidencias.isEmpty()) {
+            throw new ResponseStatusException(UNAUTHORIZED, "Credenciales invalidas");
+        }
+
+        List<UsuarioEntidad> usuariosConCredenciales = coincidencias.stream()
+                .filter(usuario -> passwordEncoder.matches(request.contrasena(), usuario.getContrasenaHash()))
+                .toList();
+
+        if (usuariosConCredenciales.isEmpty()) {
+            log.warn("Intento de inicio de sesion central con contrasena invalida: correo={}", correoNormalizado);
+            throw new ResponseStatusException(UNAUTHORIZED, "Credenciales invalidas");
+        }
+
+        List<UsuarioEntidad> usuariosDisponibles = usuariosConCredenciales.stream()
+                .filter(this::usuarioPuedeIniciarSesion)
+                .toList();
+
+        if (usuariosDisponibles.isEmpty()) {
+            throw new ResponseStatusException(FORBIDDEN, "El usuario no tiene acceso habilitado");
+        }
+
+        if (request.empresaId() != null) {
+            UsuarioEntidad usuarioSeleccionado = usuariosDisponibles.stream()
+                    .filter(usuario -> usuario.getEmpresaId().equals(request.empresaId()))
+                    .findFirst()
+                    .orElseThrow(() -> new ResponseStatusException(FORBIDDEN, "No tienes acceso a la empresa seleccionada"));
+            return autenticarUsuarioApp(usuarioSeleccionado);
+        }
+
+        if (usuariosDisponibles.size() == 1) {
+            return autenticarUsuarioApp(usuariosDisponibles.get(0));
+        }
+
+        return new RespuestaAccesoApp(
+                "SELECCION_EMPRESA",
+                "Selecciona la empresa a la que deseas entrar.",
+                construirEmpresasAcceso(usuariosDisponibles),
+                null
+        );
     }
 
     @Override
@@ -220,19 +273,42 @@ public class ServicioAutenticacionImpl implements ServicioAutenticacion {
         return !usuario.isHabilitado() || passwordEncoder.matches(CONTRASENA_LEGACY_CITA, usuario.getContrasenaHash());
     }
 
+    private boolean usuarioPuedeIniciarSesion(UsuarioEntidad usuario) {
+        if (!usuario.isHabilitado() || usuario.isBloqueado()) {
+            return false;
+        }
+        return !(esClientePendienteActivacion(usuario) && tieneRolCliente(usuario.getEmpresaId(), usuario.getId()));
+    }
+
     private void validarEmpresaExiste(Long empresaId) {
         if (!empresaRepositorio.existsById(empresaId)) {
             throw new ResponseStatusException(NOT_FOUND, "La empresa indicada no existe");
         }
     }
 
+    private RespuestaAccesoApp autenticarUsuarioApp(UsuarioEntidad usuario) {
+        List<String> roles = servicioRolesEmpresa.obtenerCodigosRolUsuario(usuario.getEmpresaId(), usuario.getId());
+        usuario.setUltimoAccesoEn(LocalDateTime.now());
+        usuarioRepositorio.save(usuario);
+
+        return new RespuestaAccesoApp(
+                "AUTENTICADO",
+                "Acceso correcto.",
+                null,
+                emitirTokens(usuario, roles)
+        );
+    }
+
     private RespuestaTokenJwt emitirTokens(UsuarioEntidad usuario, List<String> roles) {
         List<String> permisos = servicioRolesEmpresa.obtenerPermisosUsuario(usuario.getEmpresaId(), usuario.getId());
         List<Long> sucursalesPermitidas = servicioRolesEmpresa.obtenerSucursalesPermitidas(usuario.getEmpresaId(), usuario.getId());
+        EmpresaEntidad empresa = empresaRepositorio.findById(usuario.getEmpresaId())
+                .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "La empresa indicada no existe"));
         String tokenAcceso = servicioTokenJwt.generarTokenAcceso(
                 usuario.getCorreo(),
                 usuario.getId(),
                 usuario.getEmpresaId(),
+                empresa.getSlug(),
                 roles,
                 permisos,
                 sucursalesPermitidas
@@ -255,10 +331,41 @@ public class ServicioAutenticacionImpl implements ServicioAutenticacion {
                 "Bearer",
                 usuario.getId(),
                 usuario.getEmpresaId(),
+                empresa.getSlug(),
+                empresa.getNombre(),
                 roles,
                 permisos,
                 sucursalesPermitidas
         );
+    }
+
+    private List<EmpresaAccesoAppResponse> construirEmpresasAcceso(List<UsuarioEntidad> usuariosDisponibles) {
+        Map<Long, EmpresaEntidad> empresasPorId = new LinkedHashMap<>();
+        empresaRepositorio.findAllById(
+                usuariosDisponibles.stream()
+                        .map(UsuarioEntidad::getEmpresaId)
+                        .distinct()
+                        .toList()
+        ).forEach(empresa -> empresasPorId.put(empresa.getId(), empresa));
+
+        return usuariosDisponibles.stream()
+                .map(usuario -> {
+                    EmpresaEntidad empresa = empresasPorId.get(usuario.getEmpresaId());
+                    if (empresa == null) {
+                        throw new ResponseStatusException(NOT_FOUND, "La empresa indicada no existe");
+                    }
+                    List<String> roles = servicioRolesEmpresa.obtenerCodigosRolUsuario(usuario.getEmpresaId(), usuario.getId());
+                    List<String> permisos = servicioRolesEmpresa.obtenerPermisosUsuario(usuario.getEmpresaId(), usuario.getId());
+                    return new EmpresaAccesoAppResponse(
+                            empresa.getId(),
+                            empresa.getSlug(),
+                            empresa.getNombre(),
+                            roles,
+                            permisos
+                    );
+                })
+                .sorted(Comparator.comparing(EmpresaAccesoAppResponse::empresaNombre))
+                .toList();
     }
 
     private Optional<TokenActualizacionEntidad> buscarTokenVigente(Long usuarioId, String tokenPlano) {

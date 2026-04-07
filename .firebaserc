@@ -1,5 +1,17 @@
 {
   "projects": {
     "default": "fir-serviciosweb-b2901"
+  },
+  "targets": {
+    "fir-serviciosweb-b2901": {
+      "hosting": {
+        "marketing": [
+          "fir-serviciosweb-b2901"
+        ],
+        "app": [
+          "fluora"
+        ]
+      }
+    }
   }
 }

@@ -1,4 +1,4 @@
-import { CommonModule, CurrencyPipe, DatePipe } from '@angular/common';
+import { CommonModule, DatePipe } from '@angular/common';
 import { AfterViewInit, ChangeDetectorRef, Component, DestroyRef, NgZone, OnInit, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { BreakpointObserver } from '@angular/cdk/layout';
@@ -17,6 +17,7 @@ import { MatToolbarModule } from '@angular/material/toolbar';
 import { Observable, forkJoin, of } from 'rxjs';
 import { catchError, finalize, switchMap, tap } from 'rxjs/operators';
 import { AuthService } from '../../core/auth/auth.service';
+import { MoneyDisplayPipe } from '../../shared/pipes/money-display.pipe';
 import {
   CajaService,
   CajaSesion,
@@ -37,9 +38,9 @@ type VistaCaja = 'cobros' | 'sesion' | 'movimientos';
   standalone: true,
   imports: [
     CommonModule,
-    CurrencyPipe,
     DatePipe,
     FormsModule,
+    MoneyDisplayPipe,
     MatButtonModule,
     MatCardModule,
     MatChipsModule,
@@ -94,6 +95,7 @@ export class CajaDashboardComponent implements OnInit, AfterViewInit {
   readonly nombreUsuario = computed(() => this.authService.nombreUsuarioVisible());
   readonly correoUsuario = computed(() => this.authService.sesionActual()?.correo ?? '');
   readonly inicialesUsuario = computed(() => this.authService.inicialesUsuarioVisible());
+  readonly nombreEmpresa = computed(() => this.authService.sesionActual()?.empresaNombre?.trim() || 'Empresa');
   readonly puedeIrRecepcion = computed(() => this.authService.puedeVerRecepcion());
   readonly puedeIrAdmin = computed(() => this.authService.puedeVerAdmin());
   readonly puedeCobrar = computed(() => this.authService.puedeCobrarCaja());
@@ -561,7 +563,7 @@ export class CajaDashboardComponent implements OnInit, AfterViewInit {
         </head>
         <body>
           <div class="header">
-            <h1>NailArt Studio</h1>
+            <h1>${this.nombreEmpresa()}</h1>
             <small>Comprobante de cobro</small>
           </div>
 

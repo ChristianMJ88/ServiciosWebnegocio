@@ -8,7 +8,7 @@ export const roleGuard: CanActivateFn = (route: ActivatedRouteSnapshot) => {
   const expectedPermissions = (route.data['permissions'] as string[] | undefined) ?? [];
 
   if (!authService.asegurarSesion()) {
-    return router.createUrlTree(['/login']);
+    return router.createUrlTree(['/acceso']);
   }
 
   const currentPermissions = authService.sesionActual()?.permisos ?? [];

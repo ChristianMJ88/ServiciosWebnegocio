@@ -47,7 +47,7 @@ management:
 
 aplicacion:
   cors:
-    origenes-permitidos: ${CORS_ORIGENES:http://localhost:4200,http://127.0.0.1:4200}
+    origenes-permitidos: ${CORS_ORIGENES:http://localhost:4200,http://127.0.0.1:4200,https://refluora.com,https://www.refluora.com,https://app.refluora.com,https://fir-serviciosweb-b2901.web.app,https://fir-serviciosweb-b2901.firebaseapp.com,https://fluora.web.app}
   jwt:
     secreto: ${JWT_SECRETO:cambio-este-secreto-en-desarrollo}
     issuer: agenda-backend

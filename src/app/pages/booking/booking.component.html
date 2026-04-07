@@ -8,9 +8,9 @@
               <span class="badge rounded-pill booking-hero__badge mb-3">Agenda en línea</span>
 
               <div class="d-flex align-items-center gap-3 mb-3">
-                <img src="/NailArt_logo.jpeg" alt="Logo NailArt Studio" class="booking-hero__logo">
+                <img [src]="tenantContext.logoUrl() || '/fluora-mark.svg'" [alt]="'Logo ' + tenantContext.nombreComercial()" class="booking-hero__logo">
                 <div>
-                  <span class="booking-hero__brand d-block">NailArt Studio</span>
+                  <span class="booking-hero__brand d-block">{{ tenantContext.nombreComercial() }}</span>
                   <p class="mb-0 booking-hero__copy">Reserva clara, rápida y con apoyo cuando lo necesites.</p>
                 </div>
               </div>
@@ -153,9 +153,18 @@
                     </div>
 
                     <div class="booking-step-content">
-                      <div class="calendar-container glass-effect d-none d-md-block">
-                        <full-calendar [options]="calendarOptions"></full-calendar>
-                      </div>
+                      @defer (when !isMobile()) {
+                        <div class="calendar-container glass-effect d-none d-md-block">
+                          <app-booking-calendar [options]="calendarOptions"></app-booking-calendar>
+                        </div>
+                      } @placeholder {
+                        <div class="calendar-container glass-effect d-none d-md-block booking-calendar-placeholder">
+                          <div class="booking-inline-note mb-0">
+                            <i class="bi bi-calendar3"></i>
+                            <span>Cargando calendario interactivo...</span>
+                          </div>
+                        </div>
+                      }
 
                       <div class="booking-mobile-calendar d-md-none">
                         <div class="mobile-week-header">
@@ -399,7 +408,7 @@
                   <span class="booking-aside__label">Ayuda rápida</span>
                   <h3 class="h5 booking-section-title mb-2">¿Necesitas ayuda para decidir?</h3>
                   <p>Si quieres orientación sobre el servicio o prefieres apoyo para elegir horario, te atendemos por WhatsApp.</p>
-                  <a href="https://wa.me/522204292573?text=Hola%20quiero%20agendar" target="_blank" rel="noreferrer" class="btn btn-outline-primary rounded-pill w-100">
+                  <a [href]="tenantContext.whatsappHref()" target="_blank" rel="noreferrer" class="btn btn-outline-primary rounded-pill w-100">
                     Escribir por WhatsApp
                   </a>
                 </div>

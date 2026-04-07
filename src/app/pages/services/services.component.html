@@ -9,8 +9,8 @@
         </p>
       </div>
       <div class="services-hero__actions">
-        <a routerLink="/agendar" class="btn btn-primary rounded-pill">Agendar cita</a>
-        <a href="https://wa.me/522204292573?text=Hola%20quiero%20agendar" target="_blank" rel="noreferrer" class="btn btn-outline-primary rounded-pill">WhatsApp</a>
+        <a [routerLink]="tenantContext.routeFor('agendar')" class="btn btn-primary rounded-pill">Agendar cita</a>
+        <a [href]="tenantContext.whatsappHref()" target="_blank" rel="noreferrer" class="btn btn-outline-primary rounded-pill">WhatsApp</a>
       </div>
     </div>
 
@@ -32,7 +32,7 @@
                     <span class="price-badge">{{ item.price }}</span>
                   </li>
                 </ul>
-                <a routerLink="/agendar" class="service-card__cta">Reservar este tipo de servicio</a>
+                <a [routerLink]="tenantContext.routeFor('agendar')" class="service-card__cta">Reservar este tipo de servicio</a>
               </div>
             </div>
           </div>

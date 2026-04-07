@@ -1,14 +1,17 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { RouterLink } from '@angular/router';
+import { TenantContextService } from '../../core/tenant/tenant-context.service';
 
 @Component({
   selector: 'app-services',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, RouterLink],
   templateUrl: './services.component.html',
   styleUrls: ['./services.component.css']
 })
 export class ServicesComponent {
+  readonly tenantContext = inject(TenantContextService);
   categories = [
     {
       name: 'Manicura y Pedicura',

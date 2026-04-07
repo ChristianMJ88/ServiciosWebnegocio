@@ -14,16 +14,15 @@ import {
   ServicioCatalogo,
   SucursalCatalogo
 } from '../../services/booking-data.service';
-import { FullCalendarModule } from '@fullcalendar/angular';
-import { CalendarOptions, DateSelectArg } from '@fullcalendar/core';
-import dayGridPlugin from '@fullcalendar/daygrid';
-import interactionPlugin from '@fullcalendar/interaction';
+import type { CalendarOptions, DateSelectArg } from '@fullcalendar/core';
 import { finalize } from 'rxjs/operators';
+import { TenantContextService } from '../../core/tenant/tenant-context.service';
+import { BookingCalendarComponent } from './booking-calendar.component';
 
 @Component({
   selector: 'app-booking',
   standalone: true,
-  imports: [CommonModule, FormsModule, ReactiveFormsModule, FullCalendarModule],
+  imports: [CommonModule, FormsModule, ReactiveFormsModule, BookingCalendarComponent],
   templateUrl: './booking.component.html',
   styleUrls: ['./booking.component.css']
 })
@@ -34,6 +33,7 @@ export class BookingComponent implements OnInit {
   private bookingDataService = inject(BookingDataService);
   private breakpointObserver = inject(BreakpointObserver);
   private destroyRef = inject(DestroyRef);
+  readonly tenantContext = inject(TenantContextService);
   private readonly hoy = this.normalizarFecha(new Date());
   private readonly fechaMaximaReserva = this.sumarDias(this.hoy, 30);
 
@@ -89,7 +89,6 @@ export class BookingComponent implements OnInit {
   );
 
   calendarOptions: CalendarOptions = {
-    plugins: [dayGridPlugin, interactionPlugin],
     initialView: 'dayGridMonth',
     locale: 'es',
     selectable: true,
@@ -180,7 +179,7 @@ export class BookingComponent implements OnInit {
     this.availableSlots.set([]);
 
     const request: ConsultaFranjasRequest = {
-      empresaId: 1,
+      empresaId: this.tenantContext.empresaId() ?? 1,
       sucursalId: Number(this.bookingForm.value.branchId),
       servicioId: Number(this.bookingForm.value.serviceId),
       fecha: date
@@ -306,7 +305,7 @@ export class BookingComponent implements OnInit {
     const phone = this.formatPhone(this.bookingForm.value.phone);
 
     const formData: CrearCitaBackendRequest = {
-      empresaId: 1,
+      empresaId: this.tenantContext.empresaId() ?? 1,
       sucursalId: Number(this.bookingForm.value.branchId),
       servicioId: Number(this.bookingForm.value.serviceId),
       prestadorId: this.selectedSlot.prestadorId,

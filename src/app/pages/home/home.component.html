@@ -3,23 +3,20 @@
     <div class="hero-frame">
       <div class="hero-shell">
         <div class="row align-items-center g-4 hero-grid">
-          <div class="col-xl-6 col-lg-6 hero-copy-column">
-            <p class="hero-eyebrow">Uñas cuidadas, diseño elegante y una cita que se disfruta</p>
+          <div class="col-xl-7 col-lg-7 hero-copy-column">
+            <p class="hero-eyebrow">Reserva en linea</p>
             <h1>
-              Diseños que se sienten tuyos
-              <span class="hero-title-accent">desde el primer vistazo.</span>
+              {{ tenantContext.heroTitulo() }}
+              <span class="hero-title-accent">sin vueltas ni pasos de mas.</span>
             </h1>
             <p class="hero-copy">
-              Elegantes, duraderos y cuidados hasta el último detalle.
-            </p>
-            <p class="hero-copy hero-copy-secondary">
-              En NailArt Studio te ofrecemos una experiencia de belleza con técnica, dedicación y sensibilidad estética para lograr un acabado sofisticado y fiel a tu estilo.
+              {{ tenantContext.heroSubtitulo() }}
             </p>
 
             <div class="hero-actions">
-              <a routerLink="/agendar" class="btn btn-primary btn-lg rounded-pill">Agendar ahora</a>
-              <a href="https://wa.me/522204292573?text=Hola%20quiero%20agendar" target="_blank" rel="noreferrer" class="btn btn-outline-primary btn-lg rounded-pill">WhatsApp</a>
-              <a routerLink="/servicios" class="btn btn-outline-light btn-lg rounded-pill">Explorar servicios</a>
+              <a [routerLink]="tenantContext.routeFor('agendar')" class="btn btn-primary btn-lg rounded-pill">Agendar ahora</a>
+              <a [href]="tenantContext.whatsappHref()" target="_blank" rel="noreferrer" class="btn btn-outline-primary btn-lg rounded-pill">WhatsApp</a>
+              <a [routerLink]="tenantContext.routeFor('servicios')" class="btn btn-outline-light btn-lg rounded-pill">Ver servicios</a>
             </div>
 
             <div class="hero-quick-points">
@@ -35,47 +32,37 @@
             </div>
           </div>
 
-          <div class="col-xl-6 col-lg-6 hero-visual-column">
-            <div class="hero-visual">
-              <article class="hero-story card-custom">
-                <div class="hero-story-body">
-                  <span class="hero-story-kicker">La experiencia en tu cita</span>
-                  <h2>Elegimos contigo el estilo antes de empezar.</h2>
-                  <p>
-                    Antes de comenzar revisamos forma, color y acabado para proponerte un diseño que se vea bien hoy y siga luciendo bonito los próximos días.
-                  </p>
-                  <ul class="hero-story-points">
-                    <li *ngFor="let point of heroStoryPoints">{{ point }}</li>
-                  </ul>
-                  <div class="hero-story-footer">
-                    <i class="bi bi-clock-history"></i>
-                    <span>Servicios guiados con atención tranquila y acabados bien trabajados.</span>
-                  </div>
+          <div class="col-xl-5 col-lg-5 hero-visual-column">
+            <article class="hero-story card-custom hero-story--compact">
+              <div class="hero-story-body">
+                <span class="hero-story-kicker">Informacion clave</span>
+                <h2>{{ tenantContext.nombreComercial() }}</h2>
+                <p>
+                  Elige tu servicio, encuentra horario y agenda desde una pagina pensada para decidir rapido.
+                </p>
+
+                <div class="hero-story-pills">
+                  <span>Reserva online</span>
+                  <span>Atencion por WhatsApp</span>
+                  <span>Experiencia clara</span>
                 </div>
-                <div class="hero-story-side">
-                  <div class="hero-story-stat">
-                    <span>Diseño</span>
-                    <strong>Asesorado contigo</strong>
-                  </div>
-                  <div class="hero-story-stat">
-                    <span>Acabado</span>
-                    <strong>Limpio y duradero</strong>
-                  </div>
-                  <div class="hero-story-stat">
-                    <span>Reserva</span>
-                    <strong>Online o por WhatsApp</strong>
-                  </div>
-                  <a routerLink="/agendar" class="btn btn-primary rounded-pill w-100">Ver disponibilidad</a>
+
+                <div class="hero-story-contact">
+                  <a [href]="tenantContext.telefonoHref()">{{ tenantContext.telefono() || 'Telefono pendiente' }}</a>
+                  <a [href]="tenantContext.correoHref()">{{ tenantContext.correo() || 'Correo pendiente' }}</a>
+                  <span>{{ tenantContext.direccion() || 'Direccion pendiente' }}</span>
                 </div>
-              </article>
-            </div>
+
+                <a [routerLink]="tenantContext.routeFor('agendar')" class="btn btn-primary rounded-pill align-self-start">Ver disponibilidad</a>
+              </div>
+            </article>
           </div>
         </div>
 
         <div class="hero-meta">
           <p class="hero-note">
             <i class="bi bi-heart-pulse"></i>
-            Atención puntual, proceso claro y una experiencia pensada para que reservar se sienta simple y segura.
+            Lo importante aqui es simple: entender el negocio, confiar en el servicio y reservar rapido.
           </p>
 
           <div class="hero-stats">
@@ -92,15 +79,15 @@
   <section class="section-padding">
     <div class="container">
       <div class="section-header section-header-centered">
-        <span class="section-kicker">Servicios</span>
-        <h2>Elige el servicio que mejor va contigo</h2>
+        <span class="section-kicker">Servicios principales</span>
+        <h2>Lo mas importante para decidir tu cita.</h2>
         <p>
-          Una selección clara de servicios para reservar más rápido y saber qué esperar desde el inicio.
+          Una seleccion corta y clara para elegir mas rapido sin navegar una pagina larga.
         </p>
       </div>
 
       <div class="row g-4">
-        <div class="col-lg-4" *ngFor="let servicio of especialidades">
+        <div class="col-lg-4" *ngFor="let servicio of especialidades | slice:0:3">
           <article class="service-card card-custom">
             <div class="service-card-media">
               <img [src]="servicio.imagen" [alt]="servicio.titulo">
@@ -124,120 +111,42 @@
           </article>
         </div>
       </div>
+
+      <div class="tenant-inline-actions">
+        <a [routerLink]="tenantContext.routeFor('servicios')" class="btn btn-outline-primary rounded-pill">Ver catalogo completo</a>
+        <a [routerLink]="tenantContext.routeFor('agendar')" class="btn btn-primary rounded-pill">Reservar ahora</a>
+      </div>
     </div>
   </section>
 
   <section class="section-padding section-surface">
     <div class="container">
-      <div class="row align-items-center g-5">
-        <div class="col-lg-5">
-          <div class="section-header">
-            <span class="section-kicker">Confianza</span>
-            <h2>Una experiencia más clara desde antes de llegar.</h2>
-            <p>
-              Queremos que la persona entienda el servicio, encuentre horario y reserve sin fricción ni dudas innecesarias.
-            </p>
-          </div>
-        </div>
-
-        <div class="col-lg-7">
-          <div class="benefits-grid">
-            <article class="benefit-card card-custom" *ngFor="let beneficio of beneficios">
-              <div class="benefit-icon">
-                <i class="bi" [ngClass]="beneficio.icono"></i>
-              </div>
-              <h3>{{ beneficio.titulo }}</h3>
-              <p>{{ beneficio.descripcion }}</p>
-            </article>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <section class="section-padding">
-    <div class="container">
-      <div class="section-header section-header-split">
-        <div>
-          <span class="section-kicker">Inspiración</span>
-          <h2>Algunas ideas para tu próxima cita</h2>
-        </div>
+      <div class="section-header section-header-centered">
+        <span class="section-kicker">Informacion esencial</span>
+        <h2>Todo lo necesario para reservar con confianza.</h2>
         <p>
-          Mira estilos, guarda referencias y elige con más confianza antes de reservar.
+          Contacto, ubicacion y canales rapidos en un solo bloque.
         </p>
       </div>
 
-      <div class="gallery-grid">
-        <article class="gallery-card" *ngFor="let trabajo of trabajos | slice:0:4">
-          <div class="gallery-card-media">
-            <img [src]="trabajo.imagen" [alt]="trabajo.titulo">
-            <div class="gallery-card-overlay">
-              <span class="gallery-badge">{{ trabajo.categoria }}</span>
-              <h3>{{ trabajo.titulo }}</h3>
-              <p>{{ trabajo.descripcion }}</p>
-            </div>
-          </div>
-          <div class="gallery-card-body">
-            <h4>{{ trabajo.titulo }}</h4>
-            <span>{{ trabajo.categoria }}</span>
-          </div>
+      <div class="tenant-essentials-grid">
+        <article class="tenant-essential card-custom">
+          <i class="bi bi-geo-alt"></i>
+          <strong>Ubicacion</strong>
+          <p>{{ tenantContext.direccion() || 'Direccion pendiente por configurar.' }}</p>
         </article>
-      </div>
-    </div>
-  </section>
 
-  <section id="nosotros" class="section-padding section-surface">
-    <div class="container">
-      <div class="row align-items-center g-5">
-        <div class="col-lg-6">
-          <div class="about-media">
-            <img
-              src="https://images.unsplash.com/photo-1560750588-73207b1ef5b8?ixlib=rb-1.2.1&auto=format&fit=crop&w=1000&q=80"
-              alt="Interior del estudio"
-            >
-            <div class="about-floating-card card-custom">
-              <strong>10+ años</strong>
-              <span>transformando una cita de belleza en una experiencia cuidada</span>
-            </div>
-          </div>
-        </div>
+        <article class="tenant-essential card-custom">
+          <i class="bi bi-telephone"></i>
+          <strong>Contacto</strong>
+          <p>{{ tenantContext.telefono() || 'Telefono pendiente por configurar.' }}</p>
+        </article>
 
-        <div class="col-lg-6">
-          <div class="section-header">
-            <span class="section-kicker">Sobre el estudio</span>
-            <h2>Diseño, técnica y una atención que se siente tranquila.</h2>
-          </div>
-
-          <p class="about-copy">
-            NailArt Studio nace del gusto por los acabados limpios, el diseño bien hecho y una atención pensada para que quieras volver.
-          </p>
-
-          <p class="about-copy">Trabajamos con técnica, higiene y asesoría real para ayudarte a elegir un estilo que vaya contigo y se vea bien desde el primer momento.</p>
-
-          <div class="about-values">
-            <div class="about-value">
-              <i class="bi bi-brush"></i>
-              <div>
-                <h3>Diseño con criterio</h3>
-                <p>Propuestas pensadas según estilo, ocasión y duración esperada.</p>
-              </div>
-            </div>
-            <div class="about-value">
-              <i class="bi bi-heart-pulse"></i>
-              <div>
-                <h3>Cuidado integral</h3>
-                <p>El enfoque no es solo estético; también prioriza salud, higiene y confort.</p>
-              </div>
-            </div>
-            <div class="about-value">
-              <i class="bi bi-people"></i>
-              <div>
-                <h3>Atención cercana</h3>
-                <p>Una comunicación más humana mejora la confianza y fideliza más.</p>
-              </div>
-            </div>
-          </div>
-        </div>
+        <article class="tenant-essential card-custom">
+          <i class="bi bi-chat-dots"></i>
+          <strong>WhatsApp</strong>
+          <p>Resuelve dudas o pide ayuda para elegir servicio y horario.</p>
+        </article>
       </div>
     </div>
   </section>
@@ -245,15 +154,15 @@
   <section class="section-padding">
     <div class="container">
       <div class="section-header section-header-centered">
-        <span class="section-kicker">Prueba social</span>
-        <h2>Lo que más valoran quienes ya reservaron</h2>
+        <span class="section-kicker">Reseñas</span>
+        <h2>Prueba social breve, directa y útil.</h2>
         <p>
-          Puntualidad, limpieza y una experiencia que se siente bien cuidada.
+          Solo lo necesario para generar confianza antes de reservar.
         </p>
       </div>
 
       <div class="row g-4">
-        <div class="col-lg-4" *ngFor="let testimonio of testimonios">
+        <div class="col-lg-4" *ngFor="let testimonio of testimonios | slice:0:3">
           <article class="testimonial-card card-custom">
             <div class="testimonial-stars">★★★★★</div>
             <p>{{ testimonio.comentario }}</p>
@@ -269,11 +178,11 @@
         <div>
           <span class="section-kicker">Reserva hoy</span>
           <h2>¿Lista para elegir horario?</h2>
-          <p>Reserva en línea o escríbenos por WhatsApp si prefieres que te ayudemos a elegir servicio y horario.</p>
+          <p>Agenda en linea o escribe por WhatsApp si prefieres ayuda para decidir.</p>
         </div>
         <div class="home-final-cta__actions">
-          <a routerLink="/agendar" class="btn btn-primary rounded-pill">Agendar cita</a>
-          <a href="https://wa.me/522204292573?text=Hola%20quiero%20agendar" target="_blank" rel="noreferrer" class="btn btn-outline-primary rounded-pill">Hablar por WhatsApp</a>
+          <a [routerLink]="tenantContext.routeFor('agendar')" class="btn btn-primary rounded-pill">Agendar cita</a>
+          <a [href]="tenantContext.whatsappHref()" target="_blank" rel="noreferrer" class="btn btn-outline-primary rounded-pill">Hablar por WhatsApp</a>
         </div>
       </div>
     </div>

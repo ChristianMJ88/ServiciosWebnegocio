@@ -26,6 +26,7 @@ public class ConfiguracionSeguridad {
                         .requestMatchers("/actuator/health", "/actuator/info").permitAll()
                         .requestMatchers("/api/v1/publico/**").permitAll()
                         .requestMatchers("/api/v1/auth/**").permitAll()
+                        .requestMatchers("/api/v1/onboarding/**").permitAll()
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(filtroAutenticacionJwt, UsernamePasswordAuthenticationFilter.class);
@@ -38,4 +39,3 @@ public class ConfiguracionSeguridad {
         return new BCryptPasswordEncoder();
     }
 }
-

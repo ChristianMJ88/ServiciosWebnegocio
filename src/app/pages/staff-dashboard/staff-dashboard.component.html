@@ -8,11 +8,11 @@
       [class.is-hidden]="panelMovil() && !sidebarAbierto()"
       aria-label="Navegación principal del panel staff">
       <div class="staff-sidebar-brand">
-        <span class="staff-sidebar-brand-mark" aria-hidden="true">NA</span>
+        <span class="staff-sidebar-brand-mark" aria-hidden="true">{{ inicialesEmpresa() }}</span>
         <div class="staff-sidebar-brand-copy" *ngIf="!sidebarCompacto() || panelMovil()">
-          <span class="staff-sidebar-brand-eyebrow">Sistema de citas</span>
-          <span class="staff-sidebar-brand-title">NailArt Studio</span>
-          <span class="staff-sidebar-brand-subtitle">Coordinación de staff</span>
+          <span class="staff-sidebar-brand-chip">STAFF</span>
+          <span class="staff-sidebar-brand-title">Operación</span>
+          <span class="staff-sidebar-brand-subtitle">{{ nombreEmpresa() }}</span>
         </div>
       </div>
 
@@ -56,7 +56,7 @@
 
     <div class="staff-content">
       <mat-toolbar class="staff-toolbar">
-        <div class="topbar-left">
+        <div class="staff-topbar-left">
           <button
             type="button"
             class="staff-toolbar-hamburger"
@@ -64,14 +64,19 @@
             aria-label="Alternar menú lateral"
             aria-controls="staff-sidebar"
             [attr.aria-expanded]="panelMovil() ? sidebarAbierto() : !sidebarCompacto()">
-            <span></span>
-            <span></span>
-            <span></span>
+            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path d="M4 7h16" />
+              <path d="M4 12h16" />
+              <path d="M4 17h16" />
+            </svg>
           </button>
 
-          <div class="topbar-brand" aria-label="NailArt Studio Staff">
-            <span class="topbar-brand-mark" aria-hidden="true">NA</span>
-            <span class="topbar-brand-title">NailArt Studio</span>
+          <div class="staff-topbar-brand staff-topbar-brand--context" [attr.aria-label]="nombreEmpresa() + ' Staff'">
+            <span class="staff-topbar-brand-chip">STAFF</span>
+            <div class="staff-topbar-brand-copy">
+              <span class="staff-topbar-brand-title">Operación</span>
+              <span class="staff-topbar-brand-subtitle">{{ nombreEmpresa() }}</span>
+            </div>
           </div>
         </div>
 
@@ -100,21 +105,20 @@
       </mat-toolbar>
 
       <mat-menu #menuStaffUsuario="matMenu">
-        <button mat-menu-item type="button">Perfil</button>
         <button mat-menu-item type="button" (click)="logout()">Cerrar sesión</button>
       </mat-menu>
 
       <mat-progress-bar *ngIf="loading()" mode="indeterminate"></mat-progress-bar>
 
       <main class="staff-body">
-        <header class="content-header">
-          <div class="content-header-copy">
-            <span class="content-header-kicker">Operación</span>
+        <header class="staff-content-header">
+          <div class="staff-content-header-copy">
+            <span class="staff-content-header-kicker">Operación</span>
             <h1>{{ moduloActivo().titulo }}</h1>
             <p>{{ moduloActivo().descripcion }}</p>
           </div>
 
-          <div class="content-header-actions">
+          <div class="staff-content-header-actions">
             <button mat-flat-button type="button" color="primary" class="staff-toolbar-refresh-button" (click)="recargar()">
               Actualizar
             </button>
@@ -126,42 +130,15 @@
         </div>
 
         <ng-container *ngIf="seccionActiva() === 'agenda'">
-          <section class="section-stack">
-            <section class="staff-kpi-strip">
-              <article class="staff-kpi-card staff-kpi-card--wide">
-                <span class="staff-kpi-label">Operación del día</span>
-                <strong class="staff-kpi-value">Agenda en tiempo real</strong>
-                <small class="staff-kpi-helper">Confirma, finaliza y gestiona tu jornada sin perder foco.</small>
-              </article>
-              <article class="staff-kpi-card staff-kpi-card--accent">
-                <span class="staff-kpi-label">Total citas</span>
-                <strong class="staff-kpi-value">{{ totalAgenda() }}</strong>
-              </article>
-              <article class="staff-kpi-card">
-                <span class="staff-kpi-label">Pendientes</span>
-                <strong class="staff-kpi-value">{{ notificaciones() }}</strong>
-              </article>
-              <article class="staff-kpi-card">
-                <span class="staff-kpi-label">Confirmadas</span>
-                <strong class="staff-kpi-value">{{ totalConfirmadas() }}</strong>
-              </article>
-              <article class="staff-kpi-card">
-                <span class="staff-kpi-label">Finalizadas</span>
-                <strong class="staff-kpi-value">{{ totalFinalizadas() }}</strong>
-              </article>
-            </section>
-
-            <app-agenda-operations-section
-              [theme]="'light'"
+          @defer {
+            <app-staff-agenda-section
+              [totalAgenda]="totalAgenda()"
+              [totalPendientes]="notificaciones()"
+              [totalConfirmadas]="totalConfirmadas()"
+              [totalFinalizadas]="totalFinalizadas()"
               [viewMode]="agendaViewMode()"
-              [availableViews]="['day', 'week']"
-              [eyebrow]="'Agenda visual'"
-              [title]="'Agenda por fecha'"
-              [dateLabel]="'Fecha seleccionada'"
               [dateValue]="agendaFechaActiva()"
               [dateDisplay]="agendaFechaActivaTexto()"
-              [summaryCards]="[]"
-              [occupancy]="null"
               [hourLabels]="agendaHourLabels"
               [collaborators]="agendaCollaboratorsVm()"
               [appointments]="agendaAppointmentsVm()"
@@ -178,168 +155,72 @@
               (appointmentSelected)="seleccionarCitaAgenda($event)"
               (appointmentClosed)="cerrarDetalleAgenda()"
               (appointmentAction)="gestionarAccionAgenda($event)" />
-          </section>
+          } @placeholder {
+            <section class="staff-section-stack">
+              <div class="staff-workspace-card staff-workspace-card--placeholder">
+                <div class="staff-section-header">
+                  <div>
+                    <div class="staff-eyebrow">Agenda visual</div>
+                    <h3>Cargando agenda</h3>
+                  </div>
+                </div>
+                <p class="staff-entity-meta mb-0">Estamos preparando la agenda operativa.</p>
+              </div>
+            </section>
+          }
         </ng-container>
 
         <ng-container *ngIf="seccionActiva() === 'horarios'">
-          <section class="section-stack">
-            <div class="staff-grid two-columns">
-              <mat-card class="staff-workspace-card">
+          @defer {
+            <app-staff-schedules-section
+              [reglaEditandoId]="reglaEditandoId"
+              [guardandoRegla]="guardandoRegla"
+              [formularioRegla]="formularioRegla"
+              [diasSemana]="diasSemana"
+              [reglas]="reglas()"
+              [etiquetaDiaSemana]="etiquetaDiaSemana.bind(this)"
+              (save)="guardarRegla()"
+              (cancelEdit)="cancelarEdicionRegla()"
+              (editRule)="editarRegla($event)" />
+          } @placeholder {
+            <section class="staff-section-stack">
+              <div class="staff-workspace-card staff-workspace-card--placeholder">
                 <div class="staff-section-header">
                   <div>
-                    <div class="staff-eyebrow">Disponibilidad base</div>
-                    <h3>{{ reglaEditandoId ? 'Editar horario' : 'Nuevo horario base' }}</h3>
+                    <div class="staff-eyebrow">Disponibilidad</div>
+                    <h3>Cargando horarios</h3>
                   </div>
                 </div>
-
-                <form class="staff-form-grid staff-form-shell" (ngSubmit)="guardarRegla()">
-                  <div class="form-block-title full-width">Disponibilidad</div>
-
-                  <mat-form-field appearance="outline">
-                    <mat-label>Día</mat-label>
-                    <mat-select name="staffReglaDiaSemana" [(ngModel)]="formularioRegla.diaSemana">
-                      <mat-option *ngFor="let dia of diasSemana" [value]="dia.value">{{ dia.label }}</mat-option>
-                    </mat-select>
-                  </mat-form-field>
-
-                  <mat-form-field appearance="outline">
-                    <mat-label>Inicio</mat-label>
-                    <input matInput type="time" name="staffReglaHoraInicio" [(ngModel)]="formularioRegla.horaInicio" required>
-                  </mat-form-field>
-
-                  <mat-form-field appearance="outline">
-                    <mat-label>Fin</mat-label>
-                    <input matInput type="time" name="staffReglaHoraFin" [(ngModel)]="formularioRegla.horaFin" required>
-                  </mat-form-field>
-
-                  <mat-form-field appearance="outline">
-                    <mat-label>Intervalo</mat-label>
-                    <input matInput type="number" min="5" step="5" name="staffReglaIntervalo" [(ngModel)]="formularioRegla.intervaloMinutos" required>
-                  </mat-form-field>
-
-                  <div class="form-block-title full-width">Vigencia</div>
-
-                  <mat-form-field appearance="outline">
-                    <mat-label>Vigente desde</mat-label>
-                    <input matInput type="date" name="staffReglaVigenteDesde" [(ngModel)]="formularioRegla.vigenteDesde">
-                  </mat-form-field>
-
-                  <mat-form-field appearance="outline">
-                    <mat-label>Vigente hasta</mat-label>
-                    <input matInput type="date" name="staffReglaVigenteHasta" [(ngModel)]="formularioRegla.vigenteHasta">
-                  </mat-form-field>
-
-                  <div class="staff-form-actions">
-                    <button mat-flat-button color="primary" type="submit" [disabled]="guardandoRegla">
-                      {{ reglaEditandoId ? 'Actualizar horario' : 'Guardar horario' }}
-                    </button>
-                    <button mat-stroked-button type="button" *ngIf="reglaEditandoId" (click)="cancelarEdicionRegla()">
-                      Cancelar
-                    </button>
-                  </div>
-                </form>
-              </mat-card>
-
-              <mat-card class="staff-workspace-card">
-                <div class="staff-section-header">
-                  <div>
-                    <div class="staff-eyebrow">Horarios activos</div>
-                    <h3>Configuración actual</h3>
-                  </div>
-                </div>
-
-                <div class="staff-stack">
-                  <article class="staff-entity-card" *ngFor="let regla of reglas()">
-                    <div>
-                      <div class="staff-entity-title">{{ etiquetaDiaSemana(regla.diaSemana) }} · {{ regla.horaInicio }} - {{ regla.horaFin }}</div>
-                      <div class="staff-entity-meta">Intervalo {{ regla.intervaloMinutos }} min</div>
-                      <div class="staff-entity-meta" *ngIf="regla.vigenteDesde || regla.vigenteHasta">
-                        Vigencia: {{ regla.vigenteDesde || 'sin inicio' }} a {{ regla.vigenteHasta || 'sin fin' }}
-                      </div>
-                    </div>
-                    <button mat-stroked-button type="button" (click)="editarRegla(regla)">Editar</button>
-                  </article>
-                </div>
-              </mat-card>
-            </div>
-          </section>
+                <p class="staff-entity-meta mb-0">Estamos preparando la configuración de horarios.</p>
+              </div>
+            </section>
+          }
         </ng-container>
 
         <ng-container *ngIf="seccionActiva() === 'bloqueos'">
-          <section class="section-stack">
-            <div class="staff-grid two-columns">
-              <mat-card class="staff-workspace-card">
+          @defer {
+            <app-staff-blocks-section
+              [excepcionEditandoId]="excepcionEditandoId"
+              [guardandoExcepcion]="guardandoExcepcion"
+              [formularioExcepcion]="formularioExcepcion"
+              [tiposBloqueo]="tiposBloqueo"
+              [excepciones]="excepciones()"
+              (save)="guardarExcepcion()"
+              (cancelEdit)="cancelarEdicionExcepcion()"
+              (editBlock)="editarExcepcion($event)" />
+          } @placeholder {
+            <section class="staff-section-stack">
+              <div class="staff-workspace-card staff-workspace-card--placeholder">
                 <div class="staff-section-header">
                   <div>
                     <div class="staff-eyebrow">Bloqueos</div>
-                    <h3>{{ excepcionEditandoId ? 'Editar bloqueo' : 'Nuevo bloqueo' }}</h3>
+                    <h3>Cargando bloqueos</h3>
                   </div>
                 </div>
-
-                <form class="staff-form-grid staff-form-shell" (ngSubmit)="guardarExcepcion()">
-                  <div class="form-block-title full-width">Bloqueo programado</div>
-
-                  <mat-form-field appearance="outline">
-                    <mat-label>Fecha</mat-label>
-                    <input matInput type="date" name="staffExcepcionFecha" [(ngModel)]="formularioExcepcion.fechaExcepcion" required>
-                  </mat-form-field>
-
-                  <mat-form-field appearance="outline">
-                    <mat-label>Hora inicio</mat-label>
-                    <input matInput type="time" name="staffExcepcionHoraInicio" [(ngModel)]="formularioExcepcion.horaInicio">
-                  </mat-form-field>
-
-                  <mat-form-field appearance="outline">
-                    <mat-label>Hora fin</mat-label>
-                    <input matInput type="time" name="staffExcepcionHoraFin" [(ngModel)]="formularioExcepcion.horaFin">
-                  </mat-form-field>
-
-                  <mat-form-field appearance="outline">
-                    <mat-label>Tipo</mat-label>
-                    <mat-select name="staffExcepcionTipo" [(ngModel)]="formularioExcepcion.tipoBloqueo">
-                      <mat-option *ngFor="let tipo of tiposBloqueo" [value]="tipo">{{ tipo }}</mat-option>
-                    </mat-select>
-                  </mat-form-field>
-
-                  <mat-form-field appearance="outline" class="full-width">
-                    <mat-label>Motivo</mat-label>
-                    <input matInput name="staffExcepcionMotivo" [(ngModel)]="formularioExcepcion.motivo" maxlength="255">
-                  </mat-form-field>
-
-                  <div class="staff-form-actions">
-                    <button mat-flat-button color="primary" type="submit" [disabled]="guardandoExcepcion">
-                      {{ excepcionEditandoId ? 'Actualizar bloqueo' : 'Guardar bloqueo' }}
-                    </button>
-                    <button mat-stroked-button type="button" *ngIf="excepcionEditandoId" (click)="cancelarEdicionExcepcion()">
-                      Cancelar
-                    </button>
-                  </div>
-                </form>
-              </mat-card>
-
-              <mat-card class="staff-workspace-card">
-                <div class="staff-section-header">
-                  <div>
-                    <div class="staff-eyebrow">Bloqueos registrados</div>
-                    <h3>Historial operativo</h3>
-                  </div>
-                </div>
-
-                <div class="staff-stack">
-                  <article class="staff-entity-card" *ngFor="let excepcion of excepciones()">
-                    <div>
-                      <div class="staff-entity-title">{{ excepcion.fechaExcepcion }} · {{ excepcion.tipoBloqueo }}</div>
-                      <div class="staff-entity-meta">
-                        {{ excepcion.horaInicio && excepcion.horaFin ? (excepcion.horaInicio + ' - ' + excepcion.horaFin) : 'Bloqueo de todo el día' }}
-                      </div>
-                      <div class="staff-entity-meta" *ngIf="excepcion.motivo">{{ excepcion.motivo }}</div>
-                    </div>
-                    <button mat-stroked-button type="button" (click)="editarExcepcion(excepcion)">Editar</button>
-                  </article>
-                </div>
-              </mat-card>
-            </div>
-          </section>
+                <p class="staff-entity-meta mb-0">Estamos preparando el historial y la captura de bloqueos.</p>
+              </div>
+            </section>
+          }
         </ng-container>
       </main>
     </div>

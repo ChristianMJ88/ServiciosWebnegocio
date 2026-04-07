@@ -10,8 +10,8 @@
 
     <div class="caja-toolbar-actions">
       <button mat-stroked-button type="button" (click)="recargarTablero()">Actualizar</button>
-      <button mat-stroked-button type="button" *ngIf="puedeIrRecepcion()" (click)="irARecepcion()">Recepción</button>
-      <button mat-stroked-button type="button" *ngIf="puedeIrAdmin()" (click)="irAAdmin()">Admin</button>
+      <button mat-stroked-button type="button" *ngIf="!panelMovil() && puedeIrRecepcion()" (click)="irARecepcion()">Recepción</button>
+      <button mat-stroked-button type="button" *ngIf="!panelMovil() && puedeIrAdmin()" (click)="irAAdmin()">Admin</button>
       <button mat-button [matMenuTriggerFor]="menuUsuario" class="caja-user-button" type="button">
         <span class="caja-user-avatar">{{ inicialesUsuario() }}</span>
         <span class="caja-user-copy" *ngIf="!panelMovil()">
@@ -23,6 +23,9 @@
   </mat-toolbar>
 
   <mat-menu #menuUsuario="matMenu">
+    <button mat-menu-item type="button" (click)="recargarTablero()">Actualizar</button>
+    <button mat-menu-item type="button" *ngIf="puedeIrRecepcion()" (click)="irARecepcion()">Ir a recepción</button>
+    <button mat-menu-item type="button" *ngIf="puedeIrAdmin()" (click)="irAAdmin()">Ir a admin</button>
     <button mat-menu-item type="button" (click)="logout()">Cerrar sesión</button>
   </mat-menu>
 
@@ -100,7 +103,7 @@
         <span>{{ metrica.label }}</span>
         <strong>
           <ng-container *ngIf="metrica.label !== 'Citas por cobrar'; else numeroSimple">
-            {{ metrica.value | currency:'MXN':'symbol':'1.2-2':'es-MX' }}
+            {{ metrica.value | appMoney:'MXN':2:2 }}
           </ng-container>
           <ng-template #numeroSimple>{{ metrica.value }}</ng-template>
         </strong>
@@ -122,7 +125,7 @@
       <div class="caja-inline-context" *ngIf="citaSeleccionada() as citaActiva">
         <span class="caja-inline-context-label">Cobro activo</span>
         <strong>{{ citaActiva.clienteNombre }}</strong>
-        <small>{{ citaActiva.servicioNombre }} · {{ citaActiva.pendiente | currency:'MXN':'symbol':'1.2-2':'es-MX' }}</small>
+        <small>{{ citaActiva.servicioNombre }} · {{ citaActiva.pendiente | appMoney:'MXN':2:2 }}</small>
       </div>
     </div>
 
@@ -166,15 +169,15 @@
               <div class="caja-appointment-money">
                 <div>
                   <small>Total</small>
-                  <strong>{{ cita.total | currency:'MXN':'symbol':'1.2-2':'es-MX' }}</strong>
+                  <strong>{{ cita.total | appMoney:'MXN':2:2 }}</strong>
                 </div>
                 <div>
                   <small>Pagado</small>
-                  <strong>{{ cita.pagado | currency:'MXN':'symbol':'1.2-2':'es-MX' }}</strong>
+                  <strong>{{ cita.pagado | appMoney:'MXN':2:2 }}</strong>
                 </div>
                 <div>
                   <small>Pendiente</small>
-                  <strong>{{ cita.pendiente | currency:'MXN':'symbol':'1.2-2':'es-MX' }}</strong>
+                  <strong>{{ cita.pendiente | appMoney:'MXN':2:2 }}</strong>
                 </div>
               </div>
             </button>
@@ -196,7 +199,7 @@
               <span>{{ citaActiva.inicio | date:'dd/MM/yyyy HH:mm':'':'es-MX' }}</span>
               <div class="caja-payment-highlight">
                 <small>Saldo pendiente</small>
-                <strong>{{ citaActiva.pendiente | currency:'MXN':'symbol':'1.2-2':'es-MX' }}</strong>
+                <strong>{{ citaActiva.pendiente | appMoney:'MXN':2:2 }}</strong>
               </div>
             </div>
 
@@ -220,7 +223,7 @@
 
               <div class="caja-payment-result" *ngIf="formularioPago.metodoPago === 'EFECTIVO'">
                 <span>Cambio</span>
-                <strong>{{ calcularCambioPago() | currency:'MXN':'symbol':'1.2-2':'es-MX' }}</strong>
+                <strong>{{ calcularCambioPago() | appMoney:'MXN':2:2 }}</strong>
               </div>
 
               <mat-form-field appearance="outline">
@@ -261,7 +264,7 @@
               <div class="caja-history-list" *ngIf="pagosCitaSeleccionada().length">
                 <div class="caja-history-item" *ngFor="let pago of pagosCitaSeleccionada()">
                   <div>
-                    <strong>{{ pago.monto | currency:'MXN':'symbol':'1.2-2':'es-MX' }}</strong>
+                    <strong>{{ pago.monto | appMoney:'MXN':2:2 }}</strong>
                     <span>{{ pago.metodoPago }}{{ pago.referencia ? ' · ' + pago.referencia : '' }}</span>
                   </div>
                   <small>{{ pago.registradoEn | date:'dd/MM HH:mm':'':'es-MX' }}</small>
@@ -303,11 +306,11 @@
               </div>
               <div>
                 <span class="label">Inicial</span>
-                <strong>{{ sesionActual()?.montoInicial | currency:'MXN':'symbol':'1.2-2':'es-MX' }}</strong>
+                <strong>{{ sesionActual()?.montoInicial | appMoney:'MXN':2:2 }}</strong>
               </div>
               <div>
                 <span class="label">Esperado</span>
-                <strong>{{ resumen()?.saldoEsperadoCaja | currency:'MXN':'symbol':'1.2-2':'es-MX' }}</strong>
+                <strong>{{ resumen()?.saldoEsperadoCaja | appMoney:'MXN':2:2 }}</strong>
               </div>
             </div>
 
@@ -392,27 +395,27 @@
           <div class="caja-summary-grid">
             <div>
               <span class="label">Cobrado en efectivo</span>
-              <strong>{{ resumen()?.totalCobradoEfectivo | currency:'MXN':'symbol':'1.2-2':'es-MX' }}</strong>
+              <strong>{{ resumen()?.totalCobradoEfectivo | appMoney:'MXN':2:2 }}</strong>
             </div>
             <div>
               <span class="label">Cobrado con tarjeta</span>
-              <strong>{{ resumen()?.totalCobradoTarjeta | currency:'MXN':'symbol':'1.2-2':'es-MX' }}</strong>
+              <strong>{{ resumen()?.totalCobradoTarjeta | appMoney:'MXN':2:2 }}</strong>
             </div>
             <div>
               <span class="label">Cobrado por transferencia</span>
-              <strong>{{ resumen()?.totalCobradoTransferencia | currency:'MXN':'symbol':'1.2-2':'es-MX' }}</strong>
+              <strong>{{ resumen()?.totalCobradoTransferencia | appMoney:'MXN':2:2 }}</strong>
             </div>
             <div>
               <span class="label">Gastos menores</span>
-              <strong>{{ resumen()?.totalGastos | currency:'MXN':'symbol':'1.2-2':'es-MX' }}</strong>
+              <strong>{{ resumen()?.totalGastos | appMoney:'MXN':2:2 }}</strong>
             </div>
             <div>
               <span class="label">Retiros</span>
-              <strong>{{ resumen()?.totalRetiros | currency:'MXN':'symbol':'1.2-2':'es-MX' }}</strong>
+              <strong>{{ resumen()?.totalRetiros | appMoney:'MXN':2:2 }}</strong>
             </div>
             <div>
               <span class="label">Saldo esperado</span>
-              <strong>{{ resumen()?.saldoEsperadoCaja | currency:'MXN':'symbol':'1.2-2':'es-MX' }}</strong>
+              <strong>{{ resumen()?.saldoEsperadoCaja | appMoney:'MXN':2:2 }}</strong>
             </div>
           </div>
         </mat-card>
@@ -474,7 +477,7 @@
             <div class="caja-last-movement" *ngIf="ultimoMovimiento()">
               <span class="label">Último movimiento</span>
               <strong>{{ ultimoMovimiento()?.concepto }}</strong>
-              <span>{{ ultimoMovimiento()?.tipoMovimiento }} · {{ ultimoMovimiento()?.monto | currency:'MXN':'symbol':'1.2-2':'es-MX' }}</span>
+              <span>{{ ultimoMovimiento()?.tipoMovimiento }} · {{ ultimoMovimiento()?.monto | appMoney:'MXN':2:2 }}</span>
             </div>
 
             <div class="caja-history">
@@ -493,7 +496,7 @@
                     <span>{{ movimiento.tipoMovimiento }}{{ movimiento.referencia ? ' · ' + movimiento.referencia : '' }}</span>
                   </div>
                   <div class="caja-history-amount">
-                    <strong>{{ movimiento.monto | currency:'MXN':'symbol':'1.2-2':'es-MX' }}</strong>
+                    <strong>{{ movimiento.monto | appMoney:'MXN':2:2 }}</strong>
                     <small>{{ movimiento.registradoEn | date:'dd/MM HH:mm':'':'es-MX' }}</small>
                   </div>
                 </div>
@@ -512,15 +515,15 @@
           <div class="caja-summary-grid">
             <div>
               <span class="label">Gastos menores</span>
-              <strong>{{ resumen()?.totalGastos | currency:'MXN':'symbol':'1.2-2':'es-MX' }}</strong>
+              <strong>{{ resumen()?.totalGastos | appMoney:'MXN':2:2 }}</strong>
             </div>
             <div>
               <span class="label">Retiros</span>
-              <strong>{{ resumen()?.totalRetiros | currency:'MXN':'symbol':'1.2-2':'es-MX' }}</strong>
+              <strong>{{ resumen()?.totalRetiros | appMoney:'MXN':2:2 }}</strong>
             </div>
             <div>
               <span class="label">Saldo esperado</span>
-              <strong>{{ resumen()?.saldoEsperadoCaja | currency:'MXN':'symbol':'1.2-2':'es-MX' }}</strong>
+              <strong>{{ resumen()?.saldoEsperadoCaja | appMoney:'MXN':2:2 }}</strong>
             </div>
             <div>
               <span class="label">Caja</span>
