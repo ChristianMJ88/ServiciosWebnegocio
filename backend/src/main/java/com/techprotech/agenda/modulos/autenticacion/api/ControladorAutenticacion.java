@@ -18,6 +18,9 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.server.ResponseStatusException;
+
+import static org.springframework.http.HttpStatus.UNAUTHORIZED;
 
 @RestController
 @RequestMapping("/api/v1/auth")
@@ -36,6 +39,9 @@ public class ControladorAutenticacion {
 
     @GetMapping("/perfil")
     public ResponseEntity<PerfilUsuarioResponse> perfil(@AuthenticationPrincipal UsuarioAutenticado usuario) {
+        if (usuario == null) {
+            throw new ResponseStatusException(UNAUTHORIZED, "La sesión no es válida");
+        }
         return usuarioInternoPerfilRepositorio.findById(usuario.usuarioId())
                 .map(perfil -> ResponseEntity.ok(new PerfilUsuarioResponse(
                         usuario.usuarioId(),
