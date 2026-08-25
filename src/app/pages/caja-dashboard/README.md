@@ -13,3 +13,5 @@
 - La raíz conserva la coordinación del tablero y publica una sola vez los estilos prefijados de Caja.
 
 Los catálogos y reglas operativas deben provenir del backend.
+
+Cada dominio operativo contiene su propia fachada; `data` queda reservado para cargar y refrescar el tablero agregado.

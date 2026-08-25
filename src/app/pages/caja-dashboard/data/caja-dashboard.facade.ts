@@ -35,23 +35,4 @@ export class CajaDashboardFacade {
     });
   }
 
-  abrirCaja(payload: Parameters<CajaService['abrirCaja']>[0]) {
-    return this.cajaService.abrirCaja(payload);
-  }
-
-  cerrarCaja(id: number, payload: Parameters<CajaService['cerrarCaja']>[1]) {
-    return this.cajaService.cerrarCaja(id, payload);
-  }
-
-  listarPagos(citaId: number) {
-    return this.cajaService.listarPagosCita(citaId);
-  }
-
-  registrarPago(citaId: number, payload: Parameters<CajaService['registrarPago']>[1]) {
-    return this.cajaService.registrarPago(citaId, payload);
-  }
-
-  registrarMovimiento(payload: Parameters<CajaService['registrarMovimiento']>[0]) {
-    return this.cajaService.registrarMovimiento(payload);
-  }
 }

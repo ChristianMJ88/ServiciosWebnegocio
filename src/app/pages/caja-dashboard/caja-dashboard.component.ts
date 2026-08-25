@@ -27,6 +27,9 @@ import { CajaHeaderComponent } from './header/caja-header.component';
 import { CajaOverviewComponent } from './overview/caja-overview.component';
 import { CajaViewNavigationComponent } from './navigation/caja-view-navigation.component';
 import { CajaMetricViewModel, CajaNotificationViewModel, CajaViewOption, VistaCaja } from './models/caja-dashboard.models';
+import { CajaSessionFacade } from './session/caja-session.facade';
+import { CajaPaymentsFacade } from './payments/caja-payments.facade';
+import { CajaMovementsFacade } from './movements/caja-movements.facade';
 import {
   construirApertura,
   construirCierre,
@@ -57,6 +60,9 @@ import {
 })
 export class CajaDashboardComponent implements OnInit, AfterViewInit {
   private readonly cajaFacade = inject(CajaDashboardFacade);
+  private readonly sessionFacade = inject(CajaSessionFacade);
+  private readonly paymentsFacade = inject(CajaPaymentsFacade);
+  private readonly movementsFacade = inject(CajaMovementsFacade);
   private readonly authService = inject(AuthService);
   private readonly userProfileService = inject(UserProfileService);
   private readonly router = inject(Router);
@@ -319,7 +325,7 @@ export class CajaDashboardComponent implements OnInit, AfterViewInit {
     this.error.set('');
     this.mensaje.set('');
 
-    this.cajaFacade.abrirCaja(construirApertura(sucursalId, this.formularioApertura))
+    this.sessionFacade.open(construirApertura(sucursalId, this.formularioApertura))
       .pipe(finalize(() => this.guardandoApertura.set(false)))
       .subscribe({
         next: sesion => {
@@ -345,7 +351,7 @@ export class CajaDashboardComponent implements OnInit, AfterViewInit {
     this.error.set('');
     this.mensaje.set('');
 
-    this.cajaFacade.cerrarCaja(sesion.id, construirCierre(this.formularioCierre))
+    this.sessionFacade.close(sesion.id, construirCierre(this.formularioCierre))
       .pipe(finalize(() => this.guardandoCierre.set(false)))
       .subscribe({
         next: respuesta => {
@@ -367,7 +373,7 @@ export class CajaDashboardComponent implements OnInit, AfterViewInit {
       this.formularioPago.montoRecibido = Number(cita.pendiente);
     }
 
-    this.cajaFacade.listarPagos(citaId).subscribe({
+    this.paymentsFacade.list(citaId).subscribe({
       next: pagos => {
         this.actualizarVistaEnZona(() => {
           this.pagosCitaSeleccionada.set(pagos);
@@ -392,7 +398,7 @@ export class CajaDashboardComponent implements OnInit, AfterViewInit {
     this.error.set('');
     this.mensaje.set('');
 
-    this.cajaFacade.registrarPago(cita.citaId, construirPago(this.formularioPago))
+    this.paymentsFacade.register(cita.citaId, construirPago(this.formularioPago))
       .pipe(finalize(() => this.guardandoPago.set(false)))
       .subscribe({
         next: pago => {
@@ -420,7 +426,7 @@ export class CajaDashboardComponent implements OnInit, AfterViewInit {
     this.error.set('');
     this.mensaje.set('');
 
-    this.cajaFacade.registrarMovimiento(construirMovimiento(sucursalId, this.formularioMovimiento))
+    this.movementsFacade.register(construirMovimiento(sucursalId, this.formularioMovimiento))
       .pipe(finalize(() => this.guardandoMovimiento.set(false)))
       .subscribe({
         next: movimiento => {
