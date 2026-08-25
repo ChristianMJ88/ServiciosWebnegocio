@@ -33,7 +33,6 @@ import {
   DetectarChannelSenderWhatsappResponse,
   EnviarMensajeWhatsappPayload,
   ExcepcionDisponibilidadAdmin,
-  GuardarConfiguracionSitioPayload,
   GrupoServicioAdmin,
   LogMensajeWhatsappAdmin,
   MensajeWhatsappAdmin,
@@ -88,6 +87,8 @@ import { AdminAvailabilityFacade } from './admin-availability.facade';
 import { AdminProvidersFacade } from './admin-providers.facade';
 import { AdminEmailFacade } from './admin-email.facade';
 import { crearFormularioCorreo } from './admin-email.forms';
+import { AdminSiteFacade } from './admin-site.facade';
+import { crearFormularioSitio } from './admin-site.forms';
 import {
   alternarServicioPrestador,
   crearFormularioPrestador,
@@ -200,6 +201,7 @@ export class AdminDashboardComponent implements OnInit {
   private readonly availabilityFacade = inject(AdminAvailabilityFacade);
   private readonly providersFacade = inject(AdminProvidersFacade);
   private readonly emailFacade = inject(AdminEmailFacade);
+  private readonly siteFacade = inject(AdminSiteFacade);
   private readonly dashboardLoader = inject(AdminDashboardLoader);
   private readonly breakpointObserver = inject(BreakpointObserver);
   private readonly authService = inject(AuthService);
@@ -688,28 +690,7 @@ export class AdminDashboardComponent implements OnInit {
 
   formularioSucursal = crearFormularioSucursal();
 
-  formularioSitio: GuardarConfiguracionSitioPayload = {
-    slug: '',
-    nombreComercial: '',
-    dominioPrincipal: '',
-    logoUrl: '',
-    descripcionCorta: '',
-    colorPrimario: '#D14F7D',
-    colorSecundario: '#F6D9E3',
-    fuenteTitulos: 'JAKARTA',
-    fuenteCuerpo: 'INTER',
-    heroTitulo: '',
-    heroSubtitulo: '',
-    heroImagenUrl: '/tenant-hero-demo.png',
-    whatsapp: '',
-    telefono: '',
-    correo: '',
-    direccion: '',
-    instagramUrl: '',
-    facebookUrl: '',
-    tema: 'nail-art-base',
-    publicado: false
-  };
+  formularioSitio = crearFormularioSitio();
 
   formularioGrupoServicio = crearFormularioGrupoServicio();
 
@@ -1663,40 +1644,16 @@ export class AdminDashboardComponent implements OnInit {
     this.error = '';
     this.mensajeExito = '';
 
-    const payload: GuardarConfiguracionSitioPayload = {
-      slug: this.formularioSitio.slug,
-      nombreComercial: this.formularioSitio.nombreComercial,
-      dominioPrincipal: this.normalizarTexto(this.formularioSitio.dominioPrincipal),
-      logoUrl: this.normalizarTexto(this.formularioSitio.logoUrl),
-      descripcionCorta: this.normalizarTexto(this.formularioSitio.descripcionCorta),
-      colorPrimario: this.normalizarTexto(this.formularioSitio.colorPrimario),
-      colorSecundario: this.normalizarTexto(this.formularioSitio.colorSecundario),
-      fuenteTitulos: this.normalizarTexto(this.formularioSitio.fuenteTitulos),
-      fuenteCuerpo: this.normalizarTexto(this.formularioSitio.fuenteCuerpo),
-      heroTitulo: this.normalizarTexto(this.formularioSitio.heroTitulo),
-      heroSubtitulo: this.normalizarTexto(this.formularioSitio.heroSubtitulo),
-      heroImagenUrl: this.normalizarTexto(this.formularioSitio.heroImagenUrl),
-      whatsapp: this.normalizarTexto(this.formularioSitio.whatsapp),
-      telefono: this.normalizarTexto(this.formularioSitio.telefono),
-      correo: this.normalizarTexto(this.formularioSitio.correo),
-      direccion: this.normalizarTexto(this.formularioSitio.direccion),
-      instagramUrl: this.normalizarTexto(this.formularioSitio.instagramUrl),
-      facebookUrl: this.normalizarTexto(this.formularioSitio.facebookUrl),
-      tema: this.normalizarTexto(this.formularioSitio.tema),
-      publicado: this.formularioSitio.publicado
-    };
-
-    this.adminService.actualizarConfiguracionSitio(payload)
+    this.siteFacade.guardar(this.formularioSitio)
       .pipe(finalize(() => this.guardandoSitio = false))
       .subscribe({
-        next: configuracion => {
+        next: ({ configuracion, auditoria }) => {
           this.configuracionSitio.set(configuracion);
           this.sincronizarFormularioSitio(configuracion);
           this.mensajeExito = 'La configuración del sitio web se actualizó correctamente.';
-          this.adminService.getAuditoriaConfiguracion().subscribe({
-            next: auditoria => this.auditoriaConfiguracion.set(auditoria),
-            error: () => undefined
-          });
+          if (auditoria) {
+            this.auditoriaConfiguracion.set(auditoria);
+          }
         },
         error: err => {
           this.error = err?.error?.mensaje || err?.message || 'No se pudo guardar la configuración del sitio web.';
@@ -2233,28 +2190,11 @@ export class AdminDashboardComponent implements OnInit {
   }
 
   private sincronizarFormularioSitio(configuracion: ConfiguracionSitioAdmin | null) {
-    this.formularioSitio = {
-      slug: configuracion?.slug ?? this.formularioSitio.slug ?? '',
-      nombreComercial: configuracion?.nombreComercial ?? this.authService.sesionActual()?.empresaNombre ?? '',
-      dominioPrincipal: configuracion?.dominioPrincipal ?? '',
-      logoUrl: configuracion?.logoUrl ?? '',
-      descripcionCorta: configuracion?.descripcionCorta ?? '',
-      colorPrimario: configuracion?.colorPrimario ?? '#D14F7D',
-      colorSecundario: configuracion?.colorSecundario ?? '#F6D9E3',
-      fuenteTitulos: configuracion?.fuenteTitulos ?? 'JAKARTA',
-      fuenteCuerpo: configuracion?.fuenteCuerpo ?? 'INTER',
-      heroTitulo: configuracion?.heroTitulo ?? '',
-      heroSubtitulo: configuracion?.heroSubtitulo ?? '',
-      heroImagenUrl: configuracion?.heroImagenUrl ?? '/tenant-hero-demo.png',
-      whatsapp: configuracion?.whatsapp ?? '',
-      telefono: configuracion?.telefono ?? '',
-      correo: configuracion?.correo ?? '',
-      direccion: configuracion?.direccion ?? '',
-      instagramUrl: configuracion?.instagramUrl ?? '',
-      facebookUrl: configuracion?.facebookUrl ?? '',
-      tema: configuracion?.tema ?? 'nail-art-base',
-      publicado: configuracion?.publicado ?? false
-    };
+    this.formularioSitio = crearFormularioSitio(
+      configuracion,
+      this.authService.sesionActual()?.empresaNombre ?? '',
+      this.formularioSitio.slug
+    );
   }
 
   private sincronizarFormularioCorreo(configuracion: ConfiguracionCorreoAdmin | null) {
