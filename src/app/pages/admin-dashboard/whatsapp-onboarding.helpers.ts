@@ -1,11 +1,5 @@
 import { ConfiguracionWhatsappAdmin } from '../../core/admin/admin.service';
-
-export type WhatsappOnboardingItem = {
-  key: string;
-  done: boolean;
-  title: string;
-  detail: string;
-};
+import { WhatsappChecklistItem } from './admin-whatsapp.types';
 
 const obtenerPlantillasConfiguradas = (config: ConfiguracionWhatsappAdmin | null): unknown[] => [
   config?.plantillaSolicitudConfirmacionSid,
@@ -24,7 +18,7 @@ const obtenerPlantillasConfiguradas = (config: ConfiguracionWhatsappAdmin | null
 export function buildWhatsappOnboardingChecklist(
   config: ConfiguracionWhatsappAdmin | null,
   plantillasDetectadas: number
-): WhatsappOnboardingItem[] {
+): WhatsappChecklistItem[] {
   const tipoCuenta = config?.tipoCuentaTwilio ?? 'PLATAFORMA';
   const tieneCredenciales = !!config?.accountSid && !!config?.authTokenConfigurado;
   const totalPlantillas = plantillasDetectadas || obtenerPlantillasConfiguradas(config).length;
@@ -101,7 +95,7 @@ export function buildWhatsappOnboardingChecklist(
   ];
 }
 
-export function getWhatsappOnboardingStats(checklist: WhatsappOnboardingItem[]) {
+export function getWhatsappOnboardingStats(checklist: WhatsappChecklistItem[]) {
   const completados = checklist.filter(item => item.done).length;
   const total = checklist.length;
 

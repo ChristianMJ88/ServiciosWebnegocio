@@ -6,16 +6,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { EnviarMensajeWhatsappPayload, MensajeWhatsappAdmin } from '../../core/admin/admin.service';
-
-type ConversacionWhatsappVm = {
-  telefono: string;
-  iniciales: string;
-  ultimoMensaje: MensajeWhatsappAdmin;
-  mensajes: MensajeWhatsappAdmin[];
-  entrantes: number;
-  salientes: number;
-  errores: number;
-};
+import { ConversacionWhatsappVm } from './admin-whatsapp.types';
 
 @Component({
   selector: 'app-admin-whatsapp-inbox-section',
@@ -34,6 +25,7 @@ type ConversacionWhatsappVm = {
 export class AdminWhatsappInboxSectionComponent implements OnChanges {
   @Input({ required: true }) mensajes!: MensajeWhatsappAdmin[];
   @Input({ required: true }) enviando!: boolean;
+  @Input() respuestasRapidas: readonly string[] = [];
 
   @Output() refresh = new EventEmitter<void>();
   @Output() sendMessage = new EventEmitter<EnviarMensajeWhatsappPayload>();
@@ -41,13 +33,6 @@ export class AdminWhatsappInboxSectionComponent implements OnChanges {
   filtro = '';
   telefonoSeleccionado: string | null = null;
   borrador = '';
-  readonly respuestasRapidas = [
-    'Hola, con gusto te ayudo.',
-    '¿Qué día te gustaría agendar?',
-    '¿Me confirmas tu nombre completo?',
-    'Gracias, reviso disponibilidad y te comparto opciones.'
-  ];
-
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['mensajes']) {
       const conversaciones = this.conversaciones;

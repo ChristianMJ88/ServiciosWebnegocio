@@ -93,6 +93,7 @@ import { GRUPOS_SIDEBAR_ADMIN, MODULOS_ADMIN, ModuloAdminDef, SeccionAdmin } fro
 import { AdminDashboardLoader } from './admin-dashboard.loader';
 import { AdminCatalogFacade } from './admin-catalog.facade';
 import { AdminAccessFacade } from './admin-access.facade';
+import { AdminWhatsappFacade } from './admin-whatsapp.facade';
 import {
   cambiarPermiso,
   crearFormularioDesdePlantilla,
@@ -161,6 +162,7 @@ export class AdminDashboardComponent implements OnInit {
   private readonly adminService = inject(AdminService);
   private readonly catalogFacade = inject(AdminCatalogFacade);
   private readonly accessFacade = inject(AdminAccessFacade);
+  private readonly whatsappFacade = inject(AdminWhatsappFacade);
   private readonly dashboardLoader = inject(AdminDashboardLoader);
   private readonly breakpointObserver = inject(BreakpointObserver);
   private readonly authService = inject(AuthService);
@@ -1364,7 +1366,7 @@ export class AdminDashboardComponent implements OnInit {
       metaBusinessManagerId: this.normalizarTexto(this.formularioWhatsapp.metaBusinessManagerId)
     };
 
-    this.adminService.actualizarConfiguracionWhatsapp(payload)
+    this.whatsappFacade.guardarConfiguracion(payload)
       .pipe(finalize(() => this.guardandoWhatsapp = false))
       .subscribe({
         next: response => {
@@ -1387,7 +1389,7 @@ export class AdminDashboardComponent implements OnInit {
       friendlyName: this.normalizarTexto(this.formularioProvisionSubcuentaWhatsapp.friendlyName)
     };
 
-    this.adminService.provisionarSubcuentaWhatsapp(payload)
+    this.whatsappFacade.provisionarSubcuenta(payload)
       .pipe(finalize(() => this.provisionandoSubcuentaWhatsapp = false))
       .subscribe({
         next: response => {
@@ -1411,7 +1413,7 @@ export class AdminDashboardComponent implements OnInit {
       inboundRequestUrl: this.normalizarTexto(this.formularioProvisionMessagingServiceWhatsapp.inboundRequestUrl)
     };
 
-    this.adminService.provisionarMessagingServiceWhatsapp(payload)
+    this.whatsappFacade.provisionarMessagingService(payload)
       .pipe(finalize(() => this.provisionandoMessagingServiceWhatsapp = false))
       .subscribe({
         next: (response: ProvisionarMessagingServiceWhatsappResponse) => {
@@ -1434,7 +1436,7 @@ export class AdminDashboardComponent implements OnInit {
       channelSenderSid: this.formularioAsociacionChannelSenderWhatsapp.channelSenderSid.trim()
     };
 
-    this.adminService.asociarChannelSenderWhatsapp(payload)
+    this.whatsappFacade.asociarChannelSender(payload)
       .pipe(finalize(() => this.asociandoChannelSenderWhatsapp = false))
       .subscribe({
         next: (response: AsociarChannelSenderWhatsappResponse) => {
@@ -1453,7 +1455,7 @@ export class AdminDashboardComponent implements OnInit {
     this.error = '';
     this.mensajeExito = '';
 
-    this.adminService.detectarChannelSenderWhatsapp()
+    this.whatsappFacade.detectarChannelSender()
       .pipe(finalize(() => this.detectandoChannelSenderWhatsapp = false))
       .subscribe({
         next: (response: DetectarChannelSenderWhatsappResponse) => {
@@ -1479,12 +1481,12 @@ export class AdminDashboardComponent implements OnInit {
       plantillaSid: this.normalizarTexto(this.formularioPruebaWhatsapp.plantillaSid)
     };
 
-    this.adminService.probarPlantillaWhatsapp(payload)
+    this.whatsappFacade.probarPlantilla(payload)
       .pipe(finalize(() => this.probandoPlantillaWhatsapp = false))
       .subscribe({
         next: (response: PruebaWhatsappResponse) => {
           this.mensajeExito = response.mensaje || 'La prueba de plantilla fue enviada.';
-          this.adminService.getLogsWhatsapp().subscribe({
+          this.whatsappFacade.cargarLogs().subscribe({
             next: logs => this.logsWhatsapp.set(logs),
             error: () => undefined
           });
@@ -1496,7 +1498,7 @@ export class AdminDashboardComponent implements OnInit {
   }
 
   recargarMensajesWhatsapp() {
-    this.adminService.getMensajesWhatsapp().subscribe({
+    this.whatsappFacade.cargarMensajes().subscribe({
       next: mensajes => this.mensajesWhatsapp.set(mensajes),
       error: err => {
         this.error = err?.error?.mensaje || err?.message || 'No se pudieron actualizar las conversaciones de WhatsApp.';
@@ -1509,7 +1511,7 @@ export class AdminDashboardComponent implements OnInit {
     this.error = '';
     this.mensajeExito = '';
 
-    this.adminService.enviarMensajeWhatsapp(payload)
+    this.whatsappFacade.enviarMensaje(payload)
       .pipe(finalize(() => this.enviandoMensajeWhatsapp = false))
       .subscribe({
         next: mensaje => {
@@ -1532,11 +1534,7 @@ export class AdminDashboardComponent implements OnInit {
     this.guardandoPlantillaWhatsappEmpresa = true;
     this.error = '';
     this.mensajeExito = '';
-    const operacion = this.plantillaWhatsappEmpresaEditandoId
-      ? this.adminService.actualizarPlantillaWhatsappEmpresa(this.plantillaWhatsappEmpresaEditandoId, payload)
-      : this.adminService.crearPlantillaWhatsappEmpresa(payload);
-
-    operacion
+    this.whatsappFacade.guardarPlantilla(this.plantillaWhatsappEmpresaEditandoId, payload)
       .pipe(finalize(() => this.guardandoPlantillaWhatsappEmpresa = false))
       .subscribe({
         next: plantilla => {
@@ -1586,7 +1584,7 @@ export class AdminDashboardComponent implements OnInit {
     this.guardandoPlantillaWhatsappEmpresa = true;
     this.error = '';
     this.mensajeExito = '';
-    this.adminService.eliminarPlantillaWhatsappEmpresa(plantilla.id)
+    this.whatsappFacade.eliminarPlantilla(plantilla.id)
       .pipe(finalize(() => this.guardandoPlantillaWhatsappEmpresa = false))
       .subscribe({
         next: () => {

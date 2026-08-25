@@ -21,20 +21,7 @@ import {
   ProvisionarMessagingServiceWhatsappPayload,
   ProvisionarSubcuentaWhatsappPayload
 } from '../../core/admin/admin.service';
-
-type WhatsappChecklistItem = {
-  key: string;
-  done: boolean;
-  title: string;
-  detail: string;
-};
-
-type WhatsappOnboardingStats = {
-  completados: number;
-  total: number;
-  porcentaje: number;
-  siguiente: WhatsappChecklistItem | null;
-};
+import { WhatsappChecklistItem, WhatsappOnboardingStats } from './admin-whatsapp.types';
 
 @Component({
   selector: 'app-admin-whatsapp-section',
@@ -50,7 +37,8 @@ type WhatsappOnboardingStats = {
     MatSelectModule,
     MatSlideToggleModule
   ],
-  templateUrl: './admin-whatsapp-section.component.html'
+  templateUrl: './admin-whatsapp-section.component.html',
+  styleUrls: ['./admin-whatsapp-section.component.css']
 })
 export class AdminWhatsappSectionComponent {
   @Input({ required: true }) formularioWhatsapp!: GuardarConfiguracionWhatsappPayload;
