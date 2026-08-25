@@ -11,8 +11,8 @@ import { MatMenuModule } from '@angular/material/menu';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatTooltipModule } from '@angular/material/tooltip';
-import { Observable, forkJoin, of } from 'rxjs';
-import { catchError, finalize } from 'rxjs/operators';
+import { Observable, forkJoin } from 'rxjs';
+import { finalize } from 'rxjs/operators';
 import { AgendaOperationsSectionComponent } from '../../components/agenda/agenda-operations-section.component';
 import { buildWhatsAppUrl, formatAgendaStatusLabel, getDurationMinutes, getInitials } from '../../components/agenda/agenda.helpers';
 import {
@@ -96,6 +96,7 @@ import { AdminUsersRolesSectionComponent } from './admin-users-roles-section.com
 import { AdminWhatsappInboxSectionComponent } from './admin-whatsapp-inbox-section.component';
 import { AdminWhatsappSectionComponent } from './admin-whatsapp-section.component';
 import { GRUPOS_SIDEBAR_ADMIN, MODULOS_ADMIN, ModuloAdminDef, SeccionAdmin } from './admin-dashboard.config';
+import { AdminDashboardLoader } from './admin-dashboard.loader';
 import { buildWhatsappOnboardingChecklist, getWhatsappOnboardingStats } from './whatsapp-onboarding.helpers';
 
 type SubseccionUsuariosAdmin = 'usuarios' | 'roles' | 'actividad';
@@ -146,6 +147,7 @@ type NotificacionAdmin = {
 })
 export class AdminDashboardComponent implements OnInit {
   private readonly adminService = inject(AdminService);
+  private readonly dashboardLoader = inject(AdminDashboardLoader);
   private readonly breakpointObserver = inject(BreakpointObserver);
   private readonly authService = inject(AuthService);
   private readonly userProfileService = inject(UserProfileService);
@@ -1173,191 +1175,7 @@ export class AdminDashboardComponent implements OnInit {
       this.mensajeExito = '';
       this.asegurarSeccionActivaDisponible();
     });
-    forkJoin({
-      resumen: this.adminService.getResumen().pipe(
-        catchError(err => {
-          this.marcarErrorCarga(err, 'No se pudo cargar el resumen.');
-          return of(null);
-        })
-      ),
-      citas: this.cargarAdminSi(this.authService.puedeGestionarCitasAdmin(), this.adminService.getCitas(), []).pipe(
-        catchError(err => {
-          this.marcarErrorCarga(err, 'No se pudieron cargar las citas.');
-          return of([]);
-        })
-      ),
-      contactos: this.cargarAdminSi(this.authService.puedeVerContactosAdmin(), this.adminService.getContactos(), []).pipe(
-        catchError(err => {
-          this.marcarErrorCarga(err, 'No se pudieron cargar los contactos.');
-          return of([]);
-        })
-      ),
-      sucursales: this.cargarAdminSi(
-        this.authService.puedeGestionarSucursales() ||
-        this.authService.puedeGestionarServicios() ||
-        this.authService.puedeGestionarPrestadores() ||
-        this.authService.puedeGestionarUsuariosInternos(),
-        this.adminService.getSucursales(),
-        []
-      ).pipe(
-        catchError(err => {
-          this.marcarErrorCarga(err, 'No se pudieron cargar las sucursales.');
-          return of([]);
-        })
-      ),
-      gruposServicio: this.cargarAdminSi(
-        this.authService.puedeGestionarServicios(),
-        this.adminService.getGruposServicio(),
-        []
-      ).pipe(
-        catchError(err => {
-          this.marcarErrorCarga(err, 'No se pudieron cargar los grupos de servicios.');
-          return of([]);
-        })
-      ),
-      subgruposServicio: this.cargarAdminSi(
-        this.authService.puedeGestionarServicios(),
-        this.adminService.getSubgruposServicio(),
-        []
-      ).pipe(
-        catchError(err => {
-          this.marcarErrorCarga(err, 'No se pudieron cargar los subgrupos de servicios.');
-          return of([]);
-        })
-      ),
-      catalogosSugeridos: this.cargarAdminSi(
-        this.authService.puedeGestionarServicios(),
-        this.adminService.getCatalogosSugeridos(),
-        []
-      ).pipe(
-        catchError(err => {
-          this.marcarErrorCarga(err, 'No se pudieron cargar las sugerencias de catálogo.');
-          return of([]);
-        })
-      ),
-      servicios: this.cargarAdminSi(
-        this.authService.puedeGestionarServicios() || this.authService.puedeGestionarPrestadores(),
-        this.adminService.getServicios(),
-        []
-      ).pipe(
-        catchError(err => {
-          this.marcarErrorCarga(err, 'No se pudieron cargar los servicios.');
-          return of([]);
-        })
-      ),
-      prestadores: this.cargarAdminSi(this.authService.puedeGestionarPrestadores(), this.adminService.getPrestadores(), []).pipe(
-        catchError(err => {
-          this.marcarErrorCarga(err, 'No se pudieron cargar los prestadores.');
-          return of([]);
-        })
-      ),
-      rolesInternos: this.cargarAdminSi(this.authService.puedeGestionarUsuariosInternos(), this.adminService.getRolesInternos(), []).pipe(
-        catchError(err => {
-          this.marcarErrorCarga(err, 'No se pudieron cargar los roles internos.');
-          return of([]);
-        })
-      ),
-      plantillasRolesInternos: this.cargarAdminSi(this.authService.puedeGestionarUsuariosInternos(), this.adminService.getPlantillasRolesInternos(), []).pipe(
-        catchError(err => {
-          this.marcarErrorCarga(err, 'No se pudieron cargar las plantillas de roles.');
-          return of([]);
-        })
-      ),
-      auditoriaRolesInternos: this.cargarAdminSi(this.authService.puedeGestionarUsuariosInternos(), this.adminService.getAuditoriaRolesInternos(), []).pipe(
-        catchError(err => {
-          this.marcarErrorCarga(err, 'No se pudo cargar la auditoría de roles.');
-          return of([]);
-        })
-      ),
-      permisos: this.cargarAdminSi(this.authService.puedeGestionarUsuariosInternos(), this.adminService.getPermisos(), []).pipe(
-        catchError(err => {
-          this.marcarErrorCarga(err, 'No se pudo cargar el catálogo de permisos.');
-          return of([]);
-        })
-      ),
-      usuariosInternos: this.cargarAdminSi(this.authService.puedeGestionarUsuariosInternos(), this.adminService.getUsuariosInternos(), []).pipe(
-        catchError(err => {
-          this.marcarErrorCarga(err, 'No se pudieron cargar los usuarios internos.');
-          return of([]);
-        })
-      ),
-      reglas: this.cargarAdminSi(this.authService.puedeGestionarPrestadores(), this.adminService.getReglasDisponibilidad(), []).pipe(
-        catchError(err => {
-          this.marcarErrorCarga(err, 'No se pudieron cargar las reglas de disponibilidad.');
-          return of([]);
-        })
-      ),
-      excepciones: this.cargarAdminSi(this.authService.puedeGestionarPrestadores(), this.adminService.getExcepcionesDisponibilidad(), []).pipe(
-        catchError(err => {
-          this.marcarErrorCarga(err, 'No se pudieron cargar las excepciones.');
-          return of([]);
-        })
-      ),
-      reporteServicios: this.cargarAdminSi(this.authService.puedeVerReportesAdmin(), this.adminService.getReporteServicios(), []).pipe(
-        catchError(err => {
-          this.marcarErrorCarga(err, 'No se pudo cargar el reporte de servicios.');
-          return of([]);
-        })
-      ),
-      reportePrestadores: this.cargarAdminSi(this.authService.puedeVerReportesAdmin(), this.adminService.getReportePrestadores(), []).pipe(
-        catchError(err => {
-          this.marcarErrorCarga(err, 'No se pudo cargar el reporte de prestadores.');
-          return of([]);
-        })
-      ),
-      configuracionSitio: this.cargarAdminSi(this.authService.puedeGestionarConfiguracionEmpresa(), this.adminService.getConfiguracionSitio(), null).pipe(
-        catchError(err => {
-          this.marcarErrorCarga(err, 'No se pudo cargar la configuración del sitio web.');
-          return of(null);
-        })
-      ),
-      configuracionCorreo: this.cargarAdminSi(this.authService.puedeGestionarConfiguracionEmpresa(), this.adminService.getConfiguracionCorreo(), null).pipe(
-        catchError(err => {
-          this.marcarErrorCarga(err, 'No se pudo cargar la configuración de correo.');
-          return of(null);
-        })
-      ),
-      auditoriaConfiguracion: this.cargarAdminSi(
-        this.authService.puedeGestionarConfiguracionEmpresa() || this.authService.puedeGestionarWhatsapp(),
-        this.adminService.getAuditoriaConfiguracion(),
-        []
-      ).pipe(
-        catchError(err => {
-          this.marcarErrorCarga(err, 'No se pudo cargar la auditoría de configuración.');
-          return of([]);
-        })
-      ),
-      configuracionWhatsapp: this.cargarAdminSi(this.authService.puedeGestionarWhatsapp(), this.adminService.getConfiguracionWhatsapp(), null).pipe(
-        catchError(err => {
-          this.marcarErrorCarga(err, 'No se pudo cargar la configuración de WhatsApp.');
-          return of(null);
-        })
-      ),
-      plantillasWhatsapp: this.cargarAdminSi(this.authService.puedeGestionarWhatsapp(), this.adminService.getPlantillasWhatsapp(), []).pipe(
-        catchError(err => {
-          this.marcarErrorCarga(err, 'No se pudieron cargar las plantillas de WhatsApp.');
-          return of([]);
-        })
-      ),
-      plantillasWhatsappEmpresa: this.cargarAdminSi(this.authService.puedeGestionarWhatsapp(), this.adminService.getPlantillasWhatsappEmpresa(), []).pipe(
-        catchError(err => {
-          this.marcarErrorCarga(err, 'No se pudieron cargar las plantillas configuradas del tenant.');
-          return of([]);
-        })
-      ),
-      logsWhatsapp: this.cargarAdminSi(this.authService.puedeGestionarWhatsapp(), this.adminService.getLogsWhatsapp(), []).pipe(
-        catchError(err => {
-          this.marcarErrorCarga(err, 'No se pudieron cargar los logs de WhatsApp.');
-          return of([]);
-        })
-      ),
-      mensajesWhatsapp: this.cargarAdminSi(this.authService.puedeGestionarWhatsapp(), this.adminService.getMensajesWhatsapp(), []).pipe(
-        catchError(err => {
-          this.marcarErrorCarga(err, 'No se pudieron cargar las conversaciones de WhatsApp.');
-          return of([]);
-        })
-      )
-    })
+    this.dashboardLoader.cargar((error, mensaje) => this.marcarErrorCarga(error, mensaje))
       .pipe(finalize(() => this.actualizarVistaEnZona(() => this.loading.set(false))))
       .subscribe({
         next: ({ resumen, citas, contactos, sucursales, gruposServicio, subgruposServicio, catalogosSugeridos, servicios, prestadores, rolesInternos, plantillasRolesInternos, auditoriaRolesInternos, permisos, usuariosInternos, reglas, excepciones, reporteServicios, reportePrestadores, configuracionSitio, configuracionCorreo, auditoriaConfiguracion, configuracionWhatsapp, plantillasWhatsapp, plantillasWhatsappEmpresa, logsWhatsapp, mensajesWhatsapp }) => {
@@ -3225,10 +3043,6 @@ export class AdminDashboardComponent implements OnInit {
     if (!modulos.some(modulo => modulo.id === this.seccionActiva()) && modulos.length > 0) {
       this.seccionActiva.set(modulos[0].id);
     }
-  }
-
-  private cargarAdminSi<T>(permitido: boolean, peticion$: Observable<T>, fallback: T): Observable<T> {
-    return permitido ? peticion$ : of(fallback);
   }
 
   private sincronizarFormularioSitio(configuracion: ConfiguracionSitioAdmin | null) {
