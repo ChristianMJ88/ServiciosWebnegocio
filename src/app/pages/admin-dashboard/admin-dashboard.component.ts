@@ -35,7 +35,6 @@ import {
   ExcepcionDisponibilidadAdmin,
   GuardarConfiguracionCorreoPayload,
   GuardarConfiguracionSitioPayload,
-  GuardarConfiguracionWhatsappPayload,
   GuardarExcepcionDisponibilidadPayload,
   GuardarPrestadorPayload,
   GuardarReglaDisponibilidadPayload,
@@ -47,15 +46,10 @@ import {
   PlantillaWhatsappAdmin,
   PlantillaWhatsappEmpresaAdmin,
   PrestadorAdmin,
-  AsociarChannelSenderWhatsappPayload,
   AsociarChannelSenderWhatsappResponse,
   CatalogoSugeridoAdmin,
-  GuardarPlantillaWhatsappEmpresaPayload,
-  ProvisionarMessagingServiceWhatsappPayload,
   ProvisionarMessagingServiceWhatsappResponse,
-  ProvisionarSubcuentaWhatsappPayload,
   ProvisionarSubcuentaWhatsappResponse,
-  ProbarPlantillaWhatsappPayload,
   PruebaWhatsappResponse,
   ImportarCatalogoSugeridoPayload,
   ImportarCatalogoSugeridoResponse,
@@ -94,6 +88,20 @@ import { AdminDashboardLoader } from './admin-dashboard.loader';
 import { AdminCatalogFacade } from './admin-catalog.facade';
 import { AdminAccessFacade } from './admin-access.facade';
 import { AdminWhatsappFacade } from './admin-whatsapp.facade';
+import {
+  construirPayloadPlantillaWhatsapp,
+  construirPayloadPruebaWhatsapp,
+  construirPayloadProvisionMessagingService,
+  construirPayloadProvisionSubcuenta,
+  construirPayloadAsociacionSender,
+  construirPayloadWhatsapp,
+  crearFormularioAsociacionSender,
+  crearFormularioPlantillaWhatsapp,
+  crearFormularioPruebaWhatsapp,
+  crearFormularioProvisionMessagingService,
+  crearFormularioProvisionSubcuenta,
+  crearFormularioWhatsapp
+} from './admin-whatsapp.forms';
 import {
   cambiarPermiso,
   crearFormularioDesdePlantilla,
@@ -815,67 +823,12 @@ export class AdminDashboardComponent implements OnInit {
     graphPrivateKeyPem: ''
   };
 
-  formularioWhatsapp: GuardarConfiguracionWhatsappPayload = {
-    habilitado: false,
-    accountSid: '',
-    authToken: '',
-    tipoCuentaTwilio: 'PLATAFORMA',
-    subaccountSid: '',
-    numeroRemitente: '',
-    messagingServiceSid: '',
-    channelSenderSid: '',
-    statusCallbackUrl: '',
-    plantillaSolicitudConfirmacionSid: '',
-    plantillaReprogramadaPendienteSid: '',
-    plantillaRecordatorioConfirmacionSid: '',
-    plantillaCitaConfirmadaSid: '',
-    plantillaRecordatorioSid: '',
-    plantillaCancelacionSid: '',
-    plantillaLiberadaSinConfirmacionSid: '',
-    plantillaGraciasVisitaSid: '',
-    plantillaRecordatorioRegresoSid: '',
-    plantillaEspacioDisponibleWalkinSid: '',
-    plantillaMenuBienvenidaSid: '',
-    plantillasListPickerSids: '',
-    senderDisplayName: '',
-    senderPhoneNumber: '',
-    senderStatus: '',
-    qualityRating: '',
-    throughputMps: null,
-    wabaId: '',
-    metaBusinessManagerId: ''
-  };
-
-  formularioPruebaWhatsapp: ProbarPlantillaWhatsappPayload = {
-    telefonoDestino: '',
-    nombreCliente: '',
-    fecha: '',
-    hora: '',
-    plantillaSid: null
-  };
-
-  formularioPlantillaWhatsappEmpresa: GuardarPlantillaWhatsappEmpresaPayload = {
-    nombre: '',
-    uso: 'MENU_BIENVENIDA',
-    contentSid: '',
-    tipoContenido: 'twilio/list-picker',
-    categoria: 'UTILITY',
-    estado: '',
-    activa: true
-  };
-
-  formularioProvisionSubcuentaWhatsapp: ProvisionarSubcuentaWhatsappPayload = {
-    friendlyName: ''
-  };
-
-  formularioProvisionMessagingServiceWhatsapp: ProvisionarMessagingServiceWhatsappPayload = {
-    friendlyName: '',
-    inboundRequestUrl: ''
-  };
-
-  formularioAsociacionChannelSenderWhatsapp: AsociarChannelSenderWhatsappPayload = {
-    channelSenderSid: ''
-  };
+  formularioWhatsapp = crearFormularioWhatsapp();
+  formularioPruebaWhatsapp = crearFormularioPruebaWhatsapp();
+  formularioPlantillaWhatsappEmpresa = crearFormularioPlantillaWhatsapp();
+  formularioProvisionSubcuentaWhatsapp = crearFormularioProvisionSubcuenta();
+  formularioProvisionMessagingServiceWhatsapp = crearFormularioProvisionMessagingService();
+  formularioAsociacionChannelSenderWhatsapp = crearFormularioAsociacionSender();
 
   ngOnInit(): void {
     this.actualizarVistaEnZona(() => {
@@ -1335,36 +1288,7 @@ export class AdminDashboardComponent implements OnInit {
     this.guardandoWhatsapp = true;
     this.error = '';
     this.mensajeExito = '';
-    const payload: GuardarConfiguracionWhatsappPayload = {
-      habilitado: this.formularioWhatsapp.habilitado,
-      accountSid: this.normalizarTexto(this.formularioWhatsapp.accountSid),
-      authToken: this.normalizarTexto(this.formularioWhatsapp.authToken),
-      tipoCuentaTwilio: this.normalizarTexto(this.formularioWhatsapp.tipoCuentaTwilio),
-      subaccountSid: this.normalizarTexto(this.formularioWhatsapp.subaccountSid),
-      numeroRemitente: this.normalizarTexto(this.formularioWhatsapp.numeroRemitente),
-      messagingServiceSid: this.normalizarTexto(this.formularioWhatsapp.messagingServiceSid),
-      channelSenderSid: this.normalizarTexto(this.formularioWhatsapp.channelSenderSid),
-      statusCallbackUrl: this.normalizarTexto(this.formularioWhatsapp.statusCallbackUrl),
-      plantillaSolicitudConfirmacionSid: this.normalizarTexto(this.formularioWhatsapp.plantillaSolicitudConfirmacionSid),
-      plantillaReprogramadaPendienteSid: this.normalizarTexto(this.formularioWhatsapp.plantillaReprogramadaPendienteSid),
-      plantillaRecordatorioConfirmacionSid: this.normalizarTexto(this.formularioWhatsapp.plantillaRecordatorioConfirmacionSid),
-      plantillaCitaConfirmadaSid: this.normalizarTexto(this.formularioWhatsapp.plantillaCitaConfirmadaSid),
-      plantillaRecordatorioSid: this.normalizarTexto(this.formularioWhatsapp.plantillaRecordatorioSid),
-      plantillaCancelacionSid: this.normalizarTexto(this.formularioWhatsapp.plantillaCancelacionSid),
-      plantillaLiberadaSinConfirmacionSid: this.normalizarTexto(this.formularioWhatsapp.plantillaLiberadaSinConfirmacionSid),
-      plantillaGraciasVisitaSid: this.normalizarTexto(this.formularioWhatsapp.plantillaGraciasVisitaSid),
-      plantillaRecordatorioRegresoSid: this.normalizarTexto(this.formularioWhatsapp.plantillaRecordatorioRegresoSid),
-      plantillaEspacioDisponibleWalkinSid: this.normalizarTexto(this.formularioWhatsapp.plantillaEspacioDisponibleWalkinSid),
-      plantillaMenuBienvenidaSid: this.normalizarTexto(this.formularioWhatsapp.plantillaMenuBienvenidaSid),
-      plantillasListPickerSids: this.normalizarTexto(this.formularioWhatsapp.plantillasListPickerSids),
-      senderDisplayName: this.normalizarTexto(this.formularioWhatsapp.senderDisplayName),
-      senderPhoneNumber: this.normalizarTexto(this.formularioWhatsapp.senderPhoneNumber),
-      senderStatus: this.normalizarTexto(this.formularioWhatsapp.senderStatus),
-      qualityRating: this.normalizarTexto(this.formularioWhatsapp.qualityRating),
-      throughputMps: this.formularioWhatsapp.throughputMps ? Number(this.formularioWhatsapp.throughputMps) : null,
-      wabaId: this.normalizarTexto(this.formularioWhatsapp.wabaId),
-      metaBusinessManagerId: this.normalizarTexto(this.formularioWhatsapp.metaBusinessManagerId)
-    };
+    const payload = construirPayloadWhatsapp(this.formularioWhatsapp);
 
     this.whatsappFacade.guardarConfiguracion(payload)
       .pipe(finalize(() => this.guardandoWhatsapp = false))
@@ -1385,9 +1309,7 @@ export class AdminDashboardComponent implements OnInit {
     this.error = '';
     this.mensajeExito = '';
 
-    const payload: ProvisionarSubcuentaWhatsappPayload = {
-      friendlyName: this.normalizarTexto(this.formularioProvisionSubcuentaWhatsapp.friendlyName)
-    };
+    const payload = construirPayloadProvisionSubcuenta(this.formularioProvisionSubcuentaWhatsapp);
 
     this.whatsappFacade.provisionarSubcuenta(payload)
       .pipe(finalize(() => this.provisionandoSubcuentaWhatsapp = false))
@@ -1408,10 +1330,7 @@ export class AdminDashboardComponent implements OnInit {
     this.error = '';
     this.mensajeExito = '';
 
-    const payload: ProvisionarMessagingServiceWhatsappPayload = {
-      friendlyName: this.normalizarTexto(this.formularioProvisionMessagingServiceWhatsapp.friendlyName),
-      inboundRequestUrl: this.normalizarTexto(this.formularioProvisionMessagingServiceWhatsapp.inboundRequestUrl)
-    };
+    const payload = construirPayloadProvisionMessagingService(this.formularioProvisionMessagingServiceWhatsapp);
 
     this.whatsappFacade.provisionarMessagingService(payload)
       .pipe(finalize(() => this.provisionandoMessagingServiceWhatsapp = false))
@@ -1432,9 +1351,7 @@ export class AdminDashboardComponent implements OnInit {
     this.error = '';
     this.mensajeExito = '';
 
-    const payload: AsociarChannelSenderWhatsappPayload = {
-      channelSenderSid: this.formularioAsociacionChannelSenderWhatsapp.channelSenderSid.trim()
-    };
+    const payload = construirPayloadAsociacionSender(this.formularioAsociacionChannelSenderWhatsapp);
 
     this.whatsappFacade.asociarChannelSender(payload)
       .pipe(finalize(() => this.asociandoChannelSenderWhatsapp = false))
@@ -1473,13 +1390,7 @@ export class AdminDashboardComponent implements OnInit {
     this.probandoPlantillaWhatsapp = true;
     this.error = '';
     this.mensajeExito = '';
-    const payload: ProbarPlantillaWhatsappPayload = {
-      telefonoDestino: this.formularioPruebaWhatsapp.telefonoDestino.trim(),
-      nombreCliente: this.formularioPruebaWhatsapp.nombreCliente.trim(),
-      fecha: this.formularioPruebaWhatsapp.fecha.trim(),
-      hora: this.formularioPruebaWhatsapp.hora.trim(),
-      plantillaSid: this.normalizarTexto(this.formularioPruebaWhatsapp.plantillaSid)
-    };
+    const payload = construirPayloadPruebaWhatsapp(this.formularioPruebaWhatsapp);
 
     this.whatsappFacade.probarPlantilla(payload)
       .pipe(finalize(() => this.probandoPlantillaWhatsapp = false))
@@ -1526,10 +1437,7 @@ export class AdminDashboardComponent implements OnInit {
   }
 
   guardarPlantillaWhatsappEmpresa() {
-    const payload = this.construirPayloadPlantillaWhatsappEmpresa();
-    if (!payload) {
-      return;
-    }
+    const payload = construirPayloadPlantillaWhatsapp(this.formularioPlantillaWhatsappEmpresa);
 
     this.guardandoPlantillaWhatsappEmpresa = true;
     this.error = '';
@@ -1556,28 +1464,12 @@ export class AdminDashboardComponent implements OnInit {
 
   editarPlantillaWhatsappEmpresa(plantilla: PlantillaWhatsappEmpresaAdmin) {
     this.plantillaWhatsappEmpresaEditandoId = plantilla.id;
-    this.formularioPlantillaWhatsappEmpresa = {
-      nombre: plantilla.nombre,
-      uso: plantilla.uso,
-      contentSid: plantilla.contentSid,
-      tipoContenido: plantilla.tipoContenido ?? '',
-      categoria: plantilla.categoria ?? '',
-      estado: plantilla.estado ?? '',
-      activa: plantilla.activa
-    };
+    this.formularioPlantillaWhatsappEmpresa = crearFormularioPlantillaWhatsapp(plantilla);
   }
 
   cancelarEdicionPlantillaWhatsappEmpresa() {
     this.plantillaWhatsappEmpresaEditandoId = null;
-    this.formularioPlantillaWhatsappEmpresa = {
-      nombre: '',
-      uso: 'MENU_BIENVENIDA',
-      contentSid: '',
-      tipoContenido: 'twilio/list-picker',
-      categoria: 'UTILITY',
-      estado: '',
-      activa: true
-    };
+    this.formularioPlantillaWhatsappEmpresa = crearFormularioPlantillaWhatsapp();
   }
 
   eliminarPlantillaWhatsappEmpresa(plantilla: PlantillaWhatsappEmpresaAdmin) {
@@ -1598,26 +1490,6 @@ export class AdminDashboardComponent implements OnInit {
           this.error = err?.error?.mensaje || err?.message || 'No se pudo eliminar la plantilla WhatsApp del tenant.';
         }
       });
-  }
-
-  private construirPayloadPlantillaWhatsappEmpresa(): GuardarPlantillaWhatsappEmpresaPayload | null {
-    const nombre = this.normalizarTexto(this.formularioPlantillaWhatsappEmpresa.nombre);
-    const uso = this.normalizarTexto(this.formularioPlantillaWhatsappEmpresa.uso);
-    const contentSid = this.normalizarTexto(this.formularioPlantillaWhatsappEmpresa.contentSid);
-    if (!nombre || !uso || !contentSid) {
-      this.error = 'Captura nombre, uso y Content SID para guardar la plantilla.';
-      return null;
-    }
-
-    return {
-      nombre,
-      uso,
-      contentSid,
-      tipoContenido: this.normalizarTexto(this.formularioPlantillaWhatsappEmpresa.tipoContenido),
-      categoria: this.normalizarTexto(this.formularioPlantillaWhatsappEmpresa.categoria),
-      estado: this.normalizarTexto(this.formularioPlantillaWhatsappEmpresa.estado),
-      activa: this.formularioPlantillaWhatsappEmpresa.activa
-    };
   }
 
   editarSucursal(sucursal: SucursalAdmin) {
@@ -2666,57 +2538,14 @@ export class AdminDashboardComponent implements OnInit {
   }
 
   private sincronizarFormularioWhatsapp(configuracion: ConfiguracionWhatsappAdmin | null) {
-    this.formularioWhatsapp = {
-      habilitado: configuracion?.habilitado ?? false,
-      accountSid: configuracion?.accountSid ?? '',
-      authToken: '',
-      tipoCuentaTwilio: configuracion?.tipoCuentaTwilio ?? 'PLATAFORMA',
-      subaccountSid: configuracion?.subaccountSid ?? '',
-      numeroRemitente: configuracion?.numeroRemitente ?? '',
-      messagingServiceSid: configuracion?.messagingServiceSid ?? '',
-      channelSenderSid: configuracion?.channelSenderSid ?? '',
-      statusCallbackUrl: configuracion?.statusCallbackUrl ?? '',
-      plantillaSolicitudConfirmacionSid: configuracion?.plantillaSolicitudConfirmacionSid ?? '',
-      plantillaReprogramadaPendienteSid: configuracion?.plantillaReprogramadaPendienteSid ?? '',
-      plantillaRecordatorioConfirmacionSid: configuracion?.plantillaRecordatorioConfirmacionSid ?? '',
-      plantillaCitaConfirmadaSid: configuracion?.plantillaCitaConfirmadaSid ?? '',
-      plantillaRecordatorioSid: configuracion?.plantillaRecordatorioSid ?? '',
-      plantillaCancelacionSid: configuracion?.plantillaCancelacionSid ?? '',
-      plantillaLiberadaSinConfirmacionSid: configuracion?.plantillaLiberadaSinConfirmacionSid ?? '',
-      plantillaGraciasVisitaSid: configuracion?.plantillaGraciasVisitaSid ?? '',
-      plantillaRecordatorioRegresoSid: configuracion?.plantillaRecordatorioRegresoSid ?? '',
-      plantillaEspacioDisponibleWalkinSid: configuracion?.plantillaEspacioDisponibleWalkinSid ?? '',
-      plantillaMenuBienvenidaSid: configuracion?.plantillaMenuBienvenidaSid ?? '',
-      plantillasListPickerSids: configuracion?.plantillasListPickerSids ?? '',
-      senderDisplayName: configuracion?.senderDisplayName ?? '',
-      senderPhoneNumber: configuracion?.senderPhoneNumber ?? '',
-      senderStatus: configuracion?.senderStatus ?? '',
-      qualityRating: configuracion?.qualityRating ?? '',
-      throughputMps: configuracion?.throughputMps ?? null,
-      wabaId: configuracion?.wabaId ?? '',
-      metaBusinessManagerId: configuracion?.metaBusinessManagerId ?? ''
-    };
-
-    this.formularioPruebaWhatsapp = {
-      telefonoDestino: this.formularioPruebaWhatsapp.telefonoDestino || '',
-      nombreCliente: this.formularioPruebaWhatsapp.nombreCliente || '',
-      fecha: this.formularioPruebaWhatsapp.fecha || '',
-      hora: this.formularioPruebaWhatsapp.hora || '',
-      plantillaSid: configuracion?.plantillaSolicitudConfirmacionSid ?? configuracion?.plantillaCitaConfirmadaSid ?? null
-    };
-
-    this.formularioProvisionSubcuentaWhatsapp = {
-      friendlyName: this.formularioProvisionSubcuentaWhatsapp.friendlyName || ''
-    };
-
-    this.formularioProvisionMessagingServiceWhatsapp = {
-      friendlyName: this.formularioProvisionMessagingServiceWhatsapp.friendlyName || '',
-      inboundRequestUrl: this.formularioProvisionMessagingServiceWhatsapp.inboundRequestUrl || ''
-    };
-
-    this.formularioAsociacionChannelSenderWhatsapp = {
-      channelSenderSid: configuracion?.channelSenderSid ?? (this.formularioAsociacionChannelSenderWhatsapp.channelSenderSid || '')
-    };
+    this.formularioWhatsapp = crearFormularioWhatsapp(configuracion);
+    this.formularioPruebaWhatsapp = crearFormularioPruebaWhatsapp(this.formularioPruebaWhatsapp, configuracion);
+    this.formularioProvisionSubcuentaWhatsapp = crearFormularioProvisionSubcuenta(this.formularioProvisionSubcuentaWhatsapp);
+    this.formularioProvisionMessagingServiceWhatsapp = crearFormularioProvisionMessagingService(this.formularioProvisionMessagingServiceWhatsapp);
+    this.formularioAsociacionChannelSenderWhatsapp = crearFormularioAsociacionSender(
+      configuracion,
+      this.formularioAsociacionChannelSenderWhatsapp
+    );
   }
 
   private actualizarServiciosPrestadorDisponibles() {
