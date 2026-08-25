@@ -15,14 +15,12 @@ import { MatMenuModule } from '@angular/material/menu';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatSelectModule } from '@angular/material/select';
 import { MatToolbarModule } from '@angular/material/toolbar';
-import { Observable, forkJoin, of } from 'rxjs';
-import { catchError, finalize, switchMap, tap } from 'rxjs/operators';
+import { finalize } from 'rxjs/operators';
 import { AuthService } from '../../core/auth/auth.service';
 import { PerfilUsuarioLocal, UserProfileService } from '../../core/profile/user-profile.service';
 import { UserProfileDialogComponent } from '../../shared/profile/user-profile-dialog.component';
 import { MoneyDisplayPipe } from '../../shared/pipes/money-display.pipe';
 import {
-  CajaService,
   CajaSesion,
   CatalogoCaja,
   CitaPorCobrar,
@@ -31,6 +29,17 @@ import {
   ResumenCaja,
   SucursalCaja
 } from '../../core/caja/caja.service';
+import { CajaDashboardFacade } from './data/caja-dashboard.facade';
+import {
+  construirApertura,
+  construirCierre,
+  construirMovimiento,
+  construirPago,
+  crearFormularioApertura,
+  crearFormularioCierre,
+  crearFormularioMovimiento,
+  crearFormularioPago
+} from './forms/caja.forms';
 
 type VistaCaja = 'cobros' | 'sesion' | 'movimientos';
 
@@ -59,7 +68,7 @@ type VistaCaja = 'cobros' | 'sesion' | 'movimientos';
   styleUrls: ['./caja-dashboard.component.css']
 })
 export class CajaDashboardComponent implements OnInit, AfterViewInit {
-  private readonly cajaService = inject(CajaService);
+  private readonly cajaFacade = inject(CajaDashboardFacade);
   private readonly authService = inject(AuthService);
   private readonly userProfileService = inject(UserProfileService);
   private readonly router = inject(Router);
@@ -182,32 +191,10 @@ export class CajaDashboardComponent implements OnInit, AfterViewInit {
     { label: 'Citas por cobrar', value: this.citasPorCobrar().length, accent: 'soft' }
   ]);
 
-  formularioApertura = {
-    montoInicial: 0,
-    observaciones: ''
-  };
-
-  formularioCierre = {
-    montoContado: 0,
-    observaciones: ''
-  };
-
-  formularioPago = {
-    monto: 0,
-    montoRecibido: 0,
-    metodoPago: '',
-    referencia: '',
-    observaciones: ''
-  };
-
-  formularioMovimiento = {
-    tipoMovimiento: '',
-    monto: 0,
-    metodoPago: '',
-    concepto: '',
-    referencia: '',
-    observaciones: ''
-  };
+  formularioApertura = crearFormularioApertura();
+  formularioCierre = crearFormularioCierre();
+  formularioPago = crearFormularioPago();
+  formularioMovimiento = crearFormularioMovimiento();
 
   sucursalSeleccionadaModel: number | null = null;
 
@@ -270,30 +257,12 @@ export class CajaDashboardComponent implements OnInit, AfterViewInit {
 
     const sucursalBase = sucursalIdPreferida ?? this.obtenerSucursalOperativaId();
 
-    this.cajaService.getCatalogo(sucursalBase)
-      .pipe(
-        catchError(() => of<CatalogoCaja>({
-          sucursalActivaId: sucursalBase,
-          sucursales: [],
-          metodosPago: [],
-          tiposMovimiento: [],
-          estadoSesionAbierta: '',
-          metodoPagoEfectivo: ''
-        })),
-        tap(catalogo => {
+    this.cajaFacade.cargarConCatalogo(sucursalBase)
+      .pipe(finalize(() => this.loading.set(false)))
+      .subscribe({
+        next: ({ catalogo, tablero: { sesion, citas, resumen, movimientos } }) => {
           this.actualizarVistaEnZona(() => {
             this.aplicarCatalogo(catalogo);
-          });
-        }),
-        switchMap(catalogo => {
-          const sucursalId = catalogo.sucursalActivaId ?? this.obtenerSucursalOperativaId();
-          return this.cargarTablero$(sucursalId);
-        }),
-        finalize(() => this.loading.set(false))
-      )
-      .subscribe({
-        next: ({ sesion, citas, resumen, movimientos }) => {
-          this.actualizarVistaEnZona(() => {
             this.sesionActual.set(sesion);
             this.citasPorCobrar.set(citas);
             this.resumen.set(resumen);
@@ -316,7 +285,7 @@ export class CajaDashboardComponent implements OnInit, AfterViewInit {
     this.loading.set(true);
     this.error.set('');
 
-    this.cargarTablero$(sucursalId)
+    this.cajaFacade.cargarTablero(sucursalId)
       .pipe(finalize(() => this.loading.set(false)))
       .subscribe({
         next: ({ sesion, citas, resumen, movimientos }) => {
@@ -338,20 +307,6 @@ export class CajaDashboardComponent implements OnInit, AfterViewInit {
       });
   }
 
-  private cargarTablero$(sucursalId?: number | null): Observable<{
-    sesion: CajaSesion | null;
-    citas: CitaPorCobrar[];
-    resumen: ResumenCaja;
-    movimientos: MovimientoCaja[];
-  }> {
-    return forkJoin({
-      sesion: this.cajaService.getSesionActual(sucursalId),
-      citas: this.cajaService.getCitasPorCobrar(sucursalId),
-      resumen: this.cajaService.getResumen(sucursalId),
-      movimientos: this.cajaService.listarMovimientos(sucursalId)
-    });
-  }
-
   seleccionarSucursal(sucursalId: number | null) {
     this.sincronizarSucursalOperativa(sucursalId);
     this.citaSeleccionadaId.set(null);
@@ -370,16 +325,12 @@ export class CajaDashboardComponent implements OnInit, AfterViewInit {
     this.error.set('');
     this.mensaje.set('');
 
-    this.cajaService.abrirCaja({
-      sucursalId,
-      montoInicial: Number(this.formularioApertura.montoInicial),
-      observaciones: this.formularioApertura.observaciones.trim() || null
-    })
+    this.cajaFacade.abrirCaja(construirApertura(sucursalId, this.formularioApertura))
       .pipe(finalize(() => this.guardandoApertura.set(false)))
       .subscribe({
         next: sesion => {
           this.sesionActual.set(sesion);
-          this.formularioApertura = { montoInicial: 0, observaciones: '' };
+          this.formularioApertura = crearFormularioApertura();
           this.mensaje.set('Caja abierta correctamente.');
           this.recargarTablero();
         },
@@ -400,10 +351,7 @@ export class CajaDashboardComponent implements OnInit, AfterViewInit {
     this.error.set('');
     this.mensaje.set('');
 
-    this.cajaService.cerrarCaja(sesion.id, {
-      montoContado: Number(this.formularioCierre.montoContado),
-      observaciones: this.formularioCierre.observaciones.trim() || null
-    })
+    this.cajaFacade.cerrarCaja(sesion.id, construirCierre(this.formularioCierre))
       .pipe(finalize(() => this.guardandoCierre.set(false)))
       .subscribe({
         next: respuesta => {
@@ -425,7 +373,7 @@ export class CajaDashboardComponent implements OnInit, AfterViewInit {
       this.formularioPago.montoRecibido = Number(cita.pendiente);
     }
 
-    this.cajaService.listarPagosCita(citaId).subscribe({
+    this.cajaFacade.listarPagos(citaId).subscribe({
       next: pagos => {
         this.actualizarVistaEnZona(() => {
           this.pagosCitaSeleccionada.set(pagos);
@@ -450,12 +398,7 @@ export class CajaDashboardComponent implements OnInit, AfterViewInit {
     this.error.set('');
     this.mensaje.set('');
 
-    this.cajaService.registrarPago(cita.citaId, {
-      monto: Number(this.formularioPago.monto),
-      metodoPago: this.formularioPago.metodoPago,
-      referencia: this.formularioPago.referencia.trim() || null,
-      observaciones: this.formularioPago.observaciones.trim() || null
-    })
+    this.cajaFacade.registrarPago(cita.citaId, construirPago(this.formularioPago))
       .pipe(finalize(() => this.guardandoPago.set(false)))
       .subscribe({
         next: pago => {
@@ -483,26 +426,14 @@ export class CajaDashboardComponent implements OnInit, AfterViewInit {
     this.error.set('');
     this.mensaje.set('');
 
-    this.cajaService.registrarMovimiento({
-      sucursalId,
-      tipoMovimiento: this.formularioMovimiento.tipoMovimiento,
-      monto: Number(this.formularioMovimiento.monto),
-      metodoPago: this.formularioMovimiento.metodoPago,
-      concepto: this.formularioMovimiento.concepto.trim(),
-      referencia: this.formularioMovimiento.referencia.trim() || null,
-      observaciones: this.formularioMovimiento.observaciones.trim() || null
-    })
+    this.cajaFacade.registrarMovimiento(construirMovimiento(sucursalId, this.formularioMovimiento))
       .pipe(finalize(() => this.guardandoMovimiento.set(false)))
       .subscribe({
         next: movimiento => {
-          this.formularioMovimiento = {
-            tipoMovimiento: this.tiposMovimiento()[0]?.codigo ?? '',
-            monto: 0,
-            metodoPago: this.metodosPago()[0]?.codigo ?? '',
-            concepto: '',
-            referencia: '',
-            observaciones: ''
-          };
+          this.formularioMovimiento = crearFormularioMovimiento(
+            this.tiposMovimiento()[0]?.codigo,
+            this.metodosPago()[0]?.codigo
+          );
           this.mensaje.set('Movimiento registrado correctamente.');
           this.recargarTablero();
         },
