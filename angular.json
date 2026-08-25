@@ -90,8 +90,24 @@
           },
           "defaultConfiguration": "development"
         },
+        "test-build": {
+          "builder": "@angular/build:application",
+          "options": {
+            "outputPath": "dist/ServiciosWebnegocio/test",
+            "index": "src/index.html",
+            "browser": "src/main.ts",
+            "tsConfig": "tsconfig.app.json",
+            "assets": [],
+            "styles": [
+              "src/styles.css"
+            ]
+          }
+        },
         "test": {
-          "builder": "@angular/build:unit-test"
+          "builder": "@angular/build:unit-test",
+          "options": {
+            "buildTarget": "ServiciosWebnegocio:test-build"
+          }
         }
       }
     }
