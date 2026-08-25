@@ -16,3 +16,4 @@
 Los catálogos y reglas operativas deben provenir del backend.
 
 Cada dominio operativo contiene su propia fachada; `data` queda reservado para cargar y refrescar el tablero agregado.
+El coordinador de `data` administra el ciclo de carga, errores y aplicación de respuestas al store.

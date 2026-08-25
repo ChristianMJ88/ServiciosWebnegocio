@@ -7,7 +7,7 @@ import { finalize } from 'rxjs/operators';
 import { AuthService } from '../../core/auth/auth.service';
 import { PerfilUsuarioLocal, UserProfileService } from '../../core/profile/user-profile.service';
 import { SucursalCaja } from '../../core/caja/caja.service';
-import { CajaDashboardFacade } from './data/caja-dashboard.facade';
+import { CajaDashboardCoordinator, extractHttpMessage } from './data/caja-dashboard.coordinator';
 import { CajaPaymentsSectionComponent } from './payments/caja-payments-section.component';
 import { CajaSessionSectionComponent } from './session/caja-session-section.component';
 import { CajaMovementsSectionComponent } from './movements/caja-movements-section.component';
@@ -52,7 +52,7 @@ import {
   encapsulation: ViewEncapsulation.None
 })
 export class CajaDashboardComponent implements OnInit, AfterViewInit {
-  private readonly cajaFacade = inject(CajaDashboardFacade);
+  private readonly coordinator = inject(CajaDashboardCoordinator);
   private readonly sessionFacade = inject(CajaSessionFacade);
   private readonly paymentsFacade = inject(CajaPaymentsFacade);
   private readonly movementsFacade = inject(CajaMovementsFacade);
@@ -228,52 +228,29 @@ export class CajaDashboardComponent implements OnInit, AfterViewInit {
   }
 
   cargarCatalogoYTablero(sucursalIdPreferida?: number | null) {
-    this.store.setLoading(true);
-    this.store.setError('');
-
     const sucursalBase = sucursalIdPreferida ?? this.obtenerSucursalOperativaId();
 
-    this.cajaFacade.cargarConCatalogo(sucursalBase)
-      .pipe(finalize(() => this.store.setLoading(false)))
-      .subscribe({
-        next: ({ catalogo, tablero: { sesion, citas, resumen, movimientos } }) => {
-          this.actualizarVistaEnZona(() => {
-            this.store.applyCatalog(catalogo);
-            this.sincronizarCatalogoOperativo(catalogo.sucursalActivaId);
-            this.store.applyDashboard({ sesion, citas, resumen, movimientos });
-            this.sincronizarCitaSeleccionada();
-            this.formularioCierre.montoContado = Number(resumen.saldoEsperadoCaja ?? sesion?.montoEsperado ?? 0);
-          });
-        },
-        error: error => {
-          this.actualizarVistaEnZona(() => {
-            this.store.setError(this.extraerMensaje(error, 'No pude cargar las sucursales para Caja.'));
-          });
-        }
-      });
+    this.coordinator.load(sucursalBase).subscribe({
+      next: ({ catalogo, snapshot }) => {
+        this.actualizarVistaEnZona(() => {
+          this.sincronizarCatalogoOperativo(catalogo?.sucursalActivaId ?? null);
+          this.sincronizarCitaSeleccionada();
+          this.formularioCierre.montoContado = Number(snapshot.resumen.saldoEsperadoCaja ?? snapshot.sesion?.montoEsperado ?? 0);
+        });
+      }
+    });
   }
 
   recargarTablero(sucursalIdForzado?: number | null) {
     const sucursalId = sucursalIdForzado ?? this.sucursalOperativaId();
-    this.store.setLoading(true);
-    this.store.setError('');
-
-    this.cajaFacade.cargarTablero(sucursalId)
-      .pipe(finalize(() => this.store.setLoading(false)))
-      .subscribe({
-        next: ({ sesion, citas, resumen, movimientos }) => {
-          this.actualizarVistaEnZona(() => {
-            this.store.applyDashboard({ sesion, citas, resumen, movimientos });
-            this.sincronizarCitaSeleccionada();
-            this.formularioCierre.montoContado = Number(resumen.saldoEsperadoCaja ?? sesion?.montoEsperado ?? 0);
-          });
-        },
-        error: error => {
-          this.actualizarVistaEnZona(() => {
-            this.store.setError(this.extraerMensaje(error, 'No pude actualizar el tablero de Caja.'));
-          });
-        }
-      });
+    this.coordinator.refresh(sucursalId).subscribe({
+      next: ({ snapshot }) => {
+        this.actualizarVistaEnZona(() => {
+          this.sincronizarCitaSeleccionada();
+          this.formularioCierre.montoContado = Number(snapshot.resumen.saldoEsperadoCaja ?? snapshot.sesion?.montoEsperado ?? 0);
+        });
+      }
+    });
   }
 
   seleccionarSucursal(sucursalId: number | null) {
@@ -303,7 +280,7 @@ export class CajaDashboardComponent implements OnInit, AfterViewInit {
           this.recargarTablero();
         },
         error: error => {
-          this.store.setError(this.extraerMensaje(error, 'No pude abrir la caja.'));
+          this.store.setError(extractHttpMessage(error, 'No pude abrir la caja.'));
         }
       });
   }
@@ -328,7 +305,7 @@ export class CajaDashboardComponent implements OnInit, AfterViewInit {
           this.recargarTablero();
         },
         error: error => {
-          this.store.setError(this.extraerMensaje(error, 'No pude cerrar la caja.'));
+          this.store.setError(extractHttpMessage(error, 'No pude cerrar la caja.'));
         }
       });
   }
@@ -349,7 +326,7 @@ export class CajaDashboardComponent implements OnInit, AfterViewInit {
       },
       error: error => {
         this.actualizarVistaEnZona(() => {
-          this.store.setError(this.extraerMensaje(error, 'No pude cargar el historial de pagos de la cita.'));
+          this.store.setError(extractHttpMessage(error, 'No pude cargar el historial de pagos de la cita.'));
         });
       }
     });
@@ -378,7 +355,7 @@ export class CajaDashboardComponent implements OnInit, AfterViewInit {
           this.recargarTablero();
         },
         error: error => {
-          this.store.setError(this.extraerMensaje(error, 'No pude registrar el pago.'));
+          this.store.setError(extractHttpMessage(error, 'No pude registrar el pago.'));
         }
       });
   }
@@ -406,7 +383,7 @@ export class CajaDashboardComponent implements OnInit, AfterViewInit {
           this.recargarTablero();
         },
         error: error => {
-          this.store.setError(this.extraerMensaje(error, 'No pude registrar el movimiento de caja.'));
+          this.store.setError(extractHttpMessage(error, 'No pude registrar el movimiento de caja.'));
         }
       });
   }
@@ -476,7 +453,7 @@ export class CajaDashboardComponent implements OnInit, AfterViewInit {
     try {
       await this.receiptPrintService.printAfterRender();
     } catch (error) {
-      this.store.setError(this.extraerMensaje(error, 'No pude preparar el comprobante para impresión.'));
+      this.store.setError(extractHttpMessage(error, 'No pude preparar el comprobante para impresión.'));
     }
   }
 
@@ -546,9 +523,4 @@ export class CajaDashboardComponent implements OnInit, AfterViewInit {
       this.formularioPago.montoRecibido = Number(cita.pendiente);
     }
   }
-  private extraerMensaje(error: unknown, fallback: string): string {
-    const httpError = error as { error?: { message?: string }; message?: string };
-    return httpError?.error?.message || httpError?.message || fallback;
-  }
-
 }
