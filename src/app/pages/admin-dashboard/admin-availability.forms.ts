@@ -2,6 +2,7 @@ import {
   ExcepcionDisponibilidadAdmin,
   GuardarExcepcionDisponibilidadPayload,
   GuardarReglaDisponibilidadPayload,
+  MetadatosDisponibilidadAdmin,
   PrestadorAdmin,
   ReglaDisponibilidadAdmin,
   SucursalAdmin
@@ -71,4 +72,27 @@ export function sincronizarSujetoSeleccionado(
   opciones: SujetoDisponibilidadOption[]
 ): number {
   return opciones.some(opcion => opcion.id === sujetoId) ? sujetoId : opciones[0]?.id ?? 0;
+}
+
+export function completarFormularioReglaConMetadatos(
+  formulario: GuardarReglaDisponibilidadPayload,
+  metadatos: MetadatosDisponibilidadAdmin
+): GuardarReglaDisponibilidadPayload {
+  return {
+    ...formulario,
+    tipoSujeto: formulario.tipoSujeto || metadatos.tiposSujeto[0]?.valor || '',
+    diaSemana: formulario.diaSemana || metadatos.diasSemana[0]?.valor || 0,
+    intervaloMinutos: formulario.intervaloMinutos || metadatos.intervaloMinimoMinutos
+  };
+}
+
+export function completarFormularioExcepcionConMetadatos(
+  formulario: GuardarExcepcionDisponibilidadPayload,
+  metadatos: MetadatosDisponibilidadAdmin
+): GuardarExcepcionDisponibilidadPayload {
+  return {
+    ...formulario,
+    tipoSujeto: formulario.tipoSujeto || metadatos.tiposSujeto[0]?.valor || '',
+    tipoBloqueo: formulario.tipoBloqueo || metadatos.tiposBloqueo[0]?.valor || ''
+  };
 }

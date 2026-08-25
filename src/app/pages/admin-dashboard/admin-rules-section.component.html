@@ -19,8 +19,9 @@
         <mat-form-field appearance="outline">
           <mat-label>Tipo</mat-label>
           <mat-select name="reglaTipoSujeto" [(ngModel)]="formularioRegla.tipoSujeto" (ngModelChange)="typeChange.emit($event)">
-            <mat-option value="SUCURSAL">Sucursal</mat-option>
-            <mat-option value="PRESTADOR">Prestador</mat-option>
+            @for (tipo of tiposSujeto; track tipo.valor) {
+              <mat-option [value]="tipo.valor">{{ tipo.etiqueta }}</mat-option>
+            }
           </mat-select>
         </mat-form-field>
 
@@ -40,8 +41,8 @@
         <mat-form-field appearance="outline">
           <mat-label>Día</mat-label>
           <mat-select name="reglaDiaSemana" [(ngModel)]="formularioRegla.diaSemana">
-            @for (dia of diasSemana; track dia) {
-              <mat-option [value]="dia.value">{{ dia.label }}</mat-option>
+            @for (dia of diasSemana; track dia.valor) {
+              <mat-option [value]="dia.valor">{{ dia.etiqueta }}</mat-option>
             }
           </mat-select>
         </mat-form-field>
@@ -58,7 +59,7 @@
 
         <mat-form-field appearance="outline">
           <mat-label>Intervalo</mat-label>
-          <input matInput type="number" min="5" step="5" name="reglaIntervalo" [(ngModel)]="formularioRegla.intervaloMinutos" required>
+          <input matInput type="number" [min]="intervaloMinimoMinutos" [step]="intervaloMinimoMinutos" name="reglaIntervalo" [(ngModel)]="formularioRegla.intervaloMinutos" required>
         </mat-form-field>
 
         <mat-form-field appearance="outline">

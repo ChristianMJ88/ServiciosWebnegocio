@@ -16,6 +16,23 @@ export interface ResumenAdmin {
   ingresosFinalizados: number;
 }
 
+export interface OpcionTextoDisponibilidadAdmin {
+  valor: string;
+  etiqueta: string;
+}
+
+export interface OpcionNumeroDisponibilidadAdmin {
+  valor: number;
+  etiqueta: string;
+}
+
+export interface MetadatosDisponibilidadAdmin {
+  tiposSujeto: OpcionTextoDisponibilidadAdmin[];
+  diasSemana: OpcionNumeroDisponibilidadAdmin[];
+  tiposBloqueo: OpcionTextoDisponibilidadAdmin[];
+  intervaloMinimoMinutos: number;
+}
+
 export interface SucursalAdmin {
   id: number;
   nombre: string;
@@ -779,6 +796,10 @@ export class AdminService {
 
   getReglasDisponibilidad(): Observable<ReglaDisponibilidadAdmin[]> {
     return this.http.get<ReglaDisponibilidadAdmin[]>(`${environment.apiBaseUrl}/admin/disponibilidad/reglas`);
+  }
+
+  getMetadatosDisponibilidad(): Observable<MetadatosDisponibilidadAdmin> {
+    return this.http.get<MetadatosDisponibilidadAdmin>(`${environment.apiBaseUrl}/admin/disponibilidad/metadatos`);
   }
 
   crearReglaDisponibilidad(payload: GuardarReglaDisponibilidadPayload): Observable<ReglaDisponibilidadAdmin> {

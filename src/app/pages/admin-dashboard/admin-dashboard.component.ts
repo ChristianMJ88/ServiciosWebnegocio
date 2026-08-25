@@ -39,6 +39,7 @@ import {
   GrupoServicioAdmin,
   LogMensajeWhatsappAdmin,
   MensajeWhatsappAdmin,
+  MetadatosDisponibilidadAdmin,
   MigracionSecretosCorreoResponse,
   PlantillaRolInternoAdmin,
   PlantillaWhatsappAdmin,
@@ -89,6 +90,8 @@ import { AdminWhatsappFacade } from './admin-whatsapp.facade';
 import { AdminAvailabilityFacade } from './admin-availability.facade';
 import {
   construirSujetosDisponibilidad,
+  completarFormularioExcepcionConMetadatos,
+  completarFormularioReglaConMetadatos,
   crearFormularioExcepcion,
   crearFormularioRegla,
   sincronizarSujetoSeleccionado
@@ -260,6 +263,7 @@ export class AdminDashboardComponent implements OnInit {
   });
   readonly reglasDisponibilidad = signal<ReglaDisponibilidadAdmin[]>([]);
   readonly excepcionesDisponibilidad = signal<ExcepcionDisponibilidadAdmin[]>([]);
+  readonly metadatosDisponibilidad = signal<MetadatosDisponibilidadAdmin | null>(null);
   readonly reporteServicios = signal<ReporteServicioAdmin[]>([]);
   readonly reportePrestadores = signal<ReportePrestadorAdmin[]>([]);
   readonly configuracionSitio = signal<ConfiguracionSitioAdmin | null>(null);
@@ -279,25 +283,13 @@ export class AdminDashboardComponent implements OnInit {
   readonly whatsappOnboardingStats = computed(() =>
     getWhatsappOnboardingStats(this.whatsappOnboardingChecklist())
   );
-  readonly diasSemana = [
-    { value: 1, label: 'Lunes' },
-    { value: 2, label: 'Martes' },
-    { value: 3, label: 'Miércoles' },
-    { value: 4, label: 'Jueves' },
-    { value: 5, label: 'Viernes' },
-    { value: 6, label: 'Sábado' },
-    { value: 7, label: 'Domingo' }
-  ];
-  readonly diasSemanaTexto: Record<number, string> = {
-    1: 'Lunes',
-    2: 'Martes',
-    3: 'Miércoles',
-    4: 'Jueves',
-    5: 'Viernes',
-    6: 'Sábado',
-    7: 'Domingo'
-  };
-  readonly tiposBloqueo = ['BLOQUEO', 'DESCANSO', 'VACACIONES', 'HORARIO_ESPECIAL'];
+  readonly tiposSujeto = computed(() => this.metadatosDisponibilidad()?.tiposSujeto ?? []);
+  readonly diasSemana = computed(() => this.metadatosDisponibilidad()?.diasSemana ?? []);
+  readonly diasSemanaTexto = computed(() => Object.fromEntries(
+    this.diasSemana().map(dia => [dia.valor, dia.etiqueta])
+  ) as Record<number, string>);
+  readonly tiposBloqueo = computed(() => this.metadatosDisponibilidad()?.tiposBloqueo ?? []);
+  readonly intervaloMinimoMinutos = computed(() => this.metadatosDisponibilidad()?.intervaloMinimoMinutos ?? 0);
   readonly modulosAdmin = computed(() =>
     MODULOS_ADMIN.filter(modulo => !modulo.capacidad || this.authService[modulo.capacidad]())
   );
@@ -989,7 +981,7 @@ export class AdminDashboardComponent implements OnInit {
     this.dashboardLoader.cargar((error, mensaje) => this.marcarErrorCarga(error, mensaje))
       .pipe(finalize(() => this.actualizarVistaEnZona(() => this.loading.set(false))))
       .subscribe({
-        next: ({ resumen, citas, contactos, sucursales, gruposServicio, subgruposServicio, catalogosSugeridos, servicios, prestadores, rolesInternos, plantillasRolesInternos, auditoriaRolesInternos, permisos, usuariosInternos, reglas, excepciones, reporteServicios, reportePrestadores, configuracionSitio, configuracionCorreo, auditoriaConfiguracion, configuracionWhatsapp, plantillasWhatsapp, plantillasWhatsappEmpresa, logsWhatsapp, mensajesWhatsapp }) => {
+        next: ({ resumen, citas, contactos, sucursales, gruposServicio, subgruposServicio, catalogosSugeridos, servicios, prestadores, rolesInternos, plantillasRolesInternos, auditoriaRolesInternos, permisos, usuariosInternos, reglas, metadatosDisponibilidad, excepciones, reporteServicios, reportePrestadores, configuracionSitio, configuracionCorreo, auditoriaConfiguracion, configuracionWhatsapp, plantillasWhatsapp, plantillasWhatsappEmpresa, logsWhatsapp, mensajesWhatsapp }) => {
           this.actualizarVistaEnZona(() => {
             this.resumen.set(resumen);
             this.citas.set(citas);
@@ -1014,6 +1006,11 @@ export class AdminDashboardComponent implements OnInit {
             }
             this.usuariosInternos.set(usuariosInternos);
             this.reglasDisponibilidad.set(reglas);
+            this.metadatosDisponibilidad.set(metadatosDisponibilidad);
+            if (metadatosDisponibilidad) {
+              this.formularioRegla = completarFormularioReglaConMetadatos(this.formularioRegla, metadatosDisponibilidad);
+              this.formularioExcepcion = completarFormularioExcepcionConMetadatos(this.formularioExcepcion, metadatosDisponibilidad);
+            }
             this.excepcionesDisponibilidad.set(excepciones);
             this.reporteServicios.set(reporteServicios);
             this.reportePrestadores.set(reportePrestadores);
@@ -2024,7 +2021,10 @@ export class AdminDashboardComponent implements OnInit {
 
   cancelarEdicionRegla() {
     this.reglaEditandoId = null;
-    this.formularioRegla = crearFormularioRegla();
+    const formulario = crearFormularioRegla();
+    this.formularioRegla = this.metadatosDisponibilidad()
+      ? completarFormularioReglaConMetadatos(formulario, this.metadatosDisponibilidad()!)
+      : formulario;
     this.actualizarSujetosRegla();
   }
 
@@ -2052,7 +2052,10 @@ export class AdminDashboardComponent implements OnInit {
 
   cancelarEdicionExcepcion() {
     this.excepcionEditandoId = null;
-    this.formularioExcepcion = crearFormularioExcepcion();
+    const formulario = crearFormularioExcepcion();
+    this.formularioExcepcion = this.metadatosDisponibilidad()
+      ? completarFormularioExcepcionConMetadatos(formulario, this.metadatosDisponibilidad()!)
+      : formulario;
     this.actualizarSujetosExcepcion();
   }
 

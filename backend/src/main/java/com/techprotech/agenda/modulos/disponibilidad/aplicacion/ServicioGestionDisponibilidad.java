@@ -196,6 +196,10 @@ public class ServicioGestionDisponibilidad {
     }
 
     private void validarExcepcion(ExcepcionDisponibilidadRequest request) {
+        String tipoBloqueo = request.tipoBloqueo().trim().toUpperCase();
+        if (!CatalogosDisponibilidad.contiene(CatalogosDisponibilidad.TIPOS_BLOQUEO, tipoBloqueo)) {
+            throw new ResponseStatusException(BAD_REQUEST, "El tipo de bloqueo no es valido");
+        }
         if ((request.horaInicio() == null) != (request.horaFin() == null)) {
             throw new ResponseStatusException(BAD_REQUEST, "Debes indicar ambas horas o dejar ambas vacias para un bloqueo completo");
         }
@@ -206,7 +210,7 @@ public class ServicioGestionDisponibilidad {
 
     private String normalizarTipoSujeto(String tipoSujeto) {
         String tipo = tipoSujeto.trim().toUpperCase();
-        if (!List.of("SUCURSAL", "PRESTADOR").contains(tipo)) {
+        if (!CatalogosDisponibilidad.contiene(CatalogosDisponibilidad.TIPOS_SUJETO, tipo)) {
             throw new ResponseStatusException(BAD_REQUEST, "El tipo de sujeto no es valido");
         }
         return tipo;

@@ -19,8 +19,9 @@
         <mat-form-field appearance="outline">
           <mat-label>Tipo</mat-label>
           <mat-select name="excepcionTipoSujeto" [(ngModel)]="formularioExcepcion.tipoSujeto" (ngModelChange)="typeChange.emit($event)">
-            <mat-option value="SUCURSAL">Sucursal</mat-option>
-            <mat-option value="PRESTADOR">Prestador</mat-option>
+            @for (tipo of tiposSujeto; track tipo.valor) {
+              <mat-option [value]="tipo.valor">{{ tipo.etiqueta }}</mat-option>
+            }
           </mat-select>
         </mat-form-field>
 
@@ -55,8 +56,8 @@
         <mat-form-field appearance="outline">
           <mat-label>Tipo de bloqueo</mat-label>
           <mat-select name="excepcionTipoBloqueo" [(ngModel)]="formularioExcepcion.tipoBloqueo">
-            @for (tipo of tiposBloqueo; track tipo) {
-              <mat-option [value]="tipo">{{ tipo }}</mat-option>
+            @for (tipo of tiposBloqueo; track tipo.valor) {
+              <mat-option [value]="tipo.valor">{{ tipo.etiqueta }}</mat-option>
             }
           </mat-select>
         </mat-form-field>

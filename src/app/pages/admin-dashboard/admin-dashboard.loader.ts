@@ -77,6 +77,7 @@ export class AdminDashboardLoader {
       permisos: this.cargarSi(puedeGestionarUsuarios, this.adminService.getPermisos(), [], 'No se pudo cargar el catálogo de permisos.', onError),
       usuariosInternos: this.cargarSi(puedeGestionarUsuarios, this.adminService.getUsuariosInternos(), [], 'No se pudieron cargar los usuarios internos.', onError),
       reglas: this.cargarSi(puedeGestionarPrestadores, this.adminService.getReglasDisponibilidad(), [], 'No se pudieron cargar las reglas de disponibilidad.', onError),
+      metadatosDisponibilidad: this.cargarSi(puedeGestionarPrestadores, this.adminService.getMetadatosDisponibilidad(), null, 'No se pudieron cargar los catálogos de disponibilidad.', onError),
       excepciones: this.cargarSi(puedeGestionarPrestadores, this.adminService.getExcepcionesDisponibilidad(), [], 'No se pudieron cargar las excepciones.', onError),
       reporteServicios: this.cargarSi(this.authService.puedeVerReportesAdmin(), this.adminService.getReporteServicios(), [], 'No se pudo cargar el reporte de servicios.', onError),
       reportePrestadores: this.cargarSi(this.authService.puedeVerReportesAdmin(), this.adminService.getReportePrestadores(), [], 'No se pudo cargar el reporte de prestadores.', onError),

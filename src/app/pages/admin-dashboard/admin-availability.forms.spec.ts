@@ -4,6 +4,8 @@ import {
   construirPayloadExcepcion,
   construirPayloadRegla,
   construirSujetosDisponibilidad,
+  completarFormularioExcepcionConMetadatos,
+  completarFormularioReglaConMetadatos,
   crearFormularioExcepcion,
   crearFormularioRegla,
   sincronizarSujetoSeleccionado
@@ -51,5 +53,19 @@ describe('admin availability forms', () => {
       .toEqual([{ id: 8, nombre: 'Ana · Norte' }]);
     expect(sincronizarSujetoSeleccionado(99, [{ id: 3, nombre: 'Centro' }])).toBe(3);
     expect(sincronizarSujetoSeleccionado(3, [{ id: 3, nombre: 'Centro' }])).toBe(3);
+  });
+
+  it('completa valores iniciales usando exclusivamente los metadatos del backend', () => {
+    const metadatos = {
+      tiposSujeto: [{ valor: 'CENTRO', etiqueta: 'Centro' }],
+      diasSemana: [{ valor: 4, etiqueta: 'Jueves' }],
+      tiposBloqueo: [{ valor: 'CIERRE', etiqueta: 'Cierre' }],
+      intervaloMinimoMinutos: 20
+    };
+
+    expect(completarFormularioReglaConMetadatos(crearFormularioRegla(), metadatos))
+      .toEqual(expect.objectContaining({ tipoSujeto: 'CENTRO', diaSemana: 4, intervaloMinutos: 20 }));
+    expect(completarFormularioExcepcionConMetadatos(crearFormularioExcepcion(), metadatos))
+      .toEqual(expect.objectContaining({ tipoSujeto: 'CENTRO', tipoBloqueo: 'CIERRE' }));
   });
 });

@@ -6,7 +6,7 @@ import { MatCardModule } from '@angular/material/card';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
-import { ExcepcionDisponibilidadAdmin, GuardarExcepcionDisponibilidadPayload } from '../../core/admin/admin.service';
+import { ExcepcionDisponibilidadAdmin, GuardarExcepcionDisponibilidadPayload, OpcionTextoDisponibilidadAdmin } from '../../core/admin/admin.service';
 import { SujetoDisponibilidadOption } from './admin-availability.types';
 
 @Component({
@@ -28,7 +28,8 @@ export class AdminExceptionsSectionComponent {
   @Input({ required: true }) formularioExcepcion!: GuardarExcepcionDisponibilidadPayload;
   @Input({ required: true }) guardandoExcepcion!: boolean;
   @Input({ required: true }) sujetosExcepcion!: SujetoDisponibilidadOption[];
-  @Input({ required: true }) tiposBloqueo!: string[];
+  @Input({ required: true }) tiposSujeto!: OpcionTextoDisponibilidadAdmin[];
+  @Input({ required: true }) tiposBloqueo!: OpcionTextoDisponibilidadAdmin[];
   @Input({ required: true }) excepcionesDisponibilidad!: ExcepcionDisponibilidadAdmin[];
 
   @Output() clearEdit = new EventEmitter<void>();
