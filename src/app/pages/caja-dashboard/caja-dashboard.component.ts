@@ -6,15 +6,7 @@ import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { finalize } from 'rxjs/operators';
 import { AuthService } from '../../core/auth/auth.service';
 import { PerfilUsuarioLocal, UserProfileService } from '../../core/profile/user-profile.service';
-import {
-  CajaSesion,
-  CatalogoCaja,
-  CitaPorCobrar,
-  MovimientoCaja,
-  PagoCita,
-  ResumenCaja,
-  SucursalCaja
-} from '../../core/caja/caja.service';
+import { SucursalCaja } from '../../core/caja/caja.service';
 import { CajaDashboardFacade } from './data/caja-dashboard.facade';
 import { CajaPaymentsSectionComponent } from './payments/caja-payments-section.component';
 import { CajaSessionSectionComponent } from './session/caja-session-section.component';
@@ -26,10 +18,11 @@ import { CajaReceiptPrintService } from './receipt/caja-receipt-print.service';
 import { CajaHeaderComponent } from './header/caja-header.component';
 import { CajaOverviewComponent } from './overview/caja-overview.component';
 import { CajaViewNavigationComponent } from './navigation/caja-view-navigation.component';
-import { CajaMetricViewModel, CajaNotificationViewModel, CajaViewOption, VistaCaja } from './models/caja-dashboard.models';
+import { CajaViewOption, VistaCaja } from './models/caja-dashboard.models';
 import { CajaSessionFacade } from './session/caja-session.facade';
 import { CajaPaymentsFacade } from './payments/caja-payments.facade';
 import { CajaMovementsFacade } from './movements/caja-movements.facade';
+import { CajaDashboardStore } from './state/caja-dashboard.store';
 import {
   construirApertura,
   construirCierre,
@@ -63,6 +56,7 @@ export class CajaDashboardComponent implements OnInit, AfterViewInit {
   private readonly sessionFacade = inject(CajaSessionFacade);
   private readonly paymentsFacade = inject(CajaPaymentsFacade);
   private readonly movementsFacade = inject(CajaMovementsFacade);
+  private readonly store = inject(CajaDashboardStore);
   private readonly authService = inject(AuthService);
   private readonly userProfileService = inject(UserProfileService);
   private readonly router = inject(Router);
@@ -73,31 +67,31 @@ export class CajaDashboardComponent implements OnInit, AfterViewInit {
   private readonly receiptPrintService = inject(CajaReceiptPrintService);
   private reintentoInicialProgramado = false;
 
-  readonly loading = signal(false);
-  readonly guardandoApertura = signal(false);
-  readonly guardandoCierre = signal(false);
-  readonly guardandoPago = signal(false);
-  readonly guardandoMovimiento = signal(false);
+  readonly loading = this.store.loading;
+  readonly guardandoApertura = this.store.guardandoApertura;
+  readonly guardandoCierre = this.store.guardandoCierre;
+  readonly guardandoPago = this.store.guardandoPago;
+  readonly guardandoMovimiento = this.store.guardandoMovimiento;
   readonly panelMovil = signal(false);
   readonly perfilConfigAbierto = signal(false);
   readonly vistaActiva = signal<VistaCaja>('cobros');
-  readonly sucursales = signal<SucursalCaja[]>([]);
-  readonly sucursalActivaId = signal<number | null>(null);
-  readonly sesionActual = signal<CajaSesion | null>(null);
-  readonly citasPorCobrar = signal<CitaPorCobrar[]>([]);
-  readonly resumen = signal<ResumenCaja | null>(null);
-  readonly pagosCitaSeleccionada = signal<PagoCita[]>([]);
-  readonly movimientosDelTurno = signal<MovimientoCaja[]>([]);
-  readonly ultimoMovimiento = signal<MovimientoCaja | null>(null);
-  readonly citaSeleccionadaId = signal<number | null>(null);
-  readonly error = signal('');
-  readonly mensaje = signal('');
-  readonly metodosPago = signal<CatalogoCaja['metodosPago']>([]);
-  readonly tiposMovimiento = signal<CatalogoCaja['tiposMovimiento']>([]);
-  readonly estadosSesion = signal<CatalogoCaja['estadosSesion']>([]);
-  readonly estadoSesionAbierta = signal('');
-  readonly estadoSesionCerrada = signal('');
-  readonly metodoPagoEfectivo = signal('');
+  readonly sucursales = this.store.sucursales;
+  readonly sucursalActivaId = this.store.sucursalActivaId;
+  readonly sesionActual = this.store.sesionActual;
+  readonly citasPorCobrar = this.store.citasPorCobrar;
+  readonly resumen = this.store.resumen;
+  readonly pagosCitaSeleccionada = this.store.pagos;
+  readonly movimientosDelTurno = this.store.movimientos;
+  readonly ultimoMovimiento = this.store.ultimoMovimiento;
+  readonly citaSeleccionadaId = this.store.citaSeleccionadaId;
+  readonly error = this.store.error;
+  readonly mensaje = this.store.mensaje;
+  readonly metodosPago = this.store.metodosPago;
+  readonly tiposMovimiento = this.store.tiposMovimiento;
+  readonly estadosSesion = this.store.estadosSesion;
+  readonly estadoSesionAbierta = this.store.estadoSesionAbierta;
+  readonly estadoSesionCerrada = this.store.estadoSesionCerrada;
+  readonly metodoPagoEfectivo = this.store.metodoPagoEfectivo;
   readonly comprobante = signal<CajaReceiptDto | null>(null);
 
   readonly perfilUsuario = computed(() => this.userProfileService.perfilActual());
@@ -122,14 +116,9 @@ export class CajaDashboardComponent implements OnInit, AfterViewInit {
   readonly puedeGestionarSesion = computed(() => this.authService.puedeGestionarSesionCaja());
   readonly puedeGestionarMovimientos = computed(() => this.authService.puedeGestionarMovimientosCaja());
   readonly sucursalesPermitidas = computed(() => this.authService.sucursalesPermitidas());
-  readonly cajaAbierta = computed(() => Boolean(
-    this.estadoSesionAbierta() && this.sesionActual()?.estado === this.estadoSesionAbierta()
-  ));
-  readonly totalNotificaciones = computed(() => this.citasPorCobrar().length + (this.cajaAbierta() ? 0 : 1));
-  readonly notificacionesCaja = computed<CajaNotificationViewModel[]>(() => [
-    !this.cajaAbierta() ? { titulo: 'Caja cerrada', descripcion: 'Abre una sesión de caja para operar cobros.', icono: 'bi-cash-coin', total: 1 } : null,
-    this.citasPorCobrar().length ? { titulo: 'Citas por cobrar', descripcion: `${this.citasPorCobrar().length} citas tienen saldo pendiente.`, icono: 'bi-receipt', total: this.citasPorCobrar().length } : null
-  ].filter((item): item is { titulo: string; descripcion: string; icono: string; total: number } => !!item));
+  readonly cajaAbierta = this.store.cajaAbierta;
+  readonly totalNotificaciones = this.store.totalNotificaciones;
+  readonly notificacionesCaja = this.store.notificaciones;
   readonly sucursalOperativaId = computed(() =>
     this.sucursalActivaId()
     ?? this.sucursales()[0]?.id
@@ -157,18 +146,13 @@ export class CajaDashboardComponent implements OnInit, AfterViewInit {
   });
   readonly sucursalActivaDireccion = computed(() => this.sucursalActiva()?.direccion ?? '');
   readonly sucursalActivaResuelta = computed(() => Boolean(this.sucursalActivaNombre()));
-  readonly estadoSesionEtiqueta = computed(() => {
-    const codigo = this.cajaAbierta() ? this.estadoSesionAbierta() : this.estadoSesionCerrada();
-    return this.estadosSesion().find(estado => estado.codigo === codigo)?.etiqueta ?? codigo;
-  });
+  readonly estadoSesionEtiqueta = this.store.estadoSesionEtiqueta;
   readonly mensajePagoBloqueado = computed(() =>
     this.cajaAbierta()
       ? ''
       : `Abre caja${this.sucursalOperativaId() ? ' en la sucursal activa' : ''} para registrar cobros.`
   );
-  readonly citaSeleccionada = computed(() =>
-    this.citasPorCobrar().find(cita => cita.citaId === this.citaSeleccionadaId()) ?? this.citasPorCobrar()[0] ?? null
-  );
+  readonly citaSeleccionada = this.store.citaSeleccionada;
   readonly citaSeleccionadaActualId = computed(() => this.citaSeleccionada()?.citaId ?? null);
   readonly vistasDisponibles = computed(() => {
     const vistas: CajaViewOption[] = [];
@@ -183,15 +167,7 @@ export class CajaDashboardComponent implements OnInit, AfterViewInit {
     }
     return vistas;
   });
-  readonly totalPendiente = computed(() =>
-    this.citasPorCobrar().reduce((total, cita) => total + (Number(cita.pendiente) || 0), 0)
-  );
-  readonly metricas = computed<CajaMetricViewModel[]>(() => [
-    { label: 'Pendiente por cobrar', value: this.totalPendiente(), accent: 'primary', format: 'money' },
-    { label: 'Cobrado en turno', value: Number(this.resumen()?.totalCobrado ?? 0), accent: 'neutral', format: 'money' },
-    { label: 'Efectivo esperado', value: Number(this.resumen()?.saldoEsperadoCaja ?? 0), accent: 'neutral', format: 'money' },
-    { label: 'Citas por cobrar', value: this.citasPorCobrar().length, accent: 'soft', format: 'count' }
-  ]);
+  readonly metricas = this.store.metricas;
 
   formularioApertura = crearFormularioApertura();
   formularioCierre = crearFormularioCierre();
@@ -252,29 +228,26 @@ export class CajaDashboardComponent implements OnInit, AfterViewInit {
   }
 
   cargarCatalogoYTablero(sucursalIdPreferida?: number | null) {
-    this.loading.set(true);
-    this.error.set('');
+    this.store.setLoading(true);
+    this.store.setError('');
 
     const sucursalBase = sucursalIdPreferida ?? this.obtenerSucursalOperativaId();
 
     this.cajaFacade.cargarConCatalogo(sucursalBase)
-      .pipe(finalize(() => this.loading.set(false)))
+      .pipe(finalize(() => this.store.setLoading(false)))
       .subscribe({
         next: ({ catalogo, tablero: { sesion, citas, resumen, movimientos } }) => {
           this.actualizarVistaEnZona(() => {
-            this.aplicarCatalogo(catalogo);
-            this.sesionActual.set(sesion);
-            this.citasPorCobrar.set(citas);
-            this.resumen.set(resumen);
-            this.movimientosDelTurno.set(movimientos);
-            this.ultimoMovimiento.set(movimientos[0] ?? null);
+            this.store.applyCatalog(catalogo);
+            this.sincronizarCatalogoOperativo(catalogo.sucursalActivaId);
+            this.store.applyDashboard({ sesion, citas, resumen, movimientos });
             this.sincronizarCitaSeleccionada();
             this.formularioCierre.montoContado = Number(resumen.saldoEsperadoCaja ?? sesion?.montoEsperado ?? 0);
           });
         },
         error: error => {
           this.actualizarVistaEnZona(() => {
-            this.error.set(this.extraerMensaje(error, 'No pude cargar las sucursales para Caja.'));
+            this.store.setError(this.extraerMensaje(error, 'No pude cargar las sucursales para Caja.'));
           });
         }
       });
@@ -282,26 +255,22 @@ export class CajaDashboardComponent implements OnInit, AfterViewInit {
 
   recargarTablero(sucursalIdForzado?: number | null) {
     const sucursalId = sucursalIdForzado ?? this.sucursalOperativaId();
-    this.loading.set(true);
-    this.error.set('');
+    this.store.setLoading(true);
+    this.store.setError('');
 
     this.cajaFacade.cargarTablero(sucursalId)
-      .pipe(finalize(() => this.loading.set(false)))
+      .pipe(finalize(() => this.store.setLoading(false)))
       .subscribe({
         next: ({ sesion, citas, resumen, movimientos }) => {
           this.actualizarVistaEnZona(() => {
-            this.sesionActual.set(sesion);
-            this.citasPorCobrar.set(citas);
-            this.resumen.set(resumen);
-            this.movimientosDelTurno.set(movimientos);
-            this.ultimoMovimiento.set(movimientos[0] ?? null);
+            this.store.applyDashboard({ sesion, citas, resumen, movimientos });
             this.sincronizarCitaSeleccionada();
             this.formularioCierre.montoContado = Number(resumen.saldoEsperadoCaja ?? sesion?.montoEsperado ?? 0);
           });
         },
         error: error => {
           this.actualizarVistaEnZona(() => {
-            this.error.set(this.extraerMensaje(error, 'No pude actualizar el tablero de Caja.'));
+            this.store.setError(this.extraerMensaje(error, 'No pude actualizar el tablero de Caja.'));
           });
         }
       });
@@ -309,33 +278,32 @@ export class CajaDashboardComponent implements OnInit, AfterViewInit {
 
   seleccionarSucursal(sucursalId: number | null) {
     this.sincronizarSucursalOperativa(sucursalId);
-    this.citaSeleccionadaId.set(null);
-    this.pagosCitaSeleccionada.set([]);
+    this.store.clearAppointmentContext();
     this.cargarCatalogoYTablero(sucursalId);
   }
 
   abrirCaja() {
     const sucursalId = this.obtenerSucursalOperativaId();
     if (!sucursalId) {
-      this.error.set('Selecciona una sucursal antes de abrir la caja.');
+      this.store.setError('Selecciona una sucursal antes de abrir la caja.');
       return;
     }
 
-    this.guardandoApertura.set(true);
-    this.error.set('');
-    this.mensaje.set('');
+    this.store.setSavingOpen(true);
+    this.store.setError('');
+    this.store.setMessage('');
 
     this.sessionFacade.open(construirApertura(sucursalId, this.formularioApertura))
-      .pipe(finalize(() => this.guardandoApertura.set(false)))
+      .pipe(finalize(() => this.store.setSavingOpen(false)))
       .subscribe({
         next: sesion => {
-          this.sesionActual.set(sesion);
+          this.store.setSession(sesion);
           this.formularioApertura = crearFormularioApertura();
-          this.mensaje.set('Caja abierta correctamente.');
+          this.store.setMessage('Caja abierta correctamente.');
           this.recargarTablero();
         },
         error: error => {
-          this.error.set(this.extraerMensaje(error, 'No pude abrir la caja.'));
+          this.store.setError(this.extraerMensaje(error, 'No pude abrir la caja.'));
         }
       });
   }
@@ -343,30 +311,30 @@ export class CajaDashboardComponent implements OnInit, AfterViewInit {
   cerrarCaja() {
     const sesion = this.sesionActual();
     if (!sesion) {
-      this.error.set('No hay una caja abierta para cerrar.');
+      this.store.setError('No hay una caja abierta para cerrar.');
       return;
     }
 
-    this.guardandoCierre.set(true);
-    this.error.set('');
-    this.mensaje.set('');
+    this.store.setSavingClose(true);
+    this.store.setError('');
+    this.store.setMessage('');
 
     this.sessionFacade.close(sesion.id, construirCierre(this.formularioCierre))
-      .pipe(finalize(() => this.guardandoCierre.set(false)))
+      .pipe(finalize(() => this.store.setSavingClose(false)))
       .subscribe({
         next: respuesta => {
-          this.sesionActual.set(respuesta);
-          this.mensaje.set('Caja cerrada correctamente.');
+          this.store.setSession(respuesta);
+          this.store.setMessage('Caja cerrada correctamente.');
           this.recargarTablero();
         },
         error: error => {
-          this.error.set(this.extraerMensaje(error, 'No pude cerrar la caja.'));
+          this.store.setError(this.extraerMensaje(error, 'No pude cerrar la caja.'));
         }
       });
   }
 
   seleccionarCita(citaId: number) {
-    this.citaSeleccionadaId.set(citaId);
+    this.store.selectAppointment(citaId);
     const cita = this.citasPorCobrar().find(item => item.citaId === citaId);
     if (cita) {
       this.formularioPago.monto = Number(cita.pendiente);
@@ -376,12 +344,12 @@ export class CajaDashboardComponent implements OnInit, AfterViewInit {
     this.paymentsFacade.list(citaId).subscribe({
       next: pagos => {
         this.actualizarVistaEnZona(() => {
-          this.pagosCitaSeleccionada.set(pagos);
+          this.store.setPayments(pagos);
         });
       },
       error: error => {
         this.actualizarVistaEnZona(() => {
-          this.error.set(this.extraerMensaje(error, 'No pude cargar el historial de pagos de la cita.'));
+          this.store.setError(this.extraerMensaje(error, 'No pude cargar el historial de pagos de la cita.'));
         });
       }
     });
@@ -390,27 +358,27 @@ export class CajaDashboardComponent implements OnInit, AfterViewInit {
   registrarPago() {
     const cita = this.citaSeleccionada();
     if (!cita) {
-      this.error.set('Selecciona una cita por cobrar antes de registrar un pago.');
+      this.store.setError('Selecciona una cita por cobrar antes de registrar un pago.');
       return;
     }
 
-    this.guardandoPago.set(true);
-    this.error.set('');
-    this.mensaje.set('');
+    this.store.setSavingPayment(true);
+    this.store.setError('');
+    this.store.setMessage('');
 
     this.paymentsFacade.register(cita.citaId, construirPago(this.formularioPago))
-      .pipe(finalize(() => this.guardandoPago.set(false)))
+      .pipe(finalize(() => this.store.setSavingPayment(false)))
       .subscribe({
         next: pago => {
-          this.mensaje.set('Pago registrado correctamente.');
+          this.store.setMessage('Pago registrado correctamente.');
           this.formularioPago.montoRecibido = this.formularioPago.monto;
           this.formularioPago.referencia = '';
           this.formularioPago.observaciones = '';
-          this.pagosCitaSeleccionada.set([pago, ...this.pagosCitaSeleccionada()]);
+          this.store.prependPayment(pago);
           this.recargarTablero();
         },
         error: error => {
-          this.error.set(this.extraerMensaje(error, 'No pude registrar el pago.'));
+          this.store.setError(this.extraerMensaje(error, 'No pude registrar el pago.'));
         }
       });
   }
@@ -418,27 +386,27 @@ export class CajaDashboardComponent implements OnInit, AfterViewInit {
   registrarMovimiento() {
     const sucursalId = this.obtenerSucursalOperativaId();
     if (!sucursalId) {
-      this.error.set('Selecciona una sucursal antes de registrar movimientos de caja.');
+      this.store.setError('Selecciona una sucursal antes de registrar movimientos de caja.');
       return;
     }
 
-    this.guardandoMovimiento.set(true);
-    this.error.set('');
-    this.mensaje.set('');
+    this.store.setSavingMovement(true);
+    this.store.setError('');
+    this.store.setMessage('');
 
     this.movementsFacade.register(construirMovimiento(sucursalId, this.formularioMovimiento))
-      .pipe(finalize(() => this.guardandoMovimiento.set(false)))
+      .pipe(finalize(() => this.store.setSavingMovement(false)))
       .subscribe({
         next: movimiento => {
           this.formularioMovimiento = crearFormularioMovimiento(
             this.tiposMovimiento()[0]?.codigo,
             this.metodosPago()[0]?.codigo
           );
-          this.mensaje.set('Movimiento registrado correctamente.');
+          this.store.setMessage('Movimiento registrado correctamente.');
           this.recargarTablero();
         },
         error: error => {
-          this.error.set(this.extraerMensaje(error, 'No pude registrar el movimiento de caja.'));
+          this.store.setError(this.extraerMensaje(error, 'No pude registrar el movimiento de caja.'));
         }
       });
   }
@@ -459,11 +427,11 @@ export class CajaDashboardComponent implements OnInit, AfterViewInit {
   guardarConfiguracionPerfil(perfil: PerfilUsuarioLocal) {
     this.userProfileService.guardar(perfil);
     this.perfilConfigAbierto.set(false);
-    this.mensaje.set('Perfil actualizado.');
+    this.store.setMessage('Perfil actualizado.');
   }
 
   mostrarErrorPerfil(mensaje: string) {
-    this.error.set(mensaje);
+    this.store.setError(mensaje);
   }
 
   irARecepcion() {
@@ -494,13 +462,13 @@ export class CajaDashboardComponent implements OnInit, AfterViewInit {
   async imprimirComprobante() {
     const cita = this.citaSeleccionada();
     if (!cita) {
-      this.error.set('Selecciona una cita para imprimir el comprobante.');
+      this.store.setError('Selecciona una cita para imprimir el comprobante.');
       return;
     }
 
     const pagos = this.pagosCitaSeleccionada();
     if (!pagos.length) {
-      this.error.set('Todavía no hay pagos registrados para imprimir un comprobante.');
+      this.store.setError('Todavía no hay pagos registrados para imprimir un comprobante.');
       return;
     }
 
@@ -508,7 +476,7 @@ export class CajaDashboardComponent implements OnInit, AfterViewInit {
     try {
       await this.receiptPrintService.printAfterRender();
     } catch (error) {
-      this.error.set(this.extraerMensaje(error, 'No pude preparar el comprobante para impresión.'));
+      this.store.setError(this.extraerMensaje(error, 'No pude preparar el comprobante para impresión.'));
     }
   }
 
@@ -526,14 +494,7 @@ export class CajaDashboardComponent implements OnInit, AfterViewInit {
       ?? null;
   }
 
-  private aplicarCatalogo(catalogo: CatalogoCaja) {
-    this.sucursales.set(catalogo.sucursales ?? []);
-    this.metodosPago.set(catalogo.metodosPago ?? []);
-    this.tiposMovimiento.set(catalogo.tiposMovimiento ?? []);
-    this.estadosSesion.set(catalogo.estadosSesion ?? []);
-    this.estadoSesionAbierta.set(catalogo.estadoSesionAbierta ?? '');
-    this.estadoSesionCerrada.set(catalogo.estadoSesionCerrada ?? '');
-    this.metodoPagoEfectivo.set(catalogo.metodoPagoEfectivo ?? '');
+  private sincronizarCatalogoOperativo(sucursalCatalogoId: number | null) {
     if (!this.metodosPago().some(metodo => metodo.codigo === this.formularioPago.metodoPago)) {
       this.formularioPago.metodoPago = this.metodosPago()[0]?.codigo ?? '';
     }
@@ -543,7 +504,7 @@ export class CajaDashboardComponent implements OnInit, AfterViewInit {
     if (!this.tiposMovimiento().some(tipo => tipo.codigo === this.formularioMovimiento.tipoMovimiento)) {
       this.formularioMovimiento.tipoMovimiento = this.tiposMovimiento()[0]?.codigo ?? '';
     }
-    const sucursalOperativa = catalogo.sucursalActivaId
+    const sucursalOperativa = sucursalCatalogoId
       ?? this.sucursalesPermitidas()[0]
       ?? this.sucursales()[0]?.id
       ?? null;
@@ -561,14 +522,13 @@ export class CajaDashboardComponent implements OnInit, AfterViewInit {
   }
 
   private sincronizarSucursalOperativa(sucursalId: number | null) {
-    this.sucursalActivaId.set(sucursalId);
+    this.store.setActiveBranch(sucursalId);
   }
 
   private sincronizarCitaSeleccionada() {
     const citas = this.citasPorCobrar();
     if (!citas.length) {
-      this.citaSeleccionadaId.set(null);
-      this.pagosCitaSeleccionada.set([]);
+      this.store.clearAppointmentContext();
       return;
     }
 

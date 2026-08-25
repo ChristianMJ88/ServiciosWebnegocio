@@ -10,6 +10,7 @@
 - `overview`: contexto operativo de sucursal, estado y métricas.
 - `navigation`: selector de vista y contexto del cobro activo.
 - `models`: contratos de presentación del dashboard.
+- `state`: store con señales privadas, lectura pública y estado derivado probado.
 - La raíz conserva la coordinación del tablero y publica una sola vez los estilos prefijados de Caja.
 
 Los catálogos y reglas operativas deben provenir del backend.
