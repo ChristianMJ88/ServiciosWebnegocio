@@ -6,23 +6,32 @@
     </div>
   </div>
 
-  <div class="entity-list" *ngIf="auditoriaRolesInternos.length; else sinAuditoriaRoles">
-    <article class="entity-row" *ngFor="let evento of auditoriaRolesInternos">
-      <div class="entity-main">
-        <div class="entity-title">{{ etiquetaAccionAuditoriaRol(evento.accion) }}</div>
-        <div class="entity-meta">{{ evento.resumen }}</div>
-        <div class="entity-meta" *ngIf="evento.rolNombre || evento.rolCodigo">
-          {{ evento.rolNombre || evento.rolCodigo }}<span *ngIf="evento.rolNombre && evento.rolCodigo && evento.rolNombre !== evento.rolCodigo"> · {{ evento.rolCodigo }}</span>
+  @if (auditoriaRolesInternos.length) {
+    <div class="entity-list">
+      @for (evento of auditoriaRolesInternos; track evento) {
+        <article class="entity-row">
+          <div class="entity-main">
+            <div class="entity-title">{{ etiquetaAccionAuditoriaRol(evento.accion) }}</div>
+            <div class="entity-meta">{{ evento.resumen }}</div>
+            @if (evento.rolNombre || evento.rolCodigo) {
+              <div class="entity-meta">
+                {{ evento.rolNombre || evento.rolCodigo }}@if (evento.rolNombre && evento.rolCodigo && evento.rolNombre !== evento.rolCodigo) {
+                <span> · {{ evento.rolCodigo }}</span>
+              }
+            </div>
+          }
+          @if (evento.actorCorreo) {
+            <div class="entity-meta">Por {{ evento.actorCorreo }}</div>
+          }
         </div>
-        <div class="entity-meta" *ngIf="evento.actorCorreo">Por {{ evento.actorCorreo }}</div>
-      </div>
-      <div class="entity-side">
-        <span class="status-pill is-active">{{ evento.creadoEn | date:'dd/MM/yyyy HH:mm':'':'es-MX' }}</span>
-      </div>
-    </article>
+        <div class="entity-side">
+          <span class="status-pill is-active">{{ evento.creadoEn | date:'dd/MM/yyyy HH:mm':'':'es-MX' }}</span>
+        </div>
+      </article>
+    }
   </div>
+} @else {
+  <div class="helper-text">Todavía no hay movimientos auditados de roles o accesos internos.</div>
+}
 
-  <ng-template #sinAuditoriaRoles>
-    <div class="helper-text">Todavía no hay movimientos auditados de roles o accesos internos.</div>
-  </ng-template>
 </mat-card>

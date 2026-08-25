@@ -16,6 +16,15 @@ export interface CitaStaff {
   notas: string | null;
 }
 
+export interface PerfilStaff {
+  usuarioId: number;
+  sucursalId: number;
+  nombreMostrar: string;
+  biografia: string | null;
+  colorAgenda: string | null;
+  activo: boolean;
+}
+
 export interface ReglaDisponibilidadStaff {
   id: number;
   tipoSujeto: string;
@@ -67,6 +76,10 @@ export interface GuardarExcepcionDisponibilidadStaffPayload {
 })
 export class StaffService {
   private readonly http = inject(HttpClient);
+
+  getPerfil(): Observable<PerfilStaff> {
+    return this.http.get<PerfilStaff>(`${environment.apiBaseUrl}/staff/perfil`);
+  }
 
   getAgenda(desde?: string, hasta?: string): Observable<CitaStaff[]> {
     let params = new HttpParams();

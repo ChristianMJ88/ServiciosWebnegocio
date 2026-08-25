@@ -3,10 +3,11 @@
     <div class="auth-shell auth-shell--register">
       <aside class="auth-aside">
         <div class="auth-brand">
-          <span class="auth-brand__mark" *ngIf="!marketingMode(); else fluoraRegisterMark">{{ tenantContext.initials() }}</span>
-          <ng-template #fluoraRegisterMark>
+          @if (!marketingMode()) {
+            <span class="auth-brand__mark">{{ tenantContext.initials() }}</span>
+          } @else {
             <img src="/fluora-mark.svg" alt="Marca Fluora" class="auth-brand__logo">
-          </ng-template>
+          }
           <div>
             <div class="auth-brand__eyebrow">{{ marketingMode() ? 'Fluora' : tenantContext.nombreComercial() }}</div>
             <div class="auth-brand__name">{{ marketingMode() ? 'Registro inicial de empresa' : 'Registro de clientes' }}</div>
@@ -17,24 +18,26 @@
           <span class="auth-copy__kicker">{{ marketingMode() ? 'Comienza en Fluora' : 'Nuevo acceso' }}</span>
           <h1 class="auth-copy__title">
             {{ marketingMode()
-              ? 'Crea tu acceso principal y empieza a configurar tu empresa.'
-              : 'Crea tu acceso y mantén tus citas a la mano.' }}
+            ? 'Crea tu acceso principal y empieza a configurar tu empresa.'
+            : 'Crea tu acceso y mantén tus citas a la mano.' }}
           </h1>
           <p class="auth-copy__description">
             {{ marketingMode()
-              ? 'Este es el primer paso para entrar a Fluora. Después podrás continuar con la configuración de tu empresa, tu equipo y tu web pública.'
-              : 'Si ya te registramos una cita, aquí puedes activar tu acceso. Si aún no tienes cuenta, este mismo formulario te permite crearla.' }}
+            ? 'Este es el primer paso para entrar a Fluora. Después podrás continuar con la configuración de tu empresa, tu equipo y tu web pública.'
+            : 'Si ya te registramos una cita, aquí puedes activar tu acceso. Si aún no tienes cuenta, este mismo formulario te permite crearla.' }}
           </p>
         </div>
 
         <div class="auth-feature-list" aria-label="Ventajas del registro">
-          <div class="auth-feature-item" *ngFor="let item of featureItems()">
-            <i class="bi" [ngClass]="item.icon"></i>
-            <div>
-              <strong>{{ item.title }}</strong>
-              <span>{{ item.body }}</span>
+          @for (item of featureItems(); track item) {
+            <div class="auth-feature-item">
+              <i class="bi" [ngClass]="item.icon"></i>
+              <div>
+                <strong>{{ item.title }}</strong>
+                <span>{{ item.body }}</span>
+              </div>
             </div>
-          </div>
+          }
         </div>
       </aside>
 
@@ -44,8 +47,8 @@
           <h2 class="auth-panel__title">{{ marketingMode() ? 'Completa tu alta en Fluora' : 'Completa tu registro' }}</h2>
           <p class="auth-panel__description">
             {{ marketingMode()
-              ? 'Ingresa tus datos para crear la cuenta con la que empezarás la configuración de tu empresa dentro de Fluora.'
-              : 'Ingresa tus datos para crear tu cuenta o activar el acceso de una cita que ya te registramos.' }}
+            ? 'Ingresa tus datos para crear la cuenta con la que empezarás la configuración de tu empresa dentro de Fluora.'
+            : 'Ingresa tus datos para crear tu cuenta o activar el acceso de una cita que ya te registramos.' }}
           </p>
         </div>
 
@@ -112,33 +115,49 @@
             </div>
           </div>
 
-          <div class="invalid-feedback d-block" *ngIf="f['nombreCompleto'].touched && f['nombreCompleto'].invalid">
-            Ingresa tu nombre completo.
-          </div>
-          <div class="invalid-feedback d-block" *ngIf="f['correo'].touched && f['correo'].invalid">
-            Ingresa un correo válido.
-          </div>
-          <div class="invalid-feedback d-block" *ngIf="f['telefono'].touched && f['telefono'].invalid">
-            Ingresa un teléfono válido.
-          </div>
-          <div class="invalid-feedback d-block" *ngIf="f['contrasena'].touched && f['contrasena'].invalid">
-            La contraseña debe tener al menos 8 caracteres.
-          </div>
+          @if (f['nombreCompleto'].touched && f['nombreCompleto'].invalid) {
+            <div class="invalid-feedback d-block">
+              Ingresa tu nombre completo.
+            </div>
+          }
+          @if (f['correo'].touched && f['correo'].invalid) {
+            <div class="invalid-feedback d-block">
+              Ingresa un correo válido.
+            </div>
+          }
+          @if (f['telefono'].touched && f['telefono'].invalid) {
+            <div class="invalid-feedback d-block">
+              Ingresa un teléfono válido.
+            </div>
+          }
+          @if (f['contrasena'].touched && f['contrasena'].invalid) {
+            <div class="invalid-feedback d-block">
+              La contraseña debe tener al menos 8 caracteres.
+            </div>
+          }
 
-          <div *ngIf="error" class="alert alert-danger auth-alert" role="alert">
-            {{ error }}
-          </div>
+          @if (error) {
+            <div class="alert alert-danger auth-alert" role="alert">
+              {{ error }}
+            </div>
+          }
 
-          <div *ngIf="completed()" class="alert alert-success auth-alert auth-alert--success" role="status">
-            {{ marketingMode()
+          @if (completed()) {
+            <div class="alert alert-success auth-alert auth-alert--success" role="status">
+              {{ marketingMode()
               ? 'Acceso principal listo. Redirigiendo al inicio de sesión de Fluora...'
               : 'Acceso listo. Redirigiendo al inicio de sesión...' }}
-          </div>
+            </div>
+          }
 
           <div class="d-grid auth-submit">
             <button type="submit" class="btn btn-primary auth-submit__button" [disabled]="loading() || completed()">
-              <span *ngIf="!loading()">{{ marketingMode() ? 'Crear acceso principal' : 'Crear o activar acceso' }}</span>
-              <span *ngIf="loading()" class="spinner-border spinner-border-sm me-2"></span>
+              @if (!loading()) {
+                <span>{{ marketingMode() ? 'Crear acceso principal' : 'Crear o activar acceso' }}</span>
+              }
+              @if (loading()) {
+                <span class="spinner-border spinner-border-sm me-2"></span>
+              }
             </button>
           </div>
         </form>

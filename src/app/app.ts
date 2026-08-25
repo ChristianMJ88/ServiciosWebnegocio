@@ -1,10 +1,10 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, effect, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRouteSnapshot, NavigationEnd, Router, RouterOutlet } from '@angular/router';
 import { filter } from 'rxjs/operators';
 import { HeaderComponent } from './components/header/header.component';
 import { FooterComponent } from './components/footer/footer.component';
-import { CommonModule } from '@angular/common';
+
 import { AuthService } from './core/auth/auth.service';
 import { TenantContextService } from './core/tenant/tenant-context.service';
 import { PlatformHostService } from './core/platform/platform-host.service';
@@ -12,7 +12,7 @@ import { PlatformHostService } from './core/platform/platform-host.service';
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [RouterOutlet, HeaderComponent, FooterComponent, CommonModule],
+  imports: [RouterOutlet, HeaderComponent, FooterComponent],
   templateUrl: './app.html',
   styleUrl: './app.css'
 })
@@ -29,6 +29,10 @@ export class App {
   constructor() {
     this.authService.sincronizarSesionPersistida();
     this.sincronizarTenantConRuta(this.router.url);
+    effect(() => {
+      const tenant = this.tenantContext.actual();
+      this.aplicarTemaTenant(tenant);
+    });
     this.router.events
       .pipe(
         filter((event): event is NavigationEnd => event instanceof NavigationEnd),
@@ -86,6 +90,43 @@ export class App {
 
     if (!esRutaTenant && !esRutaPanel && !esHostTenant) {
       this.tenantContext.clearTenant();
+    }
+  }
+
+  private aplicarTemaTenant(tenant: ReturnType<TenantContextService['actual']>) {
+    if (typeof document === 'undefined') {
+      return;
+    }
+
+    const root = document.documentElement;
+    const primario = tenant?.colorPrimario || '#2563eb';
+    const secundario = tenant?.colorSecundario || '#0f766e';
+
+    root.style.setProperty('--tenant-primary', primario);
+    root.style.setProperty('--tenant-secondary', secundario);
+    root.style.setProperty('--primary-pink', primario);
+    root.style.setProperty('--accent-blue', secundario);
+    root.style.setProperty('--primary-color', primario);
+    root.style.setProperty('--primary-light', `${primario}1F`);
+    root.style.setProperty('--primary-border', `${primario}55`);
+    root.style.setProperty('--primary-shadow', `${primario}26`);
+    root.style.setProperty('--tenant-heading-font', this.resolverFuenteCss(tenant?.fuenteTitulos || 'JAKARTA'));
+    root.style.setProperty('--tenant-body-font', this.resolverFuenteCss(tenant?.fuenteCuerpo || 'INTER'));
+  }
+
+  private resolverFuenteCss(fuente: string): string {
+    switch ((fuente || 'INTER').toUpperCase()) {
+      case 'JAKARTA':
+        return '"Plus Jakarta Sans", Inter, "Segoe UI", sans-serif';
+      case 'PLAYFAIR':
+        return '"Playfair Display", Georgia, serif';
+      case 'MANROPE':
+        return 'Manrope, Inter, "Segoe UI", sans-serif';
+      case 'SYSTEM':
+        return 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+      case 'INTER':
+      default:
+        return 'Inter, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif';
     }
   }
 }

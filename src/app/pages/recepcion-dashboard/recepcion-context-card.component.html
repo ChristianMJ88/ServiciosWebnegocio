@@ -8,21 +8,24 @@
   </div>
 
   <div class="recepcion-filter-grid">
-    <mat-form-field appearance="outline" class="w-100" *ngIf="sucursales.length > 1; else recepcionSucursalFija">
-      <mat-label>Sucursal</mat-label>
-      <mat-select [ngModel]="sucursalActivaId" (ngModelChange)="branchChange.emit($event)">
-        <mat-option *ngFor="let sucursal of sucursales" [value]="sucursal.id">
-          {{ sucursal.nombre }}
-        </mat-option>
-      </mat-select>
-    </mat-form-field>
-
-    <ng-template #recepcionSucursalFija>
+    @if (sucursales.length > 1) {
+      <mat-form-field appearance="outline" class="w-100">
+        <mat-label>Sucursal</mat-label>
+        <mat-select [ngModel]="sucursalActivaId" (ngModelChange)="branchChange.emit($event)">
+          @for (sucursal of sucursales; track sucursal) {
+            <mat-option [value]="sucursal.id">
+              {{ sucursal.nombre }}
+            </mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+    } @else {
       <div class="recepcion-filter-static">
         <small>Sucursal</small>
         <strong>{{ sucursalActivaNombre }}</strong>
       </div>
-    </ng-template>
+    }
+
 
     <mat-form-field appearance="outline" class="w-100">
       <mat-label>Fecha</mat-label>

@@ -1,4 +1,4 @@
-import { CommonModule } from '@angular/common';
+
 import { Component, computed, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { finalize } from 'rxjs/operators';
@@ -8,7 +8,7 @@ import { PlatformHostService } from '../../core/platform/platform-host.service';
 @Component({
   selector: 'app-fluora-register-company',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [ReactiveFormsModule],
   templateUrl: './fluora-register-company.component.html',
   styleUrl: './fluora-register-company.component.css'
 })

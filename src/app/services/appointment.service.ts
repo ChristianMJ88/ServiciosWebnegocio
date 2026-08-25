@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { Observable, map, throwError } from 'rxjs';
+import { Observable, map, of, throwError } from 'rxjs';
 import { timeout, retry, catchError } from 'rxjs/operators';
 import { environment } from '../../environments/environment';
 
@@ -9,6 +9,14 @@ export interface FranjaDisponible {
   fin: string;
   hora: string;
   prestadorId: number | null;
+}
+
+export interface PrestadorPublico {
+  usuarioId: number;
+  sucursalId: number;
+  nombreMostrar: string;
+  biografia: string | null;
+  colorAgenda: string | null;
 }
 
 export interface ConsultaFranjasRequest {
@@ -29,6 +37,28 @@ export interface CrearCitaBackendRequest {
   telefonoCliente: string;
   inicio: string;
   notas?: string | null;
+}
+
+export interface CrearCitaMultipleItemBackendRequest {
+  servicioId: number;
+  prestadorId?: number | null;
+  inicio: string;
+}
+
+export interface CrearCitasMultiplesBackendRequest {
+  empresaId: number;
+  sucursalId: number;
+  nombreCliente: string;
+  correoCliente: string;
+  telefonoCliente: string;
+  notas?: string | null;
+  items: CrearCitaMultipleItemBackendRequest[];
+}
+
+export interface CitasMultiplesCreadasResponse {
+  citas: Array<{ id: number; mensaje?: string | null }>;
+  total: number;
+  mensaje: string;
 }
 
 interface FranjaDisponibleBackendResponse {
@@ -148,6 +178,34 @@ export class AppointmentService {
           );
         })
       );
+  }
+
+  bookMultipleAppointments(data: CrearCitasMultiplesBackendRequest): Observable<CitasMultiplesCreadasResponse> {
+    return this.http.post<CitasMultiplesCreadasResponse>(`${this.apiUrl}/publico/citas/multiples`, data).pipe(
+      timeout(this.TIMEOUT_DURATION),
+      catchError(err => {
+        console.error('Error al crear citas múltiples en backend:', err);
+        return throwError(() => new Error(this.resolveBackendErrorMessage(err)));
+      })
+    );
+  }
+
+  getPublicStaff(empresaId: number, sucursalId: number, servicioId?: number | null): Observable<PrestadorPublico[]> {
+    let params = new HttpParams()
+      .set('empresaId', empresaId)
+      .set('sucursalId', sucursalId);
+
+    if (servicioId) {
+      params = params.set('servicioId', servicioId);
+    }
+
+    return this.http.get<PrestadorPublico[]>(`${this.apiUrl}/publico/servicios/prestadores`, { params }).pipe(
+      timeout(this.TIMEOUT_DURATION),
+      catchError(err => {
+        console.error('Error obteniendo staff público:', err);
+        return of([]);
+      })
+    );
   }
 
   private mapBackendSlot(slot: FranjaDisponibleBackendResponse): FranjaDisponible {

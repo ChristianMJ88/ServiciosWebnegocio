@@ -1,83 +1,143 @@
 <section class="admin-shell">
-  <div
-    class="admin-backdrop"
-    *ngIf="panelMovil() && sidebarAbierto()"
+  @if (panelMovil() && sidebarAbierto()) {
+    <div
+      class="admin-backdrop"
     (click)="cerrarSidebar()"></div>
+  }
 
   <div class="admin-layout" [class.is-mobile]="panelMovil()" [class.is-compact]="sidebarCompacto() && !panelMovil()">
     <aside
       id="admin-sidebar"
-      class="admin-sidebar"
+      class="admin-sidebar d-flex flex-column"
       [class.is-hidden]="panelMovil() && !sidebarAbierto()"
       aria-label="Navegación principal del panel administrativo">
       <div class="sidebar-brand">
-        <span class="sidebar-brand-mark" aria-hidden="true">{{ inicialesEmpresa() }}</span>
-        <div class="sidebar-brand-copy" *ngIf="!sidebarCompacto() || panelMovil()">
-          <span class="sidebar-brand-chip">ADMIN</span>
-          <span class="sidebar-brand-title">Backoffice</span>
-          <span class="sidebar-brand-subtitle">{{ nombreEmpresa() }}</span>
+        <div class="sidebar-brand-body d-flex align-items-center gap-3">
+          <span class="sidebar-brand-mark rounded-3" aria-hidden="true">{{ inicialesEmpresa() }}</span>
+          @if (!sidebarCompacto() || panelMovil()) {
+            <div class="sidebar-brand-copy min-w-0">
+              <span class="badge rounded-pill text-bg-primary sidebar-brand-chip">ADMIN</span>
+              <span class="sidebar-brand-title text-truncate">Backoffice</span>
+              <span class="sidebar-brand-subtitle text-truncate">{{ nombreEmpresa() }}</span>
+            </div>
+          }
         </div>
       </div>
 
-      <div class="sidebar-nav-card">
-        <nav class="sidebar-nav" aria-label="Secciones administrativas">
-          <button
-            type="button"
-            class="sidebar-nav-item"
-            *ngFor="let modulo of modulosAdmin()"
-            (click)="seleccionarSeccion(modulo.id)"
-            [class.active-nav-item]="seccionActiva() === modulo.id"
-            [attr.aria-current]="seccionActiva() === modulo.id ? 'page' : null"
-            [attr.aria-label]="modulo.titulo"
-            [matTooltip]="sidebarCompacto() && !panelMovil() ? modulo.titulo : ''"
-            matTooltipPosition="right">
-            <span class="sidebar-nav-icon" [ngSwitch]="modulo.icono" aria-hidden="true">
-              <svg *ngSwitchCase="'resumen'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-                <path d="M4 19h16M6.5 16V9M12 16V5M17.5 16v-7" stroke-linecap="round" stroke-linejoin="round"/>
-              </svg>
-              <svg *ngSwitchCase="'sucursal'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-                <path d="M4 20h16M6 20V7l6-3 6 3v13M9 20v-5h6v5" stroke-linecap="round" stroke-linejoin="round"/>
-              </svg>
-              <svg *ngSwitchCase="'servicio'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-                <path d="M8 7h8M8 12h8M8 17h5M5 4h14a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1Z" stroke-linecap="round" stroke-linejoin="round"/>
-              </svg>
-              <svg *ngSwitchCase="'prestador'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-                <path d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8ZM5 20a7 7 0 0 1 14 0" stroke-linecap="round" stroke-linejoin="round"/>
-              </svg>
-              <svg *ngSwitchCase="'horario'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-                <path d="M7 3v3M17 3v3M4 9h16M6 5h12a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2Zm6 5v4l3 2" stroke-linecap="round" stroke-linejoin="round"/>
-              </svg>
-              <svg *ngSwitchCase="'bloqueo'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-                <path d="M8 11V8a4 4 0 1 1 8 0v3M7 11h10a1 1 0 0 1 1 1v7H6v-7a1 1 0 0 1 1-1Z" stroke-linecap="round" stroke-linejoin="round"/>
-              </svg>
-              <svg *ngSwitchCase="'correo'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-                <path d="M4 7.5 12 13l8-5.5M5 19h14a1 1 0 0 0 1-1V7a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v11a1 1 0 0 0 1 1Z" stroke-linecap="round" stroke-linejoin="round"/>
-              </svg>
-              <svg *ngSwitchCase="'whatsapp'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-                <path d="M12 20a8 8 0 0 0 6.64-12.46A8 8 0 1 0 5.6 18.77L4 21l2.4-.8A7.96 7.96 0 0 0 12 20Z" stroke-linecap="round" stroke-linejoin="round"/>
-                <path d="M9.4 9.2c.32-.7.66-.72.97-.72.2 0 .43 0 .65.01.2.01.48-.07.74.55.28.67.94 2.31 1.02 2.48.08.17.14.37.03.58-.11.21-.17.34-.34.52-.17.18-.36.4-.51.54-.17.16-.35.33-.15.65.2.32.9 1.48 1.94 2.39 1.33 1.16 2.45 1.52 2.79 1.69.34.17.53.15.73-.09.2-.24.85-.99 1.08-1.33.23-.34.46-.28.77-.17.31.11 1.98.94 2.32 1.11.34.17.57.25.66.39.08.14.08.81-.19 1.6-.27.79-1.55 1.55-2.12 1.64-.56.09-1.27.13-2.05-.11-.47-.14-1.07-.35-1.84-.68-3.24-1.4-5.36-4.85-5.53-5.08-.17-.23-1.31-1.74-1.31-3.32 0-1.58.83-2.35 1.12-2.68Z" stroke-linecap="round" stroke-linejoin="round"/>
-              </svg>
-              <svg *ngSwitchCase="'contactos'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-                <path d="M5 6h14a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2H9l-4 3v-3H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2Z" stroke-linecap="round" stroke-linejoin="round"/>
-                <path d="M8 10h8M8 13h5" stroke-linecap="round" stroke-linejoin="round"/>
-              </svg>
-              <svg *ngSwitchDefault viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-                <path d="M7 4v3M17 4v3M4 9h16M6 5h12a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2Zm2 7h3m2 0h3m-8 4h3m2 0h3" stroke-linecap="round" stroke-linejoin="round"/>
-              </svg>
-            </span>
-            <span class="sidebar-nav-copy" *ngIf="!sidebarCompacto() || panelMovil()">
-              <span class="sidebar-nav-title">{{ modulo.titulo }}</span>
-              <span class="sidebar-nav-description">{{ modulo.descripcion }}</span>
-            </span>
-          </button>
+      <div class="sidebar-nav-panel flex-grow-1">
+        <nav class="sidebar-nav sidebar-nav-body nav nav-pills flex-column gap-2" aria-label="Secciones administrativas">
+          @for (grupo of gruposSidebar(); track grupo) {
+            <section
+              class="sidebar-menu-group"
+              [class.is-active]="grupoSidebarActivo(grupo)">
+              @if (!sidebarCompacto() || panelMovil()) {
+                <button
+                  type="button"
+                  class="sidebar-menu-toggle d-flex align-items-center gap-2"
+                  (click)="alternarGrupoSidebar(grupo.id)"
+                  [attr.aria-expanded]="grupoSidebarExpandido(grupo.id)"
+                  [attr.aria-controls]="'sidebar-group-' + grupo.id"
+                  >
+                  <span class="sidebar-menu-icon" aria-hidden="true">
+                    @switch (grupo.icono) {
+                      @case ('operacion') {
+                        <i class="bi bi-grid-1x2-fill"></i>
+                      }
+                      @case ('canales') {
+                        <i class="bi bi-broadcast-pin"></i>
+                      }
+                      @case ('catalogo') {
+                        <i class="bi bi-folder2-open"></i>
+                      }
+                      @case ('equipo') {
+                        <i class="bi bi-people-fill"></i>
+                      }
+                      @default {
+                        <i class="bi bi-sliders"></i>
+                      }
+                    }
+                  </span>
+                  <span class="sidebar-menu-title text-truncate">{{ grupo.titulo }}</span>
+                  <span class="badge rounded-pill sidebar-menu-count ms-auto">{{ grupo.modulosVisibles.length }}</span>
+                  <i
+                    class="bi bi-chevron-down sidebar-menu-chevron"
+                    [class.is-open]="grupoSidebarExpandido(grupo.id)"
+                  aria-hidden="true"></i>
+                </button>
+              }
+              <div
+                class="sidebar-submenu collapse"
+                [class.show]="grupoSidebarExpandido(grupo.id) || (sidebarCompacto() && !panelMovil())"
+                [id]="'sidebar-group-' + grupo.id">
+                @for (modulo of grupo.modulosVisibles; track modulo) {
+                  <button
+                    type="button"
+                    class="nav-link sidebar-nav-item d-flex align-items-center gap-3"
+                    (click)="seleccionarSeccion(modulo.id)"
+                    [class.active-nav-item]="seccionActiva() === modulo.id"
+                    [class.active]="seccionActiva() === modulo.id"
+                    [attr.aria-current]="seccionActiva() === modulo.id ? 'page' : null"
+                    [attr.aria-label]="modulo.titulo"
+                    [matTooltip]="sidebarCompacto() && !panelMovil() ? modulo.titulo : ''"
+                    matTooltipPosition="right">
+                    <span class="sidebar-nav-icon rounded-3" aria-hidden="true">
+                      @switch (modulo.icono) {
+                        @case ('resumen') {
+                          <i class="bi bi-speedometer2"></i>
+                        }
+                        @case ('sucursal') {
+                          <i class="bi bi-buildings"></i>
+                        }
+                        @case ('servicio') {
+                          <i class="bi bi-list-check"></i>
+                        }
+                        @case ('prestador') {
+                          <i class="bi bi-person-badge"></i>
+                        }
+                        @case ('horario') {
+                          <i class="bi bi-calendar3"></i>
+                        }
+                        @case ('bloqueo') {
+                          <i class="bi bi-lock"></i>
+                        }
+                        @case ('correo') {
+                          <i class="bi bi-envelope-paper"></i>
+                        }
+                        @case ('sitio') {
+                          <i class="bi bi-window-sidebar"></i>
+                        }
+                        @case ('whatsapp') {
+                          <i class="bi bi-whatsapp"></i>
+                        }
+                        @case ('contactos') {
+                          <i class="bi bi-chat-left-text"></i>
+                        }
+                        @default {
+                          <i class="bi bi-calendar-week"></i>
+                        }
+                      }
+                    </span>
+                    @if (!sidebarCompacto() || panelMovil()) {
+                      <span class="sidebar-nav-copy min-w-0 flex-grow-1">
+                        <span class="sidebar-nav-title text-truncate">{{ modulo.titulo }}</span>
+                        <span class="sidebar-nav-description text-truncate">{{ modulo.descripcion }}</span>
+                      </span>
+                    }
+                    @if (!sidebarCompacto() || panelMovil()) {
+                      <span
+                        class="badge rounded-pill sidebar-nav-badge ms-auto"
+                        >
+                        {{ modulo.abreviatura }}
+                      </span>
+                    }
+                  </button>
+                }
+              </div>
+            </section>
+          }
         </nav>
       </div>
 
-      <div class="sidebar-support" *ngIf="!sidebarCompacto() || panelMovil()">
-        <span class="sidebar-support-label">Sesión activa</span>
-        <strong class="sidebar-support-value">{{ nombreUsuarioAdmin() || 'Administrador' }}</strong>
-        <span class="sidebar-support-meta">{{ correoUsuarioAdmin() || sucursalActivaNombre() }}</span>
-      </div>
     </aside>
 
     <div class="admin-content">
@@ -109,15 +169,15 @@
         <div class="toolbar-actions">
           <button
             mat-icon-button
-            class="toolbar-icon-button"
+            class="toolbar-icon-button notification-trigger"
+            [matMenuTriggerFor]="menuNotificaciones"
             [matBadge]="totalNotificaciones()"
             [matBadgeHidden]="!totalNotificaciones()"
             matBadgeColor="accent"
             matBadgeSize="small"
+            aria-haspopup="menu"
             [attr.aria-label]="'Notificaciones pendientes: ' + totalNotificaciones()">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-              <path d="M15 17H9m8-2V11a5 5 0 1 0-10 0v4l-2 2h14l-2-2Zm-3 6a2 2 0 0 1-2-2h4a2 2 0 0 1-2 2Z" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
+            <i class="bi bi-bell"></i>
           </button>
 
           <button
@@ -126,501 +186,704 @@
             [matMenuTriggerFor]="menuUsuario"
             aria-label="Abrir menú de usuario"
             aria-haspopup="menu">
-            <span class="toolbar-user-avatar">{{ inicialesUsuarioAdmin() }}</span>
+            <span class="toolbar-user-avatar">
+              @if (fotoPerfilUsuario(); as fotoPerfilTopbar) {
+                <img [src]="fotoPerfilTopbar" alt="" />
+              } @else {
+                {{ inicialesUsuarioAdmin() }}
+              }
+            </span>
             <span class="toolbar-user-meta">
               <span class="toolbar-user-name">{{ nombreUsuarioAdmin() }}</span>
-              <span class="toolbar-user-role">Administrador</span>
+              <span class="toolbar-user-role">{{ puestoUsuarioAdmin() }}</span>
             </span>
+            <i class="bi bi-chevron-down toolbar-user-chevron" aria-hidden="true"></i>
           </button>
         </div>
       </mat-toolbar>
 
+      <mat-menu #menuNotificaciones="matMenu" class="notification-menu">
+        <div class="notification-panel">
+          <div class="notification-panel-header d-flex align-items-start justify-content-between gap-3">
+            <div>
+              <span class="notification-eyebrow">Actividad</span>
+              <h2>Centro de alertas</h2>
+              <p>{{ totalNotificaciones() ? 'Revisa lo que requiere atención.' : 'Todo está tranquilo por ahora.' }}</p>
+            </div>
+            <span class="badge rounded-pill notification-total">{{ totalNotificaciones() }}</span>
+          </div>
+
+          @if (notificacionesDashboard().length) {
+            <div class="notification-list">
+              @for (notificacion of notificacionesDashboard(); track notificacion) {
+                <button
+                  type="button"
+                  class="notification-item"
+                  (click)="abrirNotificacion(notificacion)">
+                  <span class="notification-icon">
+                    <i class="bi" [ngClass]="notificacion.icono"></i>
+                  </span>
+                  <span class="notification-copy">
+                    <span class="notification-title-row">
+                      <strong>{{ notificacion.titulo }}</strong>
+                      <span class="badge rounded-pill">{{ notificacion.total }}</span>
+                    </span>
+                    <span>{{ notificacion.descripcion }}</span>
+                    <small>{{ notificacion.meta }}</small>
+                  </span>
+                </button>
+              }
+            </div>
+          } @else {
+            <div class="notification-empty">
+              <i class="bi bi-check2-circle" aria-hidden="true"></i>
+              <strong>Sin pendientes</strong>
+              <span>No hay citas nuevas, mensajes entrantes ni contactos nuevos.</span>
+            </div>
+          }
+
+        </div>
+      </mat-menu>
+
       <mat-menu #menuUsuario="matMenu" class="toolbar-user-menu">
+        <div class="profile-menu-header" (click)="$event.stopPropagation()">
+          <span class="toolbar-user-avatar profile-menu-avatar">
+            @if (fotoPerfilUsuario(); as fotoPerfilMenu) {
+              <img [src]="fotoPerfilMenu" alt="" />
+            } @else {
+              {{ inicialesUsuarioAdmin() }}
+            }
+          </span>
+          <div class="min-w-0">
+            <strong class="text-truncate">{{ nombreUsuarioAdmin() }}</strong>
+            <span class="text-truncate">{{ correoUsuarioAdmin() }}</span>
+          </div>
+        </div>
+        <button mat-menu-item type="button" (click)="abrirConfiguracionPerfil()">
+          <i class="bi bi-person-gear me-2" aria-hidden="true"></i>
+          Configuración de perfil
+        </button>
         <button mat-menu-item type="button" (click)="logout()">Cerrar sesión</button>
       </mat-menu>
 
-      <mat-progress-bar *ngIf="loading()" mode="indeterminate"></mat-progress-bar>
+      @if (perfilConfigAbierto()) {
+        <div class="profile-modal-backdrop" (click)="cerrarConfiguracionPerfil()"></div>
+      }
+      @if (perfilConfigAbierto()) {
+        <section class="profile-modal" role="dialog" aria-modal="true" aria-labelledby="profile-modal-title">
+          <div class="profile-modal-header">
+            <div>
+              <span class="content-header-kicker">Perfil</span>
+              <h2 id="profile-modal-title">Configuración de usuario</h2>
+              <p>Actualiza cómo se muestra tu perfil dentro del Backoffice.</p>
+            </div>
+            <button type="button" class="btn btn-light profile-modal-close" (click)="cerrarConfiguracionPerfil()" aria-label="Cerrar configuración">
+              <i class="bi bi-x-lg"></i>
+            </button>
+          </div>
+          <div class="profile-modal-body">
+            <div class="profile-photo-editor">
+              <span class="toolbar-user-avatar profile-photo-preview">
+                @if (formularioPerfilUsuario.fotoDataUrl) {
+                  <img [src]="formularioPerfilUsuario.fotoDataUrl" alt="" />
+                } @else {
+                  {{ inicialesUsuarioAdmin() }}
+                }
+              </span>
+              <div class="profile-photo-actions">
+                <label class="btn btn-primary btn-sm mb-0">
+                  <i class="bi bi-camera me-2" aria-hidden="true"></i>
+                  Subir foto
+                  <input type="file" accept="image/*" class="visually-hidden" (change)="seleccionarFotoPerfil($event)" />
+                </label>
+                <button type="button" class="btn btn-outline-secondary btn-sm" (click)="quitarFotoPerfil()">Quitar</button>
+              </div>
+            </div>
+            <div class="row g-3">
+              <div class="col-12">
+                <label class="form-label" for="perfil-nombre">Nombre visible</label>
+                <input id="perfil-nombre" name="perfilNombre" class="form-control" [(ngModel)]="formularioPerfilUsuario.nombre" />
+              </div>
+              <div class="col-12">
+                <label class="form-label" for="perfil-puesto">Rol o puesto</label>
+                <input id="perfil-puesto" name="perfilPuesto" class="form-control" [(ngModel)]="formularioPerfilUsuario.puesto" />
+              </div>
+            </div>
+          </div>
+          <div class="profile-modal-footer">
+            <button type="button" class="btn btn-outline-secondary" (click)="cerrarConfiguracionPerfil()">Cancelar</button>
+            <button type="button" class="btn btn-primary" (click)="guardarConfiguracionPerfil()">Guardar perfil</button>
+          </div>
+        </section>
+      }
+
+      @if (loading()) {
+        <mat-progress-bar mode="indeterminate"></mat-progress-bar>
+      }
 
       <main class="admin-body" id="admin-main">
-        <header class="content-header">
+        <header class="content-header" [class.is-services-header]="seccionActiva() === 'servicios'">
           <div class="content-header-copy">
-            <span class="content-header-kicker">Backoffice</span>
+            <div class="content-header-meta">
+              <span class="content-header-kicker">Backoffice</span>
+              <span class="badge rounded-pill content-header-badge">{{ nombreEmpresa() }}</span>
+            </div>
             <h1>{{ moduloActivo().titulo }}</h1>
             <p>{{ moduloActivo().descripcion }}</p>
           </div>
 
           <div class="content-header-actions">
-            <button mat-flat-button type="button" color="primary" class="toolbar-refresh-button" (click)="recargar()">
-              Actualizar datos
+            <span class="header-status-chip">
+              <i class="bi bi-activity" aria-hidden="true"></i>
+              {{ totalNotificaciones() }} pendientes
+            </span>
+            <button type="button" class="btn btn-primary toolbar-refresh-button" (click)="recargar()">
+              <i class="bi bi-arrow-clockwise me-2" aria-hidden="true"></i>
+              Actualizar
             </button>
           </div>
         </header>
 
-        <div *ngIf="error" class="alert alert-danger admin-alert" role="alert">
-          {{ error }}
-        </div>
+        @if (error) {
+          <div class="alert alert-danger admin-alert" role="alert">
+            {{ error }}
+          </div>
+        }
 
-        <div *ngIf="mensajeExito" class="alert alert-success admin-alert admin-alert-success" role="status">
-          {{ mensajeExito }}
-        </div>
+        @if (mensajeExito) {
+          <div class="alert alert-success admin-alert admin-alert-success" role="status">
+            {{ mensajeExito }}
+          </div>
+        }
 
-        <ng-container *ngIf="seccionActiva() === 'resumen'">
+        @if (seccionActiva() === 'resumen') {
           @defer {
-            <app-admin-summary-section
-              [resumen]="resumen()"
-              [viewMode]="agendaViewMode()"
-              [dateValue]="fechaAgendaActiva()"
-              [dateDisplay]="fechaAgendaActivaTexto()"
-              [hourLabels]="agendaHourLabels"
-              [collaborators]="agendaCollaboratorsVm()"
-              [appointments]="agendaAppointmentsVm()"
-              [selectedAppointment]="citaAgendaSeleccionada()"
-              [selectedAppointmentId]="citaAgendaSeleccionadaId()"
-              [timelineWidthPx]="anchoAgendaTimeline()"
-              [topPrestadoresPorIngreso]="topPrestadoresPorIngreso()"
-              [topPrestadoresPorCitas]="topPrestadoresPorCitas()"
-              [reporteServicios]="reporteServicios()"
-              (previousDay)="desplazarFechaAgenda(-1)"
-              (goToToday)="irAHoyAgenda()"
-              (nextDay)="desplazarFechaAgenda(1)"
-              (viewModeChange)="cambiarVistaAgenda($event)"
-              (dateValueChange)="seleccionarFechaAgenda($event)"
-              (appointmentSelected)="seleccionarCitaAgenda($event)"
-              (appointmentClosed)="cerrarDetalleAgenda()"
-              (appointmentAction)="gestionarAccionAgenda($event)" />
+          <app-admin-summary-section
+            [resumen]="resumen()"
+            [viewMode]="agendaViewMode()"
+            [dateValue]="fechaAgendaActiva()"
+            [dateDisplay]="fechaAgendaActivaTexto()"
+            [hourLabels]="agendaHourLabels"
+            [collaborators]="agendaCollaboratorsVm()"
+            [appointments]="agendaAppointmentsVm()"
+            [selectedAppointment]="citaAgendaSeleccionada()"
+            [selectedAppointmentId]="citaAgendaSeleccionadaId()"
+            [timelineWidthPx]="anchoAgendaTimeline()"
+            [topPrestadoresPorIngreso]="topPrestadoresPorIngreso()"
+            [topPrestadoresPorCitas]="topPrestadoresPorCitas()"
+            [reporteServicios]="reporteServicios()"
+            (previousDay)="desplazarFechaAgenda(-1)"
+            (goToToday)="irAHoyAgenda()"
+            (nextDay)="desplazarFechaAgenda(1)"
+            (viewModeChange)="cambiarVistaAgenda($event)"
+            (dateValueChange)="seleccionarFechaAgenda($event)"
+            (appointmentSelected)="seleccionarCitaAgenda($event)"
+            (appointmentClosed)="cerrarDetalleAgenda()"
+            (appointmentAction)="gestionarAccionAgenda($event)" />
           } @placeholder {
-            <section class="section-stack">
-              <div class="workspace-card">
-                <div class="section-header">
-                  <div>
-                    <div class="section-eyebrow">Dashboard</div>
-                    <h3>Cargando resumen operativo</h3>
-                  </div>
-                </div>
-                <p class="helper-text mb-0">Estamos preparando indicadores, agenda e insights del negocio.</p>
-              </div>
-            </section>
-          }
-        </ng-container>
-
-        <ng-container *ngIf="seccionActiva() === 'correo'">
-          @defer {
-            <app-admin-email-section
-              [formularioCorreo]="formularioCorreo"
-              [guardandoCorreo]="guardandoCorreo"
-              [configuracionCorreo]="configuracionCorreo()"
-              [migrandoSecretosCorreo]="migrandoSecretosCorreo"
-              [auditoriaCorreo]="auditoriaCorreo()"
-              [etiquetaAccionAuditoriaConfiguracion]="etiquetaAccionAuditoriaConfiguracion.bind(this)"
-              (save)="guardarConfiguracionCorreo()"
-              (migrateSecrets)="migrarSecretosCorreo()" />
-          } @placeholder {
-            <section class="section-stack">
-              <div class="workspace-card">
-                <div class="section-header">
-                  <div>
-                    <div class="section-eyebrow">Correo</div>
-                    <h3>Cargando configuración de correo</h3>
-                  </div>
-                </div>
-                <p class="helper-text mb-0">Estamos preparando la configuración y la trazabilidad de correo.</p>
-              </div>
-            </section>
-          }
-        </ng-container>
-
-        <ng-container *ngIf="seccionActiva() === 'contactos'">
-          @defer {
-            <app-admin-contacts-section
-              [resumen]="resumenContactos()"
-              [contactos]="contactos()"
-              [estadosContactoDisponibles]="estadosContactoDisponibles"
-              [actualizandoContactoId]="actualizandoContactoId"
-              [claseEstadoContacto]="claseEstadoContacto.bind(this)"
-              [formatearEstadoContacto]="formatearEstadoContacto.bind(this)"
-              (updateStatus)="actualizarEstadoContacto($event.contacto, $event.estado)" />
-          } @placeholder {
-            <section class="section-stack">
-              <div class="workspace-card workspace-card-emphasis">
-                <div class="section-header">
-                  <div>
-                    <div class="section-eyebrow">Contactos</div>
-                    <h3>Cargando bandeja comercial</h3>
-                  </div>
-                </div>
-                <p class="helper-text mb-0">Estamos preparando los mensajes y su seguimiento comercial.</p>
-              </div>
-            </section>
-          }
-        </ng-container>
-
-        <ng-container *ngIf="seccionActiva() === 'whatsapp'">
-          @defer {
-            <app-admin-whatsapp-section
-              [formularioWhatsapp]="formularioWhatsapp"
-              [formularioProvisionSubcuentaWhatsapp]="formularioProvisionSubcuentaWhatsapp"
-              [formularioProvisionMessagingServiceWhatsapp]="formularioProvisionMessagingServiceWhatsapp"
-              [formularioAsociacionChannelSenderWhatsapp]="formularioAsociacionChannelSenderWhatsapp"
-              [formularioPruebaWhatsapp]="formularioPruebaWhatsapp"
-              [guardandoWhatsapp]="guardandoWhatsapp"
-              [provisionandoSubcuentaWhatsapp]="provisionandoSubcuentaWhatsapp"
-              [provisionandoMessagingServiceWhatsapp]="provisionandoMessagingServiceWhatsapp"
-              [asociandoChannelSenderWhatsapp]="asociandoChannelSenderWhatsapp"
-              [detectandoChannelSenderWhatsapp]="detectandoChannelSenderWhatsapp"
-              [probandoPlantillaWhatsapp]="probandoPlantillaWhatsapp"
-              [configuracionWhatsapp]="configuracionWhatsapp()"
-              [whatsappOnboardingStats]="whatsappOnboardingStats()"
-              [whatsappOnboardingChecklist]="whatsappOnboardingChecklist()"
-              [auditoriaWhatsapp]="auditoriaWhatsapp()"
-              [plantillasWhatsapp]="plantillasWhatsapp()"
-              [logsWhatsapp]="logsWhatsapp()"
-              [etiquetaAccionAuditoriaConfiguracion]="etiquetaAccionAuditoriaConfiguracion.bind(this)"
-              (save)="guardarConfiguracionWhatsapp()"
-              (provisionSubaccount)="provisionarSubcuentaWhatsapp()"
-              (provisionMessagingService)="provisionarMessagingServiceWhatsapp()"
-              (detectChannelSender)="detectarChannelSenderWhatsapp()"
-              (associateChannelSender)="asociarChannelSenderWhatsapp()"
-              (testTemplate)="probarPlantillaWhatsapp()" />
-          } @placeholder {
-            <section class="section-stack">
-              <div class="workspace-card workspace-card-emphasis">
-                <div class="section-header">
-                  <div>
-                    <div class="section-eyebrow">WhatsApp</div>
-                    <h3>Cargando configuración conversacional</h3>
-                  </div>
-                </div>
-                <p class="helper-text mb-0">Estamos preparando plantillas, trazabilidad y estado del canal WhatsApp.</p>
-              </div>
-            </section>
-          }
-        </ng-container>
-
-        <ng-container *ngIf="seccionActiva() === 'sucursales'">
-          @defer {
-            <app-admin-branches-section
-              [sucursalEditandoId]="sucursalEditandoId"
-              [formularioSucursal]="formularioSucursal"
-              [guardandoSucursal]="guardandoSucursal"
-              [sucursales]="sucursales()"
-              (clearEdit)="cancelarEdicionSucursal()"
-              (save)="guardarSucursal()"
-              (editBranch)="editarSucursal($event)" />
-          } @placeholder {
-            <section class="section-stack">
-              <div class="workspace-card">
-                <div class="section-header">
-                  <div>
-                    <div class="section-eyebrow">Sucursales</div>
-                    <h3>Cargando sedes operativas</h3>
-                  </div>
-                </div>
-                <p class="helper-text mb-0">Estamos preparando la configuración y el listado de sucursales registradas.</p>
-              </div>
-            </section>
-          }
-        </ng-container>
-
-        <ng-container *ngIf="seccionActiva() === 'servicios'">
-          @defer {
-            <app-admin-services-section
-              [servicioEditandoId]="servicioEditandoId"
-              [formularioServicio]="formularioServicio"
-              [sucursales]="sucursales()"
-              [guardandoServicio]="guardandoServicio"
-              [servicios]="servicios()"
-              (clearEdit)="cancelarEdicionServicio()"
-              (save)="guardarServicio()"
-              (editService)="editarServicio($event)" />
-          } @placeholder {
-            <section class="section-stack">
-              <div class="workspace-card">
-                <div class="section-header">
-                  <div>
-                    <div class="section-eyebrow">Servicios</div>
-                    <h3>Cargando catálogo</h3>
-                  </div>
-                </div>
-                <p class="helper-text mb-0">Estamos preparando el formulario del servicio y el portafolio disponible.</p>
-              </div>
-            </section>
-          }
-        </ng-container>
-
-        <ng-container *ngIf="seccionActiva() === 'usuarios'">
           <section class="section-stack">
-            <mat-card class="workspace-card users-hub-card">
+            <div class="workspace-card">
               <div class="section-header">
                 <div>
-                  <div class="section-eyebrow">Accesos internos</div>
-                  <h3>Usuarios, roles y actividad</h3>
+                  <div class="section-eyebrow">Dashboard</div>
+                  <h3>Cargando resumen operativo</h3>
                 </div>
               </div>
-
-              <div class="users-hub-summary">
-                <div class="hero-stat">
-                  <span>Usuarios internos</span>
-                  <strong>{{ resumenUsuariosInternos().total }}</strong>
-                </div>
-                <div class="hero-stat">
-                  <span>Activos</span>
-                  <strong>{{ resumenUsuariosInternos().activos }}</strong>
-                </div>
-                <div class="hero-stat">
-                  <span>Roles disponibles</span>
-                  <strong>{{ resumenUsuariosInternos().roles }}</strong>
-                </div>
-              </div>
-
-              <div class="users-subnav" role="tablist" aria-label="Flujo de accesos internos">
-                <button
-                  type="button"
-                  class="users-subnav-button"
-                  [class.is-active]="subseccionUsuariosActiva() === 'usuarios'"
-                  (click)="seleccionarSubseccionUsuarios('usuarios')">
-                  <span class="users-subnav-step">Paso 1</span>
-                  <strong>Crear usuario</strong>
-                  <small>Elige sucursal y rol; los permisos se heredan automáticamente.</small>
-                </button>
-
-                <button
-                  type="button"
-                  class="users-subnav-button"
-                  [class.is-active]="subseccionUsuariosActiva() === 'roles'"
-                  (click)="seleccionarSubseccionUsuarios('roles')">
-                  <span class="users-subnav-step">Paso 2</span>
-                  <strong>Roles y permisos</strong>
-                  <small>Aquí defines qué puede hacer cada perfil interno.</small>
-                </button>
-
-                <button
-                  type="button"
-                  class="users-subnav-button"
-                  [class.is-active]="subseccionUsuariosActiva() === 'actividad'"
-                  (click)="seleccionarSubseccionUsuarios('actividad')">
-                  <span class="users-subnav-step">Paso 3</span>
-                  <strong>Actividad</strong>
-                  <small>Revisa cambios recientes de roles y accesos.</small>
-                </button>
-              </div>
-            </mat-card>
-
-            <ng-container *ngIf="subseccionUsuariosActiva() === 'usuarios'">
-              @defer {
-                <app-admin-users-access-section
-                  [usuarioInternoEditandoId]="usuarioInternoEditandoId"
-                  [formularioUsuarioInterno]="formularioUsuarioInterno"
-                  [sucursales]="sucursales()"
-                  [rolesUsuarioInterno]="rolesUsuarioInterno()"
-                  [rolUsuarioInternoSeleccionado]="rolUsuarioInternoSeleccionado()"
-                  [resumenAccesoUsuarioInterno]="resumenAccesoUsuarioInterno()"
-                  [permisosDirectosUsuarioInterno]="permisosDirectosUsuarioInterno()"
-                  [permisosEfectivosUsuarioInterno]="permisosEfectivosUsuarioInterno()"
-                  [gruposPermisosDirectosUsuarioInterno]="gruposPermisosDirectosUsuarioInterno()"
-                  [usuariosInternosFiltrados]="usuariosInternosFiltrados()"
-                  [filtroUsuariosInternos]="filtroUsuariosInternos()"
-                  [etiquetaPermiso]="etiquetaPermiso.bind(this)"
-                  [resumenPermisosLista]="resumenPermisosLista.bind(this)"
-                  [resumenPermisosRol]="resumenPermisosRol.bind(this)"
-                  [rolInternoDeUsuario]="rolInternoDeUsuario.bind(this)"
-                  [permisoDirectoUsuarioSeleccionado]="permisoDirectoUsuarioSeleccionado.bind(this)"
-                  (save)="guardarUsuarioInterno()"
-                  (clearEdit)="cancelarEdicionUsuarioInterno()"
-                  (branchScopeChange)="cambiarSucursalesUsuarioInterno($event)"
-                  (roleChange)="cambiarRolUsuarioInterno($event)"
-                  (editSelectedRole)="editarRolSeleccionadoUsuarioInterno()"
-                  (directPermissionChange)="cambiarPermisoDirectoUsuario($event.codigo, $event.checked)"
-                  (filterChange)="filtroUsuariosInternos.set($event)"
-                  (clearFilter)="limpiarFiltroUsuariosInternos()"
-                  (editAccess)="editarAccesoUsuarioInterno($event)" />
-              } @placeholder {
-                <section class="section-stack">
-                  <div class="workspace-card">
-                    <div class="section-header">
-                      <div>
-                        <div class="section-eyebrow">Usuarios</div>
-                        <h3>Cargando accesos internos</h3>
-                      </div>
-                    </div>
-                    <p class="helper-text mb-0">Estamos preparando el formulario, roles heredados y la lista de usuarios internos.</p>
-                  </div>
-                </section>
-              }
-            </ng-container>
-
-            <ng-container *ngIf="subseccionUsuariosActiva() === 'roles'">
-              @defer {
-                <app-admin-users-roles-section
-                  [rolInternoEditandoId]="rolInternoEditandoId"
-                  [rolInternoClonandoDesdeId]="rolInternoClonandoDesdeId"
-                  [rolInternoClonandoNombreOrigen]="rolInternoClonandoNombreOrigen"
-                  [plantillasRolesInternos]="plantillasRolesInternos()"
-                  [formularioRolInterno]="formularioRolInterno"
-                  [gruposPermisos]="gruposPermisos()"
-                  [rolesInternos]="rolesInternos()"
-                  [permisoRolSeleccionado]="permisoRolSeleccionado.bind(this)"
-                  (clearEdit)="cancelarEdicionRolInterno()"
-                  (useTemplate)="usarPlantillaRolInterno($event)"
-                  (save)="guardarRolInterno()"
-                  (rolePermissionChange)="cambiarPermisoRol($event.codigo, $event.checked)"
-                  (cloneRole)="clonarRolInterno($event)"
-                  (editRole)="editarRolInterno($event)"
-                  (deleteRole)="eliminarRolInterno($event)" />
-              } @placeholder {
-                <section class="section-stack">
-                  <div class="workspace-card">
-                    <div class="section-header">
-                      <div>
-                        <div class="section-eyebrow">Roles</div>
-                        <h3>Cargando roles y permisos</h3>
-                      </div>
-                    </div>
-                    <p class="helper-text mb-0">Estamos preparando plantillas, permisos y catálogo de roles internos.</p>
-                  </div>
-                </section>
-              }
-            </ng-container>
-
-            <ng-container *ngIf="subseccionUsuariosActiva() === 'actividad'">
-              @defer {
-                <app-admin-users-activity-section
-                  [auditoriaRolesInternos]="auditoriaRolesInternos()"
-                  [etiquetaAccionAuditoriaRol]="etiquetaAccionAuditoriaRol.bind(this)" />
-              } @placeholder {
-                <section class="section-stack">
-                  <div class="workspace-card">
-                    <div class="section-header">
-                      <div>
-                        <div class="section-eyebrow">Actividad</div>
-                        <h3>Cargando trazabilidad de accesos</h3>
-                      </div>
-                    </div>
-                    <p class="helper-text mb-0">Estamos preparando el historial reciente de cambios en roles y accesos internos.</p>
-                  </div>
-                </section>
-              }
-            </ng-container>
+              <p class="helper-text mb-0">Estamos preparando indicadores, agenda e insights del negocio.</p>
+            </div>
           </section>
-        </ng-container>
+        }
+      }
 
-        <ng-container *ngIf="seccionActiva() === 'prestadores'">
-          @defer {
-            <app-admin-providers-section
-              [prestadorEditandoId]="prestadorEditandoId"
-              [formularioPrestador]="formularioPrestador"
-              [sucursales]="sucursales()"
-              [guardandoPrestador]="guardandoPrestador"
-              [serviciosPrestadorDisponibles]="serviciosPrestadorDisponibles"
-              [prestadores]="prestadores()"
-              (clearEdit)="cancelarEdicionPrestador()"
-              (save)="guardarPrestador()"
-              (branchChange)="cambiarSucursalPrestador($event)"
-              (serviceToggle)="alternarServicioPrestador($event.servicioId, $event.checked)"
-              (editProvider)="editarPrestador($event)" />
-          } @placeholder {
-            <section class="section-stack">
-              <div class="workspace-card">
-                <div class="section-header">
-                  <div>
-                    <div class="section-eyebrow">Prestadores</div>
-                    <h3>Cargando equipo operativo</h3>
-                  </div>
-                </div>
-                <p class="helper-text mb-0">Estamos preparando el formulario del staff y la lista de prestadores activos.</p>
+      @if (seccionActiva() === 'sitio') {
+        @defer {
+        <app-admin-site-section
+          [formularioSitio]="formularioSitio"
+          [guardandoSitio]="guardandoSitio"
+          [configuracionSitio]="configuracionSitio()"
+          [auditoriaSitio]="auditoriaSitio()"
+          [etiquetaAccionAuditoriaConfiguracion]="etiquetaAccionAuditoriaConfiguracion.bind(this)"
+          (save)="guardarConfiguracionSitio()" />
+        } @placeholder {
+        <section class="section-stack">
+          <div class="workspace-card">
+            <div class="section-header">
+              <div>
+                <div class="section-eyebrow">Sitio web</div>
+                <h3>Cargando configuración pública</h3>
               </div>
-            </section>
-          }
-        </ng-container>
+            </div>
+            <p class="helper-text mb-0">Estamos preparando el slug, branding y publicación del tenant.</p>
+          </div>
+        </section>
+      }
+    }
 
-        <ng-container *ngIf="seccionActiva() === 'reglas'">
-          @defer {
-            <app-admin-rules-section
-              [reglaEditandoId]="reglaEditandoId"
-              [formularioRegla]="formularioRegla"
-              [guardandoRegla]="guardandoRegla"
-              [sujetosRegla]="sujetosRegla"
-              [diasSemana]="diasSemana"
-              [reglasDisponibilidad]="reglasDisponibilidad()"
-              [diasSemanaTexto]="diasSemanaTexto"
-              (clearEdit)="cancelarEdicionRegla()"
-              (save)="guardarRegla()"
-              (typeChange)="cambiarTipoSujetoRegla($event)"
-              (editRule)="editarRegla($event)" />
-          } @placeholder {
-            <section class="section-stack">
-              <div class="workspace-card">
-                <div class="section-header">
-                  <div>
-                    <div class="section-eyebrow">Reglas</div>
-                    <h3>Cargando horarios base</h3>
-                  </div>
-                </div>
-                <p class="helper-text mb-0">Estamos preparando las reglas semanales y su capacidad operativa.</p>
-              </div>
-            </section>
-          }
-        </ng-container>
+    @if (seccionActiva() === 'correo') {
+      @defer {
+      <app-admin-email-section
+        [formularioCorreo]="formularioCorreo"
+        [guardandoCorreo]="guardandoCorreo"
+        [configuracionCorreo]="configuracionCorreo()"
+        [migrandoSecretosCorreo]="migrandoSecretosCorreo"
+        [auditoriaCorreo]="auditoriaCorreo()"
+        [etiquetaAccionAuditoriaConfiguracion]="etiquetaAccionAuditoriaConfiguracion.bind(this)"
+        (save)="guardarConfiguracionCorreo()"
+        (migrateSecrets)="migrarSecretosCorreo()" />
+      } @placeholder {
+      <section class="section-stack">
+        <div class="workspace-card">
+          <div class="section-header">
+            <div>
+              <div class="section-eyebrow">Correo</div>
+              <h3>Cargando configuración de correo</h3>
+            </div>
+          </div>
+          <p class="helper-text mb-0">Estamos preparando la configuración y la trazabilidad de correo.</p>
+        </div>
+      </section>
+    }
+  }
 
-        <ng-container *ngIf="seccionActiva() === 'excepciones'">
-          @defer {
-            <app-admin-exceptions-section
-              [excepcionEditandoId]="excepcionEditandoId"
-              [formularioExcepcion]="formularioExcepcion"
-              [guardandoExcepcion]="guardandoExcepcion"
-              [sujetosExcepcion]="sujetosExcepcion"
-              [tiposBloqueo]="tiposBloqueo"
-              [excepcionesDisponibilidad]="excepcionesDisponibilidad()"
-              (clearEdit)="cancelarEdicionExcepcion()"
-              (save)="guardarExcepcion()"
-              (typeChange)="cambiarTipoSujetoExcepcion($event)"
-              (editException)="editarExcepcion($event)" />
-          } @placeholder {
-            <section class="section-stack">
-              <div class="workspace-card">
-                <div class="section-header">
-                  <div>
-                    <div class="section-eyebrow">Excepciones</div>
-                    <h3>Cargando bloqueos</h3>
-                  </div>
-                </div>
-                <p class="helper-text mb-0">Estamos preparando cierres puntuales, vacaciones y bloqueos especiales.</p>
-              </div>
-            </section>
-          }
-        </ng-container>
+  @if (seccionActiva() === 'contactos') {
+    @defer {
+    <app-admin-contacts-section
+      [resumen]="resumenContactos()"
+      [contactos]="contactos()"
+      [estadosContactoDisponibles]="estadosContactoDisponibles"
+      [actualizandoContactoId]="actualizandoContactoId"
+      [claseEstadoContacto]="claseEstadoContacto.bind(this)"
+      [formatearEstadoContacto]="formatearEstadoContacto.bind(this)"
+      (updateStatus)="actualizarEstadoContacto($event.contacto, $event.estado)" />
+    } @placeholder {
+    <section class="section-stack">
+      <div class="workspace-card workspace-card-emphasis">
+        <div class="section-header">
+          <div>
+            <div class="section-eyebrow">Contactos</div>
+            <h3>Cargando bandeja comercial</h3>
+          </div>
+        </div>
+        <p class="helper-text mb-0">Estamos preparando los mensajes y su seguimiento comercial.</p>
+      </div>
+    </section>
+  }
+}
 
-        <ng-container *ngIf="seccionActiva() === 'citas'">
-          <section class="section-stack">
-            <app-agenda-operations-section
-              [theme]="'light'"
-              [viewMode]="agendaViewMode()"
-              [availableViews]="['day', 'week']"
-              [eyebrow]="'Operación diaria'"
-              [title]="'Agenda detallada de citas'"
-              [dateLabel]="'Fecha seleccionada'"
-              [dateValue]="fechaAgendaActiva()"
-              [dateDisplay]="fechaAgendaActivaTexto()"
-              [summaryCards]="resumenAgendaCards()"
-              [occupancy]="agendaOccupancyVm()"
-              [hourLabels]="agendaHourLabels"
-              [collaborators]="agendaCollaboratorsVm()"
-              [appointments]="agendaAppointmentsVm()"
-              [selectedAppointment]="citaAgendaSeleccionada()"
-              [selectedAppointmentId]="citaAgendaSeleccionadaId()"
-              [timelineWidthPx]="anchoAgendaTimeline()"
-              [hourSlotHeight]="86"
-              [emptyMessage]="'No hay citas registradas para la fecha seleccionada.'"
-              (previousDay)="desplazarFechaAgenda(-1)"
-              (goToToday)="irAHoyAgenda()"
-              (nextDay)="desplazarFechaAgenda(1)"
-              (viewModeChange)="cambiarVistaAgenda($event)"
-              (dateValueChange)="seleccionarFechaAgenda($event)"
-              (appointmentSelected)="seleccionarCitaAgenda($event)"
-              (appointmentClosed)="cerrarDetalleAgenda()"
-              (appointmentAction)="gestionarAccionAgenda($event)" />
-          </section>
-        </ng-container>
-      </main>
+@if (seccionActiva() === 'whatsapp') {
+  @defer {
+  <app-admin-whatsapp-section
+    [formularioWhatsapp]="formularioWhatsapp"
+    [formularioProvisionSubcuentaWhatsapp]="formularioProvisionSubcuentaWhatsapp"
+    [formularioProvisionMessagingServiceWhatsapp]="formularioProvisionMessagingServiceWhatsapp"
+    [formularioAsociacionChannelSenderWhatsapp]="formularioAsociacionChannelSenderWhatsapp"
+    [formularioPruebaWhatsapp]="formularioPruebaWhatsapp"
+    [formularioPlantillaWhatsappEmpresa]="formularioPlantillaWhatsappEmpresa"
+    [guardandoWhatsapp]="guardandoWhatsapp"
+    [guardandoPlantillaWhatsappEmpresa]="guardandoPlantillaWhatsappEmpresa"
+    [provisionandoSubcuentaWhatsapp]="provisionandoSubcuentaWhatsapp"
+    [provisionandoMessagingServiceWhatsapp]="provisionandoMessagingServiceWhatsapp"
+    [asociandoChannelSenderWhatsapp]="asociandoChannelSenderWhatsapp"
+    [detectandoChannelSenderWhatsapp]="detectandoChannelSenderWhatsapp"
+    [probandoPlantillaWhatsapp]="probandoPlantillaWhatsapp"
+    [plantillaWhatsappEmpresaEditandoId]="plantillaWhatsappEmpresaEditandoId"
+    [configuracionWhatsapp]="configuracionWhatsapp()"
+    [whatsappOnboardingStats]="whatsappOnboardingStats()"
+    [whatsappOnboardingChecklist]="whatsappOnboardingChecklist()"
+    [auditoriaWhatsapp]="auditoriaWhatsapp()"
+    [plantillasWhatsapp]="plantillasWhatsapp()"
+    [plantillasWhatsappEmpresa]="plantillasWhatsappEmpresa()"
+    [logsWhatsapp]="logsWhatsapp()"
+    [etiquetaAccionAuditoriaConfiguracion]="etiquetaAccionAuditoriaConfiguracion.bind(this)"
+    (save)="guardarConfiguracionWhatsapp()"
+    (saveTemplateCatalog)="guardarPlantillaWhatsappEmpresa()"
+    (editTemplateCatalog)="editarPlantillaWhatsappEmpresa($event)"
+    (cancelTemplateCatalogEdit)="cancelarEdicionPlantillaWhatsappEmpresa()"
+    (deleteTemplateCatalog)="eliminarPlantillaWhatsappEmpresa($event)"
+    (provisionSubaccount)="provisionarSubcuentaWhatsapp()"
+    (provisionMessagingService)="provisionarMessagingServiceWhatsapp()"
+    (detectChannelSender)="detectarChannelSenderWhatsapp()"
+    (associateChannelSender)="asociarChannelSenderWhatsapp()"
+    (testTemplate)="probarPlantillaWhatsapp()" />
+  } @placeholder {
+  <section class="section-stack">
+    <div class="workspace-card workspace-card-emphasis">
+      <div class="section-header">
+        <div>
+          <div class="section-eyebrow">WhatsApp</div>
+          <h3>Cargando configuración conversacional</h3>
+        </div>
+      </div>
+      <p class="helper-text mb-0">Estamos preparando plantillas, trazabilidad y estado del canal WhatsApp.</p>
     </div>
-  </div>
+  </section>
+}
+}
+
+@if (seccionActiva() === 'mensajes') {
+  @defer {
+  <app-admin-whatsapp-inbox-section
+    [mensajes]="mensajesWhatsapp()"
+    [enviando]="enviandoMensajeWhatsapp"
+    (refresh)="recargarMensajesWhatsapp()"
+    (sendMessage)="enviarMensajeWhatsapp($event)" />
+  } @placeholder {
+  <section class="section-stack">
+    <div class="workspace-card workspace-card-emphasis">
+      <div class="section-header">
+        <div>
+          <div class="section-eyebrow">Mensajes</div>
+          <h3>Cargando conversaciones WhatsApp</h3>
+        </div>
+      </div>
+      <p class="helper-text mb-0">Estamos preparando la bandeja conversacional.</p>
+    </div>
+  </section>
+}
+}
+
+@if (seccionActiva() === 'sucursales') {
+  @defer {
+  <app-admin-branches-section
+    [sucursalEditandoId]="sucursalEditandoId"
+    [formularioSucursal]="formularioSucursal"
+    [guardandoSucursal]="guardandoSucursal"
+    [sucursales]="sucursales()"
+    (clearEdit)="cancelarEdicionSucursal()"
+    (save)="guardarSucursal()"
+    (editBranch)="editarSucursal($event)" />
+  } @placeholder {
+  <section class="section-stack">
+    <div class="workspace-card">
+      <div class="section-header">
+        <div>
+          <div class="section-eyebrow">Sucursales</div>
+          <h3>Cargando sedes operativas</h3>
+        </div>
+      </div>
+      <p class="helper-text mb-0">Estamos preparando la configuración y el listado de sucursales registradas.</p>
+    </div>
+  </section>
+}
+}
+
+@if (seccionActiva() === 'servicios') {
+  @defer {
+  <app-admin-services-section
+    [catalogosSugeridos]="catalogosSugeridos()"
+    [formularioImportarCatalogo]="formularioImportarCatalogo"
+    [importandoCatalogoSugerido]="importandoCatalogoSugerido"
+    [grupoServicioEditandoId]="grupoServicioEditandoId"
+    [formularioGrupoServicio]="formularioGrupoServicio"
+    [guardandoGrupoServicio]="guardandoGrupoServicio"
+    [gruposServicio]="gruposServicio()"
+    [subgrupoServicioEditandoId]="subgrupoServicioEditandoId"
+    [formularioSubgrupoServicio]="formularioSubgrupoServicio"
+    [guardandoSubgrupoServicio]="guardandoSubgrupoServicio"
+    [subgruposServicio]="subgruposServicio()"
+    [servicioEditandoId]="servicioEditandoId"
+    [formularioServicio]="formularioServicio"
+    [sucursales]="sucursales()"
+    [guardandoServicio]="guardandoServicio"
+    [servicios]="servicios()"
+    (importSuggestedCatalog)="importarCatalogoSugerido()"
+    (clearGroupEdit)="cancelarEdicionGrupoServicio()"
+    (saveGroup)="guardarGrupoServicio()"
+    (editGroup)="editarGrupoServicio($event)"
+    (reorderGroups)="reordenarGruposServicio($event)"
+    (toggleGroupStatus)="alternarEstadoGrupoServicio($event)"
+    (clearSubgroupEdit)="cancelarEdicionSubgrupoServicio()"
+    (saveSubgroup)="guardarSubgrupoServicio()"
+    (editSubgroup)="editarSubgrupoServicio($event)"
+    (reorderSubgroups)="reordenarSubgruposServicio($event)"
+    (toggleSubgroupStatus)="alternarEstadoSubgrupoServicio($event)"
+    (clearEdit)="cancelarEdicionServicio()"
+    (save)="guardarServicio()"
+    (editService)="editarServicio($event)"
+    (reorderServices)="reordenarServicios($event)"
+    (toggleServiceStatus)="alternarEstadoServicio($event)" />
+  } @placeholder {
+  <section class="section-stack">
+    <div class="workspace-card">
+      <div class="section-header">
+        <div>
+          <div class="section-eyebrow">Servicios</div>
+          <h3>Cargando catálogo</h3>
+        </div>
+      </div>
+      <p class="helper-text mb-0">Estamos preparando el formulario del servicio y el portafolio disponible.</p>
+    </div>
+  </section>
+}
+}
+
+@if (seccionActiva() === 'usuarios') {
+  <section class="section-stack">
+    <mat-card class="workspace-card users-hub-card">
+      <div class="section-header">
+        <div>
+          <div class="section-eyebrow">Accesos internos</div>
+          <h3>Usuarios, roles y actividad</h3>
+        </div>
+      </div>
+      <div class="users-hub-summary">
+        <div class="hero-stat">
+          <span>Usuarios internos</span>
+          <strong>{{ resumenUsuariosInternos().total }}</strong>
+        </div>
+        <div class="hero-stat">
+          <span>Activos</span>
+          <strong>{{ resumenUsuariosInternos().activos }}</strong>
+        </div>
+        <div class="hero-stat">
+          <span>Roles disponibles</span>
+          <strong>{{ resumenUsuariosInternos().roles }}</strong>
+        </div>
+      </div>
+      <div class="users-subnav" role="tablist" aria-label="Flujo de accesos internos">
+        <button
+          type="button"
+          class="users-subnav-button"
+          [class.is-active]="subseccionUsuariosActiva() === 'usuarios'"
+          (click)="seleccionarSubseccionUsuarios('usuarios')">
+          <span class="users-subnav-step">Paso 1</span>
+          <strong>Crear usuario</strong>
+          <small>Elige sucursal y rol; los permisos se heredan automáticamente.</small>
+        </button>
+        <button
+          type="button"
+          class="users-subnav-button"
+          [class.is-active]="subseccionUsuariosActiva() === 'roles'"
+          (click)="seleccionarSubseccionUsuarios('roles')">
+          <span class="users-subnav-step">Paso 2</span>
+          <strong>Roles y permisos</strong>
+          <small>Aquí defines qué puede hacer cada perfil interno.</small>
+        </button>
+        <button
+          type="button"
+          class="users-subnav-button"
+          [class.is-active]="subseccionUsuariosActiva() === 'actividad'"
+          (click)="seleccionarSubseccionUsuarios('actividad')">
+          <span class="users-subnav-step">Paso 3</span>
+          <strong>Actividad</strong>
+          <small>Revisa cambios recientes de roles y accesos.</small>
+        </button>
+      </div>
+    </mat-card>
+    @if (subseccionUsuariosActiva() === 'usuarios') {
+      @defer {
+      <app-admin-users-access-section
+        [usuarioInternoEditandoId]="usuarioInternoEditandoId"
+        [formularioUsuarioInterno]="formularioUsuarioInterno"
+        [sucursales]="sucursales()"
+        [rolesUsuarioInterno]="rolesUsuarioInterno()"
+        [rolUsuarioInternoSeleccionado]="rolUsuarioInternoSeleccionado()"
+        [resumenAccesoUsuarioInterno]="resumenAccesoUsuarioInterno()"
+        [permisosDirectosUsuarioInterno]="permisosDirectosUsuarioInterno()"
+        [permisosEfectivosUsuarioInterno]="permisosEfectivosUsuarioInterno()"
+        [gruposPermisosDirectosUsuarioInterno]="gruposPermisosDirectosUsuarioInterno()"
+        [usuariosInternosFiltrados]="usuariosInternosFiltrados()"
+        [filtroUsuariosInternos]="filtroUsuariosInternos()"
+        [etiquetaPermiso]="etiquetaPermiso.bind(this)"
+        [resumenPermisosLista]="resumenPermisosLista.bind(this)"
+        [resumenPermisosRol]="resumenPermisosRol.bind(this)"
+        [rolInternoDeUsuario]="rolInternoDeUsuario.bind(this)"
+        [permisoDirectoUsuarioSeleccionado]="permisoDirectoUsuarioSeleccionado.bind(this)"
+        (save)="guardarUsuarioInterno()"
+        (clearEdit)="cancelarEdicionUsuarioInterno()"
+        (branchScopeChange)="cambiarSucursalesUsuarioInterno($event)"
+        (roleChange)="cambiarRolUsuarioInterno($event)"
+        (editSelectedRole)="editarRolSeleccionadoUsuarioInterno()"
+        (directPermissionChange)="cambiarPermisoDirectoUsuario($event.codigo, $event.checked)"
+        (filterChange)="filtroUsuariosInternos.set($event)"
+        (clearFilter)="limpiarFiltroUsuariosInternos()"
+        (editAccess)="editarAccesoUsuarioInterno($event)" />
+      } @placeholder {
+      <section class="section-stack">
+        <div class="workspace-card">
+          <div class="section-header">
+            <div>
+              <div class="section-eyebrow">Usuarios</div>
+              <h3>Cargando accesos internos</h3>
+            </div>
+          </div>
+          <p class="helper-text mb-0">Estamos preparando el formulario, roles heredados y la lista de usuarios internos.</p>
+        </div>
+      </section>
+    }
+  }
+  @if (subseccionUsuariosActiva() === 'roles') {
+    @defer {
+    <app-admin-users-roles-section
+      [rolInternoEditandoId]="rolInternoEditandoId"
+      [rolInternoClonandoDesdeId]="rolInternoClonandoDesdeId"
+      [rolInternoClonandoNombreOrigen]="rolInternoClonandoNombreOrigen"
+      [plantillasRolesInternos]="plantillasRolesInternos()"
+      [formularioRolInterno]="formularioRolInterno"
+      [gruposPermisos]="gruposPermisos()"
+      [rolesInternos]="rolesInternos()"
+      [permisoRolSeleccionado]="permisoRolSeleccionado.bind(this)"
+      (clearEdit)="cancelarEdicionRolInterno()"
+      (useTemplate)="usarPlantillaRolInterno($event)"
+      (save)="guardarRolInterno()"
+      (rolePermissionChange)="cambiarPermisoRol($event.codigo, $event.checked)"
+      (cloneRole)="clonarRolInterno($event)"
+      (editRole)="editarRolInterno($event)"
+      (deleteRole)="eliminarRolInterno($event)" />
+    } @placeholder {
+    <section class="section-stack">
+      <div class="workspace-card">
+        <div class="section-header">
+          <div>
+            <div class="section-eyebrow">Roles</div>
+            <h3>Cargando roles y permisos</h3>
+          </div>
+        </div>
+        <p class="helper-text mb-0">Estamos preparando plantillas, permisos y catálogo de roles internos.</p>
+      </div>
+    </section>
+  }
+}
+@if (subseccionUsuariosActiva() === 'actividad') {
+  @defer {
+  <app-admin-users-activity-section
+    [auditoriaRolesInternos]="auditoriaRolesInternos()"
+    [etiquetaAccionAuditoriaRol]="etiquetaAccionAuditoriaRol.bind(this)" />
+  } @placeholder {
+  <section class="section-stack">
+    <div class="workspace-card">
+      <div class="section-header">
+        <div>
+          <div class="section-eyebrow">Actividad</div>
+          <h3>Cargando trazabilidad de accesos</h3>
+        </div>
+      </div>
+      <p class="helper-text mb-0">Estamos preparando el historial reciente de cambios en roles y accesos internos.</p>
+    </div>
+  </section>
+}
+}
+</section>
+}
+
+@if (seccionActiva() === 'prestadores') {
+  @defer {
+  <app-admin-providers-section
+    [prestadorEditandoId]="prestadorEditandoId"
+    [formularioPrestador]="formularioPrestador"
+    [sucursales]="sucursales()"
+    [guardandoPrestador]="guardandoPrestador"
+    [serviciosPrestadorDisponibles]="serviciosPrestadorDisponibles"
+    [prestadores]="prestadores()"
+    (clearEdit)="cancelarEdicionPrestador()"
+    (save)="guardarPrestador()"
+    (branchChange)="cambiarSucursalPrestador($event)"
+    (serviceToggle)="alternarServicioPrestador($event.servicioId, $event.checked)"
+    (editProvider)="editarPrestador($event)" />
+  } @placeholder {
+  <section class="section-stack">
+    <div class="workspace-card">
+      <div class="section-header">
+        <div>
+          <div class="section-eyebrow">Prestadores</div>
+          <h3>Cargando equipo operativo</h3>
+        </div>
+      </div>
+      <p class="helper-text mb-0">Estamos preparando el formulario del staff y la lista de prestadores activos.</p>
+    </div>
+  </section>
+}
+}
+
+@if (seccionActiva() === 'reglas') {
+  @defer {
+  <app-admin-rules-section
+    [reglaEditandoId]="reglaEditandoId"
+    [formularioRegla]="formularioRegla"
+    [guardandoRegla]="guardandoRegla"
+    [sujetosRegla]="sujetosRegla"
+    [diasSemana]="diasSemana"
+    [reglasDisponibilidad]="reglasDisponibilidad()"
+    [diasSemanaTexto]="diasSemanaTexto"
+    (clearEdit)="cancelarEdicionRegla()"
+    (save)="guardarRegla()"
+    (typeChange)="cambiarTipoSujetoRegla($event)"
+    (editRule)="editarRegla($event)" />
+  } @placeholder {
+  <section class="section-stack">
+    <div class="workspace-card">
+      <div class="section-header">
+        <div>
+          <div class="section-eyebrow">Reglas</div>
+          <h3>Cargando horarios base</h3>
+        </div>
+      </div>
+      <p class="helper-text mb-0">Estamos preparando las reglas semanales y su capacidad operativa.</p>
+    </div>
+  </section>
+}
+}
+
+@if (seccionActiva() === 'excepciones') {
+  @defer {
+  <app-admin-exceptions-section
+    [excepcionEditandoId]="excepcionEditandoId"
+    [formularioExcepcion]="formularioExcepcion"
+    [guardandoExcepcion]="guardandoExcepcion"
+    [sujetosExcepcion]="sujetosExcepcion"
+    [tiposBloqueo]="tiposBloqueo"
+    [excepcionesDisponibilidad]="excepcionesDisponibilidad()"
+    (clearEdit)="cancelarEdicionExcepcion()"
+    (save)="guardarExcepcion()"
+    (typeChange)="cambiarTipoSujetoExcepcion($event)"
+    (editException)="editarExcepcion($event)" />
+  } @placeholder {
+  <section class="section-stack">
+    <div class="workspace-card">
+      <div class="section-header">
+        <div>
+          <div class="section-eyebrow">Excepciones</div>
+          <h3>Cargando bloqueos</h3>
+        </div>
+      </div>
+      <p class="helper-text mb-0">Estamos preparando cierres puntuales, vacaciones y bloqueos especiales.</p>
+    </div>
+  </section>
+}
+}
+
+@if (seccionActiva() === 'citas') {
+  <section class="section-stack">
+    <app-agenda-operations-section
+      [theme]="'light'"
+      [viewMode]="agendaViewMode()"
+      [availableViews]="['day', 'week']"
+      [eyebrow]="'Operación diaria'"
+      [title]="'Agenda detallada de citas'"
+      [dateLabel]="'Fecha seleccionada'"
+      [dateValue]="fechaAgendaActiva()"
+      [dateDisplay]="fechaAgendaActivaTexto()"
+      [summaryCards]="resumenAgendaCards()"
+      [occupancy]="agendaOccupancyVm()"
+      [hourLabels]="agendaHourLabels"
+      [collaborators]="agendaCollaboratorsVm()"
+      [appointments]="agendaAppointmentsVm()"
+      [selectedAppointment]="citaAgendaSeleccionada()"
+      [selectedAppointmentId]="citaAgendaSeleccionadaId()"
+      [timelineWidthPx]="anchoAgendaTimeline()"
+      [hourSlotHeight]="86"
+      [emptyMessage]="'No hay citas registradas para la fecha seleccionada.'"
+      (previousDay)="desplazarFechaAgenda(-1)"
+      (goToToday)="irAHoyAgenda()"
+      (nextDay)="desplazarFechaAgenda(1)"
+      (viewModeChange)="cambiarVistaAgenda($event)"
+      (dateValueChange)="seleccionarFechaAgenda($event)"
+      (appointmentSelected)="seleccionarCitaAgenda($event)"
+      (appointmentClosed)="cerrarDetalleAgenda()"
+      (appointmentAction)="gestionarAccionAgenda($event)" />
+  </section>
+}
+</main>
+</div>
+</div>
 </section>

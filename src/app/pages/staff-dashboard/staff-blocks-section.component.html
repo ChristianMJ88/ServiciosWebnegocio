@@ -29,7 +29,9 @@
         <mat-form-field appearance="outline">
           <mat-label>Tipo</mat-label>
           <mat-select name="staffExcepcionTipo" [(ngModel)]="formularioExcepcion().tipoBloqueo">
-            <mat-option *ngFor="let tipo of tiposBloqueo()" [value]="tipo">{{ tipo }}</mat-option>
+            @for (tipo of tiposBloqueo(); track tipo) {
+              <mat-option [value]="tipo">{{ tipo }}</mat-option>
+            }
           </mat-select>
         </mat-form-field>
 
@@ -42,9 +44,11 @@
           <button mat-flat-button color="primary" type="submit" [disabled]="guardandoExcepcion()">
             {{ excepcionEditandoId() ? 'Actualizar bloqueo' : 'Guardar bloqueo' }}
           </button>
-          <button mat-stroked-button type="button" *ngIf="excepcionEditandoId()" (click)="cancelEdit.emit()">
-            Cancelar
-          </button>
+          @if (excepcionEditandoId()) {
+            <button mat-stroked-button type="button" (click)="cancelEdit.emit()">
+              Cancelar
+            </button>
+          }
         </div>
       </form>
     </mat-card>
@@ -58,16 +62,20 @@
       </div>
 
       <div class="staff-stack">
-        <article class="staff-entity-card" *ngFor="let excepcion of excepciones()">
-          <div>
-            <div class="staff-entity-title">{{ excepcion.fechaExcepcion }} · {{ excepcion.tipoBloqueo }}</div>
-            <div class="staff-entity-meta">
-              {{ excepcion.horaInicio && excepcion.horaFin ? (excepcion.horaInicio + ' - ' + excepcion.horaFin) : 'Bloqueo de todo el día' }}
+        @for (excepcion of excepciones(); track excepcion) {
+          <article class="staff-entity-card">
+            <div>
+              <div class="staff-entity-title">{{ excepcion.fechaExcepcion }} · {{ excepcion.tipoBloqueo }}</div>
+              <div class="staff-entity-meta">
+                {{ excepcion.horaInicio && excepcion.horaFin ? (excepcion.horaInicio + ' - ' + excepcion.horaFin) : 'Bloqueo de todo el día' }}
+              </div>
+              @if (excepcion.motivo) {
+                <div class="staff-entity-meta">{{ excepcion.motivo }}</div>
+              }
             </div>
-            <div class="staff-entity-meta" *ngIf="excepcion.motivo">{{ excepcion.motivo }}</div>
-          </div>
-          <button mat-stroked-button type="button" (click)="editBlock.emit(excepcion)">Editar</button>
-        </article>
+            <button mat-stroked-button type="button" (click)="editBlock.emit(excepcion)">Editar</button>
+          </article>
+        }
       </div>
     </mat-card>
   </div>

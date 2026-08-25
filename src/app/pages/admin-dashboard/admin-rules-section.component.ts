@@ -1,4 +1,4 @@
-import { CommonModule } from '@angular/common';
+
 import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
@@ -12,14 +12,13 @@ import { GuardarReglaDisponibilidadPayload, ReglaDisponibilidadAdmin } from '../
   selector: 'app-admin-rules-section',
   standalone: true,
   imports: [
-    CommonModule,
     FormsModule,
     MatButtonModule,
     MatCardModule,
     MatFormFieldModule,
     MatInputModule,
     MatSelectModule
-  ],
+],
   templateUrl: './admin-rules-section.component.html'
 })
 export class AdminRulesSectionComponent {

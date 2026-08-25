@@ -128,132 +128,150 @@
         </div>
       </div>
 
-      <div class="entity-list" *ngIf="configuracionCorreo() as config; else correoSinDatos">
-        <article class="entity-row">
-          <div class="entity-main">
-            <div class="entity-title">Proveedor activo</div>
-            <div class="entity-meta">{{ config.proveedor || 'SMTP' }}</div>
-          </div>
-          <div class="entity-side">
-            <span class="status-pill" [class.is-active]="!!config.proveedor">
-              {{ config.proveedor || 'SMTP' }}
-            </span>
-          </div>
-        </article>
-
-        <article class="entity-row" *ngIf="(config.proveedor || 'SMTP') === 'GRAPH'; else estadoSmtp">
-          <div class="entity-main">
-            <div class="entity-title">Secreto de Graph</div>
-            <div class="entity-meta" *ngIf="config.graphClientSecretConfigurado">Existe un client secret guardado para Microsoft Graph.</div>
-            <div class="entity-meta" *ngIf="!config.graphClientSecretConfigurado">No hay client secret guardado. Esto es válido si usas certificado.</div>
-            <div class="entity-meta" *ngIf="config.graphClientSecretConfigurado">
-              {{ config.graphClientSecretCifrado ? 'El secreto está cifrado.' : 'El secreto sigue en texto plano y requiere migración.' }}
-            </div>
-          </div>
-          <div class="entity-side">
-            <span class="status-pill" [class.is-active]="config.graphClientSecretCifrado">
-              {{ config.graphClientSecretCifrado ? 'Cifrado' : 'Legacy' }}
-            </span>
-          </div>
-        </article>
-
-        <article class="entity-row" *ngIf="(config.proveedor || 'SMTP') === 'GRAPH'">
-          <div class="entity-main">
-            <div class="entity-title">Llave privada de Graph</div>
-            <div class="entity-meta" *ngIf="config.graphPrivateKeyConfigurada">Existe una llave privada PEM guardada para Microsoft Graph.</div>
-            <div class="entity-meta" *ngIf="!config.graphPrivateKeyConfigurada">Todavía no se ha configurado una llave privada PEM para Microsoft Graph.</div>
-            <div class="entity-meta" *ngIf="config.graphPrivateKeyConfigurada">
-              {{ config.graphPrivateKeyCifrada ? 'La llave está cifrada.' : 'La llave sigue en texto plano y requiere migración.' }}
-            </div>
-          </div>
-          <div class="entity-side">
-            <span class="status-pill" [class.is-active]="config.graphPrivateKeyCifrada">
-              {{ config.graphPrivateKeyCifrada ? 'Cifrada' : 'Legacy' }}
-            </span>
-          </div>
-        </article>
-
-        <ng-template #estadoSmtp>
+      @if (configuracionCorreo(); as config) {
+        <div class="entity-list">
           <article class="entity-row">
             <div class="entity-main">
-              <div class="entity-title">Secreto SMTP</div>
-              <div class="entity-meta" *ngIf="config.smtpPasswordConfigurada">Existe una contraseña SMTP guardada para este tenant.</div>
-              <div class="entity-meta" *ngIf="!config.smtpPasswordConfigurada">Todavía no se ha configurado una contraseña SMTP.</div>
-              <div class="entity-meta" *ngIf="config.smtpPasswordConfigurada">
-                {{ config.smtpPasswordCifrada ? 'El secreto está cifrado.' : 'El secreto sigue en texto plano y requiere migración.' }}
+              <div class="entity-title">Proveedor activo</div>
+              <div class="entity-meta">{{ config.proveedor || 'SMTP' }}</div>
+            </div>
+            <div class="entity-side">
+              <span class="status-pill" [class.is-active]="!!config.proveedor">
+                {{ config.proveedor || 'SMTP' }}
+              </span>
+            </div>
+          </article>
+          @if ((config.proveedor || 'SMTP') === 'GRAPH') {
+            <article class="entity-row">
+              <div class="entity-main">
+                <div class="entity-title">Secreto de Graph</div>
+                @if (config.graphClientSecretConfigurado) {
+                  <div class="entity-meta">Existe un client secret guardado para Microsoft Graph.</div>
+                }
+                @if (!config.graphClientSecretConfigurado) {
+                  <div class="entity-meta">No hay client secret guardado. Esto es válido si usas certificado.</div>
+                }
+                @if (config.graphClientSecretConfigurado) {
+                  <div class="entity-meta">
+                    {{ config.graphClientSecretCifrado ? 'El secreto está cifrado.' : 'El secreto sigue en texto plano y requiere migración.' }}
+                  </div>
+                }
+              </div>
+              <div class="entity-side">
+                <span class="status-pill" [class.is-active]="config.graphClientSecretCifrado">
+                  {{ config.graphClientSecretCifrado ? 'Cifrado' : 'Legacy' }}
+                </span>
+              </div>
+            </article>
+          } @else {
+            <article class="entity-row">
+              <div class="entity-main">
+                <div class="entity-title">Secreto SMTP</div>
+                @if (config.smtpPasswordConfigurada) {
+                  <div class="entity-meta">Existe una contraseña SMTP guardada para este tenant.</div>
+                }
+                @if (!config.smtpPasswordConfigurada) {
+                  <div class="entity-meta">Todavía no se ha configurado una contraseña SMTP.</div>
+                }
+                @if (config.smtpPasswordConfigurada) {
+                  <div class="entity-meta">
+                    {{ config.smtpPasswordCifrada ? 'El secreto está cifrado.' : 'El secreto sigue en texto plano y requiere migración.' }}
+                  </div>
+                }
+              </div>
+              <div class="entity-side">
+                <span class="status-pill" [class.is-active]="config.smtpPasswordCifrada">
+                  {{ config.smtpPasswordCifrada ? 'Cifrado' : 'Legacy' }}
+                </span>
+              </div>
+            </article>
+          }
+          @if ((config.proveedor || 'SMTP') === 'GRAPH') {
+            <article class="entity-row">
+              <div class="entity-main">
+                <div class="entity-title">Llave privada de Graph</div>
+                @if (config.graphPrivateKeyConfigurada) {
+                  <div class="entity-meta">Existe una llave privada PEM guardada para Microsoft Graph.</div>
+                }
+                @if (!config.graphPrivateKeyConfigurada) {
+                  <div class="entity-meta">Todavía no se ha configurado una llave privada PEM para Microsoft Graph.</div>
+                }
+                @if (config.graphPrivateKeyConfigurada) {
+                  <div class="entity-meta">
+                    {{ config.graphPrivateKeyCifrada ? 'La llave está cifrada.' : 'La llave sigue en texto plano y requiere migración.' }}
+                  </div>
+                }
+              </div>
+              <div class="entity-side">
+                <span class="status-pill" [class.is-active]="config.graphPrivateKeyCifrada">
+                  {{ config.graphPrivateKeyCifrada ? 'Cifrada' : 'Legacy' }}
+                </span>
+              </div>
+            </article>
+          }
+          @if (config.requiereMigracionSecretos) {
+            <article class="entity-row">
+              <div class="entity-main">
+                <div class="entity-title">Migración recomendada</div>
+                <div class="entity-meta">
+                  Migra los secretos legacy del proveedor actual a formato cifrado sin cambiar el resto de la configuración.
+                </div>
+              </div>
+              <div class="entity-side">
+                <button mat-stroked-button type="button" (click)="migrateSecrets.emit()" [disabled]="migrandoSecretosCorreo()">
+                  {{ migrandoSecretosCorreo() ? 'Migrando...' : 'Migrar secretos' }}
+                </button>
+              </div>
+            </article>
+          }
+          @if ((config.proveedor || 'SMTP') === 'GRAPH') {
+            <article class="entity-row">
+              <div class="entity-main">
+                <div class="entity-title">Resumen técnico</div>
+                <div class="entity-meta">Tenant ID: {{ config.graphTenantId || 'Sin definir' }}</div>
+                <div class="entity-meta">Client ID: {{ config.graphClientId || 'Sin definir' }}</div>
+                <div class="entity-meta">Mailbox Graph: {{ config.graphUserId || 'Sin definir' }}</div>
+                <div class="entity-meta">Thumbprint: {{ config.graphCertificateThumbprint || 'Sin definir' }}</div>
+              </div>
+              <div class="entity-side">
+                <span class="status-pill" [class.is-active]="!!config.graphTenantId && !!config.graphClientId && !!config.graphUserId && (!!config.graphClientSecretConfigurado || (!!config.graphCertificateThumbprint && !!config.graphPrivateKeyConfigurada))">
+                  {{ !!config.graphTenantId && !!config.graphClientId && !!config.graphUserId && (!!config.graphClientSecretConfigurado || (!!config.graphCertificateThumbprint && !!config.graphPrivateKeyConfigurada)) ? 'Listo' : 'Pendiente' }}
+                </span>
+              </div>
+            </article>
+          } @else {
+            <article class="entity-row">
+              <div class="entity-main">
+                <div class="entity-title">Resumen técnico</div>
+                <div class="entity-meta">Host: {{ config.smtpHost || 'Sin definir' }}</div>
+                <div class="entity-meta">Puerto: {{ config.smtpPort || 'Sin definir' }}</div>
+                <div class="entity-meta">Usuario: {{ config.smtpUsername || 'Sin definir' }}</div>
+              </div>
+              <div class="entity-side">
+                <span class="status-pill" [class.is-active]="!!config.smtpHost && !!config.smtpPort">
+                  {{ !!config.smtpHost && !!config.smtpPort ? 'Listo' : 'Pendiente' }}
+                </span>
+              </div>
+            </article>
+          }
+          <article class="entity-row">
+            <div class="entity-main">
+              <div class="entity-title">Estado general</div>
+              <div class="entity-meta">
+                {{ config.habilitado ? 'Las confirmaciones por correo están habilitadas.' : 'Las confirmaciones por correo están deshabilitadas.' }}
               </div>
             </div>
             <div class="entity-side">
-              <span class="status-pill" [class.is-active]="config.smtpPasswordCifrada">
-                {{ config.smtpPasswordCifrada ? 'Cifrado' : 'Legacy' }}
-              </span>
+              <span class="status-pill" [class.is-active]="config.habilitado">{{ config.habilitado ? 'Activo' : 'Inactivo' }}</span>
             </div>
           </article>
-        </ng-template>
-
-        <article class="entity-row" *ngIf="config.requiereMigracionSecretos">
-          <div class="entity-main">
-            <div class="entity-title">Migración recomendada</div>
-            <div class="entity-meta">
-              Migra los secretos legacy del proveedor actual a formato cifrado sin cambiar el resto de la configuración.
-            </div>
-          </div>
-          <div class="entity-side">
-            <button mat-stroked-button type="button" (click)="migrateSecrets.emit()" [disabled]="migrandoSecretosCorreo()">
-              {{ migrandoSecretosCorreo() ? 'Migrando...' : 'Migrar secretos' }}
-            </button>
-          </div>
-        </article>
-
-        <article class="entity-row" *ngIf="(config.proveedor || 'SMTP') === 'GRAPH'; else resumenSmtp">
-          <div class="entity-main">
-            <div class="entity-title">Resumen técnico</div>
-            <div class="entity-meta">Tenant ID: {{ config.graphTenantId || 'Sin definir' }}</div>
-            <div class="entity-meta">Client ID: {{ config.graphClientId || 'Sin definir' }}</div>
-            <div class="entity-meta">Mailbox Graph: {{ config.graphUserId || 'Sin definir' }}</div>
-            <div class="entity-meta">Thumbprint: {{ config.graphCertificateThumbprint || 'Sin definir' }}</div>
-          </div>
-          <div class="entity-side">
-            <span class="status-pill" [class.is-active]="!!config.graphTenantId && !!config.graphClientId && !!config.graphUserId && (!!config.graphClientSecretConfigurado || (!!config.graphCertificateThumbprint && !!config.graphPrivateKeyConfigurada))">
-              {{ !!config.graphTenantId && !!config.graphClientId && !!config.graphUserId && (!!config.graphClientSecretConfigurado || (!!config.graphCertificateThumbprint && !!config.graphPrivateKeyConfigurada)) ? 'Listo' : 'Pendiente' }}
-            </span>
-          </div>
-        </article>
-
-        <ng-template #resumenSmtp>
-          <article class="entity-row">
-            <div class="entity-main">
-              <div class="entity-title">Resumen técnico</div>
-              <div class="entity-meta">Host: {{ config.smtpHost || 'Sin definir' }}</div>
-              <div class="entity-meta">Puerto: {{ config.smtpPort || 'Sin definir' }}</div>
-              <div class="entity-meta">Usuario: {{ config.smtpUsername || 'Sin definir' }}</div>
-            </div>
-            <div class="entity-side">
-              <span class="status-pill" [class.is-active]="!!config.smtpHost && !!config.smtpPort">
-                {{ !!config.smtpHost && !!config.smtpPort ? 'Listo' : 'Pendiente' }}
-              </span>
-            </div>
-          </article>
-        </ng-template>
-
-        <article class="entity-row">
-          <div class="entity-main">
-            <div class="entity-title">Estado general</div>
-            <div class="entity-meta">
-              {{ config.habilitado ? 'Las confirmaciones por correo están habilitadas.' : 'Las confirmaciones por correo están deshabilitadas.' }}
-            </div>
-          </div>
-          <div class="entity-side">
-            <span class="status-pill" [class.is-active]="config.habilitado">{{ config.habilitado ? 'Activo' : 'Inactivo' }}</span>
-          </div>
-        </article>
-      </div>
-
-      <ng-template #correoSinDatos>
+        </div>
+      } @else {
         <div class="agenda-empty">
           No fue posible cargar la configuración actual de correo.
         </div>
-      </ng-template>
+      }
+
     </mat-card>
   </div>
 
@@ -265,21 +283,26 @@
       </div>
     </div>
 
-    <div class="entity-list" *ngIf="auditoriaCorreo().length; else sinAuditoriaCorreo">
-      <article class="entity-row" *ngFor="let evento of auditoriaCorreo()">
-        <div class="entity-main">
-          <div class="entity-title">{{ etiquetaAccionAuditoriaConfiguracion()(evento.accion) }}</div>
-          <div class="entity-meta">{{ evento.resumen }}</div>
-          <div class="entity-meta" *ngIf="evento.actorCorreo">Por {{ evento.actorCorreo }}</div>
-        </div>
-        <div class="entity-side">
-          <span class="status-pill is-active">{{ evento.creadoEn | date:'dd/MM/yyyy HH:mm':'':'es-MX' }}</span>
-        </div>
-      </article>
-    </div>
-
-    <ng-template #sinAuditoriaCorreo>
+    @if (auditoriaCorreo().length) {
+      <div class="entity-list">
+        @for (evento of auditoriaCorreo(); track evento) {
+          <article class="entity-row">
+            <div class="entity-main">
+              <div class="entity-title">{{ etiquetaAccionAuditoriaConfiguracion()(evento.accion) }}</div>
+              <div class="entity-meta">{{ evento.resumen }}</div>
+              @if (evento.actorCorreo) {
+                <div class="entity-meta">Por {{ evento.actorCorreo }}</div>
+              }
+            </div>
+            <div class="entity-side">
+              <span class="status-pill is-active">{{ evento.creadoEn | date:'dd/MM/yyyy HH:mm':'':'es-MX' }}</span>
+            </div>
+          </article>
+        }
+      </div>
+    } @else {
       <div class="helper-text">Todavía no hay cambios auditados de configuración de correo.</div>
-    </ng-template>
+    }
+
   </mat-card>
 </section>

@@ -7,8 +7,11 @@ export interface TenantSiteConfig {
   descripcionCorta: string | null;
   colorPrimario: string | null;
   colorSecundario: string | null;
+  fuenteTitulos: string | null;
+  fuenteCuerpo: string | null;
   heroTitulo: string | null;
   heroSubtitulo: string | null;
+  heroImagenUrl: string | null;
   whatsapp: string | null;
   telefono: string | null;
   correo: string | null;

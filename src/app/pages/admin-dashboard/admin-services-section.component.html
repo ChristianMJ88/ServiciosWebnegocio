@@ -1,101 +1,658 @@
-<section class="section-stack">
+<section class="section-stack services-studio">
+  <div class="services-guide">
+    <div class="services-guide-copy">
+      <span class="section-eyebrow">Catálogo de servicios</span>
+      <strong>Organiza la oferta como la verá el cliente.</strong>
+    </div>
+
+    <div class="services-flow" aria-label="Jerarquía del catálogo">
+      <div class="services-flow-step">
+        <span>1</span>
+        <strong>Grupo</strong>
+        <small>Categoría principal</small>
+      </div>
+      <div class="services-flow-step">
+        <span>2</span>
+        <strong>Subgrupo</strong>
+        <small>Subcategoría</small>
+      </div>
+      <div class="services-flow-step">
+        <span>3</span>
+        <strong>Servicio</strong>
+        <small>Reservable</small>
+      </div>
+    </div>
+  </div>
+
   <div class="workspace-grid two-columns">
-    <mat-card class="workspace-card form-card">
-      <div class="section-header">
+    <mat-card class="workspace-card form-card services-builder-card">
+      <div class="section-header services-builder-header">
         <div>
-          <div class="section-eyebrow">Catálogo</div>
-          <h3>{{ servicioEditandoId ? 'Editar servicio' : 'Nuevo servicio' }}</h3>
+          <div class="section-eyebrow">Crear y editar</div>
+          <h3>Configura el catálogo paso a paso</h3>
         </div>
-        <button mat-stroked-button type="button" *ngIf="servicioEditandoId" (click)="clearEdit.emit()">
-          Limpiar formulario
+      </div>
+
+      <div class="services-form-tabs" role="tablist" aria-label="Acciones del catálogo">
+        <button
+          type="button"
+          role="tab"
+          [class.is-active]="activeForm === 'sugerencias'"
+          [attr.aria-selected]="activeForm === 'sugerencias'"
+          (click)="setActiveForm('sugerencias')"
+          matTooltip="Importa una base de grupos, subgrupos y servicios para empezar más rápido.">
+          <span>Inicio</span>
+          <strong>Sugerencias</strong>
+        </button>
+        <button
+          type="button"
+          role="tab"
+          [class.is-active]="activeForm === 'grupo'"
+          [attr.aria-selected]="activeForm === 'grupo'"
+          (click)="setActiveForm('grupo')"
+          matTooltip="Crea la categoría principal del catálogo, por ejemplo Uñas o Cabello.">
+          <span>1</span>
+          <strong>Grupo</strong>
+        </button>
+        <button
+          type="button"
+          role="tab"
+          [class.is-active]="activeForm === 'subgrupo'"
+          [attr.aria-selected]="activeForm === 'subgrupo'"
+          (click)="setActiveForm('subgrupo')"
+          matTooltip="Crea una subcategoría dentro de un grupo, por ejemplo Manicura.">
+          <span>2</span>
+          <strong>Subgrupo</strong>
+        </button>
+        <button
+          type="button"
+          role="tab"
+          [class.is-active]="activeForm === 'servicio'"
+          [attr.aria-selected]="activeForm === 'servicio'"
+          (click)="setActiveForm('servicio')"
+          matTooltip="Crea el servicio que el cliente reserva: duración, precio, sucursal y visibilidad.">
+          <span>3</span>
+          <strong>Servicio</strong>
         </button>
       </div>
 
-      <form class="admin-form-grid admin-form-shell" (ngSubmit)="save.emit()">
-        <div class="form-block-title full-width">Datos del servicio</div>
+      <div class="services-builder-summary">
+        <div><span>Grupos</span><strong>{{ gruposServicio.length }}</strong></div>
+        <div><span>Subgrupos</span><strong>{{ totalSubgrupos }}</strong></div>
+        <div><span>Activos</span><strong>{{ totalServiciosActivos }}</strong></div>
+      </div>
 
-        <mat-form-field appearance="outline">
-          <mat-label>Sucursal</mat-label>
-          <mat-select name="servicioSucursalId" [(ngModel)]="formularioServicio.sucursalId" required>
-            <mat-option *ngFor="let sucursal of sucursales" [value]="sucursal.id">{{ sucursal.nombre }}</mat-option>
-          </mat-select>
-        </mat-form-field>
-
-        <mat-form-field appearance="outline">
-          <mat-label>Nombre</mat-label>
-          <input matInput name="servicioNombre" [(ngModel)]="formularioServicio.nombre" required maxlength="150">
-        </mat-form-field>
-
-        <mat-form-field appearance="outline" class="full-width">
-          <mat-label>Descripción</mat-label>
-          <textarea matInput rows="3" name="servicioDescripcion" [(ngModel)]="formularioServicio.descripcion" maxlength="500"></textarea>
-        </mat-form-field>
-
-        <div class="form-block-title full-width">Configuración operativa</div>
-
-        <mat-form-field appearance="outline">
-          <mat-label>Duración (min)</mat-label>
-          <input matInput type="number" min="5" name="servicioDuracion" [(ngModel)]="formularioServicio.duracionMinutos" required>
-        </mat-form-field>
-
-        <mat-form-field appearance="outline">
-          <mat-label>Buffer antes</mat-label>
-          <input matInput type="number" min="0" name="servicioBufferAntes" [(ngModel)]="formularioServicio.bufferAntesMinutos" required>
-        </mat-form-field>
-
-        <mat-form-field appearance="outline">
-          <mat-label>Buffer después</mat-label>
-          <input matInput type="number" min="0" name="servicioBufferDespues" [(ngModel)]="formularioServicio.bufferDespuesMinutos" required>
-        </mat-form-field>
-
-        <mat-form-field appearance="outline">
-          <mat-label>Precio</mat-label>
-          <input matInput type="number" min="0" step="0.01" name="servicioPrecio" [(ngModel)]="formularioServicio.precio" required>
-        </mat-form-field>
-
-        <mat-form-field appearance="outline">
-          <mat-label>Moneda</mat-label>
-          <input matInput name="servicioMoneda" [(ngModel)]="formularioServicio.moneda" maxlength="10" required>
-        </mat-form-field>
-
-        <mat-slide-toggle name="servicioActivo" [(ngModel)]="formularioServicio.activo">
-          Servicio activo
-        </mat-slide-toggle>
-
-        <div class="form-actions">
-          <button mat-flat-button color="primary" type="submit" [disabled]="guardandoServicio || !sucursales.length">
-            {{ servicioEditandoId ? 'Actualizar servicio' : 'Crear servicio' }}
-          </button>
+      @if (activeForm === 'sugerencias') {
+        <div class="services-form-panel">
+          <div class="services-panel-head">
+            <div>
+              <div class="section-eyebrow">Sugerencias</div>
+              <h4>Importar catálogo sugerido</h4>
+            </div>
+            <button
+              class="info-button"
+              type="button"
+              aria-label="Ayuda sobre sugerencias"
+              matTooltip="Úsalo cuando el negocio todavía no tiene catálogo. Después puedes editar, mover o desactivar cada elemento.">
+              ?
+            </button>
+          </div>
+          <form class="admin-form-grid admin-form-shell" (ngSubmit)="importSuggestedCatalog.emit()">
+            <mat-form-field appearance="outline">
+              <mat-label>Paquete sugerido</mat-label>
+              <mat-select
+                name="catalogoSugeridoId"
+                [ngModel]="formularioImportarCatalogo.sugerenciaId"
+                (ngModelChange)="onSuggestedCatalogChange($event)"
+                required>
+                @for (catalogo of catalogosSugeridos; track catalogo) {
+                  <mat-option [value]="catalogo.id">
+                    {{ catalogo.nombre }}
+                  </mat-option>
+                }
+              </mat-select>
+            </mat-form-field>
+            <mat-form-field appearance="outline">
+              <mat-label>Sucursal de destino</mat-label>
+              <mat-select
+                name="catalogoSugeridoSucursalId"
+                [ngModel]="formularioImportarCatalogo.sucursalId"
+                (ngModelChange)="onSuggestedCatalogBranchChange($event)"
+                required>
+                @for (sucursal of sucursales; track sucursal) {
+                  <mat-option [value]="sucursal.id">{{ sucursal.nombre }}</mat-option>
+                }
+              </mat-select>
+            </mat-form-field>
+            @if (catalogosSugeridos.length) {
+              <div class="helper-text full-width">
+                {{ catalogoSugeridoSeleccionado?.descripcion || 'Carga un paquete base de grupos, subgrupos y servicios para acelerar el alta del tenant.' }}
+              </div>
+            }
+            @if (catalogosSugeridos.length) {
+              <div class="service-metrics full-width">
+                @if (catalogoSugeridoSeleccionado; as seleccionado) {
+                  <span>{{ seleccionado.grupos }} grupo(s)</span>
+                  <span>{{ seleccionado.subgrupos }} subgrupo(s)</span>
+                  <span>{{ seleccionado.servicios }} servicio(s)</span>
+                }
+              </div>
+            }
+            <div class="form-actions">
+              <button mat-flat-button color="primary" type="submit" [disabled]="importandoCatalogoSugerido || !catalogosSugeridos.length || !sucursales.length">
+                Importar paquete sugerido
+              </button>
+            </div>
+          </form>
         </div>
-      </form>
+      }
+
+      @if (activeForm === 'grupo') {
+        <div class="services-form-panel">
+          <div class="services-panel-head">
+            <div>
+              <div class="section-eyebrow">Grupos</div>
+              <h4>{{ grupoServicioEditandoId ? 'Editar grupo' : 'Nuevo grupo' }}</h4>
+            </div>
+            <button
+              class="info-button"
+              type="button"
+              aria-label="Ayuda sobre grupos"
+              matTooltip="El grupo es la categoría superior. Mantén pocos grupos y nombres fáciles de reconocer.">
+              ?
+            </button>
+          </div>
+          <div class="form-context-note">
+            Crea la categoría superior del catálogo. Ejemplos: Uñas, Cabello, Spa o Depilación.
+          </div>
+          <form class="admin-form-grid admin-form-shell" (ngSubmit)="saveGroup.emit()">
+            <mat-form-field appearance="outline">
+              <mat-label>Nombre</mat-label>
+              <input matInput name="grupoNombre" [(ngModel)]="formularioGrupoServicio.nombre" required maxlength="120">
+            </mat-form-field>
+            <mat-form-field appearance="outline">
+              <mat-label>Slug</mat-label>
+              <input matInput name="grupoSlug" [(ngModel)]="formularioGrupoServicio.slug" maxlength="140">
+            </mat-form-field>
+            <mat-form-field appearance="outline">
+              <mat-label>Orden público</mat-label>
+              <input matInput type="number" min="0" name="grupoOrdenPublico" [(ngModel)]="formularioGrupoServicio.ordenPublico" required>
+            </mat-form-field>
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Descripción</mat-label>
+              <textarea matInput rows="2" name="grupoDescripcion" [(ngModel)]="formularioGrupoServicio.descripcion" maxlength="300"></textarea>
+            </mat-form-field>
+            <mat-form-field appearance="outline">
+              <mat-label>Imagen</mat-label>
+              <input matInput name="grupoImagenUrl" [(ngModel)]="formularioGrupoServicio.imagenUrl" maxlength="255">
+            </mat-form-field>
+            <mat-form-field appearance="outline">
+              <mat-label>Icono</mat-label>
+              <input matInput name="grupoIcono" [(ngModel)]="formularioGrupoServicio.icono" maxlength="50">
+            </mat-form-field>
+            <mat-slide-toggle name="grupoActivo" [(ngModel)]="formularioGrupoServicio.activo">
+              Grupo activo
+            </mat-slide-toggle>
+            <div class="form-actions">
+              <button mat-flat-button color="primary" type="submit" [disabled]="guardandoGrupoServicio">
+                {{ grupoServicioEditandoId ? 'Actualizar grupo' : 'Crear grupo' }}
+              </button>
+              @if (grupoServicioEditandoId) {
+                <button mat-stroked-button type="button" (click)="clearGroupEdit.emit()">
+                  Limpiar formulario
+                </button>
+              }
+            </div>
+          </form>
+        </div>
+      }
+
+      @if (activeForm === 'subgrupo') {
+        <div class="services-form-panel">
+          <div class="services-panel-head">
+            <div>
+              <div class="section-eyebrow">Subgrupos</div>
+              <h4>{{ subgrupoServicioEditandoId ? 'Editar subgrupo' : 'Nuevo subgrupo' }}</h4>
+            </div>
+            <button
+              class="info-button"
+              type="button"
+              aria-label="Ayuda sobre subgrupos"
+              matTooltip="El subgrupo ordena servicios dentro de un grupo. Si no hace falta dividir, puedes dejar servicios sin subgrupo.">
+              ?
+            </button>
+          </div>
+          <div class="form-context-note">
+            El subgrupo vive dentro de un grupo y ayuda a dividir la categoría. Ejemplos: Manicura, Pedicura o Color.
+          </div>
+          <form class="admin-form-grid admin-form-shell" (ngSubmit)="saveSubgroup.emit()">
+            <mat-form-field appearance="outline">
+              <mat-label>Grupo</mat-label>
+              <mat-select
+                name="subgrupoGrupoId"
+                [ngModel]="formularioSubgrupoServicio.grupoId"
+                (ngModelChange)="onGrupoSubgrupoChange($event)"
+                required>
+                @for (grupo of gruposServicio; track grupo) {
+                  <mat-option [value]="grupo.id">{{ grupo.nombre }}</mat-option>
+                }
+              </mat-select>
+            </mat-form-field>
+            <mat-form-field appearance="outline">
+              <mat-label>Nombre</mat-label>
+              <input matInput name="subgrupoNombre" [(ngModel)]="formularioSubgrupoServicio.nombre" required maxlength="120">
+            </mat-form-field>
+            <mat-form-field appearance="outline">
+              <mat-label>Slug</mat-label>
+              <input matInput name="subgrupoSlug" [(ngModel)]="formularioSubgrupoServicio.slug" maxlength="140">
+            </mat-form-field>
+            <mat-form-field appearance="outline">
+              <mat-label>Orden público</mat-label>
+              <input matInput type="number" min="0" name="subgrupoOrdenPublico" [(ngModel)]="formularioSubgrupoServicio.ordenPublico" required>
+            </mat-form-field>
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Descripción</mat-label>
+              <textarea matInput rows="2" name="subgrupoDescripcion" [(ngModel)]="formularioSubgrupoServicio.descripcion" maxlength="300"></textarea>
+            </mat-form-field>
+            <mat-slide-toggle name="subgrupoActivo" [(ngModel)]="formularioSubgrupoServicio.activo">
+              Subgrupo activo
+            </mat-slide-toggle>
+            <div class="form-actions">
+              <button mat-flat-button color="primary" type="submit" [disabled]="guardandoSubgrupoServicio || !gruposServicio.length">
+                {{ subgrupoServicioEditandoId ? 'Actualizar subgrupo' : 'Crear subgrupo' }}
+              </button>
+              @if (subgrupoServicioEditandoId) {
+                <button mat-stroked-button type="button" (click)="clearSubgroupEdit.emit()">
+                  Limpiar formulario
+                </button>
+              }
+            </div>
+          </form>
+        </div>
+      }
+
+      @if (activeForm === 'servicio') {
+        <div class="services-form-panel">
+          <div class="services-panel-head">
+            <div>
+              <div class="section-eyebrow">Servicios</div>
+              <h4>{{ servicioEditandoId ? 'Editar servicio' : 'Nuevo servicio' }}</h4>
+            </div>
+            <button
+              class="info-button"
+              type="button"
+              aria-label="Ayuda sobre servicios"
+              matTooltip="El servicio es el elemento reservable. Asígnalo a sucursales y ubícalo en grupo/subgrupo para que el cliente lo encuentre.">
+              ?
+            </button>
+          </div>
+          <div class="form-context-note">
+            El servicio es lo que se agenda: duración, precio, sucursales y visibilidad pública.
+          </div>
+          <form class="admin-form-grid admin-form-shell" (ngSubmit)="save.emit()">
+            <div class="form-block-title full-width">Ubicación y catálogo</div>
+            <mat-form-field appearance="outline">
+              <mat-label>Sucursales</mat-label>
+              <mat-select
+                name="servicioSucursalIds"
+                [ngModel]="formularioServicio.sucursalIds"
+                (ngModelChange)="onSucursalesServicioChange($event)"
+                multiple
+                required>
+                @for (sucursal of sucursales; track sucursal) {
+                  <mat-option [value]="sucursal.id">{{ sucursal.nombre }}</mat-option>
+                }
+              </mat-select>
+            </mat-form-field>
+            <mat-form-field appearance="outline">
+              <mat-label>Sucursal principal</mat-label>
+              <mat-select
+                name="servicioSucursalPrincipalId"
+                [ngModel]="formularioServicio.sucursalId"
+                (ngModelChange)="onSucursalPrincipalServicioChange($event)"
+                [disabled]="!formularioServicio.sucursalIds.length"
+                required>
+                @for (sucursal of sucursalesDisponiblesPrincipal; track sucursal) {
+                  <mat-option [value]="sucursal.id">
+                    {{ sucursal.nombre }}
+                  </mat-option>
+                }
+              </mat-select>
+            </mat-form-field>
+            <mat-form-field appearance="outline">
+              <mat-label>Grupo</mat-label>
+              <mat-select
+                name="servicioGrupoId"
+                [ngModel]="formularioServicio.grupoId"
+                (ngModelChange)="onGrupoServicioChange($event)">
+                <mat-option [value]="null">Sin grupo</mat-option>
+                @for (grupo of gruposServicio; track grupo) {
+                  <mat-option [value]="grupo.id">{{ grupo.nombre }}</mat-option>
+                }
+              </mat-select>
+            </mat-form-field>
+            <mat-form-field appearance="outline">
+              <mat-label>Subgrupo</mat-label>
+              <mat-select name="servicioSubgrupoId" [(ngModel)]="formularioServicio.subgrupoId" [disabled]="!formularioServicio.grupoId">
+                <mat-option [value]="null">Sin subgrupo</mat-option>
+                @for (subgrupo of subgruposFiltradosFormulario; track subgrupo) {
+                  <mat-option [value]="subgrupo.id">{{ subgrupo.nombre }}</mat-option>
+                }
+              </mat-select>
+            </mat-form-field>
+            <div class="form-block-title full-width">Datos del servicio</div>
+            <mat-form-field appearance="outline">
+              <mat-label>Nombre</mat-label>
+              <input matInput name="servicioNombre" [(ngModel)]="formularioServicio.nombre" required maxlength="150">
+            </mat-form-field>
+            <mat-form-field appearance="outline">
+              <mat-label>Slug</mat-label>
+              <input matInput name="servicioSlug" [(ngModel)]="formularioServicio.slug" maxlength="140">
+            </mat-form-field>
+            <mat-form-field appearance="outline">
+              <mat-label>Orden público</mat-label>
+              <input matInput type="number" min="0" name="servicioOrdenPublico" [(ngModel)]="formularioServicio.ordenPublico" required>
+            </mat-form-field>
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Descripción</mat-label>
+              <textarea matInput rows="3" name="servicioDescripcion" [(ngModel)]="formularioServicio.descripcion" maxlength="500"></textarea>
+            </mat-form-field>
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Imagen</mat-label>
+              <input matInput name="servicioImagenUrl" [(ngModel)]="formularioServicio.imagenUrl" maxlength="255">
+            </mat-form-field>
+            <div class="form-block-title full-width">Configuración operativa</div>
+            <mat-form-field appearance="outline">
+              <mat-label>Duración (min)</mat-label>
+              <input matInput type="number" min="5" name="servicioDuracion" [(ngModel)]="formularioServicio.duracionMinutos" required>
+            </mat-form-field>
+            <mat-form-field appearance="outline">
+              <mat-label>Buffer antes</mat-label>
+              <input matInput type="number" min="0" name="servicioBufferAntes" [(ngModel)]="formularioServicio.bufferAntesMinutos" required>
+            </mat-form-field>
+            <mat-form-field appearance="outline">
+              <mat-label>Buffer después</mat-label>
+              <input matInput type="number" min="0" name="servicioBufferDespues" [(ngModel)]="formularioServicio.bufferDespuesMinutos" required>
+            </mat-form-field>
+            <mat-form-field appearance="outline">
+              <mat-label>Precio</mat-label>
+              <input matInput type="number" min="0" step="0.01" name="servicioPrecio" [(ngModel)]="formularioServicio.precio" required>
+            </mat-form-field>
+            <mat-form-field appearance="outline">
+              <mat-label>Moneda</mat-label>
+              <input matInput name="servicioMoneda" [(ngModel)]="formularioServicio.moneda" maxlength="10" required>
+            </mat-form-field>
+            <mat-slide-toggle name="servicioVisiblePublico" [(ngModel)]="formularioServicio.visiblePublico">
+              Visible en el sitio público
+            </mat-slide-toggle>
+            <mat-slide-toggle name="servicioActivo" [(ngModel)]="formularioServicio.activo">
+              Servicio activo
+            </mat-slide-toggle>
+            <div class="form-block-title full-width">Anticipo</div>
+            <mat-slide-toggle name="servicioRequiereAnticipo" [(ngModel)]="formularioServicio.requiereAnticipo">
+              Requiere anticipo
+            </mat-slide-toggle>
+            @if (formularioServicio.requiereAnticipo) {
+              <mat-form-field appearance="outline">
+                <mat-label>Tipo de anticipo</mat-label>
+                <mat-select name="servicioAnticipoTipo" [(ngModel)]="formularioServicio.anticipoTipo">
+                  <mat-option value="FIJO">Fijo</mat-option>
+                  <mat-option value="PORCENTAJE">Porcentaje</mat-option>
+                </mat-select>
+              </mat-form-field>
+            }
+            @if (formularioServicio.requiereAnticipo) {
+              <mat-form-field appearance="outline">
+                <mat-label>Valor del anticipo</mat-label>
+                <input matInput type="number" min="0" step="0.01" name="servicioAnticipoValor" [(ngModel)]="formularioServicio.anticipoValor">
+              </mat-form-field>
+            }
+            <div class="helper-text full-width">
+              El servicio puede vivir en varias sucursales. La sucursal principal se usa como referencia inicial en panel y respuestas públicas.
+            </div>
+            <div class="helper-text full-width">
+              Si un servicio deja de ofrecerse, conviene desactivarlo en lugar de borrarlo para conservar el historial del tenant.
+            </div>
+            <div class="form-actions">
+              <button mat-flat-button color="primary" type="submit" [disabled]="guardandoServicio || !sucursales.length || !formularioServicio.sucursalIds.length">
+                {{ servicioEditandoId ? 'Actualizar servicio' : 'Crear servicio' }}
+              </button>
+              @if (servicioEditandoId) {
+                <button mat-stroked-button type="button" (click)="clearEdit.emit()">
+                  Limpiar formulario
+                </button>
+              }
+            </div>
+          </form>
+        </div>
+      }
     </mat-card>
 
-    <mat-card class="workspace-card list-card">
-      <div class="section-header">
+    <mat-card class="workspace-card list-card services-catalog-card">
+      <div class="section-header services-catalog-header">
         <div>
-          <div class="section-eyebrow">Portafolio</div>
-          <h3>Servicios disponibles</h3>
+          <div class="section-eyebrow">Vista previa editable</div>
+          <h3>Catálogo por grupos</h3>
         </div>
+        <div class="drag-hint">Arrastra para reordenar o mover entre subgrupos</div>
       </div>
 
-      <div class="entity-list">
-        <article class="entity-row" *ngFor="let servicio of servicios">
-          <div class="entity-main">
-            <div class="entity-meta">{{ servicio.sucursalNombre }}</div>
-            <div class="entity-title">{{ servicio.nombre }}</div>
-            <div class="entity-meta" *ngIf="servicio.descripcion">{{ servicio.descripcion }}</div>
-            <div class="service-metrics">
-              <span>{{ servicio.duracionMinutos }} min</span>
-              <span>Buffers {{ servicio.bufferAntesMinutos }} / {{ servicio.bufferDespuesMinutos }}</span>
-              <span>{{ servicio.precio | appMoney:(servicio.moneda || 'MXN'):0:0 }}</span>
+      @if (!gruposServicio.length) {
+        <div class="services-empty-state">
+          <strong>Todavía no hay grupos registrados.</strong>
+          <span>Crea un grupo para empezar la estructura del catálogo.</span>
+        </div>
+      }
+
+      <div
+        class="services-group-list"
+        cdkDropList
+        [cdkDropListData]="gruposVista()"
+        (cdkDropListDropped)="onGroupsDrop($event)">
+        @for (grupo of gruposVista(); track trackById($index, grupo)) {
+          <article
+            class="services-group-card"
+            cdkDrag>
+            <div class="services-group-head">
+              <button class="drag-handle" type="button" cdkDragHandle aria-label="Arrastrar grupo">↕</button>
+              <div class="services-group-main">
+                <div class="services-level-label">Grupo · Categoría</div>
+                <div class="services-title-row">
+                  <h4>{{ grupo.nombre }}</h4>
+                  <span class="status-pill" [class.is-active]="grupo.activo">{{ grupo.activo ? 'Activo' : 'Inactivo' }}</span>
+                </div>
+                @if (grupo.descripcion) {
+                  <p>{{ grupo.descripcion }}</p>
+                }
+                <div class="service-metrics">
+                  <span>Orden {{ grupo.ordenPublico }}</span>
+                  <span>{{ grupo.subgrupos.length }} subgrupo(s)</span>
+                  <span>{{ grupo.serviciosSinSubgrupo.length }} servicio(s) sin subgrupo</span>
+                  @if (grupo.slug) {
+                    <span>/{{ grupo.slug }}</span>
+                  }
+                </div>
+              </div>
+              <div class="services-actions">
+                <button
+                  mat-button
+                  type="button"
+                  (click)="toggleGroupCollapse(grupo.id)"
+                  [attr.aria-expanded]="!isGroupCollapsed(grupo.id)"
+                  matTooltip="Contrae o expande los subgrupos y servicios de este grupo.">
+                  {{ isGroupCollapsed(grupo.id) ? 'Expandir' : 'Contraer' }}
+                </button>
+                <button mat-stroked-button type="button" (click)="editGroupFromCatalog(grupo)" matTooltip="Abre el formulario de grupo con estos datos.">Editar</button>
+                <button mat-button type="button" (click)="toggleGroupStatus.emit(grupo)">
+                  {{ grupo.activo ? 'Desactivar' : 'Reactivar' }}
+                </button>
+              </div>
             </div>
-          </div>
-          <div class="entity-side">
-            <span class="status-pill" [class.is-active]="servicio.activo">{{ servicio.activo ? 'Activo' : 'Inactivo' }}</span>
-            <button mat-stroked-button type="button" (click)="editService.emit(servicio)">Editar</button>
-          </div>
-        </article>
+            @if (!isGroupCollapsed(grupo.id)) {
+              <div
+                class="services-subgroup-list"
+                cdkDropList
+                [id]="subgroupDropListId(grupo.id)"
+                [cdkDropListData]="grupo.subgrupos"
+                [cdkDropListConnectedTo]="subgroupDropListIds"
+                (cdkDropListDropped)="onSubgroupsDrop($event, grupo.id)">
+                @for (subgrupo of grupo.subgrupos; track trackById($index, subgrupo)) {
+                  <article
+                    class="services-subgroup-card"
+                    cdkDrag>
+                    <div class="services-subgroup-head">
+                      <button class="drag-handle drag-handle-small" type="button" cdkDragHandle aria-label="Arrastrar subgrupo">↕</button>
+                      <div class="services-subgroup-main">
+                        <div class="services-level-label">Subgrupo · Subcategoría</div>
+                        <div class="services-title-row">
+                          <h5>{{ subgrupo.nombre }}</h5>
+                          <span class="status-pill" [class.is-active]="subgrupo.activo">{{ subgrupo.activo ? 'Activo' : 'Inactivo' }}</span>
+                        </div>
+                        @if (subgrupo.descripcion) {
+                          <p>{{ subgrupo.descripcion }}</p>
+                        }
+                        <div class="service-metrics">
+                          <span>Orden {{ subgrupo.ordenPublico }}</span>
+                          <span>{{ subgrupo.servicios.length }} servicio(s)</span>
+                        </div>
+                      </div>
+                      <div class="services-actions">
+                        <button
+                          mat-button
+                          type="button"
+                          (click)="toggleSubgroupCollapse(subgrupo.id)"
+                          [attr.aria-expanded]="!isSubgroupCollapsed(subgrupo.id)"
+                          matTooltip="Contrae o expande los servicios de este subgrupo.">
+                          {{ isSubgroupCollapsed(subgrupo.id) ? 'Expandir' : 'Contraer' }}
+                        </button>
+                        <button mat-stroked-button type="button" (click)="editSubgroupFromCatalog(subgrupo)" matTooltip="Abre el formulario de subgrupo con estos datos.">Editar</button>
+                        <button mat-button type="button" (click)="toggleSubgroupStatus.emit(subgrupo)">
+                          {{ subgrupo.activo ? 'Desactivar' : 'Reactivar' }}
+                        </button>
+                      </div>
+                    </div>
+                    @if (!isSubgroupCollapsed(subgrupo.id)) {
+                      <div
+                        class="services-service-list"
+                        cdkDropList
+                        [id]="serviceDropListId(grupo.id, subgrupo.id)"
+                        [cdkDropListData]="subgrupo.servicios"
+                        [cdkDropListConnectedTo]="serviceDropListIds"
+                        (cdkDropListDropped)="onServicesDrop($event, grupo.id, subgrupo.id)">
+                        @for (servicio of subgrupo.servicios; track trackById($index, servicio)) {
+                          <article class="service-item" cdkDrag>
+                            <button class="drag-handle drag-handle-service" type="button" cdkDragHandle aria-label="Arrastrar servicio">↕</button>
+                            <div class="service-item-main">
+                              <div class="services-level-label">Servicio</div>
+                              <div class="services-title-row">
+                                <h6>{{ servicio.nombre }}</h6>
+                                <span class="status-pill" [class.is-active]="servicio.activo">{{ servicio.activo ? 'Activo' : 'Inactivo' }}</span>
+                              </div>
+                              @if (servicio.descripcion) {
+                                <p>{{ servicio.descripcion }}</p>
+                              }
+                              <div class="service-metrics">
+                                <span>{{ servicio.duracionMinutos }} min</span>
+                                <span>{{ servicio.precio | appMoney:(servicio.moneda || 'MXN'):0:0 }}</span>
+                                <span>{{ descripcionSucursales(servicio) }}</span>
+                                @if (servicio.requiereAnticipo) {
+                                  <span>Anticipo {{ servicio.anticipoTipo || 'FIJO' }}</span>
+                                }
+                              </div>
+                            </div>
+                            <div class="services-actions service-item-actions">
+                              <button mat-stroked-button type="button" (click)="editServiceFromCatalog(servicio)" matTooltip="Abre el formulario de servicio con estos datos.">Editar</button>
+                              <button mat-button type="button" (click)="toggleServiceStatus.emit(servicio)">
+                                {{ servicio.activo ? 'Eliminar del catálogo' : 'Reactivar' }}
+                              </button>
+                            </div>
+                          </article>
+                        }
+                        @if (!subgrupo.servicios.length) {
+                          <div class="services-drop-empty">
+                            Suelta aquí los servicios de este subgrupo.
+                          </div>
+                        }
+                      </div>
+                    }
+                  </article>
+                }
+                @if (!grupo.subgrupos.length) {
+                  <div class="services-drop-empty">
+                    Suelta aquí subgrupos para esta categoría.
+                  </div>
+                }
+              </div>
+              <div class="services-ungrouped-block">
+                <div class="services-ungrouped-title">
+                  <span>Servicios sin subgrupo</span>
+                  <small>{{ grupo.serviciosSinSubgrupo.length }} elemento(s)</small>
+                </div>
+                <div
+                  class="services-service-list"
+                  cdkDropList
+                  [id]="serviceDropListId(grupo.id, null)"
+                  [cdkDropListData]="grupo.serviciosSinSubgrupo"
+                  [cdkDropListConnectedTo]="serviceDropListIds"
+                  (cdkDropListDropped)="onServicesDrop($event, grupo.id, null)">
+                  @for (servicio of grupo.serviciosSinSubgrupo; track trackById($index, servicio)) {
+                    <article class="service-item" cdkDrag>
+                      <button class="drag-handle drag-handle-service" type="button" cdkDragHandle aria-label="Arrastrar servicio">↕</button>
+                      <div class="service-item-main">
+                        <div class="services-level-label">Servicio</div>
+                        <div class="services-title-row">
+                          <h6>{{ servicio.nombre }}</h6>
+                          <span class="status-pill" [class.is-active]="servicio.activo">{{ servicio.activo ? 'Activo' : 'Inactivo' }}</span>
+                        </div>
+                        <div class="service-metrics">
+                          <span>{{ servicio.duracionMinutos }} min</span>
+                          <span>{{ servicio.precio | appMoney:(servicio.moneda || 'MXN'):0:0 }}</span>
+                          <span>{{ descripcionSucursales(servicio) }}</span>
+                        </div>
+                      </div>
+                      <div class="services-actions service-item-actions">
+                        <button mat-stroked-button type="button" (click)="editServiceFromCatalog(servicio)" matTooltip="Abre el formulario de servicio con estos datos.">Editar</button>
+                        <button mat-button type="button" (click)="toggleServiceStatus.emit(servicio)">
+                          {{ servicio.activo ? 'Eliminar del catálogo' : 'Reactivar' }}
+                        </button>
+                      </div>
+                    </article>
+                  }
+                  @if (!grupo.serviciosSinSubgrupo.length) {
+                    <div class="services-drop-empty">
+                      Suelta aquí servicios que no necesitan subgrupo.
+                    </div>
+                  }
+                </div>
+              </div>
+            }
+          </article>
+        }
       </div>
+
+      @if (serviciosSinGrupo.length) {
+        <div class="services-orphan-card">
+          <div>
+            <div class="section-eyebrow">Pendientes de organizar</div>
+            <h4>Servicios sin grupo</h4>
+            <p>Asigna un grupo desde el formulario del servicio para integrarlos al catálogo arrastrable.</p>
+          </div>
+          @for (servicio of serviciosSinGrupo; track trackById($index, servicio)) {
+            <article class="service-item service-item-static">
+              <div class="service-item-main">
+                <h6>{{ servicio.nombre }}</h6>
+                <div class="service-metrics">
+                  <span>{{ servicio.duracionMinutos }} min</span>
+                  <span>{{ servicio.precio | appMoney:(servicio.moneda || 'MXN'):0:0 }}</span>
+                </div>
+              </div>
+              <div class="services-actions service-item-actions">
+                <button mat-stroked-button type="button" (click)="editServiceFromCatalog(servicio)" matTooltip="Abre el formulario de servicio con estos datos.">Editar</button>
+              </div>
+            </article>
+          }
+        </div>
+      }
     </mat-card>
   </div>
 </section>

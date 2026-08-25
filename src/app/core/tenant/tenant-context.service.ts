@@ -16,8 +16,13 @@ export class TenantContextService {
   readonly descripcionCorta = computed(() =>
     this.tenant()?.descripcionCorta ?? 'Software multitenant para servicios, agenda y operación.'
   );
+  readonly colorPrimario = computed(() => this.tenant()?.colorPrimario ?? '#2563eb');
+  readonly colorSecundario = computed(() => this.tenant()?.colorSecundario ?? '#0f766e');
+  readonly fuenteTitulos = computed(() => this.tenant()?.fuenteTitulos ?? 'JAKARTA');
+  readonly fuenteCuerpo = computed(() => this.tenant()?.fuenteCuerpo ?? 'INTER');
   readonly heroTitulo = computed(() => this.tenant()?.heroTitulo ?? this.nombreComercial());
   readonly heroSubtitulo = computed(() => this.tenant()?.heroSubtitulo ?? this.descripcionCorta());
+  readonly heroImagenUrl = computed(() => this.tenant()?.heroImagenUrl ?? '/tenant-hero-demo.png');
   readonly logoUrl = computed(() => this.tenant()?.logoUrl ?? null);
   readonly whatsapp = computed(() => this.tenant()?.whatsapp ?? null);
   readonly telefono = computed(() => this.tenant()?.telefono ?? this.tenant()?.whatsapp ?? '');

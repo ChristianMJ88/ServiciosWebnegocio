@@ -6,15 +6,7 @@
           <div class="card-body booking-hero__body p-4 p-lg-4">
             <div class="booking-hero__intro">
               <span class="badge rounded-pill booking-hero__badge mb-3">Agenda en línea</span>
-
-              <div class="d-flex align-items-center gap-3 mb-3">
-                <img [src]="tenantContext.logoUrl() || '/fluora-mark.svg'" [alt]="'Logo ' + tenantContext.nombreComercial()" class="booking-hero__logo">
-                <div>
-                  <span class="booking-hero__brand d-block">{{ tenantContext.nombreComercial() }}</span>
-                  <p class="mb-0 booking-hero__copy">Reserva clara, rápida y con apoyo cuando lo necesites.</p>
-                </div>
-              </div>
-
+              <span class="booking-hero__brand d-block mb-2">{{ tenantContext.nombreComercial() }}</span>
               <h1 class="display-5 fw-bold booking-hero__title mb-3">Agenda tu cita con claridad y sin vueltas.</h1>
               <p class="booking-hero__lead mb-0">
                 Elige el servicio, la fecha y el horario que mejor te acomoden. El proceso está pensado para sentirse ligero, claro y confiable.
@@ -43,32 +35,34 @@
                       <strong>{{ selectedBranch?.nombre || 'Por elegir' }}</strong>
                     </div>
                     <div>
-                      <span>Servicio</span>
-                      <strong>{{ selectedService?.nombre || 'Por elegir' }}</strong>
+                      <span>Servicios</span>
+                      <strong>{{ selectedServices().length ? (selectedServices().length + ' seleccionados') : 'Por elegir' }}</strong>
                     </div>
                     <div>
                       <span>Fecha</span>
                       <strong>{{ selectedDate() ? (selectedDate() | date:'dd MMM':'':'es') : 'Por elegir' }}</strong>
                     </div>
                     <div>
-                      <span>Hora</span>
+                      <span>Inicio</span>
                       <strong>{{ selectedSlot?.hora || 'Por elegir' }}</strong>
                     </div>
                   </div>
                 </div>
 
                 <div class="booking-flow">
-                  <div class="mb-3" *ngIf="errorMessage && !submitted()">
-                    <div class="alert booking-alert booking-alert-danger" role="alert">
-                      <div class="d-flex align-items-center">
-                        <i class="bi bi-exclamation-octagon-fill me-2 booking-warning-icon"></i>
-                        <strong>No pudimos completar una parte de la carga.</strong>
-                      </div>
-                      <div class="mt-2 small opacity-75">
-                        {{ errorMessage }}
+                  @if (errorMessage && !submitted()) {
+                    <div class="mb-3">
+                      <div class="alert booking-alert booking-alert-danger" role="alert">
+                        <div class="d-flex align-items-center">
+                          <i class="bi bi-exclamation-octagon-fill me-2 booking-warning-icon"></i>
+                          <strong>No pudimos completar una parte de la carga.</strong>
+                        </div>
+                        <div class="mt-2 small opacity-75">
+                          {{ errorMessage }}
+                        </div>
                       </div>
                     </div>
-                  </div>
+                  }
 
                   <section class="booking-step-panel">
                     <div class="booking-step-header">
@@ -77,28 +71,31 @@
                         <h2 class="booking-step-title">{{ branches().length === 1 ? 'Servicio' : 'Servicio y sede' }}</h2>
                         <p class="booking-step-description mb-0">
                           {{ branches().length === 1
-                            ? 'Elige el servicio que deseas reservar.'
-                            : 'Elige primero la sede y el servicio que deseas reservar.' }}
+                          ? 'Elige el servicio que deseas reservar.'
+                          : 'Elige primero la sede y el servicio que deseas reservar.' }}
                         </p>
                       </div>
                     </div>
 
                     <div class="booking-step-content">
-                      <div class="booking-catalog-grid">
-                        <div class="booking-field" *ngIf="branches().length !== 1; else singleBranchDisplay">
-                          <label class="form-label fw-semibold small booking-field-label">Sucursal</label>
-                          <select
-                            class="form-select booking-control"
-                            [value]="bookingForm.value.branchId ?? ''"
-                            [disabled]="loadingCatalog()"
-                            (change)="onBranchChange($any($event.target).value)">
-                            <option value="">Selecciona una sucursal</option>
-                            <option *ngFor="let branch of branches()" [value]="branch.id">
-                              {{ branch.nombre }}
-                            </option>
-                          </select>
-                        </div>
-                        <ng-template #singleBranchDisplay>
+                      <div class="booking-catalog-grid booking-catalog-grid--compact">
+                        @if (branches().length !== 1) {
+                          <div class="booking-field">
+                            <label class="form-label fw-semibold small booking-field-label">Sucursal</label>
+                            <select
+                              class="form-select booking-control"
+                              [value]="bookingForm.value.branchId ?? ''"
+                              [disabled]="loadingCatalog()"
+                              (change)="onBranchChange($any($event.target).value)">
+                              <option value="">Selecciona una sucursal</option>
+                              @for (branch of branches(); track branch) {
+                                <option [value]="branch.id">
+                                  {{ branch.nombre }}
+                                </option>
+                              }
+                            </select>
+                          </div>
+                        } @else {
                           <div class="booking-field">
                             <label class="form-label fw-semibold small booking-field-label">Sucursal</label>
                             <div class="booking-static-selection">
@@ -106,9 +103,9 @@
                               <span>Tu cita se atenderá en esta sede.</span>
                             </div>
                           </div>
-                        </ng-template>
+                        }
 
-                        <div class="booking-field">
+                        <div class="booking-field booking-field--wide">
                           <label class="form-label fw-semibold small booking-field-label">Servicio</label>
                           <select
                             class="form-select booking-control"
@@ -116,48 +113,89 @@
                             [disabled]="!bookingForm.value.branchId || loadingCatalog()"
                             (change)="onServiceChange($any($event.target).value)">
                             <option value="">Selecciona un servicio</option>
-                            <option *ngFor="let service of services()" [value]="service.id">
-                              {{ service.nombre }} - {{ service.precio | currency:(service.moneda || 'MXN'):'symbol-narrow':'1.0-0':'es-MX' }}
-                            </option>
+                            @for (service of filteredServices(); track service) {
+                              <option [value]="service.id">
+                                {{ service.nombre }} - {{ service.precio | currency:(service.moneda || 'MXN'):'symbol-narrow':'1.0-0':'es-MX' }}
+                              </option>
+                            }
                           </select>
                         </div>
                       </div>
 
-                      <div class="booking-inline-note" *ngIf="loadingCatalog()">
-                        <i class="bi bi-arrow-repeat"></i>
-                        <span>Cargando opciones disponibles...</span>
+                      <div class="d-flex flex-wrap gap-2 mt-3">
+                        <button type="button" class="btn btn-primary" [disabled]="!selectedService" (click)="addSelectedService()">
+                          Agregar servicio
+                        </button>
+                        @if (selectedServices().length) {
+                          <span class="booking-inline-note m-0">
+                            {{ selectedServices().length }} servicio{{ selectedServices().length === 1 ? '' : 's' }} listo{{ selectedServices().length === 1 ? '' : 's' }} para combinar
+                          </span>
+                        }
                       </div>
 
-                      <div class="booking-selection-summary" *ngIf="selectedBranch || selectedService">
-                        <div class="booking-selection-chip" *ngIf="selectedBranch">
-                          <span class="booking-selection-chip__label">Sucursal</span>
-                          <strong>{{ selectedBranch.nombre }}</strong>
+                      @if (loadingCatalog()) {
+                        <div class="booking-inline-note">
+                          <i class="bi bi-arrow-repeat"></i>
+                          <span>Cargando opciones disponibles...</span>
                         </div>
-                        <div class="booking-selection-chip" *ngIf="selectedService">
-                          <span class="booking-selection-chip__label">Servicio</span>
-                          <strong>{{ selectedService.nombre }}</strong>
+                      }
+
+                      @if (selectedBranch || selectedServices().length) {
+                        <div class="booking-selection-board">
+                          @if (selectedBranch) {
+                            <div class="booking-selection-branch">
+                              <span class="booking-selection-chip__label">Sucursal seleccionada</span>
+                              <strong>{{ selectedBranch.nombre }}</strong>
+                              <span>Todos tus servicios se reservarán en esta sede.</span>
+                            </div>
+                          }
+                          @if (selectedServices().length) {
+                            <div class="booking-selection-services">
+                              <div class="booking-selection-services__header">
+                                <div>
+                                  <span class="booking-selection-chip__label">Servicios seleccionados</span>
+                                  <strong>{{ selectedServices().length }} en tu itinerario</strong>
+                                </div>
+                                <span class="booking-selection-services__price">
+                                  {{ selectedServicesPriceTotal() | currency:'MXN':'symbol-narrow':'1.0-0':'es-MX' }}
+                                </span>
+                              </div>
+                              <div class="booking-selection-services__grid">
+                                @for (service of selectedServices(); track service) {
+                                  <article class="booking-selection-chip booking-selection-chip--service">
+                                    <strong>{{ service.nombre }}</strong>
+                                    <span>{{ service.duracionMinutos }} min</span>
+                                    <div class="booking-selection-chip__footer">
+                                      <span>{{ service.precio | currency:(service.moneda || 'MXN'):'symbol-narrow':'1.0-0':'es-MX' }}</span>
+                                      <button type="button" class="booking-chip-remove" (click)="removeSelectedService(service.id)">Quitar</button>
+                                    </div>
+                                  </article>
+                                }
+                              </div>
+                            </div>
+                          }
                         </div>
-                      </div>
+                      }
                     </div>
                   </section>
 
-                  <section class="booking-step-panel" *ngIf="hasCatalogSelection()">
-                    <div class="booking-step-header">
-                      <div class="step-badge shadow-lg">2</div>
-                      <div>
-                        <h2 class="booking-step-title">Fecha</h2>
-                        <p class="booking-step-description mb-0">
-                          Elige el día que mejor te funcione.
-                        </p>
+                  @if (hasCatalogSelection()) {
+                    <section class="booking-step-panel">
+                      <div class="booking-step-header">
+                        <div class="step-badge shadow-lg">2</div>
+                        <div>
+                          <h2 class="booking-step-title">Fecha</h2>
+                          <p class="booking-step-description mb-0">
+                            Elige el día que mejor te funcione.
+                          </p>
+                        </div>
                       </div>
-                    </div>
-
-                    <div class="booking-step-content">
-                      @defer (when !isMobile()) {
+                      <div class="booking-step-content">
+                        @defer (when !isMobile()) {
                         <div class="calendar-container glass-effect d-none d-md-block">
                           <app-booking-calendar [options]="calendarOptions"></app-booking-calendar>
                         </div>
-                      } @placeholder {
+                        } @placeholder {
                         <div class="calendar-container glass-effect d-none d-md-block booking-calendar-placeholder">
                           <div class="booking-inline-note mb-0">
                             <i class="bi bi-calendar3"></i>
@@ -165,7 +203,6 @@
                           </div>
                         </div>
                       }
-
                       <div class="booking-mobile-calendar d-md-none">
                         <div class="mobile-week-header">
                           <button
@@ -176,9 +213,7 @@
                             (click)="moveMobileWeek(-1)">
                             <i class="bi bi-chevron-left"></i>
                           </button>
-
                           <div class="mobile-week-title">{{ mobileMonthLabel() }}</div>
-
                           <button
                             type="button"
                             class="mobile-week-nav"
@@ -188,96 +223,266 @@
                             <i class="bi bi-chevron-right"></i>
                           </button>
                         </div>
-
                         <div class="mobile-week-strip">
-                          <button
-                            type="button"
-                            class="mobile-day-card"
-                            *ngFor="let day of mobileWeekDays()"
-                            [class.is-selected]="day.seleccionada"
-                            [class.is-today]="day.esHoy"
-                            [class.is-disabled]="!day.disponible"
-                            [disabled]="!day.disponible || !hasCatalogSelection()"
-                            (click)="selectMobileDay(day.fechaIso)">
-                            <span class="mobile-day-label">{{ day.diaCorto }}</span>
-                            <span class="mobile-day-number">{{ day.diaNumero }}</span>
-                            <span class="mobile-day-indicator"></span>
-                          </button>
+                          @for (day of mobileWeekDays(); track day) {
+                            <button
+                              type="button"
+                              class="mobile-day-card"
+                              [class.is-selected]="day.seleccionada"
+                              [class.is-today]="day.esHoy"
+                              [class.is-disabled]="!day.disponible"
+                              [disabled]="!day.disponible || !hasCatalogSelection()"
+                              (click)="selectMobileDay(day.fechaIso)">
+                              <span class="mobile-day-label">{{ day.diaCorto }}</span>
+                              <span class="mobile-day-number">{{ day.diaNumero }}</span>
+                              <span class="mobile-day-indicator"></span>
+                            </button>
+                          }
                         </div>
                       </div>
-
-                      <div class="mt-3 p-3 bg-white bg-opacity-10 rounded-4 booking-date-hint" *ngIf="isMobile() && selectedDate()">
-                        <span class="small booking-meta-label d-block">Disponibilidad para:</span>
-                        <strong class="booking-accent">{{ selectedDate() | date:'fullDate':'':'es' }}</strong>
-                      </div>
-
+                      @if (isMobile() && selectedDate()) {
+                        <div class="mt-3 p-3 bg-white bg-opacity-10 rounded-4 booking-date-hint">
+                          <span class="small booking-meta-label d-block">Disponibilidad para:</span>
+                          <strong class="booking-accent">{{ selectedDate() | date:'fullDate':'':'es' }}</strong>
+                        </div>
+                      }
                       <div class="booking-inline-note">
                         <i class="bi bi-info-circle"></i>
-                        <span *ngIf="isMobile(); else desktopDateNote">
-                          Desliza por semanas y toca un día para consultar horarios sin abrir un calendario completo.
-                        </span>
-                        <ng-template #desktopDateNote>
+                        @if (isMobile()) {
+                          <span>
+                            Desliza por semanas y toca un día para consultar horarios sin abrir un calendario completo.
+                          </span>
+                        } @else {
                           Selecciona un día en el calendario para consultar los horarios disponibles.
-                        </ng-template>
+                        }
                       </div>
                     </div>
                   </section>
+                }
 
-                  <section class="booking-step-panel" *ngIf="selectedDate()">
+                @if (selectedDate()) {
+                  <section class="booking-step-panel">
                     <div class="booking-step-header">
                       <div class="step-badge shadow-lg">3</div>
                       <div>
                         <h2 class="booking-step-title">Horario</h2>
                         <p class="booking-step-description mb-0">
-                          Selecciona el horario disponible que prefieras.
+                          Elige tu hora de inicio y nosotros acomodamos el itinerario sin choques.
                         </p>
                       </div>
                     </div>
-
                     <div class="booking-step-content">
                       <div #hoursSection class="animate__animated animate__fadeIn">
+                        @if (hasMultipleServices()) {
+                          <div class="booking-mode-switch">
+                            <button
+                              type="button"
+                              class="booking-mode-switch__option"
+                              [class.is-active]="schedulingMode() === 'consecutive'"
+                              (click)="setSchedulingMode('consecutive')">
+                              Continuo recomendado
+                            </button>
+                            <button
+                              type="button"
+                              class="booking-mode-switch__option"
+                              [class.is-active]="schedulingMode() === 'separated'"
+                              (click)="setSchedulingMode('separated')">
+                              Horarios separados
+                            </button>
+                          </div>
+                        }
                         <div class="booking-slot-header">
                           <div>
                             <span class="booking-slot-label">Fecha seleccionada</span>
                             <strong class="booking-accent">{{ selectedDate() | date:'fullDate':'':'es' }}</strong>
+                            @if (schedulingMode() === 'consecutive') {
+                              <p class="booking-slot-copy mb-0">
+                                Te mostramos horas de inicio y armamos el itinerario consecutivo automáticamente.
+                              </p>
+                            }
+                            @if (schedulingMode() === 'separated') {
+                              <p class="booking-slot-copy mb-0">
+                                Elige un horario para cada servicio. Cada siguiente paso sólo muestra opciones libres y sin choques.
+                              </p>
+                            }
                           </div>
-                          <span class="booking-slot-badge">Paso rápido</span>
+                          @if (schedulingMode() === 'consecutive') {
+                            <span class="booking-slot-badge">
+                              {{ availableStartOptions().length }} horarios
+                            </span>
+                          }
+                          @if (schedulingMode() === 'separated' && separatedCurrentService(); as currentService) {
+                            <span class="booking-slot-badge">
+                              {{ currentService.nombre }}
+                            </span>
+                          }
                         </div>
-
                         <div class="mb-0">
-                          <div *ngIf="loadingSlots()" class="slots-grid slots-grid-loading">
-                            <div *ngFor="let i of [1,2,3,4,5,6,7,8]" class="skeleton-hour"></div>
-                            <div class="text-center w-100 py-3 mt-2 rounded-3 slots-grid-status">
-                              <div class="spinner-grow spinner-grow-sm booking-accent me-2"></div>
-                              <span class="small booking-empty-copy fw-medium">Buscando horarios disponibles...</span>
+                          @if (loadingSlots()) {
+                            <div class="slots-grid slots-grid-loading">
+                              @for (i of [1,2,3,4,5,6,7,8]; track i) {
+                                <div class="skeleton-hour"></div>
+                              }
+                              <div class="text-center w-100 py-3 mt-2 rounded-3 slots-grid-status">
+                                <div class="spinner-grow spinner-grow-sm booking-accent me-2"></div>
+                                <span class="small booking-empty-copy fw-medium">Buscando horarios disponibles...</span>
+                              </div>
                             </div>
-                          </div>
-
-                          <div *ngIf="!loadingSlots()" class="animate__animated animate__fadeIn">
-                            <div class="slots-grid">
-                              <button
-                                *ngFor="let slot of availableSlots()"
-                                type="button"
-                                class="btn btn-time animate__animated animate__zoomIn"
-                                [class.active]="selectedHour() === slot.inicio"
-                                (click)="selectHour(slot)">
-                                <i class="bi bi-clock me-1 small"></i> {{ slot.hora }}
-                              </button>
+                          }
+                          @if (!loadingSlots()) {
+                            <div class="animate__animated animate__fadeIn">
+                              @if (schedulingMode() === 'consecutive') {
+                                @if (availableStartOptions().length) {
+                                  <div class="time-option-grid">
+                                    @for (option of availableStartOptions(); track option) {
+                                      <button
+                                        type="button"
+                                        class="time-option-card"
+                                        [class.is-active]="selectedItinerary()?.id === option.itinerary.id"
+                                        (click)="selectStartOption(option)">
+                                        <strong>{{ option.hora }}</strong>
+                                        <span>Termina {{ option.finHora }}</span>
+                                      </button>
+                                    }
+                                  </div>
+                                } @else {
+                                  <div class="alert booking-empty-warning w-100 py-3 mt-3 small shadow-sm animate__animated animate__headShake">
+                                    <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                                    No hay horarios disponibles para este día. Prueba con otra fecha.
+                                  </div>
+                                }
+                                @if (availableStartOptions().length) {
+                                  <div class="booking-inline-note booking-inline-note--soft mt-3">
+                                    <i class="bi bi-magic"></i>
+                                    <span>Después de elegir la hora de inicio te mostraremos el itinerario completo en el siguiente paso.</span>
+                                  </div>
+                                }
+                              } @else {
+                                @if (hasMultipleServices()) {
+                                  <div class="booking-separate-flow">
+                                    <div class="booking-separate-flow__progress">
+                                      @for (service of selectedServices(); track service; let i = $index) {
+                                        <article class="booking-separate-flow__service">
+                                          <div class="booking-separate-flow__service-main">
+                                            <span class="booking-separate-flow__index">{{ i + 1 }}</span>
+                                            <div>
+                                              <span class="booking-selection-chip__label">Servicio {{ i + 1 }}</span>
+                                              <strong>{{ service.nombre }}</strong>
+                                              <small>{{ service.duracionMinutos }} min</small>
+                                            </div>
+                                          </div>
+                                          @if (selectedSeparatedSlot(service.id); as slot) {
+                                            <div class="booking-separate-flow__state">
+                                              <strong>{{ slot.hora }}</strong>
+                                              <button type="button" class="booking-chip-remove" (click)="resetSeparatedFrom(i)">Cambiar</button>
+                                            </div>
+                                          } @else {
+                                            <span class="booking-separate-flow__pending" [class.is-current]="separatedCurrentService()?.id === service.id">
+                                              {{ separatedCurrentService()?.id === service.id ? 'Elige horario' : 'Pendiente' }}
+                                            </span>
+                                          }
+                                        </article>
+                                      }
+                                    </div>
+                                    @if (separatedCurrentService(); as currentService) {
+                                      <div class="booking-separate-flow__chooser">
+                                        <div class="booking-separate-flow__heading">
+                                          <span class="booking-selection-chip__label">Siguiente paso</span>
+                                          <h3>{{ currentService.nombre }}</h3>
+                                          <p class="mb-0">Estos horarios ya respetan la duración del servicio anterior, la sucursal y la disponibilidad del staff.</p>
+                                        </div>
+                                        @if (separatedCurrentOptions().length) {
+                                          <div class="time-option-grid">
+                                            @for (option of separatedCurrentOptions(); track option) {
+                                              <button
+                                                type="button"
+                                                class="time-option-card"
+                                                (click)="selectSeparatedSlot(currentService.id, option.slot)">
+                                                <strong>{{ option.slot.hora }}</strong>
+                                                <span>{{ option.staff?.nombreMostrar || 'Staff disponible' }}</span>
+                                              </button>
+                                            }
+                                          </div>
+                                        } @else {
+                                          <div class="alert booking-empty-warning w-100 py-3 mt-3 small shadow-sm">
+                                            <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                                            No hay más horarios válidos para este servicio. Cambia la hora anterior o elige otra fecha.
+                                          </div>
+                                        }
+                                      </div>
+                                    }
+                                  </div>
+                                } @else {
+                                  @if (availableStartOptions().length) {
+                                    <div class="time-option-grid">
+                                      @for (option of availableStartOptions(); track option) {
+                                        <button
+                                          type="button"
+                                          class="time-option-card"
+                                          [class.is-active]="selectedItinerary()?.id === option.itinerary.id"
+                                          (click)="selectStartOption(option)">
+                                          <strong>{{ option.hora }}</strong>
+                                          <span>{{ option.itinerary.items[0].staff?.nombreMostrar || 'Staff disponible' }}</span>
+                                        </button>
+                                      }
+                                    </div>
+                                  } @else {
+                                    <div class="alert booking-empty-warning w-100 py-3 mt-3 small shadow-sm animate__animated animate__headShake">
+                                      <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                                      No hay horarios disponibles para este día. Prueba con otra fecha.
+                                    </div>
+                                  }
+                                }
+                              }
+                              @if (selectedItinerary(); as itinerary) {
+                                <div class="itinerary-grid booking-itinerary-grid-preview">
+                                  <button
+                                    type="button"
+                                    class="itinerary-card itinerary-card--preview is-active"
+                                    (click)="selectItinerary(itinerary)">
+                                    <div class="itinerary-card__top">
+                                      <div>
+                                        <strong>{{ itinerary.items[0].slot.hora }}</strong>
+                                        <small>Inicio</small>
+                                      </div>
+                                      <div class="text-end">
+                                        <span>Termina {{ itineraryEndHour(itinerary) }}</span>
+                                        <small>{{ itinerary.totalMinutos }} min</small>
+                                      </div>
+                                    </div>
+                                    <div class="itinerary-card__meta">
+                                      <span>{{ itinerary.items.length }} servicios</span>
+                                      <span>{{ itineraryStaffSummary(itinerary) }}</span>
+                                    </div>
+                                    <div class="itinerary-card__services">
+                                      @for (serviceName of itineraryServiceNames(itinerary); track serviceName) {
+                                        <span class="itinerary-card__service-pill">
+                                          {{ serviceName }}
+                                        </span>
+                                      }
+                                    </div>
+                                    <div class="itinerary-card__footer">
+                                      <span>{{ itinerary.totalPrecio | currency:'MXN':'symbol-narrow':'1.0-0':'es-MX' }}</span>
+                                      @if (itinerary.usaMultiplesStaff) {
+                                        <small>Atención combinada</small>
+                                      }
+                                      @if (!itinerary.usaMultiplesStaff) {
+                                        <small>Atención continua</small>
+                                      }
+                                    </div>
+                                  </button>
+                                </div>
+                              }
                             </div>
-
-                            <div
-                              *ngIf="availableSlots().length === 0"
-                              class="alert booking-empty-warning w-100 py-3 mt-3 small shadow-sm animate__animated animate__headShake">
-                              <i class="bi bi-exclamation-triangle-fill me-2"></i>
-                              No hay horarios disponibles para este día. Prueba con otra fecha.
-                            </div>
-                          </div>
+                          }
                         </div>
                       </div>
                     </div>
                   </section>
+                }
 
-                  <section class="booking-step-panel" *ngIf="selectedHour()">
+                @if (selectedItinerary()) {
+                  <section class="booking-step-panel">
                     <div class="booking-step-header">
                       <div class="step-badge shadow-lg">4</div>
                       <div>
@@ -287,136 +492,192 @@
                         </p>
                       </div>
                     </div>
-
                     <div class="booking-step-content">
                       <form [formGroup]="bookingForm" (ngSubmit)="onSubmit()" class="needs-validation animate__animated animate__fadeInUp" #dataSection>
                         <div class="booking-summary p-3 rounded-4 mb-3">
                           <div class="booking-summary-grid">
-                            <div>
+                            <div class="booking-summary-grid__item">
                               <div class="small booking-meta-label">Sucursal</div>
                               <div class="booking-meta-value fw-semibold">{{ selectedBranch?.nombre }}</div>
                             </div>
-                            <div>
-                              <div class="small booking-meta-label">Servicio</div>
-                              <div class="booking-meta-value fw-semibold">{{ selectedService?.nombre }}</div>
+                            <div class="booking-summary-grid__item">
+                              <div class="small booking-meta-label">Servicios</div>
+                              <div class="booking-meta-value fw-semibold">{{ selectedServices().length }}</div>
                             </div>
-                            <div>
+                            <div class="booking-summary-grid__item">
                               <div class="small booking-meta-label">Fecha</div>
                               <div class="booking-meta-value fw-semibold">{{ selectedDate() | date:'fullDate':'':'es' }}</div>
                             </div>
-                            <div>
-                              <div class="small booking-meta-label">Horario</div>
+                            <div class="booking-summary-grid__item">
+                              <div class="small booking-meta-label">Inicio</div>
                               <div class="booking-meta-value fw-semibold">{{ selectedSlot?.hora }}</div>
+                            </div>
+                            <div class="booking-summary-grid__item">
+                              <div class="small booking-meta-label">Fin estimado</div>
+                              <div class="booking-meta-value fw-semibold">{{ itineraryEndHour(selectedItinerary()) }}</div>
+                            </div>
+                            <div class="booking-summary-grid__item">
+                              <div class="small booking-meta-label">Total</div>
+                              <div class="booking-meta-value fw-semibold">{{ selectedItinerary()?.totalPrecio | currency:'MXN':'symbol-narrow':'1.0-0':'es-MX' }}</div>
                             </div>
                           </div>
                         </div>
-
+                        @if (selectedItinerary(); as itinerary) {
+                          <div class="booking-itinerary-summary mb-3">
+                            @for (item of itinerary.items; track item) {
+                              <article class="booking-itinerary-summary__item">
+                                <div class="booking-itinerary-summary__main">
+                                  <strong>{{ item.servicio.nombre }}</strong>
+                                  <span>{{ item.staff?.nombreMostrar || 'Staff por asignar' }}</span>
+                                </div>
+                                <div class="booking-itinerary-summary__side text-end">
+                                  <strong>{{ item.slot.hora }}</strong>
+                                  <span>{{ item.servicio.precio | currency:(item.servicio.moneda || 'MXN'):'symbol-narrow':'1.0-0':'es-MX' }}</span>
+                                </div>
+                              </article>
+                            }
+                          </div>
+                        }
                         <div class="booking-form-grid">
                           <div class="booking-field">
                             <label class="form-label fw-semibold small booking-field-label">Nombre Completo</label>
                             <div class="input-group">
                               <span class="input-group-text booking-input-addon"><i class="bi bi-person"></i></span>
                               <input type="text" formControlName="name" class="form-control booking-control booking-control--input" placeholder="Ej. Ana García" [class.is-invalid]="f['name'].touched && f['name'].invalid">
-                              <div class="invalid-feedback" *ngIf="f['name'].touched && f['name'].invalid">
-                                <span *ngIf="f['name'].errors?.['required']">El nombre es obligatorio.</span>
-                                <span *ngIf="f['name'].errors?.['minlength']">Mínimo 3 caracteres.</span>
-                              </div>
+                              @if (f['name'].touched && f['name'].invalid) {
+                                <div class="invalid-feedback">
+                                  @if (f['name'].errors?.['required']) {
+                                    <span>El nombre es obligatorio.</span>
+                                  }
+                                  @if (f['name'].errors?.['minlength']) {
+                                    <span>Mínimo 3 caracteres.</span>
+                                  }
+                                </div>
+                              }
                             </div>
                           </div>
-
                           <div class="booking-field">
                             <label class="form-label fw-semibold small booking-field-label">Teléfono</label>
                             <div class="input-group">
                               <span class="input-group-text booking-input-addon"><i class="bi bi-whatsapp"></i></span>
                               <input type="tel" formControlName="phone" class="form-control booking-control booking-control--input" placeholder="10 dígitos" [class.is-invalid]="f['phone'].touched && f['phone'].invalid">
-                              <div class="invalid-feedback" *ngIf="f['phone'].touched && f['phone'].invalid">
-                                <span *ngIf="f['phone'].errors?.['required']">El teléfono es obligatorio.</span>
-                                <span *ngIf="f['phone'].errors?.['pattern']">Ingresa un número válido (10-15 dígitos).</span>
-                              </div>
+                              @if (f['phone'].touched && f['phone'].invalid) {
+                                <div class="invalid-feedback">
+                                  @if (f['phone'].errors?.['required']) {
+                                    <span>El teléfono es obligatorio.</span>
+                                  }
+                                  @if (f['phone'].errors?.['pattern']) {
+                                    <span>Ingresa un número válido (10-15 dígitos).</span>
+                                  }
+                                </div>
+                              }
                             </div>
                           </div>
-
                           <div class="booking-field booking-field--full">
                             <label class="form-label fw-semibold small booking-field-label">Correo</label>
                             <div class="input-group">
                               <span class="input-group-text booking-input-addon"><i class="bi bi-envelope"></i></span>
                               <input type="email" formControlName="email" class="form-control booking-control booking-control--input" placeholder="ana@mail.com" [class.is-invalid]="f['email'].touched && f['email'].invalid">
-                              <div class="invalid-feedback" *ngIf="f['email'].touched && f['email'].invalid">
-                                <span *ngIf="f['email'].errors?.['required']">El correo es obligatorio.</span>
-                                <span *ngIf="f['email'].errors?.['email']">Ingresa un correo válido.</span>
-                              </div>
+                              @if (f['email'].touched && f['email'].invalid) {
+                                <div class="invalid-feedback">
+                                  @if (f['email'].errors?.['required']) {
+                                    <span>El correo es obligatorio.</span>
+                                  }
+                                  @if (f['email'].errors?.['email']) {
+                                    <span>Ingresa un correo válido.</span>
+                                  }
+                                </div>
+                              }
                             </div>
                           </div>
                         </div>
-
                         <div class="d-grid mt-4">
                           <button type="submit" [disabled]="bookingForm.invalid || isSubmitting()" class="btn btn-primary rounded-pill shadow-lg py-3">
-                            <span *ngIf="!isSubmitting()">Confirmar Reserva</span>
-                            <span *ngIf="isSubmitting()" class="spinner-border spinner-border-sm me-2"></span>
+                            @if (!isSubmitting()) {
+                              <span>Confirmar reserva</span>
+                            }
+                            @if (isSubmitting()) {
+                              <span class="spinner-border spinner-border-sm me-2"></span>
+                            }
                           </button>
-                          <p class="text-center small booking-empty-copy mt-2" *ngIf="!isSubmitting()">
-                            Reservar para las {{ selectedSlot?.hora }}
-                          </p>
+                          @if (!isSubmitting()) {
+                            <p class="text-center small booking-empty-copy mt-2">
+                              {{ selectedItinerary()?.items?.length === 1 ? ('Reservar para las ' + selectedSlot?.hora) : 'Reservar este itinerario completo' }}
+                            </p>
+                          }
                         </div>
                       </form>
                     </div>
                   </section>
+                }
 
-                  <div class="mt-2" *ngIf="submitted() || errorMessage" #confirmationSection>
+                @if (submitted() || errorMessage) {
+                  <div class="mt-2" #confirmationSection>
                     <div class="alert booking-alert" [class.booking-alert-success]="submitted()" [class.booking-alert-danger]="!submitted() && errorMessage" role="alert">
                       <div class="d-flex align-items-center">
                         <i class="bi me-2 h4 mb-0 booking-accent" [class.bi-check-circle-fill]="submitted()" [class.bi-exclamation-octagon-fill]="!submitted()"></i>
-                        <strong *ngIf="submitted()" class="booking-accent">Tu cita fue enviada con éxito.</strong>
-                        <strong *ngIf="!submitted() && errorMessage" class="booking-section-title">Necesitamos que revises tu reserva.</strong>
+                        @if (submitted()) {
+                          <strong class="booking-accent">Tu cita fue enviada con éxito.</strong>
+                        }
+                        @if (!submitted() && errorMessage) {
+                          <strong class="booking-section-title">Necesitamos que revises tu reserva.</strong>
+                        }
                       </div>
                       <div class="mt-2 small opacity-75">
                         {{ errorMessage }}
                       </div>
                     </div>
                   </div>
-                </div>
+                }
               </div>
             </div>
+          </div>
 
-            <div class="col-lg-4 col-xl-4 d-none d-lg-block">
-              <aside class="booking-aside">
-                <div class="booking-aside__card">
-                  <span class="booking-aside__label">Resumen de tu cita</span>
-                  <h2 class="h4 booking-section-title mb-3">Resumen de tu cita</h2>
+          <div class="col-lg-4 col-xl-4 d-none d-lg-block">
+            <aside class="booking-aside">
+              <div class="booking-aside__card">
+                <span class="booking-aside__label">Resumen de tu cita</span>
+                <h2 class="h4 booking-section-title mb-3">Resumen de tu cita</h2>
 
-                  <div class="booking-aside__summary">
-                    <div class="booking-aside__item">
-                      <span>Sucursal</span>
-                      <strong>{{ selectedBranch?.nombre || 'Selecciona una sucursal' }}</strong>
-                    </div>
-                    <div class="booking-aside__item">
-                      <span>Servicio</span>
-                      <strong>{{ selectedService?.nombre || 'Selecciona un servicio' }}</strong>
-                    </div>
-                    <div class="booking-aside__item">
-                      <span>Fecha</span>
-                      <strong>{{ selectedDate() ? (selectedDate() | date:'fullDate':'':'es') : 'Elige una fecha' }}</strong>
-                    </div>
-                    <div class="booking-aside__item">
-                      <span>Horario</span>
-                      <strong>{{ selectedSlot?.hora || 'Elige un horario' }}</strong>
-                    </div>
+                <div class="booking-aside__summary">
+                  <div class="booking-aside__item">
+                    <span>Sucursal</span>
+                    <strong>{{ selectedBranch?.nombre || 'Selecciona una sucursal' }}</strong>
                   </div>
+                  <div class="booking-aside__item">
+                    <span>Servicios</span>
+                    <strong>{{ selectedServices().length ? selectedServices().length + ' seleccionados' : 'Selecciona un servicio' }}</strong>
+                  </div>
+                  <div class="booking-aside__item">
+                    <span>Fecha</span>
+                    <strong>{{ selectedDate() ? (selectedDate() | date:'fullDate':'':'es') : 'Elige una fecha' }}</strong>
+                  </div>
+                  <div class="booking-aside__item">
+                    <span>Itinerario</span>
+                    <strong>{{ selectedSlot?.hora ? (selectedSlot?.hora + ' a ' + itineraryEndHour(selectedItinerary())) : 'Elige una opción' }}</strong>
+                  </div>
+                  @if (selectedItinerary()) {
+                    <div class="booking-aside__item">
+                      <span>Total</span>
+                      <strong>{{ selectedItinerary()?.totalPrecio | currency:'MXN':'symbol-narrow':'1.0-0':'es-MX' }}</strong>
+                    </div>
+                  }
                 </div>
+              </div>
 
-                <div class="booking-aside__card booking-aside__contact">
-                  <span class="booking-aside__label">Ayuda rápida</span>
-                  <h3 class="h5 booking-section-title mb-2">¿Necesitas ayuda para decidir?</h3>
-                  <p>Si quieres orientación sobre el servicio o prefieres apoyo para elegir horario, te atendemos por WhatsApp.</p>
-                  <a [href]="tenantContext.whatsappHref()" target="_blank" rel="noreferrer" class="btn btn-outline-primary rounded-pill w-100">
-                    Escribir por WhatsApp
-                  </a>
-                </div>
-              </aside>
-            </div>
+              <div class="booking-aside__card booking-aside__contact">
+                <span class="booking-aside__label">Ayuda rápida</span>
+                <h3 class="h5 booking-section-title mb-2">¿Necesitas ayuda para decidir?</h3>
+                <p>Si quieres orientación sobre el servicio o prefieres apoyo para elegir horario, te atendemos por WhatsApp.</p>
+                <a [href]="tenantContext.whatsappHref()" target="_blank" rel="noreferrer" class="btn btn-outline-primary rounded-pill w-100">
+                  Escribir por WhatsApp
+                </a>
+              </div>
+            </aside>
           </div>
         </div>
       </div>
     </div>
   </div>
+</div>
 </section>

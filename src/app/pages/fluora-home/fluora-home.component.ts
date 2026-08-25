@@ -1,4 +1,4 @@
-import { CommonModule } from '@angular/common';
+
 import { Component, inject } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { PlatformHostService } from '../../core/platform/platform-host.service';
@@ -6,7 +6,7 @@ import { PlatformHostService } from '../../core/platform/platform-host.service';
 @Component({
   selector: 'app-fluora-home',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [RouterLink],
   templateUrl: './fluora-home.component.html',
   styleUrl: './fluora-home.component.css'
 })

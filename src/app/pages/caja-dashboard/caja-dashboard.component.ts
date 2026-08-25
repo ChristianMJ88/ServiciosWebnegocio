@@ -4,6 +4,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { BreakpointObserver } from '@angular/cdk/layout';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
+import { MatBadgeModule } from '@angular/material/badge';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { MatChipsModule } from '@angular/material/chips';
@@ -17,6 +18,7 @@ import { MatToolbarModule } from '@angular/material/toolbar';
 import { Observable, forkJoin, of } from 'rxjs';
 import { catchError, finalize, switchMap, tap } from 'rxjs/operators';
 import { AuthService } from '../../core/auth/auth.service';
+import { PerfilUsuarioLocal, UserProfileService } from '../../core/profile/user-profile.service';
 import { MoneyDisplayPipe } from '../../shared/pipes/money-display.pipe';
 import {
   CajaService,
@@ -41,6 +43,7 @@ type VistaCaja = 'cobros' | 'sesion' | 'movimientos';
     DatePipe,
     FormsModule,
     MoneyDisplayPipe,
+    MatBadgeModule,
     MatButtonModule,
     MatCardModule,
     MatChipsModule,
@@ -58,6 +61,7 @@ type VistaCaja = 'cobros' | 'sesion' | 'movimientos';
 export class CajaDashboardComponent implements OnInit, AfterViewInit {
   private readonly cajaService = inject(CajaService);
   private readonly authService = inject(AuthService);
+  private readonly userProfileService = inject(UserProfileService);
   private readonly router = inject(Router);
   private readonly breakpointObserver = inject(BreakpointObserver);
   private readonly ngZone = inject(NgZone);
@@ -71,6 +75,7 @@ export class CajaDashboardComponent implements OnInit, AfterViewInit {
   readonly guardandoPago = signal(false);
   readonly guardandoMovimiento = signal(false);
   readonly panelMovil = signal(false);
+  readonly perfilConfigAbierto = signal(false);
   readonly vistaActiva = signal<VistaCaja>('cobros');
   readonly sucursales = signal<SucursalCaja[]>([]);
   readonly sucursalActivaId = signal<number | null>(null);
@@ -92,9 +97,21 @@ export class CajaDashboardComponent implements OnInit, AfterViewInit {
     { value: 'AJUSTE_NEGATIVO', label: 'Ajuste negativo' }
   ];
 
-  readonly nombreUsuario = computed(() => this.authService.nombreUsuarioVisible());
+  readonly perfilUsuario = computed(() => this.userProfileService.perfilActual());
+  readonly perfilRegistrado = computed(() => this.userProfileService.perfilRegistrado());
+  readonly nombreUsuario = computed(() =>
+    this.perfilRegistrado()?.nombreCompleto?.trim()
+    || this.perfilUsuario().nombre
+    || this.authService.nombreUsuarioVisible()
+  );
   readonly correoUsuario = computed(() => this.authService.sesionActual()?.correo ?? '');
-  readonly inicialesUsuario = computed(() => this.authService.inicialesUsuarioVisible());
+  readonly puestoUsuario = computed(() =>
+    this.perfilRegistrado()?.puesto?.trim()
+    || this.perfilUsuario().puesto
+    || 'Caja'
+  );
+  readonly fotoPerfilUsuario = computed(() => this.perfilUsuario().fotoDataUrl);
+  readonly inicialesUsuario = computed(() => this.obtenerIniciales(this.nombreUsuario()));
   readonly nombreEmpresa = computed(() => this.authService.sesionActual()?.empresaNombre?.trim() || 'Empresa');
   readonly puedeIrRecepcion = computed(() => this.authService.puedeVerRecepcion());
   readonly puedeIrAdmin = computed(() => this.authService.puedeVerAdmin());
@@ -103,6 +120,11 @@ export class CajaDashboardComponent implements OnInit, AfterViewInit {
   readonly puedeGestionarMovimientos = computed(() => this.authService.puedeGestionarMovimientosCaja());
   readonly sucursalesPermitidas = computed(() => this.authService.sucursalesPermitidas());
   readonly cajaAbierta = computed(() => this.sesionActual()?.estado === 'ABIERTA');
+  readonly totalNotificaciones = computed(() => this.citasPorCobrar().length + (this.cajaAbierta() ? 0 : 1));
+  readonly notificacionesCaja = computed(() => [
+    !this.cajaAbierta() ? { titulo: 'Caja cerrada', descripcion: 'Abre una sesión de caja para operar cobros.', icono: 'bi-cash-coin', total: 1 } : null,
+    this.citasPorCobrar().length ? { titulo: 'Citas por cobrar', descripcion: `${this.citasPorCobrar().length} citas tienen saldo pendiente.`, icono: 'bi-receipt', total: this.citasPorCobrar().length } : null
+  ].filter((item): item is { titulo: string; descripcion: string; icono: string; total: number } => !!item));
   readonly sucursalOperativaId = computed(() =>
     this.sucursalActivaId()
     ?? this.sucursales()[0]?.id
@@ -189,10 +211,17 @@ export class CajaDashboardComponent implements OnInit, AfterViewInit {
     observaciones: ''
   };
 
+  formularioPerfilUsuario: PerfilUsuarioLocal = {
+    nombre: '',
+    puesto: '',
+    fotoDataUrl: null
+  };
+
   sucursalSeleccionadaModel: number | null = null;
 
   ngOnInit(): void {
     this.authService.sincronizarSesionPersistida();
+    this.userProfileService.cargar();
     this.actualizarVistaEnZona(() => {
       this.sincronizarSucursalOperativa(this.sucursalesPermitidas()[0] ?? null);
       this.vistaActiva.set(this.obtenerVistaInicial());
@@ -492,6 +521,53 @@ export class CajaDashboardComponent implements OnInit, AfterViewInit {
     this.router.navigateByUrl('/login');
   }
 
+  abrirConfiguracionPerfil() {
+    this.formularioPerfilUsuario = {
+      nombre: this.nombreUsuario(),
+      puesto: this.puestoUsuario(),
+      fotoDataUrl: this.fotoPerfilUsuario()
+    };
+    this.perfilConfigAbierto.set(true);
+  }
+
+  cerrarConfiguracionPerfil() {
+    this.perfilConfigAbierto.set(false);
+  }
+
+  guardarConfiguracionPerfil() {
+    this.userProfileService.guardar(this.formularioPerfilUsuario);
+    this.perfilConfigAbierto.set(false);
+    this.mensaje.set('Perfil actualizado.');
+  }
+
+  seleccionarFotoPerfil(evento: Event) {
+    const input = evento.target as HTMLInputElement;
+    const archivo = input.files?.[0];
+    if (!archivo) {
+      return;
+    }
+    if (!archivo.type.startsWith('image/') || archivo.size > 1_500_000) {
+      this.error.set('Selecciona una imagen válida menor a 1.5 MB.');
+      input.value = '';
+      return;
+    }
+    const lector = new FileReader();
+    lector.onload = () => this.actualizarVistaEnZona(() => {
+      this.formularioPerfilUsuario = {
+        ...this.formularioPerfilUsuario,
+        fotoDataUrl: typeof lector.result === 'string' ? lector.result : null
+      };
+    });
+    lector.readAsDataURL(archivo);
+  }
+
+  quitarFotoPerfil() {
+    this.formularioPerfilUsuario = {
+      ...this.formularioPerfilUsuario,
+      fotoDataUrl: null
+    };
+  }
+
   irARecepcion() {
     this.ngZone.run(() => {
       void this.router.navigateByUrl('/recepcion');
@@ -502,6 +578,15 @@ export class CajaDashboardComponent implements OnInit, AfterViewInit {
     this.ngZone.run(() => {
       void this.router.navigateByUrl('/admin');
     });
+  }
+
+  private obtenerIniciales(nombre: string): string {
+    return nombre
+      .split(/\s+/)
+      .filter(Boolean)
+      .slice(0, 2)
+      .map(parte => parte[0]?.toUpperCase() ?? '')
+      .join('') || 'US';
   }
 
   seleccionarVista(vista: VistaCaja) {

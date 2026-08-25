@@ -1,84 +1,68 @@
 import { CommonModule } from '@angular/common';
-import { Component, inject } from '@angular/core';
+import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { TenantContextService } from '../../core/tenant/tenant-context.service';
+import { BookingDataService, CatalogoServiciosPublico, GrupoCatalogoPublico } from '../../services/booking-data.service';
+import { ScrollRevealDirective } from '../../shared/directives/scroll-reveal.directive';
 
 @Component({
   selector: 'app-home',
   standalone: true,
-  imports: [RouterLink, CommonModule],
+  imports: [RouterLink, CommonModule, ScrollRevealDirective],
   templateUrl: './home.component.html',
   styleUrls: ['./home.component.css']
 })
-export class HomeComponent {
+export class HomeComponent implements OnInit {
   readonly tenantContext = inject(TenantContextService);
-
-  readonly estadisticas = [
-    { valor: 'Agenda online', etiqueta: 'Reserva simple desde cualquier dispositivo' },
-    { valor: 'WhatsApp', etiqueta: 'Atencion rapida si el cliente necesita ayuda' },
-    { valor: 'Reserva clara', etiqueta: 'Servicios, contacto y accion principal visibles' }
+  private readonly bookingDataService = inject(BookingDataService);
+  readonly catalogo = signal<CatalogoServiciosPublico | null>(null);
+  readonly cargandoServicios = signal(false);
+  readonly tieneWhatsapp = computed(() => !!this.tenantContext.whatsapp());
+  readonly gruposDestacados = computed(() => this.catalogo()?.grupos.slice(0, 3) ?? []);
+  readonly imagenesServicioFallback = [
+    'https://images.unsplash.com/photo-1562322140-8baeececf3df?auto=format&fit=crop&w=1200&q=80',
+    'https://images.unsplash.com/photo-1521590832167-7bcbfaa6381f?auto=format&fit=crop&w=1200&q=80',
+    'https://images.unsplash.com/photo-1487412947147-5cebf100ffc2?auto=format&fit=crop&w=1200&q=80'
   ];
 
-  readonly heroHighlights = [
-    {
-      icono: 'bi bi-calendar2-check',
-      titulo: 'Agenda simple',
-      descripcion: 'Reserva en linea y confirma tu horario sin vueltas.'
-    },
-    {
-      icono: 'bi bi-chat-dots',
-      titulo: 'Contacto rapido',
-      descripcion: 'WhatsApp y datos del negocio visibles desde el inicio.'
-    },
-    {
-      icono: 'bi bi-stars',
-      titulo: 'Experiencia clara',
-      descripcion: 'La pagina se enfoca en decidir rapido y reservar mejor.'
+  ngOnInit(): void {
+    const slug = this.tenantContext.slug();
+    if (!slug) {
+      return;
     }
-  ];
 
-  readonly especialidades = [
-    {
-      etiqueta: 'Servicio destacado',
-      titulo: 'Servicio principal',
-      descripcion: 'Una opcion clara para quienes quieren reservar rapido y entender el valor del negocio desde la primera vista.',
-      imagen: 'https://images.unsplash.com/photo-1604654894610-df63bc536371?ixlib=rb-1.2.1&auto=format&fit=crop&w=900&q=80',
-      icono: 'bi-gem',
-      detalles: ['Informacion clara', 'Reserva directa', 'Presentacion profesional']
-    },
-    {
-      etiqueta: 'Personalizado',
-      titulo: 'Atencion con estilo propio',
-      descripcion: 'Servicios pensados para adaptarse al cliente, explicar el resultado esperado y facilitar la eleccion.',
-      imagen: 'https://images.unsplash.com/photo-1632345031435-8727f6897d53?ixlib=rb-1.2.1&auto=format&fit=crop&w=900&q=80',
-      icono: 'bi-palette2',
-      detalles: ['Acompañamiento', 'Propuesta visual', 'Reserva agil']
-    },
-    {
-      etiqueta: 'Bienestar',
-      titulo: 'Experiencia cuidada',
-      descripcion: 'El sitio comunica lo esencial del servicio y ayuda a generar confianza antes de la cita.',
-      imagen: 'https://images.unsplash.com/photo-1522337660859-02fbefca4702?ixlib=rb-1.2.1&auto=format&fit=crop&w=900&q=80',
-      icono: 'bi-flower1',
-      detalles: ['Contacto visible', 'Decision rapida', 'Mejor conversion']
-    }
-  ];
+    this.cargandoServicios.set(true);
+    this.bookingDataService.getPublicCatalogBySlug(slug).subscribe({
+      next: catalogo => {
+        this.catalogo.set(catalogo);
+        this.cargandoServicios.set(false);
+      },
+      error: () => {
+        this.catalogo.set(null);
+        this.cargandoServicios.set(false);
+      }
+    });
+  }
 
-  readonly testimonios = [
-    {
-      nombre: 'Maria G.',
-      resumen: 'Reserva facil',
-      comentario: 'La pagina me dejo claro que ofrecen y pude reservar sin perder tiempo buscando informacion.'
-    },
-    {
-      nombre: 'Lucia R.',
-      resumen: 'Atencion clara',
-      comentario: 'Se siente mas directa y ordenada. En pocos segundos supe como contactarlas y agendar.'
-    },
-    {
-      nombre: 'Ana S.',
-      resumen: 'Mas confianza',
-      comentario: 'Ver servicios, contacto y reseñas en una sola vista me dio mas seguridad para reservar.'
-    }
-  ];
+  imagenGrupo(grupo: GrupoCatalogoPublico, index: number): string {
+    const imagenServicio = grupo.subgrupos.flatMap(subgrupo => subgrupo.servicios).find(servicio => !!servicio.imagenUrl)?.imagenUrl;
+    return grupo.imagenUrl || imagenServicio || this.imagenesServicioFallback[index % this.imagenesServicioFallback.length];
+  }
+
+  totalServiciosGrupo(grupo: GrupoCatalogoPublico): number {
+    return grupo.subgrupos.reduce((total, subgrupo) => total + subgrupo.servicios.length, 0);
+  }
+
+  precioDesdeGrupo(grupo: GrupoCatalogoPublico): number | null {
+    const precios = grupo.subgrupos.flatMap(subgrupo => subgrupo.servicios).map(servicio => servicio.precio);
+    return precios.length ? Math.min(...precios) : null;
+  }
+
+  monedaGrupo(grupo: GrupoCatalogoPublico): string {
+    return grupo.subgrupos.flatMap(subgrupo => subgrupo.servicios).find(servicio => !!servicio.moneda)?.moneda || 'MXN';
+  }
+
+  mensajeWhatsappHero(): string {
+    return `Hola, quiero reservar una cita en ${this.tenantContext.nombreComercial()}.`;
+  }
 }

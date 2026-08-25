@@ -1,4 +1,4 @@
-import { CommonModule } from '@angular/common';
+
 import { Component, inject } from '@angular/core';
 import { FormsModule, NgForm } from '@angular/forms';
 import { finalize } from 'rxjs/operators';
@@ -9,7 +9,7 @@ import { TenantContextService } from '../../core/tenant/tenant-context.service';
 @Component({
   selector: 'app-contact',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [FormsModule],
   templateUrl: './contact.component.html',
   styleUrl: './contact.component.css'
 })

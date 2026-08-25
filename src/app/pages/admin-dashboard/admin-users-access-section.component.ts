@@ -1,4 +1,4 @@
-import { CommonModule } from '@angular/common';
+
 import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
@@ -20,7 +20,6 @@ import {
   selector: 'app-admin-users-access-section',
   standalone: true,
   imports: [
-    CommonModule,
     FormsModule,
     MatButtonModule,
     MatCardModule,
@@ -30,7 +29,7 @@ import {
     MatInputModule,
     MatSelectModule,
     MatSlideToggleModule
-  ],
+],
   templateUrl: './admin-users-access-section.component.html'
 })
 export class AdminUsersAccessSectionComponent {

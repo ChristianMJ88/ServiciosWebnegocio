@@ -1,26 +1,26 @@
-<footer class="site-footer pt-5 pb-4">
-  <div class="container">
+<footer class="site-footer">
+  <div class="footer-shell">
     <div class="footer-grid">
       <div class="footer-brand-panel">
-        <div class="d-flex align-items-center gap-3 mb-3">
-          <img
-            *ngIf="tenantActivo() && tenantContext.logoUrl(); else fluoraFooterLogo"
-            [src]="tenantContext.logoUrl()"
-            [alt]="'Logo ' + tenantContext.nombreComercial()"
-            class="footer-logo">
-          <ng-template #fluoraFooterLogo>
+        <div class="footer-brand-row">
+          @if (tenantActivo() && tenantContext.logoUrl()) {
+            <img
+              [src]="tenantContext.logoUrl()"
+              [alt]="'Logo ' + tenantContext.nombreComercial()"
+              class="footer-logo">
+          } @else {
             <img src="/fluora-logo.svg" alt="Logo Fluora" class="footer-wordmark">
-          </ng-template>
+          }
           <div>
-            <h3 class="footer-brand-title mb-1">{{ tenantActivo() ? tenantContext.nombreComercial() : 'Fluora' }}</h3>
-            <p class="footer-brand-copy mb-0">{{ tenantContext.descripcionCorta() }}</p>
+            <h3 class="footer-brand-title">{{ tenantActivo() ? tenantContext.nombreComercial() : 'Fluora' }}</h3>
+            <p class="footer-brand-copy">{{ tenantContext.descripcionCorta() }}</p>
           </div>
         </div>
 
-        <p class="footer-copy mb-4">
+        <p class="footer-copy">
           {{ tenantActivo()
-            ? 'Diseño, técnica y una atención cercana para que cada cita se sienta bien cuidada desde el primer momento.'
-            : 'Portal SaaS para separar tu marca comercial, operar tus paneles y publicar una web propia por empresa.' }}
+          ? 'Diseño, técnica y una atención cercana para que cada cita se sienta bien cuidada desde el primer momento.'
+          : 'Portal SaaS para separar tu marca comercial, operar tus paneles y publicar una web propia por empresa.' }}
         </p>
 
         <div class="footer-socials">
@@ -38,67 +38,71 @@
 
       <div class="footer-links-panel">
         <h4 class="footer-title">Navegación</h4>
-        <ul class="list-unstyled footer-links-list mb-0">
+        <ul class="footer-links-list">
           <li>
-            <a *ngIf="tenantActivo(); else footerHomeMarketing" [routerLink]="homeLink()" class="footer-link">Inicio</a>
-            <ng-template #footerHomeMarketing>
-              <a [routerLink]="homeLink()" class="footer-link">Inicio</a>
-            </ng-template>
+            <a [routerLink]="homeLink()" class="footer-link">Inicio</a>
           </li>
           <li>
-            <a *ngIf="tenantActivo(); else footerFeaturesMarketing" [routerLink]="servicesLink()" class="footer-link">Servicios</a>
-            <ng-template #footerFeaturesMarketing>
+            @if (tenantActivo()) {
+              <a [routerLink]="servicesLink()" class="footer-link">Servicios</a>
+            } @else {
               <a [attr.href]="featuresHref()" class="footer-link">Funciones</a>
-            </ng-template>
+            }
           </li>
           <li>
-            <a *ngIf="tenantActivo(); else footerShowcaseMarketing" [routerLink]="bookingLink()" class="footer-link">Agendar</a>
-            <ng-template #footerShowcaseMarketing>
+            @if (tenantActivo()) {
+              <a [routerLink]="bookingLink()" class="footer-link">Agendar</a>
+            } @else {
               <a [attr.href]="showcaseHref()" class="footer-link">Empresas</a>
-            </ng-template>
+            }
           </li>
           <li>
-            <a *ngIf="tenantActivo(); else footerAccessLink" [routerLink]="contactLink()" class="footer-link">{{ tenantActivo() ? 'Contacto' : 'Acceso' }}</a>
-            <ng-template #footerAccessLink>
+            @if (tenantActivo()) {
+              <a [routerLink]="contactLink()" class="footer-link">Contacto</a>
+            } @else {
               <a [attr.href]="accessHref()" class="footer-link">Acceso</a>
-            </ng-template>
+            }
           </li>
         </ul>
       </div>
 
       <div class="footer-links-panel">
         <h4 class="footer-title">{{ tenantActivo() ? 'Servicios' : 'Fluora' }}</h4>
-        <ul class="list-unstyled footer-links-list mb-0">
+        <ul class="footer-links-list">
           <li>
-            <a *ngIf="tenantActivo(); else footerFluoraOne" [routerLink]="servicesLink()" class="footer-link">Manicura premium</a>
-            <ng-template #footerFluoraOne>
+            @if (tenantActivo()) {
+              <a [routerLink]="servicesLink()" class="footer-link">Manicura premium</a>
+            } @else {
               <a [attr.href]="featuresHref()" class="footer-link">Agenda y reservas</a>
-            </ng-template>
+            }
           </li>
           <li>
-            <a *ngIf="tenantActivo(); else footerFluoraTwo" [routerLink]="servicesLink()" class="footer-link">Gel semipermanente</a>
-            <ng-template #footerFluoraTwo>
+            @if (tenantActivo()) {
+              <a [routerLink]="servicesLink()" class="footer-link">Gel semipermanente</a>
+            } @else {
               <a [attr.href]="featuresHref()" class="footer-link">Paneles por rol</a>
-            </ng-template>
+            }
           </li>
           <li>
-            <a *ngIf="tenantActivo(); else footerFluoraThree" [routerLink]="servicesLink()" class="footer-link">Nail art</a>
-            <ng-template #footerFluoraThree>
+            @if (tenantActivo()) {
+              <a [routerLink]="servicesLink()" class="footer-link">Nail art</a>
+            } @else {
               <a [attr.href]="showcaseHref()" class="footer-link">Web pública por empresa</a>
-            </ng-template>
+            }
           </li>
           <li>
-            <a *ngIf="tenantActivo(); else footerFluoraFour" [routerLink]="servicesLink()" class="footer-link">Pedicura spa</a>
-            <ng-template #footerFluoraFour>
+            @if (tenantActivo()) {
+              <a [routerLink]="servicesLink()" class="footer-link">Pedicura spa</a>
+            } @else {
               <a [attr.href]="reviewsHref()" class="footer-link">Reseñas y referencias</a>
-            </ng-template>
+            }
           </li>
         </ul>
       </div>
 
       <div class="footer-links-panel">
         <h4 class="footer-title">Contacto</h4>
-        <ul class="list-unstyled footer-contact-list mb-0">
+        <ul class="footer-contact-list">
           <li>
             <i class="bi bi-geo-alt"></i>
             <span>{{ tenantContext.direccion() || 'Configuración de dirección pendiente' }}</span>
@@ -119,13 +123,14 @@
       </div>
     </div>
 
-    <div class="footer-bottom d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mt-4 pt-4">
-      <p class="mb-0">© 2026 {{ tenantActivo() ? tenantContext.nombreComercial() : 'Fluora' }}. Todos los derechos reservados.</p>
-      <div class="d-flex flex-wrap gap-3">
-        <a *ngIf="tenantActivo(); else footerBottomAccess" [routerLink]="contactLink()" class="footer-bottom-link">Soporte</a>
-        <ng-template #footerBottomAccess>
+    <div class="footer-bottom">
+      <p>© 2026 {{ tenantActivo() ? tenantContext.nombreComercial() : 'Fluora' }}. Todos los derechos reservados.</p>
+      <div class="footer-legal-links">
+        @if (tenantActivo()) {
+          <a [routerLink]="contactLink()" class="footer-bottom-link">Soporte</a>
+        } @else {
           <a [attr.href]="accessHref()" class="footer-bottom-link">Acceso</a>
-        </ng-template>
+        }
         <a href="#" class="footer-bottom-link">Privacidad</a>
         <a href="#" class="footer-bottom-link">Términos</a>
       </div>

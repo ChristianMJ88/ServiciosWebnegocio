@@ -111,17 +111,21 @@
 
             <form (ngSubmit)="sendEmail(contactForm)" #contactForm="ngForm" class="contact-form">
               <div class="row g-3">
-                <div class="col-12" *ngIf="successMessage">
-                  <div class="alert alert-success contact-form__alert contact-form__alert--success mb-0" role="status">
-                    {{ successMessage }}
+                @if (successMessage) {
+                  <div class="col-12">
+                    <div class="alert alert-success contact-form__alert contact-form__alert--success mb-0" role="status">
+                      {{ successMessage }}
+                    </div>
                   </div>
-                </div>
+                }
 
-                <div class="col-12" *ngIf="errorMessage">
-                  <div class="alert alert-danger contact-form__alert mb-0" role="alert">
-                    {{ errorMessage }}
+                @if (errorMessage) {
+                  <div class="col-12">
+                    <div class="alert alert-danger contact-form__alert mb-0" role="alert">
+                      {{ errorMessage }}
+                    </div>
                   </div>
-                </div>
+                }
 
                 <div class="col-12">
                   <div class="contact-form__note">
@@ -172,9 +176,15 @@
 
                 <div class="col-12 mt-4">
                   <button type="submit" class="btn btn-primary contact-form__submit w-100" [disabled]="!contactForm.form.valid || sending">
-                    <span *ngIf="!sending">Enviar mensaje</span>
-                    <span *ngIf="sending" class="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>
-                    <span *ngIf="sending">Enviando...</span>
+                    @if (!sending) {
+                      <span>Enviar mensaje</span>
+                    }
+                    @if (sending) {
+                      <span class="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>
+                    }
+                    @if (sending) {
+                      <span>Enviando...</span>
+                    }
                   </button>
                 </div>
               </div>
@@ -200,8 +210,8 @@
 
           <div class="map-container rounded-4 shadow-sm overflow-hidden mt-4">
             <iframe src="https://www.google.com/maps/embed?pb=!1m17!1m12!1m3!1d2270.503921553064!2d-98.23603752533727!3d19.045331519278296!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m2!1m1!2zMTnCsDAyJzQzLjIiTiA5OMKwMTQnMDUuMSJX!5e1!3m2!1ses!2smx!4v1767065822511!5m2!1ses!2smx"
-                    width="100%" height="430" style="border:0;" allowfullscreen=""
-                    loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+              width="100%" height="430" style="border:0;" allowfullscreen=""
+            loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
           </div>
         </div>
       </div>

@@ -12,9 +12,11 @@ import {
   AsociarChannelSenderWhatsappPayload,
   AuditoriaConfiguracionAdmin,
   ConfiguracionWhatsappAdmin,
+  GuardarPlantillaWhatsappEmpresaPayload,
   GuardarConfiguracionWhatsappPayload,
   LogMensajeWhatsappAdmin,
   PlantillaWhatsappAdmin,
+  PlantillaWhatsappEmpresaAdmin,
   ProbarPlantillaWhatsappPayload,
   ProvisionarMessagingServiceWhatsappPayload,
   ProvisionarSubcuentaWhatsappPayload
@@ -56,21 +58,29 @@ export class AdminWhatsappSectionComponent {
   @Input({ required: true }) formularioProvisionMessagingServiceWhatsapp!: ProvisionarMessagingServiceWhatsappPayload;
   @Input({ required: true }) formularioAsociacionChannelSenderWhatsapp!: AsociarChannelSenderWhatsappPayload;
   @Input({ required: true }) formularioPruebaWhatsapp!: ProbarPlantillaWhatsappPayload;
+  @Input({ required: true }) formularioPlantillaWhatsappEmpresa!: GuardarPlantillaWhatsappEmpresaPayload;
   @Input({ required: true }) guardandoWhatsapp!: boolean;
+  @Input({ required: true }) guardandoPlantillaWhatsappEmpresa!: boolean;
   @Input({ required: true }) provisionandoSubcuentaWhatsapp!: boolean;
   @Input({ required: true }) provisionandoMessagingServiceWhatsapp!: boolean;
   @Input({ required: true }) asociandoChannelSenderWhatsapp!: boolean;
   @Input({ required: true }) detectandoChannelSenderWhatsapp!: boolean;
   @Input({ required: true }) probandoPlantillaWhatsapp!: boolean;
+  @Input({ required: true }) plantillaWhatsappEmpresaEditandoId!: number | null;
   @Input({ required: true }) configuracionWhatsapp!: ConfiguracionWhatsappAdmin | null;
   @Input({ required: true }) whatsappOnboardingStats!: WhatsappOnboardingStats;
   @Input({ required: true }) whatsappOnboardingChecklist!: WhatsappChecklistItem[];
   @Input({ required: true }) auditoriaWhatsapp!: AuditoriaConfiguracionAdmin[];
   @Input({ required: true }) plantillasWhatsapp!: PlantillaWhatsappAdmin[];
+  @Input({ required: true }) plantillasWhatsappEmpresa!: PlantillaWhatsappEmpresaAdmin[];
   @Input({ required: true }) logsWhatsapp!: LogMensajeWhatsappAdmin[];
   @Input({ required: true }) etiquetaAccionAuditoriaConfiguracion!: (accion: string) => string;
 
   @Output() save = new EventEmitter<void>();
+  @Output() saveTemplateCatalog = new EventEmitter<void>();
+  @Output() editTemplateCatalog = new EventEmitter<PlantillaWhatsappEmpresaAdmin>();
+  @Output() cancelTemplateCatalogEdit = new EventEmitter<void>();
+  @Output() deleteTemplateCatalog = new EventEmitter<PlantillaWhatsappEmpresaAdmin>();
   @Output() provisionSubaccount = new EventEmitter<void>();
   @Output() provisionMessagingService = new EventEmitter<void>();
   @Output() detectChannelSender = new EventEmitter<void>();

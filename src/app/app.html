@@ -1,34 +1,43 @@
-<app-header *ngIf="!esPanelInterno()"></app-header>
+@if (!esPanelInterno()) {
+  <app-header></app-header>
+}
 
 <main class="min-vh-100" [class.panel-shell]="esPanelInterno()">
   <router-outlet></router-outlet>
 </main>
 
-<app-footer *ngIf="!esPanelInterno()"></app-footer>
+@if (!esPanelInterno()) {
+  <app-footer></app-footer>
+}
 
 <!-- Botón de WhatsApp Flotante -->
-<a *ngIf="!esPanelInterno() && tenantContext.activo()" [href]="tenantContext.whatsappHref()" class="whatsapp-float shadow-lg" target="_blank" rel="noreferrer" title="Contáctanos por WhatsApp">
-  <img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg" alt="WhatsApp" width="35" height="35" />
-</a>
+@if (!esPanelInterno() && tenantContext.activo()) {
+  <a [href]="tenantContext.whatsappHref()" class="whatsapp-float shadow-lg" target="_blank" rel="noreferrer" title="Contáctanos por WhatsApp">
+    <img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg" alt="WhatsApp" width="35" height="35" />
+  </a>
+}
 
 <!-- Chatbot Flotante -->
-<div *ngIf="!esPanelInterno() && tenantContext.activo()" class="chatbot-wrapper shadow-lg" [class.open]="isChatOpen()">
-  <div class="chat-header d-flex justify-content-between align-items-center px-3 py-2" (click)="toggleChat()">
-    <span class="fw-bold">¿Dudas? Chat con nosotros</span>
-    <span class="chat-toggle-icon">{{ isChatOpen() ? '−' : '+' }}</span>
-  </div>
-
-  <div class="chat-body p-3 bg-white" *ngIf="isChatOpen()">
-    <p class="mb-3">Hola 👋 ¿En qué podemos ayudarte?</p>
-    <div class="d-grid gap-2 mb-3">
-      <button class="btn btn-outline-primary btn-sm" (click)="clickChatOption('precios')">Ver Precios</button>
-      <button class="btn btn-outline-primary btn-sm" (click)="clickChatOption('citas')">¿Cómo agendar?</button>
-      <button class="btn btn-outline-primary btn-sm" (click)="clickChatOption('ubicacion')">Ubicación</button>
-
+@if (!esPanelInterno() && tenantContext.activo()) {
+  <div class="chatbot-wrapper shadow-lg" [class.open]="isChatOpen()">
+    <div class="chat-header d-flex justify-content-between align-items-center px-3 py-2" (click)="toggleChat()">
+      <span class="fw-bold">¿Dudas? Chat con nosotros</span>
+      <span class="chat-toggle-icon">{{ isChatOpen() ? '−' : '+' }}</span>
     </div>
-
-    <div class="chat-response p-2 rounded bg-light border" *ngIf="chatMsg()">
-      {{ chatMsg() }}
-    </div>
+    @if (isChatOpen()) {
+      <div class="chat-body p-3 bg-white">
+        <p class="mb-3">Hola 👋 ¿En qué podemos ayudarte?</p>
+        <div class="d-grid gap-2 mb-3">
+          <button class="btn btn-outline-primary btn-sm" (click)="clickChatOption('precios')">Ver Precios</button>
+          <button class="btn btn-outline-primary btn-sm" (click)="clickChatOption('citas')">¿Cómo agendar?</button>
+          <button class="btn btn-outline-primary btn-sm" (click)="clickChatOption('ubicacion')">Ubicación</button>
+        </div>
+        @if (chatMsg()) {
+          <div class="chat-response p-2 rounded bg-light border">
+            {{ chatMsg() }}
+          </div>
+        }
+      </div>
+    }
   </div>
-</div>
+}

@@ -226,9 +226,19 @@
           <input matInput name="whatsappTemplateEspacioDisponibleWalkin" [(ngModel)]="formularioWhatsapp.plantillaEspacioDisponibleWalkinSid" maxlength="80">
         </mat-form-field>
 
+        <mat-form-field appearance="outline">
+          <mat-label>SID content menú bienvenida (list picker)</mat-label>
+          <input matInput name="whatsappTemplateMenuBienvenida" [(ngModel)]="formularioWhatsapp.plantillaMenuBienvenidaSid" maxlength="80">
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>SIDs genéricos list picker por cantidad</mat-label>
+          <textarea matInput name="whatsappListPickerSids" [(ngModel)]="formularioWhatsapp.plantillasListPickerSids" maxlength="1000" rows="3" placeholder="1=HX...,2=HX...,3=HX..."></textarea>
+        </mat-form-field>
+
         <div class="helper-text full-width">
           Si dejas vacío el Auth Token, el backend puede conservar el secreto actual. Usa "Cuenta plataforma" si operas todo bajo tu Twilio, "Subcuenta" si crearás una por empresa y "Cuenta propia del tenant" si el cliente traerá sus propias credenciales.
-          La plantilla de solicitud de confirmación se usa al registrar la cita y debe pedir al cliente que responda para confirmar su asistencia. La de cita reprogramada pendiente se usa cuando la cita cambia de fecha y vuelve a estado pendiente. La de recordar confirmar se usa cuando la cita sigue pendiente y se acerca la fecha. La de cancelación se reserva para mensajes iniciados por el negocio. La de espacio disponible walk-in debe ser creada por cada empresa según su operación y aprobada por Meta antes de usarla desde recepción.
+          La plantilla de solicitud de confirmación se usa al registrar la cita y debe pedir al cliente que responda para confirmar su asistencia. La de cita reprogramada pendiente se usa cuando la cita cambia de fecha y vuelve a estado pendiente. La de recordar confirmar se usa cuando la cita sigue pendiente y se acerca la fecha. La de cancelación se reserva para mensajes iniciados por el negocio. La de espacio disponible walk-in debe ser creada por cada empresa según su operación y aprobada por Meta antes de usarla desde recepción. El menú de bienvenida debe ser un `ContentSid` con tipo `twilio/list-picker`, se envía solo dentro de la ventana activa de 24 horas y conviene usar payloads como `MENU_AGENDAR`, `MENU_SERVICIOS`, `MENU_HORARIOS`, `MENU_UBICACION`, `MENU_MIS_CITAS` y `MENU_PROMOCIONES`. Los SIDs genéricos list picker se usan para listas dinámicas de sucursales, servicios y horarios con formato `1=HX...,2=HX...,3=HX...`.
         </div>
 
         <div class="form-actions">
@@ -237,6 +247,98 @@
           </button>
         </div>
       </form>
+    </mat-card>
+
+    <mat-card class="workspace-card form-card">
+      <div class="section-header">
+        <div>
+          <div class="section-eyebrow">Catálogo tenant</div>
+          <h3>Plantillas configuradas por uso</h3>
+        </div>
+        <span class="agenda-date-pill">{{ plantillasWhatsappEmpresa.length }} guardadas</span>
+      </div>
+
+      <p class="helper-text">
+        Guarda aquí el nombre interno, el uso del backend y el `Content SID` aprobado en Twilio. Para el menú usa `MENU_BIENVENIDA`; para list pickers dinámicos usa `LIST_PICKER_1` a `LIST_PICKER_10`.
+      </p>
+
+      <form class="admin-form-grid admin-form-shell" (ngSubmit)="saveTemplateCatalog.emit()">
+        <mat-form-field appearance="outline">
+          <mat-label>Nombre interno</mat-label>
+          <input matInput name="whatsappTenantTemplateName" [(ngModel)]="formularioPlantillaWhatsappEmpresa.nombre" required maxlength="120" placeholder="Menú bienvenida">
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Uso backend</mat-label>
+          <input matInput name="whatsappTenantTemplateUse" [(ngModel)]="formularioPlantillaWhatsappEmpresa.uso" required maxlength="80" placeholder="MENU_BIENVENIDA">
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Content SID</mat-label>
+          <input matInput name="whatsappTenantTemplateSid" [(ngModel)]="formularioPlantillaWhatsappEmpresa.contentSid" required maxlength="80" placeholder="HXxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx">
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Tipo contenido</mat-label>
+          <input matInput name="whatsappTenantTemplateType" [(ngModel)]="formularioPlantillaWhatsappEmpresa.tipoContenido" maxlength="80" placeholder="twilio/list-picker">
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Categoría</mat-label>
+          <input matInput name="whatsappTenantTemplateCategory" [(ngModel)]="formularioPlantillaWhatsappEmpresa.categoria" maxlength="40" placeholder="UTILITY">
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Estado</mat-label>
+          <input matInput name="whatsappTenantTemplateStatus" [(ngModel)]="formularioPlantillaWhatsappEmpresa.estado" maxlength="40" placeholder="APPROVED">
+        </mat-form-field>
+
+        <mat-slide-toggle name="whatsappTenantTemplateActive" [(ngModel)]="formularioPlantillaWhatsappEmpresa.activa">
+          Activa para respuestas automáticas
+        </mat-slide-toggle>
+
+        <div class="form-actions full-width">
+          <button mat-flat-button color="primary" type="submit" [disabled]="guardandoPlantillaWhatsappEmpresa">
+            {{ guardandoPlantillaWhatsappEmpresa ? 'Guardando...' : (plantillaWhatsappEmpresaEditandoId ? 'Actualizar plantilla' : 'Guardar plantilla') }}
+          </button>
+          @if (plantillaWhatsappEmpresaEditandoId) {
+            <button
+              mat-stroked-button
+              type="button"
+              (click)="cancelTemplateCatalogEdit.emit()"
+              [disabled]="guardandoPlantillaWhatsappEmpresa">
+              Cancelar edición
+            </button>
+          }
+        </div>
+      </form>
+
+      @if (!plantillasWhatsappEmpresa.length) {
+        <div class="agenda-empty">
+          Aún no hay plantillas guardadas para este tenant.
+        </div>
+      }
+
+      @if (plantillasWhatsappEmpresa.length) {
+        <div class="entity-list">
+          @for (plantilla of plantillasWhatsappEmpresa; track plantilla) {
+            <article class="entity-row">
+              <div class="entity-main">
+                <div class="entity-title">{{ plantilla.nombre }}</div>
+                <div class="entity-meta">{{ plantilla.uso }} · {{ plantilla.contentSid }}</div>
+                <div class="entity-meta">{{ plantilla.tipoContenido || 'Tipo no definido' }} · {{ plantilla.categoria || 'Sin categoría' }}</div>
+              </div>
+              <div class="entity-side">
+                <span class="status-pill" [class.is-active]="plantilla.activa">
+                  {{ plantilla.activa ? 'Activa' : 'Inactiva' }}
+                </span>
+                <button mat-stroked-button type="button" (click)="editTemplateCatalog.emit(plantilla)">Editar</button>
+                <button mat-stroked-button color="warn" type="button" (click)="deleteTemplateCatalog.emit(plantilla)" [disabled]="guardandoPlantillaWhatsappEmpresa">Eliminar</button>
+              </div>
+            </article>
+          }
+        </div>
+      }
     </mat-card>
 
     <mat-card class="workspace-card list-card">
@@ -253,9 +355,11 @@
             <div class="entity-title">Onboarding del tenant</div>
             <div class="entity-meta">
               {{ whatsappOnboardingStats.completados }} de {{ whatsappOnboardingStats.total }} pasos completos.
-              <span *ngIf="whatsappOnboardingStats.siguiente as siguiente">
-                Siguiente acción: {{ siguiente.title.toLowerCase() }}.
-              </span>
+              @if (whatsappOnboardingStats.siguiente; as siguiente) {
+                <span>
+                  Siguiente acción: {{ siguiente.title.toLowerCase() }}.
+                </span>
+              }
             </div>
             <mat-progress-bar mode="determinate" [value]="whatsappOnboardingStats.porcentaje"></mat-progress-bar>
           </div>
@@ -266,102 +370,103 @@
           </div>
         </article>
 
-        <article class="entity-row" *ngFor="let paso of whatsappOnboardingChecklist">
-          <div class="entity-main">
-            <div class="entity-title">{{ paso.title }}</div>
-            <div class="entity-meta">{{ paso.detail }}</div>
-          </div>
-          <div class="entity-side">
-            <span class="status-pill" [class.is-active]="paso.done">
-              {{ paso.done ? 'Listo' : 'Pendiente' }}
-            </span>
-          </div>
-        </article>
-      </div>
-
-      <div class="entity-list" *ngIf="configuracionWhatsapp as config; else whatsappSinDatos">
-        <article class="entity-row">
-          <div class="entity-main">
-            <div class="entity-title">Canal habilitado</div>
-            <div class="entity-meta">
-              {{ config.habilitado ? 'WhatsApp está activo para este tenant.' : 'WhatsApp está deshabilitado para este tenant.' }}
+        @for (paso of whatsappOnboardingChecklist; track paso) {
+          <article class="entity-row">
+            <div class="entity-main">
+              <div class="entity-title">{{ paso.title }}</div>
+              <div class="entity-meta">{{ paso.detail }}</div>
             </div>
-          </div>
-          <div class="entity-side">
-            <span class="status-pill" [class.is-active]="config.habilitado">{{ config.habilitado ? 'Activo' : 'Inactivo' }}</span>
-          </div>
-        </article>
-
-        <article class="entity-row">
-          <div class="entity-main">
-            <div class="entity-title">Sender conectado</div>
-            <div class="entity-meta">{{ config.senderDisplayName || 'Sin display name' }}</div>
-            <div class="entity-meta">{{ config.senderPhoneNumber || config.numeroRemitente || 'Sin número remitente' }}</div>
-            <div class="entity-meta">Messaging Service: {{ config.messagingServiceSid || 'Sin definir' }}</div>
-          </div>
-          <div class="entity-side">
-            <span class="status-pill" [class.is-active]="(config.senderStatus || '').toLowerCase() === 'online'">
-              {{ config.senderStatus || 'Pendiente' }}
-            </span>
-          </div>
-        </article>
-
-        <article class="entity-row">
-          <div class="entity-main">
-            <div class="entity-title">Meta / WABA</div>
-            <div class="entity-meta">WABA ID: {{ config.wabaId || 'Sin definir' }}</div>
-            <div class="entity-meta">Business Manager: {{ config.metaBusinessManagerId || 'Sin definir' }}</div>
-            <div class="entity-meta">Quality rating: {{ config.qualityRating || 'Sin dato' }}</div>
-            <div class="entity-meta">Throughput: {{ config.throughputMps || 'Sin dato' }} MPS</div>
-          </div>
-          <div class="entity-side">
-            <span class="status-pill" [class.is-active]="!!config.wabaId && !!config.metaBusinessManagerId">
-              {{ !!config.wabaId && !!config.metaBusinessManagerId ? 'Listo' : 'Pendiente' }}
-            </span>
-          </div>
-        </article>
-
-        <article class="entity-row">
-          <div class="entity-main">
-            <div class="entity-title">Credenciales y callback</div>
-            <div class="entity-meta">Account SID: {{ config.accountSid || 'Sin definir' }}</div>
-            <div class="entity-meta">Auth Token: {{ config.authTokenConfigurado ? 'Configurado' : 'Pendiente' }}</div>
-            <div class="entity-meta">Status callback: {{ config.statusCallbackUrl || 'Sin definir' }}</div>
-          </div>
-          <div class="entity-side">
-            <span class="status-pill" [class.is-active]="config.authTokenConfigurado && !!config.statusCallbackUrl">
-              {{ config.authTokenConfigurado && !!config.statusCallbackUrl ? 'Listo' : 'Parcial' }}
-            </span>
-          </div>
-        </article>
-
-        <article class="entity-row">
-          <div class="entity-main">
-            <div class="entity-title">Plantillas configuradas</div>
-            <div class="entity-meta">Solicitud de confirmación: {{ config.plantillaSolicitudConfirmacionSid || 'Sin definir' }}</div>
-            <div class="entity-meta">Reprogramada pendiente: {{ config.plantillaReprogramadaPendienteSid || 'Sin definir' }}</div>
-            <div class="entity-meta">Recordatorio para confirmar: {{ config.plantillaRecordatorioConfirmacionSid || 'Sin definir' }}</div>
-            <div class="entity-meta">Cita confirmada: {{ config.plantillaCitaConfirmadaSid || 'Sin definir' }}</div>
-            <div class="entity-meta">Recordatorio: {{ config.plantillaRecordatorioSid || 'Sin definir' }}</div>
-            <div class="entity-meta">Cancelación: {{ config.plantillaCancelacionSid || 'Sin definir' }}</div>
-            <div class="entity-meta">Liberada sin confirmación: {{ config.plantillaLiberadaSinConfirmacionSid || 'Sin definir' }}</div>
-            <div class="entity-meta">Gracias por tu visita: {{ config.plantillaGraciasVisitaSid || 'Sin definir' }}</div>
-            <div class="entity-meta">Recordatorio de regreso: {{ config.plantillaRecordatorioRegresoSid || 'Sin definir' }}</div>
-            <div class="entity-meta">Espacio disponible walk-in: {{ config.plantillaEspacioDisponibleWalkinSid || 'Sin definir' }}</div>
-          </div>
-          <div class="entity-side">
-            <span class="status-pill" [class.is-active]="!!config.plantillaSolicitudConfirmacionSid && !!config.plantillaReprogramadaPendienteSid && !!config.plantillaRecordatorioConfirmacionSid && !!config.plantillaCitaConfirmadaSid && !!config.plantillaRecordatorioSid && !!config.plantillaCancelacionSid && !!config.plantillaLiberadaSinConfirmacionSid && !!config.plantillaGraciasVisitaSid && !!config.plantillaRecordatorioRegresoSid && !!config.plantillaEspacioDisponibleWalkinSid">
-              {{ !!config.plantillaSolicitudConfirmacionSid && !!config.plantillaReprogramadaPendienteSid && !!config.plantillaRecordatorioConfirmacionSid && !!config.plantillaCitaConfirmadaSid && !!config.plantillaRecordatorioSid && !!config.plantillaCancelacionSid && !!config.plantillaLiberadaSinConfirmacionSid && !!config.plantillaGraciasVisitaSid && !!config.plantillaRecordatorioRegresoSid && !!config.plantillaEspacioDisponibleWalkinSid ? 'Listas' : 'Parcial' }}
-            </span>
-          </div>
-        </article>
+            <div class="entity-side">
+              <span class="status-pill" [class.is-active]="paso.done">
+                {{ paso.done ? 'Listo' : 'Pendiente' }}
+              </span>
+            </div>
+          </article>
+        }
       </div>
 
-      <ng-template #whatsappSinDatos>
+      @if (configuracionWhatsapp; as config) {
+        <div class="entity-list">
+          <article class="entity-row">
+            <div class="entity-main">
+              <div class="entity-title">Canal habilitado</div>
+              <div class="entity-meta">
+                {{ config.habilitado ? 'WhatsApp está activo para este tenant.' : 'WhatsApp está deshabilitado para este tenant.' }}
+              </div>
+            </div>
+            <div class="entity-side">
+              <span class="status-pill" [class.is-active]="config.habilitado">{{ config.habilitado ? 'Activo' : 'Inactivo' }}</span>
+            </div>
+          </article>
+          <article class="entity-row">
+            <div class="entity-main">
+              <div class="entity-title">Sender conectado</div>
+              <div class="entity-meta">{{ config.senderDisplayName || 'Sin display name' }}</div>
+              <div class="entity-meta">{{ config.senderPhoneNumber || config.numeroRemitente || 'Sin número remitente' }}</div>
+              <div class="entity-meta">Messaging Service: {{ config.messagingServiceSid || 'Sin definir' }}</div>
+            </div>
+            <div class="entity-side">
+              <span class="status-pill" [class.is-active]="(config.senderStatus || '').toLowerCase() === 'online'">
+                {{ config.senderStatus || 'Pendiente' }}
+              </span>
+            </div>
+          </article>
+          <article class="entity-row">
+            <div class="entity-main">
+              <div class="entity-title">Meta / WABA</div>
+              <div class="entity-meta">WABA ID: {{ config.wabaId || 'Sin definir' }}</div>
+              <div class="entity-meta">Business Manager: {{ config.metaBusinessManagerId || 'Sin definir' }}</div>
+              <div class="entity-meta">Quality rating: {{ config.qualityRating || 'Sin dato' }}</div>
+              <div class="entity-meta">Throughput: {{ config.throughputMps || 'Sin dato' }} MPS</div>
+            </div>
+            <div class="entity-side">
+              <span class="status-pill" [class.is-active]="!!config.wabaId && !!config.metaBusinessManagerId">
+                {{ !!config.wabaId && !!config.metaBusinessManagerId ? 'Listo' : 'Pendiente' }}
+              </span>
+            </div>
+          </article>
+          <article class="entity-row">
+            <div class="entity-main">
+              <div class="entity-title">Credenciales y callback</div>
+              <div class="entity-meta">Account SID: {{ config.accountSid || 'Sin definir' }}</div>
+              <div class="entity-meta">Auth Token: {{ config.authTokenConfigurado ? 'Configurado' : 'Pendiente' }}</div>
+              <div class="entity-meta">Status callback: {{ config.statusCallbackUrl || 'Sin definir' }}</div>
+            </div>
+            <div class="entity-side">
+              <span class="status-pill" [class.is-active]="config.authTokenConfigurado && !!config.statusCallbackUrl">
+                {{ config.authTokenConfigurado && !!config.statusCallbackUrl ? 'Listo' : 'Parcial' }}
+              </span>
+            </div>
+          </article>
+          <article class="entity-row">
+            <div class="entity-main">
+              <div class="entity-title">Plantillas configuradas</div>
+              <div class="entity-meta">Solicitud de confirmación: {{ config.plantillaSolicitudConfirmacionSid || 'Sin definir' }}</div>
+              <div class="entity-meta">Reprogramada pendiente: {{ config.plantillaReprogramadaPendienteSid || 'Sin definir' }}</div>
+              <div class="entity-meta">Recordatorio para confirmar: {{ config.plantillaRecordatorioConfirmacionSid || 'Sin definir' }}</div>
+              <div class="entity-meta">Cita confirmada: {{ config.plantillaCitaConfirmadaSid || 'Sin definir' }}</div>
+              <div class="entity-meta">Recordatorio: {{ config.plantillaRecordatorioSid || 'Sin definir' }}</div>
+              <div class="entity-meta">Cancelación: {{ config.plantillaCancelacionSid || 'Sin definir' }}</div>
+              <div class="entity-meta">Liberada sin confirmación: {{ config.plantillaLiberadaSinConfirmacionSid || 'Sin definir' }}</div>
+              <div class="entity-meta">Gracias por tu visita: {{ config.plantillaGraciasVisitaSid || 'Sin definir' }}</div>
+              <div class="entity-meta">Recordatorio de regreso: {{ config.plantillaRecordatorioRegresoSid || 'Sin definir' }}</div>
+              <div class="entity-meta">Espacio disponible walk-in: {{ config.plantillaEspacioDisponibleWalkinSid || 'Sin definir' }}</div>
+              <div class="entity-meta">Menú bienvenida list picker: {{ config.plantillaMenuBienvenidaSid || 'Sin definir' }}</div>
+              <div class="entity-meta">List pickers dinámicos: {{ config.plantillasListPickerSids || 'Sin definir' }}</div>
+            </div>
+            <div class="entity-side">
+              <span class="status-pill" [class.is-active]="!!config.plantillaSolicitudConfirmacionSid && !!config.plantillaReprogramadaPendienteSid && !!config.plantillaRecordatorioConfirmacionSid && !!config.plantillaCitaConfirmadaSid && !!config.plantillaRecordatorioSid && !!config.plantillaCancelacionSid && !!config.plantillaLiberadaSinConfirmacionSid && !!config.plantillaGraciasVisitaSid && !!config.plantillaRecordatorioRegresoSid && !!config.plantillaEspacioDisponibleWalkinSid && !!config.plantillaMenuBienvenidaSid">
+                {{ !!config.plantillaSolicitudConfirmacionSid && !!config.plantillaReprogramadaPendienteSid && !!config.plantillaRecordatorioConfirmacionSid && !!config.plantillaCitaConfirmadaSid && !!config.plantillaRecordatorioSid && !!config.plantillaCancelacionSid && !!config.plantillaLiberadaSinConfirmacionSid && !!config.plantillaGraciasVisitaSid && !!config.plantillaRecordatorioRegresoSid && !!config.plantillaEspacioDisponibleWalkinSid && !!config.plantillaMenuBienvenidaSid ? 'Listas' : 'Parcial' }}
+              </span>
+            </div>
+          </article>
+        </div>
+      } @else {
         <div class="agenda-empty">
           No fue posible cargar la configuración actual de WhatsApp.
         </div>
-      </ng-template>
+      }
+
     </mat-card>
   </div>
 
@@ -373,22 +478,27 @@
       </div>
     </div>
 
-    <div class="entity-list" *ngIf="auditoriaWhatsapp.length; else sinAuditoriaWhatsapp">
-      <article class="entity-row" *ngFor="let evento of auditoriaWhatsapp">
-        <div class="entity-main">
-          <div class="entity-title">{{ etiquetaAccionAuditoriaConfiguracion(evento.accion) }}</div>
-          <div class="entity-meta">{{ evento.resumen }}</div>
-          <div class="entity-meta" *ngIf="evento.actorCorreo">Por {{ evento.actorCorreo }}</div>
-        </div>
-        <div class="entity-side">
-          <span class="status-pill is-active">{{ evento.creadoEn | date:'dd/MM/yyyy HH:mm':'':'es-MX' }}</span>
-        </div>
-      </article>
-    </div>
-
-    <ng-template #sinAuditoriaWhatsapp>
+    @if (auditoriaWhatsapp.length) {
+      <div class="entity-list">
+        @for (evento of auditoriaWhatsapp; track evento) {
+          <article class="entity-row">
+            <div class="entity-main">
+              <div class="entity-title">{{ etiquetaAccionAuditoriaConfiguracion(evento.accion) }}</div>
+              <div class="entity-meta">{{ evento.resumen }}</div>
+              @if (evento.actorCorreo) {
+                <div class="entity-meta">Por {{ evento.actorCorreo }}</div>
+              }
+            </div>
+            <div class="entity-side">
+              <span class="status-pill is-active">{{ evento.creadoEn | date:'dd/MM/yyyy HH:mm':'':'es-MX' }}</span>
+            </div>
+          </article>
+        }
+      </div>
+    } @else {
       <div class="helper-text">Todavía no hay cambios auditados de configuración de WhatsApp.</div>
-    </ng-template>
+    }
+
   </mat-card>
 
   <div class="workspace-grid two-columns">
@@ -425,9 +535,11 @@
           <mat-label>Plantilla a probar</mat-label>
           <mat-select name="whatsappTestTemplate" [(ngModel)]="formularioPruebaWhatsapp.plantillaSid">
             <mat-option [value]="null">Usar plantilla de solicitud de confirmación configurada</mat-option>
-            <mat-option *ngFor="let plantilla of plantillasWhatsapp" [value]="plantilla.sid">
-              {{ plantilla.nombre }} · {{ plantilla.sid }}
-            </mat-option>
+            @for (plantilla of plantillasWhatsapp; track plantilla) {
+              <mat-option [value]="plantilla.sid">
+                {{ plantilla.nombre }} · {{ plantilla.sid }}
+              </mat-option>
+            }
           </mat-select>
         </mat-form-field>
 
@@ -447,24 +559,30 @@
         </div>
       </div>
 
-      <div class="agenda-empty" *ngIf="!plantillasWhatsapp.length">
-        Aún no hay plantillas cargadas desde el backend.
-      </div>
+      @if (!plantillasWhatsapp.length) {
+        <div class="agenda-empty">
+          Aún no hay plantillas cargadas desde el backend.
+        </div>
+      }
 
-      <div class="entity-list" *ngIf="plantillasWhatsapp.length">
-        <article class="entity-row" *ngFor="let plantilla of plantillasWhatsapp">
-          <div class="entity-main">
-            <div class="entity-title">{{ plantilla.nombre }}</div>
-            <div class="entity-meta">{{ plantilla.sid }}</div>
-            <div class="entity-meta">{{ plantilla.idioma || 'Idioma no definido' }} · {{ plantilla.categoria || 'Sin categoría' }}</div>
-          </div>
-          <div class="entity-side">
-            <span class="status-pill" [class.is-active]="(plantilla.estado || '').toLowerCase() === 'approved'">
-              {{ plantilla.estado || 'Sin estado' }}
-            </span>
-          </div>
-        </article>
-      </div>
+      @if (plantillasWhatsapp.length) {
+        <div class="entity-list">
+          @for (plantilla of plantillasWhatsapp; track plantilla) {
+            <article class="entity-row">
+              <div class="entity-main">
+                <div class="entity-title">{{ plantilla.nombre }}</div>
+                <div class="entity-meta">{{ plantilla.sid }}</div>
+                <div class="entity-meta">{{ plantilla.idioma || 'Idioma no definido' }} · {{ plantilla.categoria || 'Sin categoría' }}</div>
+              </div>
+              <div class="entity-side">
+                <span class="status-pill" [class.is-active]="(plantilla.estado || '').toLowerCase() === 'approved'">
+                  {{ plantilla.estado || 'Sin estado' }}
+                </span>
+              </div>
+            </article>
+          }
+        </div>
+      }
     </mat-card>
   </div>
 
@@ -477,31 +595,47 @@
       <span class="agenda-date-pill">{{ logsWhatsapp.length }} registros</span>
     </div>
 
-    <div class="agenda-empty" *ngIf="!logsWhatsapp.length">
-      Todavía no hay logs cargados para WhatsApp en este tenant.
-    </div>
+    @if (!logsWhatsapp.length) {
+      <div class="agenda-empty">
+        Todavía no hay logs cargados para WhatsApp en este tenant.
+      </div>
+    }
 
-    <div class="entity-list" *ngIf="logsWhatsapp.length">
-      <article class="entity-row" *ngFor="let log of logsWhatsapp">
-        <div class="entity-main">
-          <div class="entity-meta">Cita #{{ log.agregadoId }} · {{ log.tipoEvento }}</div>
-          <div class="entity-title">{{ log.destinatario || 'Destino oculto' }}</div>
-          <div class="entity-meta">Outbox: {{ log.estado }}<span *ngIf="log.estadoEntrega"> · Entrega: {{ log.estadoEntrega }}</span></div>
-          <div class="entity-meta" *ngIf="log.plantillaSid">Plantilla: {{ log.plantillaSid }}</div>
-          <div class="entity-meta" *ngIf="log.proveedorMensajeId">Message SID: {{ log.proveedorMensajeId }}</div>
-          <div class="entity-meta" *ngIf="log.codigoErrorProveedor || log.detalleErrorProveedor">
-            {{ log.codigoErrorProveedor || 'Sin código' }} · {{ log.detalleErrorProveedor || 'Sin detalle' }}
-          </div>
-        </div>
-        <div class="entity-side">
-          <span class="status-pill" [class.is-active]="['delivered','read','sent','queued'].includes((log.estadoEntrega || '').toLowerCase())">
-            {{ log.estadoEntrega || log.estado }}
-          </span>
-          <span class="entity-meta" *ngIf="log.estadoEntregaActualizadoEn || log.enviadaEn">
-            {{ (log.estadoEntregaActualizadoEn || log.enviadaEn) | date:'short':'':'es-MX' }}
-          </span>
-        </div>
-      </article>
-    </div>
+    @if (logsWhatsapp.length) {
+      <div class="entity-list">
+        @for (log of logsWhatsapp; track log) {
+          <article class="entity-row">
+            <div class="entity-main">
+              <div class="entity-meta">Cita #{{ log.agregadoId }} · {{ log.tipoEvento }}</div>
+              <div class="entity-title">{{ log.destinatario || 'Destino oculto' }}</div>
+              <div class="entity-meta">Outbox: {{ log.estado }}@if (log.estadoEntrega) {
+                <span> · Entrega: {{ log.estadoEntrega }}</span>
+              }</div>
+              @if (log.plantillaSid) {
+                <div class="entity-meta">Plantilla: {{ log.plantillaSid }}</div>
+              }
+              @if (log.proveedorMensajeId) {
+                <div class="entity-meta">Message SID: {{ log.proveedorMensajeId }}</div>
+              }
+              @if (log.codigoErrorProveedor || log.detalleErrorProveedor) {
+                <div class="entity-meta">
+                  {{ log.codigoErrorProveedor || 'Sin código' }} · {{ log.detalleErrorProveedor || 'Sin detalle' }}
+                </div>
+              }
+            </div>
+            <div class="entity-side">
+              <span class="status-pill" [class.is-active]="['delivered','read','sent','queued'].includes((log.estadoEntrega || '').toLowerCase())">
+                {{ log.estadoEntrega || log.estado }}
+              </span>
+              @if (log.estadoEntregaActualizadoEn || log.enviadaEn) {
+                <span class="entity-meta">
+                  {{ (log.estadoEntregaActualizadoEn || log.enviadaEn) | date:'short':'':'es-MX' }}
+                </span>
+              }
+            </div>
+          </article>
+        }
+      </div>
+    }
   </mat-card>
 </section>

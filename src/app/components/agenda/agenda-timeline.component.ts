@@ -1,11 +1,11 @@
-import { CommonModule } from '@angular/common';
+
 import { Component, computed, input, output } from '@angular/core';
 import { AgendaAppointmentVm, AgendaCollaboratorVm, AgendaThemeMode, AgendaViewMode } from './agenda.types';
 
 @Component({
   selector: 'app-agenda-timeline',
   standalone: true,
-  imports: [CommonModule],
+  imports: [],
   templateUrl: './agenda-timeline.component.html',
   styleUrl: './agenda-timeline.component.css'
 })

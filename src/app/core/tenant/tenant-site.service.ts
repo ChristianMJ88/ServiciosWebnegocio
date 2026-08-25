@@ -14,8 +14,11 @@ const DEMO_TENANT: TenantSiteConfig = {
   descripcionCorta: 'Diseño, técnica y cuidado para manos y pies.',
   colorPrimario: '#d14f7d',
   colorSecundario: '#f6d9e3',
+  fuenteTitulos: 'JAKARTA',
+  fuenteCuerpo: 'INTER',
   heroTitulo: 'Diseños que se sienten tuyos desde el primer vistazo.',
   heroSubtitulo: 'Reserva, conoce servicios y atiende a tus clientes con una experiencia clara y cuidada.',
+  heroImagenUrl: '/tenant-hero-demo.png',
   whatsapp: '522204292573',
   telefono: '220 429 25 73',
   correo: 'christianmejia@techprotech.com.mx',
@@ -74,6 +77,7 @@ export class TenantSiteService {
       dominioPrincipal: null,
       heroTitulo: `Bienvenido a ${this.titleFromSlug(slug)}.`,
       heroSubtitulo: 'Este tenant todavía no tiene una configuración pública completa.',
+      heroImagenUrl: DEMO_TENANT.heroImagenUrl,
       publicado: false
     };
   }

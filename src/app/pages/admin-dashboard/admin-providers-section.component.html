@@ -6,9 +6,11 @@
           <div class="section-eyebrow">Equipo</div>
           <h3>{{ prestadorEditandoId ? 'Editar prestador' : 'Nuevo prestador' }}</h3>
         </div>
-        <button mat-stroked-button type="button" *ngIf="prestadorEditandoId" (click)="clearEdit.emit()">
-          Limpiar formulario
-        </button>
+        @if (prestadorEditandoId) {
+          <button mat-stroked-button type="button" (click)="clearEdit.emit()">
+            Limpiar formulario
+          </button>
+        }
       </div>
 
       <form class="admin-form-grid admin-form-shell" (ngSubmit)="save.emit()">
@@ -21,7 +23,9 @@
             [(ngModel)]="formularioPrestador.sucursalId"
             (ngModelChange)="branchChange.emit($event)"
             required>
-            <mat-option *ngFor="let sucursal of sucursales" [value]="sucursal.id">{{ sucursal.nombre }}</mat-option>
+            @for (sucursal of sucursales; track sucursal) {
+              <mat-option [value]="sucursal.id">{{ sucursal.nombre }}</mat-option>
+            }
           </mat-select>
         </mat-form-field>
 
@@ -69,16 +73,19 @@
 
         <div class="full-width">
           <div class="checkbox-grid">
-            <mat-checkbox
-              *ngFor="let servicio of serviciosPrestadorDisponibles"
-              [checked]="formularioPrestador.servicioIds.includes(servicio.id)"
-              (change)="serviceToggle.emit({ servicioId: servicio.id, checked: $event.checked })">
-              {{ servicio.nombre }}
-            </mat-checkbox>
+            @for (servicio of serviciosPrestadorDisponibles; track servicio) {
+              <mat-checkbox
+                [checked]="formularioPrestador.servicioIds.includes(servicio.id)"
+                (change)="serviceToggle.emit({ servicioId: servicio.id, checked: $event.checked })">
+                {{ servicio.nombre }}
+              </mat-checkbox>
+            }
           </div>
-          <div class="helper-text" *ngIf="!serviciosPrestadorDisponibles.length">
-            No hay servicios disponibles en la sucursal seleccionada.
-          </div>
+          @if (!serviciosPrestadorDisponibles.length) {
+            <div class="helper-text">
+              No hay servicios disponibles en la sucursal seleccionada.
+            </div>
+          }
         </div>
 
         <div class="form-actions">
@@ -98,21 +105,27 @@
       </div>
 
       <div class="entity-list">
-        <article class="entity-row" *ngFor="let prestador of prestadores">
-          <div class="entity-main">
-            <div class="entity-meta">{{ prestador.sucursalNombre }}</div>
-            <div class="entity-title">{{ prestador.nombreMostrar }}</div>
-            <div class="entity-meta">{{ prestador.correo }}</div>
-            <div class="entity-meta" *ngIf="prestador.biografia">{{ prestador.biografia }}</div>
-            <mat-chip-set>
-              <mat-chip *ngFor="let nombre of prestador.servicioNombres">{{ nombre }}</mat-chip>
-            </mat-chip-set>
-          </div>
-          <div class="entity-side">
-            <span class="status-pill" [class.is-active]="prestador.activo">{{ prestador.activo ? 'Activo' : 'Inactivo' }}</span>
-            <button mat-stroked-button type="button" (click)="editProvider.emit(prestador)">Editar</button>
-          </div>
-        </article>
+        @for (prestador of prestadores; track prestador) {
+          <article class="entity-row">
+            <div class="entity-main">
+              <div class="entity-meta">{{ prestador.sucursalNombre }}</div>
+              <div class="entity-title">{{ prestador.nombreMostrar }}</div>
+              <div class="entity-meta">{{ prestador.correo }}</div>
+              @if (prestador.biografia) {
+                <div class="entity-meta">{{ prestador.biografia }}</div>
+              }
+              <mat-chip-set>
+                @for (nombre of prestador.servicioNombres; track nombre) {
+                  <mat-chip>{{ nombre }}</mat-chip>
+                }
+              </mat-chip-set>
+            </div>
+            <div class="entity-side">
+              <span class="status-pill" [class.is-active]="prestador.activo">{{ prestador.activo ? 'Activo' : 'Inactivo' }}</span>
+              <button mat-stroked-button type="button" (click)="editProvider.emit(prestador)">Editar</button>
+            </div>
+          </article>
+        }
       </div>
     </mat-card>
   </div>

@@ -1,13 +1,13 @@
 import { Component, computed, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { CommonModule } from '@angular/common';
+
 import { TenantContextService } from '../../core/tenant/tenant-context.service';
 import { PlatformHostService } from '../../core/platform/platform-host.service';
 
 @Component({
   selector: 'app-footer',
   standalone: true,
-  imports: [RouterLink, CommonModule],
+  imports: [RouterLink],
   templateUrl: './footer.component.html',
   styleUrl: './footer.component.css'
 })

@@ -16,17 +16,21 @@
         </div>
 
         <div class="company-register__list">
-          <article class="company-register__item" *ngFor="let step of setupSteps; let i = index">
-            <span>{{ i + 1 }}</span>
-            <p>{{ step }}</p>
-          </article>
+          @for (step of setupSteps; track step; let i = $index) {
+            <article class="company-register__item">
+              <span>{{ i + 1 }}</span>
+              <p>{{ step }}</p>
+            </article>
+          }
         </div>
 
         <div class="company-register__capabilities">
-          <article *ngFor="let item of capabilities">
-            <i class="bi bi-stars"></i>
-            <span>{{ item }}</span>
-          </article>
+          @for (item of capabilities; track item) {
+            <article>
+              <i class="bi bi-stars"></i>
+              <span>{{ item }}</span>
+            </article>
+          }
         </div>
       </aside>
 
@@ -88,18 +92,26 @@
           </div>
 
           <div class="company-register__feedback">
-            <div class="text-danger small" *ngIf="form.invalid && (form.touched || form.dirty)">
-              Revisa los datos del negocio y del administrador. El formulario debe quedar completo para crear la empresa.
-            </div>
-            <div class="alert alert-danger mb-0" *ngIf="error">
-              {{ error }}
-            </div>
+            @if (form.invalid && (form.touched || form.dirty)) {
+              <div class="text-danger small">
+                Revisa los datos del negocio y del administrador. El formulario debe quedar completo para crear la empresa.
+              </div>
+            }
+            @if (error) {
+              <div class="alert alert-danger mb-0">
+                {{ error }}
+              </div>
+            }
           </div>
 
           <div class="company-register__actions">
             <button type="submit" class="btn btn-primary btn-lg rounded-pill" [disabled]="loading()">
-              <span *ngIf="!loading()">Crear empresa</span>
-              <span *ngIf="loading()" class="spinner-border spinner-border-sm"></span>
+              @if (!loading()) {
+                <span>Crear empresa</span>
+              }
+              @if (loading()) {
+                <span class="spinner-border spinner-border-sm"></span>
+              }
             </button>
             <button type="button" class="btn btn-outline-dark btn-lg rounded-pill" (click)="cargarDemo()">
               Cargar demo
@@ -107,18 +119,20 @@
           </div>
         </form>
 
-        <div class="company-register__success" *ngIf="submitted() as result">
-          <span class="company-register__success-eyebrow">Empresa creada</span>
-          <h3>{{ result.nombreEmpresa }} ya quedó lista en Fluora.</h3>
-          <p>
-            Fluora creó la empresa, el acceso principal y el sitio base. Ya puedes entrar al acceso central o abrir la web pública generada.
-          </p>
-          <div class="company-register__success-links">
-            <a [attr.href]="accesoUrl()" class="btn btn-primary rounded-pill">Ir a iniciar sesión</a>
-            <a [attr.href]="sitioUrl()" class="btn btn-outline-dark rounded-pill">Ver sitio público</a>
+        @if (submitted(); as result) {
+          <div class="company-register__success">
+            <span class="company-register__success-eyebrow">Empresa creada</span>
+            <h3>{{ result.nombreEmpresa }} ya quedó lista en Fluora.</h3>
+            <p>
+              Fluora creó la empresa, el acceso principal y el sitio base. Ya puedes entrar al acceso central o abrir la web pública generada.
+            </p>
+            <div class="company-register__success-links">
+              <a [attr.href]="accesoUrl()" class="btn btn-primary rounded-pill">Ir a iniciar sesión</a>
+              <a [attr.href]="sitioUrl()" class="btn btn-outline-dark rounded-pill">Ver sitio público</a>
+            </div>
+            <small>Slug generado: {{ result.slug }}</small>
           </div>
-          <small>Slug generado: {{ result.slug }}</small>
-        </div>
+        }
       </div>
     </div>
   </div>

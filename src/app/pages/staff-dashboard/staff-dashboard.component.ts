@@ -2,6 +2,7 @@ import { CommonModule } from '@angular/common';
 import { ChangeDetectorRef, Component, DestroyRef, NgZone, OnInit, ViewEncapsulation, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { BreakpointObserver } from '@angular/cdk/layout';
+import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { MatBadgeModule } from '@angular/material/badge';
 import { MatButtonModule } from '@angular/material/button';
@@ -10,7 +11,7 @@ import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { Observable, forkJoin, of } from 'rxjs';
-import { finalize } from 'rxjs/operators';
+import { catchError, finalize } from 'rxjs/operators';
 import { buildWhatsAppUrl, formatAgendaStatusLabel, getDurationMinutes, getInitials } from '../../components/agenda/agenda.helpers';
 import {
   AgendaActionVm,
@@ -21,11 +22,13 @@ import {
   AgendaViewMode
 } from '../../components/agenda/agenda.types';
 import { AuthService } from '../../core/auth/auth.service';
+import { PerfilUsuarioLocal, UserProfileService } from '../../core/profile/user-profile.service';
 import {
   CitaStaff,
   ExcepcionDisponibilidadStaff,
   GuardarExcepcionDisponibilidadStaffPayload,
   GuardarReglaDisponibilidadStaffPayload,
+  PerfilStaff,
   ReglaDisponibilidadStaff,
   StaffService
 } from '../../core/staff/staff.service';
@@ -35,12 +38,14 @@ import { StaffBlocksSectionComponent } from './staff-blocks-section.component';
 
 type SeccionStaff = 'agenda' | 'horarios' | 'bloqueos';
 type ModuloStaffDef = { id: SeccionStaff; titulo: string; descripcion: string; icono: string; permiso: string };
+type GrupoSidebarStaff = { id: string; titulo: string; icono: string; modulos: SeccionStaff[] };
 
 @Component({
   selector: 'app-staff-dashboard',
   standalone: true,
   imports: [
     CommonModule,
+    FormsModule,
     MatBadgeModule,
     MatButtonModule,
     MatMenuModule,
@@ -58,6 +63,7 @@ type ModuloStaffDef = { id: SeccionStaff; titulo: string; descripcion: string; i
 export class StaffDashboardComponent implements OnInit {
   private readonly staffService = inject(StaffService);
   private readonly authService = inject(AuthService);
+  private readonly userProfileService = inject(UserProfileService);
   private readonly router = inject(Router);
   private readonly breakpointObserver = inject(BreakpointObserver);
   private readonly ngZone = inject(NgZone);
@@ -76,7 +82,13 @@ export class StaffDashboardComponent implements OnInit {
   readonly panelMovil = signal(false);
   readonly sidebarAbierto = signal(true);
   readonly sidebarCompacto = signal(false);
+  readonly perfilConfigAbierto = signal(false);
   readonly seccionActiva = signal<SeccionStaff>('agenda');
+  readonly perfilStaff = signal<PerfilStaff | null>(null);
+  readonly gruposSidebarAbiertos = signal<Record<string, boolean>>({
+    operacion: true,
+    disponibilidad: false
+  });
   readonly agenda = signal<CitaStaff[]>([]);
   readonly reglas = signal<ReglaDisponibilidadStaff[]>([]);
   readonly excepciones = signal<ExcepcionDisponibilidadStaff[]>([]);
@@ -102,21 +114,55 @@ export class StaffDashboardComponent implements OnInit {
     { id: 'horarios', titulo: 'Horarios', descripcion: 'Define tu disponibilidad base.', icono: 'horario', permiso: 'STAFF_DISPONIBILIDAD_GESTIONAR' },
     { id: 'bloqueos', titulo: 'Bloqueos', descripcion: 'Descansos, vacaciones y cierres.', icono: 'bloqueo', permiso: 'STAFF_DISPONIBILIDAD_GESTIONAR' }
   ];
+  readonly gruposSidebarBase: GrupoSidebarStaff[] = [
+    { id: 'operacion', titulo: 'Operación', icono: 'agenda', modulos: ['agenda'] },
+    { id: 'disponibilidad', titulo: 'Disponibilidad', icono: 'horario', modulos: ['horarios', 'bloqueos'] }
+  ];
   readonly modulosStaff = computed(() =>
     this.modulosStaffBase.filter(modulo => this.authService.tienePermiso(modulo.permiso))
   );
+  readonly gruposSidebar = computed(() => {
+    const modulosDisponibles = new Map(this.modulosStaff().map(modulo => [modulo.id, modulo]));
+    return this.gruposSidebarBase
+      .map(grupo => ({
+        ...grupo,
+        modulosVisibles: grupo.modulos
+          .map(moduloId => modulosDisponibles.get(moduloId))
+          .filter((modulo): modulo is ModuloStaffDef => !!modulo)
+      }))
+      .filter(grupo => grupo.modulosVisibles.length > 0);
+  });
   readonly moduloActivo = computed(() =>
     this.modulosStaff().find(modulo => modulo.id === this.seccionActiva()) ?? this.modulosStaff()[0] ?? this.moduloStaffFallback
   );
   readonly nombreEmpresa = computed(() => this.authService.sesionActual()?.empresaNombre?.trim() || 'Empresa');
   readonly inicialesEmpresa = computed(() => getInitials(this.nombreEmpresa()));
-  readonly nombreUsuario = computed(() => this.authService.nombreUsuarioVisible());
+  readonly perfilUsuario = computed(() => this.userProfileService.perfilActual());
+  readonly nombreUsuario = computed(() =>
+    this.perfilStaff()?.nombreMostrar?.trim()
+    || this.perfilUsuario().nombre
+    || this.authService.nombreUsuarioVisible()
+  );
   readonly correoUsuario = computed(() => this.authService.sesionActual()?.correo ?? '');
-  readonly inicialesUsuario = computed(() => this.authService.inicialesUsuarioVisible());
+  readonly puestoUsuario = computed(() => this.perfilUsuario().puesto || 'Staff');
+  readonly fotoPerfilUsuario = computed(() => this.perfilUsuario().fotoDataUrl);
+  readonly inicialesUsuario = computed(() => getInitials(this.nombreUsuario()));
   readonly puedeVerAgenda = computed(() => this.authService.puedeVerAgendaStaff());
   readonly puedeGestionarCitas = computed(() => this.authService.puedeGestionarCitasStaff());
   readonly puedeGestionarDisponibilidad = computed(() => this.authService.puedeGestionarDisponibilidadStaff());
   readonly notificaciones = computed(() => this.agenda().filter(cita => cita.estado === 'PENDIENTE').length);
+  readonly notificacionesStaff = computed(() => {
+    const pendientes = this.agenda().filter(cita => cita.estado === 'PENDIENTE');
+    return pendientes.length
+      ? [{
+          titulo: 'Citas pendientes',
+          descripcion: `${pendientes.length} citas requieren confirmación o seguimiento.`,
+          icono: 'bi-calendar-check',
+          seccion: 'agenda' as SeccionStaff,
+          total: pendientes.length
+        }]
+      : [];
+  });
   readonly horasAgenda = Array.from({ length: this.finAgendaHora - this.inicioAgendaHora + 1 }, (_, index) => {
     const hora = this.inicioAgendaHora + index;
     return { hora, etiqueta: `${hora.toString().padStart(2, '0')}:00` };
@@ -305,8 +351,15 @@ export class StaffDashboardComponent implements OnInit {
     motivo: null
   };
 
+  formularioPerfilUsuario: PerfilUsuarioLocal = {
+    nombre: '',
+    puesto: '',
+    fotoDataUrl: null
+  };
+
   ngOnInit(): void {
     this.actualizarVistaEnZona(() => {
+      this.userProfileService.cargar();
       this.sincronizarSidebarConViewport(this.breakpointObserver.isMatched('(max-width: 991px)'));
     });
     this.recargar();
@@ -341,9 +394,86 @@ export class StaffDashboardComponent implements OnInit {
       return;
     }
     this.seccionActiva.set(seccion);
+    this.abrirGrupoSidebarDeSeccion(seccion);
     if (this.panelMovil()) {
       this.sidebarAbierto.set(false);
     }
+  }
+
+  alternarGrupoSidebar(grupoId: string) {
+    this.gruposSidebarAbiertos.update(grupos => ({
+      ...grupos,
+      [grupoId]: !grupos[grupoId]
+    }));
+  }
+
+  grupoSidebarExpandido(grupoId: string): boolean {
+    return !!this.gruposSidebarAbiertos()[grupoId];
+  }
+
+  grupoSidebarActivo(grupo: { modulos: SeccionStaff[] }): boolean {
+    return grupo.modulos.includes(this.seccionActiva());
+  }
+
+  abrirNotificacionStaff(notificacion: { seccion: SeccionStaff }) {
+    this.seleccionarSeccion(notificacion.seccion);
+  }
+
+  abrirConfiguracionPerfil() {
+    this.formularioPerfilUsuario = {
+      nombre: this.nombreUsuario(),
+      puesto: this.puestoUsuario(),
+      fotoDataUrl: this.fotoPerfilUsuario()
+    };
+    this.perfilConfigAbierto.set(true);
+  }
+
+  cerrarConfiguracionPerfil() {
+    this.perfilConfigAbierto.set(false);
+  }
+
+  guardarConfiguracionPerfil() {
+    this.userProfileService.guardar(this.formularioPerfilUsuario);
+    this.perfilConfigAbierto.set(false);
+  }
+
+  seleccionarFotoPerfil(evento: Event) {
+    const input = evento.target as HTMLInputElement;
+    const archivo = input.files?.[0];
+    if (!archivo) {
+      return;
+    }
+    if (!archivo.type.startsWith('image/') || archivo.size > 1_500_000) {
+      this.error = 'Selecciona una imagen válida menor a 1.5 MB.';
+      input.value = '';
+      return;
+    }
+    const lector = new FileReader();
+    lector.onload = () => this.actualizarVistaEnZona(() => {
+      this.formularioPerfilUsuario = {
+        ...this.formularioPerfilUsuario,
+        fotoDataUrl: typeof lector.result === 'string' ? lector.result : null
+      };
+    });
+    lector.readAsDataURL(archivo);
+  }
+
+  quitarFotoPerfil() {
+    this.formularioPerfilUsuario = {
+      ...this.formularioPerfilUsuario,
+      fotoDataUrl: null
+    };
+  }
+
+  private abrirGrupoSidebarDeSeccion(seccion: SeccionStaff) {
+    const grupo = this.gruposSidebarBase.find(item => item.modulos.includes(seccion));
+    if (!grupo) {
+      return;
+    }
+    this.gruposSidebarAbiertos.update(grupos => ({
+      ...grupos,
+      [grupo.id]: true
+    }));
   }
 
   alternarCompactoSidebar() {
@@ -508,14 +638,16 @@ export class StaffDashboardComponent implements OnInit {
       this.error = '';
     });
     forkJoin({
+      perfil: this.staffService.getPerfil().pipe(catchError(() => of(null as PerfilStaff | null))),
       agenda: this.cargarStaffSi(this.puedeVerAgenda(), this.staffService.getAgenda(desde, hasta), [] as CitaStaff[]),
       reglas: this.cargarStaffSi(this.puedeGestionarDisponibilidad(), this.staffService.getReglasDisponibilidad(), [] as ReglaDisponibilidadStaff[]),
       excepciones: this.cargarStaffSi(this.puedeGestionarDisponibilidad(), this.staffService.getExcepcionesDisponibilidad(), [] as ExcepcionDisponibilidadStaff[])
     })
       .pipe(finalize(() => this.actualizarVistaEnZona(() => this.loading.set(false))))
       .subscribe({
-        next: ({ agenda, reglas, excepciones }) => {
+        next: ({ perfil, agenda, reglas, excepciones }) => {
           this.actualizarVistaEnZona(() => {
+            this.perfilStaff.set(perfil);
             this.agenda.set(agenda);
             this.reglas.set(reglas);
             this.excepciones.set(excepciones);

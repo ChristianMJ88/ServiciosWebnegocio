@@ -1,5 +1,5 @@
 <section class="agenda-detail" [attr.data-theme]="theme()" [class.is-modal]="modal()">
-  <ng-container *ngIf="appointment() as item; else agendaDetailEmpty">
+  @if (appointment(); as item) {
     <div class="agenda-detail__header">
       <div class="agenda-detail__profile">
         <span class="agenda-detail__avatar">{{ item.avatarLabel }}</span>
@@ -10,63 +10,64 @@
       </div>
       <div class="agenda-detail__header-actions">
         <span class="agenda-detail__status" [attr.data-status]="item.status.toLowerCase()">{{ item.statusLabel }}</span>
-        <button
-          *ngIf="modal()"
-          type="button"
-          class="agenda-detail__close"
-          aria-label="Cerrar detalle"
-          (click)="close()">
-          ×
-        </button>
+        @if (modal()) {
+          <button
+            type="button"
+            class="agenda-detail__close"
+            aria-label="Cerrar detalle"
+            (click)="close()">
+            ×
+          </button>
+        }
       </div>
     </div>
-
     <div class="agenda-detail__time">
       {{ item.start | date:'EEEE d MMMM, h:mm a':'':'es-MX' }} - {{ item.end | date:'h:mm a':'':'es-MX' }}
     </div>
-
     <div class="agenda-detail__meta">
-      <div *ngFor="let field of item.metaFields">
-        <span>{{ field.label }}</span>
-        <strong>{{ field.value }}</strong>
+      @for (field of item.metaFields; track field) {
+        <div>
+          <span>{{ field.label }}</span>
+          <strong>{{ field.value }}</strong>
+        </div>
+      }
+    </div>
+    @if (item.notes) {
+      <div class="agenda-detail__notes">
+        <span>Notas</span>
+        <p>{{ item.notes }}</p>
       </div>
-    </div>
-
-    <div class="agenda-detail__notes" *ngIf="item.notes">
-      <span>Notas</span>
-      <p>{{ item.notes }}</p>
-    </div>
-
-    <div class="agenda-detail__actions" *ngIf="item.actions.length">
-      <ng-container *ngFor="let action of item.actions">
-        <a
-          *ngIf="action.externalUrl; else internalAction"
-          class="agenda-detail__action"
-          [ngClass]="'is-' + (action.kind || 'secondary')"
-          [href]="action.externalUrl"
-          target="_blank"
-          rel="noopener noreferrer">
-          {{ action.label }}
-        </a>
-
-        <ng-template #internalAction>
-          <button
-            type="button"
-            class="agenda-detail__action"
-            [ngClass]="'is-' + (action.kind || 'secondary')"
-            [disabled]="action.disabled"
-            (click)="triggerAction(action, item.id)">
-            {{ action.label }}
-          </button>
-        </ng-template>
-      </ng-container>
-    </div>
-  </ng-container>
-
-  <ng-template #agendaDetailEmpty>
+    }
+    @if (item.actions.length) {
+      <div class="agenda-detail__actions">
+        @for (action of item.actions; track action) {
+          @if (action.externalUrl) {
+            <a
+              class="agenda-detail__action"
+              [ngClass]="'is-' + (action.kind || 'secondary')"
+              [href]="action.externalUrl"
+              target="_blank"
+              rel="noopener noreferrer">
+              {{ action.label }}
+            </a>
+          } @else {
+            <button
+              type="button"
+              class="agenda-detail__action"
+              [ngClass]="'is-' + (action.kind || 'secondary')"
+              [disabled]="action.disabled"
+              (click)="triggerAction(action, item.id)">
+              {{ action.label }}
+            </button>
+          }
+        }
+      </div>
+    }
+  } @else {
     <div class="agenda-detail__empty">
       <h4>{{ emptyTitle() }}</h4>
       <p>{{ emptyMessage() }}</p>
     </div>
-  </ng-template>
+  }
+
 </section>

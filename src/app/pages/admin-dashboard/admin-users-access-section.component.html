@@ -5,9 +5,11 @@
         <div class="section-eyebrow">Operación interna</div>
         <h3>{{ usuarioInternoEditandoId ? 'Editar acceso de usuario' : 'Nuevo usuario interno' }}</h3>
       </div>
-      <button mat-stroked-button type="button" *ngIf="usuarioInternoEditandoId" (click)="clearEdit.emit()">
-        Limpiar formulario
-      </button>
+      @if (usuarioInternoEditandoId) {
+        <button mat-stroked-button type="button" (click)="clearEdit.emit()">
+          Limpiar formulario
+        </button>
+      }
     </div>
 
     <div class="helper-text full-width users-helper-banner">
@@ -40,7 +42,9 @@
         <mat-label>Sucursal base</mat-label>
         <mat-select name="usuarioInternoSucursalId" [(ngModel)]="formularioUsuarioInterno.sucursalId">
           <mat-option [value]="null">Sin restricción inicial</mat-option>
-          <mat-option *ngFor="let sucursal of sucursales" [value]="sucursal.id">{{ sucursal.nombre }}</mat-option>
+          @for (sucursal of sucursales; track sucursal) {
+            <mat-option [value]="sucursal.id">{{ sucursal.nombre }}</mat-option>
+          }
         </mat-select>
       </mat-form-field>
 
@@ -51,7 +55,9 @@
           name="usuarioInternoSucursalIds"
           [(ngModel)]="formularioUsuarioInterno.sucursalIds"
           (ngModelChange)="branchScopeChange.emit($event)">
-          <mat-option *ngFor="let sucursal of sucursales" [value]="sucursal.id">{{ sucursal.nombre }}</mat-option>
+          @for (sucursal of sucursales; track sucursal) {
+            <mat-option [value]="sucursal.id">{{ sucursal.nombre }}</mat-option>
+          }
         </mat-select>
         <mat-hint>Si no eliges ninguna, el usuario podrá operar en todas las sucursales de la empresa.</mat-hint>
       </mat-form-field>
@@ -64,87 +70,104 @@
           (ngModelChange)="roleChange.emit($event)"
           required>
           <mat-option [value]="null" disabled>Selecciona un rol</mat-option>
-          <mat-option *ngFor="let rol of rolesUsuarioInterno" [value]="rol.id">{{ rol.nombre }}</mat-option>
+          @for (rol of rolesUsuarioInterno; track rol) {
+            <mat-option [value]="rol.id">{{ rol.nombre }}</mat-option>
+          }
         </mat-select>
         <mat-hint>Selecciona el rol y el usuario heredará esos permisos sin configurarlos manualmente.</mat-hint>
       </mat-form-field>
 
-      <div class="role-preview-card full-width" *ngIf="rolUsuarioInternoSeleccionado as rol">
-        <div class="role-preview-head">
-          <div>
-            <div class="section-eyebrow">Vista previa del acceso</div>
-            <h4>{{ rol.nombre }}</h4>
-            <p>{{ rol.permisos.length }} permiso(s) heredados. Scope actual: {{ resumenAccesoUsuarioInterno.scopeTexto }}.</p>
-          </div>
-          <button mat-stroked-button type="button" (click)="editSelectedRole.emit()">
-            Revisar rol
-          </button>
-        </div>
-
-        <mat-chip-set aria-label="Permisos heredados del rol">
-          <mat-chip *ngFor="let permiso of rol.permisos.slice(0, 4)">{{ etiquetaPermiso(permiso) }}</mat-chip>
-          <mat-chip *ngIf="rol.permisos.length > 4">+{{ rol.permisos.length - 4 }} más</mat-chip>
-        </mat-chip-set>
-      </div>
-
-      <details class="user-extra-permissions full-width" *ngIf="rolUsuarioInternoSeleccionado as rol" [open]="!!permisosDirectosUsuarioInterno.length">
-        <summary>
-          2. Permisos extra por usuario
-          <span>{{ permisosDirectosUsuarioInterno.length }} seleccionado(s)</span>
-        </summary>
-
-        <div class="helper-text">
-          Usa este bloque solo para excepciones. El rol sigue siendo la base y aquí solo agregas permisos puntuales para este usuario.
-        </div>
-
-        <div class="user-permissions-summary" *ngIf="permisosDirectosUsuarioInterno.length">
-          <div>
-            <strong>Extras directos</strong>
-            <p>{{ permisosDirectosUsuarioInterno.length }} permiso(s). {{ resumenPermisosLista(permisosDirectosUsuarioInterno, 4) }}.</p>
-          </div>
-          <mat-chip-set aria-label="Permisos directos del usuario">
-            <mat-chip *ngFor="let permiso of permisosDirectosUsuarioInterno.slice(0, 6)">{{ etiquetaPermiso(permiso) }}</mat-chip>
-            <mat-chip *ngIf="permisosDirectosUsuarioInterno.length > 6">+{{ permisosDirectosUsuarioInterno.length - 6 }} más</mat-chip>
-          </mat-chip-set>
-        </div>
-
-        <div class="user-permissions-summary user-permissions-summary-secondary">
-          <div>
-            <strong>Acceso efectivo</strong>
-            <p>{{ permisosEfectivosUsuarioInterno.length }} permiso(s) combinando rol + extras.</p>
-          </div>
-          <mat-chip-set aria-label="Acceso efectivo del usuario">
-            <mat-chip *ngFor="let permiso of permisosEfectivosUsuarioInterno.slice(0, 6)">{{ etiquetaPermiso(permiso) }}</mat-chip>
-            <mat-chip *ngIf="permisosEfectivosUsuarioInterno.length > 6">+{{ permisosEfectivosUsuarioInterno.length - 6 }} más</mat-chip>
-          </mat-chip-set>
-        </div>
-
-        <div class="permission-groups" *ngIf="gruposPermisosDirectosUsuarioInterno.length; else sinPermisosExtrasDisponibles">
-          <section class="permission-group-card" *ngFor="let grupo of gruposPermisosDirectosUsuarioInterno">
-            <div class="permission-group-title">{{ grupo.titulo }}</div>
-            <div class="permission-group-list">
-              <mat-checkbox
-                *ngFor="let permiso of grupo.permisos"
-                [ngModel]="permisoDirectoUsuarioSeleccionado(permiso.codigo)"
-                (ngModelChange)="directPermissionChange.emit({ codigo: permiso.codigo, checked: $event })"
-                [name]="'permiso_directo_' + permiso.codigo">
-                <span class="permission-label">{{ permiso.nombre }}</span>
-                <span class="permission-code">{{ permiso.codigo }}</span>
-              </mat-checkbox>
+      @if (rolUsuarioInternoSeleccionado; as rol) {
+        <div class="role-preview-card full-width">
+          <div class="role-preview-head">
+            <div>
+              <div class="section-eyebrow">Vista previa del acceso</div>
+              <h4>{{ rol.nombre }}</h4>
+              <p>{{ rol.permisos.length }} permiso(s) heredados. Scope actual: {{ resumenAccesoUsuarioInterno.scopeTexto }}.</p>
             </div>
-          </section>
-        </div>
-
-        <ng-template #sinPermisosExtrasDisponibles>
-          <div class="helper-text">
-            Este rol ya cubre todos los permisos internos disponibles para esta empresa.
+            <button mat-stroked-button type="button" (click)="editSelectedRole.emit()">
+              Revisar rol
+            </button>
           </div>
-        </ng-template>
-
-        <div class="helper-text">
-          Los cambios de acceso aplican en el siguiente inicio de sesión de ese usuario.
+          <mat-chip-set aria-label="Permisos heredados del rol">
+            @for (permiso of rol.permisos.slice(0, 4); track permiso) {
+              <mat-chip>{{ etiquetaPermiso(permiso) }}</mat-chip>
+            }
+            @if (rol.permisos.length > 4) {
+              <mat-chip>+{{ rol.permisos.length - 4 }} más</mat-chip>
+            }
+          </mat-chip-set>
         </div>
-      </details>
+      }
+
+      @if (rolUsuarioInternoSeleccionado; as rol) {
+        <details class="user-extra-permissions full-width" [open]="!!permisosDirectosUsuarioInterno.length">
+          <summary>
+            2. Permisos extra por usuario
+            <span>{{ permisosDirectosUsuarioInterno.length }} seleccionado(s)</span>
+          </summary>
+          <div class="helper-text">
+            Usa este bloque solo para excepciones. El rol sigue siendo la base y aquí solo agregas permisos puntuales para este usuario.
+          </div>
+          @if (permisosDirectosUsuarioInterno.length) {
+            <div class="user-permissions-summary">
+              <div>
+                <strong>Extras directos</strong>
+                <p>{{ permisosDirectosUsuarioInterno.length }} permiso(s). {{ resumenPermisosLista(permisosDirectosUsuarioInterno, 4) }}.</p>
+              </div>
+              <mat-chip-set aria-label="Permisos directos del usuario">
+                @for (permiso of permisosDirectosUsuarioInterno.slice(0, 6); track permiso) {
+                  <mat-chip>{{ etiquetaPermiso(permiso) }}</mat-chip>
+                }
+                @if (permisosDirectosUsuarioInterno.length > 6) {
+                  <mat-chip>+{{ permisosDirectosUsuarioInterno.length - 6 }} más</mat-chip>
+                }
+              </mat-chip-set>
+            </div>
+          }
+          <div class="user-permissions-summary user-permissions-summary-secondary">
+            <div>
+              <strong>Acceso efectivo</strong>
+              <p>{{ permisosEfectivosUsuarioInterno.length }} permiso(s) combinando rol + extras.</p>
+            </div>
+            <mat-chip-set aria-label="Acceso efectivo del usuario">
+              @for (permiso of permisosEfectivosUsuarioInterno.slice(0, 6); track permiso) {
+                <mat-chip>{{ etiquetaPermiso(permiso) }}</mat-chip>
+              }
+              @if (permisosEfectivosUsuarioInterno.length > 6) {
+                <mat-chip>+{{ permisosEfectivosUsuarioInterno.length - 6 }} más</mat-chip>
+              }
+            </mat-chip-set>
+          </div>
+          @if (gruposPermisosDirectosUsuarioInterno.length) {
+            <div class="permission-groups">
+              @for (grupo of gruposPermisosDirectosUsuarioInterno; track grupo) {
+                <section class="permission-group-card">
+                  <div class="permission-group-title">{{ grupo.titulo }}</div>
+                  <div class="permission-group-list">
+                    @for (permiso of grupo.permisos; track permiso) {
+                      <mat-checkbox
+                        [ngModel]="permisoDirectoUsuarioSeleccionado(permiso.codigo)"
+                        (ngModelChange)="directPermissionChange.emit({ codigo: permiso.codigo, checked: $event })"
+                        [name]="'permiso_directo_' + permiso.codigo">
+                        <span class="permission-label">{{ permiso.nombre }}</span>
+                        <span class="permission-code">{{ permiso.codigo }}</span>
+                      </mat-checkbox>
+                    }
+                  </div>
+                </section>
+              }
+            </div>
+          } @else {
+            <div class="helper-text">
+              Este rol ya cubre todos los permisos internos disponibles para esta empresa.
+            </div>
+          }
+          <div class="helper-text">
+            Los cambios de acceso aplican en el siguiente inicio de sesión de ese usuario.
+          </div>
+        </details>
+      }
 
       <div class="form-block-title full-width">3. Datos del usuario</div>
 
@@ -212,44 +235,62 @@
         <mat-label>Buscar usuario</mat-label>
         <input matInput [ngModel]="filtroUsuariosInternos" (ngModelChange)="filterChange.emit($event)" placeholder="Nombre, correo, rol o sucursal">
       </mat-form-field>
-      <button mat-stroked-button type="button" *ngIf="filtroUsuariosInternos" (click)="clearFilter.emit()">
-        Limpiar
-      </button>
+      @if (filtroUsuariosInternos) {
+        <button mat-stroked-button type="button" (click)="clearFilter.emit()">
+          Limpiar
+        </button>
+      }
     </div>
 
     <div class="entity-list">
-      <article class="entity-row entity-row-user" *ngFor="let usuario of usuariosInternosFiltrados">
-        <div class="entity-main">
-          <div class="entity-row-head">
-            <div class="entity-title">{{ usuario.nombreCompleto }}</div>
-            <div class="entity-meta">{{ usuario.rolNombre || usuario.rolCodigo }}<span *ngIf="usuario.puesto"> · {{ usuario.puesto }}</span></div>
+      @for (usuario of usuariosInternosFiltrados; track usuario) {
+        <article class="entity-row entity-row-user">
+          <div class="entity-main">
+            <div class="entity-row-head">
+              <div class="entity-title">{{ usuario.nombreCompleto }}</div>
+              <div class="entity-meta">{{ usuario.rolNombre || usuario.rolCodigo }}@if (usuario.puesto) {
+                <span> · {{ usuario.puesto }}</span>
+              }</div>
+            </div>
+            <div class="entity-meta">{{ usuario.correo }}</div>
+            <div class="entity-meta">
+              Alcance: {{ usuario.sucursalNombresScope.length ? usuario.sucursalNombresScope.join(', ') : (usuario.sucursalNombre || 'Todas las sucursales') }}
+            </div>
+            <div class="entity-meta">
+              Acceso efectivo: {{ usuario.permisosEfectivos.length }} permiso(s)
+              @if (usuario.permisosDirectos.length) {
+                <span> · {{ usuario.permisosDirectos.length }} extra(s)</span>
+              }
+            </div>
+            @if (rolInternoDeUsuario(usuario); as rolAsignado) {
+              <div class="entity-meta">
+                Hereda {{ rolAsignado.permisos.length }} del rol. {{ resumenPermisosRol(rolAsignado, 3) }}
+              </div>
+            }
+            @if (usuario.permisosDirectos.length) {
+              <div class="entity-meta">
+                Extras directos: {{ resumenPermisosLista(usuario.permisosDirectos, 3) }}
+              </div>
+            }
+            @if (usuario.telefono) {
+              <div class="entity-meta">{{ usuario.telefono }}</div>
+            }
+            @if (usuario.notas) {
+              <div class="entity-meta">{{ usuario.notas }}</div>
+            }
           </div>
-          <div class="entity-meta">{{ usuario.correo }}</div>
-          <div class="entity-meta">
-            Alcance: {{ usuario.sucursalNombresScope.length ? usuario.sucursalNombresScope.join(', ') : (usuario.sucursalNombre || 'Todas las sucursales') }}
+          <div class="entity-side">
+            <span class="status-pill" [class.is-active]="usuario.activo">{{ usuario.activo ? 'Activo' : 'Inactivo' }}</span>
+            <button mat-stroked-button type="button" (click)="editAccess.emit(usuario)">Editar acceso</button>
           </div>
-          <div class="entity-meta">
-            Acceso efectivo: {{ usuario.permisosEfectivos.length }} permiso(s)
-            <span *ngIf="usuario.permisosDirectos.length"> · {{ usuario.permisosDirectos.length }} extra(s)</span>
-          </div>
-          <div class="entity-meta" *ngIf="rolInternoDeUsuario(usuario) as rolAsignado">
-            Hereda {{ rolAsignado.permisos.length }} del rol. {{ resumenPermisosRol(rolAsignado, 3) }}
-          </div>
-          <div class="entity-meta" *ngIf="usuario.permisosDirectos.length">
-            Extras directos: {{ resumenPermisosLista(usuario.permisosDirectos, 3) }}
-          </div>
-          <div class="entity-meta" *ngIf="usuario.telefono">{{ usuario.telefono }}</div>
-          <div class="entity-meta" *ngIf="usuario.notas">{{ usuario.notas }}</div>
-        </div>
-        <div class="entity-side">
-          <span class="status-pill" [class.is-active]="usuario.activo">{{ usuario.activo ? 'Activo' : 'Inactivo' }}</span>
-          <button mat-stroked-button type="button" (click)="editAccess.emit(usuario)">Editar acceso</button>
-        </div>
-      </article>
+        </article>
+      }
     </div>
 
-    <div class="agenda-empty" *ngIf="!usuariosInternosFiltrados.length">
-      No encontré usuarios con ese filtro.
-    </div>
+    @if (!usuariosInternosFiltrados.length) {
+      <div class="agenda-empty">
+        No encontré usuarios con ese filtro.
+      </div>
+    }
   </mat-card>
 </div>

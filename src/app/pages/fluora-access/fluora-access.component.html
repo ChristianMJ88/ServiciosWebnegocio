@@ -1,43 +1,21 @@
-<section class="fluora-access min-vh-100 d-flex align-items-center">
-  <div class="container">
-    <div class="fluora-access__layout">
-      <aside class="fluora-access__aside">
-        <img src="/fluora-logo-dark.svg" alt="Logo Fluora" class="fluora-access__logo">
-        <span class="fluora-access__eyebrow">Acceso central Fluora</span>
-        <h1>Entra a tus paneles sin depender de la web pública del negocio.</h1>
-        <p>
-          Fluora toma tu correo y contraseña, reconoce tu empresa y abre la vista correcta para dirección, recepción, caja o equipo.
-        </p>
+<section class="fluora-access min-vh-100 d-flex align-items-center justify-content-center">
+  <div class="container fluora-access__container">
+    <div class="fluora-access__card">
+      <div class="fluora-access__brand">
+        <img src="/fluora-logo.svg" alt="Logo Fluora" class="fluora-access__logo">
+      </div>
 
-        <div class="fluora-access__role-list">
-          <article class="fluora-access__role" *ngFor="let item of roleHighlights">
-            <i class="bi bi-stars"></i>
-            <span>{{ item }}</span>
-          </article>
-        </div>
+      <div class="fluora-access__header">
+        <span class="fluora-access__eyebrow">Acceso</span>
+        <h1>Iniciar sesión</h1>
+        <p>Ingresa con tu usuario y contraseña.</p>
+      </div>
 
-        <div class="fluora-access__reference">
-          <div class="fluora-access__reference-card">
-            <span>Referencia de plataforma</span>
-            <strong>Acceso central + web del negocio por separado</strong>
-            <p>La web pública del negocio vive aparte, mientras el equipo entra por Fluora con un acceso centralizado y vistas según su trabajo.</p>
-            <a [attr.href]="platformHost.marketingUrl('/#resenas')">Ver reseñas del producto</a>
-          </div>
-          <img src="/fluora-showcase-panels.svg" alt="Referencia visual del acceso central de Fluora">
-        </div>
-      </aside>
-
-      <div class="fluora-access__card">
-        <span class="fluora-access__eyebrow">Inicio de sesión</span>
-        <h2>Usa tu acceso principal.</h2>
-        <p class="fluora-access__copy">
-          Si tu correo existe en más de una empresa, después del ingreso te mostraremos cuál elegir para continuar.
-        </p>
-
-        <form [formGroup]="form" (ngSubmit)="iniciarSesion()" class="fluora-access__form">
-          <label for="correo" class="form-label">Correo</label>
-          <div class="input-group input-group-lg mb-3">
-            <span class="input-group-text"><i class="bi bi-envelope"></i></span>
+      <form [formGroup]="form" (ngSubmit)="iniciarSesion()" class="fluora-access__form">
+        <div class="fluora-access__field">
+          <label for="correo" class="form-label">Usuario</label>
+          <div class="input-group fluora-access__input-group">
+            <span class="input-group-text"><i class="bi bi-person"></i></span>
             <input
               id="correo"
               type="email"
@@ -45,9 +23,11 @@
               formControlName="correo"
               placeholder="tu@empresa.com">
           </div>
+        </div>
 
+        <div class="fluora-access__field">
           <label for="contrasena" class="form-label">Contraseña</label>
-          <div class="input-group input-group-lg">
+          <div class="input-group fluora-access__input-group">
             <span class="input-group-text"><i class="bi bi-lock"></i></span>
             <input
               id="contrasena"
@@ -56,53 +36,50 @@
               formControlName="contrasena"
               placeholder="Mínimo 8 caracteres">
           </div>
+        </div>
 
-          <div class="text-danger small mt-2" *ngIf="touched() && form.invalid">
+        @if (touched() && form.invalid) {
+          <div class="fluora-access__validation text-danger small">
             Captura un correo válido y una contraseña de al menos 8 caracteres.
           </div>
+        }
 
-          <div class="alert alert-danger mt-3 mb-0" *ngIf="error">
+        @if (error) {
+          <div class="alert alert-danger fluora-access__alert">
             {{ error }}
           </div>
+        }
 
-          <div class="fluora-access__actions">
-            <button type="submit" class="btn btn-primary rounded-pill" [disabled]="loading()">
-              <span *ngIf="!loading()">Entrar a Fluora</span>
-              <span *ngIf="loading()" class="spinner-border spinner-border-sm"></span>
-            </button>
-            <a routerLink="/registro" class="btn btn-outline-light rounded-pill">Crear empresa</a>
-          </div>
-        </form>
+        <button type="submit" class="btn btn-primary fluora-access__submit" [disabled]="loading()">
+          @if (!loading()) {
+            <span>Entrar</span>
+          }
+          @if (loading()) {
+            <span class="spinner-border spinner-border-sm"></span>
+          }
+        </button>
+      </form>
 
-        <div class="fluora-access__footer">
-          <span>¿Aún no tienes empresa en Fluora?</span>
-          <a routerLink="/registro">Inicia el onboarding</a>
-        </div>
-
-        <div class="fluora-access__companies" *ngIf="empresas().length">
+      @if (empresas().length) {
+        <div class="fluora-access__companies">
           <div class="fluora-access__companies-head">
             <strong>Selecciona tu empresa</strong>
-            <span>Encontramos este correo en más de una empresa.</span>
+            <span>Encontramos este usuario en más de una empresa.</span>
           </div>
-
-          <button
-            type="button"
-            class="fluora-access__company"
-            *ngFor="let empresa of empresas()"
-            (click)="iniciarSesion(empresa.empresaId)">
-            <div>
-              <strong>{{ empresa.empresaNombre }}</strong>
-              <span>{{ empresa.empresaSlug }}</span>
-            </div>
-            <small>{{ empresa.roles.join(', ') }}</small>
-          </button>
+          @for (empresa of empresas(); track empresa) {
+            <button
+              type="button"
+              class="fluora-access__company"
+              (click)="iniciarSesion(empresa.empresaId)">
+              <div>
+                <strong>{{ empresa.empresaNombre }}</strong>
+                <span>{{ empresa.empresaSlug }}</span>
+              </div>
+              <small>{{ empresa.roles.join(', ') }}</small>
+            </button>
+          }
         </div>
-
-        <div class="fluora-access__microcopy">
-          <a [attr.href]="platformHost.marketingUrl('/#funcionalidades')">Ver funcionalidades</a>
-          <a [attr.href]="platformHost.marketingUrl('/#resenas')">Ver reseñas</a>
-        </div>
-      </div>
+      }
     </div>
   </div>
 </section>

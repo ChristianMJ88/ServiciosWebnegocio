@@ -1,4 +1,4 @@
-import { CommonModule } from '@angular/common';
+
 import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
@@ -12,14 +12,13 @@ import { GuardarSucursalPayload, SucursalAdmin } from '../../core/admin/admin.se
   selector: 'app-admin-branches-section',
   standalone: true,
   imports: [
-    CommonModule,
     FormsModule,
     MatButtonModule,
     MatCardModule,
     MatFormFieldModule,
     MatInputModule,
     MatSlideToggleModule
-  ],
+],
   templateUrl: './admin-branches-section.component.html'
 })
 export class AdminBranchesSectionComponent {

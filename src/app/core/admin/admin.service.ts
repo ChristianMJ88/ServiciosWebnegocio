@@ -37,26 +37,114 @@ export interface ServicioAdmin {
   id: number;
   sucursalId: number;
   sucursalNombre: string;
+  sucursalIds: number[];
+  sucursalNombres: string[];
+  grupoId: number | null;
+  grupoNombre: string | null;
+  subgrupoId: number | null;
+  subgrupoNombre: string | null;
   nombre: string;
+  slug: string;
   descripcion: string | null;
+  imagenUrl: string | null;
   duracionMinutos: number;
   bufferAntesMinutos: number;
   bufferDespuesMinutos: number;
   precio: number;
   moneda: string;
+  ordenPublico: number;
+  visiblePublico: boolean;
+  requiereAnticipo: boolean;
+  anticipoTipo: string | null;
+  anticipoValor: number | null;
   activo: boolean;
 }
 
 export interface GuardarServicioPayload {
   sucursalId: number;
+  sucursalIds: number[];
+  grupoId: number | null;
+  subgrupoId: number | null;
   nombre: string;
+  slug: string | null;
   descripcion: string | null;
+  imagenUrl: string | null;
   duracionMinutos: number;
   bufferAntesMinutos: number;
   bufferDespuesMinutos: number;
   precio: number;
   moneda: string;
+  ordenPublico: number;
+  visiblePublico: boolean;
+  requiereAnticipo: boolean;
+  anticipoTipo: string | null;
+  anticipoValor: number | null;
   activo: boolean;
+}
+
+export interface GrupoServicioAdmin {
+  id: number;
+  nombre: string;
+  slug: string;
+  descripcion: string | null;
+  imagenUrl: string | null;
+  icono: string | null;
+  ordenPublico: number;
+  activo: boolean;
+}
+
+export interface GuardarGrupoServicioPayload {
+  nombre: string;
+  slug: string | null;
+  descripcion: string | null;
+  imagenUrl: string | null;
+  icono: string | null;
+  ordenPublico: number;
+  activo: boolean;
+}
+
+export interface SubgrupoServicioAdmin {
+  id: number;
+  grupoId: number;
+  grupoNombre: string;
+  nombre: string;
+  slug: string;
+  descripcion: string | null;
+  ordenPublico: number;
+  activo: boolean;
+}
+
+export interface GuardarSubgrupoServicioPayload {
+  grupoId: number | null;
+  nombre: string;
+  slug: string | null;
+  descripcion: string | null;
+  ordenPublico: number;
+  activo: boolean;
+}
+
+export interface CatalogoSugeridoAdmin {
+  id: string;
+  nombre: string;
+  descripcion: string;
+  grupos: number;
+  subgrupos: number;
+  servicios: number;
+}
+
+export interface ImportarCatalogoSugeridoPayload {
+  sugerenciaId: string;
+  sucursalId: number | null;
+}
+
+export interface ImportarCatalogoSugeridoResponse {
+  sugerenciaId: string;
+  sugerenciaNombre: string;
+  gruposCreados: number;
+  subgruposCreados: number;
+  serviciosCreados: number;
+  serviciosReutilizados: number;
+  mensaje: string;
 }
 
 export interface PrestadorAdmin {
@@ -242,6 +330,53 @@ export interface ReportePrestadorAdmin {
   ticketPromedio: number;
 }
 
+export interface ConfiguracionSitioAdmin {
+  empresaId: number;
+  slug: string;
+  nombreComercial: string;
+  dominioPrincipal: string | null;
+  logoUrl: string | null;
+  descripcionCorta: string | null;
+  colorPrimario: string | null;
+  colorSecundario: string | null;
+  fuenteTitulos: string | null;
+  fuenteCuerpo: string | null;
+  heroTitulo: string | null;
+  heroSubtitulo: string | null;
+  heroImagenUrl: string | null;
+  whatsapp: string | null;
+  telefono: string | null;
+  correo: string | null;
+  direccion: string | null;
+  instagramUrl: string | null;
+  facebookUrl: string | null;
+  tema: string | null;
+  publicado: boolean;
+}
+
+export interface GuardarConfiguracionSitioPayload {
+  slug: string;
+  nombreComercial: string;
+  dominioPrincipal: string | null;
+  logoUrl: string | null;
+  descripcionCorta: string | null;
+  colorPrimario: string | null;
+  colorSecundario: string | null;
+  fuenteTitulos: string | null;
+  fuenteCuerpo: string | null;
+  heroTitulo: string | null;
+  heroSubtitulo: string | null;
+  heroImagenUrl: string | null;
+  whatsapp: string | null;
+  telefono: string | null;
+  correo: string | null;
+  direccion: string | null;
+  instagramUrl: string | null;
+  facebookUrl: string | null;
+  tema: string | null;
+  publicado: boolean;
+}
+
 export interface ConfiguracionCorreoAdmin {
   habilitado: boolean;
   proveedor: 'SMTP' | 'GRAPH' | string | null;
@@ -311,6 +446,8 @@ export interface ConfiguracionWhatsappAdmin {
   plantillaGraciasVisitaSid: string | null;
   plantillaRecordatorioRegresoSid: string | null;
   plantillaEspacioDisponibleWalkinSid: string | null;
+  plantillaMenuBienvenidaSid: string | null;
+  plantillasListPickerSids: string | null;
   senderDisplayName: string | null;
   senderPhoneNumber: string | null;
   senderStatus: string | null;
@@ -340,6 +477,8 @@ export interface GuardarConfiguracionWhatsappPayload {
   plantillaGraciasVisitaSid: string | null;
   plantillaRecordatorioRegresoSid: string | null;
   plantillaEspacioDisponibleWalkinSid: string | null;
+  plantillaMenuBienvenidaSid: string | null;
+  plantillasListPickerSids: string | null;
   senderDisplayName: string | null;
   senderPhoneNumber: string | null;
   senderStatus: string | null;
@@ -358,6 +497,29 @@ export interface PlantillaWhatsappAdmin {
   tipoPlantilla: string | null;
 }
 
+export interface PlantillaWhatsappEmpresaAdmin {
+  id: number;
+  nombre: string;
+  uso: string;
+  contentSid: string;
+  tipoContenido: string | null;
+  categoria: string | null;
+  estado: string | null;
+  activa: boolean;
+  creadaEn: string | null;
+  actualizadaEn: string | null;
+}
+
+export interface GuardarPlantillaWhatsappEmpresaPayload {
+  nombre: string;
+  uso: string;
+  contentSid: string;
+  tipoContenido: string | null;
+  categoria: string | null;
+  estado: string | null;
+  activa: boolean;
+}
+
 export interface LogMensajeWhatsappAdmin {
   id: number;
   agregadoId: number;
@@ -371,6 +533,24 @@ export interface LogMensajeWhatsappAdmin {
   detalleErrorProveedor: string | null;
   enviadaEn: string | null;
   estadoEntregaActualizadoEn: string | null;
+}
+
+export interface MensajeWhatsappAdmin {
+  id: number;
+  telefono: string;
+  direccion: 'ENTRANTE' | 'SALIENTE' | string;
+  cuerpo: string | null;
+  contentSid: string | null;
+  proveedorMensajeId: string | null;
+  estado: string | null;
+  codigoErrorProveedor: string | null;
+  detalleErrorProveedor: string | null;
+  creadoEn: string;
+}
+
+export interface EnviarMensajeWhatsappPayload {
+  telefono: string;
+  mensaje: string;
 }
 
 export interface ProbarPlantillaWhatsappPayload {
@@ -497,6 +677,38 @@ export class AdminService {
     return this.http.get<ServicioAdmin[]>(`${environment.apiBaseUrl}/admin/servicios`);
   }
 
+  getGruposServicio(): Observable<GrupoServicioAdmin[]> {
+    return this.http.get<GrupoServicioAdmin[]>(`${environment.apiBaseUrl}/admin/grupos-servicio`);
+  }
+
+  crearGrupoServicio(payload: GuardarGrupoServicioPayload): Observable<GrupoServicioAdmin> {
+    return this.http.post<GrupoServicioAdmin>(`${environment.apiBaseUrl}/admin/grupos-servicio`, payload);
+  }
+
+  actualizarGrupoServicio(id: number, payload: GuardarGrupoServicioPayload): Observable<GrupoServicioAdmin> {
+    return this.http.patch<GrupoServicioAdmin>(`${environment.apiBaseUrl}/admin/grupos-servicio/${id}`, payload);
+  }
+
+  getSubgruposServicio(): Observable<SubgrupoServicioAdmin[]> {
+    return this.http.get<SubgrupoServicioAdmin[]>(`${environment.apiBaseUrl}/admin/subgrupos-servicio`);
+  }
+
+  crearSubgrupoServicio(payload: GuardarSubgrupoServicioPayload): Observable<SubgrupoServicioAdmin> {
+    return this.http.post<SubgrupoServicioAdmin>(`${environment.apiBaseUrl}/admin/subgrupos-servicio`, payload);
+  }
+
+  actualizarSubgrupoServicio(id: number, payload: GuardarSubgrupoServicioPayload): Observable<SubgrupoServicioAdmin> {
+    return this.http.patch<SubgrupoServicioAdmin>(`${environment.apiBaseUrl}/admin/subgrupos-servicio/${id}`, payload);
+  }
+
+  getCatalogosSugeridos(): Observable<CatalogoSugeridoAdmin[]> {
+    return this.http.get<CatalogoSugeridoAdmin[]>(`${environment.apiBaseUrl}/admin/catalogos-sugeridos`);
+  }
+
+  importarCatalogoSugerido(payload: ImportarCatalogoSugeridoPayload): Observable<ImportarCatalogoSugeridoResponse> {
+    return this.http.post<ImportarCatalogoSugeridoResponse>(`${environment.apiBaseUrl}/admin/catalogos-sugeridos/importar`, payload);
+  }
+
   crearServicio(payload: GuardarServicioPayload): Observable<ServicioAdmin> {
     return this.http.post<ServicioAdmin>(`${environment.apiBaseUrl}/admin/servicios`, payload);
   }
@@ -597,6 +809,14 @@ export class AdminService {
     return this.http.get<ReportePrestadorAdmin[]>(`${environment.apiBaseUrl}/admin/reportes/prestadores`);
   }
 
+  getConfiguracionSitio(): Observable<ConfiguracionSitioAdmin> {
+    return this.http.get<ConfiguracionSitioAdmin>(`${environment.apiBaseUrl}/admin/configuracion-sitio`);
+  }
+
+  actualizarConfiguracionSitio(payload: GuardarConfiguracionSitioPayload): Observable<ConfiguracionSitioAdmin> {
+    return this.http.patch<ConfiguracionSitioAdmin>(`${environment.apiBaseUrl}/admin/configuracion-sitio`, payload);
+  }
+
   getConfiguracionCorreo(): Observable<ConfiguracionCorreoAdmin> {
     return this.http.get<ConfiguracionCorreoAdmin>(`${environment.apiBaseUrl}/admin/configuracion-correo`);
   }
@@ -621,8 +841,32 @@ export class AdminService {
     return this.http.get<PlantillaWhatsappAdmin[]>(`${environment.apiBaseUrl}/admin/configuracion-whatsapp/plantillas`);
   }
 
+  getPlantillasWhatsappEmpresa(): Observable<PlantillaWhatsappEmpresaAdmin[]> {
+    return this.http.get<PlantillaWhatsappEmpresaAdmin[]>(`${environment.apiBaseUrl}/admin/configuracion-whatsapp/plantillas-empresa`);
+  }
+
+  crearPlantillaWhatsappEmpresa(payload: GuardarPlantillaWhatsappEmpresaPayload): Observable<PlantillaWhatsappEmpresaAdmin> {
+    return this.http.post<PlantillaWhatsappEmpresaAdmin>(`${environment.apiBaseUrl}/admin/configuracion-whatsapp/plantillas-empresa`, payload);
+  }
+
+  actualizarPlantillaWhatsappEmpresa(id: number, payload: GuardarPlantillaWhatsappEmpresaPayload): Observable<PlantillaWhatsappEmpresaAdmin> {
+    return this.http.patch<PlantillaWhatsappEmpresaAdmin>(`${environment.apiBaseUrl}/admin/configuracion-whatsapp/plantillas-empresa/${id}`, payload);
+  }
+
+  eliminarPlantillaWhatsappEmpresa(id: number): Observable<void> {
+    return this.http.delete<void>(`${environment.apiBaseUrl}/admin/configuracion-whatsapp/plantillas-empresa/${id}`);
+  }
+
   getLogsWhatsapp(): Observable<LogMensajeWhatsappAdmin[]> {
     return this.http.get<LogMensajeWhatsappAdmin[]>(`${environment.apiBaseUrl}/admin/configuracion-whatsapp/logs`);
+  }
+
+  getMensajesWhatsapp(): Observable<MensajeWhatsappAdmin[]> {
+    return this.http.get<MensajeWhatsappAdmin[]>(`${environment.apiBaseUrl}/admin/whatsapp/mensajes`);
+  }
+
+  enviarMensajeWhatsapp(payload: EnviarMensajeWhatsappPayload): Observable<MensajeWhatsappAdmin> {
+    return this.http.post<MensajeWhatsappAdmin>(`${environment.apiBaseUrl}/admin/whatsapp/mensajes`, payload);
   }
 
   probarPlantillaWhatsapp(payload: ProbarPlantillaWhatsappPayload): Observable<PruebaWhatsappResponse> {

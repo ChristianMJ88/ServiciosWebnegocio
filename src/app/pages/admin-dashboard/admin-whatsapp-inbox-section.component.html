@@ -1,0 +1,202 @@
+<section class="section-stack whatsapp-inbox-section container-fluid px-0">
+  <div class="row g-3 whatsapp-kpi-row">
+    <div class="col-12 col-md-4">
+      <article class="card whatsapp-metric-card h-100">
+        <div class="card-body d-flex align-items-center justify-content-between gap-3">
+          <div>
+            <span class="text-uppercase fw-bold text-secondary small">Conversaciones</span>
+            <strong class="d-block">{{ conversaciones.length }}</strong>
+          </div>
+          <span class="whatsapp-metric-icon bg-primary-subtle text-primary">
+            <i class="bi bi-chat-dots-fill" aria-hidden="true"></i>
+          </span>
+        </div>
+      </article>
+    </div>
+
+    <div class="col-12 col-md-4">
+      <article class="card whatsapp-metric-card h-100">
+        <div class="card-body d-flex align-items-center justify-content-between gap-3">
+          <div>
+            <span class="text-uppercase fw-bold text-secondary small">Recibidos</span>
+            <strong class="d-block">{{ totalEntrantes }}</strong>
+          </div>
+          <span class="whatsapp-metric-icon bg-success-subtle text-success">
+            <i class="bi bi-inbox-fill" aria-hidden="true"></i>
+          </span>
+        </div>
+      </article>
+    </div>
+
+    <div class="col-12 col-md-4">
+      <article class="card whatsapp-metric-card h-100" [class.has-alert]="totalErrores">
+        <div class="card-body d-flex align-items-center justify-content-between gap-3">
+          <div>
+            <span class="text-uppercase fw-bold text-secondary small">Enviados</span>
+            <strong class="d-block">{{ totalSalientes }}</strong>
+            @if (totalErrores) {
+              <small class="text-danger fw-semibold">{{ totalErrores }} con error</small>
+            }
+          </div>
+          <span class="whatsapp-metric-icon bg-info-subtle text-info">
+            <i class="bi bi-send-fill" aria-hidden="true"></i>
+          </span>
+        </div>
+      </article>
+    </div>
+  </div>
+
+  <div class="card whatsapp-inbox-shell border-0">
+    <div class="whatsapp-inbox-layout">
+      <aside class="whatsapp-conversations-panel" aria-label="Conversaciones de WhatsApp">
+        <div class="whatsapp-panel-toolbar">
+          <div>
+            <span class="badge rounded-pill text-bg-success">WhatsApp</span>
+            <h3>Mensajes</h3>
+          </div>
+          <button
+            type="button"
+            class="btn btn-light btn-sm whatsapp-icon-button"
+            (click)="refresh.emit()"
+            matTooltip="Actualizar conversaciones"
+            aria-label="Actualizar conversaciones">
+            <i class="bi bi-arrow-clockwise" aria-hidden="true"></i>
+          </button>
+        </div>
+
+        <div class="px-3 pb-3">
+          <div class="input-group whatsapp-search">
+            <span class="input-group-text">
+              <i class="bi bi-search" aria-hidden="true"></i>
+            </span>
+            <input
+              class="form-control"
+              name="whatsappInboxSearch"
+              type="search"
+              placeholder="Buscar por teléfono, mensaje o estado"
+              [(ngModel)]="filtro">
+          </div>
+        </div>
+
+        @if (!conversaciones.length) {
+          <div class="whatsapp-empty">
+            <i class="bi bi-chat-square-text" aria-hidden="true"></i>
+            <strong>No hay conversaciones</strong>
+            <span>Los mensajes nuevos aparecerán aquí.</span>
+          </div>
+        }
+
+        @if (conversaciones.length) {
+          <div class="list-group list-group-flush whatsapp-conversation-list">
+            @for (conversacion of conversaciones; track trackByTelefono($index, conversacion)) {
+              <button
+                type="button"
+                class="list-group-item list-group-item-action whatsapp-conversation-item"
+                [class.active]="conversacion.telefono === conversacionSeleccionada?.telefono"
+                (click)="seleccionarConversacion(conversacion.telefono)">
+                <span class="whatsapp-avatar">{{ conversacion.iniciales }}</span>
+                <span class="whatsapp-conversation-copy">
+                  <span class="d-flex align-items-center justify-content-between gap-2">
+                    <strong>{{ telefonoVisible(conversacion.telefono) }}</strong>
+                    <time>{{ conversacion.ultimoMensaje.creadoEn | date:'HH:mm':'':'es-MX' }}</time>
+                  </span>
+                  <small>{{ vistaPrevia(conversacion.ultimoMensaje) }}</small>
+                  <span class="d-flex align-items-center gap-2">
+                    <span class="badge rounded-pill text-bg-light">{{ conversacion.mensajes.length }} mensajes</span>
+                    @if (conversacion.errores) {
+                      <span class="badge rounded-pill text-bg-danger">Error</span>
+                    }
+                  </span>
+                </span>
+              </button>
+            }
+          </div>
+        }
+      </aside>
+
+      @if (conversacionSeleccionada; as conversacion) {
+        <section class="whatsapp-thread-panel">
+          <header class="whatsapp-thread-header">
+            <span class="whatsapp-avatar whatsapp-avatar-large">{{ conversacion.iniciales }}</span>
+            <div class="min-w-0">
+              <span class="text-uppercase fw-bold text-secondary small">Conversación activa</span>
+              <h3>{{ telefonoVisible(conversacion.telefono) }}</h3>
+              <p>{{ conversacion.entrantes }} recibidos · {{ conversacion.salientes }} enviados</p>
+            </div>
+            <span class="badge rounded-pill text-bg-success ms-auto">
+              <i class="bi bi-shield-check me-1" aria-hidden="true"></i>
+              Sesión 24h
+            </span>
+          </header>
+          <div class="whatsapp-thread-body" aria-label="Historial de mensajes">
+            @for (mensaje of conversacion.mensajes; track trackByMensaje($index, mensaje)) {
+              <article
+                class="whatsapp-message"
+                [class.is-inbound]="esEntrante(mensaje)"
+                [class.is-outbound]="!esEntrante(mensaje)"
+                [class.has-error]="tieneError(mensaje)">
+                <div class="whatsapp-bubble">
+                  <div class="whatsapp-bubble-label">
+                    <i class="bi" [class.bi-person-fill]="esEntrante(mensaje)" [class.bi-building-fill]="!esEntrante(mensaje)" aria-hidden="true"></i>
+                    <span>{{ esEntrante(mensaje) ? 'Cliente' : 'Negocio' }}</span>
+                  </div>
+                  <p>{{ vistaPrevia(mensaje) }}</p>
+                  <div class="whatsapp-bubble-meta">
+                    <time>{{ mensaje.creadoEn | date:'dd/MM HH:mm':'':'es-MX' }}</time>
+                    <span>{{ estadoVisible(mensaje) }}</span>
+                    @if (!esEntrante(mensaje) && !tieneError(mensaje)) {
+                      <i class="bi bi-check2-all" aria-hidden="true"></i>
+                    }
+                  </div>
+                  @if (mensaje.contentSid) {
+                    <small>Content SID: {{ mensaje.contentSid }}</small>
+                  }
+                  @if (mensaje.detalleErrorProveedor) {
+                    <small class="text-danger">{{ mensaje.detalleErrorProveedor }}</small>
+                  }
+                </div>
+              </article>
+            }
+          </div>
+          <div class="whatsapp-quick-replies">
+            @for (respuesta of respuestasRapidas; track respuesta) {
+              <button
+                type="button"
+                class="btn btn-outline-secondary btn-sm"
+                (click)="usarRespuestaRapida(respuesta)">
+                {{ respuesta }}
+              </button>
+            }
+          </div>
+          <form class="whatsapp-composer" (ngSubmit)="enviar()">
+            <div class="input-group">
+              <textarea
+                class="form-control"
+                name="whatsappInboxReply"
+                [(ngModel)]="borrador"
+                rows="2"
+                maxlength="1600"
+              placeholder="Escribe un mensaje"></textarea>
+              <button
+                class="btn btn-primary whatsapp-send-button"
+                type="submit"
+                [disabled]="enviando || !borrador.trim()">
+                <i class="bi bi-send-fill me-1" aria-hidden="true"></i>
+                {{ enviando ? 'Enviando...' : 'Enviar' }}
+              </button>
+            </div>
+          </form>
+        </section>
+      } @else {
+        <section class="whatsapp-thread-panel whatsapp-thread-empty">
+          <div class="whatsapp-empty-state">
+            <span class="whatsapp-avatar whatsapp-avatar-large">WA</span>
+            <h3>Sin conversación seleccionada</h3>
+            <p>Cuando lleguen mensajes desde el webhook aparecerán aquí.</p>
+          </div>
+        </section>
+      }
+
+    </div>
+  </div>
+</section>

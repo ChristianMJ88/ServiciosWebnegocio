@@ -1,6 +1,6 @@
 import { Component, HostListener, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { CommonModule } from '@angular/common';
+
 import { NavigationEnd, Router, RouterLink, RouterLinkActive } from '@angular/router';
 import { filter } from 'rxjs/operators';
 import { AuthService } from '../../core/auth/auth.service';
@@ -10,7 +10,7 @@ import { PlatformHostService } from '../../core/platform/platform-host.service';
 @Component({
   selector: 'app-header',
   standalone: true,
-  imports: [RouterLink, RouterLinkActive, CommonModule],
+  imports: [RouterLink, RouterLinkActive],
   templateUrl: './header.component.html',
   styleUrls: ['./header.component.css']
 })
@@ -24,6 +24,7 @@ export class HeaderComponent {
   readonly tenantActivo = computed(() => this.tenantContext.activo());
   readonly rutaActual = signal(this.normalizarUrl(this.router.url));
   readonly navbarCondensed = signal(false);
+  readonly mobileMenuOpen = signal(false);
   readonly brandName = computed(() => this.tenantActivo() ? this.tenantContext.nombreComercial() : 'Refluora');
   readonly brandSubtitle = computed(() =>
     this.tenantActivo()
@@ -31,8 +32,11 @@ export class HeaderComponent {
       : 'CRM + Automatización + IA'
   );
   readonly fluoraHomeActiva = computed(() => !this.tenantActivo() && this.rutaActual() === '/');
+  readonly tenantHomeActiva = computed(() => this.tenantActivo() && this.rutaActual() === this.homeLink());
+  readonly headerSobreHero = computed(() => this.fluoraHomeActiva() || this.tenantHomeActiva());
   readonly navbarIntegradoHero = computed(() => this.fluoraHomeActiva() && !this.navbarCondensed());
-  readonly navbarDesprendido = computed(() => this.fluoraHomeActiva() && this.navbarCondensed());
+  readonly navbarDesprendido = computed(() => this.tenantHomeActiva() || (this.fluoraHomeActiva() && this.navbarCondensed()));
+  readonly menuDesprendido = computed(() => this.mobileMenuOpen() && this.navbarDesprendido());
   readonly homeLink = computed(() => this.tenantActivo() ? this.tenantContext.routeFor() : '/');
   readonly servicesLink = computed(() => this.tenantActivo() ? this.tenantContext.routeFor('servicios') : '/#funcionalidades');
   readonly contactLink = computed(() => this.tenantActivo() ? this.tenantContext.routeFor('contacto') : '/#experiencias');
@@ -55,6 +59,7 @@ export class HeaderComponent {
       .subscribe((event) => {
         this.rutaActual.set(this.normalizarUrl(event.urlAfterRedirects));
         this.actualizarEstadoScroll();
+        this.cerrarMenuMovil();
       });
   }
 
@@ -63,8 +68,24 @@ export class HeaderComponent {
     this.actualizarEstadoScroll();
   }
 
+  @HostListener('window:resize')
+  onWindowResize() {
+    if (typeof window !== 'undefined' && window.innerWidth >= 992) {
+      this.cerrarMenuMovil();
+    }
+  }
+
   logout() {
+    this.cerrarMenuMovil();
     this.authService.logout();
+  }
+
+  onNavAction() {
+    this.cerrarMenuMovil();
+  }
+
+  alternarMenuMovil() {
+    this.mobileMenuOpen.update(abierto => !abierto);
   }
 
   private actualizarEstadoScroll() {
@@ -73,6 +94,10 @@ export class HeaderComponent {
     }
 
     this.navbarCondensed.set(window.scrollY > 72);
+  }
+
+  private cerrarMenuMovil() {
+    this.mobileMenuOpen.set(false);
   }
 
   private normalizarUrl(url: string): string {

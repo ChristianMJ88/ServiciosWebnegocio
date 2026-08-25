@@ -1,4 +1,4 @@
-import { CommonModule } from '@angular/common';
+
 import { Component, computed, input, output } from '@angular/core';
 import { AgendaDetailPanelComponent } from './agenda-detail-panel.component';
 import { AgendaTimelineComponent } from './agenda-timeline.component';
@@ -14,7 +14,7 @@ import {
 @Component({
   selector: 'app-agenda-operations-section',
   standalone: true,
-  imports: [CommonModule, AgendaTimelineComponent, AgendaDetailPanelComponent],
+  imports: [AgendaTimelineComponent, AgendaDetailPanelComponent],
   templateUrl: './agenda-operations-section.component.html',
   styleUrl: './agenda-operations-section.component.css'
 })

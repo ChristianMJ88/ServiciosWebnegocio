@@ -1,7 +1,7 @@
-import { CommonModule } from '@angular/common';
+
 import { Component, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
+import { Router } from '@angular/router';
 import { finalize } from 'rxjs/operators';
 import { AuthService, EmpresaAccesoApp } from '../../core/auth/auth.service';
 import { PlatformHostService } from '../../core/platform/platform-host.service';
@@ -9,7 +9,7 @@ import { PlatformHostService } from '../../core/platform/platform-host.service';
 @Component({
   selector: 'app-fluora-access',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterLink],
+  imports: [ReactiveFormsModule],
   templateUrl: './fluora-access.component.html',
   styleUrl: './fluora-access.component.css'
 })
@@ -27,11 +27,6 @@ export class FluoraAccessComponent {
     correo: ['', [Validators.required, Validators.email]],
     contrasena: ['', [Validators.required, Validators.minLength(8)]]
   });
-  readonly roleHighlights = [
-    'Administra empresas, sucursales y accesos desde un solo ingreso.',
-    'Da a recepción, caja y equipo una vista pensada para su trabajo.',
-    'Si una persona trabaja en más de una empresa, Fluora le permite elegir a cuál entrar.'
-  ];
 
   constructor() {
     if (this.platformHost.hasDedicatedAppHost() && !this.platformHost.isAppHost()) {

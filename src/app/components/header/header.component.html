@@ -1,110 +1,128 @@
 <nav
-  class="navbar navbar-expand-lg sticky-top site-header"
+  class="site-header"
   [class.site-header--fluora-home]="fluoraHomeActiva()"
+  [class.site-header--over-hero]="headerSobreHero()"
   [class.site-header--hero-integrated]="navbarIntegradoHero()"
-  [class.site-header--detached]="navbarDesprendido()">
-  <div class="container header-shell">
-    <a class="navbar-brand brand-lockup" [routerLink]="homeLink()">
-      <ng-container *ngIf="tenantActivo() && tenantContext.logoUrl(); else fluoraHeaderLogo">
+  [class.site-header--detached]="navbarDesprendido()"
+  [class.site-header--menu-detached]="menuDesprendido()">
+  <div class="header-shell">
+    <a class="brand-lockup" [routerLink]="homeLink()">
+      @if (tenantActivo() && tenantContext.logoUrl()) {
         <img
           [src]="tenantContext.logoUrl()"
           [alt]="'Logo ' + brandName()"
           class="brand-logo">
         <span class="brand-copy">
           <strong>{{ brandName() }}</strong>
-          <small>{{ brandSubtitle() }}</small>
         </span>
-      </ng-container>
-      <ng-template #fluoraHeaderLogo>
+      } @else {
         <img src="/fluora-mark.svg" alt="Logo Refluora" class="brand-mark">
         <span class="brand-copy brand-copy--marketing">
-          <strong>Refluora</strong>
-          <small>CRM + Automatización + IA</small>
+          <strong>Fluora</strong>
+          <small>Agenda facil, rapido, organizate mejor</small>
         </span>
-      </ng-template>
+      }
     </a>
 
     <button
-      class="navbar-toggler header-toggler"
+      class="header-toggler"
       type="button"
-      data-bs-toggle="collapse"
-      data-bs-target="#navbarNav"
+      (click)="alternarMenuMovil()"
       aria-controls="navbarNav"
-      aria-expanded="false"
+      [attr.aria-expanded]="mobileMenuOpen()"
       aria-label="Mostrar navegación"
-    >
+      >
       <span></span>
       <span></span>
       <span></span>
     </button>
 
-    <div class="collapse navbar-collapse header-collapse" id="navbarNav">
-      <ul class="navbar-nav ms-auto align-items-lg-center header-nav">
-        <li class="nav-item" *ngIf="tenantActivo(); else fluoraPrimaryLinks">
-          <a
-            class="nav-link header-link"
-            [routerLink]="homeLink()"
-            routerLinkActive="active-link"
-            [routerLinkActiveOptions]="{ exact: true }"
-          >
-            Inicio
-          </a>
-        </li>
-        <li class="nav-item" *ngIf="tenantActivo()">
-          <a class="nav-link header-link" [routerLink]="servicesLink()" routerLinkActive="active-link">
-            Servicios
-          </a>
-        </li>
-        <li class="nav-item" *ngIf="tenantActivo()">
-          <a class="nav-link header-link" [routerLink]="contactLink()" routerLinkActive="active-link">
-            Contacto
-          </a>
-        </li>
-        <ng-template #fluoraPrimaryLinks>
-          <li class="nav-item">
-            <a class="nav-link header-link" [attr.href]="featuresHref()">Plataforma</a>
+    <div class="header-collapse" [class.header-collapse--open]="mobileMenuOpen()" id="navbarNav">
+      <ul class="header-nav">
+        @if (tenantActivo()) {
+          <li class="header-nav-item">
+            <a
+              class="header-link"
+              [routerLink]="homeLink()"
+              routerLinkActive="active-link"
+              [routerLinkActiveOptions]="{ exact: true }"
+              (click)="onNavAction()"
+              >
+              Inicio
+            </a>
           </li>
-          <li class="nav-item">
-            <a class="nav-link header-link" [attr.href]="workflowHref()">Cómo funciona</a>
+        } @else {
+          <li class="header-nav-item">
+            <a class="header-link" [attr.href]="featuresHref()" (click)="onNavAction()">Plataforma</a>
           </li>
-          <li class="nav-item">
-            <a class="nav-link header-link" [attr.href]="companiesHref()">Beneficios</a>
+          <li class="header-nav-item">
+            <a class="header-link" [attr.href]="workflowHref()" (click)="onNavAction()">Cómo funciona</a>
           </li>
-          <li class="nav-item">
-            <a class="nav-link header-link" [attr.href]="pricingHref()">FAQ</a>
+          <li class="header-nav-item">
+            <a class="header-link" [attr.href]="companiesHref()" (click)="onNavAction()">Beneficios</a>
           </li>
-        </ng-template>
+          <li class="header-nav-item">
+            <a class="header-link" [attr.href]="pricingHref()" (click)="onNavAction()">FAQ</a>
+          </li>
+        }
+        @if (tenantActivo()) {
+          <li class="header-nav-item">
+            <a class="header-link" [routerLink]="servicesLink()" routerLinkActive="active-link" (click)="onNavAction()">
+              Servicios
+            </a>
+          </li>
+        }
+        @if (tenantActivo()) {
+          <li class="header-nav-item">
+            <a class="header-link" [routerLink]="contactLink()" routerLinkActive="active-link" (click)="onNavAction()">
+              Contacto
+            </a>
+          </li>
+        }
 
-        <li class="nav-item" *ngIf="!autenticadoVisible()">
-          <a class="nav-link header-link header-link-soft" [attr.href]="accessHref()">
-            Iniciar sesión
-          </a>
-        </li>
-        <li class="nav-item" *ngIf="!autenticadoVisible() && tenantActivo()">
-          <a class="nav-link header-link header-link-soft" [routerLink]="registerLink()" routerLinkActive="active-link">
-            Registro
-          </a>
-        </li>
-        <li class="nav-item" *ngIf="autenticadoVisible()">
-          <a class="nav-link header-link header-link-soft" [routerLink]="rutaPanelVisible()" routerLinkActive="active-link">
-            Mi panel
-          </a>
-        </li>
-        <li class="nav-item" *ngIf="autenticadoVisible()">
-          <button type="button" class="nav-link header-link header-link-soft border-0 bg-transparent" (click)="logout()">
-            Cerrar sesión
-          </button>
-        </li>
+        @if (!autenticadoVisible()) {
+          <li class="header-nav-item">
+            <a class="header-link header-link-soft" [attr.href]="accessHref()" (click)="onNavAction()">
+              Iniciar sesión
+            </a>
+          </li>
+        }
+        @if (!autenticadoVisible() && tenantActivo()) {
+          <li class="header-nav-item">
+            <a class="header-link header-link-soft" [routerLink]="registerLink()" routerLinkActive="active-link" (click)="onNavAction()">
+              Registro
+            </a>
+          </li>
+        }
+        @if (autenticadoVisible()) {
+          <li class="header-nav-item">
+            <a class="header-link header-link-soft" [routerLink]="rutaPanelVisible()" routerLinkActive="active-link" (click)="onNavAction()">
+              Mi panel
+            </a>
+          </li>
+        }
+        @if (autenticadoVisible()) {
+          <li class="header-nav-item">
+            <button type="button" class="header-link header-link-soft header-link--button" (click)="logout()">
+              Cerrar sesión
+            </button>
+          </li>
+        }
 
-        <li class="nav-item header-cta" *ngIf="!autenticadoVisible()">
-          <a *ngIf="tenantActivo(); else fluoraHeaderCta" [routerLink]="ctaLink()" class="btn btn-primary rounded-pill">Reservar</a>
-          <ng-template #fluoraHeaderCta>
-            <a [attr.href]="registerHref()" class="btn btn-primary rounded-pill">Solicitar demo</a>
-          </ng-template>
-        </li>
-        <li class="nav-item header-cta" *ngIf="autenticadoVisible()">
-          <a [routerLink]="rutaPanelVisible()" class="btn btn-primary rounded-pill">Ir a mi panel</a>
-        </li>
+        @if (!autenticadoVisible()) {
+          <li class="header-nav-item header-cta">
+            @if (tenantActivo()) {
+              <a [routerLink]="ctaLink()" class="header-button" (click)="onNavAction()">Reservar</a>
+            } @else {
+              <a [attr.href]="registerHref()" class="header-button" (click)="onNavAction()">Solicitar demo</a>
+            }
+          </li>
+        }
+        @if (autenticadoVisible()) {
+          <li class="header-nav-item header-cta">
+            <a [routerLink]="rutaPanelVisible()" class="header-button" (click)="onNavAction()">Ir a mi panel</a>
+          </li>
+        }
       </ul>
     </div>
   </div>

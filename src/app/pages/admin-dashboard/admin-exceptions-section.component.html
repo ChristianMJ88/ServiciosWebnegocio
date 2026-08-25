@@ -6,9 +6,11 @@
           <div class="section-eyebrow">Bloqueos</div>
           <h3>{{ excepcionEditandoId ? 'Editar excepción' : 'Nueva excepción' }}</h3>
         </div>
-        <button mat-stroked-button type="button" *ngIf="excepcionEditandoId" (click)="clearEdit.emit()">
-          Limpiar formulario
-        </button>
+        @if (excepcionEditandoId) {
+          <button mat-stroked-button type="button" (click)="clearEdit.emit()">
+            Limpiar formulario
+          </button>
+        }
       </div>
 
       <form class="admin-form-grid admin-form-shell" (ngSubmit)="save.emit()">
@@ -25,9 +27,11 @@
         <mat-form-field appearance="outline">
           <mat-label>Sujeto</mat-label>
           <mat-select name="excepcionSujetoId" [(ngModel)]="formularioExcepcion.sujetoId" required>
-            <mat-option *ngFor="let sujeto of sujetosExcepcion" [value]="sujeto.id">
-              {{ sujeto.nombre }}
-            </mat-option>
+            @for (sujeto of sujetosExcepcion; track sujeto) {
+              <mat-option [value]="sujeto.id">
+                {{ sujeto.nombre }}
+              </mat-option>
+            }
           </mat-select>
         </mat-form-field>
 
@@ -51,7 +55,9 @@
         <mat-form-field appearance="outline">
           <mat-label>Tipo de bloqueo</mat-label>
           <mat-select name="excepcionTipoBloqueo" [(ngModel)]="formularioExcepcion.tipoBloqueo">
-            <mat-option *ngFor="let tipo of tiposBloqueo" [value]="tipo">{{ tipo }}</mat-option>
+            @for (tipo of tiposBloqueo; track tipo) {
+              <mat-option [value]="tipo">{{ tipo }}</mat-option>
+            }
           </mat-select>
         </mat-form-field>
 
@@ -77,19 +83,23 @@
       </div>
 
       <div class="entity-list">
-        <article class="entity-row" *ngFor="let excepcion of excepcionesDisponibilidad">
-          <div class="entity-main">
-            <div class="entity-meta">{{ excepcion.tipoSujeto }} · {{ excepcion.sujetoNombre }}</div>
-            <div class="entity-title">{{ excepcion.fechaExcepcion }} · {{ excepcion.tipoBloqueo }}</div>
-            <div class="entity-meta">
-              {{ excepcion.horaInicio && excepcion.horaFin ? (excepcion.horaInicio + ' - ' + excepcion.horaFin) : 'Bloqueo de todo el día' }}
+        @for (excepcion of excepcionesDisponibilidad; track excepcion) {
+          <article class="entity-row">
+            <div class="entity-main">
+              <div class="entity-meta">{{ excepcion.tipoSujeto }} · {{ excepcion.sujetoNombre }}</div>
+              <div class="entity-title">{{ excepcion.fechaExcepcion }} · {{ excepcion.tipoBloqueo }}</div>
+              <div class="entity-meta">
+                {{ excepcion.horaInicio && excepcion.horaFin ? (excepcion.horaInicio + ' - ' + excepcion.horaFin) : 'Bloqueo de todo el día' }}
+              </div>
+              @if (excepcion.motivo) {
+                <div class="entity-meta">{{ excepcion.motivo }}</div>
+              }
             </div>
-            <div class="entity-meta" *ngIf="excepcion.motivo">{{ excepcion.motivo }}</div>
-          </div>
-          <div class="entity-side">
-            <button mat-stroked-button type="button" (click)="editException.emit(excepcion)">Editar</button>
-          </div>
-        </article>
+            <div class="entity-side">
+              <button mat-stroked-button type="button" (click)="editException.emit(excepcion)">Editar</button>
+            </div>
+          </article>
+        }
       </div>
     </mat-card>
   </div>

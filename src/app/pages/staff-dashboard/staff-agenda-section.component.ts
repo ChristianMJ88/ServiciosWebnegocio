@@ -1,4 +1,4 @@
-import { CommonModule } from '@angular/common';
+
 import { Component, input, output } from '@angular/core';
 import { AgendaOperationsSectionComponent } from '../../components/agenda/agenda-operations-section.component';
 import {
@@ -11,7 +11,7 @@ import {
 @Component({
   selector: 'app-staff-agenda-section',
   standalone: true,
-  imports: [CommonModule, AgendaOperationsSectionComponent],
+  imports: [AgendaOperationsSectionComponent],
   templateUrl: './staff-agenda-section.component.html'
 })
 export class StaffAgendaSectionComponent {

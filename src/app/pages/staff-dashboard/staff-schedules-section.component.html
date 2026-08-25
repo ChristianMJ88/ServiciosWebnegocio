@@ -14,7 +14,9 @@
         <mat-form-field appearance="outline">
           <mat-label>Día</mat-label>
           <mat-select name="staffReglaDiaSemana" [(ngModel)]="formularioRegla().diaSemana">
-            <mat-option *ngFor="let dia of diasSemana()" [value]="dia.value">{{ dia.label }}</mat-option>
+            @for (dia of diasSemana(); track dia) {
+              <mat-option [value]="dia.value">{{ dia.label }}</mat-option>
+            }
           </mat-select>
         </mat-form-field>
 
@@ -49,9 +51,11 @@
           <button mat-flat-button color="primary" type="submit" [disabled]="guardandoRegla()">
             {{ reglaEditandoId() ? 'Actualizar horario' : 'Guardar horario' }}
           </button>
-          <button mat-stroked-button type="button" *ngIf="reglaEditandoId()" (click)="cancelEdit.emit()">
-            Cancelar
-          </button>
+          @if (reglaEditandoId()) {
+            <button mat-stroked-button type="button" (click)="cancelEdit.emit()">
+              Cancelar
+            </button>
+          }
         </div>
       </form>
     </mat-card>
@@ -65,16 +69,20 @@
       </div>
 
       <div class="staff-stack">
-        <article class="staff-entity-card" *ngFor="let regla of reglas()">
-          <div>
-            <div class="staff-entity-title">{{ etiquetaDiaSemana()(regla.diaSemana) }} · {{ regla.horaInicio }} - {{ regla.horaFin }}</div>
-            <div class="staff-entity-meta">Intervalo {{ regla.intervaloMinutos }} min</div>
-            <div class="staff-entity-meta" *ngIf="regla.vigenteDesde || regla.vigenteHasta">
-              Vigencia: {{ regla.vigenteDesde || 'sin inicio' }} a {{ regla.vigenteHasta || 'sin fin' }}
+        @for (regla of reglas(); track regla) {
+          <article class="staff-entity-card">
+            <div>
+              <div class="staff-entity-title">{{ etiquetaDiaSemana()(regla.diaSemana) }} · {{ regla.horaInicio }} - {{ regla.horaFin }}</div>
+              <div class="staff-entity-meta">Intervalo {{ regla.intervaloMinutos }} min</div>
+              @if (regla.vigenteDesde || regla.vigenteHasta) {
+                <div class="staff-entity-meta">
+                  Vigencia: {{ regla.vigenteDesde || 'sin inicio' }} a {{ regla.vigenteHasta || 'sin fin' }}
+                </div>
+              }
             </div>
-          </div>
-          <button mat-stroked-button type="button" (click)="editRule.emit(regla)">Editar</button>
-        </article>
+            <button mat-stroked-button type="button" (click)="editRule.emit(regla)">Editar</button>
+          </article>
+        }
       </div>
     </mat-card>
   </div>

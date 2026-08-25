@@ -6,9 +6,11 @@
           <div class="section-eyebrow">Configuración</div>
           <h3>{{ sucursalEditandoId ? 'Editar sucursal' : 'Nueva sucursal' }}</h3>
         </div>
-        <button mat-stroked-button type="button" *ngIf="sucursalEditandoId" (click)="clearEdit.emit()">
-          Limpiar formulario
-        </button>
+        @if (sucursalEditandoId) {
+          <button mat-stroked-button type="button" (click)="clearEdit.emit()">
+            Limpiar formulario
+          </button>
+        }
       </div>
 
       <form class="admin-form-grid admin-form-shell" (ngSubmit)="save.emit()">
@@ -57,18 +59,22 @@
       </div>
 
       <div class="entity-list">
-        <article class="entity-row" *ngFor="let sucursal of sucursales">
-          <div class="entity-main">
-            <div class="entity-title">{{ sucursal.nombre }}</div>
-            <div class="entity-meta">{{ sucursal.zonaHoraria }}</div>
-            <div class="entity-meta" *ngIf="sucursal.direccion">{{ sucursal.direccion }}</div>
-            <div class="entity-meta">{{ sucursal.telefono || 'Sin teléfono' }}</div>
-          </div>
-          <div class="entity-side">
-            <span class="status-pill" [class.is-active]="sucursal.activa">{{ sucursal.activa ? 'Activa' : 'Inactiva' }}</span>
-            <button mat-stroked-button type="button" (click)="editBranch.emit(sucursal)">Editar</button>
-          </div>
-        </article>
+        @for (sucursal of sucursales; track sucursal) {
+          <article class="entity-row">
+            <div class="entity-main">
+              <div class="entity-title">{{ sucursal.nombre }}</div>
+              <div class="entity-meta">{{ sucursal.zonaHoraria }}</div>
+              @if (sucursal.direccion) {
+                <div class="entity-meta">{{ sucursal.direccion }}</div>
+              }
+              <div class="entity-meta">{{ sucursal.telefono || 'Sin teléfono' }}</div>
+            </div>
+            <div class="entity-side">
+              <span class="status-pill" [class.is-active]="sucursal.activa">{{ sucursal.activa ? 'Activa' : 'Inactiva' }}</span>
+              <button mat-stroked-button type="button" (click)="editBranch.emit(sucursal)">Editar</button>
+            </div>
+          </article>
+        }
       </div>
     </mat-card>
   </div>

@@ -27,54 +27,64 @@
       <span class="agenda-date-pill">{{ contactos().length }} registros</span>
     </div>
 
-    <div class="agenda-empty" *ngIf="!contactos().length">
-      Aún no se han recibido mensajes desde el formulario de contacto.
-    </div>
+    @if (!contactos().length) {
+      <div class="agenda-empty">
+        Aún no se han recibido mensajes desde el formulario de contacto.
+      </div>
+    }
 
-    <div class="entity-list" *ngIf="contactos().length">
-      <article class="entity-row contacto-row" *ngFor="let contacto of contactos()">
-        <div class="entity-main contacto-row__main">
-          <div class="contacto-row__header">
-            <div>
-              <div class="entity-title">{{ contacto.nombreCompleto }}</div>
-              <div class="entity-meta">{{ contacto.correo }}<span *ngIf="contacto.telefono"> · {{ contacto.telefono }}</span></div>
+    @if (contactos().length) {
+      <div class="entity-list">
+        @for (contacto of contactos(); track contacto) {
+          <article class="entity-row contacto-row">
+            <div class="entity-main contacto-row__main">
+              <div class="contacto-row__header">
+                <div>
+                  <div class="entity-title">{{ contacto.nombreCompleto }}</div>
+                  <div class="entity-meta">{{ contacto.correo }}@if (contacto.telefono) {
+                    <span> · {{ contacto.telefono }}</span>
+                  }</div>
+                </div>
+                <span class="status-pill contacto-status-pill" [ngClass]="claseEstadoContacto()(contacto.estado)">
+                  {{ formatearEstadoContacto()(contacto.estado) }}
+                </span>
+              </div>
+              <div class="service-metrics contacto-row__meta">
+                <span>Asunto: {{ contacto.asunto }}</span>
+                <span>Canal: {{ contacto.canal }}</span>
+                <span>Recibido: {{ contacto.creadaEn | date:'medium':'':'es-MX' }}</span>
+                @if (contacto.notificadaEn) {
+                  <span>Notificado: {{ contacto.notificadaEn | date:'short':'':'es-MX' }}</span>
+                }
+                @if (!contacto.notificadaEn && contacto.notificacionCorreoProgramada) {
+                  <span>Notificación pendiente</span>
+                }
+              </div>
+              <div class="contacto-row__message">
+                {{ contacto.mensaje }}
+              </div>
             </div>
-            <span class="status-pill contacto-status-pill" [ngClass]="claseEstadoContacto()(contacto.estado)">
-              {{ formatearEstadoContacto()(contacto.estado) }}
-            </span>
-          </div>
-
-          <div class="service-metrics contacto-row__meta">
-            <span>Asunto: {{ contacto.asunto }}</span>
-            <span>Canal: {{ contacto.canal }}</span>
-            <span>Recibido: {{ contacto.creadaEn | date:'medium':'':'es-MX' }}</span>
-            <span *ngIf="contacto.notificadaEn">Notificado: {{ contacto.notificadaEn | date:'short':'':'es-MX' }}</span>
-            <span *ngIf="!contacto.notificadaEn && contacto.notificacionCorreoProgramada">Notificación pendiente</span>
-          </div>
-
-          <div class="contacto-row__message">
-            {{ contacto.mensaje }}
-          </div>
-        </div>
-
-        <div class="entity-side contacto-row__side">
-          <mat-form-field appearance="outline" class="contacto-row__field">
-            <mat-label>Estado</mat-label>
-            <mat-select
-              [ngModel]="contacto.estado"
-              (ngModelChange)="updateStatus.emit({ contacto, estado: $event })"
-              [disabled]="actualizandoContactoId() === contacto.id">
-              <mat-option *ngFor="let estado of estadosContactoDisponibles()" [value]="estado">
-                {{ formatearEstadoContacto()(estado) }}
-              </mat-option>
-            </mat-select>
-          </mat-form-field>
-
-          <a mat-stroked-button [href]="'mailto:' + contacto.correo + '?subject=Re: ' + contacto.asunto">
-            Responder
-          </a>
-        </div>
-      </article>
-    </div>
+            <div class="entity-side contacto-row__side">
+              <mat-form-field appearance="outline" class="contacto-row__field">
+                <mat-label>Estado</mat-label>
+                <mat-select
+                  [ngModel]="contacto.estado"
+                  (ngModelChange)="updateStatus.emit({ contacto, estado: $event })"
+                  [disabled]="actualizandoContactoId() === contacto.id">
+                  @for (estado of estadosContactoDisponibles(); track estado) {
+                    <mat-option [value]="estado">
+                      {{ formatearEstadoContacto()(estado) }}
+                    </mat-option>
+                  }
+                </mat-select>
+              </mat-form-field>
+              <a mat-stroked-button [href]="'mailto:' + contacto.correo + '?subject=Re: ' + contacto.asunto">
+                Responder
+              </a>
+            </div>
+          </article>
+        }
+      </div>
+    }
   </mat-card>
 </section>

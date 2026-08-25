@@ -1,9 +1,22 @@
 .site-footer {
+  padding: 3rem 0 2rem;
   background:
     radial-gradient(circle at top left, rgba(214, 170, 183, 0.1), transparent 24%),
     radial-gradient(circle at bottom right, rgba(156, 182, 170, 0.1), transparent 22%),
     linear-gradient(180deg, #fbf5f2 0%, #f3e9e5 100%);
   border-top: 1px solid rgba(224, 205, 198, 0.72);
+}
+
+.footer-shell {
+  width: min(100% - 2rem, 1140px);
+  margin-inline: auto;
+}
+
+.footer-brand-row {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
 }
 
 .footer-grid {
@@ -22,12 +35,14 @@
 }
 
 .footer-logo {
-  width: 68px;
-  height: 68px;
-  object-fit: cover;
-  border-radius: 22px;
-  border: 1px solid rgba(224, 205, 198, 0.88);
-  box-shadow: 0 16px 36px rgba(103, 79, 88, 0.08);
+  width: 144px;
+  height: 88px;
+  object-fit: contain;
+  padding: 0;
+  border-radius: 8px;
+  background: transparent;
+  border: 0;
+  box-shadow: 0 16px 32px rgba(15, 23, 42, 0.14);
 }
 
 .footer-wordmark {
@@ -43,9 +58,18 @@
 }
 
 .footer-brand-title {
+  margin: 0 0 0.25rem;
   font-size: 1.15rem;
   font-weight: 800;
   letter-spacing: -0.03em;
+}
+
+.footer-brand-copy {
+  margin: 0;
+}
+
+.footer-copy {
+  margin: 0 0 1.5rem;
 }
 
 .footer-title {
@@ -67,6 +91,9 @@
 
 .footer-links-list,
 .footer-contact-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
   display: grid;
   gap: 0.8rem;
 }
@@ -121,7 +148,23 @@
 }
 
 .footer-bottom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-top: 1.5rem;
+  padding-top: 1.5rem;
   border-top: 1px solid rgba(224, 205, 198, 0.72);
+}
+
+.footer-bottom p {
+  margin: 0;
+}
+
+.footer-legal-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
 }
 
 @media (max-width: 1199.98px) {
@@ -132,8 +175,7 @@
 
 @media (max-width: 767.98px) {
   .site-footer {
-    padding-top: 3rem !important;
-    padding-bottom: 2rem !important;
+    padding: 3rem 0 2rem;
   }
 
   .footer-grid {
@@ -147,9 +189,8 @@
   }
 
   .footer-logo {
-    width: 56px;
-    height: 56px;
-    border-radius: 18px;
+    width: 120px;
+    height: 74px;
   }
 
   .footer-wordmark {
@@ -157,7 +198,8 @@
   }
 
   .footer-bottom {
-    align-items: flex-start !important;
+    flex-direction: column;
+    align-items: flex-start;
   }
 }
 
@@ -173,6 +215,6 @@
   }
 
   .footer-bottom {
-    gap: 0.75rem !important;
+    gap: 0.75rem;
   }
 }

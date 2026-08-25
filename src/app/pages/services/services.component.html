@@ -1,43 +1,321 @@
-<section class="section-padding services-page">
-  <div class="container">
-    <div class="services-hero card-custom">
-      <div>
-        <span class="services-kicker">Servicios del estudio</span>
-        <h1>Elige el servicio ideal para tu próxima cita.</h1>
-        <p>
-          Desde manicura y gel hasta nail art y pedicura, cada servicio está pensado para cuidar el acabado, la duración y la experiencia completa.
-        </p>
-      </div>
-      <div class="services-hero__actions">
-        <a [routerLink]="tenantContext.routeFor('agendar')" class="btn btn-primary rounded-pill">Agendar cita</a>
-        <a [href]="tenantContext.whatsappHref()" target="_blank" rel="noreferrer" class="btn btn-outline-primary rounded-pill">WhatsApp</a>
-      </div>
-    </div>
-
-    <div class="row g-4">
-      <div class="col-lg-6" *ngFor="let cat of categories">
-        <div class="card service-card h-100 card-custom overflow-hidden">
-          <div class="row g-0 h-100">
-            <div class="col-md-5">
-              <div class="service-img-container h-100">
-                <img [src]="cat.image" class="service-img" [alt]="cat.name">
-              </div>
+@if (catalogo(); as catalogo) {
+  <main class="services-page">
+    <section class="services-intro">
+      <div class="container services-intro__shell">
+        <div class="services-brand">
+          @if (tenantContext.logoUrl()) {
+            <div class="services-brand__logo">
+              <img [src]="tenantContext.logoUrl()!" [alt]="catalogo.nombreComercial">
             </div>
-            <div class="col-md-7">
-              <div class="card-body p-4">
-                <h2 class="h4 fw-bold mb-3 service-title">{{ cat.name }}</h2>
-                <ul class="list-unstyled">
-                  <li *ngFor="let item of cat.items" class="d-flex justify-content-between align-items-center mb-3 service-item">
-                    <span class="fw-medium service-item__name">{{ item.name }}</span>
-                    <span class="price-badge">{{ item.price }}</span>
-                  </li>
-                </ul>
-                <a [routerLink]="tenantContext.routeFor('agendar')" class="service-card__cta">Reservar este tipo de servicio</a>
-              </div>
-            </div>
+          } @else {
+            <div class="services-brand__initials">{{ tenantContext.initials() }}</div>
+          }
+          <div class="services-brand__copy" appScrollReveal="up">
+            <span class="services-kicker">Reserva en línea</span>
+            <h1>{{ catalogo.nombreComercial }}</h1>
+            <p>{{ tenantContext.descripcionCorta() }}</p>
           </div>
         </div>
+        <div class="services-intro__actions" appScrollReveal="up" [revealDelay]="120">
+          <a [routerLink]="tenantContext.routeFor('agendar')" class="btn services-action services-action--primary">
+            <i class="bi bi-calendar2-check"></i>
+            <span>Agendar ahora</span>
+          </a>
+          @if (tenantContext.whatsapp()) {
+            <a
+              [href]="tenantContext.whatsappHref()"
+              target="_blank"
+              rel="noreferrer"
+              class="btn services-action services-action--whatsapp">
+              <i class="bi bi-whatsapp"></i>
+              <span>WhatsApp</span>
+            </a>
+          }
+        </div>
+        <div class="services-meta" appScrollReveal="up" [revealDelay]="220">
+          @if (tenantContext.direccion()) {
+            <span>{{ tenantContext.direccion() }}</span>
+          }
+          <span>{{ totalServicios() }} servicios</span>
+          <span>{{ catalogo.grupos.length }} categorías</span>
+          @if (precioDesde() !== null) {
+            <span>
+              Desde {{ precioDesde()! | currency:'MXN':'symbol-narrow':'1.0-0':'es-MX' }}
+            </span>
+          }
+        </div>
+      </div>
+    </section>
+    @if (catalogo.grupos.length) {
+      <section class="services-filters">
+        <div class="container">
+          <div class="services-chip-row">
+            <button
+              type="button"
+              class="services-chip"
+              [class.is-active]="grupoActivoId() === null"
+              (click)="seleccionarGrupo(null)">
+              Todo
+            </button>
+            @for (grupo of catalogo.grupos; track grupo) {
+              <button
+                type="button"
+                class="services-chip"
+                [class.is-active]="grupoActivoId() === grupo.id"
+                (click)="seleccionarGrupo(grupo.id)">
+                {{ grupo.nombre }}
+              </button>
+            }
+          </div>
+          @if (subgruposDisponibles().length) {
+            <div class="services-chip-row services-chip-row--secondary">
+              <button
+                type="button"
+                class="services-chip services-chip--secondary"
+                [class.is-active]="subgrupoActivoId() === null"
+                (click)="seleccionarSubgrupo(null)">
+                Todos
+              </button>
+              @for (subgrupo of subgruposDisponibles(); track subgrupo) {
+                <button
+                  type="button"
+                  class="services-chip services-chip--secondary"
+                  [class.is-active]="subgrupoActivoId() === subgrupo.id"
+                  (click)="seleccionarSubgrupo(subgrupo.id)">
+                  {{ subgrupo.nombre }}
+                </button>
+              }
+            </div>
+          }
+        </div>
+      </section>
+    }
+    <section class="section-padding">
+      <div class="container services-layout">
+        <div class="services-content">
+          @for (grupo of gruposVisibles(); track grupo) {
+            <article class="group-section">
+              <div class="group-section__header">
+                <div class="group-section__media">
+                  <img [src]="grupo.imagenUrl || tenantContext.logoUrl() || '/NailArt_logo.jpeg'" [alt]="grupo.nombre">
+                </div>
+                <div class="group-section__copy" appScrollReveal="up">
+                  <div class="group-section__topline">
+                    <span class="group-pill">{{ totalServiciosGrupo(grupo) }} servicios</span>
+                    @if (precioDesdeGrupo(grupo) !== null) {
+                      <span class="group-pill">
+                        Desde {{ precioDesdeGrupo(grupo)! | currency:'MXN':'symbol-narrow':'1.0-0':'es-MX' }}
+                      </span>
+                    }
+                  </div>
+                  <h2>{{ grupo.nombre }}</h2>
+                  @if (grupo.descripcion) {
+                    <p>{{ grupo.descripcion }}</p>
+                  }
+                </div>
+              </div>
+              @for (subgrupo of subgruposVisibles(grupo); track subgrupo) {
+                <section class="subgroup-section">
+                  <div class="subgroup-section__header" appScrollReveal="up">
+                    <div>
+                      <h3>{{ subgrupo.nombre }}</h3>
+                      @if (subgrupo.descripcion) {
+                        <p>{{ subgrupo.descripcion }}</p>
+                      }
+                    </div>
+                    <span>{{ subgrupo.servicios.length }} opciones</span>
+                  </div>
+                  <div class="service-grid">
+                    @for (servicio of subgrupo.servicios; track servicio) {
+                      <article
+                        class="service-card"
+                        [class.is-selected]="servicioSeleccionadoId() === servicio.id">
+                        <button type="button" class="service-card__button" (click)="seleccionarServicio(servicio)">
+                          <div class="service-card__media">
+                            <img [src]="imagenServicio(grupo, servicio)" [alt]="servicio.nombre">
+                          </div>
+                          <div class="service-card__topline">
+                            <span class="service-card__name">{{ servicio.nombre }}</span>
+                            <span class="service-card__price">
+                              {{ servicio.precio | currency:(servicio.moneda || 'MXN'):'symbol-narrow':'1.0-0':'es-MX' }}
+                            </span>
+                          </div>
+                          @if (servicio.descripcion) {
+                            <p class="service-card__description">{{ servicio.descripcion }}</p>
+                          }
+                          <div class="service-card__meta">
+                            <span>{{ servicio.duracionMinutos }} min</span>
+                            @if (servicio.requiereAnticipo) {
+                              <span>
+                                Anticipo {{ servicio.anticipoValor ? (servicio.anticipoValor | currency:(servicio.moneda || 'MXN'):'symbol-narrow':'1.0-0':'es-MX') : (servicio.anticipoTipo || 'requerido') }}
+                              </span>
+                            }
+                          </div>
+                        </button>
+                        <div class="service-card__actions">
+                          <button
+                            type="button"
+                            class="btn service-card__action-btn service-card__action-btn--secondary"
+                            [class.service-card__select--active]="servicioEstaSeleccionado(servicio.id)"
+                            (click)="agregarServicio(servicio)">
+                            <i
+                              class="bi"
+                              [class.bi-check2-circle]="servicioEstaSeleccionado(servicio.id)"
+                            [class.bi-plus-circle]="!servicioEstaSeleccionado(servicio.id)"></i>
+                            <span>{{ servicioEstaSeleccionado(servicio.id) ? 'Agregado' : 'Agregar' }}</span>
+                          </button>
+                          <a
+                            [routerLink]="tenantContext.routeFor('agendar')"
+                            [queryParams]="{ servicio: servicio.slug || servicio.id }"
+                            class="btn service-card__action-btn service-card__action-btn--primary">
+                            <i class="bi bi-calendar2-check"></i>
+                            <span>Agendar</span>
+                          </a>
+                        </div>
+                      </article>
+                    }
+                  </div>
+                </section>
+              }
+            </article>
+          }
+        </div>
+        <aside class="services-aside">
+          <div class="booking-panel" appScrollReveal="right" [revealDelay]="100">
+            <span class="services-kicker">Reserva</span>
+            <h2>{{ serviciosSeleccionados().length ? 'Servicios seleccionados' : (servicioSeleccionado()?.nombre || 'Elige un servicio') }}</h2>
+            <p>
+              {{ serviciosSeleccionados().length
+              ? 'Arma tu combinación antes de entrar a agenda. La reserva propondrá itinerarios sin choques entre servicios y staff.'
+              : (servicioSeleccionado()?.descripcion || 'Selecciona una tarjeta para ver el resumen y avanzar más rápido a la reserva.') }}
+            </p>
+            @if (serviciosSeleccionados().length) {
+              <div class="booking-panel__selected-list">
+                @for (servicio of serviciosSeleccionados(); track servicio) {
+                  <article class="booking-panel__selected-item">
+                    <div>
+                      <strong>{{ servicio.nombre }}</strong>
+                      <span>{{ servicio.duracionMinutos }} min</span>
+                    </div>
+                    <div class="booking-panel__selected-actions">
+                      <span>{{ servicio.precio | currency:(servicio.moneda || 'MXN'):'symbol-narrow':'1.0-0':'es-MX' }}</span>
+                      <button type="button" (click)="quitarServicio(servicio.id)">Quitar</button>
+                    </div>
+                  </article>
+                }
+              </div>
+            }
+            @if (!serviciosSeleccionados().length && servicioSeleccionado(); as servicio) {
+              <dl class="booking-panel__details">
+                <div>
+                  <dt>Duración</dt>
+                  <dd>{{ servicio.duracionMinutos }} min</dd>
+                </div>
+                <div>
+                  <dt>Precio</dt>
+                  <dd>{{ servicio.precio | currency:(servicio.moneda || 'MXN'):'symbol-narrow':'1.0-0':'es-MX' }}</dd>
+                </div>
+                @if (servicio.requiereAnticipo) {
+                  <div>
+                    <dt>Reserva</dt>
+                    <dd>Requiere anticipo</dd>
+                  </div>
+                }
+              </dl>
+            }
+            @if (serviciosSeleccionados().length) {
+              <dl class="booking-panel__details">
+                <div>
+                  <dt>Servicios</dt>
+                  <dd>{{ serviciosSeleccionados().length }}</dd>
+                </div>
+                <div>
+                  <dt>Tiempo estimado</dt>
+                  <dd>{{ duracionSeleccionada() }} min</dd>
+                </div>
+                <div>
+                  <dt>Total estimado</dt>
+                  <dd>{{ totalSeleccionado() | currency:'MXN':'symbol-narrow':'1.0-0':'es-MX' }}</dd>
+                </div>
+              </dl>
+            }
+            <div class="booking-panel__actions">
+              <a
+                [routerLink]="tenantContext.routeFor('agendar')"
+                [queryParams]="bookingQueryParams()"
+                class="btn services-action services-action--primary">
+                <i class="bi bi-calendar2-check"></i>
+                <span>
+                  {{ serviciosSeleccionados().length ? 'Agendar selección' : (servicioSeleccionado() ? 'Agendar ' + servicioSeleccionado()!.nombre : 'Ir a reservar') }}
+                </span>
+              </a>
+              @if (tenantContext.whatsapp()) {
+                <a
+                  [href]="whatsappServicioHref()"
+                  target="_blank"
+                  rel="noreferrer"
+                  class="btn services-action services-action--whatsapp">
+                  <i class="bi bi-whatsapp"></i>
+                  <span>Preguntar por WhatsApp</span>
+                </a>
+              }
+            </div>
+          </div>
+          <div class="contact-panel" appScrollReveal="right" [revealDelay]="180">
+            <h3>Equipo disponible</h3>
+            @if (staffServicio().length) {
+              <div class="staff-grid">
+                @for (staff of staffServicio(); track staff) {
+                  <article class="staff-card">
+                    <div class="staff-card__avatar" [style.background]="staff.colorAgenda || 'linear-gradient(135deg, var(--tenant-primary), var(--tenant-secondary))'">
+                      {{ staff.nombreMostrar.slice(0, 1) }}
+                    </div>
+                    <div>
+                      <strong>{{ staff.nombreMostrar }}</strong>
+                      <p>{{ staff.biografia || 'Disponible para atender este servicio.' }}</p>
+                    </div>
+                  </article>
+                }
+              </div>
+            } @else {
+              <p class="contact-panel__empty">
+                {{ cargandoStaff() ? 'Cargando equipo...' : 'Selecciona un servicio para ver al equipo disponible.' }}
+              </p>
+            }
+          </div>
+          <div class="contact-panel" appScrollReveal="right" [revealDelay]="260">
+            <h3>Información esencial</h3>
+            <ul>
+              @if (tenantContext.telefono()) {
+                <li>
+                  <strong>Teléfono</strong>
+                  <a [href]="tenantContext.telefonoHref()">{{ tenantContext.telefono() }}</a>
+                </li>
+              }
+              @if (tenantContext.correo()) {
+                <li>
+                  <strong>Correo</strong>
+                  <a [href]="tenantContext.correoHref()">{{ tenantContext.correo() }}</a>
+                </li>
+              }
+              @if (tenantContext.direccion()) {
+                <li>
+                  <strong>Ubicación</strong>
+                  <span>{{ tenantContext.direccion() }}</span>
+                </li>
+              }
+            </ul>
+          </div>
+        </aside>
+      </div>
+    </section>
+  </main>
+} @else {
+  <section class="section-padding services-loading">
+    <div class="container">
+      <div class="services-loading__box">
+        <p class="mb-0">{{ cargando() ? 'Cargando catálogo...' : 'Todavía no hay servicios visibles en este catálogo.' }}</p>
       </div>
     </div>
-  </div>
-</section>
+  </section>
+}

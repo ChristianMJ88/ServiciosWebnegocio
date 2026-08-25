@@ -1,4 +1,4 @@
-import { CommonModule } from '@angular/common';
+
 import { Component, computed, input, output } from '@angular/core';
 import { MatCardModule } from '@angular/material/card';
 import { MatDividerModule } from '@angular/material/divider';
@@ -18,7 +18,7 @@ import {
 @Component({
   selector: 'app-admin-summary-section',
   standalone: true,
-  imports: [CommonModule, MatCardModule, MatDividerModule, AgendaOperationsSectionComponent, MoneyDisplayPipe],
+  imports: [MatCardModule, MatDividerModule, AgendaOperationsSectionComponent, MoneyDisplayPipe],
   templateUrl: './admin-summary-section.component.html'
 })
 export class AdminSummarySectionComponent {
