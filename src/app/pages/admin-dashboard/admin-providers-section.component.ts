@@ -25,7 +25,8 @@ import { GuardarPrestadorPayload, PrestadorAdmin, ServicioAdmin, SucursalAdmin }
     MatSelectModule,
     MatSlideToggleModule
 ],
-  templateUrl: './admin-providers-section.component.html'
+  templateUrl: './admin-providers-section.component.html',
+  styleUrls: ['./admin-providers-section.component.css']
 })
 export class AdminProvidersSectionComponent {
   @Input({ required: true }) prestadorEditandoId!: number | null;

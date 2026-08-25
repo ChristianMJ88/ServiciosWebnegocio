@@ -46,10 +46,9 @@
             type="password"
             name="prestadorPassword"
             [(ngModel)]="formularioPrestador.contrasenaTemporal"
-            minlength="8"
-            maxlength="100">
+            [required]="!prestadorEditandoId">
           <mat-hint>
-            {{ prestadorEditandoId ? 'Opcional al editar. Si la cambias, usa mínimo 8 caracteres.' : 'Usa una contraseña temporal de al menos 8 caracteres.' }}
+            {{ prestadorEditandoId ? 'Opcional al editar.' : 'Define una contraseña temporal.' }}
           </mat-hint>
         </mat-form-field>
 

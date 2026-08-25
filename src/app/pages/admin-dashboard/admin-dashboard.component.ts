@@ -35,7 +35,6 @@ import {
   ExcepcionDisponibilidadAdmin,
   GuardarConfiguracionCorreoPayload,
   GuardarConfiguracionSitioPayload,
-  GuardarPrestadorPayload,
   GrupoServicioAdmin,
   LogMensajeWhatsappAdmin,
   MensajeWhatsappAdmin,
@@ -88,6 +87,13 @@ import { AdminCatalogFacade } from './admin-catalog.facade';
 import { AdminAccessFacade } from './admin-access.facade';
 import { AdminWhatsappFacade } from './admin-whatsapp.facade';
 import { AdminAvailabilityFacade } from './admin-availability.facade';
+import { AdminProvidersFacade } from './admin-providers.facade';
+import {
+  alternarServicioPrestador,
+  crearFormularioPrestador,
+  filtrarServiciosPrestador,
+  sincronizarServiciosPrestador
+} from './admin-providers.forms';
 import {
   construirSujetosDisponibilidad,
   completarFormularioExcepcionConMetadatos,
@@ -192,6 +198,7 @@ export class AdminDashboardComponent implements OnInit {
   private readonly accessFacade = inject(AdminAccessFacade);
   private readonly whatsappFacade = inject(AdminWhatsappFacade);
   private readonly availabilityFacade = inject(AdminAvailabilityFacade);
+  private readonly providersFacade = inject(AdminProvidersFacade);
   private readonly dashboardLoader = inject(AdminDashboardLoader);
   private readonly breakpointObserver = inject(BreakpointObserver);
   private readonly authService = inject(AuthService);
@@ -714,16 +721,7 @@ export class AdminDashboardComponent implements OnInit {
 
   formularioServicio = crearFormularioServicio();
 
-  formularioPrestador: GuardarPrestadorPayload = {
-    sucursalId: 0,
-    correo: '',
-    contrasenaTemporal: '',
-    nombreMostrar: '',
-    biografia: '',
-    colorAgenda: '#2563eb',
-    activo: true,
-    servicioIds: []
-  };
+  formularioPrestador = crearFormularioPrestador();
 
   formularioUsuarioInterno = crearFormularioUsuarioInterno(null, null);
 
@@ -1922,31 +1920,13 @@ export class AdminDashboardComponent implements OnInit {
 
   editarPrestador(prestador: PrestadorAdmin) {
     this.prestadorEditandoId = prestador.usuarioId;
-    this.formularioPrestador = {
-      sucursalId: prestador.sucursalId,
-      correo: prestador.correo,
-      contrasenaTemporal: '',
-      nombreMostrar: prestador.nombreMostrar,
-      biografia: prestador.biografia ?? '',
-      colorAgenda: prestador.colorAgenda ?? '#2563eb',
-      activo: prestador.activo,
-      servicioIds: [...prestador.servicioIds]
-    };
+    this.formularioPrestador = crearFormularioPrestador(0, prestador);
     this.actualizarServiciosPrestadorDisponibles();
   }
 
   cancelarEdicionPrestador() {
     this.prestadorEditandoId = null;
-    this.formularioPrestador = {
-      sucursalId: this.sucursales()[0]?.id ?? 0,
-      correo: '',
-      contrasenaTemporal: '',
-      nombreMostrar: '',
-      biografia: '',
-      colorAgenda: '#2563eb',
-      activo: true,
-      servicioIds: []
-    };
+    this.formularioPrestador = crearFormularioPrestador(this.sucursales()[0]?.id ?? 0);
     this.actualizarServiciosPrestadorDisponibles();
   }
 
@@ -1954,27 +1934,7 @@ export class AdminDashboardComponent implements OnInit {
     this.guardandoPrestador = true;
     this.error = '';
     this.mensajeExito = '';
-    const contrasenaTemporal = this.normalizarTexto(this.formularioPrestador.contrasenaTemporal);
-    const errorContrasena = this.validarContrasenaPrestador(contrasenaTemporal);
-    if (errorContrasena) {
-      this.error = errorContrasena;
-      this.guardandoPrestador = false;
-      return;
-    }
-
-    const payload: GuardarPrestadorPayload = {
-      ...this.formularioPrestador,
-      correo: this.formularioPrestador.correo.trim().toLowerCase(),
-      contrasenaTemporal,
-      biografia: this.normalizarTexto(this.formularioPrestador.biografia),
-      colorAgenda: this.normalizarTexto(this.formularioPrestador.colorAgenda)
-    };
-
-    const operacion = this.prestadorEditandoId
-      ? this.adminService.actualizarPrestador(this.prestadorEditandoId, payload)
-      : this.adminService.crearPrestador(payload);
-
-    operacion
+    this.providersFacade.guardar(this.prestadorEditandoId, this.formularioPrestador)
       .pipe(finalize(() => this.guardandoPrestador = false))
       .subscribe({
         next: () => {
@@ -1990,18 +1950,18 @@ export class AdminDashboardComponent implements OnInit {
   cambiarSucursalPrestador(sucursalId: number) {
     this.formularioPrestador.sucursalId = sucursalId;
     this.actualizarServiciosPrestadorDisponibles();
-    const serviciosValidos = new Set(this.serviciosPrestadorDisponibles.map(servicio => servicio.id));
-    this.formularioPrestador.servicioIds = this.formularioPrestador.servicioIds.filter(id => serviciosValidos.has(id));
+    this.formularioPrestador.servicioIds = sincronizarServiciosPrestador(
+      this.formularioPrestador.servicioIds,
+      this.serviciosPrestadorDisponibles
+    );
   }
 
   alternarServicioPrestador(servicioId: number, marcado: boolean) {
-    const seleccionados = new Set(this.formularioPrestador.servicioIds);
-    if (marcado) {
-      seleccionados.add(servicioId);
-    } else {
-      seleccionados.delete(servicioId);
-    }
-    this.formularioPrestador.servicioIds = Array.from(seleccionados);
+    this.formularioPrestador.servicioIds = alternarServicioPrestador(
+      this.formularioPrestador.servicioIds,
+      servicioId,
+      marcado
+    );
   }
 
   cambiarTipoSujetoRegla(tipoSujeto: string) {
@@ -2127,18 +2087,6 @@ export class AdminDashboardComponent implements OnInit {
       currency: moneda || 'MXN',
       maximumFractionDigits: 0
     }).format(precio);
-  }
-
-  private validarContrasenaPrestador(contrasenaTemporal: string | null): string | null {
-    if (!this.prestadorEditandoId && !contrasenaTemporal) {
-      return 'La contraseña temporal es obligatoria y debe tener entre 8 y 100 caracteres.';
-    }
-
-    if (contrasenaTemporal && (contrasenaTemporal.length < 8 || contrasenaTemporal.length > 100)) {
-      return 'La contraseña temporal debe tener entre 8 y 100 caracteres.';
-    }
-
-    return null;
   }
 
   cambiarRolUsuarioInterno(rolEmpresaId: number | null) {
@@ -2387,8 +2335,9 @@ export class AdminDashboardComponent implements OnInit {
   }
 
   private actualizarServiciosPrestadorDisponibles() {
-    this.serviciosPrestadorDisponibles = this.servicios().filter(
-      servicio => (servicio.sucursalIds ?? [servicio.sucursalId]).includes(this.formularioPrestador.sucursalId)
+    this.serviciosPrestadorDisponibles = filtrarServiciosPrestador(
+      this.servicios(),
+      this.formularioPrestador.sucursalId
     );
   }
 
