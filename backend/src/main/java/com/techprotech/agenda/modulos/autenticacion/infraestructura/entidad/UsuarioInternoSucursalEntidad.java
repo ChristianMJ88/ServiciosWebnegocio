@@ -8,7 +8,11 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.MapsId;
 import jakarta.persistence.Table;
+import lombok.Getter;
+import lombok.Setter;
 
+@Setter
+@Getter
 @Entity
 @Table(name = "usuario_interno_sucursal")
 public class UsuarioInternoSucursalEntidad {
@@ -35,15 +39,4 @@ public class UsuarioInternoSucursalEntidad {
         this.sucursal = sucursal;
     }
 
-    public UsuarioInternoSucursalId getId() {
-        return id;
-    }
-
-    public UsuarioEntidad getUsuario() {
-        return usuario;
-    }
-
-    public SucursalEntidad getSucursal() {
-        return sucursal;
-    }
 }

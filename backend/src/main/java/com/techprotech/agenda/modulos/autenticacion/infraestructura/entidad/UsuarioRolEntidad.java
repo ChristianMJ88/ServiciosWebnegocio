@@ -6,8 +6,14 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.MapsId;
 import jakarta.persistence.Table;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.Setter;
 
+@Setter
+@Getter
 @Entity
+@AllArgsConstructor
 @Table(name = "usuario_rol")
 public class UsuarioRolEntidad {
 
@@ -25,24 +31,6 @@ public class UsuarioRolEntidad {
     private RolEntidad rol;
 
     public UsuarioRolEntidad() {
-    }
-
-    public UsuarioRolEntidad(UsuarioRolId id, UsuarioEntidad usuario, RolEntidad rol) {
-        this.id = id;
-        this.usuario = usuario;
-        this.rol = rol;
-    }
-
-    public UsuarioRolId getId() {
-        return id;
-    }
-
-    public UsuarioEntidad getUsuario() {
-        return usuario;
-    }
-
-    public RolEntidad getRol() {
-        return rol;
     }
 }
 

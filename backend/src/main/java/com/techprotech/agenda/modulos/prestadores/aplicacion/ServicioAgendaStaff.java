@@ -1,5 +1,7 @@
 package com.techprotech.agenda.modulos.prestadores.aplicacion;
 
+import com.techprotech.agenda.modulos.autenticacion.infraestructura.entidad.ClienteEntidad;
+import com.techprotech.agenda.modulos.autenticacion.infraestructura.entidad.UsuarioEntidad;
 import com.techprotech.agenda.modulos.autenticacion.infraestructura.repositorio.ClienteRepositorio;
 import com.techprotech.agenda.modulos.autenticacion.infraestructura.repositorio.UsuarioRepositorio;
 import com.techprotech.agenda.modulos.citas.infraestructura.entidad.CitaEntidad;
@@ -7,7 +9,12 @@ import com.techprotech.agenda.modulos.citas.infraestructura.entidad.HistorialEst
 import com.techprotech.agenda.modulos.citas.infraestructura.repositorio.CitaRepositorio;
 import com.techprotech.agenda.modulos.citas.infraestructura.repositorio.HistorialEstadoCitaRepositorio;
 import com.techprotech.agenda.modulos.prestadores.api.dto.CitaAgendaResponse;
+import com.techprotech.agenda.modulos.prestadores.api.dto.PerfilStaffResponse;
+import com.techprotech.agenda.modulos.prestadores.infraestructura.entidad.PrestadorServicioEntidad;
+import com.techprotech.agenda.modulos.prestadores.infraestructura.repositorio.PrestadorServicioRepositorio;
+import com.techprotech.agenda.modulos.servicios.infraestructura.entidad.ServicioEntidad;
 import com.techprotech.agenda.modulos.servicios.infraestructura.repositorio.ServicioRepositorio;
+import com.techprotech.agenda.modulos.sucursales.infraestructura.entidad.SucursalEntidad;
 import com.techprotech.agenda.modulos.sucursales.infraestructura.repositorio.SucursalRepositorio;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -30,6 +37,7 @@ public class ServicioAgendaStaff {
     private final ServicioRepositorio servicioRepositorio;
     private final ClienteRepositorio clienteRepositorio;
     private final UsuarioRepositorio usuarioRepositorio;
+    private final PrestadorServicioRepositorio prestadorServicioRepositorio;
 
     public ServicioAgendaStaff(
             CitaRepositorio citaRepositorio,
@@ -37,7 +45,8 @@ public class ServicioAgendaStaff {
             SucursalRepositorio sucursalRepositorio,
             ServicioRepositorio servicioRepositorio,
             ClienteRepositorio clienteRepositorio,
-            UsuarioRepositorio usuarioRepositorio
+            UsuarioRepositorio usuarioRepositorio,
+            PrestadorServicioRepositorio prestadorServicioRepositorio
     ) {
         this.citaRepositorio = citaRepositorio;
         this.historialEstadoCitaRepositorio = historialEstadoCitaRepositorio;
@@ -45,6 +54,28 @@ public class ServicioAgendaStaff {
         this.servicioRepositorio = servicioRepositorio;
         this.clienteRepositorio = clienteRepositorio;
         this.usuarioRepositorio = usuarioRepositorio;
+        this.prestadorServicioRepositorio = prestadorServicioRepositorio;
+    }
+
+    @Transactional(readOnly = true)
+    public PerfilStaffResponse obtenerPerfil(Long empresaId, Long prestadorId) {
+        PrestadorServicioEntidad prestador = prestadorServicioRepositorio.findById(prestadorId)
+                .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "El perfil de staff no existe"));
+
+        SucursalEntidad sucursal = sucursalRepositorio.findById(prestador.getSucursalId())
+                .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "La sucursal del staff no existe"));
+        if (!empresaId.equals(sucursal.getEmpresaId())) {
+            throw new ResponseStatusException(NOT_FOUND, "El perfil de staff no existe para la empresa autenticada");
+        }
+
+        return new PerfilStaffResponse(
+                prestador.getUsuarioId(),
+                prestador.getSucursalId(),
+                prestador.getNombreMostrar(),
+                prestador.getBiografia(),
+                prestador.getColorAgenda(),
+                prestador.isActivo()
+        );
     }
 
     @Transactional(readOnly = true)
@@ -81,7 +112,7 @@ public class ServicioAgendaStaff {
 
         if (List.of("FINALIZADA", "NO_ASISTIO").contains(nuevoEstado)) {
             String zonaHoraria = sucursalRepositorio.findById(cita.getSucursalId())
-                    .map(sucursal -> sucursal.getZonaHoraria())
+                    .map(SucursalEntidad::getZonaHoraria)
                     .orElse("America/Mexico_City");
             LocalDateTime ahoraLocal = LocalDateTime.now(ZoneId.of(zonaHoraria));
             if (cita.getInicio().isAfter(ahoraLocal)) {
@@ -103,12 +134,18 @@ public class ServicioAgendaStaff {
     }
 
     private CitaAgendaResponse mapear(CitaEntidad cita) {
-        String sucursalNombre = sucursalRepositorio.findById(cita.getSucursalId()).map(s -> s.getNombre()).orElse("Sucursal");
-        String servicioNombre = servicioRepositorio.findById(cita.getServicioId()).map(s -> s.getNombre()).orElse("Servicio");
-        String zonaHoraria = sucursalRepositorio.findById(cita.getSucursalId()).map(s -> s.getZonaHoraria()).orElse("America/Mexico_City");
-        String clienteNombre = clienteRepositorio.findById(cita.getClienteId()).map(c -> c.getNombreCompleto()).orElse("Cliente");
-        String clienteTelefono = clienteRepositorio.findById(cita.getClienteId()).map(c -> c.getTelefono()).orElse("");
-        String clienteCorreo = usuarioRepositorio.findById(cita.getClienteId()).map(u -> u.getCorreo()).orElse("");
+        String sucursalNombre = sucursalRepositorio.findById(cita.getSucursalId()).map(SucursalEntidad::getNombre)
+          .orElse("Sucursal");
+        String servicioNombre = servicioRepositorio.findById(cita.getServicioId()).map(ServicioEntidad::getNombre)
+          .orElse("Servicio");
+        String zonaHoraria = sucursalRepositorio.findById(cita.getSucursalId()).map(SucursalEntidad::getZonaHoraria)
+          .orElse("America/Mexico_City");
+        String clienteNombre = clienteRepositorio.findById(cita.getClienteId()).map(ClienteEntidad::getNombreCompleto)
+          .orElse("Cliente");
+        String clienteTelefono = clienteRepositorio.findById(cita.getClienteId()).map(ClienteEntidad::getTelefono)
+          .orElse("");
+        String clienteCorreo = usuarioRepositorio.findById(cita.getClienteId()).map(UsuarioEntidad::getCorreo)
+          .orElse("");
 
         return new CitaAgendaResponse(
                 cita.getId(),

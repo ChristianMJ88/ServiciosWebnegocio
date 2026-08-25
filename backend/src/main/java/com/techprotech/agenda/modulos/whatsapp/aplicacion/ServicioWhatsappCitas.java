@@ -1,10 +1,17 @@
 package com.techprotech.agenda.modulos.whatsapp.aplicacion;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.techprotech.agenda.compartido.whatsapp.NormalizadorTelefonoWhatsapp;
 import com.techprotech.agenda.compartido.whatsapp.PropiedadesWhatsapp;
+import com.techprotech.agenda.compartido.whatsapp.ClienteWhatsappTwilio;
+import com.techprotech.agenda.compartido.whatsapp.ResultadoEnvioWhatsapp;
 import com.techprotech.agenda.compartido.whatsapp.ServicioConfiguracionWhatsappEmpresa;
+import com.techprotech.agenda.compartido.whatsapp.ServicioPlantillasWhatsappEmpresa;
 import com.techprotech.agenda.modulos.autenticacion.infraestructura.entidad.ClienteEntidad;
+import com.techprotech.agenda.modulos.autenticacion.infraestructura.entidad.EmpresaEntidad;
 import com.techprotech.agenda.modulos.autenticacion.infraestructura.repositorio.ClienteRepositorio;
+import com.techprotech.agenda.modulos.autenticacion.infraestructura.repositorio.EmpresaRepositorio;
 import com.techprotech.agenda.modulos.autenticacion.infraestructura.repositorio.UsuarioRepositorio;
 import com.techprotech.agenda.modulos.citas.api.dto.CitaClienteResponse;
 import com.techprotech.agenda.modulos.citas.api.dto.CitaCreadaResponse;
@@ -13,24 +20,38 @@ import com.techprotech.agenda.modulos.citas.aplicacion.ServicioCitas;
 import com.techprotech.agenda.modulos.citas.aplicacion.ServicioCitasCliente;
 import com.techprotech.agenda.modulos.disponibilidad.aplicacion.FranjaDisponibleResponse;
 import com.techprotech.agenda.modulos.disponibilidad.aplicacion.ServicioConsultaDisponibilidad;
+import com.techprotech.agenda.modulos.servicios.infraestructura.entidad.GrupoServicioEntidad;
 import com.techprotech.agenda.modulos.servicios.infraestructura.entidad.ServicioEntidad;
+import com.techprotech.agenda.modulos.servicios.infraestructura.entidad.SubgrupoServicioEntidad;
+import com.techprotech.agenda.modulos.servicios.infraestructura.repositorio.GrupoServicioRepositorio;
 import com.techprotech.agenda.modulos.servicios.infraestructura.repositorio.ServicioRepositorio;
+import com.techprotech.agenda.modulos.servicios.infraestructura.repositorio.SubgrupoServicioRepositorio;
 import com.techprotech.agenda.modulos.sucursales.infraestructura.entidad.SucursalEntidad;
 import com.techprotech.agenda.modulos.sucursales.infraestructura.repositorio.SucursalRepositorio;
 import com.techprotech.agenda.modulos.whatsapp.infraestructura.entidad.ConversacionWhatsappEntidad;
+import com.techprotech.agenda.modulos.whatsapp.infraestructura.entidad.MensajeWhatsappEntidad;
 import com.techprotech.agenda.modulos.whatsapp.infraestructura.repositorio.ConversacionWhatsappRepositorio;
+import com.techprotech.agenda.modulos.whatsapp.infraestructura.repositorio.MensajeWhatsappRepositorio;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.text.Normalizer;
+import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.time.format.TextStyle;
+import java.util.ArrayList;
+import java.util.Base64;
 import java.util.Comparator;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.regex.Pattern;
@@ -38,57 +59,237 @@ import java.util.regex.Pattern;
 @Service
 public class ServicioWhatsappCitas {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(ServicioWhatsappCitas.class);
+
     private static final DateTimeFormatter FORMATO_FECHA_HORA = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
     private static final DateTimeFormatter FORMATO_FECHA = DateTimeFormatter.ISO_LOCAL_DATE;
     private static final DateTimeFormatter FORMATO_RESPUESTA = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm", new Locale("es", "MX"));
     private static final DateTimeFormatter FORMATO_FECHA_AMIGABLE = DateTimeFormatter.ofPattern("EEEE dd 'de' MMMM", new Locale("es", "MX"));
     private static final DateTimeFormatter FORMATO_HORA = DateTimeFormatter.ofPattern("HH:mm");
+    private static final DateTimeFormatter FORMATO_HORA_DETALLE = DateTimeFormatter.ofPattern("hh:mm a", Locale.US);
     private static final Pattern SOLO_HORA = Pattern.compile("^\\d{2}:\\d{2}$");
     private static final long MINUTOS_EXPIRACION_CONVERSACION = 60L;
+    private static final String PREFIJO_RESPUESTA_CONTENIDO = "__WA_CONTENT__";
+    private static final String USO_SELECCIONAR_SUCURSAL = "seleccionar_sucursal";
+    private static final String USO_CATEGORIA_SERVICIO = "categoria_servicio";
+    private static final String USO_SUBCATEGORIA_GENERICO = "subcategoria_generico";
+    private static final String USO_SUBCATEGORIA_GENERICA = "subcategoria_generica";
+    private static final String USO_SERVICIO_GENERICO = "servicio_generico";
+    private static final Long GRUPO_SIN_CATEGORIA_ID = 0L;
+    private static final Map<String, String> LIST_PICKER_SIDS_POR_USO = Map.of(
+            USO_SELECCIONAR_SUCURSAL, "HXb5123174a3f36d76ff186d94d6be5cfe",
+            USO_CATEGORIA_SERVICIO, "HXd65399c8e9ea5e115b85715cc1c3c0b4",
+            USO_SUBCATEGORIA_GENERICO, "HX14dee1638ae9526c2ef7fc923cd401c3",
+            USO_SUBCATEGORIA_GENERICA, "HX14dee1638ae9526c2ef7fc923cd401c3",
+            USO_SERVICIO_GENERICO, "HX7db152d9c27db81bfbddf7ce69ab6eed"
+    );
 
     private final PropiedadesWhatsapp propiedadesWhatsapp;
     private final ServicioConfiguracionWhatsappEmpresa servicioConfiguracionWhatsappEmpresa;
+    private final ServicioPlantillasWhatsappEmpresa servicioPlantillasWhatsappEmpresa;
+    private final ClienteWhatsappTwilio clienteWhatsappTwilio;
+    private final ObjectMapper objectMapper;
     private final ServicioCitas servicioCitas;
     private final ServicioCitasCliente servicioCitasCliente;
     private final ServicioConsultaDisponibilidad servicioConsultaDisponibilidad;
     private final ClienteRepositorio clienteRepositorio;
+    private final EmpresaRepositorio empresaRepositorio;
     private final UsuarioRepositorio usuarioRepositorio;
     private final SucursalRepositorio sucursalRepositorio;
+    private final GrupoServicioRepositorio grupoServicioRepositorio;
+    private final SubgrupoServicioRepositorio subgrupoServicioRepositorio;
     private final ServicioRepositorio servicioRepositorio;
     private final ConversacionWhatsappRepositorio conversacionWhatsappRepositorio;
+    private final MensajeWhatsappRepositorio mensajeWhatsappRepositorio;
 
     public ServicioWhatsappCitas(
             PropiedadesWhatsapp propiedadesWhatsapp,
             ServicioConfiguracionWhatsappEmpresa servicioConfiguracionWhatsappEmpresa,
+            ServicioPlantillasWhatsappEmpresa servicioPlantillasWhatsappEmpresa,
+            ClienteWhatsappTwilio clienteWhatsappTwilio,
+            ObjectMapper objectMapper,
             ServicioCitas servicioCitas,
             ServicioCitasCliente servicioCitasCliente,
             ServicioConsultaDisponibilidad servicioConsultaDisponibilidad,
             ClienteRepositorio clienteRepositorio,
+            EmpresaRepositorio empresaRepositorio,
             UsuarioRepositorio usuarioRepositorio,
             SucursalRepositorio sucursalRepositorio,
+            GrupoServicioRepositorio grupoServicioRepositorio,
+            SubgrupoServicioRepositorio subgrupoServicioRepositorio,
             ServicioRepositorio servicioRepositorio,
-            ConversacionWhatsappRepositorio conversacionWhatsappRepositorio
+            ConversacionWhatsappRepositorio conversacionWhatsappRepositorio,
+            MensajeWhatsappRepositorio mensajeWhatsappRepositorio
     ) {
         this.propiedadesWhatsapp = propiedadesWhatsapp;
         this.servicioConfiguracionWhatsappEmpresa = servicioConfiguracionWhatsappEmpresa;
+        this.servicioPlantillasWhatsappEmpresa = servicioPlantillasWhatsappEmpresa;
+        this.clienteWhatsappTwilio = clienteWhatsappTwilio;
+        this.objectMapper = objectMapper;
         this.servicioCitas = servicioCitas;
         this.servicioCitasCliente = servicioCitasCliente;
         this.servicioConsultaDisponibilidad = servicioConsultaDisponibilidad;
         this.clienteRepositorio = clienteRepositorio;
+        this.empresaRepositorio = empresaRepositorio;
         this.usuarioRepositorio = usuarioRepositorio;
         this.sucursalRepositorio = sucursalRepositorio;
+        this.grupoServicioRepositorio = grupoServicioRepositorio;
+        this.subgrupoServicioRepositorio = subgrupoServicioRepositorio;
         this.servicioRepositorio = servicioRepositorio;
         this.conversacionWhatsappRepositorio = conversacionWhatsappRepositorio;
+        this.mensajeWhatsappRepositorio = mensajeWhatsappRepositorio;
     }
 
-    public String procesarMensaje(String telefonoRemitente, String mensajeOriginal) {
+    public RespuestaWhatsapp procesarWebhook(String telefonoRemitente, String mensajeOriginal) {
+        String respuesta = procesarMensaje(telefonoRemitente, mensajeOriginal);
+        RespuestaWhatsapp respuestaConContenido = deserializarRespuestaContenido(respuesta);
+        if (respuestaConContenido != null) {
+            return respuestaConContenido;
+        }
+
+        String bienvenidaTexto = bienvenidaTexto();
+        if (Objects.equals(respuesta, bienvenidaTexto)) {
+            return construirRespuestaBienvenida(bienvenidaTexto);
+        }
+        return RespuestaWhatsapp.texto(respuesta);
+    }
+
+    public boolean enviarContenidoInteractivo(String telefonoRemitente, RespuestaWhatsapp respuesta) {
+        if (respuesta == null || !respuesta.tieneContenidoInteractivo()) {
+            return false;
+        }
+
+        try {
+            ResultadoEnvioWhatsapp resultado = clienteWhatsappTwilio.enviarContenido(
+                    obtenerEmpresaId(),
+                    telefonoRemitente,
+                    respuesta.contenidoInteractivo().contentSid(),
+                    respuesta.contenidoInteractivo().variables()
+            );
+            registrarMensajeSaliente(
+                    telefonoRemitente,
+                    respuesta.mensaje(),
+                    respuesta.contenidoInteractivo().contentSid(),
+                    resultado
+            );
+            if (resultado == null) {
+                return false;
+            }
+
+            boolean enviadoSinError = !tieneTexto(resultado.codigoErrorProveedor()) && !tieneTexto(resultado.detalleErrorProveedor());
+            if (!enviadoSinError) {
+                LOGGER.warn(
+                        "No se pudo enviar contenido interactivo de WhatsApp a {}. Codigo={} detalle={}",
+                        telefonoRemitente,
+                        resultado.codigoErrorProveedor(),
+                        resultado.detalleErrorProveedor()
+                );
+            }
+            return enviadoSinError;
+        } catch (Exception ex) {
+            LOGGER.warn("Fallo el envio del contenido interactivo de WhatsApp para {}", telefonoRemitente, ex);
+            registrarMensajeSalienteFallido(
+                    telefonoRemitente,
+                    respuesta.mensaje(),
+                    respuesta.contenidoInteractivo().contentSid(),
+                    ex.getMessage()
+            );
+            return false;
+        }
+    }
+
+    public void registrarMensajeEntrante(String telefonoRemitente, String mensaje) {
+        registrarMensajeWhatsapp(
+                telefonoRemitente,
+                "ENTRANTE",
+                mensaje,
+                null,
+                null,
+                "RECIBIDO",
+                null,
+                null
+        );
+    }
+
+    public void registrarMensajeSalienteTexto(String telefonoDestino, String mensaje) {
+        registrarMensajeWhatsapp(
+                telefonoDestino,
+                "SALIENTE",
+                mensaje,
+                null,
+                null,
+                "ENVIADO",
+                null,
+                null
+        );
+    }
+
+    private void registrarMensajeSaliente(String telefonoDestino, String mensaje, String contentSid, ResultadoEnvioWhatsapp resultado) {
+        registrarMensajeWhatsapp(
+                telefonoDestino,
+                "SALIENTE",
+                mensaje,
+                contentSid,
+                resultado != null ? resultado.proveedorMensajeId() : null,
+                resultado != null ? resultado.estadoProveedor() : null,
+                resultado != null ? resultado.codigoErrorProveedor() : null,
+                resultado != null ? resultado.detalleErrorProveedor() : null
+        );
+    }
+
+    private void registrarMensajeSalienteFallido(String telefonoDestino, String mensaje, String contentSid, String detalleError) {
+        registrarMensajeWhatsapp(
+                telefonoDestino,
+                "SALIENTE",
+                mensaje,
+                contentSid,
+                null,
+                "ERROR",
+                null,
+                detalleError
+        );
+    }
+
+    private void registrarMensajeWhatsapp(
+            String telefono,
+            String direccion,
+            String cuerpo,
+            String contentSid,
+            String proveedorMensajeId,
+            String estado,
+            String codigoErrorProveedor,
+            String detalleErrorProveedor
+    ) {
+        try {
+            String telefonoNormalizado = NormalizadorTelefonoWhatsapp.normalizarComparable(telefono);
+            if (!tieneTexto(telefonoNormalizado)) {
+                return;
+            }
+            MensajeWhatsappEntidad mensaje = new MensajeWhatsappEntidad();
+            mensaje.setEmpresaId(obtenerEmpresaId());
+            mensaje.setTelefonoNormalizado(telefonoNormalizado);
+            mensaje.setDireccion(direccion);
+            mensaje.setCuerpo(limitar(cuerpo, 1600));
+            mensaje.setContentSid(limitar(contentSid, 80));
+            mensaje.setProveedorMensajeId(limitar(proveedorMensajeId, 80));
+            mensaje.setEstado(limitar(estado, 30));
+            mensaje.setCodigoErrorProveedor(limitar(codigoErrorProveedor, 32));
+            mensaje.setDetalleErrorProveedor(limitar(detalleErrorProveedor, 500));
+            mensaje.setCreadoEn(LocalDateTime.now());
+            mensajeWhatsappRepositorio.save(mensaje);
+        } catch (Exception ex) {
+            LOGGER.warn("No se pudo registrar mensaje WhatsApp {} para {}", direccion, telefono, ex);
+        }
+    }
+
+    private String procesarMensaje(String telefonoRemitente, String mensajeOriginal) {
         if (!servicioConfiguracionWhatsappEmpresa.resolver(obtenerEmpresaId()).habilitado()) {
             return "El canal de WhatsApp no esta habilitado en este momento.";
         }
 
         String mensaje = mensajeOriginal == null ? "" : mensajeOriginal.trim();
         if (mensaje.isBlank()) {
-            return bienvenida();
+            return bienvenidaTexto();
         }
 
         String mensajeMayus = mensaje.toUpperCase(Locale.ROOT);
@@ -97,13 +298,19 @@ public class ServicioWhatsappCitas {
         try {
             if (esMensajeMenu(mensajeNormalizado)) {
                 limpiarConversacion(telefonoRemitente);
-                return bienvenida();
+                return bienvenidaTexto();
             }
             if ("SUCURSALES".equals(mensajeMayus)) {
                 return listarSucursales();
             }
             if ("MIS CITAS".equals(mensajeMayus)) {
                 return listarMisCitas(telefonoRemitente);
+            }
+            if ("VER DETALLE".equals(mensajeMayus) || "VER DETALLES".equals(mensajeMayus)) {
+                return responderDetalleCita(telefonoRemitente);
+            }
+            if ("CONFIRMAR CITA".equals(mensajeMayus)) {
+                return confirmarCitaWhatsapp(telefonoRemitente, "CONFIRMAR");
             }
             if (esIntencionUbicacion(mensajeNormalizado)) {
                 limpiarConversacion(telefonoRemitente);
@@ -167,7 +374,7 @@ public class ServicioWhatsappCitas {
             if (conversacion != null) {
                 return continuarConversacion(conversacion, telefonoRemitente, mensaje);
             }
-            return bienvenida();
+            return bienvenidaTexto();
         } catch (ResponseStatusException ex) {
             return ex.getReason() != null ? ex.getReason() : "No pudimos procesar tu solicitud.";
         } catch (IllegalArgumentException ex) {
@@ -175,9 +382,9 @@ public class ServicioWhatsappCitas {
         }
     }
 
-    private String bienvenida() {
+    private String bienvenidaTexto() {
         return """
-                Hola, 👋 Soy el asistente de NailArt Studio.
+                Hola, 👋 Soy el asistente de %s.
 
                 ¿Que te gustaría hacer hoy?:
 
@@ -189,7 +396,33 @@ public class ServicioWhatsappCitas {
                 6️⃣ Ver promociones
 
                 Solo dime qué necesitas y te guío paso a paso.
-                """.trim();
+                """.formatted(obtenerNombreNegocio()).trim();
+    }
+
+    private RespuestaWhatsapp construirRespuestaBienvenida(String fallbackTexto) {
+        Long empresaId = obtenerEmpresaId();
+        String plantillaMenuBienvenidaSid = servicioPlantillasWhatsappEmpresa.resolverContentSid(empresaId, "MENU_BIENVENIDA");
+        if (!tieneTexto(plantillaMenuBienvenidaSid)) {
+            plantillaMenuBienvenidaSid = servicioConfiguracionWhatsappEmpresa
+                    .resolver(empresaId)
+                    .plantillaMenuBienvenidaSid();
+        }
+        if (!tieneTexto(plantillaMenuBienvenidaSid)) {
+            return RespuestaWhatsapp.texto(fallbackTexto);
+        }
+
+        return RespuestaWhatsapp.conContenido(
+                fallbackTexto,
+                plantillaMenuBienvenidaSid,
+                Map.of("1", obtenerNombreNegocio())
+        );
+    }
+
+    private String obtenerNombreNegocio() {
+        return empresaRepositorio.findById(obtenerEmpresaId())
+                .map(EmpresaEntidad::getNombre)
+                .filter(nombre -> nombre != null && !nombre.isBlank())
+                .orElse("nuestro estudio");
     }
 
     private String responderUbicacion() {
@@ -275,14 +508,19 @@ public class ServicioWhatsappCitas {
         if (sucursales.size() == 1) {
             conversacion.setCitaId(null);
             conversacion.setSucursalId(sucursales.getFirst().getId());
-            conversacion.setPaso("AGENDAR_SERVICIO");
+            conversacion.setGrupoId(null);
+            conversacion.setSubgrupoId(null);
+            conversacion.setServicioId(null);
+            conversacion.setPaso("AGENDAR_GRUPO");
             guardarConversacion(conversacion);
-            return construirPreguntaServicios(sucursales.getFirst().getId(), "Claro, te ayudo a agendar.");
+            return construirSiguientePreguntaCatalogo(conversacion, "Claro, te ayudo a agendar.");
         }
 
         conversacion.setPaso("AGENDAR_SUCURSAL");
         conversacion.setCitaId(null);
         conversacion.setSucursalId(null);
+        conversacion.setGrupoId(null);
+        conversacion.setSubgrupoId(null);
         conversacion.setServicioId(null);
         guardarConversacion(conversacion);
         return construirPreguntaSucursales("Claro, te ayudo a agendar. Primero elige la sucursal.");
@@ -303,14 +541,19 @@ public class ServicioWhatsappCitas {
         if (sucursales.size() == 1) {
             conversacion.setCitaId(null);
             conversacion.setSucursalId(sucursales.getFirst().getId());
-            conversacion.setPaso("HORARIOS_SERVICIO");
+            conversacion.setGrupoId(null);
+            conversacion.setSubgrupoId(null);
+            conversacion.setServicioId(null);
+            conversacion.setPaso("HORARIOS_GRUPO");
             guardarConversacion(conversacion);
-            return construirPreguntaServicios(sucursales.getFirst().getId(), "Perfecto, revisemos horarios.");
+            return construirSiguientePreguntaCatalogo(conversacion, "Perfecto, revisemos horarios.");
         }
 
         conversacion.setPaso("HORARIOS_SUCURSAL");
         conversacion.setCitaId(null);
         conversacion.setSucursalId(null);
+        conversacion.setGrupoId(null);
+        conversacion.setSubgrupoId(null);
         conversacion.setServicioId(null);
         guardarConversacion(conversacion);
         return construirPreguntaSucursales("Perfecto, revisemos horarios. Primero dime la sucursal.");
@@ -340,6 +583,8 @@ public class ServicioWhatsappCitas {
         conversacion.setPaso("REAGENDAR_CITA");
         conversacion.setCitaId(null);
         conversacion.setSucursalId(null);
+        conversacion.setGrupoId(null);
+        conversacion.setSubgrupoId(null);
         conversacion.setServicioId(null);
         conversacion.setFechaSeleccionada(null);
         conversacion.setHoraSeleccionada(null);
@@ -350,6 +595,8 @@ public class ServicioWhatsappCitas {
     private String continuarConversacion(ConversacionWhatsappEntidad conversacion, String telefonoRemitente, String mensaje) {
         return switch (conversacion.getPaso()) {
             case "AGENDAR_SUCURSAL", "HORARIOS_SUCURSAL" -> procesarSucursalConversacion(conversacion, mensaje);
+            case "AGENDAR_GRUPO", "HORARIOS_GRUPO" -> procesarGrupoConversacion(conversacion, mensaje);
+            case "AGENDAR_SUBGRUPO", "HORARIOS_SUBGRUPO" -> procesarSubgrupoConversacion(conversacion, mensaje);
             case "AGENDAR_SERVICIO", "HORARIOS_SERVICIO" -> procesarServicioConversacion(conversacion, mensaje);
             case "AGENDAR_FECHA", "HORARIOS_FECHA" -> procesarFechaConversacion(conversacion, mensaje);
             case "AGENDAR_HORA" -> procesarHoraAgendar(conversacion, telefonoRemitente, mensaje);
@@ -359,9 +606,10 @@ public class ServicioWhatsappCitas {
             case "REAGENDAR_CITA" -> procesarSeleccionReagendar(conversacion, telefonoRemitente, mensaje);
             case "REAGENDAR_FECHA" -> procesarFechaReagendar(conversacion, telefonoRemitente, mensaje);
             case "REAGENDAR_HORA" -> procesarHoraReagendar(conversacion, telefonoRemitente, mensaje);
+            case "DETALLE_CONFIRMACION" -> procesarConfirmacionDetalle(conversacion, telefonoRemitente, mensaje);
             default -> {
                 limpiarConversacion(telefonoRemitente);
-                yield bienvenida();
+                yield bienvenidaTexto();
             }
         };
     }
@@ -373,12 +621,77 @@ public class ServicioWhatsappCitas {
         }
 
         conversacion.setSucursalId(sucursal.getId());
+        conversacion.setGrupoId(null);
+        conversacion.setSubgrupoId(null);
+        conversacion.setServicioId(null);
+        conversacion.setFechaSeleccionada(null);
+        conversacion.setHoraSeleccionada(null);
+        conversacion.setPaso(conversacion.getFlujo().equals("HORARIOS") ? "HORARIOS_GRUPO" : "AGENDAR_GRUPO");
+        guardarConversacion(conversacion);
+        return construirSiguientePreguntaCatalogo(conversacion, "Perfecto.");
+    }
+
+    private String procesarGrupoConversacion(ConversacionWhatsappEntidad conversacion, String mensaje) {
+        if (conversacion.getSucursalId() == null) {
+            conversacion.setPaso(conversacion.getFlujo().equals("HORARIOS") ? "HORARIOS_SUCURSAL" : "AGENDAR_SUCURSAL");
+            guardarConversacion(conversacion);
+            return construirPreguntaSucursales("Necesito primero la sucursal.");
+        }
+
+        if (seleccionoGrupoSinCategoria(conversacion.getSucursalId(), mensaje)) {
+            conversacion.setGrupoId(GRUPO_SIN_CATEGORIA_ID);
+            conversacion.setSubgrupoId(null);
+            conversacion.setServicioId(null);
+            conversacion.setFechaSeleccionada(null);
+            conversacion.setHoraSeleccionada(null);
+            conversacion.setPaso(conversacion.getFlujo().equals("HORARIOS") ? "HORARIOS_SERVICIO" : "AGENDAR_SERVICIO");
+            guardarConversacion(conversacion);
+            return construirPreguntaServicios(conversacion.getSucursalId(), GRUPO_SIN_CATEGORIA_ID, null, "Perfecto.");
+        }
+
+        GrupoServicioEntidad grupo = resolverGrupoPorTexto(conversacion.getSucursalId(), mensaje);
+        if (grupo == null) {
+            return construirPreguntaGrupos(conversacion.getSucursalId(), "No identifiqué la categoría. Elige una opción.");
+        }
+
+        conversacion.setGrupoId(grupo.getId());
+        conversacion.setSubgrupoId(null);
+        conversacion.setServicioId(null);
+        conversacion.setFechaSeleccionada(null);
+        conversacion.setHoraSeleccionada(null);
+        guardarConversacion(conversacion);
+        return construirSiguientePreguntaDespuesDeGrupo(conversacion, "Perfecto.");
+    }
+
+    private String procesarSubgrupoConversacion(ConversacionWhatsappEntidad conversacion, String mensaje) {
+        if (conversacion.getSucursalId() == null || conversacion.getGrupoId() == null) {
+            conversacion.setPaso(conversacion.getFlujo().equals("HORARIOS") ? "HORARIOS_GRUPO" : "AGENDAR_GRUPO");
+            guardarConversacion(conversacion);
+            return construirPreguntaGrupos(conversacion.getSucursalId(), "Vamos a retomar desde la categoría.");
+        }
+
+        if (seleccionoSubgrupoSinSubcategoria(conversacion.getSucursalId(), conversacion.getGrupoId(), mensaje)) {
+            conversacion.setSubgrupoId(null);
+            conversacion.setServicioId(null);
+            conversacion.setFechaSeleccionada(null);
+            conversacion.setHoraSeleccionada(null);
+            conversacion.setPaso(conversacion.getFlujo().equals("HORARIOS") ? "HORARIOS_SERVICIO" : "AGENDAR_SERVICIO");
+            guardarConversacion(conversacion);
+            return construirPreguntaServicios(conversacion.getSucursalId(), conversacion.getGrupoId(), null, "Perfecto.");
+        }
+
+        SubgrupoServicioEntidad subgrupo = resolverSubgrupoPorTexto(conversacion.getSucursalId(), conversacion.getGrupoId(), mensaje);
+        if (subgrupo == null) {
+            return construirPreguntaSubgrupos(conversacion.getSucursalId(), conversacion.getGrupoId(), "No identifiqué la subcategoría. Elige una opción.");
+        }
+
+        conversacion.setSubgrupoId(subgrupo.getId());
         conversacion.setServicioId(null);
         conversacion.setFechaSeleccionada(null);
         conversacion.setHoraSeleccionada(null);
         conversacion.setPaso(conversacion.getFlujo().equals("HORARIOS") ? "HORARIOS_SERVICIO" : "AGENDAR_SERVICIO");
         guardarConversacion(conversacion);
-        return construirPreguntaServicios(sucursal.getId(), "Perfecto.");
+        return construirPreguntaServicios(conversacion.getSucursalId(), conversacion.getGrupoId(), subgrupo.getId(), "Perfecto.");
     }
 
     private String procesarServicioConversacion(ConversacionWhatsappEntidad conversacion, String mensaje) {
@@ -388,9 +701,9 @@ public class ServicioWhatsappCitas {
             return construirPreguntaSucursales("Necesito primero la sucursal.");
         }
 
-        ServicioEntidad servicio = resolverServicioPorTexto(conversacion.getSucursalId(), mensaje);
+        ServicioEntidad servicio = resolverServicioPorTexto(conversacion.getSucursalId(), conversacion.getGrupoId(), conversacion.getSubgrupoId(), mensaje);
         if (servicio == null) {
-            return construirPreguntaServicios(conversacion.getSucursalId(), "No identifiqué el servicio. Respóndeme con el número o con el nombre del servicio que te interesa.");
+            return construirPreguntaServicios(conversacion.getSucursalId(), conversacion.getGrupoId(), conversacion.getSubgrupoId(), "No identifiqué el servicio. Elige una opción.");
         }
 
         conversacion.setServicioId(servicio.getId());
@@ -705,6 +1018,13 @@ public class ServicioWhatsappCitas {
         List<SucursalEntidad> sucursales = sucursalRepositorio.findByEmpresaIdAndActivaTrue(obtenerEmpresaId()).stream()
                 .sorted(Comparator.comparing(SucursalEntidad::getNombre))
                 .toList();
+        List<OpcionListPicker> opciones = sucursales.stream()
+                .map(sucursal -> new OpcionListPicker(
+                        "SUCURSAL|" + sucursal.getId(),
+                        nombreVisibleSucursal(sucursal.getNombre()),
+                        tieneTexto(sucursal.getDireccion()) ? sucursal.getDireccion() : "Seleccionar sucursal"
+                ))
+                .toList();
         StringBuilder respuesta = new StringBuilder(encabezado).append("\n\nSucursales disponibles:\n");
         for (int i = 0; i < sucursales.size(); i++) {
             respuesta.append(i + 1)
@@ -713,18 +1033,118 @@ public class ServicioWhatsappCitas {
                     .append("\n");
         }
         respuesta.append("\nRespóndeme con el número o con parte del nombre de la sucursal.");
-        return respuesta.toString().trim();
+        String fallback = respuesta.toString().trim();
+        return construirRespuestaListPicker(fallback, encabezado, "Elegir sucursal", opciones, USO_SELECCIONAR_SUCURSAL);
     }
 
-    private String construirPreguntaServicios(Long sucursalId, String encabezado) {
+    private String construirSiguientePreguntaCatalogo(ConversacionWhatsappEntidad conversacion, String encabezado) {
+        List<GrupoServicioEntidad> grupos = gruposDisponiblesParaSucursal(conversacion.getSucursalId());
+        boolean tieneServiciosSinGrupo = serviciosDisponibles(conversacion.getSucursalId(), GRUPO_SIN_CATEGORIA_ID, null).size() > 0;
+        if (!grupos.isEmpty() || tieneServiciosSinGrupo) {
+            conversacion.setPaso(conversacion.getFlujo().equals("HORARIOS") ? "HORARIOS_GRUPO" : "AGENDAR_GRUPO");
+            guardarConversacion(conversacion);
+            return construirPreguntaGrupos(conversacion.getSucursalId(), encabezado);
+        }
+
+        conversacion.setPaso(conversacion.getFlujo().equals("HORARIOS") ? "HORARIOS_SERVICIO" : "AGENDAR_SERVICIO");
+        guardarConversacion(conversacion);
+        return construirPreguntaServicios(conversacion.getSucursalId(), null, null, encabezado);
+    }
+
+    private String construirSiguientePreguntaDespuesDeGrupo(ConversacionWhatsappEntidad conversacion, String encabezado) {
+        List<SubgrupoServicioEntidad> subgrupos = subgruposDisponiblesParaGrupo(conversacion.getSucursalId(), conversacion.getGrupoId());
+        boolean tieneServiciosSinSubgrupo = !serviciosSinSubgrupo(conversacion.getSucursalId(), conversacion.getGrupoId()).isEmpty();
+        if (!subgrupos.isEmpty()) {
+            conversacion.setPaso(conversacion.getFlujo().equals("HORARIOS") ? "HORARIOS_SUBGRUPO" : "AGENDAR_SUBGRUPO");
+            guardarConversacion(conversacion);
+            return construirPreguntaSubgrupos(conversacion.getSucursalId(), conversacion.getGrupoId(), encabezado);
+        }
+
+        conversacion.setPaso(conversacion.getFlujo().equals("HORARIOS") ? "HORARIOS_SERVICIO" : "AGENDAR_SERVICIO");
+        guardarConversacion(conversacion);
+        return construirPreguntaServicios(conversacion.getSucursalId(), conversacion.getGrupoId(), tieneServiciosSinSubgrupo ? null : conversacion.getSubgrupoId(), encabezado);
+    }
+
+    private String construirPreguntaGrupos(Long sucursalId, String encabezado) {
+        List<GrupoServicioEntidad> grupos = gruposDisponiblesParaSucursal(sucursalId);
+        boolean tieneServiciosSinGrupo = !serviciosDisponibles(sucursalId, GRUPO_SIN_CATEGORIA_ID, null).isEmpty();
+        List<OpcionListPicker> opciones = new ArrayList<>();
+        for (GrupoServicioEntidad grupo : grupos) {
+            opciones.add(new OpcionListPicker(
+                    "GRUPO|" + grupo.getId(),
+                    grupo.getNombre(),
+                    tieneTexto(grupo.getDescripcion()) ? grupo.getDescripcion() : "Categoría de servicios"
+            ));
+        }
+        if (tieneServiciosSinGrupo) {
+            opciones.add(new OpcionListPicker(
+                    "GRUPO|SIN_CATEGORIA",
+                    "Otros servicios",
+                    "Servicios sin categoría"
+            ));
+        }
+
+        if (opciones.isEmpty()) {
+            return construirPreguntaServicios(sucursalId, null, null, encabezado);
+        }
+
+        StringBuilder respuesta = new StringBuilder(encabezado).append("\n\nCategorías disponibles:\n");
+        for (int i = 0; i < opciones.size(); i++) {
+            respuesta.append(i + 1)
+                    .append(". ")
+                    .append(opciones.get(i).titulo())
+                    .append("\n");
+        }
+        respuesta.append("\nRespóndeme con el número o el nombre de la categoría.");
+        return construirRespuestaListPicker(respuesta.toString().trim(), encabezado, "Elegir categoría", opciones, USO_CATEGORIA_SERVICIO);
+    }
+
+    private String construirPreguntaSubgrupos(Long sucursalId, Long grupoId, String encabezado) {
+        List<SubgrupoServicioEntidad> subgrupos = subgruposDisponiblesParaGrupo(sucursalId, grupoId);
+        List<OpcionListPicker> opciones = new ArrayList<>(subgrupos.stream()
+                .map(subgrupo -> new OpcionListPicker(
+                        "SUBGRUPO|" + subgrupo.getId(),
+                        subgrupo.getNombre(),
+                        tieneTexto(subgrupo.getDescripcion()) ? subgrupo.getDescripcion() : "Subcategoría de servicios"
+                ))
+                .toList());
+        if (!serviciosSinSubgrupo(sucursalId, grupoId).isEmpty()) {
+            opciones.add(new OpcionListPicker(
+                    "SUBGRUPO|SIN_SUBGRUPO",
+                    "Otros servicios",
+                    "Servicios sin subcategoría"
+            ));
+        }
+
+        if (opciones.isEmpty()) {
+            return construirPreguntaServicios(sucursalId, grupoId, null, encabezado);
+        }
+
+        StringBuilder respuesta = new StringBuilder(encabezado).append("\n\nSubcategorías disponibles:\n");
+        for (int i = 0; i < opciones.size(); i++) {
+            respuesta.append(i + 1)
+                    .append(". ")
+                    .append(opciones.get(i).titulo())
+                    .append("\n");
+        }
+        respuesta.append("\nRespóndeme con el número o el nombre de la subcategoría.");
+        return construirRespuestaListPicker(respuesta.toString().trim(), encabezado, "Elegir subcategoría", opciones, USO_SUBCATEGORIA_GENERICO);
+    }
+
+    private String construirPreguntaServicios(Long sucursalId, Long grupoId, Long subgrupoId, String encabezado) {
         SucursalEntidad sucursal = sucursalRepositorio.findById(sucursalId).orElse(null);
-        List<ServicioEntidad> servicios = servicioRepositorio.findBySucursalIdAndActivoTrue(sucursalId).stream()
-                .sorted(Comparator.comparing(ServicioEntidad::getNombre))
-                .toList();
+        List<ServicioEntidad> servicios = serviciosDisponibles(sucursalId, grupoId, subgrupoId);
         if (servicios.isEmpty()) {
             return "No encontré servicios activos para esa sucursal. Si deseas, responde Ubicación o Mis citas.";
         }
 
+        List<OpcionListPicker> opciones = servicios.stream()
+                .map(servicio -> new OpcionListPicker(
+                        "SERVICIO|" + servicio.getId(),
+                        servicio.getNombre(),
+                        "%d min".formatted(servicio.getDuracionMinutos())
+                ))
+                .toList();
         StringBuilder respuesta = new StringBuilder(encabezado)
                 .append("\n\n")
                 .append("Sucursal: ")
@@ -741,7 +1161,12 @@ public class ServicioWhatsappCitas {
                     .append(" min\n");
         }
         respuesta.append("\nRespóndeme con el número o con el nombre del servicio que te interesa.");
-        return respuesta.toString().trim();
+        String fallback = respuesta.toString().trim();
+        String body = "%s\nSucursal: %s".formatted(
+                encabezado,
+                sucursal != null ? nombreVisibleSucursal(sucursal.getNombre()) : "Seleccionada"
+        );
+        return construirRespuestaListPicker(fallback, body, "Elegir servicio", opciones, USO_SERVICIO_GENERICO);
     }
 
     private String construirPreguntaReagendarCita(List<CitaClienteResponse> citas) {
@@ -760,6 +1185,7 @@ public class ServicioWhatsappCitas {
         ServicioEntidad servicio = servicioRepositorio.findById(servicioId).orElse(null);
         SucursalEntidad sucursal = sucursalRepositorio.findById(sucursalId).orElse(null);
         ZoneId zona = ZoneId.of(sucursal != null ? sucursal.getZonaHoraria() : "America/Mexico_City");
+        List<OpcionListPicker> opciones = new ArrayList<>();
 
         StringBuilder respuesta = new StringBuilder("Encontré estos horarios disponibles");
         if (servicio != null) {
@@ -772,6 +1198,11 @@ public class ServicioWhatsappCitas {
         franjas.stream().limit(8).forEach(franja -> {
             String hora = java.time.OffsetDateTime.parse(franja.inicio()).atZoneSameInstant(zona).toLocalTime().format(DateTimeFormatter.ofPattern("HH:mm"));
             respuesta.append("- ").append(hora).append("\n");
+            opciones.add(new OpcionListPicker(
+                    "HORA|" + hora,
+                    hora,
+                    "Disponible"
+            ));
         });
 
         if (paraAgendar) {
@@ -779,7 +1210,15 @@ public class ServicioWhatsappCitas {
         } else {
             respuesta.append("\nSi quieres apartar uno de estos horarios, responde: Quiero agendar.");
         }
-        return respuesta.toString().trim();
+        String fallback = respuesta.toString().trim();
+        if (!paraAgendar) {
+            return fallback;
+        }
+        String body = "Encontré estos horarios%s el %s.".formatted(
+                servicio != null ? " para " + servicio.getNombre() : "",
+                fecha.format(FORMATO_FECHA_AMIGABLE)
+        );
+        return construirRespuestaListPicker(fallback, body, "Elegir horario", opciones);
     }
 
     private ConversacionWhatsappEntidad obtenerConversacion(String telefonoRemitente) {
@@ -868,6 +1307,14 @@ public class ServicioWhatsappCitas {
         List<SucursalEntidad> sucursales = sucursalRepositorio.findByEmpresaIdAndActivaTrue(obtenerEmpresaId()).stream()
                 .sorted(Comparator.comparing(SucursalEntidad::getNombre))
                 .toList();
+        Long sucursalIdPayload = extraerIdPayload(texto, "SUCURSAL");
+        if (sucursalIdPayload != null) {
+            return sucursales.stream()
+                    .filter(sucursal -> sucursal.getId().equals(sucursalIdPayload))
+                    .findFirst()
+                    .orElse(null);
+        }
+
         Integer opcion = parsearOpcion(texto);
         if (opcion != null && opcion >= 1 && opcion <= sucursales.size()) {
             return sucursales.get(opcion - 1);
@@ -880,10 +1327,107 @@ public class ServicioWhatsappCitas {
                 .orElse(null);
     }
 
-    private ServicioEntidad resolverServicioPorTexto(Long sucursalId, String texto) {
-        List<ServicioEntidad> servicios = servicioRepositorio.findBySucursalIdAndActivoTrue(sucursalId).stream()
-                .sorted(Comparator.comparing(ServicioEntidad::getNombre))
-                .toList();
+    private GrupoServicioEntidad resolverGrupoPorTexto(Long sucursalId, String texto) {
+        List<GrupoServicioEntidad> grupos = gruposDisponiblesParaSucursal(sucursalId);
+        Long grupoIdPayload = extraerIdPayload(texto, "GRUPO");
+        if (grupoIdPayload != null) {
+            return grupos.stream()
+                    .filter(grupo -> grupo.getId().equals(grupoIdPayload))
+                    .findFirst()
+                    .orElse(null);
+        }
+
+        Integer opcion = parsearOpcion(texto);
+        boolean tieneServiciosSinGrupo = !serviciosDisponibles(sucursalId, GRUPO_SIN_CATEGORIA_ID, null).isEmpty();
+        int totalOpciones = grupos.size() + (tieneServiciosSinGrupo ? 1 : 0);
+        if (opcion != null && opcion >= 1 && opcion <= totalOpciones) {
+            if (opcion <= grupos.size()) {
+                return grupos.get(opcion - 1);
+            }
+            return null;
+        }
+
+        String buscado = normalizarTextoLibre(texto);
+        return grupos.stream()
+                .filter(grupo -> coincideTexto(buscado, grupo.getNombre()))
+                .findFirst()
+                .orElse(null);
+    }
+
+    private boolean seleccionoGrupoSinCategoria(Long sucursalId, String texto) {
+        if (serviciosDisponibles(sucursalId, GRUPO_SIN_CATEGORIA_ID, null).isEmpty()) {
+            return false;
+        }
+        String payload = extraerPayload(texto, "GRUPO");
+        if ("SIN_CATEGORIA".equalsIgnoreCase(payload)) {
+            return true;
+        }
+        Integer opcion = parsearOpcion(texto);
+        if (opcion != null) {
+            return opcion == gruposDisponiblesParaSucursal(sucursalId).size() + 1;
+        }
+        String normalizado = normalizarTextoLibre(texto);
+        return normalizado.equals("otros")
+                || normalizado.equals("otros servicios")
+                || normalizado.equals("sin categoria");
+    }
+
+    private SubgrupoServicioEntidad resolverSubgrupoPorTexto(Long sucursalId, Long grupoId, String texto) {
+        List<SubgrupoServicioEntidad> subgrupos = subgruposDisponiblesParaGrupo(sucursalId, grupoId);
+        Long subgrupoIdPayload = extraerIdPayload(texto, "SUBGRUPO");
+        if (subgrupoIdPayload != null) {
+            return subgrupos.stream()
+                    .filter(subgrupo -> subgrupo.getId().equals(subgrupoIdPayload))
+                    .findFirst()
+                    .orElse(null);
+        }
+
+        Integer opcion = parsearOpcion(texto);
+        boolean tieneServiciosSinSubgrupo = !serviciosSinSubgrupo(sucursalId, grupoId).isEmpty();
+        int totalOpciones = subgrupos.size() + (tieneServiciosSinSubgrupo ? 1 : 0);
+        if (opcion != null && opcion >= 1 && opcion <= totalOpciones) {
+            if (opcion <= subgrupos.size()) {
+                return subgrupos.get(opcion - 1);
+            }
+            return null;
+        }
+
+        String buscado = normalizarTextoLibre(texto);
+        return subgrupos.stream()
+                .filter(subgrupo -> coincideTexto(buscado, subgrupo.getNombre()))
+                .findFirst()
+                .orElse(null);
+    }
+
+    private boolean seleccionoSubgrupoSinSubcategoria(Long sucursalId, Long grupoId, String texto) {
+        if (serviciosSinSubgrupo(sucursalId, grupoId).isEmpty()) {
+            return false;
+        }
+        String payload = extraerPayload(texto, "SUBGRUPO");
+        if ("SIN_SUBGRUPO".equalsIgnoreCase(payload)) {
+            return true;
+        }
+        Integer opcion = parsearOpcion(texto);
+        if (opcion != null) {
+            return opcion == subgruposDisponiblesParaGrupo(sucursalId, grupoId).size() + 1;
+        }
+        String normalizado = normalizarTextoLibre(texto);
+        return normalizado.equals("otros")
+                || normalizado.equals("otros servicios")
+                || normalizado.equals("sin subcategoria")
+                || normalizado.equals("sin subgrupo");
+    }
+
+    private ServicioEntidad resolverServicioPorTexto(Long sucursalId, Long grupoId, Long subgrupoId, String texto) {
+        List<ServicioEntidad> servicios = serviciosDisponibles(sucursalId, grupoId, subgrupoId);
+        Long servicioIdPayload = extraerIdPayload(texto, "SERVICIO");
+        if (servicioIdPayload != null) {
+            return servicios.stream()
+                    .filter(servicio -> servicio.getId().equals(servicioIdPayload))
+                    .findFirst()
+                    .orElse(null);
+        }
+
         Integer opcion = parsearOpcion(texto);
         if (opcion != null && opcion >= 1 && opcion <= servicios.size()) {
             return servicios.get(opcion - 1);
@@ -894,6 +1438,86 @@ public class ServicioWhatsappCitas {
                 .filter(servicio -> coincideTexto(buscado, servicio.getNombre()))
                 .findFirst()
                 .orElse(null);
+    }
+
+    private List<GrupoServicioEntidad> gruposDisponiblesParaSucursal(Long sucursalId) {
+        if (sucursalId == null) {
+            return List.of();
+        }
+        List<ServicioEntidad> servicios = servicioRepositorio.findBySucursalIdAndActivoTrue(sucursalId);
+        List<Long> grupoIds = servicios.stream()
+                .map(ServicioEntidad::getGrupoId)
+                .filter(Objects::nonNull)
+                .distinct()
+                .toList();
+        if (grupoIds.isEmpty()) {
+            return List.of();
+        }
+        return grupoServicioRepositorio.findByEmpresaIdOrderByOrdenPublicoAscNombreAsc(obtenerEmpresaId()).stream()
+                .filter(GrupoServicioEntidad::isActivo)
+                .filter(grupo -> grupoIds.contains(grupo.getId()))
+                .toList();
+    }
+
+    private List<SubgrupoServicioEntidad> subgruposDisponiblesParaGrupo(Long sucursalId, Long grupoId) {
+        if (sucursalId == null || grupoId == null || GRUPO_SIN_CATEGORIA_ID.equals(grupoId)) {
+            return List.of();
+        }
+        List<ServicioEntidad> servicios = servicioRepositorio.findBySucursalIdAndActivoTrue(sucursalId);
+        List<Long> subgrupoIds = servicios.stream()
+                .filter(servicio -> grupoId.equals(servicio.getGrupoId()))
+                .map(ServicioEntidad::getSubgrupoId)
+                .filter(Objects::nonNull)
+                .distinct()
+                .toList();
+        if (subgrupoIds.isEmpty()) {
+            return List.of();
+        }
+        return subgrupoServicioRepositorio.findByEmpresaIdAndGrupoIdOrderByOrdenPublicoAscNombreAsc(obtenerEmpresaId(), grupoId).stream()
+                .filter(SubgrupoServicioEntidad::isActivo)
+                .filter(subgrupo -> subgrupoIds.contains(subgrupo.getId()))
+                .toList();
+    }
+
+    private List<ServicioEntidad> serviciosSinSubgrupo(Long sucursalId, Long grupoId) {
+        if (sucursalId == null || grupoId == null || GRUPO_SIN_CATEGORIA_ID.equals(grupoId)) {
+            return List.of();
+        }
+        return servicioRepositorio.findBySucursalIdAndActivoTrue(sucursalId).stream()
+                .filter(servicio -> grupoId.equals(servicio.getGrupoId()))
+                .filter(servicio -> servicio.getSubgrupoId() == null)
+                .sorted(Comparator.comparingInt(ServicioEntidad::getOrdenPublico).thenComparing(ServicioEntidad::getNombre))
+                .toList();
+    }
+
+    private List<ServicioEntidad> serviciosDisponibles(Long sucursalId, Long grupoId, Long subgrupoId) {
+        if (sucursalId == null) {
+            return List.of();
+        }
+        List<ServicioEntidad> servicios = servicioRepositorio.findBySucursalIdAndActivoTrue(sucursalId).stream()
+                .sorted(Comparator.comparingInt(ServicioEntidad::getOrdenPublico).thenComparing(ServicioEntidad::getNombre))
+                .toList();
+        if (grupoId == null) {
+            return servicios;
+        }
+        if (GRUPO_SIN_CATEGORIA_ID.equals(grupoId)) {
+            return servicios.stream()
+                    .filter(servicio -> servicio.getGrupoId() == null)
+                    .toList();
+        }
+        List<SubgrupoServicioEntidad> subgrupos = subgruposDisponiblesParaGrupo(sucursalId, grupoId);
+        return servicios.stream()
+                .filter(servicio -> grupoId.equals(servicio.getGrupoId()))
+                .filter(servicio -> {
+                    if (subgrupoId != null) {
+                        return subgrupoId.equals(servicio.getSubgrupoId());
+                    }
+                    if (!subgrupos.isEmpty()) {
+                        return servicio.getSubgrupoId() == null;
+                    }
+                    return true;
+                })
+                .toList();
     }
 
     private boolean coincideTexto(String buscado, String candidato) {
@@ -920,7 +1544,10 @@ public class ServicioWhatsappCitas {
     }
 
     private String extraerHora(String valor) {
-        String candidato = valor == null ? "" : valor.trim();
+        String candidato = extraerPayload(valor, "HORA");
+        if (!tieneTexto(candidato)) {
+            candidato = valor == null ? "" : valor.trim();
+        }
         if (!SOLO_HORA.matcher(candidato).matches()) {
             throw new IllegalArgumentException("Respóndeme solo con la hora en formato HH:mm, por ejemplo 10:30.");
         }
@@ -978,6 +1605,22 @@ public class ServicioWhatsappCitas {
                 || mensajeNormalizado.contains("ahora no gracias");
     }
 
+    private boolean esIntencionConfirmarDetalle(String mensajeNormalizado) {
+        return mensajeNormalizado.equals("si")
+                || mensajeNormalizado.equals("confirmar")
+                || mensajeNormalizado.equals("confirmar cita")
+                || mensajeNormalizado.equals("ok")
+                || mensajeNormalizado.equals("vale")
+                || mensajeNormalizado.equals("listo");
+    }
+
+    private boolean esIntencionRechazarDetalle(String mensajeNormalizado) {
+        return mensajeNormalizado.equals("no")
+                || mensajeNormalizado.equals("aun no")
+                || mensajeNormalizado.equals("todavia no")
+                || mensajeNormalizado.equals("despues");
+    }
+
     private boolean esMensajeMenu(String mensajeNormalizado) {
         return mensajeNormalizado.equals("ayuda")
                 || mensajeNormalizado.equals("menu")
@@ -989,6 +1632,196 @@ public class ServicioWhatsappCitas {
                 || mensajeNormalizado.equals("buenas noches");
     }
 
+    private String construirRespuestaListPicker(
+            String fallback,
+            String body,
+            String button,
+            List<OpcionListPicker> opciones
+    ) {
+        return construirRespuestaListPicker(fallback, body, button, opciones, null);
+    }
+
+    private String construirRespuestaListPicker(
+            String fallback,
+            String body,
+            String button,
+            List<OpcionListPicker> opciones,
+            String uso
+    ) {
+        if (opciones == null || opciones.isEmpty()) {
+            return fallback;
+        }
+        if (opciones.size() > 10) {
+            return fallback;
+        }
+
+        String contentSid = resolverListPickerSid(uso, opciones.size());
+        if (!tieneTexto(contentSid)) {
+            return fallback;
+        }
+
+        Map<String, String> variables = construirVariablesListPicker(body, button, opciones, usaVariablesNumericasListPicker(uso));
+
+        return serializarRespuestaContenido(fallback, contentSid, variables);
+    }
+
+    private Map<String, String> construirVariablesListPicker(
+            String body,
+            String button,
+            List<OpcionListPicker> opciones,
+            boolean variablesNumericas
+    ) {
+        Map<String, String> variables = new LinkedHashMap<>();
+        if (variablesNumericas) {
+            for (int i = 0; i < opciones.size(); i++) {
+                OpcionListPicker opcion = opciones.get(i);
+                int base = i * 3 + 1;
+                variables.put(String.valueOf(base), limitar(opcion.titulo(), 24));
+                variables.put(String.valueOf(base + 1), limitar(opcion.payload(), 200));
+                variables.put(String.valueOf(base + 2), limitar(opcion.descripcion(), 72));
+            }
+            return variables;
+        }
+
+        variables.put("body", limitar(body, 1024));
+        variables.put("button", limitar(button, 20));
+        for (int i = 0; i < opciones.size(); i++) {
+            OpcionListPicker opcion = opciones.get(i);
+            int numero = i + 1;
+            variables.put("item" + numero, limitar(opcion.titulo(), 24));
+            variables.put("id" + numero, limitar(opcion.payload(), 200));
+            variables.put("desc" + numero, limitar(opcion.descripcion(), 72));
+        }
+        return variables;
+    }
+
+    private boolean usaVariablesNumericasListPicker(String uso) {
+        if (!tieneTexto(uso)) {
+            return false;
+        }
+        String normalizado = uso.trim().toLowerCase(Locale.ROOT);
+        return USO_SELECCIONAR_SUCURSAL.equals(normalizado)
+                || USO_CATEGORIA_SERVICIO.equals(normalizado)
+                || USO_SUBCATEGORIA_GENERICO.equals(normalizado)
+                || USO_SUBCATEGORIA_GENERICA.equals(normalizado)
+                || USO_SERVICIO_GENERICO.equals(normalizado);
+    }
+
+    private String resolverListPickerSid(String uso, int cantidadOpciones) {
+        if (cantidadOpciones < 1 || cantidadOpciones > 10) {
+            return null;
+        }
+        Long empresaId = obtenerEmpresaId();
+        if (tieneTexto(uso)) {
+            for (String usoEquivalente : usosEquivalentesListPicker(uso)) {
+                String contentSidPorUso = servicioPlantillasWhatsappEmpresa.resolverContentSid(empresaId, usoEquivalente);
+                if (tieneTexto(contentSidPorUso)) {
+                    return contentSidPorUso;
+                }
+                contentSidPorUso = LIST_PICKER_SIDS_POR_USO.get(usoEquivalente.trim().toLowerCase(Locale.ROOT));
+                if (tieneTexto(contentSidPorUso)) {
+                    return contentSidPorUso;
+                }
+            }
+        }
+
+        String contentSidCatalogo = servicioPlantillasWhatsappEmpresa.resolverContentSid(empresaId, "LIST_PICKER_" + cantidadOpciones);
+        if (tieneTexto(contentSidCatalogo)) {
+            return contentSidCatalogo;
+        }
+
+        String configuracion = servicioConfiguracionWhatsappEmpresa.resolver(empresaId).plantillasListPickerSids();
+        if (!tieneTexto(configuracion)) {
+            return null;
+        }
+
+        for (String entrada : configuracion.split("[,;\\n]")) {
+            String limpio = entrada.trim();
+            if (limpio.isEmpty()) {
+                continue;
+            }
+            String[] partes = limpio.split("[:=]", 2);
+            if (partes.length != 2) {
+                continue;
+            }
+            try {
+                int cantidad = Integer.parseInt(partes[0].trim());
+                if (cantidad == cantidadOpciones) {
+                    return partes[1].trim();
+                }
+            } catch (NumberFormatException ignored) {
+                // Ignoramos entradas mal formateadas para conservar fallback a texto.
+            }
+        }
+        return null;
+    }
+
+    private List<String> usosEquivalentesListPicker(String uso) {
+        String normalizado = uso.trim().toLowerCase(Locale.ROOT);
+        if (USO_SUBCATEGORIA_GENERICO.equals(normalizado) || USO_SUBCATEGORIA_GENERICA.equals(normalizado)) {
+            return List.of(USO_SUBCATEGORIA_GENERICO, USO_SUBCATEGORIA_GENERICA);
+        }
+        return List.of(normalizado);
+    }
+
+    private String serializarRespuestaContenido(String fallback, String contentSid, Map<String, String> variables) {
+        try {
+            RespuestaContenidoSerializada contenido = new RespuestaContenidoSerializada(fallback, contentSid, variables);
+            String json = objectMapper.writeValueAsString(contenido);
+            return PREFIJO_RESPUESTA_CONTENIDO + Base64.getUrlEncoder().encodeToString(json.getBytes(StandardCharsets.UTF_8));
+        } catch (JsonProcessingException ex) {
+            LOGGER.warn("No se pudo serializar respuesta interactiva de WhatsApp, se usara texto plano", ex);
+            return fallback;
+        }
+    }
+
+    private RespuestaWhatsapp deserializarRespuestaContenido(String respuesta) {
+        if (respuesta == null || !respuesta.startsWith(PREFIJO_RESPUESTA_CONTENIDO)) {
+            return null;
+        }
+        try {
+            String encoded = respuesta.substring(PREFIJO_RESPUESTA_CONTENIDO.length());
+            String json = new String(Base64.getUrlDecoder().decode(encoded), StandardCharsets.UTF_8);
+            RespuestaContenidoSerializada contenido = objectMapper.readValue(json, RespuestaContenidoSerializada.class);
+            return RespuestaWhatsapp.conContenido(contenido.fallback(), contenido.contentSid(), contenido.variables());
+        } catch (Exception ex) {
+            LOGGER.warn("No se pudo leer respuesta interactiva de WhatsApp, se usara texto plano", ex);
+            return RespuestaWhatsapp.texto("No pude preparar las opciones interactivas. Escribe MENU para intentarlo de nuevo.");
+        }
+    }
+
+    private Long extraerIdPayload(String texto, String tipo) {
+        String payload = extraerPayload(texto, tipo);
+        if (!tieneTexto(payload)) {
+            return null;
+        }
+        try {
+            return Long.parseLong(payload);
+        } catch (NumberFormatException ex) {
+            return null;
+        }
+    }
+
+    private String extraerPayload(String texto, String tipo) {
+        if (!tieneTexto(texto) || !tieneTexto(tipo)) {
+            return null;
+        }
+        String prefijo = tipo + "|";
+        String limpio = texto.trim();
+        if (!limpio.toUpperCase(Locale.ROOT).startsWith(prefijo)) {
+            return null;
+        }
+        return limpio.substring(prefijo.length()).trim();
+    }
+
+    private String limitar(String valor, int maximo) {
+        String limpio = valor == null ? "" : valor.trim();
+        if (limpio.length() <= maximo) {
+            return limpio;
+        }
+        return limpio.substring(0, Math.max(0, maximo)).trim();
+    }
+
     private String normalizarTextoLibre(String valor) {
         String base = valor == null ? "" : valor.trim().toLowerCase(Locale.ROOT);
         String sinAcentos = Normalizer.normalize(base, Normalizer.Form.NFD).replaceAll("\\p{M}+", "");
@@ -997,6 +1830,45 @@ public class ServicioWhatsappCitas {
 
     private boolean tieneTexto(String valor) {
         return valor != null && !valor.isBlank();
+    }
+
+    public record RespuestaWhatsapp(
+            String mensaje,
+            ContenidoInteractivo contenidoInteractivo
+    ) {
+        public static RespuestaWhatsapp texto(String mensaje) {
+            return new RespuestaWhatsapp(mensaje, null);
+        }
+
+        public static RespuestaWhatsapp conContenido(String mensaje, String contentSid, Map<String, String> variables) {
+            return new RespuestaWhatsapp(mensaje, new ContenidoInteractivo(contentSid, variables == null ? Map.of() : Map.copyOf(variables)));
+        }
+
+        public boolean tieneContenidoInteractivo() {
+            return contenidoInteractivo != null
+                    && contenidoInteractivo.contentSid() != null
+                    && !contenidoInteractivo.contentSid().isBlank();
+        }
+    }
+
+    public record ContenidoInteractivo(
+            String contentSid,
+            Map<String, String> variables
+    ) {
+    }
+
+    private record OpcionListPicker(
+            String payload,
+            String titulo,
+            String descripcion
+    ) {
+    }
+
+    public record RespuestaContenidoSerializada(
+            String fallback,
+            String contentSid,
+            Map<String, String> variables
+    ) {
     }
 
     private String listarMisCitas(String telefonoRemitente) {
@@ -1027,6 +1899,47 @@ public class ServicioWhatsappCitas {
             respuesta.append("\n- CANCELAR 1");
             respuesta.append("\n- REAGENDAR 1");
         }
+        return respuesta.toString().trim();
+    }
+
+    private String responderDetalleCita(String telefonoRemitente) {
+        ClienteEntidad cliente = obtenerClientePorTelefono(telefonoRemitente);
+        List<CitaClienteResponse> citas = obtenerCitasActivasCliente(cliente);
+
+        if (citas.isEmpty()) {
+            return "No encontramos una cita próxima para mostrarte. Si quieres, puedo ayudarte a agendar una nueva.";
+        }
+
+        ReservaDetalleWhatsapp detalle = construirDetalleReserva(citas);
+        ConversacionWhatsappEntidad conversacion = obtenerOCrearConversacion(telefonoRemitente);
+        conversacion.setFlujo("DETALLE_CITA");
+        conversacion.setPaso("DETALLE_CONFIRMACION");
+        conversacion.setCitaId(detalle.citas().getFirst().id());
+        conversacion.setSucursalId(detalle.citas().getFirst().sucursalId());
+        conversacion.setServicioId(null);
+        conversacion.setFechaSeleccionada(detalle.citas().getFirst().inicio().toLocalDate());
+        conversacion.setHoraSeleccionada(formatearHoraDetalle(detalle.citas().getFirst().inicio()));
+        guardarConversacion(conversacion);
+        StringBuilder respuesta = new StringBuilder("""
+                📋 Detalle de tu cita:
+
+                """);
+
+        for (CitaClienteResponse cita : detalle.citas()) {
+            respuesta.append("• ")
+                    .append(cita.servicioNombre())
+                    .append(" — ")
+                    .append(formatearHoraDetalle(cita.inicio()))
+                    .append("\n");
+        }
+
+        respuesta.append("\nSucursal: ")
+                .append(nombreVisibleSucursal(detalle.sucursalNombre()))
+                .append("\nDuración estimada total: ")
+                .append(formatearDuracion(detalle.duracionTotal()))
+                .append("\n\n¿Deseas confirmar tu cita?");
+
+        respuesta.append("\nResponde CONFIRMAR CITA para confirmarla o MIS CITAS para revisar tus opciones.");
         return respuesta.toString().trim();
     }
 
@@ -1140,12 +2053,30 @@ public class ServicioWhatsappCitas {
 
     private String confirmarCita(String telefonoRemitente, String mensaje) {
         ClienteEntidad cliente = obtenerClientePorTelefono(telefonoRemitente);
-        Long citaId = extraerIdConfirmacion(cliente, mensaje);
-        CitaClienteResponse cita = servicioCitasCliente.confirmar(obtenerEmpresaId(), cliente.getUsuarioId(), citaId);
-        return "Tu cita de %s para el %s quedó confirmada.".formatted(
-                cita.servicioNombre(),
-                formatearFechaHoraCliente(cita.inicio())
-        );
+        Long empresaId = obtenerEmpresaId();
+        String opcion = extraerOpcionSimple(mensaje);
+
+        if (opcion != null) {
+            Long citaId = resolverCitaPorOpcion(cliente, opcion, true);
+            CitaClienteResponse cita = servicioCitasCliente.confirmar(empresaId, cliente.getUsuarioId(), citaId, false);
+            return construirRespuestaConfirmacion(cliente, List.of(cita));
+        }
+
+        List<CitaClienteResponse> pendientes = servicioCitasCliente.listarMisCitas(empresaId, cliente.getUsuarioId()).stream()
+                .filter(cita -> "PENDIENTE".equalsIgnoreCase(cita.estado()))
+                .filter(cita -> cita.inicio().toLocalDateTime().isAfter(LocalDateTime.now()))
+                .sorted(Comparator.comparing(CitaClienteResponse::inicio))
+                .toList();
+
+        if (pendientes.isEmpty()) {
+            throw new IllegalArgumentException("No encontramos una cita pendiente para confirmar. Responde MIS CITAS para revisar tus opciones.");
+        }
+
+        ReservaDetalleWhatsapp detalle = construirDetalleReserva(pendientes);
+        List<CitaClienteResponse> confirmadas = detalle.citas().stream()
+                .map(cita -> servicioCitasCliente.confirmar(empresaId, cliente.getUsuarioId(), cita.id(), false))
+                .toList();
+        return construirRespuestaConfirmacion(cliente, confirmadas);
     }
 
     private String cancelarCita(String telefonoRemitente, String mensaje) {
@@ -1387,6 +2318,103 @@ public class ServicioWhatsappCitas {
                 .orElseThrow(() -> new IllegalArgumentException("No encontré la cita indicada para este número."));
     }
 
+    private ReservaDetalleWhatsapp construirDetalleReserva(List<CitaClienteResponse> citas) {
+        CitaClienteResponse primera = citas.getFirst();
+        LocalDate fechaBase = primera.inicio().toLocalDate();
+        Long sucursalBase = primera.sucursalId();
+
+        List<CitaClienteResponse> agrupadas = citas.stream()
+                .filter(cita -> Objects.equals(cita.sucursalId(), sucursalBase))
+                .filter(cita -> cita.inicio().toLocalDate().equals(fechaBase))
+                .toList();
+
+        Duration duracionTotal = agrupadas.stream()
+                .map(cita -> Duration.between(cita.inicio().toLocalDateTime(), cita.fin().toLocalDateTime()))
+                .reduce(Duration.ZERO, Duration::plus);
+
+        boolean todasPendientes = agrupadas.stream()
+                .allMatch(cita -> "PENDIENTE".equalsIgnoreCase(cita.estado()));
+
+        return new ReservaDetalleWhatsapp(
+                agrupadas,
+                primera.sucursalNombre(),
+                duracionTotal,
+                todasPendientes
+        );
+    }
+
+    private String construirRespuestaConfirmacion(ClienteEntidad cliente, List<CitaClienteResponse> citasConfirmadas) {
+        ReservaDetalleWhatsapp detalle = construirDetalleReserva(citasConfirmadas);
+        CitaClienteResponse primera = detalle.citas().getFirst();
+        SucursalEntidad sucursal = sucursalRepositorio.findById(primera.sucursalId()).orElse(null);
+        EmpresaEntidad empresa = empresaRepositorio.findById(obtenerEmpresaId()).orElse(null);
+        String nombreNegocio = empresa != null ? empresa.getNombre() : "tu negocio";
+        String fecha = primera.inicio().toLocalDateTime().format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
+        String hora = formatearHoraDetalle(primera.inicio());
+        String direccion = sucursal != null && tieneTexto(sucursal.getDireccion())
+                ? sucursal.getDireccion()
+                : nombreVisibleSucursal(detalle.sucursalNombre());
+
+        return """
+                ¡Todo listo, %s!
+
+                Tu cita en %s quedó confirmada para el %s a las %s.
+
+                Te recomendamos llegar 10 minutos antes para brindarte un mejor servicio.
+
+                Te esperamos en %s.
+                Si más adelante necesitas reprogramarla o cancelarla, responde MIS CITAS.
+                """.formatted(
+                cliente.getNombreCompleto(),
+                nombreNegocio,
+                fecha,
+                hora,
+                direccion
+        ).trim();
+    }
+
+    private String procesarConfirmacionDetalle(ConversacionWhatsappEntidad conversacion, String telefonoRemitente, String mensaje) {
+        String mensajeNormalizado = normalizarTextoLibre(mensaje);
+        if (esIntencionConfirmarDetalle(mensajeNormalizado)) {
+            limpiarConversacion(conversacion);
+            return confirmarCitaWhatsapp(telefonoRemitente, "CONFIRMAR");
+        }
+        if (esIntencionRechazarDetalle(mensajeNormalizado)) {
+            limpiarConversacion(conversacion);
+            return "Entendido. Cuando quieras retomarlo, responde CONFIRMAR CITA o MIS CITAS.";
+        }
+        if ("ver detalle".equals(mensajeNormalizado) || "ver detalles".equals(mensajeNormalizado)) {
+            return responderDetalleCita(telefonoRemitente);
+        }
+        return "Si deseas confirmarla, responde CONFIRMAR CITA. Si prefieres revisar tus opciones, responde MIS CITAS.";
+    }
+
+    private String confirmarCitaWhatsapp(String telefonoRemitente, String mensaje) {
+        ClienteEntidad cliente = obtenerClientePorTelefono(telefonoRemitente);
+        Long empresaId = obtenerEmpresaId();
+        String opcion = extraerOpcionSimple(mensaje);
+
+        if (opcion != null) {
+            Long citaId = resolverCitaPorOpcion(cliente, opcion, true);
+            servicioCitasCliente.confirmar(empresaId, cliente.getUsuarioId(), citaId, true);
+            return "Listo. Estoy enviando la confirmación de tu cita.";
+        }
+
+        List<CitaClienteResponse> pendientes = servicioCitasCliente.listarMisCitas(empresaId, cliente.getUsuarioId()).stream()
+                .filter(cita -> "PENDIENTE".equalsIgnoreCase(cita.estado()))
+                .filter(cita -> cita.inicio().toLocalDateTime().isAfter(LocalDateTime.now()))
+                .sorted(Comparator.comparing(CitaClienteResponse::inicio))
+                .toList();
+
+        if (pendientes.isEmpty()) {
+            throw new IllegalArgumentException("No encontramos una cita pendiente para confirmar. Responde MIS CITAS para revisar tus opciones.");
+        }
+
+        ReservaDetalleWhatsapp detalle = construirDetalleReserva(pendientes);
+        detalle.citas().forEach(cita -> servicioCitasCliente.confirmar(empresaId, cliente.getUsuarioId(), cita.id(), true));
+        return "Listo. Estoy enviando la confirmación de tu cita.";
+    }
+
     private Integer parsearOpcion(String valor) {
         try {
             return Integer.parseInt(valor.trim());
@@ -1413,6 +2441,23 @@ public class ServicioWhatsappCitas {
                 local.getMonthValue(),
                 local.toLocalTime().format(FORMATO_HORA)
         );
+    }
+
+    private String formatearHoraDetalle(java.time.OffsetDateTime fechaHora) {
+        return fechaHora.toLocalDateTime().toLocalTime().format(FORMATO_HORA_DETALLE);
+    }
+
+    private String formatearDuracion(Duration duracion) {
+        long minutos = Math.max(duracion.toMinutes(), 0);
+        long horas = minutos / 60;
+        long restantes = minutos % 60;
+        if (horas == 0) {
+            return "%d min".formatted(restantes);
+        }
+        if (restantes == 0) {
+            return "%d h".formatted(horas);
+        }
+        return "%d h %02d min".formatted(horas, restantes);
     }
 
     private String estadoVisible(String estado) {
@@ -1449,5 +2494,13 @@ public class ServicioWhatsappCitas {
             return "";
         }
         return valor.substring(0, 1).toUpperCase(Locale.ROOT) + valor.substring(1);
+    }
+
+    private record ReservaDetalleWhatsapp(
+            List<CitaClienteResponse> citas,
+            String sucursalNombre,
+            Duration duracionTotal,
+            boolean todasPendientes
+    ) {
     }
 }

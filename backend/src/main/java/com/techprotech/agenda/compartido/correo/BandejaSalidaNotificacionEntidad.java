@@ -6,9 +6,13 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.time.LocalDateTime;
 
+@Setter
+@Getter
 @Entity
 @Table(name = "bandeja_salida_notificacion")
 public class BandejaSalidaNotificacionEntidad {
@@ -65,135 +69,5 @@ public class BandejaSalidaNotificacionEntidad {
     @Column(name = "detalle_error_proveedor", length = 500)
     private String detalleErrorProveedor;
 
-    public Long getId() {
-        return id;
-    }
 
-    public Long getEmpresaId() {
-        return empresaId;
-    }
-
-    public void setEmpresaId(Long empresaId) {
-        this.empresaId = empresaId;
-    }
-
-    public String getTipoAgregado() {
-        return tipoAgregado;
-    }
-
-    public void setTipoAgregado(String tipoAgregado) {
-        this.tipoAgregado = tipoAgregado;
-    }
-
-    public Long getAgregadoId() {
-        return agregadoId;
-    }
-
-    public void setAgregadoId(Long agregadoId) {
-        this.agregadoId = agregadoId;
-    }
-
-    public String getTipoEvento() {
-        return tipoEvento;
-    }
-
-    public void setTipoEvento(String tipoEvento) {
-        this.tipoEvento = tipoEvento;
-    }
-
-    public String getCanal() {
-        return canal;
-    }
-
-    public void setCanal(String canal) {
-        this.canal = canal;
-    }
-
-    public String getPayloadJson() {
-        return payloadJson;
-    }
-
-    public void setPayloadJson(String payloadJson) {
-        this.payloadJson = payloadJson;
-    }
-
-    public String getEstado() {
-        return estado;
-    }
-
-    public void setEstado(String estado) {
-        this.estado = estado;
-    }
-
-    public LocalDateTime getProgramadaEn() {
-        return programadaEn;
-    }
-
-    public void setProgramadaEn(LocalDateTime programadaEn) {
-        this.programadaEn = programadaEn;
-    }
-
-    public LocalDateTime getEnviadaEn() {
-        return enviadaEn;
-    }
-
-    public void setEnviadaEn(LocalDateTime enviadaEn) {
-        this.enviadaEn = enviadaEn;
-    }
-
-    public String getMensajeError() {
-        return mensajeError;
-    }
-
-    public void setMensajeError(String mensajeError) {
-        this.mensajeError = mensajeError;
-    }
-
-    public int getIntentos() {
-        return intentos;
-    }
-
-    public void setIntentos(int intentos) {
-        this.intentos = intentos;
-    }
-
-    public String getProveedorMensajeId() {
-        return proveedorMensajeId;
-    }
-
-    public void setProveedorMensajeId(String proveedorMensajeId) {
-        this.proveedorMensajeId = proveedorMensajeId;
-    }
-
-    public String getEstadoEntrega() {
-        return estadoEntrega;
-    }
-
-    public void setEstadoEntrega(String estadoEntrega) {
-        this.estadoEntrega = estadoEntrega;
-    }
-
-    public LocalDateTime getEstadoEntregaActualizadoEn() {
-        return estadoEntregaActualizadoEn;
-    }
-
-    public void setEstadoEntregaActualizadoEn(LocalDateTime estadoEntregaActualizadoEn) {
-        this.estadoEntregaActualizadoEn = estadoEntregaActualizadoEn;
-    }
-
-    public String getCodigoErrorProveedor() {
-        return codigoErrorProveedor;
-    }
-
-    public void setCodigoErrorProveedor(String codigoErrorProveedor) {
-        this.codigoErrorProveedor = codigoErrorProveedor;
-    }
-
-    public String getDetalleErrorProveedor() {
-        return detalleErrorProveedor;
-    }
-
-    public void setDetalleErrorProveedor(String detalleErrorProveedor) {
-        this.detalleErrorProveedor = detalleErrorProveedor;
-    }
 }

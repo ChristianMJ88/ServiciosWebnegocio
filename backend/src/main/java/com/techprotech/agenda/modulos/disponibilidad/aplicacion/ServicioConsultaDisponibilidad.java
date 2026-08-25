@@ -11,6 +11,7 @@ import com.techprotech.agenda.modulos.servicios.infraestructura.entidad.Asignaci
 import com.techprotech.agenda.modulos.servicios.infraestructura.entidad.ServicioEntidad;
 import com.techprotech.agenda.modulos.servicios.infraestructura.repositorio.AsignacionServicioPrestadorRepositorio;
 import com.techprotech.agenda.modulos.servicios.infraestructura.repositorio.ServicioRepositorio;
+import com.techprotech.agenda.modulos.servicios.infraestructura.repositorio.ServicioSucursalRepositorio;
 import com.techprotech.agenda.modulos.sucursales.infraestructura.entidad.SucursalEntidad;
 import com.techprotech.agenda.modulos.sucursales.infraestructura.repositorio.SucursalRepositorio;
 import org.springframework.stereotype.Service;
@@ -25,6 +26,8 @@ import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import static org.springframework.http.HttpStatus.BAD_REQUEST;
 import static org.springframework.http.HttpStatus.NOT_FOUND;
@@ -36,6 +39,7 @@ public class ServicioConsultaDisponibilidad {
 
     private final SucursalRepositorio sucursalRepositorio;
     private final ServicioRepositorio servicioRepositorio;
+    private final ServicioSucursalRepositorio servicioSucursalRepositorio;
     private final PrestadorServicioRepositorio prestadorServicioRepositorio;
     private final AsignacionServicioPrestadorRepositorio asignacionServicioPrestadorRepositorio;
     private final ReglaDisponibilidadRepositorio reglaDisponibilidadRepositorio;
@@ -45,6 +49,7 @@ public class ServicioConsultaDisponibilidad {
     public ServicioConsultaDisponibilidad(
             SucursalRepositorio sucursalRepositorio,
             ServicioRepositorio servicioRepositorio,
+            ServicioSucursalRepositorio servicioSucursalRepositorio,
             PrestadorServicioRepositorio prestadorServicioRepositorio,
             AsignacionServicioPrestadorRepositorio asignacionServicioPrestadorRepositorio,
             ReglaDisponibilidadRepositorio reglaDisponibilidadRepositorio,
@@ -53,6 +58,7 @@ public class ServicioConsultaDisponibilidad {
     ) {
         this.sucursalRepositorio = sucursalRepositorio;
         this.servicioRepositorio = servicioRepositorio;
+        this.servicioSucursalRepositorio = servicioSucursalRepositorio;
         this.prestadorServicioRepositorio = prestadorServicioRepositorio;
         this.asignacionServicioPrestadorRepositorio = asignacionServicioPrestadorRepositorio;
         this.reglaDisponibilidadRepositorio = reglaDisponibilidadRepositorio;
@@ -76,10 +82,35 @@ public class ServicioConsultaDisponibilidad {
         SucursalEntidad sucursal = sucursalRepositorio.findByIdAndEmpresaIdAndActivaTrue(sucursalId, empresa)
                 .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "La sucursal no existe o no esta activa"));
 
-        ServicioEntidad servicio = servicioRepositorio.findByIdAndEmpresaIdAndSucursalIdAndActivoTrue(servicioId, empresa, sucursalId)
+        ServicioEntidad servicio = servicioRepositorio.findByIdAndEmpresaIdAndActivoTrue(servicioId, empresa)
                 .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "El servicio no existe o no esta activo"));
+        if (!servicioSucursalRepositorio.existsByEmpresaIdAndIdServicioIdAndIdSucursalIdAndActivoTrue(empresa, servicioId, sucursalId)) {
+            throw new ResponseStatusException(NOT_FOUND, "El servicio no existe o no esta activo en la sucursal");
+        }
 
-        PrestadorServicioEntidad prestador = resolverPrestador(prestadorId, sucursalId, servicioId);
+        if (prestadorId != null) {
+            PrestadorServicioEntidad prestador = resolverPrestador(prestadorId, sucursalId, servicioId);
+            return calcularFranjasParaPrestador(empresa, sucursal, servicio, prestador, fecha);
+        }
+
+        List<PrestadorServicioEntidad> prestadores = resolverPrestadoresDisponibles(sucursalId, servicioId);
+        List<FranjaDisponibleResponse> respuesta = new ArrayList<>();
+        for (PrestadorServicioEntidad prestador : prestadores) {
+            respuesta.addAll(calcularFranjasParaPrestador(empresa, sucursal, servicio, prestador, fecha));
+        }
+
+        return respuesta.stream()
+                .sorted(Comparator.comparing(FranjaDisponibleResponse::inicio).thenComparing(FranjaDisponibleResponse::prestadorId))
+                .toList();
+    }
+
+    private List<FranjaDisponibleResponse> calcularFranjasParaPrestador(
+            Long empresa,
+            SucursalEntidad sucursal,
+            ServicioEntidad servicio,
+            PrestadorServicioEntidad prestador,
+            LocalDate fecha
+    ) {
         int duracionTotalMinutos = servicio.getDuracionMinutos() + servicio.getBufferAntesMinutos() + servicio.getBufferDespuesMinutos();
 
         List<ReglaDisponibilidadEntidad> reglasSucursal = reglaDisponibilidadRepositorio
@@ -130,9 +161,7 @@ public class ServicioConsultaDisponibilidad {
             }
         }
 
-        return respuesta.stream()
-                .sorted(Comparator.comparing(FranjaDisponibleResponse::inicio))
-                .toList();
+        return respuesta;
     }
 
     private PrestadorServicioEntidad resolverPrestador(Long prestadorId, Long sucursalId, Long servicioId) {
@@ -155,6 +184,28 @@ public class ServicioConsultaDisponibilidad {
 
         return prestadorServicioRepositorio.findByUsuarioIdAndSucursalIdAndActivoTrue(asignacion.getId().getPrestadorId(), sucursalId)
                 .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "No hay prestadores activos para este servicio en la sucursal"));
+    }
+
+    private List<PrestadorServicioEntidad> resolverPrestadoresDisponibles(Long sucursalId, Long servicioId) {
+        Set<Long> prestadoresAsignados = asignacionServicioPrestadorRepositorio.findByIdServicioIdAndActivaTrue(servicioId)
+                .stream()
+                .map(asignacion -> asignacion.getId().getPrestadorId())
+                .collect(Collectors.toSet());
+        if (prestadoresAsignados.isEmpty()) {
+            throw new ResponseStatusException(NOT_FOUND, "No hay prestadores asignados a este servicio");
+        }
+
+        List<PrestadorServicioEntidad> prestadores = prestadorServicioRepositorio.findBySucursalIdInOrderByNombreMostrarAsc(List.of(sucursalId))
+                .stream()
+                .filter(PrestadorServicioEntidad::isActivo)
+                .filter(prestador -> prestadoresAsignados.contains(prestador.getUsuarioId()))
+                .toList();
+
+        if (prestadores.isEmpty()) {
+            throw new ResponseStatusException(NOT_FOUND, "No hay prestadores activos para este servicio en la sucursal");
+        }
+
+        return prestadores;
     }
 
     private List<VentanaHorario> intersectarReglas(

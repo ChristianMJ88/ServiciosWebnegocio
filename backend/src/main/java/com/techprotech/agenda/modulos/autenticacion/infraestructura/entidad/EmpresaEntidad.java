@@ -6,7 +6,11 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import lombok.Getter;
+import lombok.Setter;
 
+@Setter
+@Getter
 @Entity
 @Table(name = "empresa")
 public class EmpresaEntidad {
@@ -27,39 +31,5 @@ public class EmpresaEntidad {
     @Column(nullable = false, length = 20)
     private String estado;
 
-    public Long getId() {
-        return id;
-    }
 
-    public String getNombre() {
-        return nombre;
-    }
-
-    public String getSlug() {
-        return slug;
-    }
-
-    public String getZonaHoraria() {
-        return zonaHoraria;
-    }
-
-    public String getEstado() {
-        return estado;
-    }
-
-    public void setNombre(String nombre) {
-        this.nombre = nombre;
-    }
-
-    public void setSlug(String slug) {
-        this.slug = slug;
-    }
-
-    public void setZonaHoraria(String zonaHoraria) {
-        this.zonaHoraria = zonaHoraria;
-    }
-
-    public void setEstado(String estado) {
-        this.estado = estado;
-    }
 }

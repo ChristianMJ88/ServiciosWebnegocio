@@ -6,9 +6,12 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.time.LocalDateTime;
-
+@Setter
+@Getter
 @Entity
 @Table(name = "usuario")
 public class UsuarioEntidad {
@@ -35,56 +38,5 @@ public class UsuarioEntidad {
     @Column(name = "ultimo_acceso_en")
     private LocalDateTime ultimoAccesoEn;
 
-    public Long getId() {
-        return id;
-    }
-
-    public Long getEmpresaId() {
-        return empresaId;
-    }
-
-    public void setEmpresaId(Long empresaId) {
-        this.empresaId = empresaId;
-    }
-
-    public String getCorreo() {
-        return correo;
-    }
-
-    public void setCorreo(String correo) {
-        this.correo = correo;
-    }
-
-    public String getContrasenaHash() {
-        return contrasenaHash;
-    }
-
-    public void setContrasenaHash(String contrasenaHash) {
-        this.contrasenaHash = contrasenaHash;
-    }
-
-    public boolean isHabilitado() {
-        return habilitado;
-    }
-
-    public void setHabilitado(boolean habilitado) {
-        this.habilitado = habilitado;
-    }
-
-    public boolean isBloqueado() {
-        return bloqueado;
-    }
-
-    public void setBloqueado(boolean bloqueado) {
-        this.bloqueado = bloqueado;
-    }
-
-    public LocalDateTime getUltimoAccesoEn() {
-        return ultimoAccesoEn;
-    }
-
-    public void setUltimoAccesoEn(LocalDateTime ultimoAccesoEn) {
-        this.ultimoAccesoEn = ultimoAccesoEn;
-    }
 }
 

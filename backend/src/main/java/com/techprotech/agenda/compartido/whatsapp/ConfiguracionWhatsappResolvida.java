@@ -20,6 +20,8 @@ public record ConfiguracionWhatsappResolvida(
         String plantillaGraciasVisitaSid,
         String plantillaRecordatorioRegresoSid,
         String plantillaEspacioDisponibleWalkinSid,
+        String plantillaMenuBienvenidaSid,
+        String plantillasListPickerSids,
         String senderDisplayName,
         String senderPhoneNumber,
         String senderStatus,

@@ -6,10 +6,13 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-
+@Setter
+@Getter
 @Entity
 @Table(name = "movimiento_caja")
 public class MovimientoCajaEntidad {
@@ -51,95 +54,5 @@ public class MovimientoCajaEntidad {
     @Column(name = "registrado_en", nullable = false)
     private LocalDateTime registradoEn;
 
-    public Long getId() {
-        return id;
-    }
 
-    public Long getEmpresaId() {
-        return empresaId;
-    }
-
-    public void setEmpresaId(Long empresaId) {
-        this.empresaId = empresaId;
-    }
-
-    public Long getCajaSesionId() {
-        return cajaSesionId;
-    }
-
-    public void setCajaSesionId(Long cajaSesionId) {
-        this.cajaSesionId = cajaSesionId;
-    }
-
-    public Long getCitaId() {
-        return citaId;
-    }
-
-    public void setCitaId(Long citaId) {
-        this.citaId = citaId;
-    }
-
-    public String getTipoMovimiento() {
-        return tipoMovimiento;
-    }
-
-    public void setTipoMovimiento(String tipoMovimiento) {
-        this.tipoMovimiento = tipoMovimiento;
-    }
-
-    public String getMetodoPago() {
-        return metodoPago;
-    }
-
-    public void setMetodoPago(String metodoPago) {
-        this.metodoPago = metodoPago;
-    }
-
-    public BigDecimal getMonto() {
-        return monto;
-    }
-
-    public void setMonto(BigDecimal monto) {
-        this.monto = monto;
-    }
-
-    public String getConcepto() {
-        return concepto;
-    }
-
-    public void setConcepto(String concepto) {
-        this.concepto = concepto;
-    }
-
-    public String getReferencia() {
-        return referencia;
-    }
-
-    public void setReferencia(String referencia) {
-        this.referencia = referencia;
-    }
-
-    public String getObservaciones() {
-        return observaciones;
-    }
-
-    public void setObservaciones(String observaciones) {
-        this.observaciones = observaciones;
-    }
-
-    public Long getRegistradoPorUsuarioId() {
-        return registradoPorUsuarioId;
-    }
-
-    public void setRegistradoPorUsuarioId(Long registradoPorUsuarioId) {
-        this.registradoPorUsuarioId = registradoPorUsuarioId;
-    }
-
-    public LocalDateTime getRegistradoEn() {
-        return registradoEn;
-    }
-
-    public void setRegistradoEn(LocalDateTime registradoEn) {
-        this.registradoEn = registradoEn;
-    }
 }

@@ -2,10 +2,14 @@ package com.techprotech.agenda.modulos.autenticacion.infraestructura.entidad;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.io.Serializable;
 import java.util.Objects;
 
+@Setter
+@Getter
 @Embeddable
 public class UsuarioInternoSucursalId implements Serializable {
 
@@ -23,15 +27,7 @@ public class UsuarioInternoSucursalId implements Serializable {
         this.sucursalId = sucursalId;
     }
 
-    public Long getUsuarioId() {
-        return usuarioId;
-    }
-
-    public Long getSucursalId() {
-        return sucursalId;
-    }
-
-    @Override
+  @Override
     public boolean equals(Object o) {
         if (this == o) {
             return true;

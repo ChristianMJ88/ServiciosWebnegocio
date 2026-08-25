@@ -1,7 +1,9 @@
 package com.techprotech.agenda.modulos.citas.api;
 
 import com.techprotech.agenda.modulos.citas.api.dto.CitaCreadaResponse;
+import com.techprotech.agenda.modulos.citas.api.dto.CitasMultiplesCreadasResponse;
 import com.techprotech.agenda.modulos.citas.api.dto.CrearCitaRequest;
+import com.techprotech.agenda.modulos.citas.api.dto.CrearCitasMultiplesRequest;
 import com.techprotech.agenda.modulos.citas.aplicacion.ServicioCitas;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -26,5 +28,10 @@ public class ControladorCitasPublico {
     public CitaCreadaResponse crear(@Valid @RequestBody CrearCitaRequest request) {
         return servicioCitas.crearCita(request);
     }
-}
 
+    @PostMapping("/multiples")
+    @ResponseStatus(HttpStatus.CREATED)
+    public CitasMultiplesCreadasResponse crearMultiples(@Valid @RequestBody CrearCitasMultiplesRequest request) {
+        return servicioCitas.crearCitasMultiples(request);
+    }
+}

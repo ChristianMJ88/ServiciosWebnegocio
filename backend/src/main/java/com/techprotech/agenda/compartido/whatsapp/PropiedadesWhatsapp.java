@@ -21,6 +21,8 @@ public record PropiedadesWhatsapp(
         String plantillaGraciasVisitaSid,
         String plantillaRecordatorioRegresoSid,
         String plantillaEspacioDisponibleWalkinSid,
+        String plantillaMenuBienvenidaSid,
+        String plantillasListPickerSids,
         int loteMaximoOutbox,
         long retrasoReintentoSegundos,
         long recordatorioHorasAntes,

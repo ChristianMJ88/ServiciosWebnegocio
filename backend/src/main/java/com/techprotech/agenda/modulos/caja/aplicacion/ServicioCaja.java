@@ -21,7 +21,9 @@ import com.techprotech.agenda.modulos.caja.infraestructura.repositorio.Movimient
 import com.techprotech.agenda.modulos.caja.infraestructura.repositorio.PagoCitaRepositorio;
 import com.techprotech.agenda.modulos.citas.infraestructura.entidad.CitaEntidad;
 import com.techprotech.agenda.modulos.citas.infraestructura.repositorio.CitaRepositorio;
+import com.techprotech.agenda.modulos.servicios.infraestructura.entidad.ServicioEntidad;
 import com.techprotech.agenda.modulos.servicios.infraestructura.repositorio.ServicioRepositorio;
+import com.techprotech.agenda.modulos.sucursales.infraestructura.entidad.SucursalEntidad;
 import com.techprotech.agenda.modulos.sucursales.infraestructura.repositorio.SucursalRepositorio;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -92,7 +94,7 @@ public class ServicioCaja {
         Long sucursalOperativaId = sucursalId != null
                 ? sucursalId
                 : sucursalesPermitidas != null && !sucursalesPermitidas.isEmpty()
-                ? sucursalesPermitidas.get(0)
+                ? sucursalesPermitidas.getFirst()
                 : sucursalesDisponibles.stream().findFirst().map(com.techprotech.agenda.modulos.sucursales.infraestructura.entidad.SucursalEntidad::getId).orElse(null);
 
         return new CatalogoCajaResponse(
@@ -318,7 +320,7 @@ public class ServicioCaja {
             return sucursalId;
         }
         if (tieneScopeSucursales(sucursalesPermitidas) && sucursalesPermitidas.size() == 1) {
-            return sucursalesPermitidas.get(0);
+            return sucursalesPermitidas.getFirst();
         }
         return null;
     }
@@ -388,7 +390,7 @@ public class ServicioCaja {
 
     private boolean esDelDiaOperativo(CitaEntidad cita) {
         String zonaHoraria = sucursalRepositorio.findById(cita.getSucursalId())
-                .map(sucursal -> sucursal.getZonaHoraria())
+                .map(SucursalEntidad::getZonaHoraria)
                 .orElse("America/Mexico_City");
         ZoneId zoneId = ZoneId.of(zonaHoraria);
         LocalDate hoy = LocalDate.now(zoneId);
@@ -403,8 +405,8 @@ public class ServicioCaja {
                 cita.getId(),
                 cliente != null ? cliente.getNombreCompleto() : "Cliente",
                 cliente != null ? cliente.getTelefono() : null,
-                servicioRepositorio.findById(cita.getServicioId()).map(servicio -> servicio.getNombre()).orElse("Servicio"),
-                sucursalRepositorio.findById(cita.getSucursalId()).map(sucursal -> sucursal.getNombre()).orElse("Sucursal"),
+                servicioRepositorio.findById(cita.getServicioId()).map(ServicioEntidad::getNombre).orElse("Servicio"),
+                sucursalRepositorio.findById(cita.getSucursalId()).map(SucursalEntidad::getNombre).orElse("Sucursal"),
                 cita.getInicio(),
                 cita.getPrecio(),
                 pagado,
@@ -419,7 +421,7 @@ public class ServicioCaja {
         return new CajaSesionResponse(
                 sesion.getId(),
                 sesion.getSucursalId(),
-                sucursalRepositorio.findById(sesion.getSucursalId()).map(sucursal -> sucursal.getNombre()).orElse("Sucursal"),
+                sucursalRepositorio.findById(sesion.getSucursalId()).map(SucursalEntidad::getNombre).orElse("Sucursal"),
                 sesion.getEstado(),
                 sesion.getMontoInicial(),
                 sesion.getMontoEsperado(),

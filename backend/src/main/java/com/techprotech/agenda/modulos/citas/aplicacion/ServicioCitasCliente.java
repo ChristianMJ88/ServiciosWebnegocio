@@ -12,7 +12,9 @@ import com.techprotech.agenda.modulos.citas.infraestructura.entidad.HistorialEst
 import com.techprotech.agenda.modulos.citas.infraestructura.repositorio.CitaRepositorio;
 import com.techprotech.agenda.modulos.citas.infraestructura.repositorio.HistorialEstadoCitaRepositorio;
 import com.techprotech.agenda.modulos.prestadores.infraestructura.repositorio.PrestadorServicioRepositorio;
+import com.techprotech.agenda.modulos.servicios.infraestructura.entidad.ServicioEntidad;
 import com.techprotech.agenda.modulos.servicios.infraestructura.repositorio.ServicioRepositorio;
+import com.techprotech.agenda.modulos.sucursales.infraestructura.entidad.SucursalEntidad;
 import com.techprotech.agenda.modulos.sucursales.infraestructura.repositorio.SucursalRepositorio;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -72,6 +74,11 @@ public class ServicioCitasCliente {
 
     @Transactional
     public CitaClienteResponse confirmar(Long empresaId, Long clienteId, Long citaId) {
+        return confirmar(empresaId, clienteId, citaId, true);
+    }
+
+    @Transactional
+    public CitaClienteResponse confirmar(Long empresaId, Long clienteId, Long citaId, boolean programarWhatsappConfirmacion) {
         CitaEntidad cita = citaRepositorio.findByIdAndEmpresaIdAndClienteId(citaId, empresaId, clienteId)
                 .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "La cita no existe para el cliente autenticado"));
 
@@ -95,7 +102,7 @@ public class ServicioCitasCliente {
         historialEstadoCitaRepositorio.save(historial);
 
         ClienteEntidad cliente = clienteRepositorio.findById(clienteId).orElse(null);
-        if (cliente != null && cliente.isAceptaWhatsapp() && cliente.getTelefono() != null && !cliente.getTelefono().isBlank()) {
+        if (programarWhatsappConfirmacion && cliente != null && cliente.isAceptaWhatsapp() && cliente.getTelefono() != null && !cliente.getTelefono().isBlank()) {
             servicioOutboxWhatsappCitas.programarCitaConfirmada(
                     empresaId,
                     cita.getId(),
@@ -149,7 +156,7 @@ public class ServicioCitasCliente {
         }
 
         String zonaHoraria = sucursalRepositorio.findById(cita.getSucursalId())
-                .map(sucursal -> sucursal.getZonaHoraria())
+                .map(SucursalEntidad::getZonaHoraria)
                 .orElse("America/Mexico_City");
         ZoneId zona = ZoneId.of(zonaHoraria);
         OffsetDateTime nuevoInicioZonado = nuevoInicio.atZoneSameInstant(zona).toOffsetDateTime();
@@ -163,7 +170,7 @@ public class ServicioCitasCliente {
         );
 
         FranjaDisponibleResponse franja = franjas.stream()
-                .filter(item -> item.inicio().equals(nuevoInicioZonado.toString()))
+                .filter(item -> coincideInicioFranja(item.inicio(), nuevoInicioZonado))
                 .findFirst()
                 .orElseThrow(() -> new ResponseStatusException(CONFLICT, "La nueva franja ya no esta disponible"));
 
@@ -194,17 +201,24 @@ public class ServicioCitasCliente {
         return mapearCita(cita);
     }
 
+    private boolean coincideInicioFranja(String inicioFranja, OffsetDateTime inicioSolicitado) {
+        if (inicioFranja == null || inicioSolicitado == null) {
+            return false;
+        }
+        return OffsetDateTime.parse(inicioFranja).toInstant().equals(inicioSolicitado.toInstant());
+    }
+
     private CitaClienteResponse mapearCita(CitaEntidad cita) {
         String sucursalNombre = sucursalRepositorio.findById(cita.getSucursalId())
-                .map(sucursal -> sucursal.getNombre())
+                .map(SucursalEntidad::getNombre)
                 .orElse("Sucursal");
         String servicioNombre = servicioRepositorio.findById(cita.getServicioId())
-                .map(servicio -> servicio.getNombre())
+                .map(ServicioEntidad::getNombre)
                 .orElse("Servicio");
         var prestador = prestadorServicioRepositorio.findById(cita.getPrestadorId()).orElse(null);
         String prestadorNombre = prestador != null ? prestador.getNombreMostrar() : "Prestador";
         String zonaHoraria = sucursalRepositorio.findById(cita.getSucursalId())
-                .map(sucursal -> sucursal.getZonaHoraria())
+                .map(SucursalEntidad::getZonaHoraria)
                 .orElse("America/Mexico_City");
         String clienteNombre = clienteRepositorio.findById(cita.getClienteId()).map(cliente -> cliente.getNombreCompleto()).orElse("Cliente");
         String clienteTelefono = clienteRepositorio.findById(cita.getClienteId()).map(cliente -> cliente.getTelefono()).orElse("");

@@ -1,6 +1,7 @@
 package com.techprotech.agenda.modulos.prestadores.api;
 
 import com.techprotech.agenda.modulos.prestadores.api.dto.CitaAgendaResponse;
+import com.techprotech.agenda.modulos.prestadores.api.dto.PerfilStaffResponse;
 import com.techprotech.agenda.modulos.prestadores.aplicacion.ServicioAgendaStaff;
 import com.techprotech.agenda.seguridad.jwt.UsuarioAutenticado;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -26,6 +27,11 @@ public class ControladorAgendaStaff {
 
     public ControladorAgendaStaff(ServicioAgendaStaff servicioAgendaStaff) {
         this.servicioAgendaStaff = servicioAgendaStaff;
+    }
+
+    @GetMapping("/perfil")
+    public PerfilStaffResponse perfil(@AuthenticationPrincipal UsuarioAutenticado usuario) {
+        return servicioAgendaStaff.obtenerPerfil(usuario.empresaId(), usuario.usuarioId());
     }
 
     @GetMapping("/agenda")

@@ -2,13 +2,18 @@ package com.techprotech.agenda.modulos.autenticacion.api;
 
 import com.techprotech.agenda.modulos.autenticacion.api.dto.IniciarSesionAppRequest;
 import com.techprotech.agenda.modulos.autenticacion.api.dto.IniciarSesionRequest;
+import com.techprotech.agenda.modulos.autenticacion.api.dto.PerfilUsuarioResponse;
 import com.techprotech.agenda.modulos.autenticacion.api.dto.RefrescarTokenRequest;
 import com.techprotech.agenda.modulos.autenticacion.api.dto.RegistrarClienteRequest;
 import com.techprotech.agenda.modulos.autenticacion.api.dto.RespuestaAccesoApp;
 import com.techprotech.agenda.modulos.autenticacion.api.dto.RespuestaTokenJwt;
 import com.techprotech.agenda.modulos.autenticacion.aplicacion.ServicioAutenticacion;
+import com.techprotech.agenda.modulos.autenticacion.infraestructura.repositorio.UsuarioInternoPerfilRepositorio;
+import com.techprotech.agenda.seguridad.jwt.UsuarioAutenticado;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -19,9 +24,33 @@ import org.springframework.web.bind.annotation.RestController;
 public class ControladorAutenticacion {
 
     private final ServicioAutenticacion servicioAutenticacion;
+    private final UsuarioInternoPerfilRepositorio usuarioInternoPerfilRepositorio;
 
-    public ControladorAutenticacion(ServicioAutenticacion servicioAutenticacion) {
+    public ControladorAutenticacion(
+            ServicioAutenticacion servicioAutenticacion,
+            UsuarioInternoPerfilRepositorio usuarioInternoPerfilRepositorio
+    ) {
         this.servicioAutenticacion = servicioAutenticacion;
+        this.usuarioInternoPerfilRepositorio = usuarioInternoPerfilRepositorio;
+    }
+
+    @GetMapping("/perfil")
+    public ResponseEntity<PerfilUsuarioResponse> perfil(@AuthenticationPrincipal UsuarioAutenticado usuario) {
+        return usuarioInternoPerfilRepositorio.findById(usuario.usuarioId())
+                .map(perfil -> ResponseEntity.ok(new PerfilUsuarioResponse(
+                        usuario.usuarioId(),
+                        usuario.correo(),
+                        perfil.getNombreCompleto(),
+                        perfil.getPuesto(),
+                        perfil.getSucursalId()
+                )))
+                .orElseGet(() -> ResponseEntity.ok(new PerfilUsuarioResponse(
+                        usuario.usuarioId(),
+                        usuario.correo(),
+                        null,
+                        null,
+                        null
+                )));
     }
 
     @PostMapping("/iniciar-sesion")

@@ -86,6 +86,8 @@ aplicacion:
     plantilla-gracias-visita-sid: ${TWILIO_WHATSAPP_TEMPLATE_GRACIAS_VISITA_SID:}
     plantilla-recordatorio-regreso-sid: ${TWILIO_WHATSAPP_TEMPLATE_RECORDATORIO_REGRESO_SID:}
     plantilla-espacio-disponible-walkin-sid: ${TWILIO_WHATSAPP_TEMPLATE_ESPACIO_DISPONIBLE_WALKIN_SID:}
+    plantilla-menu-bienvenida-sid: ${TWILIO_WHATSAPP_TEMPLATE_MENU_BIENVENIDA_SID:}
+    plantillas-list-picker-sids: ${TWILIO_WHATSAPP_LIST_PICKER_SIDS:}
     lote-maximo-outbox: ${WHATSAPP_LOTE_MAXIMO_OUTBOX:20}
     retraso-reintento-segundos: ${WHATSAPP_REINTENTO_SEGUNDOS:60}
     recordatorio-horas-antes: ${WHATSAPP_RECORDATORIO_HORAS_ANTES:24}

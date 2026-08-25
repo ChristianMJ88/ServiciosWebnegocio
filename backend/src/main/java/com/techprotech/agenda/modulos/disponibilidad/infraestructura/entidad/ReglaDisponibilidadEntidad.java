@@ -6,10 +6,14 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
 
+@Setter
+@Getter
 @Entity
 @Table(name = "regla_disponibilidad")
 public class ReglaDisponibilidadEntidad {
@@ -45,79 +49,4 @@ public class ReglaDisponibilidadEntidad {
     @Column(name = "vigente_hasta")
     private LocalDate vigenteHasta;
 
-    public Long getId() {
-        return id;
-    }
-
-    public Long getEmpresaId() {
-        return empresaId;
-    }
-
-    public void setEmpresaId(Long empresaId) {
-        this.empresaId = empresaId;
-    }
-
-    public String getTipoSujeto() {
-        return tipoSujeto;
-    }
-
-    public void setTipoSujeto(String tipoSujeto) {
-        this.tipoSujeto = tipoSujeto;
-    }
-
-    public Long getSujetoId() {
-        return sujetoId;
-    }
-
-    public void setSujetoId(Long sujetoId) {
-        this.sujetoId = sujetoId;
-    }
-
-    public int getDiaSemana() {
-        return diaSemana;
-    }
-
-    public void setDiaSemana(int diaSemana) {
-        this.diaSemana = diaSemana;
-    }
-
-    public LocalTime getHoraInicio() {
-        return horaInicio;
-    }
-
-    public void setHoraInicio(LocalTime horaInicio) {
-        this.horaInicio = horaInicio;
-    }
-
-    public LocalTime getHoraFin() {
-        return horaFin;
-    }
-
-    public void setHoraFin(LocalTime horaFin) {
-        this.horaFin = horaFin;
-    }
-
-    public int getIntervaloMinutos() {
-        return intervaloMinutos;
-    }
-
-    public void setIntervaloMinutos(int intervaloMinutos) {
-        this.intervaloMinutos = intervaloMinutos;
-    }
-
-    public LocalDate getVigenteDesde() {
-        return vigenteDesde;
-    }
-
-    public void setVigenteDesde(LocalDate vigenteDesde) {
-        this.vigenteDesde = vigenteDesde;
-    }
-
-    public LocalDate getVigenteHasta() {
-        return vigenteHasta;
-    }
-
-    public void setVigenteHasta(LocalDate vigenteHasta) {
-        this.vigenteHasta = vigenteHasta;
-    }
 }

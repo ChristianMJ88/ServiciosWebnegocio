@@ -7,9 +7,12 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.time.LocalDateTime;
-
+@Setter
+@Getter
 @Entity
 @Table(name = "solicitud_contacto")
 public class SolicitudContactoEntidad {
@@ -58,91 +61,4 @@ public class SolicitudContactoEntidad {
         }
     }
 
-    public Long getId() {
-        return id;
-    }
-
-    public Long getEmpresaId() {
-        return empresaId;
-    }
-
-    public void setEmpresaId(Long empresaId) {
-        this.empresaId = empresaId;
-    }
-
-    public String getNombreCompleto() {
-        return nombreCompleto;
-    }
-
-    public void setNombreCompleto(String nombreCompleto) {
-        this.nombreCompleto = nombreCompleto;
-    }
-
-    public String getTelefono() {
-        return telefono;
-    }
-
-    public void setTelefono(String telefono) {
-        this.telefono = telefono;
-    }
-
-    public String getCorreo() {
-        return correo;
-    }
-
-    public void setCorreo(String correo) {
-        this.correo = correo;
-    }
-
-    public String getAsunto() {
-        return asunto;
-    }
-
-    public void setAsunto(String asunto) {
-        this.asunto = asunto;
-    }
-
-    public String getMensaje() {
-        return mensaje;
-    }
-
-    public void setMensaje(String mensaje) {
-        this.mensaje = mensaje;
-    }
-
-    public String getCanal() {
-        return canal;
-    }
-
-    public void setCanal(String canal) {
-        this.canal = canal;
-    }
-
-    public String getEstado() {
-        return estado;
-    }
-
-    public void setEstado(String estado) {
-        this.estado = estado;
-    }
-
-    public boolean isNotificacionCorreoProgramada() {
-        return notificacionCorreoProgramada;
-    }
-
-    public void setNotificacionCorreoProgramada(boolean notificacionCorreoProgramada) {
-        this.notificacionCorreoProgramada = notificacionCorreoProgramada;
-    }
-
-    public LocalDateTime getNotificadaEn() {
-        return notificadaEn;
-    }
-
-    public void setNotificadaEn(LocalDateTime notificadaEn) {
-        this.notificadaEn = notificadaEn;
-    }
-
-    public LocalDateTime getCreadaEn() {
-        return creadaEn;
-    }
 }

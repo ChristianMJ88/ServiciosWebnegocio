@@ -4,7 +4,11 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import lombok.Getter;
+import lombok.Setter;
 
+@Setter
+@Getter
 @Entity
 @Table(name = "prestador_servicio")
 public class PrestadorServicioEntidad {
@@ -28,51 +32,4 @@ public class PrestadorServicioEntidad {
     @Column(name = "color_agenda", length = 20)
     private String colorAgenda;
 
-    public Long getUsuarioId() {
-        return usuarioId;
-    }
-
-    public void setUsuarioId(Long usuarioId) {
-        this.usuarioId = usuarioId;
-    }
-
-    public Long getSucursalId() {
-        return sucursalId;
-    }
-
-    public void setSucursalId(Long sucursalId) {
-        this.sucursalId = sucursalId;
-    }
-
-    public String getNombreMostrar() {
-        return nombreMostrar;
-    }
-
-    public void setNombreMostrar(String nombreMostrar) {
-        this.nombreMostrar = nombreMostrar;
-    }
-
-    public String getBiografia() {
-        return biografia;
-    }
-
-    public void setBiografia(String biografia) {
-        this.biografia = biografia;
-    }
-
-    public boolean isActivo() {
-        return activo;
-    }
-
-    public void setActivo(boolean activo) {
-        this.activo = activo;
-    }
-
-    public String getColorAgenda() {
-        return colorAgenda;
-    }
-
-    public void setColorAgenda(String colorAgenda) {
-        this.colorAgenda = colorAgenda;
-    }
 }

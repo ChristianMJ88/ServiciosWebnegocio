@@ -48,6 +48,8 @@ public class ServicioConfiguracionWhatsappEmpresa {
                     null,
                     null,
                     null,
+                    null,
+                    null,
                     null
             );
         }
@@ -103,6 +105,14 @@ public class ServicioConfiguracionWhatsappEmpresa {
                 entidad.getPlantillaEspacioDisponibleWalkinSid(),
                 propiedadesWhatsapp.plantillaEspacioDisponibleWalkinSid()
         );
+        String plantillaMenuBienvenidaSid = valorOPropiedad(
+                entidad.getPlantillaMenuBienvenidaSid(),
+                propiedadesWhatsapp.plantillaMenuBienvenidaSid()
+        );
+        String plantillasListPickerSids = valorOPropiedad(
+                entidad.getPlantillasListPickerSids(),
+                propiedadesWhatsapp.plantillasListPickerSids()
+        );
 
         return new ConfiguracionWhatsappResolvida(
                 entidad.isHabilitado() && configuracionMinimaValida(accountSid, authToken, numeroRemitente),
@@ -124,6 +134,8 @@ public class ServicioConfiguracionWhatsappEmpresa {
                 plantillaGraciasVisitaSid,
                 plantillaRecordatorioRegresoSid,
                 plantillaEspacioDisponibleWalkinSid,
+                plantillaMenuBienvenidaSid,
+                plantillasListPickerSids,
                 entidad.getSenderDisplayName(),
                 entidad.getSenderPhoneNumber(),
                 entidad.getSenderStatus(),
@@ -159,6 +171,8 @@ public class ServicioConfiguracionWhatsappEmpresa {
                 propiedadesWhatsapp.plantillaGraciasVisitaSid(),
                 propiedadesWhatsapp.plantillaRecordatorioRegresoSid(),
                 propiedadesWhatsapp.plantillaEspacioDisponibleWalkinSid(),
+                propiedadesWhatsapp.plantillaMenuBienvenidaSid(),
+                propiedadesWhatsapp.plantillasListPickerSids(),
                 null,
                 null,
                 null,

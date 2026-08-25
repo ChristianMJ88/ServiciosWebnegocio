@@ -2,10 +2,16 @@ package com.techprotech.agenda.modulos.autenticacion.infraestructura.entidad;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.io.Serializable;
 import java.util.Objects;
 
+@Setter
+@Getter
+@AllArgsConstructor
 @Embeddable
 public class UsuarioRolId implements Serializable {
 
@@ -19,24 +25,6 @@ public class UsuarioRolId implements Serializable {
     private Long empresaId;
 
     public UsuarioRolId() {
-    }
-
-    public UsuarioRolId(Long usuarioId, Long rolId, Long empresaId) {
-        this.usuarioId = usuarioId;
-        this.rolId = rolId;
-        this.empresaId = empresaId;
-    }
-
-    public Long getUsuarioId() {
-        return usuarioId;
-    }
-
-    public Long getRolId() {
-        return rolId;
-    }
-
-    public Long getEmpresaId() {
-        return empresaId;
     }
 
     @Override

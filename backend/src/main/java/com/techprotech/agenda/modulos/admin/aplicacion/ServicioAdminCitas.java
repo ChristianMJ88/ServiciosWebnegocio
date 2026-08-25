@@ -10,15 +10,26 @@ import com.techprotech.agenda.compartido.whatsapp.ClienteWhatsappTwilio;
 import com.techprotech.agenda.compartido.whatsapp.ConfiguracionWhatsappEmpresaEntidad;
 import com.techprotech.agenda.compartido.whatsapp.ConfiguracionWhatsappEmpresaRepositorio;
 import com.techprotech.agenda.compartido.whatsapp.ConfiguracionWhatsappResolvida;
+import com.techprotech.agenda.compartido.whatsapp.PlantillaWhatsappEmpresaEntidad;
+import com.techprotech.agenda.compartido.whatsapp.PlantillaWhatsappEmpresaRepositorio;
 import com.techprotech.agenda.compartido.whatsapp.ResultadoEnvioWhatsapp;
 import com.techprotech.agenda.compartido.whatsapp.ServicioConfiguracionWhatsappEmpresa;
 import com.techprotech.agenda.compartido.whatsapp.ServicioOutboxWhatsappCitas;
 import com.techprotech.agenda.modulos.admin.api.dto.ConfiguracionCorreoAdminRequest;
 import com.techprotech.agenda.modulos.admin.api.dto.ConfiguracionCorreoAdminResponse;
+import com.techprotech.agenda.modulos.admin.api.dto.ConfiguracionSitioAdminRequest;
+import com.techprotech.agenda.modulos.admin.api.dto.ConfiguracionSitioAdminResponse;
 import com.techprotech.agenda.modulos.admin.api.dto.ConfiguracionWhatsappAdminRequest;
 import com.techprotech.agenda.modulos.admin.api.dto.ConfiguracionWhatsappAdminResponse;
+import com.techprotech.agenda.modulos.admin.api.dto.CatalogoSugeridoAdminResponse;
 import com.techprotech.agenda.modulos.admin.api.dto.DetectarChannelSenderWhatsappResponse;
+import com.techprotech.agenda.modulos.admin.api.dto.EnviarMensajeWhatsappAdminRequest;
+import com.techprotech.agenda.modulos.admin.api.dto.GrupoServicioAdminRequest;
+import com.techprotech.agenda.modulos.admin.api.dto.GrupoServicioAdminResponse;
+import com.techprotech.agenda.modulos.admin.api.dto.ImportarCatalogoSugeridoRequest;
+import com.techprotech.agenda.modulos.admin.api.dto.ImportarCatalogoSugeridoResponse;
 import com.techprotech.agenda.modulos.admin.api.dto.LogMensajeWhatsappAdminResponse;
+import com.techprotech.agenda.modulos.admin.api.dto.MensajeWhatsappAdminResponse;
 import com.techprotech.agenda.modulos.admin.api.dto.MigracionSecretosCorreoResponse;
 import com.techprotech.agenda.modulos.admin.api.dto.AsociarChannelSenderWhatsappRequest;
 import com.techprotech.agenda.modulos.admin.api.dto.AsociarChannelSenderWhatsappResponse;
@@ -27,6 +38,8 @@ import com.techprotech.agenda.modulos.admin.api.dto.AuditoriaRolInternoAdminResp
 import com.techprotech.agenda.modulos.admin.api.dto.PermisoAdminResponse;
 import com.techprotech.agenda.modulos.admin.api.dto.PlantillaRolInternoAdminResponse;
 import com.techprotech.agenda.modulos.admin.api.dto.PlantillaWhatsappAdminResponse;
+import com.techprotech.agenda.modulos.admin.api.dto.PlantillaWhatsappEmpresaAdminRequest;
+import com.techprotech.agenda.modulos.admin.api.dto.PlantillaWhatsappEmpresaAdminResponse;
 import com.techprotech.agenda.modulos.admin.api.dto.PrestadorAdminRequest;
 import com.techprotech.agenda.modulos.admin.api.dto.PrestadorAdminResponse;
 import com.techprotech.agenda.modulos.admin.api.dto.ProvisionarSubcuentaWhatsappRequest;
@@ -41,6 +54,8 @@ import com.techprotech.agenda.modulos.admin.api.dto.RolInternoAdminRequest;
 import com.techprotech.agenda.modulos.admin.api.dto.RolInternoAdminResponse;
 import com.techprotech.agenda.modulos.admin.api.dto.ServicioAdminRequest;
 import com.techprotech.agenda.modulos.admin.api.dto.ServicioAdminResponse;
+import com.techprotech.agenda.modulos.admin.api.dto.SubgrupoServicioAdminRequest;
+import com.techprotech.agenda.modulos.admin.api.dto.SubgrupoServicioAdminResponse;
 import com.techprotech.agenda.modulos.admin.api.dto.SucursalAdminRequest;
 import com.techprotech.agenda.modulos.admin.api.dto.SucursalAdminResponse;
 import com.techprotech.agenda.modulos.admin.api.dto.UsuarioInternoAdminRequest;
@@ -53,19 +68,8 @@ import com.techprotech.agenda.modulos.admin.infraestructura.repositorio.Auditori
 import com.techprotech.agenda.modulos.autenticacion.aplicacion.ServicioRolesEmpresa;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.techprotech.agenda.modulos.autenticacion.infraestructura.entidad.*;
 import com.techprotech.agenda.modulos.autenticacion.infraestructura.repositorio.ClienteRepositorio;
-import com.techprotech.agenda.modulos.autenticacion.infraestructura.entidad.PermisoEntidad;
-import com.techprotech.agenda.modulos.autenticacion.infraestructura.entidad.RolEmpresaEntidad;
-import com.techprotech.agenda.modulos.autenticacion.infraestructura.entidad.RolEmpresaPermisoEntidad;
-import com.techprotech.agenda.modulos.autenticacion.infraestructura.entidad.RolEmpresaPermisoId;
-import com.techprotech.agenda.modulos.autenticacion.infraestructura.entidad.UsuarioEntidad;
-import com.techprotech.agenda.modulos.autenticacion.infraestructura.entidad.UsuarioInternoPerfilEntidad;
-import com.techprotech.agenda.modulos.autenticacion.infraestructura.entidad.UsuarioInternoSucursalEntidad;
-import com.techprotech.agenda.modulos.autenticacion.infraestructura.entidad.UsuarioInternoSucursalId;
-import com.techprotech.agenda.modulos.autenticacion.infraestructura.entidad.UsuarioPermisoEmpresaEntidad;
-import com.techprotech.agenda.modulos.autenticacion.infraestructura.entidad.UsuarioPermisoEmpresaId;
-import com.techprotech.agenda.modulos.autenticacion.infraestructura.entidad.UsuarioRolEmpresaEntidad;
-import com.techprotech.agenda.modulos.autenticacion.infraestructura.entidad.EmpresaEntidad;
 import com.techprotech.agenda.modulos.autenticacion.infraestructura.repositorio.EmpresaRepositorio;
 import com.techprotech.agenda.modulos.autenticacion.infraestructura.repositorio.PermisoRepositorio;
 import com.techprotech.agenda.modulos.autenticacion.infraestructura.repositorio.RolEmpresaPermisoRepositorio;
@@ -84,11 +88,22 @@ import com.techprotech.agenda.modulos.prestadores.infraestructura.entidad.Presta
 import com.techprotech.agenda.modulos.prestadores.infraestructura.repositorio.PrestadorServicioRepositorio;
 import com.techprotech.agenda.modulos.servicios.infraestructura.entidad.AsignacionServicioPrestadorEntidad;
 import com.techprotech.agenda.modulos.servicios.infraestructura.entidad.AsignacionServicioPrestadorId;
+import com.techprotech.agenda.modulos.servicios.infraestructura.entidad.GrupoServicioEntidad;
 import com.techprotech.agenda.modulos.servicios.infraestructura.entidad.ServicioEntidad;
+import com.techprotech.agenda.modulos.servicios.infraestructura.entidad.ServicioSucursalEntidad;
+import com.techprotech.agenda.modulos.servicios.infraestructura.entidad.ServicioSucursalId;
+import com.techprotech.agenda.modulos.servicios.infraestructura.entidad.SubgrupoServicioEntidad;
 import com.techprotech.agenda.modulos.servicios.infraestructura.repositorio.AsignacionServicioPrestadorRepositorio;
+import com.techprotech.agenda.modulos.servicios.infraestructura.repositorio.GrupoServicioRepositorio;
 import com.techprotech.agenda.modulos.servicios.infraestructura.repositorio.ServicioRepositorio;
+import com.techprotech.agenda.modulos.servicios.infraestructura.repositorio.ServicioSucursalRepositorio;
+import com.techprotech.agenda.modulos.servicios.infraestructura.repositorio.SubgrupoServicioRepositorio;
+import com.techprotech.agenda.modulos.sitio.infraestructura.entidad.EmpresaSitioConfigEntidad;
+import com.techprotech.agenda.modulos.sitio.infraestructura.repositorio.EmpresaSitioConfigRepositorio;
 import com.techprotech.agenda.modulos.sucursales.infraestructura.entidad.SucursalEntidad;
 import com.techprotech.agenda.modulos.sucursales.infraestructura.repositorio.SucursalRepositorio;
+import com.techprotech.agenda.modulos.whatsapp.infraestructura.entidad.MensajeWhatsappEntidad;
+import com.techprotech.agenda.modulos.whatsapp.infraestructura.repositorio.MensajeWhatsappRepositorio;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -100,8 +115,10 @@ import java.time.ZoneId;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.math.BigDecimal;
+import java.net.IDN;
+import java.net.URI;
+import java.text.Normalizer;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -111,6 +128,7 @@ import java.util.Set;
 import java.util.HashSet;
 import java.util.Comparator;
 import java.util.Collections;
+import java.util.Locale;
 import java.util.stream.Collectors;
 
 import static org.springframework.http.HttpStatus.CONFLICT;
@@ -127,11 +145,112 @@ public class ServicioAdminCitas {
             "CAJA_ACCESO",
             "STAFF_PANEL_ACCESO"
     );
+    private static final List<CatalogoSugeridoDef> CATALOGOS_SUGERIDOS = List.of(
+            new CatalogoSugeridoDef(
+                    "nails-studio",
+                    "Nails Studio",
+                    "Manicura, pedicura, gel y extensiones para arrancar rápido el catálogo.",
+                    List.of(
+                            new GrupoSugeridoDef(
+                                    "Uñas",
+                                    "Servicios principales para manos y pies.",
+                                    "/NailArt_logo.jpeg",
+                                    "spa",
+                                    10,
+                                    List.of(
+                                            new SubgrupoSugeridoDef(
+                                                    "Manicura",
+                                                    "Clásica, gel y soft gel.",
+                                                    10,
+                                                    List.of(
+                                                            new ServicioSugeridoDef("Manicura tradicional", "Limpieza, forma y esmaltado clásico.", 60, 0, 10, new BigDecimal("220"), "MXN", 10, false, null, null),
+                                                            new ServicioSugeridoDef("Manicura gel", "Preparación y aplicación de gel semipermanente.", 75, 0, 10, new BigDecimal("290"), "MXN", 20, false, null, null),
+                                                            new ServicioSugeridoDef("Soft gel", "Aplicación de tips soft gel con acabado natural.", 100, 0, 15, new BigDecimal("450"), "MXN", 30, true, "FIJO", new BigDecimal("120"))
+                                                    )
+                                            ),
+                                            new SubgrupoSugeridoDef(
+                                                    "Pedicura",
+                                                    "Cuidado integral para pies.",
+                                                    20,
+                                                    List.of(
+                                                            new ServicioSugeridoDef("Pedicura spa", "Limpieza, exfoliación y esmaltado.", 75, 0, 10, new BigDecimal("320"), "MXN", 10, false, null, null),
+                                                            new ServicioSugeridoDef("Pedicura gel", "Pedicura con acabado de larga duración.", 90, 0, 10, new BigDecimal("390"), "MXN", 20, false, null, null)
+                                                    )
+                                            ),
+                                            new SubgrupoSugeridoDef(
+                                                    "Extensiones",
+                                                    "Sets completos y mantenimientos.",
+                                                    30,
+                                                    List.of(
+                                                            new ServicioSugeridoDef("Uñas acrílicas set completo", "Construcción de set completo con forma básica.", 120, 0, 15, new BigDecimal("580"), "MXN", 10, true, "FIJO", new BigDecimal("150")),
+                                                            new ServicioSugeridoDef("Retoque acrílico", "Mantenimiento y relleno de crecimiento.", 90, 0, 10, new BigDecimal("420"), "MXN", 20, false, null, null)
+                                                    )
+                                            )
+                                    )
+                            )
+                    )
+            ),
+            new CatalogoSugeridoDef(
+                    "makeup-brows",
+                    "Makeup + Brows",
+                    "Maquillaje social, cejas y pestañas para estudios de belleza integral.",
+                    List.of(
+                            new GrupoSugeridoDef(
+                                    "Maquillaje",
+                                    "Looks para eventos y sesiones.",
+                                    "/fluora-logo.svg",
+                                    "palette",
+                                    10,
+                                    List.of(
+                                            new SubgrupoSugeridoDef(
+                                                    "Social",
+                                                    "Maquillaje para eventos y ocasiones especiales.",
+                                                    10,
+                                                    List.of(
+                                                            new ServicioSugeridoDef("Maquillaje social", "Preparación de piel y look completo.", 90, 0, 15, new BigDecimal("950"), "MXN", 10, true, "FIJO", new BigDecimal("250")),
+                                                            new ServicioSugeridoDef("Maquillaje express", "Look ligero para compromisos rápidos.", 45, 0, 10, new BigDecimal("550"), "MXN", 20, false, null, null)
+                                                    )
+                                            )
+                                    )
+                            ),
+                            new GrupoSugeridoDef(
+                                    "Cejas y pestañas",
+                                    "Servicios para mirada y definición.",
+                                    "/fluora-mark.svg",
+                                    "visibility",
+                                    20,
+                                    List.of(
+                                            new SubgrupoSugeridoDef(
+                                                    "Cejas",
+                                                    "Diseño y acabado.",
+                                                    10,
+                                                    List.of(
+                                                            new ServicioSugeridoDef("Diseño de ceja", "Mapeo y depilación con acabado natural.", 35, 0, 5, new BigDecimal("180"), "MXN", 10, false, null, null),
+                                                            new ServicioSugeridoDef("Laminado de ceja", "Peinado, fijación y acabado definido.", 60, 0, 10, new BigDecimal("420"), "MXN", 20, false, null, null)
+                                                    )
+                                            ),
+                                            new SubgrupoSugeridoDef(
+                                                    "Pestañas",
+                                                    "Lifting y tintes.",
+                                                    20,
+                                                    List.of(
+                                                            new ServicioSugeridoDef("Lifting de pestañas", "Curvatura y nutrición de pestaña natural.", 70, 0, 10, new BigDecimal("480"), "MXN", 10, false, null, null),
+                                                            new ServicioSugeridoDef("Tinte de pestañas", "Intensidad natural en pestaña.", 30, 0, 5, new BigDecimal("160"), "MXN", 20, false, null, null)
+                                                    )
+                                            )
+                                    )
+                            )
+                    )
+            )
+    );
 
     private final CitaRepositorio citaRepositorio;
     private final HistorialEstadoCitaRepositorio historialEstadoCitaRepositorio;
     private final SucursalRepositorio sucursalRepositorio;
     private final ServicioRepositorio servicioRepositorio;
+    private final ServicioSucursalRepositorio servicioSucursalRepositorio;
+    private final GrupoServicioRepositorio grupoServicioRepositorio;
+    private final SubgrupoServicioRepositorio subgrupoServicioRepositorio;
     private final PrestadorServicioRepositorio prestadorServicioRepositorio;
     private final AsignacionServicioPrestadorRepositorio asignacionServicioPrestadorRepositorio;
     private final ClienteRepositorio clienteRepositorio;
@@ -146,12 +265,15 @@ public class ServicioAdminCitas {
     private final ServicioRolesEmpresa servicioRolesEmpresa;
     private final PasswordEncoder passwordEncoder;
     private final EmpresaRepositorio empresaRepositorio;
+    private final EmpresaSitioConfigRepositorio empresaSitioConfigRepositorio;
     private final ConfiguracionCorreoEmpresaRepositorio configuracionCorreoEmpresaRepositorio;
     private final ConfiguracionWhatsappEmpresaRepositorio configuracionWhatsappEmpresaRepositorio;
+    private final PlantillaWhatsappEmpresaRepositorio plantillaWhatsappEmpresaRepositorio;
     private final ServicioConfiguracionWhatsappEmpresa servicioConfiguracionWhatsappEmpresa;
     private final ClienteWhatsappTwilio clienteWhatsappTwilio;
     private final ServicioOutboxWhatsappCitas servicioOutboxWhatsappCitas;
     private final BandejaSalidaNotificacionRepositorio bandejaSalidaNotificacionRepositorio;
+    private final MensajeWhatsappRepositorio mensajeWhatsappRepositorio;
     private final AuditoriaConfiguracionEmpresaRepositorio auditoriaConfiguracionEmpresaRepositorio;
     private final AuditoriaRolEmpresaRepositorio auditoriaRolEmpresaRepositorio;
     private final ObjectMapper objectMapper;
@@ -162,6 +284,9 @@ public class ServicioAdminCitas {
             HistorialEstadoCitaRepositorio historialEstadoCitaRepositorio,
             SucursalRepositorio sucursalRepositorio,
             ServicioRepositorio servicioRepositorio,
+            ServicioSucursalRepositorio servicioSucursalRepositorio,
+            GrupoServicioRepositorio grupoServicioRepositorio,
+            SubgrupoServicioRepositorio subgrupoServicioRepositorio,
             PrestadorServicioRepositorio prestadorServicioRepositorio,
             AsignacionServicioPrestadorRepositorio asignacionServicioPrestadorRepositorio,
             ClienteRepositorio clienteRepositorio,
@@ -176,12 +301,15 @@ public class ServicioAdminCitas {
             ServicioRolesEmpresa servicioRolesEmpresa,
             PasswordEncoder passwordEncoder,
             EmpresaRepositorio empresaRepositorio,
+            EmpresaSitioConfigRepositorio empresaSitioConfigRepositorio,
             ConfiguracionCorreoEmpresaRepositorio configuracionCorreoEmpresaRepositorio,
             ConfiguracionWhatsappEmpresaRepositorio configuracionWhatsappEmpresaRepositorio,
+            PlantillaWhatsappEmpresaRepositorio plantillaWhatsappEmpresaRepositorio,
             ServicioConfiguracionWhatsappEmpresa servicioConfiguracionWhatsappEmpresa,
             ClienteWhatsappTwilio clienteWhatsappTwilio,
             ServicioOutboxWhatsappCitas servicioOutboxWhatsappCitas,
             BandejaSalidaNotificacionRepositorio bandejaSalidaNotificacionRepositorio,
+            MensajeWhatsappRepositorio mensajeWhatsappRepositorio,
             AuditoriaConfiguracionEmpresaRepositorio auditoriaConfiguracionEmpresaRepositorio,
             AuditoriaRolEmpresaRepositorio auditoriaRolEmpresaRepositorio,
             ObjectMapper objectMapper,
@@ -191,6 +319,9 @@ public class ServicioAdminCitas {
         this.historialEstadoCitaRepositorio = historialEstadoCitaRepositorio;
         this.sucursalRepositorio = sucursalRepositorio;
         this.servicioRepositorio = servicioRepositorio;
+        this.servicioSucursalRepositorio = servicioSucursalRepositorio;
+        this.grupoServicioRepositorio = grupoServicioRepositorio;
+        this.subgrupoServicioRepositorio = subgrupoServicioRepositorio;
         this.prestadorServicioRepositorio = prestadorServicioRepositorio;
         this.asignacionServicioPrestadorRepositorio = asignacionServicioPrestadorRepositorio;
         this.clienteRepositorio = clienteRepositorio;
@@ -205,12 +336,15 @@ public class ServicioAdminCitas {
         this.servicioRolesEmpresa = servicioRolesEmpresa;
         this.passwordEncoder = passwordEncoder;
         this.empresaRepositorio = empresaRepositorio;
+        this.empresaSitioConfigRepositorio = empresaSitioConfigRepositorio;
         this.configuracionCorreoEmpresaRepositorio = configuracionCorreoEmpresaRepositorio;
         this.configuracionWhatsappEmpresaRepositorio = configuracionWhatsappEmpresaRepositorio;
+        this.plantillaWhatsappEmpresaRepositorio = plantillaWhatsappEmpresaRepositorio;
         this.servicioConfiguracionWhatsappEmpresa = servicioConfiguracionWhatsappEmpresa;
         this.clienteWhatsappTwilio = clienteWhatsappTwilio;
         this.servicioOutboxWhatsappCitas = servicioOutboxWhatsappCitas;
         this.bandejaSalidaNotificacionRepositorio = bandejaSalidaNotificacionRepositorio;
+        this.mensajeWhatsappRepositorio = mensajeWhatsappRepositorio;
         this.auditoriaConfiguracionEmpresaRepositorio = auditoriaConfiguracionEmpresaRepositorio;
         this.auditoriaRolEmpresaRepositorio = auditoriaRolEmpresaRepositorio;
         this.objectMapper = objectMapper;
@@ -315,6 +449,64 @@ public class ServicioAdminCitas {
         return mapearConfiguracionCorreo(configuracion);
     }
 
+    @Transactional(readOnly = true)
+    public ConfiguracionSitioAdminResponse obtenerConfiguracionSitio(Long empresaId) {
+        EmpresaEntidad empresa = empresaRepositorio.findById(empresaId)
+                .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "La empresa indicada no existe"));
+        EmpresaSitioConfigEntidad configuracion = empresaSitioConfigRepositorio.findById(empresaId)
+                .orElseGet(() -> construirConfiguracionSitioBase(empresa));
+        return mapearConfiguracionSitio(configuracion);
+    }
+
+    @Transactional
+    public ConfiguracionSitioAdminResponse actualizarConfiguracionSitio(Long empresaId, Long usuarioActorId, ConfiguracionSitioAdminRequest request) {
+        EmpresaEntidad empresa = empresaRepositorio.findById(empresaId)
+                .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "La empresa indicada no existe"));
+        EmpresaSitioConfigEntidad configuracion = empresaSitioConfigRepositorio.findById(empresaId)
+                .orElseGet(() -> construirConfiguracionSitioBase(empresa));
+        String snapshotAntes = snapshotConfiguracionSitio(configuracion);
+
+        String slugNormalizado = normalizarSlugPublico(request.slug());
+        validarSlugSitioDisponible(empresaId, slugNormalizado);
+
+        String dominioPrincipal = normalizarDominioPrincipal(request.dominioPrincipal());
+        validarDominioPrincipalDisponible(empresaId, dominioPrincipal);
+
+        configuracion.setEmpresaId(empresaId);
+        configuracion.setSlug(slugNormalizado);
+        configuracion.setNombreComercial(request.nombreComercial().trim());
+        configuracion.setDominioPrincipal(dominioPrincipal);
+        configuracion.setLogoUrl(normalizarOpcional(request.logoUrl()));
+        configuracion.setDescripcionCorta(normalizarOpcional(request.descripcionCorta()));
+        configuracion.setColorPrimario(normalizarColorHex(request.colorPrimario()));
+        configuracion.setColorSecundario(normalizarColorHex(request.colorSecundario()));
+        configuracion.setFuenteTitulos(normalizarFuente(request.fuenteTitulos(), "JAKARTA"));
+        configuracion.setFuenteCuerpo(normalizarFuente(request.fuenteCuerpo(), "INTER"));
+        configuracion.setHeroTitulo(normalizarOpcional(request.heroTitulo()));
+        configuracion.setHeroSubtitulo(normalizarOpcional(request.heroSubtitulo()));
+        configuracion.setHeroImagenUrl(normalizarOpcional(request.heroImagenUrl()));
+        configuracion.setWhatsapp(normalizarOpcional(request.whatsapp()));
+        configuracion.setTelefono(normalizarOpcional(request.telefono()));
+        configuracion.setCorreo(normalizarOpcional(request.correo()));
+        configuracion.setDireccion(normalizarOpcional(request.direccion()));
+        configuracion.setInstagramUrl(normalizarOpcional(request.instagramUrl()));
+        configuracion.setFacebookUrl(normalizarOpcional(request.facebookUrl()));
+        configuracion.setTema(normalizarTema(request.tema()));
+        configuracion.setPublicado(request.publicado());
+
+        EmpresaSitioConfigEntidad guardada = empresaSitioConfigRepositorio.save(configuracion);
+        registrarAuditoriaConfiguracion(
+                empresaId,
+                usuarioActorId,
+                "SITIO",
+                "CONFIGURACION_SITIO_ACTUALIZADA",
+                "Se actualizó la configuración del sitio público",
+                snapshotAntes,
+                snapshotConfiguracionSitio(guardada)
+        );
+        return mapearConfiguracionSitio(guardada);
+    }
+
     @Transactional
     public ConfiguracionCorreoAdminResponse actualizarConfiguracionCorreo(Long empresaId, Long usuarioActorId, ConfiguracionCorreoAdminRequest request) {
         ConfiguracionCorreoEmpresaEntidad configuracion = configuracionCorreoEmpresaRepositorio.findById(empresaId)
@@ -394,7 +586,7 @@ public class ServicioAdminCitas {
         String graphClientSecret = configuracion.getGraphClientSecret();
         if (graphClientSecret != null && !graphClientSecret.isBlank() && !graphClientSecret.startsWith("enc:v1:")) {
             configuracion.setGraphClientSecret(protectorSecretosCorreo.encriptar(graphClientSecret));
-            if (mensaje.length() > 0) {
+            if (!mensaje.isEmpty()) {
                 mensaje.append("; ");
             }
             mensaje.append("graph_client_secret migrado");
@@ -404,7 +596,7 @@ public class ServicioAdminCitas {
         String graphPrivateKeyPem = configuracion.getGraphPrivateKeyPem();
         if (graphPrivateKeyPem != null && !graphPrivateKeyPem.isBlank() && !graphPrivateKeyPem.startsWith("enc:v1:")) {
             configuracion.setGraphPrivateKeyPem(protectorSecretosCorreo.encriptar(graphPrivateKeyPem));
-            if (mensaje.length() > 0) {
+            if (!mensaje.isEmpty()) {
                 mensaje.append("; ");
             }
             mensaje.append("graph_private_key_pem migrado");
@@ -468,6 +660,8 @@ public class ServicioAdminCitas {
         configuracion.setPlantillaGraciasVisitaSid(normalizarOpcional(request.plantillaGraciasVisitaSid()));
         configuracion.setPlantillaRecordatorioRegresoSid(normalizarOpcional(request.plantillaRecordatorioRegresoSid()));
         configuracion.setPlantillaEspacioDisponibleWalkinSid(normalizarOpcional(request.plantillaEspacioDisponibleWalkinSid()));
+        configuracion.setPlantillaMenuBienvenidaSid(normalizarOpcional(request.plantillaMenuBienvenidaSid()));
+        configuracion.setPlantillasListPickerSids(normalizarOpcional(request.plantillasListPickerSids()));
         configuracion.setSenderDisplayName(normalizarOpcional(request.senderDisplayName()));
         configuracion.setSenderPhoneNumber(normalizarOpcional(request.senderPhoneNumber()));
         configuracion.setSenderStatus(normalizarOpcional(request.senderStatus()));
@@ -540,12 +734,147 @@ public class ServicioAdminCitas {
     }
 
     @Transactional(readOnly = true)
+    public List<PlantillaWhatsappEmpresaAdminResponse> listarPlantillasWhatsappEmpresa(Long empresaId) {
+        return plantillaWhatsappEmpresaRepositorio.findByEmpresaIdOrderByUsoAscNombreAsc(empresaId).stream()
+                .map(this::mapearPlantillaWhatsappEmpresa)
+                .toList();
+    }
+
+    @Transactional
+    public PlantillaWhatsappEmpresaAdminResponse crearPlantillaWhatsappEmpresa(
+            Long empresaId,
+            Long usuarioActorId,
+            PlantillaWhatsappEmpresaAdminRequest request
+    ) {
+        String uso = normalizarUsoPlantillaWhatsapp(request.uso());
+        String contentSid = normalizarContentSidPlantillaWhatsapp(request.contentSid());
+        if (plantillaWhatsappEmpresaRepositorio.existsByEmpresaIdAndUsoIgnoreCaseAndContentSidIgnoreCase(empresaId, uso, contentSid)) {
+            throw new ResponseStatusException(CONFLICT, "Ya existe una plantilla con ese uso y Content SID");
+        }
+
+        PlantillaWhatsappEmpresaEntidad plantilla = new PlantillaWhatsappEmpresaEntidad();
+        plantilla.setEmpresaId(empresaId);
+        aplicarPlantillaWhatsappEmpresa(plantilla, request, uso, contentSid);
+        PlantillaWhatsappEmpresaEntidad guardada = plantillaWhatsappEmpresaRepositorio.save(plantilla);
+
+        registrarAuditoriaConfiguracion(
+                empresaId,
+                usuarioActorId,
+                "WHATSAPP",
+                "PLANTILLA_WHATSAPP_CREADA",
+                "Se registró una plantilla WhatsApp para el tenant",
+                null,
+                snapshotPlantillaWhatsappEmpresa(guardada)
+        );
+        return mapearPlantillaWhatsappEmpresa(guardada);
+    }
+
+    @Transactional
+    public PlantillaWhatsappEmpresaAdminResponse actualizarPlantillaWhatsappEmpresa(
+            Long empresaId,
+            Long usuarioActorId,
+            Long plantillaId,
+            PlantillaWhatsappEmpresaAdminRequest request
+    ) {
+        PlantillaWhatsappEmpresaEntidad plantilla = plantillaWhatsappEmpresaRepositorio.findByIdAndEmpresaId(plantillaId, empresaId)
+                .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "La plantilla WhatsApp no existe para esta empresa"));
+        String snapshotAntes = snapshotPlantillaWhatsappEmpresa(plantilla);
+        String uso = normalizarUsoPlantillaWhatsapp(request.uso());
+        String contentSid = normalizarContentSidPlantillaWhatsapp(request.contentSid());
+
+        plantillaWhatsappEmpresaRepositorio
+                .findByEmpresaIdOrderByUsoAscNombreAsc(empresaId)
+                .stream()
+                .filter(existente -> !existente.getId().equals(plantillaId))
+                .filter(existente -> existente.getUso() != null && existente.getUso().equalsIgnoreCase(uso))
+                .filter(existente -> existente.getContentSid() != null && existente.getContentSid().equalsIgnoreCase(contentSid))
+                .findFirst()
+                .ifPresent(existente -> {
+                    throw new ResponseStatusException(CONFLICT, "Ya existe otra plantilla con ese uso y Content SID");
+                });
+
+        aplicarPlantillaWhatsappEmpresa(plantilla, request, uso, contentSid);
+        PlantillaWhatsappEmpresaEntidad guardada = plantillaWhatsappEmpresaRepositorio.save(plantilla);
+
+        registrarAuditoriaConfiguracion(
+                empresaId,
+                usuarioActorId,
+                "WHATSAPP",
+                "PLANTILLA_WHATSAPP_ACTUALIZADA",
+                "Se actualizó una plantilla WhatsApp del tenant",
+                snapshotAntes,
+                snapshotPlantillaWhatsappEmpresa(guardada)
+        );
+        return mapearPlantillaWhatsappEmpresa(guardada);
+    }
+
+    @Transactional
+    public void eliminarPlantillaWhatsappEmpresa(Long empresaId, Long usuarioActorId, Long plantillaId) {
+        PlantillaWhatsappEmpresaEntidad plantilla = plantillaWhatsappEmpresaRepositorio.findByIdAndEmpresaId(plantillaId, empresaId)
+                .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "La plantilla WhatsApp no existe para esta empresa"));
+        String snapshotAntes = snapshotPlantillaWhatsappEmpresa(plantilla);
+        plantillaWhatsappEmpresaRepositorio.delete(plantilla);
+        registrarAuditoriaConfiguracion(
+                empresaId,
+                usuarioActorId,
+                "WHATSAPP",
+                "PLANTILLA_WHATSAPP_ELIMINADA",
+                "Se eliminó una plantilla WhatsApp del tenant",
+                snapshotAntes,
+                null
+        );
+    }
+
+    @Transactional(readOnly = true)
     public List<LogMensajeWhatsappAdminResponse> listarLogsWhatsapp(Long empresaId) {
         ConfiguracionWhatsappResolvida configuracion = servicioConfiguracionWhatsappEmpresa.resolver(empresaId);
         return bandejaSalidaNotificacionRepositorio.findTop50ByEmpresaIdAndCanalOrderByIdDesc(empresaId, "WHATSAPP")
                 .stream()
                 .map(log -> mapearLogWhatsapp(log, configuracion))
                 .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public List<MensajeWhatsappAdminResponse> listarMensajesWhatsapp(Long empresaId) {
+        return mensajeWhatsappRepositorio.findTop200ByEmpresaIdOrderByCreadoEnDesc(empresaId)
+                .stream()
+                .map(this::mapearMensajeWhatsapp)
+                .toList();
+    }
+
+    @Transactional
+    public MensajeWhatsappAdminResponse enviarMensajeWhatsapp(Long empresaId, EnviarMensajeWhatsappAdminRequest request) {
+        String telefono = normalizarOpcional(request.telefono());
+        String mensajeTexto = normalizarOpcional(request.mensaje());
+        if (telefono == null || mensajeTexto == null) {
+            throw new ResponseStatusException(BAD_REQUEST, "El teléfono y el mensaje son obligatorios");
+        }
+
+        MensajeWhatsappEntidad mensaje = new MensajeWhatsappEntidad();
+        mensaje.setEmpresaId(empresaId);
+        String telefonoNormalizado = com.techprotech.agenda.compartido.whatsapp.NormalizadorTelefonoWhatsapp.normalizarComparable(telefono);
+        if (telefonoNormalizado.isBlank()) {
+            throw new ResponseStatusException(BAD_REQUEST, "El teléfono de WhatsApp no es válido");
+        }
+        mensaje.setTelefonoNormalizado(telefonoNormalizado);
+        mensaje.setDireccion("SALIENTE");
+        mensaje.setCuerpo(mensajeTexto);
+        mensaje.setCreadoEn(LocalDateTime.now());
+
+        try {
+            ResultadoEnvioWhatsapp resultado = clienteWhatsappTwilio.enviarMensaje(empresaId, telefono, mensajeTexto);
+            mensaje.setProveedorMensajeId(resultado.proveedorMensajeId());
+            mensaje.setEstado(resultado.estadoProveedor());
+            mensaje.setCodigoErrorProveedor(resultado.codigoErrorProveedor());
+            mensaje.setDetalleErrorProveedor(resultado.detalleErrorProveedor());
+        } catch (Exception ex) {
+            mensaje.setEstado("ERROR");
+            mensaje.setDetalleErrorProveedor(ex.getMessage());
+            mensajeWhatsappRepositorio.save(mensaje);
+            throw new ResponseStatusException(CONFLICT, "No se pudo enviar el mensaje por WhatsApp: " + ex.getMessage());
+        }
+
+        return mapearMensajeWhatsapp(mensajeWhatsappRepositorio.save(mensaje));
     }
 
     @Transactional
@@ -790,17 +1119,51 @@ public class ServicioAdminCitas {
                 empresaId,
                 request.telefonoDestino().trim(),
                 plantillaSid,
-                Map.of(
-                        "1", request.nombreCliente().trim(),
-                        "2", request.fecha().trim(),
-                        "3", request.hora().trim()
-                )
+                construirVariablesPruebaWhatsapp(empresaId, configuracion, plantillaSid, request)
         );
 
         registrarLogPruebaWhatsapp(empresaId, request, plantillaSid, resultado);
         return new PruebaPlantillaWhatsappResponse(
                 true,
                 "La prueba de WhatsApp fue enviada a Twilio" + (resultado.proveedorMensajeId() != null ? " con Message SID " + resultado.proveedorMensajeId() : "")
+        );
+    }
+
+    private Map<String, String> construirVariablesPruebaWhatsapp(
+            Long empresaId,
+            ConfiguracionWhatsappResolvida configuracion,
+            String plantillaSid,
+            PruebaPlantillaWhatsappRequest request
+    ) {
+        String nombreEmpresa = empresaRepositorio.findById(empresaId)
+                .map(EmpresaEntidad::getNombre)
+                .filter(nombre -> !nombre.isBlank())
+                .orElse("Tu negocio");
+        String fechaHoraAmigable = "%s a las %s".formatted(request.fecha().trim(), request.hora().trim());
+
+        if (plantillaSid.equals(configuracion.plantillaSolicitudConfirmacionSid())) {
+            return Map.of(
+                    "1", request.nombreCliente().trim(),
+                    "2", nombreEmpresa,
+                    "3", fechaHoraAmigable,
+                    "4", "1"
+            );
+        }
+
+        if (plantillaSid.equals(configuracion.plantillaCitaConfirmadaSid())) {
+            return Map.of(
+                    "1", request.nombreCliente().trim(),
+                    "2", nombreEmpresa,
+                    "3", request.fecha().trim(),
+                    "4", request.hora().trim(),
+                    "5", "Sucursal por definir"
+            );
+        }
+
+        return Map.of(
+                "1", request.nombreCliente().trim(),
+                "2", request.fecha().trim(),
+                "3", request.hora().trim()
         );
     }
 
@@ -814,18 +1177,18 @@ public class ServicioAdminCitas {
                         cita.getSucursalId(),
                         cita.getServicioId(),
                         cita.getPrestadorId(),
-                        sucursalRepositorio.findById(cita.getSucursalId()).map(s -> s.getNombre()).orElse("Sucursal"),
-                        servicioRepositorio.findById(cita.getServicioId()).map(s -> s.getNombre()).orElse("Servicio"),
-                        prestadorServicioRepositorio.findById(cita.getPrestadorId()).map(p -> p.getNombreMostrar()).orElse("Prestador"),
-                        cita.getInicio().atZone(ZoneId.of(sucursalRepositorio.findById(cita.getSucursalId()).map(s -> s.getZonaHoraria()).orElse("America/Mexico_City"))).toOffsetDateTime(),
-                        cita.getFin().atZone(ZoneId.of(sucursalRepositorio.findById(cita.getSucursalId()).map(s -> s.getZonaHoraria()).orElse("America/Mexico_City"))).toOffsetDateTime(),
+                        sucursalRepositorio.findById(cita.getSucursalId()).map(SucursalEntidad::getNombre).orElse("Sucursal"),
+                        servicioRepositorio.findById(cita.getServicioId()).map(ServicioEntidad::getNombre).orElse("Servicio"),
+                        prestadorServicioRepositorio.findById(cita.getPrestadorId()).map(PrestadorServicioEntidad::getNombreMostrar).orElse("Prestador"),
+                        cita.getInicio().atZone(ZoneId.of(sucursalRepositorio.findById(cita.getSucursalId()).map(SucursalEntidad::getZonaHoraria).orElse("America/Mexico_City"))).toOffsetDateTime(),
+                        cita.getFin().atZone(ZoneId.of(sucursalRepositorio.findById(cita.getSucursalId()).map(SucursalEntidad::getZonaHoraria).orElse("America/Mexico_City"))).toOffsetDateTime(),
                         cita.getPrecio(),
                         cita.getMoneda(),
                         cita.getNotas(),
                         false,
-                        clienteRepositorio.findById(cita.getClienteId()).map(cliente -> cliente.getNombreCompleto()).orElse("Cliente"),
-                        usuarioRepositorio.findById(cita.getClienteId()).map(usuario -> usuario.getCorreo()).orElse(""),
-                        clienteRepositorio.findById(cita.getClienteId()).map(cliente -> cliente.getTelefono()).orElse("")
+                        clienteRepositorio.findById(cita.getClienteId()).map(ClienteEntidad::getNombreCompleto).orElse("Cliente"),
+                        usuarioRepositorio.findById(cita.getClienteId()).map(UsuarioEntidad::getCorreo).orElse(""),
+                        clienteRepositorio.findById(cita.getClienteId()).map(ClienteEntidad::getTelefono).orElse("")
                 ))
                 .toList();
     }
@@ -905,12 +1268,206 @@ public class ServicioAdminCitas {
     }
 
     @Transactional(readOnly = true)
+    public List<GrupoServicioAdminResponse> listarGruposServicio(Long empresaId) {
+        return grupoServicioRepositorio.findByEmpresaIdOrderByOrdenPublicoAscNombreAsc(empresaId)
+                .stream()
+                .map(this::mapearGrupoServicio)
+                .toList();
+    }
+
+    @Transactional
+    public GrupoServicioAdminResponse crearGrupoServicio(Long empresaId, GrupoServicioAdminRequest request) {
+        GrupoServicioEntidad grupo = new GrupoServicioEntidad();
+        grupo.setEmpresaId(empresaId);
+        aplicarGrupoServicio(grupo, request);
+        validarSlugGrupoDisponible(empresaId, grupo.getSlug(), null);
+        return mapearGrupoServicio(grupoServicioRepositorio.save(grupo));
+    }
+
+    @Transactional
+    public GrupoServicioAdminResponse actualizarGrupoServicio(Long empresaId, Long grupoId, GrupoServicioAdminRequest request) {
+        GrupoServicioEntidad grupo = grupoServicioRepositorio.findByIdAndEmpresaId(grupoId, empresaId)
+                .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "El grupo de servicios no existe para la empresa"));
+        aplicarGrupoServicio(grupo, request);
+        validarSlugGrupoDisponible(empresaId, grupo.getSlug(), grupoId);
+        return mapearGrupoServicio(grupoServicioRepositorio.save(grupo));
+    }
+
+    @Transactional(readOnly = true)
+    public List<SubgrupoServicioAdminResponse> listarSubgruposServicio(Long empresaId) {
+        Map<Long, String> grupos = grupoServicioRepositorio.findByEmpresaIdOrderByOrdenPublicoAscNombreAsc(empresaId).stream()
+                .collect(Collectors.toMap(GrupoServicioEntidad::getId, GrupoServicioEntidad::getNombre));
+        return subgrupoServicioRepositorio.findByEmpresaIdOrderByOrdenPublicoAscNombreAsc(empresaId)
+                .stream()
+                .map(subgrupo -> mapearSubgrupoServicio(subgrupo, grupos.getOrDefault(subgrupo.getGrupoId(), "Grupo")))
+                .toList();
+    }
+
+    @Transactional
+    public SubgrupoServicioAdminResponse crearSubgrupoServicio(Long empresaId, SubgrupoServicioAdminRequest request) {
+        GrupoServicioEntidad grupo = grupoServicioRepositorio.findByIdAndEmpresaId(request.grupoId(), empresaId)
+                .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "El grupo indicado no existe para la empresa"));
+        SubgrupoServicioEntidad subgrupo = new SubgrupoServicioEntidad();
+        subgrupo.setEmpresaId(empresaId);
+        aplicarSubgrupoServicio(subgrupo, request);
+        validarSlugSubgrupoDisponible(empresaId, subgrupo.getGrupoId(), subgrupo.getSlug(), null);
+        return mapearSubgrupoServicio(subgrupoServicioRepositorio.save(subgrupo), grupo.getNombre());
+    }
+
+    @Transactional
+    public SubgrupoServicioAdminResponse actualizarSubgrupoServicio(Long empresaId, Long subgrupoId, SubgrupoServicioAdminRequest request) {
+        GrupoServicioEntidad grupo = grupoServicioRepositorio.findByIdAndEmpresaId(request.grupoId(), empresaId)
+                .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "El grupo indicado no existe para la empresa"));
+        SubgrupoServicioEntidad subgrupo = subgrupoServicioRepositorio.findByIdAndEmpresaId(subgrupoId, empresaId)
+                .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "El subgrupo indicado no existe para la empresa"));
+        aplicarSubgrupoServicio(subgrupo, request);
+        validarSlugSubgrupoDisponible(empresaId, subgrupo.getGrupoId(), subgrupo.getSlug(), subgrupoId);
+        return mapearSubgrupoServicio(subgrupoServicioRepositorio.save(subgrupo), grupo.getNombre());
+    }
+
+    @Transactional(readOnly = true)
+    public List<CatalogoSugeridoAdminResponse> listarCatalogosSugeridos() {
+        return CATALOGOS_SUGERIDOS.stream()
+                .map(catalogo -> new CatalogoSugeridoAdminResponse(
+                        catalogo.id(),
+                        catalogo.nombre(),
+                        catalogo.descripcion(),
+                        catalogo.grupos().size(),
+                        catalogo.grupos().stream().mapToInt(grupo -> grupo.subgrupos().size()).sum(),
+                        catalogo.grupos().stream()
+                                .flatMap(grupo -> grupo.subgrupos().stream())
+                                .mapToInt(subgrupo -> subgrupo.servicios().size())
+                                .sum()
+                ))
+                .toList();
+    }
+
+    @Transactional
+    public ImportarCatalogoSugeridoResponse importarCatalogoSugerido(Long empresaId, ImportarCatalogoSugeridoRequest request) {
+        CatalogoSugeridoDef catalogo = CATALOGOS_SUGERIDOS.stream()
+                .filter(item -> item.id().equalsIgnoreCase(request.sugerenciaId().trim()))
+                .findFirst()
+                .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "La sugerencia indicada no existe"));
+        sucursalRepositorio.findByIdAndEmpresaId(request.sucursalId(), empresaId)
+                .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "La sucursal indicada no existe para la empresa"));
+
+        int gruposCreados = 0;
+        int subgruposCreados = 0;
+        int serviciosCreados = 0;
+        int serviciosReutilizados = 0;
+
+        for (GrupoSugeridoDef grupoDef : catalogo.grupos()) {
+            String grupoSlug = normalizarSlugCatalogo(null, grupoDef.nombre(), "grupo");
+            GrupoServicioEntidad grupo = grupoServicioRepositorio.findByEmpresaIdAndSlug(empresaId, grupoSlug).orElse(null);
+            if (grupo == null) {
+                grupo = new GrupoServicioEntidad();
+                grupo.setEmpresaId(empresaId);
+                grupo.setNombre(grupoDef.nombre());
+                grupo.setSlug(grupoSlug);
+                grupo.setDescripcion(grupoDef.descripcion());
+                grupo.setImagenUrl(grupoDef.imagenUrl());
+                grupo.setIcono(grupoDef.icono());
+                grupo.setOrdenPublico(grupoDef.ordenPublico());
+                grupo.setActivo(true);
+                grupo = grupoServicioRepositorio.save(grupo);
+                gruposCreados++;
+            }
+
+            for (SubgrupoSugeridoDef subgrupoDef : grupoDef.subgrupos()) {
+                String subgrupoSlug = normalizarSlugCatalogo(null, subgrupoDef.nombre(), "subgrupo");
+                SubgrupoServicioEntidad subgrupo = subgrupoServicioRepositorio.findByEmpresaIdAndGrupoIdAndSlug(empresaId, grupo.getId(), subgrupoSlug).orElse(null);
+                if (subgrupo == null) {
+                    subgrupo = new SubgrupoServicioEntidad();
+                    subgrupo.setEmpresaId(empresaId);
+                    subgrupo.setGrupoId(grupo.getId());
+                    subgrupo.setNombre(subgrupoDef.nombre());
+                    subgrupo.setSlug(subgrupoSlug);
+                    subgrupo.setDescripcion(subgrupoDef.descripcion());
+                    subgrupo.setOrdenPublico(subgrupoDef.ordenPublico());
+                    subgrupo.setActivo(true);
+                    subgrupo = subgrupoServicioRepositorio.save(subgrupo);
+                    subgruposCreados++;
+                }
+
+                for (ServicioSugeridoDef servicioDef : subgrupoDef.servicios()) {
+                    String servicioSlug = normalizarSlugCatalogo(null, servicioDef.nombre(), "servicio");
+                    ServicioEntidad existente = servicioRepositorio.findByEmpresaIdAndSlug(empresaId, servicioSlug).orElse(null);
+                    if (existente != null) {
+                        serviciosReutilizados++;
+                        continue;
+                    }
+                    ServicioEntidad servicio = new ServicioEntidad();
+                    servicio.setEmpresaId(empresaId);
+                    servicio.setSucursalId(request.sucursalId());
+                    servicio.setGrupoId(grupo.getId());
+                    servicio.setSubgrupoId(subgrupo.getId());
+                    servicio.setNombre(servicioDef.nombre());
+                    servicio.setSlug(servicioSlug);
+                    servicio.setDescripcion(servicioDef.descripcion());
+                    servicio.setImagenUrl(null);
+                    servicio.setDuracionMinutos(servicioDef.duracionMinutos());
+                    servicio.setBufferAntesMinutos(servicioDef.bufferAntesMinutos());
+                    servicio.setBufferDespuesMinutos(servicioDef.bufferDespuesMinutos());
+                    servicio.setPrecio(servicioDef.precio());
+                    servicio.setMoneda(servicioDef.moneda());
+                    servicio.setOrdenPublico(servicioDef.ordenPublico());
+                    servicio.setVisiblePublico(true);
+                    servicio.setRequiereAnticipo(servicioDef.requiereAnticipo());
+                    servicio.setAnticipoTipo(servicioDef.anticipoTipo());
+                    servicio.setAnticipoValor(servicioDef.anticipoValor());
+                    servicio.setActivo(true);
+                    servicio = servicioRepositorio.save(servicio);
+                    sincronizarAsignacionesServicio(empresaId, servicio.getId(), List.of(request.sucursalId()));
+                    serviciosCreados++;
+                }
+            }
+        }
+
+        return new ImportarCatalogoSugeridoResponse(
+                catalogo.id(),
+                catalogo.nombre(),
+                gruposCreados,
+                subgruposCreados,
+                serviciosCreados,
+                serviciosReutilizados,
+                "Se importó la sugerencia " + catalogo.nombre() + " al tenant."
+        );
+    }
+
+    @Transactional(readOnly = true)
     public List<ServicioAdminResponse> listarServicios(Long empresaId) {
         Map<Long, String> sucursales = sucursalRepositorio.findByEmpresaIdOrderByNombreAsc(empresaId).stream()
                 .collect(java.util.stream.Collectors.toMap(SucursalEntidad::getId, SucursalEntidad::getNombre));
-        return servicioRepositorio.findByEmpresaIdOrderByNombreAsc(empresaId)
+        Map<Long, String> grupos = grupoServicioRepositorio.findByEmpresaIdOrderByOrdenPublicoAscNombreAsc(empresaId).stream()
+                .collect(Collectors.toMap(GrupoServicioEntidad::getId, GrupoServicioEntidad::getNombre));
+        Map<Long, String> subgrupos = subgrupoServicioRepositorio.findByEmpresaIdOrderByOrdenPublicoAscNombreAsc(empresaId).stream()
+                .collect(Collectors.toMap(SubgrupoServicioEntidad::getId, SubgrupoServicioEntidad::getNombre));
+        List<ServicioEntidad> servicios = servicioRepositorio.findByEmpresaIdOrderByOrdenPublicoAscNombreAsc(empresaId);
+        Map<Long, List<ServicioSucursalEntidad>> asignacionesPorServicio = servicioSucursalRepositorio
+                .findByEmpresaIdAndIdServicioIdInAndActivoTrue(
+                        empresaId,
+                        servicios.stream().map(ServicioEntidad::getId).toList()
+                ).stream()
+                .collect(Collectors.groupingBy(asignacion -> asignacion.getId().getServicioId()));
+        return servicios
                 .stream()
-                .map(servicio -> mapearServicio(servicio, sucursales.getOrDefault(servicio.getSucursalId(), "Sucursal")))
+                .map(servicio -> {
+                    List<ServicioSucursalEntidad> asignaciones = asignacionesPorServicio.get(servicio.getId());
+                    Long sucursalId = resolverSucursalPrincipal(servicio, asignaciones);
+                    List<Long> sucursalIds = resolverSucursalesAsignadas(servicio, asignaciones);
+                    List<String> sucursalNombres = sucursalIds.stream()
+                            .map(id -> sucursales.getOrDefault(id, "Sucursal"))
+                            .toList();
+                    return mapearServicio(
+                            servicio,
+                            sucursalId,
+                            sucursales.getOrDefault(sucursalId, "Sucursal"),
+                            sucursalIds,
+                            sucursalNombres,
+                            servicio.getGrupoId() != null ? grupos.get(servicio.getGrupoId()) : null,
+                            servicio.getSubgrupoId() != null ? subgrupos.get(servicio.getSubgrupoId()) : null
+                    );
+                })
                 .toList();
     }
 
@@ -918,10 +1475,24 @@ public class ServicioAdminCitas {
     public ServicioAdminResponse crearServicio(Long empresaId, ServicioAdminRequest request) {
         SucursalEntidad sucursal = sucursalRepositorio.findByIdAndEmpresaId(request.sucursalId(), empresaId)
                 .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "La sucursal indicada no existe para la empresa"));
+        List<Long> sucursalIds = validarSucursalesServicio(empresaId, request.sucursalId(), request.sucursalIds());
+        GrupoServicioEntidad grupo = validarGrupoServicio(empresaId, request.grupoId());
+        SubgrupoServicioEntidad subgrupo = validarSubgrupoServicio(empresaId, grupo, request.subgrupoId());
         ServicioEntidad servicio = new ServicioEntidad();
         servicio.setEmpresaId(empresaId);
         aplicarServicio(servicio, request);
-        return mapearServicio(servicioRepositorio.save(servicio), sucursal.getNombre());
+        validarSlugServicioDisponible(empresaId, servicio.getSlug(), null);
+        servicio = servicioRepositorio.save(servicio);
+        sincronizarAsignacionesServicio(empresaId, servicio.getId(), sucursalIds);
+        return mapearServicio(
+                servicio,
+                request.sucursalId(),
+                sucursal.getNombre(),
+                sucursalIds,
+                sucursalIds.stream().map(id -> sucursalRepositorio.findById(id).map(SucursalEntidad::getNombre).orElse("Sucursal")).toList(),
+                grupo != null ? grupo.getNombre() : null,
+                subgrupo != null ? subgrupo.getNombre() : null
+        );
     }
 
     @Transactional
@@ -930,8 +1501,22 @@ public class ServicioAdminCitas {
                 .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "El servicio no existe para la empresa"));
         SucursalEntidad sucursal = sucursalRepositorio.findByIdAndEmpresaId(request.sucursalId(), empresaId)
                 .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "La sucursal indicada no existe para la empresa"));
+        List<Long> sucursalIds = validarSucursalesServicio(empresaId, request.sucursalId(), request.sucursalIds());
+        GrupoServicioEntidad grupo = validarGrupoServicio(empresaId, request.grupoId());
+        SubgrupoServicioEntidad subgrupo = validarSubgrupoServicio(empresaId, grupo, request.subgrupoId());
         aplicarServicio(servicio, request);
-        return mapearServicio(servicioRepositorio.save(servicio), sucursal.getNombre());
+        validarSlugServicioDisponible(empresaId, servicio.getSlug(), servicioId);
+        servicio = servicioRepositorio.save(servicio);
+        sincronizarAsignacionesServicio(empresaId, servicio.getId(), sucursalIds);
+        return mapearServicio(
+                servicio,
+                request.sucursalId(),
+                sucursal.getNombre(),
+                sucursalIds,
+                sucursalIds.stream().map(id -> sucursalRepositorio.findById(id).map(SucursalEntidad::getNombre).orElse("Sucursal")).toList(),
+                grupo != null ? grupo.getNombre() : null,
+                subgrupo != null ? subgrupo.getNombre() : null
+        );
     }
 
     @Transactional(readOnly = true)
@@ -1513,6 +2098,32 @@ public class ServicioAdminCitas {
         );
     }
 
+    private ConfiguracionSitioAdminResponse mapearConfiguracionSitio(EmpresaSitioConfigEntidad configuracion) {
+        return new ConfiguracionSitioAdminResponse(
+                configuracion.getEmpresaId(),
+                configuracion.getSlug(),
+                configuracion.getNombreComercial(),
+                configuracion.getDominioPrincipal(),
+                configuracion.getLogoUrl(),
+                configuracion.getDescripcionCorta(),
+                configuracion.getColorPrimario(),
+                configuracion.getColorSecundario(),
+                configuracion.getFuenteTitulos(),
+                configuracion.getFuenteCuerpo(),
+                configuracion.getHeroTitulo(),
+                configuracion.getHeroSubtitulo(),
+                configuracion.getHeroImagenUrl(),
+                configuracion.getWhatsapp(),
+                configuracion.getTelefono(),
+                configuracion.getCorreo(),
+                configuracion.getDireccion(),
+                configuracion.getInstagramUrl(),
+                configuracion.getFacebookUrl(),
+                configuracion.getTema(),
+                configuracion.isPublicado()
+        );
+    }
+
     private ConfiguracionWhatsappAdminResponse mapearConfiguracionWhatsapp(ConfiguracionWhatsappEmpresaEntidad configuracion) {
         String authToken = configuracion.getAuthToken();
         boolean authTokenConfigurado = authToken != null && !authToken.isBlank();
@@ -1538,6 +2149,8 @@ public class ServicioAdminCitas {
                 configuracion.getPlantillaGraciasVisitaSid(),
                 configuracion.getPlantillaRecordatorioRegresoSid(),
                 configuracion.getPlantillaEspacioDisponibleWalkinSid(),
+                configuracion.getPlantillaMenuBienvenidaSid(),
+                configuracion.getPlantillasListPickerSids(),
                 configuracion.getSenderDisplayName(),
                 configuracion.getSenderPhoneNumber(),
                 configuracion.getSenderStatus(),
@@ -1548,12 +2161,181 @@ public class ServicioAdminCitas {
         );
     }
 
+    private PlantillaWhatsappEmpresaAdminResponse mapearPlantillaWhatsappEmpresa(PlantillaWhatsappEmpresaEntidad plantilla) {
+        return new PlantillaWhatsappEmpresaAdminResponse(
+                plantilla.getId(),
+                plantilla.getNombre(),
+                plantilla.getUso(),
+                plantilla.getContentSid(),
+                plantilla.getTipoContenido(),
+                plantilla.getCategoria(),
+                plantilla.getEstado(),
+                plantilla.isActiva(),
+                plantilla.getCreadaEn(),
+                plantilla.getActualizadaEn()
+        );
+    }
+
+    private void aplicarPlantillaWhatsappEmpresa(
+            PlantillaWhatsappEmpresaEntidad plantilla,
+            PlantillaWhatsappEmpresaAdminRequest request,
+            String uso,
+            String contentSid
+    ) {
+        String nombre = normalizarOpcional(request.nombre());
+        if (nombre == null) {
+            throw new ResponseStatusException(BAD_REQUEST, "Debes indicar un nombre para la plantilla");
+        }
+        plantilla.setNombre(nombre);
+        plantilla.setUso(uso);
+        plantilla.setContentSid(contentSid);
+        plantilla.setTipoContenido(normalizarOpcional(request.tipoContenido()));
+        plantilla.setCategoria(normalizarOpcional(request.categoria()));
+        plantilla.setEstado(normalizarOpcional(request.estado()));
+        plantilla.setActiva(request.activa());
+    }
+
+    private String normalizarUsoPlantillaWhatsapp(String uso) {
+        String limpio = normalizarOpcional(uso);
+        if (limpio == null) {
+            throw new ResponseStatusException(BAD_REQUEST, "Debes indicar el uso de la plantilla");
+        }
+        return limpio.trim().toUpperCase(Locale.ROOT).replace('-', '_').replace(' ', '_');
+    }
+
+    private String normalizarContentSidPlantillaWhatsapp(String contentSid) {
+        String limpio = normalizarOpcional(contentSid);
+        if (limpio == null) {
+            throw new ResponseStatusException(BAD_REQUEST, "Debes indicar el Content SID de Twilio");
+        }
+        return limpio;
+    }
+
+    private String snapshotPlantillaWhatsappEmpresa(PlantillaWhatsappEmpresaEntidad plantilla) {
+        Map<String, Object> snapshot = new LinkedHashMap<>();
+        snapshot.put("id", plantilla.getId());
+        snapshot.put("nombre", plantilla.getNombre());
+        snapshot.put("uso", plantilla.getUso());
+        snapshot.put("contentSid", plantilla.getContentSid());
+        snapshot.put("tipoContenido", plantilla.getTipoContenido());
+        snapshot.put("categoria", plantilla.getCategoria());
+        snapshot.put("estado", plantilla.getEstado());
+        snapshot.put("activa", plantilla.isActiva());
+        return serializarAuditoria(snapshot);
+    }
+
     private String normalizarOpcional(String valor) {
         if (valor == null) {
             return null;
         }
         String limpio = valor.trim();
         return limpio.isEmpty() ? null : limpio;
+    }
+
+    private EmpresaSitioConfigEntidad construirConfiguracionSitioBase(EmpresaEntidad empresa) {
+        EmpresaSitioConfigEntidad configuracion = new EmpresaSitioConfigEntidad();
+        configuracion.setEmpresaId(empresa.getId());
+        configuracion.setSlug(normalizarSlugPublico(empresa.getSlug() != null ? empresa.getSlug() : empresa.getNombre()));
+        configuracion.setNombreComercial(
+                empresa.getNombre() != null && !empresa.getNombre().isBlank()
+                        ? empresa.getNombre().trim()
+                        : "Mi negocio"
+        );
+        configuracion.setColorPrimario("#D14F7D");
+        configuracion.setColorSecundario("#F6D9E3");
+        configuracion.setFuenteTitulos("JAKARTA");
+        configuracion.setFuenteCuerpo("INTER");
+        configuracion.setTema("nail-art-base");
+        configuracion.setPublicado(false);
+        return configuracion;
+    }
+
+    private void validarSlugSitioDisponible(Long empresaId, String slug) {
+        empresaSitioConfigRepositorio.findBySlug(slug)
+                .filter(configuracion -> !configuracion.getEmpresaId().equals(empresaId))
+                .ifPresent(configuracion -> {
+                    throw new ResponseStatusException(CONFLICT, "Ese slug ya está en uso por otro tenant");
+                });
+    }
+
+    private void validarDominioPrincipalDisponible(Long empresaId, String dominioPrincipal) {
+        if (dominioPrincipal == null) {
+            return;
+        }
+
+        empresaSitioConfigRepositorio.findByDominioPrincipalIgnoreCase(dominioPrincipal)
+                .filter(configuracion -> !configuracion.getEmpresaId().equals(empresaId))
+                .ifPresent(configuracion -> {
+                    throw new ResponseStatusException(CONFLICT, "Ese dominio principal ya está configurado en otro tenant");
+                });
+    }
+
+    private String normalizarSlugPublico(String valor) {
+        String ascii = Normalizer.normalize(valor == null ? "" : valor, Normalizer.Form.NFD)
+                .replaceAll("\\p{M}", "");
+        String slug = ascii
+                .toLowerCase(Locale.ROOT)
+                .replaceAll("[^a-z0-9]+", "-")
+                .replaceAll("(^-|-$)", "");
+        if (slug.isBlank()) {
+            throw new ResponseStatusException(BAD_REQUEST, "Debes indicar un slug válido para el sitio");
+        }
+        if (slug.length() > 100) {
+            throw new ResponseStatusException(BAD_REQUEST, "El slug del sitio no puede exceder 100 caracteres");
+        }
+        return slug;
+    }
+
+    private String normalizarDominioPrincipal(String valor) {
+        String limpio = normalizarOpcional(valor);
+        if (limpio == null) {
+            return null;
+        }
+
+        String candidato = limpio;
+        try {
+            if (!candidato.contains("://")) {
+                candidato = "https://" + candidato;
+            }
+            URI uri = URI.create(candidato);
+            String host = uri.getHost();
+            if (host == null || host.isBlank()) {
+                throw new IllegalArgumentException("host vacío");
+            }
+            return IDN.toASCII(host.trim().toLowerCase(Locale.ROOT));
+        } catch (Exception exception) {
+            throw new ResponseStatusException(BAD_REQUEST, "Debes indicar un dominio principal válido");
+        }
+    }
+
+    private String normalizarColorHex(String valor) {
+        String limpio = normalizarOpcional(valor);
+        if (limpio == null) {
+            return null;
+        }
+        String color = limpio.toUpperCase(Locale.ROOT);
+        if (!color.matches("^#[0-9A-F]{6}$")) {
+            throw new ResponseStatusException(BAD_REQUEST, "Los colores deben estar en formato hexadecimal #RRGGBB");
+        }
+        return color;
+    }
+
+    private String normalizarTema(String valor) {
+        String limpio = normalizarOpcional(valor);
+        return limpio != null ? limpio : "nail-art-base";
+    }
+
+    private String normalizarFuente(String valor, String fallback) {
+        String limpio = normalizarOpcional(valor);
+        if (limpio == null) {
+            return fallback;
+        }
+
+        String fuente = limpio.trim().toUpperCase(Locale.ROOT);
+        return switch (fuente) {
+            case "INTER", "JAKARTA", "PLAYFAIR", "MANROPE", "SYSTEM" -> fuente;
+            default -> fallback;
+        };
     }
 
     private String construirNombreSubcuenta(EmpresaEntidad empresa) {
@@ -1592,6 +2374,21 @@ public class ServicioAdminCitas {
         );
     }
 
+    private MensajeWhatsappAdminResponse mapearMensajeWhatsapp(MensajeWhatsappEntidad mensaje) {
+        return new MensajeWhatsappAdminResponse(
+                mensaje.getId(),
+                mensaje.getTelefonoNormalizado(),
+                mensaje.getDireccion(),
+                mensaje.getCuerpo(),
+                mensaje.getContentSid(),
+                mensaje.getProveedorMensajeId(),
+                mensaje.getEstado(),
+                mensaje.getCodigoErrorProveedor(),
+                mensaje.getDetalleErrorProveedor(),
+                mensaje.getCreadoEn()
+        );
+    }
+
     private List<PlantillaWhatsappAdminResponse> construirPlantillasLocalmente(ConfiguracionWhatsappResolvida configuracion) {
         List<PlantillaWhatsappAdminResponse> plantillas = new ArrayList<>();
         Set<String> sids = new HashSet<>();
@@ -1606,6 +2403,7 @@ public class ServicioAdminCitas {
         agregarPlantillaLocal(plantillas, sids, configuracion.plantillaGraciasVisitaSid(), "gracias_por_tu_visita");
         agregarPlantillaLocal(plantillas, sids, configuracion.plantillaRecordatorioRegresoSid(), "recordatorio_regreso");
         agregarPlantillaLocal(plantillas, sids, configuracion.plantillaEspacioDisponibleWalkinSid(), "espacio_disponible_walkin");
+        agregarPlantillaLocal(plantillas, sids, configuracion.plantillaMenuBienvenidaSid(), "menu_bienvenida_sesion");
 
         return plantillas;
     }
@@ -1724,32 +2522,274 @@ public class ServicioAdminCitas {
         );
     }
 
+    private void aplicarGrupoServicio(GrupoServicioEntidad grupo, GrupoServicioAdminRequest request) {
+        grupo.setNombre(request.nombre().trim());
+        grupo.setSlug(normalizarSlugCatalogo(request.slug(), request.nombre(), "grupo"));
+        grupo.setDescripcion(normalizarOpcional(request.descripcion()));
+        grupo.setImagenUrl(normalizarOpcional(request.imagenUrl()));
+        grupo.setIcono(normalizarOpcional(request.icono()));
+        grupo.setOrdenPublico(request.ordenPublico());
+        grupo.setActivo(request.activo());
+    }
+
+    private GrupoServicioAdminResponse mapearGrupoServicio(GrupoServicioEntidad grupo) {
+        return new GrupoServicioAdminResponse(
+                grupo.getId(),
+                grupo.getNombre(),
+                grupo.getSlug(),
+                grupo.getDescripcion(),
+                grupo.getImagenUrl(),
+                grupo.getIcono(),
+                grupo.getOrdenPublico(),
+                grupo.isActivo()
+        );
+    }
+
+    private void aplicarSubgrupoServicio(SubgrupoServicioEntidad subgrupo, SubgrupoServicioAdminRequest request) {
+        subgrupo.setGrupoId(request.grupoId());
+        subgrupo.setNombre(request.nombre().trim());
+        subgrupo.setSlug(normalizarSlugCatalogo(request.slug(), request.nombre(), "subgrupo"));
+        subgrupo.setDescripcion(normalizarOpcional(request.descripcion()));
+        subgrupo.setOrdenPublico(request.ordenPublico());
+        subgrupo.setActivo(request.activo());
+    }
+
+    private SubgrupoServicioAdminResponse mapearSubgrupoServicio(SubgrupoServicioEntidad subgrupo, String grupoNombre) {
+        return new SubgrupoServicioAdminResponse(
+                subgrupo.getId(),
+                subgrupo.getGrupoId(),
+                grupoNombre,
+                subgrupo.getNombre(),
+                subgrupo.getSlug(),
+                subgrupo.getDescripcion(),
+                subgrupo.getOrdenPublico(),
+                subgrupo.isActivo()
+        );
+    }
+
     private void aplicarServicio(ServicioEntidad servicio, ServicioAdminRequest request) {
         servicio.setSucursalId(request.sucursalId());
+        servicio.setGrupoId(request.grupoId());
+        servicio.setSubgrupoId(request.subgrupoId());
         servicio.setNombre(request.nombre().trim());
-        servicio.setDescripcion(request.descripcion() != null ? request.descripcion().trim() : null);
+        servicio.setSlug(normalizarSlugCatalogo(request.slug(), request.nombre(), "servicio"));
+        servicio.setDescripcion(normalizarOpcional(request.descripcion()));
+        servicio.setImagenUrl(normalizarOpcional(request.imagenUrl()));
         servicio.setDuracionMinutos(request.duracionMinutos());
         servicio.setBufferAntesMinutos(request.bufferAntesMinutos());
         servicio.setBufferDespuesMinutos(request.bufferDespuesMinutos());
         servicio.setPrecio(request.precio());
         servicio.setMoneda(request.moneda().trim().toUpperCase());
+        servicio.setOrdenPublico(request.ordenPublico());
+        servicio.setVisiblePublico(request.visiblePublico());
+        servicio.setRequiereAnticipo(request.requiereAnticipo());
+        servicio.setAnticipoTipo(request.requiereAnticipo() ? normalizarAnticipoTipo(request.anticipoTipo()) : null);
+        servicio.setAnticipoValor(request.requiereAnticipo() ? validarAnticipoValor(request.anticipoValor()) : null);
         servicio.setActivo(request.activo());
     }
 
-    private ServicioAdminResponse mapearServicio(ServicioEntidad servicio, String sucursalNombre) {
+    private ServicioAdminResponse mapearServicio(
+            ServicioEntidad servicio,
+            Long sucursalId,
+            String sucursalNombre,
+            List<Long> sucursalIds,
+            List<String> sucursalNombres,
+            String grupoNombre,
+            String subgrupoNombre
+    ) {
         return new ServicioAdminResponse(
                 servicio.getId(),
-                servicio.getSucursalId(),
+                sucursalId,
                 sucursalNombre,
+                sucursalIds,
+                sucursalNombres,
+                servicio.getGrupoId(),
+                grupoNombre,
+                servicio.getSubgrupoId(),
+                subgrupoNombre,
                 servicio.getNombre(),
+                servicio.getSlug(),
                 servicio.getDescripcion(),
+                servicio.getImagenUrl(),
                 servicio.getDuracionMinutos(),
                 servicio.getBufferAntesMinutos(),
                 servicio.getBufferDespuesMinutos(),
                 servicio.getPrecio(),
                 servicio.getMoneda(),
+                servicio.getOrdenPublico(),
+                servicio.isVisiblePublico(),
+                servicio.isRequiereAnticipo(),
+                servicio.getAnticipoTipo(),
+                servicio.getAnticipoValor(),
                 servicio.isActivo()
         );
+    }
+
+    private List<Long> validarSucursalesServicio(Long empresaId, Long sucursalPrincipalId, List<Long> sucursalIds) {
+        LinkedHashSet<Long> seleccionadas = new LinkedHashSet<>();
+        if (sucursalIds != null) {
+            sucursalIds.stream()
+                    .filter(java.util.Objects::nonNull)
+                    .forEach(seleccionadas::add);
+        }
+        if (sucursalPrincipalId != null) {
+            seleccionadas.add(sucursalPrincipalId);
+        }
+
+        if (seleccionadas.isEmpty()) {
+            throw new ResponseStatusException(BAD_REQUEST, "Debes asignar al menos una sucursal al servicio");
+        }
+        if (sucursalPrincipalId == null || !seleccionadas.contains(sucursalPrincipalId)) {
+            throw new ResponseStatusException(BAD_REQUEST, "La sucursal principal debe formar parte de las sucursales asignadas");
+        }
+
+        List<SucursalEntidad> sucursales = sucursalRepositorio.findByEmpresaIdOrderByNombreAsc(empresaId).stream()
+                .filter(sucursal -> seleccionadas.contains(sucursal.getId()))
+                .toList();
+        if (sucursales.size() != seleccionadas.size()) {
+            throw new ResponseStatusException(NOT_FOUND, "Una o mas sucursales asignadas no existen para la empresa");
+        }
+
+        return new ArrayList<>(seleccionadas);
+    }
+
+    private void sincronizarAsignacionesServicio(Long empresaId, Long servicioId, List<Long> sucursalIds) {
+        Set<Long> seleccionadas = new LinkedHashSet<>(sucursalIds);
+        List<ServicioSucursalEntidad> actuales = servicioSucursalRepositorio.findByEmpresaIdAndIdServicioId(empresaId, servicioId);
+        Map<Long, ServicioSucursalEntidad> actualesPorSucursal = actuales.stream()
+                .collect(Collectors.toMap(asignacion -> asignacion.getId().getSucursalId(), asignacion -> asignacion));
+
+        for (ServicioSucursalEntidad asignacion : actuales) {
+            asignacion.setActivo(seleccionadas.contains(asignacion.getId().getSucursalId()));
+        }
+
+        for (Long sucursalId : seleccionadas) {
+            if (!actualesPorSucursal.containsKey(sucursalId)) {
+                ServicioSucursalEntidad nueva = new ServicioSucursalEntidad();
+                nueva.setId(new ServicioSucursalId(servicioId, sucursalId));
+                nueva.setEmpresaId(empresaId);
+                nueva.setActivo(true);
+                servicioSucursalRepositorio.save(nueva);
+            }
+        }
+
+        if (!actuales.isEmpty()) {
+            servicioSucursalRepositorio.saveAll(actuales);
+        }
+    }
+
+    private Long resolverSucursalPrincipal(ServicioEntidad servicio, List<ServicioSucursalEntidad> asignaciones) {
+        if (asignaciones == null || asignaciones.isEmpty()) {
+            return servicio.getSucursalId();
+        }
+        if (servicio.getSucursalId() != null) {
+            boolean coincide = asignaciones.stream()
+                    .anyMatch(asignacion -> servicio.getSucursalId().equals(asignacion.getId().getSucursalId()));
+            if (coincide) {
+                return servicio.getSucursalId();
+            }
+        }
+        return asignaciones.stream()
+                .map(asignacion -> asignacion.getId().getSucursalId())
+                .sorted()
+                .findFirst()
+                .orElse(servicio.getSucursalId());
+    }
+
+    private List<Long> resolverSucursalesAsignadas(ServicioEntidad servicio, List<ServicioSucursalEntidad> asignaciones) {
+        if (asignaciones == null || asignaciones.isEmpty()) {
+            return servicio.getSucursalId() != null ? List.of(servicio.getSucursalId()) : List.of();
+        }
+        return asignaciones.stream()
+                .map(asignacion -> asignacion.getId().getSucursalId())
+                .distinct()
+                .sorted()
+                .toList();
+    }
+
+    private GrupoServicioEntidad validarGrupoServicio(Long empresaId, Long grupoId) {
+        if (grupoId == null) {
+            return null;
+        }
+        return grupoServicioRepositorio.findByIdAndEmpresaId(grupoId, empresaId)
+                .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "El grupo indicado no existe para la empresa"));
+    }
+
+    private SubgrupoServicioEntidad validarSubgrupoServicio(Long empresaId, GrupoServicioEntidad grupo, Long subgrupoId) {
+        if (subgrupoId == null) {
+            return null;
+        }
+        if (grupo == null) {
+            throw new ResponseStatusException(BAD_REQUEST, "Debes elegir un grupo antes de seleccionar un subgrupo");
+        }
+        SubgrupoServicioEntidad subgrupo = subgrupoServicioRepositorio.findByIdAndEmpresaId(subgrupoId, empresaId)
+                .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "El subgrupo indicado no existe para la empresa"));
+        if (!grupo.getId().equals(subgrupo.getGrupoId())) {
+            throw new ResponseStatusException(BAD_REQUEST, "El subgrupo no pertenece al grupo seleccionado");
+        }
+        return subgrupo;
+    }
+
+    private void validarSlugGrupoDisponible(Long empresaId, String slug, Long grupoId) {
+        boolean existe = grupoId == null
+                ? grupoServicioRepositorio.existsByEmpresaIdAndSlug(empresaId, slug)
+                : grupoServicioRepositorio.existsByEmpresaIdAndSlugAndIdNot(empresaId, slug, grupoId);
+        if (existe) {
+            throw new ResponseStatusException(CONFLICT, "Ya existe otro grupo con ese slug");
+        }
+    }
+
+    private void validarSlugSubgrupoDisponible(Long empresaId, Long grupoId, String slug, Long subgrupoId) {
+        boolean existe = subgrupoId == null
+                ? subgrupoServicioRepositorio.existsByEmpresaIdAndGrupoIdAndSlug(empresaId, grupoId, slug)
+                : subgrupoServicioRepositorio.existsByEmpresaIdAndGrupoIdAndSlugAndIdNot(empresaId, grupoId, slug, subgrupoId);
+        if (existe) {
+            throw new ResponseStatusException(CONFLICT, "Ya existe otro subgrupo con ese slug dentro del grupo");
+        }
+    }
+
+    private void validarSlugServicioDisponible(Long empresaId, String slug, Long servicioId) {
+        boolean existe = servicioId == null
+                ? servicioRepositorio.existsByEmpresaIdAndSlug(empresaId, slug)
+                : servicioRepositorio.existsByEmpresaIdAndSlugAndIdNot(empresaId, slug, servicioId);
+        if (existe) {
+            throw new ResponseStatusException(CONFLICT, "Ya existe otro servicio con ese slug");
+        }
+    }
+
+    private String normalizarSlugCatalogo(String slugSolicitado, String fallback, String tipo) {
+        String base = slugSolicitado != null && !slugSolicitado.isBlank() ? slugSolicitado : fallback;
+        String slug = Normalizer.normalize(base == null ? "" : base, Normalizer.Form.NFD)
+                .replaceAll("\\p{M}", "")
+                .toLowerCase(Locale.ROOT)
+                .replaceAll("[^a-z0-9]+", "-")
+                .replaceAll("(^-|-$)", "");
+        if (slug.isBlank()) {
+            throw new ResponseStatusException(BAD_REQUEST, "Debes indicar un slug válido para el " + tipo);
+        }
+        if (slug.length() > 140) {
+            throw new ResponseStatusException(BAD_REQUEST, "El slug del " + tipo + " no puede exceder 140 caracteres");
+        }
+        return slug;
+    }
+
+    private String normalizarAnticipoTipo(String valor) {
+        String tipo = normalizarOpcional(valor);
+        if (tipo == null) {
+            throw new ResponseStatusException(BAD_REQUEST, "Debes indicar el tipo de anticipo");
+        }
+        String normalizado = tipo.toUpperCase(Locale.ROOT);
+        if (!Set.of("FIJO", "PORCENTAJE").contains(normalizado)) {
+            throw new ResponseStatusException(BAD_REQUEST, "El tipo de anticipo debe ser FIJO o PORCENTAJE");
+        }
+        return normalizado;
+    }
+
+    private BigDecimal validarAnticipoValor(BigDecimal valor) {
+        if (valor == null || valor.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new ResponseStatusException(BAD_REQUEST, "Debes indicar un valor de anticipo mayor a cero");
+        }
+        return valor;
     }
 
     private void aplicarPrestador(PrestadorServicioEntidad prestador, PrestadorAdminRequest request) {
@@ -1985,6 +3025,34 @@ public class ServicioAdminCitas {
         snapshot.put("plantillaGraciasVisitaSid", configuracion.getPlantillaGraciasVisitaSid());
         snapshot.put("plantillaRecordatorioRegresoSid", configuracion.getPlantillaRecordatorioRegresoSid());
         snapshot.put("plantillaEspacioDisponibleWalkinSid", configuracion.getPlantillaEspacioDisponibleWalkinSid());
+        snapshot.put("plantillaMenuBienvenidaSid", configuracion.getPlantillaMenuBienvenidaSid());
+        snapshot.put("plantillasListPickerSids", configuracion.getPlantillasListPickerSids());
+        return serializarAuditoria(snapshot);
+    }
+
+    private String snapshotConfiguracionSitio(EmpresaSitioConfigEntidad configuracion) {
+        Map<String, Object> snapshot = new LinkedHashMap<>();
+        snapshot.put("empresaId", configuracion.getEmpresaId());
+        snapshot.put("slug", configuracion.getSlug());
+        snapshot.put("nombreComercial", configuracion.getNombreComercial());
+        snapshot.put("dominioPrincipal", configuracion.getDominioPrincipal());
+        snapshot.put("logoUrl", configuracion.getLogoUrl());
+        snapshot.put("descripcionCorta", configuracion.getDescripcionCorta());
+        snapshot.put("colorPrimario", configuracion.getColorPrimario());
+        snapshot.put("colorSecundario", configuracion.getColorSecundario());
+        snapshot.put("fuenteTitulos", configuracion.getFuenteTitulos());
+        snapshot.put("fuenteCuerpo", configuracion.getFuenteCuerpo());
+        snapshot.put("heroTitulo", configuracion.getHeroTitulo());
+        snapshot.put("heroSubtitulo", configuracion.getHeroSubtitulo());
+        snapshot.put("heroImagenUrl", configuracion.getHeroImagenUrl());
+        snapshot.put("whatsapp", configuracion.getWhatsapp());
+        snapshot.put("telefono", configuracion.getTelefono());
+        snapshot.put("correo", configuracion.getCorreo());
+        snapshot.put("direccion", configuracion.getDireccion());
+        snapshot.put("instagramUrl", configuracion.getInstagramUrl());
+        snapshot.put("facebookUrl", configuracion.getFacebookUrl());
+        snapshot.put("tema", configuracion.getTema());
+        snapshot.put("publicado", configuracion.isPublicado());
         return serializarAuditoria(snapshot);
     }
 
@@ -2244,7 +3312,9 @@ public class ServicioAdminCitas {
             throw new ResponseStatusException(NOT_FOUND, "Uno o mas servicios no existen para la empresa");
         }
 
-        boolean todosEnSucursal = servicios.stream().allMatch(servicio -> servicio.getSucursalId().equals(sucursalId));
+        boolean todosEnSucursal = servicios.stream()
+                .allMatch(servicio -> servicioSucursalRepositorio
+                        .existsByEmpresaIdAndIdServicioIdAndIdSucursalIdAndActivoTrue(empresaId, servicio.getId(), sucursalId));
         if (!todosEnSucursal) {
             throw new ResponseStatusException(CONFLICT, "Todos los servicios asignados deben pertenecer a la misma sucursal del prestador");
         }
@@ -2324,5 +3394,46 @@ public class ServicioAdminCitas {
             return BigDecimal.ZERO;
         }
         return total.divide(BigDecimal.valueOf(cantidad), 2, java.math.RoundingMode.HALF_UP);
+    }
+
+    private record CatalogoSugeridoDef(
+            String id,
+            String nombre,
+            String descripcion,
+            List<GrupoSugeridoDef> grupos
+    ) {
+    }
+
+    private record GrupoSugeridoDef(
+            String nombre,
+            String descripcion,
+            String imagenUrl,
+            String icono,
+            int ordenPublico,
+            List<SubgrupoSugeridoDef> subgrupos
+    ) {
+    }
+
+    private record SubgrupoSugeridoDef(
+            String nombre,
+            String descripcion,
+            int ordenPublico,
+            List<ServicioSugeridoDef> servicios
+    ) {
+    }
+
+    private record ServicioSugeridoDef(
+            String nombre,
+            String descripcion,
+            int duracionMinutos,
+            int bufferAntesMinutos,
+            int bufferDespuesMinutos,
+            BigDecimal precio,
+            String moneda,
+            int ordenPublico,
+            boolean requiereAnticipo,
+            String anticipoTipo,
+            BigDecimal anticipoValor
+    ) {
     }
 }

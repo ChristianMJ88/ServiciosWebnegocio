@@ -79,6 +79,10 @@ public class ClienteWhatsappTwilio {
     }
 
     public ResultadoEnvioWhatsapp enviarPlantilla(Long empresaId, String telefonoDestino, String contentSid, Map<String, String> variables) {
+        return enviarContenido(empresaId, telefonoDestino, contentSid, variables);
+    }
+
+    public ResultadoEnvioWhatsapp enviarContenido(Long empresaId, String telefonoDestino, String contentSid, Map<String, String> variables) {
         ConfiguracionWhatsappResolvida configuracion = servicioConfiguracionWhatsappEmpresa.resolver(empresaId);
         if (!configuracion.habilitado()) {
             throw new IllegalStateException("Twilio WhatsApp no esta configurado: " + diagnosticoConfiguracion(empresaId));
@@ -243,7 +247,7 @@ public class ClienteWhatsappTwilio {
 
         List<SenderTwilioWhatsapp> senders = listarSendersWhatsapp(configuracion);
         if (!tieneTexto(senderObjetivo)) {
-            return senders.isEmpty() ? null : senders.get(0);
+            return senders.isEmpty() ? null : senders.getFirst();
         }
 
         return senders.stream()
@@ -345,6 +349,7 @@ public class ClienteWhatsappTwilio {
                         || sid.equals(configuracion.plantillaGraciasVisitaSid())
                         || sid.equals(configuracion.plantillaRecordatorioRegresoSid())
                         || sid.equals(configuracion.plantillaEspacioDisponibleWalkinSid())
+                        || sid.equals(configuracion.plantillaMenuBienvenidaSid())
         );
     }
 

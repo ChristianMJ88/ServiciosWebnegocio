@@ -6,8 +6,14 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.MapsId;
 import jakarta.persistence.Table;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.Setter;
 
+@Setter
+@Getter
 @Entity
+@AllArgsConstructor
 @Table(name = "rol_permiso")
 public class RolPermisoEntidad {
 
@@ -27,21 +33,4 @@ public class RolPermisoEntidad {
     public RolPermisoEntidad() {
     }
 
-    public RolPermisoEntidad(RolPermisoId id, RolEntidad rol, PermisoEntidad permiso) {
-        this.id = id;
-        this.rol = rol;
-        this.permiso = permiso;
-    }
-
-    public RolPermisoId getId() {
-        return id;
-    }
-
-    public RolEntidad getRol() {
-        return rol;
-    }
-
-    public PermisoEntidad getPermiso() {
-        return permiso;
-    }
 }

@@ -7,7 +7,11 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.MapsId;
 import jakarta.persistence.Table;
+import lombok.Getter;
+import lombok.Setter;
 
+@Setter
+@Getter
 @Entity
 @Table(name = "usuario_permiso_empresa")
 public class UsuarioPermisoEmpresaEntidad {
@@ -34,15 +38,4 @@ public class UsuarioPermisoEmpresaEntidad {
         this.permiso = permiso;
     }
 
-    public UsuarioPermisoEmpresaId getId() {
-        return id;
-    }
-
-    public UsuarioEntidad getUsuario() {
-        return usuario;
-    }
-
-    public PermisoEntidad getPermiso() {
-        return permiso;
-    }
 }

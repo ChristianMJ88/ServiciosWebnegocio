@@ -33,22 +33,21 @@ public class ControladorWhatsappTwilio {
     public ResponseEntity<String> recibir(@RequestParam MultiValueMap<String, String> params) {
         String from = params.getFirst("From");
         String body = resolverMensajeEntrante(params);
+        servicioWhatsappCitas.registrarMensajeEntrante(from, resolverMensajeVisibleEntrante(params, body));
 
-        String respuesta;
+        ServicioWhatsappCitas.RespuestaWhatsapp respuesta;
         try {
-            respuesta = servicioWhatsappCitas.procesarMensaje(from, body);
+            respuesta = servicioWhatsappCitas.procesarWebhook(from, body);
         } catch (Exception ex) {
             LOGGER.error("No se pudo procesar el webhook de WhatsApp", ex);
-            respuesta = "Ocurrio un error al procesar tu mensaje. Intenta nuevamente con AYUDA.";
+            respuesta = ServicioWhatsappCitas.RespuestaWhatsapp.texto(
+                    "Ocurrio un error al procesar tu mensaje. Intenta nuevamente con AYUDA."
+            );
         }
 
         return ResponseEntity.ok()
                 .contentType(MediaType.APPLICATION_XML)
-                .body("""
-                        <Response>
-                          <Message>%s</Message>
-                        </Response>
-                        """.formatted(escaparXml(respuesta)));
+                .body(construirRespuestaTwiml(from, respuesta));
     }
 
     @PostMapping(value = "/status", consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE)
@@ -76,28 +75,94 @@ public class ControladorWhatsappTwilio {
                 .replace("'", "&apos;");
     }
 
+    private String construirRespuestaTwiml(String telefonoRemitente, ServicioWhatsappCitas.RespuestaWhatsapp respuesta) {
+        if (respuesta == null) {
+            return "<Response></Response>";
+        }
+
+        if (respuesta.tieneContenidoInteractivo() && servicioWhatsappCitas.enviarContenidoInteractivo(telefonoRemitente, respuesta)) {
+            return "<Response></Response>";
+        }
+
+        if (respuesta.mensaje() == null || respuesta.mensaje().isBlank()) {
+            return "<Response></Response>";
+        }
+
+        servicioWhatsappCitas.registrarMensajeSalienteTexto(telefonoRemitente, respuesta.mensaje());
+        return """
+                <Response>
+                  <Message>%s</Message>
+                </Response>
+                """.formatted(escaparXml(respuesta.mensaje()));
+    }
+
     private String resolverMensajeEntrante(MultiValueMap<String, String> params) {
         String buttonPayload = params.getFirst("ButtonPayload");
         if (buttonPayload != null && !buttonPayload.isBlank()) {
-            return switch (buttonPayload.trim()) {
-                case "QUIERO_AGENDAR", "AGENDAR_DESDE_RECORDATORIO" -> "Quiero agendar";
-                case "MIS_CITAS" -> "MIS CITAS";
-                case "CONFIRMAR_CITA" -> "CONFIRMAR";
-                case "VER_SERVICIOS" -> "Ver servicios";
-                case "VER_HORARIOS" -> "Horarios disponibles";
-                case "VER_UBICACION" -> "Ubicación";
-                case "VER_PROMOCIONES" -> "Promociones";
-                case "PAUSAR_RECORDATORIOS" -> "Pausar recordatorios";
-                case "NO_POR_AHORA" -> "No por ahora";
-                default -> buttonPayload;
-            };
+            String normalizado = normalizarAccionRapida(buttonPayload);
+            return normalizado != null ? normalizado : buttonPayload.trim();
         }
 
         String buttonText = params.getFirst("ButtonText");
         if (buttonText != null && !buttonText.isBlank()) {
-            return buttonText;
+            String normalizado = normalizarAccionRapida(buttonText);
+            return normalizado != null ? normalizado : buttonText.trim();
         }
 
         return params.getFirst("Body");
+    }
+
+    private String resolverMensajeVisibleEntrante(MultiValueMap<String, String> params, String fallback) {
+        String buttonText = params.getFirst("ButtonText");
+        if (buttonText != null && !buttonText.isBlank()) {
+            return buttonText.trim();
+        }
+
+        String body = params.getFirst("Body");
+        if (body != null && !body.isBlank()) {
+            return body.trim();
+        }
+
+        String buttonPayload = params.getFirst("ButtonPayload");
+        if (buttonPayload != null && !buttonPayload.isBlank()) {
+            return buttonPayload.trim();
+        }
+
+        return fallback;
+    }
+
+    private String normalizarAccionRapida(String valor) {
+        if (valor == null || valor.isBlank()) {
+            return null;
+        }
+
+        String limpio = valor.trim();
+        String canonico = limpio
+                .toUpperCase()
+                .replace('Á', 'A')
+                .replace('É', 'E')
+                .replace('Í', 'I')
+                .replace('Ó', 'O')
+                .replace('Ú', 'U');
+
+        return switch (canonico) {
+            case "QUIERO_AGENDAR", "AGENDAR_DESDE_RECORDATORIO" -> "Quiero agendar";
+            case "MENU_AGENDAR", "MENU_AGENDAR_CITA", "MENU_CITA" -> "Quiero agendar";
+            case "MIS_CITAS", "MIS CITAS" -> "MIS CITAS";
+            case "MENU_MIS_CITAS" -> "MIS CITAS";
+            case "VER_DETALLE", "VER DETALLE", "VER DETALLES" -> "VER DETALLE";
+            case "CONFIRMAR_CITA", "CONFIRMAR CITA" -> "CONFIRMAR CITA";
+            case "VER_SERVICIOS", "VER SERVICIOS" -> "Ver servicios";
+            case "MENU_SERVICIOS" -> "Ver servicios";
+            case "VER_HORARIOS", "HORARIOS DISPONIBLES" -> "Horarios disponibles";
+            case "MENU_HORARIOS" -> "Horarios disponibles";
+            case "VER_UBICACION", "UBICACION" -> "Ubicación";
+            case "MENU_UBICACION" -> "Ubicación";
+            case "VER_PROMOCIONES", "PROMOCIONES" -> "Promociones";
+            case "MENU_PROMOCIONES" -> "Promociones";
+            case "PAUSAR_RECORDATORIOS" -> "Pausar recordatorios";
+            case "NO_POR_AHORA" -> "No por ahora";
+            default -> null;
+        };
     }
 }

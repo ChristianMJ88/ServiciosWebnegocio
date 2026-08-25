@@ -6,10 +6,14 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
+@Setter
+@Getter
 @Entity
 @Table(name = "caja_sesion")
 public class CajaSesionEntidad {
@@ -54,103 +58,4 @@ public class CajaSesionEntidad {
     @Column(name = "cerrada_en")
     private LocalDateTime cerradaEn;
 
-    public Long getId() {
-        return id;
-    }
-
-    public Long getEmpresaId() {
-        return empresaId;
-    }
-
-    public void setEmpresaId(Long empresaId) {
-        this.empresaId = empresaId;
-    }
-
-    public Long getSucursalId() {
-        return sucursalId;
-    }
-
-    public void setSucursalId(Long sucursalId) {
-        this.sucursalId = sucursalId;
-    }
-
-    public String getEstado() {
-        return estado;
-    }
-
-    public void setEstado(String estado) {
-        this.estado = estado;
-    }
-
-    public BigDecimal getMontoInicial() {
-        return montoInicial;
-    }
-
-    public void setMontoInicial(BigDecimal montoInicial) {
-        this.montoInicial = montoInicial;
-    }
-
-    public BigDecimal getMontoEsperado() {
-        return montoEsperado;
-    }
-
-    public void setMontoEsperado(BigDecimal montoEsperado) {
-        this.montoEsperado = montoEsperado;
-    }
-
-    public BigDecimal getMontoContado() {
-        return montoContado;
-    }
-
-    public void setMontoContado(BigDecimal montoContado) {
-        this.montoContado = montoContado;
-    }
-
-    public BigDecimal getDiferencia() {
-        return diferencia;
-    }
-
-    public void setDiferencia(BigDecimal diferencia) {
-        this.diferencia = diferencia;
-    }
-
-    public String getObservaciones() {
-        return observaciones;
-    }
-
-    public void setObservaciones(String observaciones) {
-        this.observaciones = observaciones;
-    }
-
-    public Long getAbiertaPorUsuarioId() {
-        return abiertaPorUsuarioId;
-    }
-
-    public void setAbiertaPorUsuarioId(Long abiertaPorUsuarioId) {
-        this.abiertaPorUsuarioId = abiertaPorUsuarioId;
-    }
-
-    public LocalDateTime getAbiertaEn() {
-        return abiertaEn;
-    }
-
-    public void setAbiertaEn(LocalDateTime abiertaEn) {
-        this.abiertaEn = abiertaEn;
-    }
-
-    public Long getCerradaPorUsuarioId() {
-        return cerradaPorUsuarioId;
-    }
-
-    public void setCerradaPorUsuarioId(Long cerradaPorUsuarioId) {
-        this.cerradaPorUsuarioId = cerradaPorUsuarioId;
-    }
-
-    public LocalDateTime getCerradaEn() {
-        return cerradaEn;
-    }
-
-    public void setCerradaEn(LocalDateTime cerradaEn) {
-        this.cerradaEn = cerradaEn;
-    }
 }

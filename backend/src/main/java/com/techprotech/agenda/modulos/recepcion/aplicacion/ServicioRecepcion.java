@@ -31,7 +31,9 @@ import com.techprotech.agenda.modulos.recepcion.infraestructura.entidad.Solicitu
 import com.techprotech.agenda.modulos.recepcion.infraestructura.repositorio.SolicitudEsperaRecepcionRepositorio;
 import com.techprotech.agenda.modulos.disponibilidad.aplicacion.FranjaDisponibleResponse;
 import com.techprotech.agenda.modulos.disponibilidad.aplicacion.ServicioConsultaDisponibilidad;
+import com.techprotech.agenda.modulos.servicios.infraestructura.entidad.ServicioSucursalEntidad;
 import com.techprotech.agenda.modulos.servicios.infraestructura.repositorio.ServicioRepositorio;
+import com.techprotech.agenda.modulos.servicios.infraestructura.repositorio.ServicioSucursalRepositorio;
 import com.techprotech.agenda.modulos.sucursales.infraestructura.entidad.SucursalEntidad;
 import com.techprotech.agenda.modulos.sucursales.infraestructura.repositorio.SucursalRepositorio;
 import org.springframework.stereotype.Service;
@@ -63,6 +65,7 @@ public class ServicioRecepcion {
     private final UsuarioRepositorio usuarioRepositorio;
     private final SucursalRepositorio sucursalRepositorio;
     private final ServicioRepositorio servicioRepositorio;
+    private final ServicioSucursalRepositorio servicioSucursalRepositorio;
     private final PrestadorServicioRepositorio prestadorServicioRepositorio;
     private final ServicioCitas servicioCitas;
     private final ServicioCitasCliente servicioCitasCliente;
@@ -79,6 +82,7 @@ public class ServicioRecepcion {
             UsuarioRepositorio usuarioRepositorio,
             SucursalRepositorio sucursalRepositorio,
             ServicioRepositorio servicioRepositorio,
+            ServicioSucursalRepositorio servicioSucursalRepositorio,
             PrestadorServicioRepositorio prestadorServicioRepositorio,
             ServicioCitas servicioCitas,
             ServicioCitasCliente servicioCitasCliente,
@@ -94,6 +98,7 @@ public class ServicioRecepcion {
         this.usuarioRepositorio = usuarioRepositorio;
         this.sucursalRepositorio = sucursalRepositorio;
         this.servicioRepositorio = servicioRepositorio;
+        this.servicioSucursalRepositorio = servicioSucursalRepositorio;
         this.prestadorServicioRepositorio = prestadorServicioRepositorio;
         this.servicioCitas = servicioCitas;
         this.servicioCitasCliente = servicioCitasCliente;
@@ -131,7 +136,7 @@ public class ServicioRecepcion {
             servicios = servicioRepositorio.findBySucursalIdAndActivoTrue(sucursalOperativaId).stream()
                     .map(servicio -> new ServicioRecepcionCatalogoResponse(
                             servicio.getId(),
-                            servicio.getSucursalId(),
+                            sucursalOperativaId,
                             servicio.getNombre(),
                             servicio.getDescripcion(),
                             servicio.getDuracionMinutos(),
@@ -143,12 +148,18 @@ public class ServicioRecepcion {
                     .toList();
 
             if (servicios.isEmpty()) {
+                Map<Long, ServicioSucursalEntidad> asignacionesPorServicio = servicioSucursalRepositorio
+                        .findByEmpresaIdAndIdSucursalIdInAndActivoTrue(
+                                empresaId,
+                                sucursalesDisponibles.stream().map(SucursalEntidad::getId).toList()
+                        ).stream()
+                        .collect(Collectors.toMap(asignacion -> asignacion.getId().getServicioId(), Function.identity(), (primera, segunda) -> primera));
                 servicios = servicioRepositorio.findByEmpresaIdOrderByNombreAsc(empresaId).stream()
                         .filter(servicio -> servicio.isActivo())
-                        .filter(servicio -> !tieneScopeSucursales(sucursalesPermitidas) || sucursalesPermitidas.contains(servicio.getSucursalId()))
+                        .filter(servicio -> asignacionesPorServicio.containsKey(servicio.getId()))
                         .map(servicio -> new ServicioRecepcionCatalogoResponse(
                                 servicio.getId(),
-                                servicio.getSucursalId(),
+                                asignacionesPorServicio.get(servicio.getId()).getId().getSucursalId(),
                                 servicio.getNombre(),
                                 servicio.getDescripcion(),
                                 servicio.getDuracionMinutos(),

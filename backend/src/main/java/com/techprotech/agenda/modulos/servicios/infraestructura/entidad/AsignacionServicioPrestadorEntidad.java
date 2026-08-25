@@ -4,9 +4,13 @@ import jakarta.persistence.Column;
 import jakarta.persistence.EmbeddedId;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.math.BigDecimal;
-
+@Setter
+@Getter
 @Entity
 @Table(name = "asignacion_servicio_prestador")
 public class AsignacionServicioPrestadorEntidad {
@@ -23,35 +27,4 @@ public class AsignacionServicioPrestadorEntidad {
     @Column(nullable = false)
     private boolean activa;
 
-    public AsignacionServicioPrestadorId getId() {
-        return id;
-    }
-
-    public void setId(AsignacionServicioPrestadorId id) {
-        this.id = id;
-    }
-
-    public Integer getDuracionPersonalizadaMinutos() {
-        return duracionPersonalizadaMinutos;
-    }
-
-    public void setDuracionPersonalizadaMinutos(Integer duracionPersonalizadaMinutos) {
-        this.duracionPersonalizadaMinutos = duracionPersonalizadaMinutos;
-    }
-
-    public BigDecimal getPrecioPersonalizado() {
-        return precioPersonalizado;
-    }
-
-    public void setPrecioPersonalizado(BigDecimal precioPersonalizado) {
-        this.precioPersonalizado = precioPersonalizado;
-    }
-
-    public boolean isActiva() {
-        return activa;
-    }
-
-    public void setActiva(boolean activa) {
-        this.activa = activa;
-    }
 }

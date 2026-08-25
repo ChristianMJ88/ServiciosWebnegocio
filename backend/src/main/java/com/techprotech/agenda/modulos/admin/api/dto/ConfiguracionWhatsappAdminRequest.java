@@ -24,6 +24,8 @@ public record ConfiguracionWhatsappAdminRequest(
         @Size(max = 80) String plantillaGraciasVisitaSid,
         @Size(max = 80) String plantillaRecordatorioRegresoSid,
         @Size(max = 80) String plantillaEspacioDisponibleWalkinSid,
+        @Size(max = 80) String plantillaMenuBienvenidaSid,
+        @Size(max = 1000) String plantillasListPickerSids,
         @Size(max = 150) String senderDisplayName,
         @Size(max = 40) String senderPhoneNumber,
         @Size(max = 40) String senderStatus,

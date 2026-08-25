@@ -6,10 +6,15 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.time.LocalDateTime;
-
+@Setter
+@Getter
 @Entity
+
 @Table(name = "token_actualizacion")
 public class TokenActualizacionEntidad {
 
@@ -35,56 +40,6 @@ public class TokenActualizacionEntidad {
     @Column(name = "direccion_ip", length = 45)
     private String direccionIp;
 
-    public Long getId() {
-        return id;
-    }
 
-    public Long getUsuarioId() {
-        return usuarioId;
-    }
-
-    public void setUsuarioId(Long usuarioId) {
-        this.usuarioId = usuarioId;
-    }
-
-    public String getTokenHash() {
-        return tokenHash;
-    }
-
-    public void setTokenHash(String tokenHash) {
-        this.tokenHash = tokenHash;
-    }
-
-    public LocalDateTime getExpiraEn() {
-        return expiraEn;
-    }
-
-    public void setExpiraEn(LocalDateTime expiraEn) {
-        this.expiraEn = expiraEn;
-    }
-
-    public LocalDateTime getRevocadoEn() {
-        return revocadoEn;
-    }
-
-    public void setRevocadoEn(LocalDateTime revocadoEn) {
-        this.revocadoEn = revocadoEn;
-    }
-
-    public String getNombreDispositivo() {
-        return nombreDispositivo;
-    }
-
-    public void setNombreDispositivo(String nombreDispositivo) {
-        this.nombreDispositivo = nombreDispositivo;
-    }
-
-    public String getDireccionIp() {
-        return direccionIp;
-    }
-
-    public void setDireccionIp(String direccionIp) {
-        this.direccionIp = direccionIp;
-    }
 }
 

@@ -7,9 +7,12 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Lob;
 import jakarta.persistence.Table;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.time.LocalDateTime;
-
+@Setter
+@Getter
 @Entity
 @Table(name = "auditoria_configuracion_empresa")
 public class AuditoriaConfiguracionEmpresaEntidad {
@@ -47,22 +50,4 @@ public class AuditoriaConfiguracionEmpresaEntidad {
     @Column(name = "creado_en", nullable = false, insertable = false, updatable = false)
     private LocalDateTime creadoEn;
 
-    public Long getId() { return id; }
-    public Long getEmpresaId() { return empresaId; }
-    public void setEmpresaId(Long empresaId) { this.empresaId = empresaId; }
-    public Long getUsuarioActorId() { return usuarioActorId; }
-    public void setUsuarioActorId(Long usuarioActorId) { this.usuarioActorId = usuarioActorId; }
-    public String getActorCorreo() { return actorCorreo; }
-    public void setActorCorreo(String actorCorreo) { this.actorCorreo = actorCorreo; }
-    public String getModulo() { return modulo; }
-    public void setModulo(String modulo) { this.modulo = modulo; }
-    public String getAccion() { return accion; }
-    public void setAccion(String accion) { this.accion = accion; }
-    public String getResumen() { return resumen; }
-    public void setResumen(String resumen) { this.resumen = resumen; }
-    public String getDetalleAntesJson() { return detalleAntesJson; }
-    public void setDetalleAntesJson(String detalleAntesJson) { this.detalleAntesJson = detalleAntesJson; }
-    public String getDetalleDespuesJson() { return detalleDespuesJson; }
-    public void setDetalleDespuesJson(String detalleDespuesJson) { this.detalleDespuesJson = detalleDespuesJson; }
-    public LocalDateTime getCreadoEn() { return creadoEn; }
 }

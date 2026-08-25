@@ -4,7 +4,11 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import lombok.Getter;
+import lombok.Setter;
 
+@Setter
+@Getter
 @Entity
 @Table(name = "configuracion_whatsapp_empresa")
 public class ConfiguracionWhatsappEmpresaEntidad {
@@ -70,6 +74,12 @@ public class ConfiguracionWhatsappEmpresaEntidad {
     @Column(name = "plantilla_espacio_disponible_walkin_sid", length = 80)
     private String plantillaEspacioDisponibleWalkinSid;
 
+    @Column(name = "plantilla_menu_bienvenida_sid", length = 80)
+    private String plantillaMenuBienvenidaSid;
+
+    @Column(name = "plantillas_list_picker_sids", length = 1000)
+    private String plantillasListPickerSids;
+
     @Column(name = "sender_display_name", length = 150)
     private String senderDisplayName;
 
@@ -91,219 +101,4 @@ public class ConfiguracionWhatsappEmpresaEntidad {
     @Column(name = "meta_business_manager_id", length = 100)
     private String metaBusinessManagerId;
 
-    public Long getEmpresaId() {
-        return empresaId;
-    }
-
-    public void setEmpresaId(Long empresaId) {
-        this.empresaId = empresaId;
-    }
-
-    public boolean isHabilitado() {
-        return habilitado;
-    }
-
-    public void setHabilitado(boolean habilitado) {
-        this.habilitado = habilitado;
-    }
-
-    public String getAccountSid() {
-        return accountSid;
-    }
-
-    public void setAccountSid(String accountSid) {
-        this.accountSid = accountSid;
-    }
-
-    public String getAuthToken() {
-        return authToken;
-    }
-
-    public void setAuthToken(String authToken) {
-        this.authToken = authToken;
-    }
-
-    public String getTipoCuentaTwilio() {
-        return tipoCuentaTwilio;
-    }
-
-    public void setTipoCuentaTwilio(String tipoCuentaTwilio) {
-        this.tipoCuentaTwilio = tipoCuentaTwilio;
-    }
-
-    public String getSubaccountSid() {
-        return subaccountSid;
-    }
-
-    public void setSubaccountSid(String subaccountSid) {
-        this.subaccountSid = subaccountSid;
-    }
-
-    public String getNumeroRemitente() {
-        return numeroRemitente;
-    }
-
-    public void setNumeroRemitente(String numeroRemitente) {
-        this.numeroRemitente = numeroRemitente;
-    }
-
-    public String getMessagingServiceSid() {
-        return messagingServiceSid;
-    }
-
-    public void setMessagingServiceSid(String messagingServiceSid) {
-        this.messagingServiceSid = messagingServiceSid;
-    }
-
-    public String getChannelSenderSid() {
-        return channelSenderSid;
-    }
-
-    public void setChannelSenderSid(String channelSenderSid) {
-        this.channelSenderSid = channelSenderSid;
-    }
-
-    public String getStatusCallbackUrl() {
-        return statusCallbackUrl;
-    }
-
-    public void setStatusCallbackUrl(String statusCallbackUrl) {
-        this.statusCallbackUrl = statusCallbackUrl;
-    }
-
-    public String getPlantillaCitaConfirmadaSid() {
-        return plantillaCitaConfirmadaSid;
-    }
-
-    public String getPlantillaSolicitudConfirmacionSid() {
-        return plantillaSolicitudConfirmacionSid;
-    }
-
-    public void setPlantillaSolicitudConfirmacionSid(String plantillaSolicitudConfirmacionSid) {
-        this.plantillaSolicitudConfirmacionSid = plantillaSolicitudConfirmacionSid;
-    }
-
-    public String getPlantillaReprogramadaPendienteSid() {
-        return plantillaReprogramadaPendienteSid;
-    }
-
-    public void setPlantillaReprogramadaPendienteSid(String plantillaReprogramadaPendienteSid) {
-        this.plantillaReprogramadaPendienteSid = plantillaReprogramadaPendienteSid;
-    }
-
-    public String getPlantillaRecordatorioConfirmacionSid() {
-        return plantillaRecordatorioConfirmacionSid;
-    }
-
-    public void setPlantillaRecordatorioConfirmacionSid(String plantillaRecordatorioConfirmacionSid) {
-        this.plantillaRecordatorioConfirmacionSid = plantillaRecordatorioConfirmacionSid;
-    }
-
-    public void setPlantillaCitaConfirmadaSid(String plantillaCitaConfirmadaSid) {
-        this.plantillaCitaConfirmadaSid = plantillaCitaConfirmadaSid;
-    }
-
-    public String getPlantillaRecordatorioSid() {
-        return plantillaRecordatorioSid;
-    }
-
-    public void setPlantillaRecordatorioSid(String plantillaRecordatorioSid) {
-        this.plantillaRecordatorioSid = plantillaRecordatorioSid;
-    }
-
-    public String getPlantillaCancelacionSid() {
-        return plantillaCancelacionSid;
-    }
-
-    public void setPlantillaCancelacionSid(String plantillaCancelacionSid) {
-        this.plantillaCancelacionSid = plantillaCancelacionSid;
-    }
-
-    public String getPlantillaLiberadaSinConfirmacionSid() {
-        return plantillaLiberadaSinConfirmacionSid;
-    }
-
-    public void setPlantillaLiberadaSinConfirmacionSid(String plantillaLiberadaSinConfirmacionSid) {
-        this.plantillaLiberadaSinConfirmacionSid = plantillaLiberadaSinConfirmacionSid;
-    }
-
-    public String getPlantillaGraciasVisitaSid() {
-        return plantillaGraciasVisitaSid;
-    }
-
-    public void setPlantillaGraciasVisitaSid(String plantillaGraciasVisitaSid) {
-        this.plantillaGraciasVisitaSid = plantillaGraciasVisitaSid;
-    }
-
-    public String getPlantillaRecordatorioRegresoSid() {
-        return plantillaRecordatorioRegresoSid;
-    }
-
-    public void setPlantillaRecordatorioRegresoSid(String plantillaRecordatorioRegresoSid) {
-        this.plantillaRecordatorioRegresoSid = plantillaRecordatorioRegresoSid;
-    }
-
-    public String getPlantillaEspacioDisponibleWalkinSid() {
-        return plantillaEspacioDisponibleWalkinSid;
-    }
-
-    public void setPlantillaEspacioDisponibleWalkinSid(String plantillaEspacioDisponibleWalkinSid) {
-        this.plantillaEspacioDisponibleWalkinSid = plantillaEspacioDisponibleWalkinSid;
-    }
-
-    public String getSenderDisplayName() {
-        return senderDisplayName;
-    }
-
-    public void setSenderDisplayName(String senderDisplayName) {
-        this.senderDisplayName = senderDisplayName;
-    }
-
-    public String getSenderPhoneNumber() {
-        return senderPhoneNumber;
-    }
-
-    public void setSenderPhoneNumber(String senderPhoneNumber) {
-        this.senderPhoneNumber = senderPhoneNumber;
-    }
-
-    public String getSenderStatus() {
-        return senderStatus;
-    }
-
-    public void setSenderStatus(String senderStatus) {
-        this.senderStatus = senderStatus;
-    }
-
-    public String getQualityRating() {
-        return qualityRating;
-    }
-
-    public void setQualityRating(String qualityRating) {
-        this.qualityRating = qualityRating;
-    }
-
-    public Integer getThroughputMps() {
-        return throughputMps;
-    }
-
-    public void setThroughputMps(Integer throughputMps) {
-        this.throughputMps = throughputMps;
-    }
-
-    public String getWabaId() {
-        return wabaId;
-    }
-
-    public void setWabaId(String wabaId) {
-        this.wabaId = wabaId;
-    }
-
-    public String getMetaBusinessManagerId() {
-        return metaBusinessManagerId;
-    }
-
-    public void setMetaBusinessManagerId(String metaBusinessManagerId) {
-        this.metaBusinessManagerId = metaBusinessManagerId;
-    }
 }

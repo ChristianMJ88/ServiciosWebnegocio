@@ -5,6 +5,8 @@ import java.time.LocalDateTime;
 public record MensajeCitaWhatsappPayload(
         Long citaId,
         String telefonoDestino,
-        LocalDateTime inicioEsperado
+        LocalDateTime inicioEsperado,
+        Integer totalServicios
 ) {
+
 }

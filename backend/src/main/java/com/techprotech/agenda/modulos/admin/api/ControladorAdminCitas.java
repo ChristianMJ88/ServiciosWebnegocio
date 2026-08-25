@@ -2,16 +2,27 @@ package com.techprotech.agenda.modulos.admin.api;
 
 import com.techprotech.agenda.modulos.admin.api.dto.ConfiguracionCorreoAdminRequest;
 import com.techprotech.agenda.modulos.admin.api.dto.ConfiguracionCorreoAdminResponse;
+import com.techprotech.agenda.modulos.admin.api.dto.ConfiguracionSitioAdminRequest;
+import com.techprotech.agenda.modulos.admin.api.dto.ConfiguracionSitioAdminResponse;
 import com.techprotech.agenda.modulos.admin.api.dto.ConfiguracionWhatsappAdminRequest;
 import com.techprotech.agenda.modulos.admin.api.dto.ConfiguracionWhatsappAdminResponse;
+import com.techprotech.agenda.modulos.admin.api.dto.CatalogoSugeridoAdminResponse;
 import com.techprotech.agenda.modulos.admin.api.dto.DetectarChannelSenderWhatsappResponse;
+import com.techprotech.agenda.modulos.admin.api.dto.EnviarMensajeWhatsappAdminRequest;
+import com.techprotech.agenda.modulos.admin.api.dto.GrupoServicioAdminRequest;
+import com.techprotech.agenda.modulos.admin.api.dto.GrupoServicioAdminResponse;
+import com.techprotech.agenda.modulos.admin.api.dto.ImportarCatalogoSugeridoRequest;
+import com.techprotech.agenda.modulos.admin.api.dto.ImportarCatalogoSugeridoResponse;
 import com.techprotech.agenda.modulos.admin.api.dto.LogMensajeWhatsappAdminResponse;
+import com.techprotech.agenda.modulos.admin.api.dto.MensajeWhatsappAdminResponse;
 import com.techprotech.agenda.modulos.admin.api.dto.MigracionSecretosCorreoResponse;
 import com.techprotech.agenda.modulos.admin.api.dto.AsociarChannelSenderWhatsappRequest;
 import com.techprotech.agenda.modulos.admin.api.dto.AsociarChannelSenderWhatsappResponse;
 import com.techprotech.agenda.modulos.admin.api.dto.AuditoriaConfiguracionAdminResponse;
 import com.techprotech.agenda.modulos.admin.api.dto.AuditoriaRolInternoAdminResponse;
 import com.techprotech.agenda.modulos.admin.api.dto.PlantillaWhatsappAdminResponse;
+import com.techprotech.agenda.modulos.admin.api.dto.PlantillaWhatsappEmpresaAdminRequest;
+import com.techprotech.agenda.modulos.admin.api.dto.PlantillaWhatsappEmpresaAdminResponse;
 import com.techprotech.agenda.modulos.admin.api.dto.PrestadorAdminRequest;
 import com.techprotech.agenda.modulos.admin.api.dto.PrestadorAdminResponse;
 import com.techprotech.agenda.modulos.admin.api.dto.PermisoAdminResponse;
@@ -29,6 +40,8 @@ import com.techprotech.agenda.modulos.admin.api.dto.RolInternoAdminResponse;
 import com.techprotech.agenda.modulos.admin.api.dto.ResumenAdminResponse;
 import com.techprotech.agenda.modulos.admin.api.dto.ServicioAdminRequest;
 import com.techprotech.agenda.modulos.admin.api.dto.ServicioAdminResponse;
+import com.techprotech.agenda.modulos.admin.api.dto.SubgrupoServicioAdminRequest;
+import com.techprotech.agenda.modulos.admin.api.dto.SubgrupoServicioAdminResponse;
 import com.techprotech.agenda.modulos.admin.api.dto.SucursalAdminRequest;
 import com.techprotech.agenda.modulos.admin.api.dto.SucursalAdminResponse;
 import com.techprotech.agenda.modulos.admin.api.dto.UsuarioInternoAdminRequest;
@@ -195,6 +208,21 @@ public class ControladorAdminCitas {
         return servicioAdminCitas.obtenerConfiguracionCorreo(usuario.empresaId());
     }
 
+    @GetMapping("/configuracion-sitio")
+    @PreAuthorize("hasAuthority('CONFIGURACION_EMPRESA_GESTIONAR')")
+    public ConfiguracionSitioAdminResponse configuracionSitio(@AuthenticationPrincipal UsuarioAutenticado usuario) {
+        return servicioAdminCitas.obtenerConfiguracionSitio(usuario.empresaId());
+    }
+
+    @PatchMapping("/configuracion-sitio")
+    @PreAuthorize("hasAuthority('CONFIGURACION_EMPRESA_GESTIONAR')")
+    public ConfiguracionSitioAdminResponse actualizarConfiguracionSitio(
+            @AuthenticationPrincipal UsuarioAutenticado usuario,
+            @Valid @RequestBody ConfiguracionSitioAdminRequest request
+    ) {
+        return servicioAdminCitas.actualizarConfiguracionSitio(usuario.empresaId(), usuario.usuarioId(), request);
+    }
+
     @PatchMapping("/configuracion-correo")
     @PreAuthorize("hasAuthority('CONFIGURACION_EMPRESA_GESTIONAR')")
     public ConfiguracionCorreoAdminResponse actualizarConfiguracionCorreo(
@@ -237,10 +265,60 @@ public class ControladorAdminCitas {
         return servicioAdminCitas.listarPlantillasWhatsapp(usuario.empresaId());
     }
 
+    @GetMapping("/configuracion-whatsapp/plantillas-empresa")
+    @PreAuthorize("hasAuthority('WHATSAPP_CONFIGURAR')")
+    public List<PlantillaWhatsappEmpresaAdminResponse> plantillasWhatsappEmpresa(@AuthenticationPrincipal UsuarioAutenticado usuario) {
+        return servicioAdminCitas.listarPlantillasWhatsappEmpresa(usuario.empresaId());
+    }
+
+    @PostMapping("/configuracion-whatsapp/plantillas-empresa")
+    @PreAuthorize("hasAuthority('WHATSAPP_CONFIGURAR')")
+    public PlantillaWhatsappEmpresaAdminResponse crearPlantillaWhatsappEmpresa(
+            @AuthenticationPrincipal UsuarioAutenticado usuario,
+            @Valid @RequestBody PlantillaWhatsappEmpresaAdminRequest request
+    ) {
+        return servicioAdminCitas.crearPlantillaWhatsappEmpresa(usuario.empresaId(), usuario.usuarioId(), request);
+    }
+
+    @PatchMapping("/configuracion-whatsapp/plantillas-empresa/{plantillaId}")
+    @PreAuthorize("hasAuthority('WHATSAPP_CONFIGURAR')")
+    public PlantillaWhatsappEmpresaAdminResponse actualizarPlantillaWhatsappEmpresa(
+            @AuthenticationPrincipal UsuarioAutenticado usuario,
+            @PathVariable Long plantillaId,
+            @Valid @RequestBody PlantillaWhatsappEmpresaAdminRequest request
+    ) {
+        return servicioAdminCitas.actualizarPlantillaWhatsappEmpresa(usuario.empresaId(), usuario.usuarioId(), plantillaId, request);
+    }
+
+    @DeleteMapping("/configuracion-whatsapp/plantillas-empresa/{plantillaId}")
+    @PreAuthorize("hasAuthority('WHATSAPP_CONFIGURAR')")
+    public ResponseEntity<Void> eliminarPlantillaWhatsappEmpresa(
+            @AuthenticationPrincipal UsuarioAutenticado usuario,
+            @PathVariable Long plantillaId
+    ) {
+        servicioAdminCitas.eliminarPlantillaWhatsappEmpresa(usuario.empresaId(), usuario.usuarioId(), plantillaId);
+        return ResponseEntity.noContent().build();
+    }
+
     @GetMapping("/configuracion-whatsapp/logs")
     @PreAuthorize("hasAuthority('WHATSAPP_CONFIGURAR')")
     public List<LogMensajeWhatsappAdminResponse> logsWhatsapp(@AuthenticationPrincipal UsuarioAutenticado usuario) {
         return servicioAdminCitas.listarLogsWhatsapp(usuario.empresaId());
+    }
+
+    @GetMapping("/whatsapp/mensajes")
+    @PreAuthorize("hasAuthority('WHATSAPP_CONFIGURAR')")
+    public List<MensajeWhatsappAdminResponse> mensajesWhatsapp(@AuthenticationPrincipal UsuarioAutenticado usuario) {
+        return servicioAdminCitas.listarMensajesWhatsapp(usuario.empresaId());
+    }
+
+    @PostMapping("/whatsapp/mensajes")
+    @PreAuthorize("hasAuthority('WHATSAPP_CONFIGURAR')")
+    public MensajeWhatsappAdminResponse enviarMensajeWhatsapp(
+            @AuthenticationPrincipal UsuarioAutenticado usuario,
+            @Valid @RequestBody EnviarMensajeWhatsappAdminRequest request
+    ) {
+        return servicioAdminCitas.enviarMensajeWhatsapp(usuario.empresaId(), request);
     }
 
     @PostMapping("/configuracion-whatsapp/provisionar-subcuenta")
@@ -335,6 +413,71 @@ public class ControladorAdminCitas {
             @Valid @RequestBody ServicioAdminRequest request
     ) {
         return servicioAdminCitas.actualizarServicio(usuario.empresaId(), id, request);
+    }
+
+    @GetMapping("/grupos-servicio")
+    @PreAuthorize("hasAuthority('SERVICIOS_GESTIONAR')")
+    public List<GrupoServicioAdminResponse> gruposServicio(@AuthenticationPrincipal UsuarioAutenticado usuario) {
+        return servicioAdminCitas.listarGruposServicio(usuario.empresaId());
+    }
+
+    @PostMapping("/grupos-servicio")
+    @PreAuthorize("hasAuthority('SERVICIOS_GESTIONAR')")
+    public GrupoServicioAdminResponse crearGrupoServicio(
+            @AuthenticationPrincipal UsuarioAutenticado usuario,
+            @Valid @RequestBody GrupoServicioAdminRequest request
+    ) {
+        return servicioAdminCitas.crearGrupoServicio(usuario.empresaId(), request);
+    }
+
+    @PatchMapping("/grupos-servicio/{id}")
+    @PreAuthorize("hasAuthority('SERVICIOS_GESTIONAR')")
+    public GrupoServicioAdminResponse actualizarGrupoServicio(
+            @AuthenticationPrincipal UsuarioAutenticado usuario,
+            @PathVariable Long id,
+            @Valid @RequestBody GrupoServicioAdminRequest request
+    ) {
+        return servicioAdminCitas.actualizarGrupoServicio(usuario.empresaId(), id, request);
+    }
+
+    @GetMapping("/subgrupos-servicio")
+    @PreAuthorize("hasAuthority('SERVICIOS_GESTIONAR')")
+    public List<SubgrupoServicioAdminResponse> subgruposServicio(@AuthenticationPrincipal UsuarioAutenticado usuario) {
+        return servicioAdminCitas.listarSubgruposServicio(usuario.empresaId());
+    }
+
+    @PostMapping("/subgrupos-servicio")
+    @PreAuthorize("hasAuthority('SERVICIOS_GESTIONAR')")
+    public SubgrupoServicioAdminResponse crearSubgrupoServicio(
+            @AuthenticationPrincipal UsuarioAutenticado usuario,
+            @Valid @RequestBody SubgrupoServicioAdminRequest request
+    ) {
+        return servicioAdminCitas.crearSubgrupoServicio(usuario.empresaId(), request);
+    }
+
+    @PatchMapping("/subgrupos-servicio/{id}")
+    @PreAuthorize("hasAuthority('SERVICIOS_GESTIONAR')")
+    public SubgrupoServicioAdminResponse actualizarSubgrupoServicio(
+            @AuthenticationPrincipal UsuarioAutenticado usuario,
+            @PathVariable Long id,
+            @Valid @RequestBody SubgrupoServicioAdminRequest request
+    ) {
+        return servicioAdminCitas.actualizarSubgrupoServicio(usuario.empresaId(), id, request);
+    }
+
+    @GetMapping("/catalogos-sugeridos")
+    @PreAuthorize("hasAuthority('SERVICIOS_GESTIONAR')")
+    public List<CatalogoSugeridoAdminResponse> catalogosSugeridos(@AuthenticationPrincipal UsuarioAutenticado usuario) {
+        return servicioAdminCitas.listarCatalogosSugeridos();
+    }
+
+    @PostMapping("/catalogos-sugeridos/importar")
+    @PreAuthorize("hasAuthority('SERVICIOS_GESTIONAR')")
+    public ImportarCatalogoSugeridoResponse importarCatalogoSugerido(
+            @AuthenticationPrincipal UsuarioAutenticado usuario,
+            @Valid @RequestBody ImportarCatalogoSugeridoRequest request
+    ) {
+        return servicioAdminCitas.importarCatalogoSugerido(usuario.empresaId(), request);
     }
 
     @GetMapping("/prestadores")

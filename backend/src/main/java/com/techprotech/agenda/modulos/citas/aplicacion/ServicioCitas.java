@@ -6,7 +6,10 @@ import com.techprotech.agenda.compartido.correo.ServicioOutboxCorreoCitas;
 import com.techprotech.agenda.compartido.whatsapp.ServicioOutboxWhatsappCitas;
 import com.techprotech.agenda.modulos.autenticacion.aplicacion.ServicioRolesEmpresa;
 import com.techprotech.agenda.modulos.citas.api.dto.CitaCreadaResponse;
+import com.techprotech.agenda.modulos.citas.api.dto.CitasMultiplesCreadasResponse;
+import com.techprotech.agenda.modulos.citas.api.dto.CrearCitaMultipleItemRequest;
 import com.techprotech.agenda.modulos.citas.api.dto.CrearCitaRequest;
+import com.techprotech.agenda.modulos.citas.api.dto.CrearCitasMultiplesRequest;
 import com.techprotech.agenda.modulos.autenticacion.infraestructura.entidad.ClienteEntidad;
 import com.techprotech.agenda.modulos.autenticacion.infraestructura.entidad.EmpresaEntidad;
 import com.techprotech.agenda.modulos.autenticacion.infraestructura.entidad.UsuarioEntidad;
@@ -25,8 +28,11 @@ import com.techprotech.agenda.modulos.servicios.infraestructura.entidad.Asignaci
 import com.techprotech.agenda.modulos.servicios.infraestructura.entidad.ServicioEntidad;
 import com.techprotech.agenda.modulos.servicios.infraestructura.repositorio.AsignacionServicioPrestadorRepositorio;
 import com.techprotech.agenda.modulos.servicios.infraestructura.repositorio.ServicioRepositorio;
+import com.techprotech.agenda.modulos.servicios.infraestructura.repositorio.ServicioSucursalRepositorio;
 import com.techprotech.agenda.modulos.sucursales.infraestructura.entidad.SucursalEntidad;
 import com.techprotech.agenda.modulos.sucursales.infraestructura.repositorio.SucursalRepositorio;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -36,6 +42,9 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
+import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.UUID;
 
@@ -47,10 +56,12 @@ import static org.springframework.http.HttpStatus.NOT_FOUND;
 public class ServicioCitas {
 
     private static final String PREFIJO_CONTRASENA_PROVISIONAL = "registro-cita";
+    private static final Logger LOGGER = LoggerFactory.getLogger(ServicioCitas.class);
 
     private final ServicioConsultaDisponibilidad servicioConsultaDisponibilidad;
     private final SucursalRepositorio sucursalRepositorio;
     private final ServicioRepositorio servicioRepositorio;
+    private final ServicioSucursalRepositorio servicioSucursalRepositorio;
     private final PrestadorServicioRepositorio prestadorServicioRepositorio;
     private final AsignacionServicioPrestadorRepositorio asignacionServicioPrestadorRepositorio;
     private final UsuarioRepositorio usuarioRepositorio;
@@ -68,6 +79,7 @@ public class ServicioCitas {
             ServicioConsultaDisponibilidad servicioConsultaDisponibilidad,
             SucursalRepositorio sucursalRepositorio,
             ServicioRepositorio servicioRepositorio,
+            ServicioSucursalRepositorio servicioSucursalRepositorio,
             PrestadorServicioRepositorio prestadorServicioRepositorio,
             AsignacionServicioPrestadorRepositorio asignacionServicioPrestadorRepositorio,
             UsuarioRepositorio usuarioRepositorio,
@@ -84,6 +96,7 @@ public class ServicioCitas {
         this.servicioConsultaDisponibilidad = servicioConsultaDisponibilidad;
         this.sucursalRepositorio = sucursalRepositorio;
         this.servicioRepositorio = servicioRepositorio;
+        this.servicioSucursalRepositorio = servicioSucursalRepositorio;
         this.prestadorServicioRepositorio = prestadorServicioRepositorio;
         this.asignacionServicioPrestadorRepositorio = asignacionServicioPrestadorRepositorio;
         this.usuarioRepositorio = usuarioRepositorio;
@@ -100,14 +113,21 @@ public class ServicioCitas {
 
     @Transactional
     public CitaCreadaResponse crearCita(CrearCitaRequest request) {
+        return crearCita(request, true);
+    }
+
+    private CitaCreadaResponse crearCita(CrearCitaRequest request, boolean programarWhatsappConfirmacion) {
         Long empresaId = request.empresaId() != null ? request.empresaId() : 1L;
         EmpresaEntidad empresa = empresaRepositorio.findById(empresaId)
                 .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "La empresa no existe"));
 
         SucursalEntidad sucursal = sucursalRepositorio.findByIdAndEmpresaIdAndActivaTrue(request.sucursalId(), empresaId)
                 .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "La sucursal no existe o no esta activa"));
-        ServicioEntidad servicio = servicioRepositorio.findByIdAndEmpresaIdAndSucursalIdAndActivoTrue(request.servicioId(), empresaId, request.sucursalId())
+        ServicioEntidad servicio = servicioRepositorio.findByIdAndEmpresaIdAndActivoTrue(request.servicioId(), empresaId)
                 .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "El servicio no existe o no esta activo"));
+        if (!servicioSucursalRepositorio.existsByEmpresaIdAndIdServicioIdAndIdSucursalIdAndActivoTrue(empresaId, request.servicioId(), request.sucursalId())) {
+            throw new ResponseStatusException(NOT_FOUND, "El servicio no existe o no esta activo en la sucursal");
+        }
 
         PrestadorServicioEntidad prestador = resolverPrestador(request.prestadorId(), request.sucursalId(), request.servicioId());
         ZoneId zona = ZoneId.of(sucursal.getZonaHoraria());
@@ -123,7 +143,7 @@ public class ServicioCitas {
         );
 
         FranjaDisponibleResponse franjaSeleccionada = franjas.stream()
-                .filter(franja -> franja.inicio().equals(inicioSolicitado.toString()))
+                .filter(franja -> coincideInicioFranja(franja.inicio(), inicioSolicitado))
                 .findFirst()
                 .orElseThrow(() -> new ResponseStatusException(CONFLICT, "La franja solicitada ya no esta disponible"));
 
@@ -184,12 +204,14 @@ public class ServicioCitas {
                     cita.getMoneda()
                 )
         );
-        servicioOutboxWhatsappCitas.programarConfirmacion(
-                empresaId,
-                cita.getId(),
-                request.telefonoCliente().trim(),
-                cita.getInicio()
-        );
+        if (programarWhatsappConfirmacion) {
+            servicioOutboxWhatsappCitas.programarConfirmacion(
+                    empresaId,
+                    cita.getId(),
+                    request.telefonoCliente().trim(),
+                    cita.getInicio()
+            );
+        }
 
         return new CitaCreadaResponse(
                 cita.getId(),
@@ -206,6 +228,153 @@ public class ServicioCitas {
         );
     }
 
+    @Transactional
+    public CitasMultiplesCreadasResponse crearCitasMultiples(CrearCitasMultiplesRequest request) {
+        Long empresaId = request.empresaId() != null ? request.empresaId() : 1L;
+        EmpresaEntidad empresa = empresaRepositorio.findById(empresaId)
+                .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "La empresa no existe"));
+        SucursalEntidad sucursal = sucursalRepositorio.findByIdAndEmpresaIdAndActivaTrue(request.sucursalId(), empresaId)
+                .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "La sucursal no existe o no esta activa"));
+        ZoneId zona = ZoneId.of(sucursal.getZonaHoraria());
+
+        List<CrearCitaMultipleItemRequest> items = request.items().stream()
+                .sorted(Comparator.comparing(CrearCitaMultipleItemRequest::inicio))
+                .toList();
+
+        if (items.isEmpty()) {
+            throw new ResponseStatusException(BAD_REQUEST, "Debes indicar al menos un servicio para reservar");
+        }
+
+        List<RangoReservaValidado> rangos = new ArrayList<>();
+        for (CrearCitaMultipleItemRequest item : items) {
+            List<FranjaDisponibleResponse> franjas = servicioConsultaDisponibilidad.obtenerFranjasDisponibles(
+                    request.empresaId(),
+                    request.sucursalId(),
+                    item.servicioId(),
+                    item.prestadorId(),
+                    item.inicio().toLocalDate()
+            );
+
+            FranjaDisponibleResponse franja = franjas.stream()
+                    .filter(disponible -> coincideInicioFranja(disponible.inicio(), item.inicio()))
+                    .findFirst()
+                    .orElseThrow(() -> new ResponseStatusException(CONFLICT, "Uno de los horarios seleccionados ya no esta disponible"));
+
+            rangos.add(new RangoReservaValidado(
+                    item.servicioId(),
+                    franja.prestadorId(),
+                    OffsetDateTime.parse(franja.inicio()),
+                    OffsetDateTime.parse(franja.fin())
+            ));
+        }
+
+        for (int index = 1; index < rangos.size(); index++) {
+            RangoReservaValidado anterior = rangos.get(index - 1);
+            RangoReservaValidado actual = rangos.get(index);
+            OffsetDateTime finAnterior = normalizarMinuto(anterior.fin());
+            OffsetDateTime inicioActual = normalizarMinuto(actual.inicio());
+            if (inicioActual.isBefore(finAnterior)) {
+                LOGGER.warn(
+                        "Conflicto al crear citas multiples empresa={} sucursal={} servicioAnterior={} finAnterior={} servicioActual={} inicioActual={}",
+                        request.empresaId(),
+                        request.sucursalId(),
+                        anterior.servicioId(),
+                        anterior.fin(),
+                        actual.servicioId(),
+                        actual.inicio()
+                );
+                throw new ResponseStatusException(CONFLICT, "Los servicios seleccionados se traslapan. Ajusta el itinerario antes de confirmar.");
+            }
+        }
+
+        Long clienteId = resolverOCrearCliente(
+                empresaId,
+                request.nombreCliente(),
+                request.correoCliente(),
+                request.telefonoCliente()
+        );
+
+        List<CitaCreadaResponse> citas = new ArrayList<>();
+        for (RangoReservaValidado rango : rangos) {
+            ServicioEntidad servicio = servicioRepositorio.findByIdAndEmpresaIdAndActivoTrue(rango.servicioId(), empresaId)
+                    .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "El servicio no existe o no esta activo"));
+
+            CitaEntidad cita = new CitaEntidad();
+            cita.setEmpresaId(empresaId);
+            cita.setSucursalId(request.sucursalId());
+            cita.setServicioId(rango.servicioId());
+            cita.setPrestadorId(rango.prestadorId());
+            cita.setClienteId(clienteId);
+            cita.setEstado("PENDIENTE");
+            cita.setInicio(rango.inicio().toLocalDateTime());
+            cita.setFin(rango.fin().toLocalDateTime());
+            cita.setPrecio(servicio.getPrecio());
+            cita.setMoneda(servicio.getMoneda());
+            cita.setNotas(request.notas());
+            cita.setCreadaPorUsuarioId(clienteId);
+            cita = citaRepositorio.save(cita);
+
+            HistorialEstadoCitaEntidad historial = new HistorialEstadoCitaEntidad();
+            historial.setCitaId(cita.getId());
+            historial.setEstadoAnterior(null);
+            historial.setEstadoNuevo("PENDIENTE");
+            historial.setCambiadoPorUsuarioId(clienteId);
+            historial.setMotivo("Creacion inicial de cita");
+            historialEstadoCitaRepositorio.save(historial);
+
+            OffsetDateTime inicioRespuesta = cita.getInicio().atZone(zona).toOffsetDateTime();
+            OffsetDateTime finRespuesta = cita.getFin().atZone(zona).toOffsetDateTime();
+            boolean correoConfirmacionProgramado = servicioOutboxCorreoCitas.programarConfirmacion(
+                    empresaId,
+                    new ConfirmacionCitaCorreo(
+                            cita.getId(),
+                            empresa.getNombre(),
+                            request.nombreCliente().trim(),
+                            request.correoCliente().trim().toLowerCase(),
+                            servicio.getNombre(),
+                            sucursal.getNombre(),
+                            sucursal.getDireccion(),
+                            sucursal.getTelefono(),
+                            inicioRespuesta,
+                            finRespuesta,
+                            zona,
+                            cita.getPrecio(),
+                            cita.getMoneda()
+                    )
+            );
+
+            citas.add(new CitaCreadaResponse(
+                    cita.getId(),
+                    cita.getEstado(),
+                    cita.getEmpresaId(),
+                    cita.getSucursalId(),
+                    cita.getServicioId(),
+                    cita.getPrestadorId(),
+                    inicioRespuesta,
+                    finRespuesta,
+                    resolverMensajeRespuesta(empresaId, correoConfirmacionProgramado),
+                    correoConfirmacionProgramado,
+                    false
+            ));
+        }
+
+        if (!citas.isEmpty()) {
+            servicioOutboxWhatsappCitas.programarConfirmacion(
+                    empresaId,
+                    citas.getFirst().id(),
+                    request.telefonoCliente().trim(),
+                    citas.getFirst().inicio().toLocalDateTime(),
+                    citas.size()
+            );
+        }
+
+        return new CitasMultiplesCreadasResponse(
+                citas,
+                citas.size(),
+                "Las reservas fueron creadas correctamente sin choques de horario."
+        );
+    }
+
     private String resolverMensajeRespuesta(Long empresaId, boolean correoConfirmacionProgramado) {
         if (!servicioCorreoCitas.estaHabilitado(empresaId)) {
             return "Cita creada correctamente";
@@ -216,6 +385,17 @@ public class ServicioCitas {
         }
 
         return "Cita creada correctamente. La empresa no tiene correo de confirmacion disponible en este momento.";
+    }
+
+    private OffsetDateTime normalizarMinuto(OffsetDateTime fechaHora) {
+        return fechaHora == null ? null : fechaHora.truncatedTo(ChronoUnit.MINUTES);
+    }
+
+    private boolean coincideInicioFranja(String inicioFranja, OffsetDateTime inicioSolicitado) {
+        if (inicioFranja == null || inicioSolicitado == null) {
+            return false;
+        }
+        return OffsetDateTime.parse(inicioFranja).toInstant().equals(inicioSolicitado.toInstant());
     }
 
     private PrestadorServicioEntidad resolverPrestador(Long prestadorId, Long sucursalId, Long servicioId) {
@@ -290,5 +470,13 @@ public class ServicioCitas {
 
     private String generarContrasenaProvisional() {
         return PREFIJO_CONTRASENA_PROVISIONAL + "-" + UUID.randomUUID();
+    }
+
+    private record RangoReservaValidado(
+            Long servicioId,
+            Long prestadorId,
+            OffsetDateTime inicio,
+            OffsetDateTime fin
+    ) {
     }
 }

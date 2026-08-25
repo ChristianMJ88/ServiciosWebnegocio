@@ -31,101 +31,114 @@ public class ServicioOutboxWhatsappCitas {
         this.objectMapper = objectMapper;
     }
 
-    public boolean programarConfirmacion(Long empresaId, Long citaId, String telefonoDestino, LocalDateTime inicioEsperado) {
-        return programar(
-                empresaId,
-                citaId,
-                "CITA_REGISTRADA_WHATSAPP",
-                telefonoDestino,
-                inicioEsperado,
-                LocalDateTime.now()
-        );
+    public void programarConfirmacion(Long empresaId, Long citaId, String telefonoDestino, LocalDateTime inicioEsperado) {
+      programarConfirmacion(empresaId, citaId, telefonoDestino, inicioEsperado, null);
     }
 
-    public boolean programarCitaConfirmada(Long empresaId, Long citaId, String telefonoDestino, LocalDateTime inicioEsperado) {
-        return programar(
-                empresaId,
-                citaId,
-                "CITA_CONFIRMADA_WHATSAPP",
-                telefonoDestino,
-                inicioEsperado,
-                LocalDateTime.now()
-        );
+    public void programarConfirmacion(Long empresaId, Long citaId, String telefonoDestino, LocalDateTime inicioEsperado, Integer totalServicios) {
+      programar(
+        empresaId,
+        citaId,
+        "CITA_REGISTRADA_WHATSAPP",
+        telefonoDestino,
+        inicioEsperado,
+        LocalDateTime.now(),
+        totalServicios
+      );
     }
 
-    public boolean programarCitaReprogramadaPendiente(Long empresaId, Long citaId, String telefonoDestino, LocalDateTime inicioEsperado) {
-        return programar(
-                empresaId,
-                citaId,
-                "CITA_REPROGRAMADA_PENDIENTE_WHATSAPP",
-                telefonoDestino,
-                inicioEsperado,
-                LocalDateTime.now()
-        );
+    public void programarCitaConfirmada(Long empresaId, Long citaId, String telefonoDestino, LocalDateTime inicioEsperado) {
+      programar(
+        empresaId,
+        citaId,
+        "CITA_CONFIRMADA_WHATSAPP",
+        telefonoDestino,
+        inicioEsperado,
+        LocalDateTime.now(),
+        null
+      );
     }
 
-    public boolean programarRecordatorioConfirmacion(Long empresaId, Long citaId, String telefonoDestino, LocalDateTime inicioEsperado, LocalDateTime programadaEn) {
-        return programar(
-                empresaId,
-                citaId,
-                "CITA_RECORDATORIO_CONFIRMACION_WHATSAPP",
-                telefonoDestino,
-                inicioEsperado,
-                programadaEn
-        );
+    public void programarCitaReprogramadaPendiente(Long empresaId, Long citaId, String telefonoDestino, LocalDateTime inicioEsperado) {
+      programar(
+        empresaId,
+        citaId,
+        "CITA_REPROGRAMADA_PENDIENTE_WHATSAPP",
+        telefonoDestino,
+        inicioEsperado,
+        LocalDateTime.now(),
+        null
+      );
     }
 
-    public boolean programarRecordatorio(Long empresaId, Long citaId, String telefonoDestino, LocalDateTime inicioEsperado, LocalDateTime programadaEn) {
-        return programar(
-                empresaId,
-                citaId,
-                "CITA_RECORDATORIO_WHATSAPP",
-                telefonoDestino,
-                inicioEsperado,
-                programadaEn
-        );
+    public void programarRecordatorioConfirmacion(Long empresaId, Long citaId, String telefonoDestino, LocalDateTime inicioEsperado, LocalDateTime programadaEn) {
+      programar(
+        empresaId,
+        citaId,
+        "CITA_RECORDATORIO_CONFIRMACION_WHATSAPP",
+        telefonoDestino,
+        inicioEsperado,
+        programadaEn,
+        null
+      );
     }
 
-    public boolean programarCancelacionNegocio(Long empresaId, Long citaId, String telefonoDestino, LocalDateTime inicioEsperado) {
-        return programar(
-                empresaId,
-                citaId,
-                "CITA_CANCELADA_NEGOCIO_WHATSAPP",
-                telefonoDestino,
-                inicioEsperado,
-                LocalDateTime.now()
-        );
+    public void programarRecordatorio(Long empresaId, Long citaId, String telefonoDestino, LocalDateTime inicioEsperado, LocalDateTime programadaEn) {
+      programar(
+        empresaId,
+        citaId,
+        "CITA_RECORDATORIO_WHATSAPP",
+        telefonoDestino,
+        inicioEsperado,
+        programadaEn,
+        null
+      );
     }
 
-    public boolean programarLiberadaSinConfirmacion(Long empresaId, Long citaId, String telefonoDestino, LocalDateTime inicioEsperado) {
-        return programar(
-                empresaId,
-                citaId,
-                "CITA_LIBERADA_SIN_CONFIRMACION_WHATSAPP",
-                telefonoDestino,
-                inicioEsperado,
-                LocalDateTime.now()
-        );
+    public void programarCancelacionNegocio(Long empresaId, Long citaId, String telefonoDestino, LocalDateTime inicioEsperado) {
+      programar(
+        empresaId,
+        citaId,
+        "CITA_CANCELADA_NEGOCIO_WHATSAPP",
+        telefonoDestino,
+        inicioEsperado,
+        LocalDateTime.now(),
+        null
+      );
     }
 
-    public boolean programarGraciasVisita(Long empresaId, Long citaId, String telefonoDestino, LocalDateTime inicioEsperado) {
-        return programar(
-                empresaId,
-                citaId,
-                "CITA_GRACIAS_VISITA_WHATSAPP",
-                telefonoDestino,
-                inicioEsperado,
-                LocalDateTime.now()
-        );
+    public void programarLiberadaSinConfirmacion(Long empresaId, Long citaId, String telefonoDestino, LocalDateTime inicioEsperado) {
+      programar(
+        empresaId,
+        citaId,
+        "CITA_LIBERADA_SIN_CONFIRMACION_WHATSAPP",
+        telefonoDestino,
+        inicioEsperado,
+        LocalDateTime.now(),
+        null
+      );
     }
 
-    private boolean programar(
+    public void programarGraciasVisita(Long empresaId, Long citaId, String telefonoDestino, LocalDateTime inicioEsperado) {
+      programar(
+        empresaId,
+        citaId,
+        "CITA_GRACIAS_VISITA_WHATSAPP",
+        telefonoDestino,
+        inicioEsperado,
+        LocalDateTime.now(),
+        null
+      );
+    }
+
+    private void programar(
             Long empresaId,
             Long citaId,
             String tipoEvento,
             String telefonoDestino,
             LocalDateTime inicioEsperado,
-            LocalDateTime programadaEn
+            LocalDateTime programadaEn,
+            Integer totalServicios
     ) {
         if (!clienteWhatsappTwilio.estaHabilitado(empresaId)) {
             LOGGER.warn(
@@ -135,7 +148,7 @@ public class ServicioOutboxWhatsappCitas {
                     empresaId,
                     clienteWhatsappTwilio.diagnosticoConfiguracion(empresaId)
             );
-            return false;
+            return;
         }
 
         if (telefonoDestino == null || telefonoDestino.isBlank()) {
@@ -145,7 +158,7 @@ public class ServicioOutboxWhatsappCitas {
                     tipoEvento,
                     empresaId
             );
-            return false;
+            return;
         }
 
         BandejaSalidaNotificacionEntidad salida = new BandejaSalidaNotificacionEntidad();
@@ -154,7 +167,7 @@ public class ServicioOutboxWhatsappCitas {
         salida.setAgregadoId(citaId);
         salida.setTipoEvento(tipoEvento);
         salida.setCanal(CANAL);
-        salida.setPayloadJson(serializar(new MensajeCitaWhatsappPayload(citaId, telefonoDestino, inicioEsperado)));
+        salida.setPayloadJson(serializar(new MensajeCitaWhatsappPayload(citaId, telefonoDestino, inicioEsperado, totalServicios)));
         salida.setEstado("PENDIENTE");
         salida.setProgramadaEn(programadaEn);
         salida.setIntentos(0);
@@ -166,7 +179,6 @@ public class ServicioOutboxWhatsappCitas {
                 empresaId,
                 enmascararTelefono(telefonoDestino)
         );
-        return true;
     }
 
     private String enmascararTelefono(String telefono) {

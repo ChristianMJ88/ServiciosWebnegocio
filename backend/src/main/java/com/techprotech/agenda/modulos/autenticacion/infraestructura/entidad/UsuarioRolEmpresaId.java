@@ -2,10 +2,14 @@ package com.techprotech.agenda.modulos.autenticacion.infraestructura.entidad;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.io.Serializable;
 import java.util.Objects;
 
+@Setter
+@Getter
 @Embeddable
 public class UsuarioRolEmpresaId implements Serializable {
 
@@ -23,15 +27,7 @@ public class UsuarioRolEmpresaId implements Serializable {
         this.rolEmpresaId = rolEmpresaId;
     }
 
-    public Long getUsuarioId() {
-        return usuarioId;
-    }
-
-    public Long getRolEmpresaId() {
-        return rolEmpresaId;
-    }
-
-    @Override
+  @Override
     public boolean equals(Object o) {
         if (!(o instanceof UsuarioRolEmpresaId that)) {
             return false;

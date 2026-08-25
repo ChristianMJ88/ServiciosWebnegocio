@@ -6,10 +6,14 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
 
+@Setter
+@Getter
 @Entity
 @Table(name = "excepcion_disponibilidad")
 public class ExcepcionDisponibilidadEntidad {
@@ -39,74 +43,7 @@ public class ExcepcionDisponibilidadEntidad {
     @Column(name = "tipo_bloqueo", nullable = false, length = 20)
     private String tipoBloqueo;
 
-    @Column(length = 255)
+    @Column(length = 90)
     private String motivo;
 
-    public Long getId() {
-        return id;
-    }
-
-    public Long getEmpresaId() {
-        return empresaId;
-    }
-
-    public void setEmpresaId(Long empresaId) {
-        this.empresaId = empresaId;
-    }
-
-    public String getTipoSujeto() {
-        return tipoSujeto;
-    }
-
-    public void setTipoSujeto(String tipoSujeto) {
-        this.tipoSujeto = tipoSujeto;
-    }
-
-    public Long getSujetoId() {
-        return sujetoId;
-    }
-
-    public void setSujetoId(Long sujetoId) {
-        this.sujetoId = sujetoId;
-    }
-
-    public LocalDate getFechaExcepcion() {
-        return fechaExcepcion;
-    }
-
-    public void setFechaExcepcion(LocalDate fechaExcepcion) {
-        this.fechaExcepcion = fechaExcepcion;
-    }
-
-    public LocalTime getHoraInicio() {
-        return horaInicio;
-    }
-
-    public void setHoraInicio(LocalTime horaInicio) {
-        this.horaInicio = horaInicio;
-    }
-
-    public LocalTime getHoraFin() {
-        return horaFin;
-    }
-
-    public void setHoraFin(LocalTime horaFin) {
-        this.horaFin = horaFin;
-    }
-
-    public String getTipoBloqueo() {
-        return tipoBloqueo;
-    }
-
-    public void setTipoBloqueo(String tipoBloqueo) {
-        this.tipoBloqueo = tipoBloqueo;
-    }
-
-    public String getMotivo() {
-        return motivo;
-    }
-
-    public void setMotivo(String motivo) {
-        this.motivo = motivo;
-    }
 }
