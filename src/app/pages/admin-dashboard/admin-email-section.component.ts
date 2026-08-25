@@ -30,7 +30,8 @@ import {
     MatSelectModule,
     MatSlideToggleModule
   ],
-  templateUrl: './admin-email-section.component.html'
+  templateUrl: './admin-email-section.component.html',
+  styleUrls: ['./admin-email-section.component.css']
 })
 export class AdminEmailSectionComponent {
   readonly formularioCorreo = input.required<GuardarConfiguracionCorreoPayload>();

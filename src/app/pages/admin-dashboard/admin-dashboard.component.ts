@@ -33,13 +33,11 @@ import {
   DetectarChannelSenderWhatsappResponse,
   EnviarMensajeWhatsappPayload,
   ExcepcionDisponibilidadAdmin,
-  GuardarConfiguracionCorreoPayload,
   GuardarConfiguracionSitioPayload,
   GrupoServicioAdmin,
   LogMensajeWhatsappAdmin,
   MensajeWhatsappAdmin,
   MetadatosDisponibilidadAdmin,
-  MigracionSecretosCorreoResponse,
   PlantillaRolInternoAdmin,
   PlantillaWhatsappAdmin,
   PlantillaWhatsappEmpresaAdmin,
@@ -88,6 +86,8 @@ import { AdminAccessFacade } from './admin-access.facade';
 import { AdminWhatsappFacade } from './admin-whatsapp.facade';
 import { AdminAvailabilityFacade } from './admin-availability.facade';
 import { AdminProvidersFacade } from './admin-providers.facade';
+import { AdminEmailFacade } from './admin-email.facade';
+import { crearFormularioCorreo } from './admin-email.forms';
 import {
   alternarServicioPrestador,
   crearFormularioPrestador,
@@ -199,6 +199,7 @@ export class AdminDashboardComponent implements OnInit {
   private readonly whatsappFacade = inject(AdminWhatsappFacade);
   private readonly availabilityFacade = inject(AdminAvailabilityFacade);
   private readonly providersFacade = inject(AdminProvidersFacade);
+  private readonly emailFacade = inject(AdminEmailFacade);
   private readonly dashboardLoader = inject(AdminDashboardLoader);
   private readonly breakpointObserver = inject(BreakpointObserver);
   private readonly authService = inject(AuthService);
@@ -731,25 +732,7 @@ export class AdminDashboardComponent implements OnInit {
 
   formularioExcepcion = crearFormularioExcepcion();
 
-  formularioCorreo: GuardarConfiguracionCorreoPayload = {
-    habilitado: false,
-    proveedor: 'SMTP',
-    remitente: '',
-    nombreRemitente: '',
-    responderA: '',
-    smtpHost: '',
-    smtpPort: 587,
-    smtpUsername: '',
-    smtpPassword: '',
-    smtpAuth: true,
-    smtpStartTls: true,
-    graphTenantId: '',
-    graphClientId: '',
-    graphClientSecret: '',
-    graphUserId: '',
-    graphCertificateThumbprint: '',
-    graphPrivateKeyPem: ''
-  };
+  formularioCorreo = crearFormularioCorreo();
 
   formularioWhatsapp = crearFormularioWhatsapp();
   formularioPruebaWhatsapp = crearFormularioPruebaWhatsapp();
@@ -1121,27 +1104,7 @@ export class AdminDashboardComponent implements OnInit {
     this.guardandoCorreo = true;
     this.error = '';
     this.mensajeExito = '';
-    const payload: GuardarConfiguracionCorreoPayload = {
-      habilitado: this.formularioCorreo.habilitado,
-      proveedor: this.formularioCorreo.proveedor,
-      remitente: this.normalizarTexto(this.formularioCorreo.remitente),
-      nombreRemitente: this.normalizarTexto(this.formularioCorreo.nombreRemitente),
-      responderA: this.normalizarTexto(this.formularioCorreo.responderA),
-      smtpHost: this.normalizarTexto(this.formularioCorreo.smtpHost),
-      smtpPort: this.formularioCorreo.smtpPort ? Number(this.formularioCorreo.smtpPort) : null,
-      smtpUsername: this.normalizarTexto(this.formularioCorreo.smtpUsername),
-      smtpPassword: this.normalizarTexto(this.formularioCorreo.smtpPassword),
-      smtpAuth: this.formularioCorreo.smtpAuth,
-      smtpStartTls: this.formularioCorreo.smtpStartTls,
-      graphTenantId: this.normalizarTexto(this.formularioCorreo.graphTenantId),
-      graphClientId: this.normalizarTexto(this.formularioCorreo.graphClientId),
-      graphClientSecret: this.normalizarTexto(this.formularioCorreo.graphClientSecret),
-      graphUserId: this.normalizarTexto(this.formularioCorreo.graphUserId),
-      graphCertificateThumbprint: this.normalizarTexto(this.formularioCorreo.graphCertificateThumbprint),
-      graphPrivateKeyPem: this.normalizarTexto(this.formularioCorreo.graphPrivateKeyPem)
-    };
-
-    this.adminService.actualizarConfiguracionCorreo(payload)
+    this.emailFacade.guardar(this.formularioCorreo)
       .pipe(finalize(() => this.guardandoCorreo = false))
       .subscribe({
         next: response => {
@@ -1159,20 +1122,13 @@ export class AdminDashboardComponent implements OnInit {
     this.migrandoSecretosCorreo = true;
     this.error = '';
     this.mensajeExito = '';
-    this.adminService.migrarSecretosCorreo()
+    this.emailFacade.migrarSecretosYRecargar()
       .pipe(finalize(() => this.migrandoSecretosCorreo = false))
       .subscribe({
-        next: (response: MigracionSecretosCorreoResponse) => {
-          this.mensajeExito = response.mensaje;
-          this.adminService.getConfiguracionCorreo().subscribe({
-            next: configuracion => {
-              this.configuracionCorreo.set(configuracion);
-              this.sincronizarFormularioCorreo(configuracion);
-            },
-            error: err => {
-              this.error = err?.error?.mensaje || err?.message || 'Se migró el secreto, pero no se pudo refrescar la configuración.';
-            }
-          });
+        next: ({ resultado, configuracion }) => {
+          this.mensajeExito = resultado.mensaje;
+          this.configuracionCorreo.set(configuracion);
+          this.sincronizarFormularioCorreo(configuracion);
         },
         error: err => {
           this.error = err?.error?.mensaje || err?.message || 'No se pudo migrar el secreto SMTP.';
@@ -2302,25 +2258,7 @@ export class AdminDashboardComponent implements OnInit {
   }
 
   private sincronizarFormularioCorreo(configuracion: ConfiguracionCorreoAdmin | null) {
-    this.formularioCorreo = {
-      habilitado: configuracion?.habilitado ?? false,
-      proveedor: configuracion?.proveedor ?? 'SMTP',
-      remitente: configuracion?.remitente ?? '',
-      nombreRemitente: configuracion?.nombreRemitente ?? '',
-      responderA: configuracion?.responderA ?? '',
-      smtpHost: configuracion?.smtpHost ?? '',
-      smtpPort: configuracion?.smtpPort ?? 587,
-      smtpUsername: configuracion?.smtpUsername ?? '',
-      smtpPassword: '',
-      smtpAuth: configuracion?.smtpAuth ?? true,
-      smtpStartTls: configuracion?.smtpStartTls ?? true,
-      graphTenantId: configuracion?.graphTenantId ?? '',
-      graphClientId: configuracion?.graphClientId ?? '',
-      graphClientSecret: '',
-      graphUserId: configuracion?.graphUserId ?? '',
-      graphCertificateThumbprint: configuracion?.graphCertificateThumbprint ?? '',
-      graphPrivateKeyPem: ''
-    };
+    this.formularioCorreo = crearFormularioCorreo(configuracion);
   }
 
   private sincronizarFormularioWhatsapp(configuracion: ConfiguracionWhatsappAdmin | null) {
