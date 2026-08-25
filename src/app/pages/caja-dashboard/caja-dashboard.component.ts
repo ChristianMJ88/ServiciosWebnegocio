@@ -30,6 +30,7 @@ import {
   SucursalCaja
 } from '../../core/caja/caja.service';
 import { CajaDashboardFacade } from './data/caja-dashboard.facade';
+import { CajaPaymentsSectionComponent } from './payments/caja-payments-section.component';
 import {
   construirApertura,
   construirCierre,
@@ -62,7 +63,8 @@ type VistaCaja = 'cobros' | 'sesion' | 'movimientos';
     MatProgressBarModule,
     MatSelectModule,
     MatToolbarModule,
-    UserProfileDialogComponent
+    UserProfileDialogComponent,
+    CajaPaymentsSectionComponent
   ],
   templateUrl: './caja-dashboard.component.html',
   styleUrls: ['./caja-dashboard.component.css']
@@ -595,18 +597,6 @@ export class CajaDashboardComponent implements OnInit, AfterViewInit {
     ventana.document.close();
     ventana.focus();
     ventana.print();
-  }
-
-  calcularCambioPago(): number {
-    if (this.formularioPago.metodoPago !== this.metodoPagoEfectivo()) {
-      return 0;
-    }
-    const monto = Number(this.formularioPago.monto || 0);
-    const recibido = Number(this.formularioPago.montoRecibido || 0);
-    if (!Number.isFinite(monto) || !Number.isFinite(recibido) || recibido <= monto) {
-      return 0;
-    }
-    return recibido - monto;
   }
 
   private obtenerSucursalOperativaId(): number | null {

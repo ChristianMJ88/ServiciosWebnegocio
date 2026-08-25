@@ -1,0 +1,83 @@
+<div class="caja-grid">
+  <div class="caja-main-column">
+    <mat-card class="caja-card">
+      <div class="caja-card-heading">
+        <span class="caja-card-kicker">Cobros</span>
+        <h2>Citas pendientes de cobro</h2>
+      </div>
+      @if (citas.length) {
+        <div class="caja-list-toolbar">
+          <span>Selecciona una cita para trabajarla en el panel de cobro.</span>
+          <strong>{{ citas.length }} pendientes</strong>
+        </div>
+      } @else {
+        <div class="caja-empty">No hay citas cobrables hoy.</div>
+      }
+      @if (citas.length) {
+        <div class="caja-appointments">
+          @for (cita of citas; track cita.citaId) {
+            <button type="button" class="caja-appointment-card"
+              [class.active]="citaSeleccionadaId === cita.citaId"
+              (click)="selectAppointment.emit(cita.citaId)">
+              <div class="caja-appointment-head">
+                <div><strong>{{ cita.clienteNombre }}</strong><span>{{ cita.servicioNombre }} · {{ cita.sucursalNombre }}</span></div>
+                <span class="caja-table-badge">{{ cita.estadoPago }}</span>
+              </div>
+              <div class="caja-appointment-meta">
+                <span>{{ cita.inicio | date:'dd/MM/yyyy HH:mm':'':'es-MX' }}</span>
+                <span>{{ cita.clienteTelefono || 'Sin teléfono' }}</span>
+              </div>
+              <div class="caja-appointment-money">
+                <div><small>Total</small><strong>{{ cita.total | appMoney:'MXN':2:2 }}</strong></div>
+                <div><small>Pagado</small><strong>{{ cita.pagado | appMoney:'MXN':2:2 }}</strong></div>
+                <div><small>Pendiente</small><strong>{{ cita.pendiente | appMoney:'MXN':2:2 }}</strong></div>
+              </div>
+            </button>
+          }
+        </div>
+      }
+    </mat-card>
+  </div>
+
+  <div class="caja-side-column">
+    <mat-card class="caja-card caja-card-payment">
+      <div class="caja-card-heading">
+        <span class="caja-card-kicker">Pago</span>
+        <h2>{{ citaSeleccionada ? 'Registrar cobro' : 'Selecciona una cita' }}</h2>
+      </div>
+      @if (citaSeleccionada; as cita) {
+        <div class="caja-payment-context">
+          <strong>{{ cita.clienteNombre }}</strong>
+          <span>{{ cita.servicioNombre }} · {{ cita.sucursalNombre }}</span>
+          <span>{{ cita.inicio | date:'dd/MM/yyyy HH:mm':'':'es-MX' }}</span>
+          <div class="caja-payment-highlight"><small>Saldo pendiente</small><strong>{{ cita.pendiente | appMoney:'MXN':2:2 }}</strong></div>
+        </div>
+        <form class="caja-form-grid" (ngSubmit)="savePayment.emit()">
+          <mat-form-field appearance="outline"><mat-label>Monto</mat-label><input matInput type="number" min="0.01" step="0.01" name="montoPago" [(ngModel)]="formularioPago.monto" required></mat-form-field>
+          <mat-form-field appearance="outline"><mat-label>Método de pago</mat-label><mat-select name="metodoPago" [(ngModel)]="formularioPago.metodoPago">@for (metodo of metodosPago; track metodo.codigo) {<mat-option [value]="metodo.codigo">{{ metodo.etiqueta }}</mat-option>}</mat-select></mat-form-field>
+          @if (formularioPago.metodoPago === metodoPagoEfectivo) {
+            <mat-form-field appearance="outline"><mat-label>Recibido</mat-label><input matInput type="number" min="0.01" step="0.01" name="montoRecibido" [(ngModel)]="formularioPago.montoRecibido"></mat-form-field>
+            <div class="caja-payment-result"><span>Cambio</span><strong>{{ calcularCambio() | appMoney:'MXN':2:2 }}</strong></div>
+          }
+          <mat-form-field appearance="outline"><mat-label>Referencia</mat-label><input matInput name="referenciaPago" [(ngModel)]="formularioPago.referencia"></mat-form-field>
+          <mat-form-field appearance="outline" class="full-width"><mat-label>Observaciones</mat-label><textarea matInput rows="3" name="observacionesPago" [(ngModel)]="formularioPago.observaciones"></textarea></mat-form-field>
+          <div class="caja-form-actions">
+            <button mat-flat-button color="primary" type="submit" [disabled]="guardando || !cajaAbierta">Registrar pago</button>
+            @if (pagos.length) {<button mat-stroked-button type="button" (click)="printReceipt.emit()">Imprimir comprobante</button>}
+          </div>
+        </form>
+        @if (!cajaAbierta) {<div class="caja-empty">{{ mensajeBloqueo }}</div>}
+        <mat-divider></mat-divider>
+        <div class="caja-history">
+          <div class="caja-subheading"><span>Pagos registrados</span></div>
+          @if (!pagos.length) {<div class="caja-empty">Aún no hay pagos registrados para esta cita.</div>}
+          @if (pagos.length) {
+            <div class="caja-history-list">@for (pago of pagos; track pago.id) {<div class="caja-history-item"><div><strong>{{ pago.monto | appMoney:'MXN':2:2 }}</strong><span>{{ pago.metodoPago }}{{ pago.referencia ? ' · ' + pago.referencia : '' }}</span></div><small>{{ pago.registradoEn | date:'dd/MM HH:mm':'':'es-MX' }}</small></div>}</div>
+          }
+        </div>
+      } @else {
+        <div class="caja-empty">Elige una cita por cobrar para registrar pago, anticipo o liquidación.</div>
+      }
+    </mat-card>
+  </div>
+</div>
