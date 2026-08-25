@@ -11,7 +11,7 @@ import { MatMenuModule } from '@angular/material/menu';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatTooltipModule } from '@angular/material/tooltip';
-import { Observable, forkJoin } from 'rxjs';
+import { Observable } from 'rxjs';
 import { finalize } from 'rxjs/operators';
 import { AgendaOperationsSectionComponent } from '../../components/agenda/agenda-operations-section.component';
 import { buildWhatsAppUrl, formatAgendaStatusLabel, getDurationMinutes, getInitials } from '../../components/agenda/agenda.helpers';
@@ -93,11 +93,8 @@ import { AdminWhatsappInboxSectionComponent } from './admin-whatsapp-inbox-secti
 import { AdminWhatsappSectionComponent } from './admin-whatsapp-section.component';
 import { GRUPOS_SIDEBAR_ADMIN, MODULOS_ADMIN, ModuloAdminDef, SeccionAdmin } from './admin-dashboard.config';
 import { AdminDashboardLoader } from './admin-dashboard.loader';
+import { AdminCatalogFacade } from './admin-catalog.facade';
 import {
-  construirPayloadGrupoServicio,
-  construirPayloadServicio,
-  construirPayloadSubgrupoServicio,
-  construirPayloadSucursal,
   crearFormularioGrupoServicio,
   crearFormularioServicio,
   crearFormularioSubgrupoServicio,
@@ -155,6 +152,7 @@ type NotificacionAdmin = {
 })
 export class AdminDashboardComponent implements OnInit {
   private readonly adminService = inject(AdminService);
+  private readonly catalogFacade = inject(AdminCatalogFacade);
   private readonly dashboardLoader = inject(AdminDashboardLoader);
   private readonly breakpointObserver = inject(BreakpointObserver);
   private readonly authService = inject(AuthService);
@@ -1648,13 +1646,7 @@ export class AdminDashboardComponent implements OnInit {
     this.guardandoSucursal = true;
     this.error = '';
     this.mensajeExito = '';
-    const payload = construirPayloadSucursal(this.formularioSucursal);
-
-    const operacion = this.sucursalEditandoId
-      ? this.adminService.actualizarSucursal(this.sucursalEditandoId, payload)
-      : this.adminService.crearSucursal(payload);
-
-    operacion
+    this.catalogFacade.guardarSucursal(this.sucursalEditandoId, this.formularioSucursal)
       .pipe(finalize(() => this.guardandoSucursal = false))
       .subscribe({
         next: () => {
@@ -1681,12 +1673,7 @@ export class AdminDashboardComponent implements OnInit {
     this.guardandoGrupoServicio = true;
     this.error = '';
     this.mensajeExito = '';
-    const payload = construirPayloadGrupoServicio(this.formularioGrupoServicio);
-    const operacion = this.grupoServicioEditandoId
-      ? this.adminService.actualizarGrupoServicio(this.grupoServicioEditandoId, payload)
-      : this.adminService.crearGrupoServicio(payload);
-
-    operacion
+    this.catalogFacade.guardarGrupo(this.grupoServicioEditandoId, this.formularioGrupoServicio)
       .pipe(finalize(() => this.guardandoGrupoServicio = false))
       .subscribe({
         next: () => {
@@ -1713,12 +1700,7 @@ export class AdminDashboardComponent implements OnInit {
     this.guardandoSubgrupoServicio = true;
     this.error = '';
     this.mensajeExito = '';
-    const payload = construirPayloadSubgrupoServicio(this.formularioSubgrupoServicio);
-    const operacion = this.subgrupoServicioEditandoId
-      ? this.adminService.actualizarSubgrupoServicio(this.subgrupoServicioEditandoId, payload)
-      : this.adminService.crearSubgrupoServicio(payload);
-
-    operacion
+    this.catalogFacade.guardarSubgrupo(this.subgrupoServicioEditandoId, this.formularioSubgrupoServicio)
       .pipe(finalize(() => this.guardandoSubgrupoServicio = false))
       .subscribe({
         next: () => {
@@ -1768,13 +1750,7 @@ export class AdminDashboardComponent implements OnInit {
     this.guardandoServicio = true;
     this.error = '';
     this.mensajeExito = '';
-    const payload = construirPayloadServicio(this.formularioServicio);
-
-    const operacion = this.servicioEditandoId
-      ? this.adminService.actualizarServicio(this.servicioEditandoId, payload)
-      : this.adminService.crearServicio(payload);
-
-    operacion
+    this.catalogFacade.guardarServicio(this.servicioEditandoId, this.formularioServicio)
       .pipe(finalize(() => this.guardandoServicio = false))
       .subscribe({
         next: () => {
@@ -1796,12 +1772,7 @@ export class AdminDashboardComponent implements OnInit {
     this.error = '';
     this.mensajeExito = '';
 
-    const payload = {
-      ...construirPayloadServicio(servicio),
-      activo: !servicio.activo
-    };
-
-    this.adminService.actualizarServicio(servicio.id, payload)
+    this.catalogFacade.alternarServicio(servicio)
       .pipe(finalize(() => this.guardandoServicio = false))
       .subscribe({
         next: servicioActualizado => {
@@ -1828,10 +1799,7 @@ export class AdminDashboardComponent implements OnInit {
     this.error = '';
     this.mensajeExito = '';
 
-    this.adminService.actualizarGrupoServicio(grupo.id, {
-      ...construirPayloadGrupoServicio(grupo),
-      activo: !grupo.activo
-    })
+    this.catalogFacade.alternarGrupo(grupo)
       .pipe(finalize(() => this.guardandoGrupoServicio = false))
       .subscribe({
         next: grupoActualizado => {
@@ -1857,10 +1825,7 @@ export class AdminDashboardComponent implements OnInit {
     this.error = '';
     this.mensajeExito = '';
 
-    this.adminService.actualizarSubgrupoServicio(subgrupo.id, {
-      ...construirPayloadSubgrupoServicio(subgrupo),
-      activo: !subgrupo.activo
-    })
+    this.catalogFacade.alternarSubgrupo(subgrupo)
       .pipe(finalize(() => this.guardandoSubgrupoServicio = false))
       .subscribe({
         next: subgrupoActualizado => {
@@ -1894,9 +1859,7 @@ export class AdminDashboardComponent implements OnInit {
     this.mensajeExito = '';
     this.gruposServicio.set(mergeCatalogoById(this.gruposServicio(), cambios).sort(ordenarCatalogo));
 
-    forkJoin(cambios.map(grupo =>
-      this.adminService.actualizarGrupoServicio(grupo.id, construirPayloadGrupoServicio(grupo))
-    ))
+    this.catalogFacade.guardarOrdenGrupos(cambios)
       .pipe(finalize(() => this.guardandoGrupoServicio = false))
       .subscribe({
         next: gruposActualizados => {
@@ -1930,9 +1893,7 @@ export class AdminDashboardComponent implements OnInit {
     this.mensajeExito = '';
     this.subgruposServicio.set(mergeCatalogoById(this.subgruposServicio(), cambios).sort(ordenarCatalogo));
 
-    forkJoin(cambios.map(subgrupo =>
-      this.adminService.actualizarSubgrupoServicio(subgrupo.id, construirPayloadSubgrupoServicio(subgrupo))
-    ))
+    this.catalogFacade.guardarOrdenSubgrupos(cambios)
       .pipe(finalize(() => this.guardandoSubgrupoServicio = false))
       .subscribe({
         next: subgruposActualizados => {
@@ -1970,9 +1931,7 @@ export class AdminDashboardComponent implements OnInit {
     this.mensajeExito = '';
     this.servicios.set(mergeCatalogoById(this.servicios(), cambios).sort(ordenarCatalogo));
 
-    forkJoin(cambios.map(servicio =>
-      this.adminService.actualizarServicio(servicio.id, construirPayloadServicio(servicio))
-    ))
+    this.catalogFacade.guardarOrdenServicios(cambios)
       .pipe(finalize(() => this.guardandoServicio = false))
       .subscribe({
         next: serviciosActualizados => {
