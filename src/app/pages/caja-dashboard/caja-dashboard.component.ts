@@ -31,6 +31,7 @@ import {
 } from '../../core/caja/caja.service';
 import { CajaDashboardFacade } from './data/caja-dashboard.facade';
 import { CajaPaymentsSectionComponent } from './payments/caja-payments-section.component';
+import { CajaSessionSectionComponent } from './session/caja-session-section.component';
 import {
   construirApertura,
   construirCierre,
@@ -64,7 +65,8 @@ type VistaCaja = 'cobros' | 'sesion' | 'movimientos';
     MatSelectModule,
     MatToolbarModule,
     UserProfileDialogComponent,
-    CajaPaymentsSectionComponent
+    CajaPaymentsSectionComponent,
+    CajaSessionSectionComponent
   ],
   templateUrl: './caja-dashboard.component.html',
   styleUrls: ['./caja-dashboard.component.css']

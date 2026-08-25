@@ -1,0 +1,75 @@
+<div class="caja-grid caja-grid-focus">
+  <div class="caja-main-column">
+    <mat-card class="caja-card caja-card-emphasis">
+      <div class="caja-card-heading">
+        <span class="caja-card-kicker">Sesión</span>
+        <h2>{{ cajaAbierta ? 'Caja abierta' : 'Apertura de caja' }}</h2>
+      </div>
+      @if (!cajaAbierta) {
+        <div class="caja-inline-note">
+          Abre la caja de la sucursal activa antes de registrar cobros o movimientos.
+        </div>
+      }
+      @if (sesion) {
+        <div class="caja-session-summary">
+          <div><span class="label">Sucursal</span><strong>{{ sesion.sucursalNombre }}</strong></div>
+          <div><span class="label">Abierta en</span><strong>{{ sesion.abiertaEn | date:'dd/MM/yyyy HH:mm':'':'es-MX' }}</strong></div>
+          <div><span class="label">Inicial</span><strong>{{ sesion.montoInicial | appMoney:'MXN':2:2 }}</strong></div>
+          <div><span class="label">Esperado</span><strong>{{ resumen?.saldoEsperadoCaja | appMoney:'MXN':2:2 }}</strong></div>
+        </div>
+        @if (puedeGestionar) {
+          <mat-divider></mat-divider>
+          <form class="caja-form-grid" (ngSubmit)="closeSession.emit()">
+            <mat-form-field appearance="outline">
+              <mat-label>Monto contado</mat-label>
+              <input matInput type="number" min="0" step="0.01" name="montoContado"
+                [(ngModel)]="formularioCierre.montoContado" required>
+            </mat-form-field>
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Observaciones de cierre</mat-label>
+              <textarea matInput rows="3" name="observacionesCierre"
+                [(ngModel)]="formularioCierre.observaciones"></textarea>
+            </mat-form-field>
+            <div class="caja-form-actions">
+              <button mat-flat-button color="primary" type="submit" [disabled]="guardandoCierre">Cerrar caja</button>
+            </div>
+          </form>
+        }
+      } @else if (puedeGestionar) {
+        <form class="caja-form-grid" (ngSubmit)="openSession.emit()">
+          <mat-form-field appearance="outline">
+            <mat-label>Monto inicial</mat-label>
+            <input matInput type="number" min="0" step="0.01" name="montoInicial"
+              [(ngModel)]="formularioApertura.montoInicial" required>
+          </mat-form-field>
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Observaciones de apertura</mat-label>
+            <textarea matInput rows="3" name="observacionesApertura"
+              [(ngModel)]="formularioApertura.observaciones"></textarea>
+          </mat-form-field>
+          <div class="caja-form-actions">
+            <button mat-flat-button color="primary" type="submit" [disabled]="guardandoApertura">Abrir caja</button>
+          </div>
+        </form>
+      } @else {
+        <div class="caja-empty">Tienes acceso de consulta a caja, pero no permiso para abrir o cerrar sesión.</div>
+      }
+    </mat-card>
+  </div>
+  <div class="caja-side-column">
+    <mat-card class="caja-card">
+      <div class="caja-card-heading">
+        <span class="caja-card-kicker">Resumen</span>
+        <h2>Apertura y cierre</h2>
+      </div>
+      <div class="caja-summary-grid">
+        <div><span class="label">Cobrado en efectivo</span><strong>{{ resumen?.totalCobradoEfectivo | appMoney:'MXN':2:2 }}</strong></div>
+        <div><span class="label">Cobrado con tarjeta</span><strong>{{ resumen?.totalCobradoTarjeta | appMoney:'MXN':2:2 }}</strong></div>
+        <div><span class="label">Cobrado por transferencia</span><strong>{{ resumen?.totalCobradoTransferencia | appMoney:'MXN':2:2 }}</strong></div>
+        <div><span class="label">Gastos menores</span><strong>{{ resumen?.totalGastos | appMoney:'MXN':2:2 }}</strong></div>
+        <div><span class="label">Retiros</span><strong>{{ resumen?.totalRetiros | appMoney:'MXN':2:2 }}</strong></div>
+        <div><span class="label">Saldo esperado</span><strong>{{ resumen?.saldoEsperadoCaja | appMoney:'MXN':2:2 }}</strong></div>
+      </div>
+    </mat-card>
+  </div>
+</div>
