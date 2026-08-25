@@ -48,7 +48,7 @@ import {
     CajaReceiptComponent
   ],
   templateUrl: './caja-dashboard.component.html',
-  styleUrls: ['./caja-dashboard.component.css'],
+  styleUrls: ['./caja-dashboard.component.css', './styles/caja-operation-shared.css'],
   encapsulation: ViewEncapsulation.None
 })
 export class CajaDashboardComponent implements OnInit, AfterViewInit {

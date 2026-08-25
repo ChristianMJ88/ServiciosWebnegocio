@@ -1,3 +1,202 @@
 :host {
   display: block;
 }
+
+.caja-card-payment {
+  border-color: rgba(31, 112, 97, 0.14);
+  box-shadow: 0 20px 36px rgba(31, 46, 43, 0.1);
+}
+
+.caja-list-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 0.7rem;
+  padding: 0.7rem 0.85rem;
+  border-radius: 16px;
+  background: rgba(231, 225, 214, 0.52);
+  color: #6c6259;
+  font-size: 0.92rem;
+}
+
+.caja-list-toolbar strong {
+  color: #2f312d;
+  font-size: 0.95rem;
+}
+
+.caja-payment-result {
+  grid-column: 1 / -1;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.9rem 1rem;
+  border-radius: 16px;
+  background: rgba(31, 112, 97, 0.08);
+  color: #245247;
+}
+
+.caja-payment-result span {
+  color: #5f665f;
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.caja-payment-result strong {
+  font-size: 1.35rem;
+}
+
+.caja-appointments {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+  max-height: 760px;
+  overflow: auto;
+  padding-right: 0.15rem;
+}
+
+.caja-appointment-card {
+  position: relative;
+  width: 100%;
+  padding: 0.95rem 1rem;
+  border: 1px solid rgba(110, 93, 77, 0.12);
+  border-radius: 20px;
+  background: rgba(255, 253, 249, 0.94);
+  text-align: left;
+  transition: transform 120ms ease, box-shadow 120ms ease, border-color 120ms ease;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.52);
+}
+
+.caja-appointment-card::before {
+  content: "";
+  position: absolute;
+  left: 0.85rem;
+  top: 0.9rem;
+  bottom: 0.9rem;
+  width: 3px;
+  border-radius: 999px;
+  background: rgba(31, 112, 97, 0.14);
+}
+
+.caja-appointment-card:hover,
+.caja-appointment-card.active {
+  transform: translateY(-1px);
+  border-color: rgba(31, 112, 97, 0.32);
+  box-shadow: 0 18px 32px rgba(43, 41, 37, 0.09);
+}
+
+.caja-appointment-card.active {
+  background: linear-gradient(180deg, rgba(255, 252, 246, 1), rgba(243, 248, 245, 0.92));
+}
+
+.caja-appointment-card.active::before,
+.caja-appointment-card:hover::before {
+  background: linear-gradient(180deg, #1f7061, #145043);
+}
+
+.caja-appointment-head,
+.caja-appointment-meta,
+.caja-appointment-money {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding-left: 0.55rem;
+}
+
+.caja-appointment-head span,
+.caja-appointment-meta span,
+.caja-appointment-money small,
+.caja-payment-context span {
+  color: #71665d;
+}
+
+.caja-appointment-head {
+  align-items: flex-start;
+  margin-bottom: 0.65rem;
+}
+
+.caja-appointment-meta {
+  margin-bottom: 0.75rem;
+  font-size: 0.89rem;
+  flex-wrap: wrap;
+}
+
+.caja-appointment-money {
+  gap: 1rem;
+}
+
+.caja-appointment-money div {
+  min-width: 0;
+}
+
+.caja-appointment-money strong {
+  display: block;
+  font-size: 1rem;
+}
+
+.caja-table-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.45rem 0.7rem;
+  border-radius: 999px;
+  background: rgba(101, 91, 81, 0.09);
+  color: #64584f;
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+.caja-table-badge.is-partial {
+  background: rgba(233, 178, 106, 0.2);
+  color: #7a5a27;
+}
+
+.caja-payment-context {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  margin-bottom: 0.9rem;
+  padding: 0.95rem 1rem;
+  border: 1px solid rgba(31, 112, 97, 0.14);
+  border-radius: 18px;
+  background: linear-gradient(180deg, rgba(242, 246, 244, 0.95), rgba(255, 252, 246, 0.96));
+}
+
+.caja-payment-context strong {
+  display: block;
+}
+
+.caja-payment-highlight {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  margin-top: 0.45rem;
+  padding-top: 0.55rem;
+  border-top: 1px dashed rgba(110, 93, 77, 0.18);
+}
+
+.caja-payment-highlight small {
+  color: #6f6358;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.caja-payment-highlight strong {
+  font-size: 1.4rem;
+  color: #184b42;
+}
+
+@media (max-width: 767px) {
+  .caja-appointment-head,
+  .caja-appointment-meta,
+  .caja-appointment-money,
+  .caja-list-toolbar,
+  .caja-payment-result {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .caja-payment-result {
+    gap: 0.35rem;
+  }
+}

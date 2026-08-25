@@ -1,3 +1,27 @@
 :host {
   display: block;
 }
+
+.caja-last-movement {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  margin-bottom: 0.9rem;
+}
+
+.caja-last-movement span {
+  color: #71665d;
+}
+
+.caja-last-movement strong {
+  display: block;
+}
+
+.caja-history-amount {
+  text-align: right;
+}
+
+.caja-history-amount small {
+  display: block;
+  margin-top: 0.2rem;
+}
