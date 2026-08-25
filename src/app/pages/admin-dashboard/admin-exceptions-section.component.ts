@@ -7,6 +7,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { ExcepcionDisponibilidadAdmin, GuardarExcepcionDisponibilidadPayload } from '../../core/admin/admin.service';
+import { SujetoDisponibilidadOption } from './admin-availability.types';
 
 @Component({
   selector: 'app-admin-exceptions-section',
@@ -19,13 +20,14 @@ import { ExcepcionDisponibilidadAdmin, GuardarExcepcionDisponibilidadPayload } f
     MatInputModule,
     MatSelectModule
 ],
-  templateUrl: './admin-exceptions-section.component.html'
+  templateUrl: './admin-exceptions-section.component.html',
+  styleUrls: ['./admin-exceptions-section.component.css']
 })
 export class AdminExceptionsSectionComponent {
   @Input({ required: true }) excepcionEditandoId!: number | null;
   @Input({ required: true }) formularioExcepcion!: GuardarExcepcionDisponibilidadPayload;
   @Input({ required: true }) guardandoExcepcion!: boolean;
-  @Input({ required: true }) sujetosExcepcion!: Array<{ id: number; nombre: string }>;
+  @Input({ required: true }) sujetosExcepcion!: SujetoDisponibilidadOption[];
   @Input({ required: true }) tiposBloqueo!: string[];
   @Input({ required: true }) excepcionesDisponibilidad!: ExcepcionDisponibilidadAdmin[];
 

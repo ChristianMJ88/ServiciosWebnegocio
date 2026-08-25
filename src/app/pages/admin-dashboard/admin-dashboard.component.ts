@@ -35,9 +35,7 @@ import {
   ExcepcionDisponibilidadAdmin,
   GuardarConfiguracionCorreoPayload,
   GuardarConfiguracionSitioPayload,
-  GuardarExcepcionDisponibilidadPayload,
   GuardarPrestadorPayload,
-  GuardarReglaDisponibilidadPayload,
   GrupoServicioAdmin,
   LogMensajeWhatsappAdmin,
   MensajeWhatsappAdmin,
@@ -88,6 +86,14 @@ import { AdminDashboardLoader } from './admin-dashboard.loader';
 import { AdminCatalogFacade } from './admin-catalog.facade';
 import { AdminAccessFacade } from './admin-access.facade';
 import { AdminWhatsappFacade } from './admin-whatsapp.facade';
+import { AdminAvailabilityFacade } from './admin-availability.facade';
+import {
+  construirSujetosDisponibilidad,
+  crearFormularioExcepcion,
+  crearFormularioRegla,
+  sincronizarSujetoSeleccionado
+} from './admin-availability.forms';
+import { SujetoDisponibilidadOption } from './admin-availability.types';
 import {
   agruparCitasPorFecha,
   calcularAnaliticaAgenda,
@@ -182,6 +188,7 @@ export class AdminDashboardComponent implements OnInit {
   private readonly catalogFacade = inject(AdminCatalogFacade);
   private readonly accessFacade = inject(AdminAccessFacade);
   private readonly whatsappFacade = inject(AdminWhatsappFacade);
+  private readonly availabilityFacade = inject(AdminAvailabilityFacade);
   private readonly dashboardLoader = inject(AdminDashboardLoader);
   private readonly breakpointObserver = inject(BreakpointObserver);
   private readonly authService = inject(AuthService);
@@ -663,8 +670,8 @@ export class AdminDashboardComponent implements OnInit {
   probandoPlantillaWhatsapp = false;
   enviandoMensajeWhatsapp = false;
   guardandoPlantillaWhatsappEmpresa = false;
-  sujetosRegla: Array<{ id: number; nombre: string }> = [];
-  sujetosExcepcion: Array<{ id: number; nombre: string }> = [];
+  sujetosRegla: SujetoDisponibilidadOption[] = [];
+  sujetosExcepcion: SujetoDisponibilidadOption[] = [];
   serviciosPrestadorDisponibles: ServicioAdmin[] = [];
   sucursalEditandoId: number | null = null;
   grupoServicioEditandoId: number | null = null;
@@ -730,26 +737,9 @@ export class AdminDashboardComponent implements OnInit {
 
   formularioRolInterno = crearFormularioRolInterno();
 
-  formularioRegla: GuardarReglaDisponibilidadPayload = {
-    tipoSujeto: 'SUCURSAL',
-    sujetoId: 0,
-    diaSemana: 1,
-    horaInicio: '09:00',
-    horaFin: '18:00',
-    intervaloMinutos: 15,
-    vigenteDesde: null,
-    vigenteHasta: null
-  };
+  formularioRegla = crearFormularioRegla();
 
-  formularioExcepcion: GuardarExcepcionDisponibilidadPayload = {
-    tipoSujeto: 'SUCURSAL',
-    sujetoId: 0,
-    fechaExcepcion: '',
-    horaInicio: null,
-    horaFin: null,
-    tipoBloqueo: 'BLOQUEO',
-    motivo: null
-  };
+  formularioExcepcion = crearFormularioExcepcion();
 
   formularioCorreo: GuardarConfiguracionCorreoPayload = {
     habilitado: false,
@@ -2017,19 +2007,6 @@ export class AdminDashboardComponent implements OnInit {
     this.formularioPrestador.servicioIds = Array.from(seleccionados);
   }
 
-  private construirOpcionesSujetos(tipoSujeto: string): Array<{ id: number; nombre: string }> {
-    if (tipoSujeto === 'PRESTADOR') {
-      return this.prestadores().map(prestador => ({
-        id: prestador.usuarioId,
-        nombre: `${prestador.nombreMostrar} · ${prestador.sucursalNombre}`
-      }));
-    }
-    return this.sucursales().map(sucursal => ({
-      id: sucursal.id,
-      nombre: sucursal.nombre
-    }));
-  }
-
   cambiarTipoSujetoRegla(tipoSujeto: string) {
     this.formularioRegla.tipoSujeto = tipoSujeto;
     this.actualizarSujetosRegla();
@@ -2042,30 +2019,12 @@ export class AdminDashboardComponent implements OnInit {
 
   editarRegla(regla: ReglaDisponibilidadAdmin) {
     this.reglaEditandoId = regla.id;
-    this.formularioRegla = {
-      tipoSujeto: regla.tipoSujeto,
-      sujetoId: regla.sujetoId,
-      diaSemana: regla.diaSemana,
-      horaInicio: regla.horaInicio,
-      horaFin: regla.horaFin,
-      intervaloMinutos: regla.intervaloMinutos,
-      vigenteDesde: regla.vigenteDesde,
-      vigenteHasta: regla.vigenteHasta
-    };
+    this.formularioRegla = crearFormularioRegla(0, regla);
   }
 
   cancelarEdicionRegla() {
     this.reglaEditandoId = null;
-    this.formularioRegla = {
-      tipoSujeto: 'SUCURSAL',
-      sujetoId: 0,
-      diaSemana: 1,
-      horaInicio: '09:00',
-      horaFin: '18:00',
-      intervaloMinutos: 15,
-      vigenteDesde: null,
-      vigenteHasta: null
-    };
+    this.formularioRegla = crearFormularioRegla();
     this.actualizarSujetosRegla();
   }
 
@@ -2073,16 +2032,7 @@ export class AdminDashboardComponent implements OnInit {
     this.guardandoRegla = true;
     this.error = '';
     this.mensajeExito = '';
-    const payload: GuardarReglaDisponibilidadPayload = {
-      ...this.formularioRegla,
-      vigenteDesde: this.normalizarTexto(this.formularioRegla.vigenteDesde),
-      vigenteHasta: this.normalizarTexto(this.formularioRegla.vigenteHasta)
-    };
-    const operacion = this.reglaEditandoId
-      ? this.adminService.actualizarReglaDisponibilidad(this.reglaEditandoId, payload)
-      : this.adminService.crearReglaDisponibilidad(payload);
-
-    operacion
+    this.availabilityFacade.guardarRegla(this.reglaEditandoId, this.formularioRegla)
       .pipe(finalize(() => this.guardandoRegla = false))
       .subscribe({
         next: () => {
@@ -2097,28 +2047,12 @@ export class AdminDashboardComponent implements OnInit {
 
   editarExcepcion(excepcion: ExcepcionDisponibilidadAdmin) {
     this.excepcionEditandoId = excepcion.id;
-    this.formularioExcepcion = {
-      tipoSujeto: excepcion.tipoSujeto,
-      sujetoId: excepcion.sujetoId,
-      fechaExcepcion: excepcion.fechaExcepcion,
-      horaInicio: excepcion.horaInicio,
-      horaFin: excepcion.horaFin,
-      tipoBloqueo: excepcion.tipoBloqueo,
-      motivo: excepcion.motivo
-    };
+    this.formularioExcepcion = crearFormularioExcepcion(0, excepcion);
   }
 
   cancelarEdicionExcepcion() {
     this.excepcionEditandoId = null;
-    this.formularioExcepcion = {
-      tipoSujeto: 'SUCURSAL',
-      sujetoId: 0,
-      fechaExcepcion: '',
-      horaInicio: null,
-      horaFin: null,
-      tipoBloqueo: 'BLOQUEO',
-      motivo: null
-    };
+    this.formularioExcepcion = crearFormularioExcepcion();
     this.actualizarSujetosExcepcion();
   }
 
@@ -2126,17 +2060,7 @@ export class AdminDashboardComponent implements OnInit {
     this.guardandoExcepcion = true;
     this.error = '';
     this.mensajeExito = '';
-    const payload: GuardarExcepcionDisponibilidadPayload = {
-      ...this.formularioExcepcion,
-      horaInicio: this.normalizarTexto(this.formularioExcepcion.horaInicio),
-      horaFin: this.normalizarTexto(this.formularioExcepcion.horaFin),
-      motivo: this.normalizarTexto(this.formularioExcepcion.motivo)
-    };
-    const operacion = this.excepcionEditandoId
-      ? this.adminService.actualizarExcepcionDisponibilidad(this.excepcionEditandoId, payload)
-      : this.adminService.crearExcepcionDisponibilidad(payload);
-
-    operacion
+    this.availabilityFacade.guardarExcepcion(this.excepcionEditandoId, this.formularioExcepcion)
       .pipe(finalize(() => this.guardandoExcepcion = false))
       .subscribe({
         next: () => {
@@ -2466,17 +2390,27 @@ export class AdminDashboardComponent implements OnInit {
   }
 
   private actualizarSujetosRegla() {
-    this.sujetosRegla = this.construirOpcionesSujetos(this.formularioRegla.tipoSujeto);
-    if (!this.sujetosRegla.some(sujeto => sujeto.id === this.formularioRegla.sujetoId)) {
-      this.formularioRegla.sujetoId = this.sujetosRegla[0]?.id ?? 0;
-    }
+    this.sujetosRegla = construirSujetosDisponibilidad(
+      this.formularioRegla.tipoSujeto,
+      this.sucursales(),
+      this.prestadores()
+    );
+    this.formularioRegla.sujetoId = sincronizarSujetoSeleccionado(
+      this.formularioRegla.sujetoId,
+      this.sujetosRegla
+    );
   }
 
   private actualizarSujetosExcepcion() {
-    this.sujetosExcepcion = this.construirOpcionesSujetos(this.formularioExcepcion.tipoSujeto);
-    if (!this.sujetosExcepcion.some(sujeto => sujeto.id === this.formularioExcepcion.sujetoId)) {
-      this.formularioExcepcion.sujetoId = this.sujetosExcepcion[0]?.id ?? 0;
-    }
+    this.sujetosExcepcion = construirSujetosDisponibilidad(
+      this.formularioExcepcion.tipoSujeto,
+      this.sucursales(),
+      this.prestadores()
+    );
+    this.formularioExcepcion.sujetoId = sincronizarSujetoSeleccionado(
+      this.formularioExcepcion.sujetoId,
+      this.sujetosExcepcion
+    );
   }
 
   private enfocarFormularioUsuariosInternos() {

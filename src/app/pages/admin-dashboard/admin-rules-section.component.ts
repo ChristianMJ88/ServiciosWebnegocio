@@ -7,6 +7,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { GuardarReglaDisponibilidadPayload, ReglaDisponibilidadAdmin } from '../../core/admin/admin.service';
+import { DiaSemanaOption, SujetoDisponibilidadOption } from './admin-availability.types';
 
 @Component({
   selector: 'app-admin-rules-section',
@@ -19,14 +20,15 @@ import { GuardarReglaDisponibilidadPayload, ReglaDisponibilidadAdmin } from '../
     MatInputModule,
     MatSelectModule
 ],
-  templateUrl: './admin-rules-section.component.html'
+  templateUrl: './admin-rules-section.component.html',
+  styleUrls: ['./admin-rules-section.component.css']
 })
 export class AdminRulesSectionComponent {
   @Input({ required: true }) reglaEditandoId!: number | null;
   @Input({ required: true }) formularioRegla!: GuardarReglaDisponibilidadPayload;
   @Input({ required: true }) guardandoRegla!: boolean;
-  @Input({ required: true }) sujetosRegla!: Array<{ id: number; nombre: string }>;
-  @Input({ required: true }) diasSemana!: Array<{ value: number; label: string }>;
+  @Input({ required: true }) sujetosRegla!: SujetoDisponibilidadOption[];
+  @Input({ required: true }) diasSemana!: DiaSemanaOption[];
   @Input({ required: true }) reglasDisponibilidad!: ReglaDisponibilidadAdmin[];
   @Input({ required: true }) diasSemanaTexto!: Record<number, string>;
 
