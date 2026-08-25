@@ -40,12 +40,11 @@ import java.util.Locale;
 import static org.springframework.http.HttpStatus.CONFLICT;
 import static org.springframework.http.HttpStatus.FORBIDDEN;
 import static org.springframework.http.HttpStatus.NOT_FOUND;
+import static org.springframework.http.HttpStatus.BAD_REQUEST;
+import static com.techprotech.agenda.modulos.caja.aplicacion.CatalogosCaja.*;
 
 @Service
 public class ServicioCaja {
-
-    private static final String ESTADO_ABIERTA = "ABIERTA";
-    private static final String ESTADO_CERRADA = "CERRADA";
 
     private final CajaSesionRepositorio cajaSesionRepositorio;
     private final PagoCitaRepositorio pagoCitaRepositorio;
@@ -108,14 +107,18 @@ public class ServicioCaja {
                                 sucursal.getTelefono(),
                                 sucursal.getZonaHoraria()
                         ))
-                        .toList()
+                        .toList(),
+                METODOS_PAGO.stream().map(opcion -> new CatalogoCajaResponse.OpcionCajaResponse(opcion.codigo(), opcion.etiqueta())).toList(),
+                TIPOS_MOVIMIENTO_MANUAL.stream().map(opcion -> new CatalogoCajaResponse.OpcionCajaResponse(opcion.codigo(), opcion.etiqueta())).toList(),
+                ESTADO_SESION_ABIERTA,
+                METODO_PAGO_EFECTIVO
         );
     }
 
     @Transactional
     public CajaSesionResponse abrirSesion(Long empresaId, Long usuarioId, List<Long> sucursalesPermitidas, AbrirCajaRequest request) {
         validarAccesoSucursal(sucursalesPermitidas, request.sucursalId());
-        cajaSesionRepositorio.findByEmpresaIdAndSucursalIdAndEstado(empresaId, request.sucursalId(), ESTADO_ABIERTA)
+        cajaSesionRepositorio.findByEmpresaIdAndSucursalIdAndEstado(empresaId, request.sucursalId(), ESTADO_SESION_ABIERTA)
                 .ifPresent(sesion -> {
                     throw new ResponseStatusException(CONFLICT, "Ya existe una caja abierta para esa sucursal");
                 });
@@ -123,7 +126,7 @@ public class ServicioCaja {
         CajaSesionEntidad sesion = new CajaSesionEntidad();
         sesion.setEmpresaId(empresaId);
         sesion.setSucursalId(request.sucursalId());
-        sesion.setEstado(ESTADO_ABIERTA);
+        sesion.setEstado(ESTADO_SESION_ABIERTA);
         sesion.setMontoInicial(request.montoInicial());
         sesion.setMontoEsperado(request.montoInicial());
         sesion.setObservaciones(normalizarOpcional(request.observaciones()));
@@ -137,7 +140,7 @@ public class ServicioCaja {
         CajaSesionEntidad sesion = cajaSesionRepositorio.findByIdAndEmpresaId(cajaSesionId, empresaId)
                 .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "La sesión de caja no existe para la empresa"));
         validarAccesoSucursal(sucursalesPermitidas, sesion.getSucursalId());
-        if (!ESTADO_ABIERTA.equalsIgnoreCase(sesion.getEstado())) {
+        if (!ESTADO_SESION_ABIERTA.equalsIgnoreCase(sesion.getEstado())) {
             throw new ResponseStatusException(CONFLICT, "La caja indicada ya está cerrada");
         }
 
@@ -145,7 +148,7 @@ public class ServicioCaja {
         sesion.setMontoEsperado(esperado);
         sesion.setMontoContado(request.montoContado());
         sesion.setDiferencia(request.montoContado().subtract(esperado));
-        sesion.setEstado(ESTADO_CERRADA);
+        sesion.setEstado(ESTADO_SESION_CERRADA);
         sesion.setCerradaPorUsuarioId(usuarioId);
         sesion.setCerradaEn(LocalDateTime.now());
         if (normalizarOpcional(request.observaciones()) != null) {
@@ -178,6 +181,10 @@ public class ServicioCaja {
 
     @Transactional
     public PagoCitaResponse registrarPago(Long empresaId, Long usuarioId, List<Long> sucursalesPermitidas, Long citaId, RegistrarPagoRequest request) {
+        String metodoPago = normalizarMayusculas(request.metodoPago());
+        if (!contiene(METODOS_PAGO, metodoPago)) {
+            throw new ResponseStatusException(BAD_REQUEST, "El método de pago no es válido");
+        }
         CitaEntidad cita = citaRepositorio.findByIdAndEmpresaId(citaId, empresaId)
                 .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "La cita no existe para la empresa"));
         validarAccesoSucursal(sucursalesPermitidas, cita.getSucursalId());
@@ -200,20 +207,20 @@ public class ServicioCaja {
         pago.setCitaId(citaId);
         pago.setCajaSesionId(sesion.getId());
         pago.setMonto(request.monto());
-        pago.setMetodoPago(normalizarMayusculas(request.metodoPago()));
+        pago.setMetodoPago(metodoPago);
         pago.setReferencia(normalizarOpcional(request.referencia()));
         pago.setObservaciones(normalizarOpcional(request.observaciones()));
         pago.setRegistradoPorUsuarioId(usuarioId);
         pago.setRegistradoEn(LocalDateTime.now());
         PagoCitaEntidad guardado = pagoCitaRepositorio.save(pago);
 
-        if ("EFECTIVO".equals(guardado.getMetodoPago())) {
+        if (METODO_PAGO_EFECTIVO.equals(guardado.getMetodoPago())) {
             registrarMovimientoInterno(
                     empresaId,
                     sesion.getId(),
                     citaId,
                     "INGRESO_CITA",
-                    "EFECTIVO",
+                    METODO_PAGO_EFECTIVO,
                     guardado.getMonto(),
                     "Cobro de cita #" + citaId,
                     guardado.getReferencia(),
@@ -237,14 +244,22 @@ public class ServicioCaja {
 
     @Transactional
     public MovimientoCajaResponse registrarMovimiento(Long empresaId, Long usuarioId, List<Long> sucursalesPermitidas, RegistrarMovimientoCajaRequest request) {
+        String tipoMovimiento = normalizarMayusculas(request.tipoMovimiento());
+        String metodoPago = normalizarOpcionalMayusculas(request.metodoPago());
+        if (!contiene(TIPOS_MOVIMIENTO_MANUAL, tipoMovimiento)) {
+            throw new ResponseStatusException(BAD_REQUEST, "El tipo de movimiento no es válido");
+        }
+        if (metodoPago != null && !contiene(METODOS_PAGO, metodoPago)) {
+            throw new ResponseStatusException(BAD_REQUEST, "El método de pago no es válido");
+        }
         validarAccesoSucursal(sucursalesPermitidas, request.sucursalId());
         CajaSesionEntidad sesion = obtenerSesionAbiertaObligatoria(empresaId, request.sucursalId());
         MovimientoCajaEntidad movimiento = registrarMovimientoInterno(
                 empresaId,
                 sesion.getId(),
                 null,
-                normalizarMayusculas(request.tipoMovimiento()),
-                normalizarOpcionalMayusculas(request.metodoPago()),
+                tipoMovimiento,
+                metodoPago,
                 request.monto(),
                 request.concepto().trim(),
                 normalizarOpcional(request.referencia()),
@@ -327,9 +342,9 @@ public class ServicioCaja {
 
     private java.util.Optional<CajaSesionEntidad> resolverSesionAbierta(Long empresaId, Long sucursalId) {
         if (sucursalId != null) {
-            return cajaSesionRepositorio.findByEmpresaIdAndSucursalIdAndEstado(empresaId, sucursalId, ESTADO_ABIERTA);
+            return cajaSesionRepositorio.findByEmpresaIdAndSucursalIdAndEstado(empresaId, sucursalId, ESTADO_SESION_ABIERTA);
         }
-        return cajaSesionRepositorio.findFirstByEmpresaIdAndEstadoOrderByAbiertaEnDesc(empresaId, ESTADO_ABIERTA);
+        return cajaSesionRepositorio.findFirstByEmpresaIdAndEstadoOrderByAbiertaEnDesc(empresaId, ESTADO_SESION_ABIERTA);
     }
 
     private CajaSesionEntidad obtenerSesionAbiertaObligatoria(Long empresaId, Long sucursalId) {

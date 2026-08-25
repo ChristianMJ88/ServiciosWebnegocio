@@ -15,6 +15,15 @@ export interface SucursalCaja {
 export interface CatalogoCaja {
   sucursalActivaId: number | null;
   sucursales: SucursalCaja[];
+  metodosPago: OpcionCaja[];
+  tiposMovimiento: OpcionCaja[];
+  estadoSesionAbierta: string;
+  metodoPagoEfectivo: string;
+}
+
+export interface OpcionCaja {
+  codigo: string;
+  etiqueta: string;
 }
 
 export interface CajaSesion {

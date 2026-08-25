@@ -32,8 +32,6 @@ import {
   SucursalCaja
 } from '../../core/caja/caja.service';
 
-type MetodoPago = 'EFECTIVO' | 'TARJETA' | 'TRANSFERENCIA';
-type TipoMovimiento = 'GASTO_MENOR' | 'RETIRO' | 'INGRESO_EXTRA' | 'AJUSTE_POSITIVO' | 'AJUSTE_NEGATIVO';
 type VistaCaja = 'cobros' | 'sesion' | 'movimientos';
 
 @Component({
@@ -90,14 +88,10 @@ export class CajaDashboardComponent implements OnInit, AfterViewInit {
   readonly citaSeleccionadaId = signal<number | null>(null);
   readonly error = signal('');
   readonly mensaje = signal('');
-  readonly metodosPago: MetodoPago[] = ['EFECTIVO', 'TARJETA', 'TRANSFERENCIA'];
-  readonly tiposMovimiento: Array<{ value: TipoMovimiento; label: string }> = [
-    { value: 'GASTO_MENOR', label: 'Gasto menor' },
-    { value: 'RETIRO', label: 'Retiro de efectivo' },
-    { value: 'INGRESO_EXTRA', label: 'Ingreso extra' },
-    { value: 'AJUSTE_POSITIVO', label: 'Ajuste positivo' },
-    { value: 'AJUSTE_NEGATIVO', label: 'Ajuste negativo' }
-  ];
+  readonly metodosPago = signal<CatalogoCaja['metodosPago']>([]);
+  readonly tiposMovimiento = signal<CatalogoCaja['tiposMovimiento']>([]);
+  readonly estadoSesionAbierta = signal('');
+  readonly metodoPagoEfectivo = signal('');
 
   readonly perfilUsuario = computed(() => this.userProfileService.perfilActual());
   readonly perfilRegistrado = computed(() => this.userProfileService.perfilRegistrado());
@@ -121,7 +115,9 @@ export class CajaDashboardComponent implements OnInit, AfterViewInit {
   readonly puedeGestionarSesion = computed(() => this.authService.puedeGestionarSesionCaja());
   readonly puedeGestionarMovimientos = computed(() => this.authService.puedeGestionarMovimientosCaja());
   readonly sucursalesPermitidas = computed(() => this.authService.sucursalesPermitidas());
-  readonly cajaAbierta = computed(() => this.sesionActual()?.estado === 'ABIERTA');
+  readonly cajaAbierta = computed(() => Boolean(
+    this.estadoSesionAbierta() && this.sesionActual()?.estado === this.estadoSesionAbierta()
+  ));
   readonly totalNotificaciones = computed(() => this.citasPorCobrar().length + (this.cajaAbierta() ? 0 : 1));
   readonly notificacionesCaja = computed(() => [
     !this.cajaAbierta() ? { titulo: 'Caja cerrada', descripcion: 'Abre una sesión de caja para operar cobros.', icono: 'bi-cash-coin', total: 1 } : null,
@@ -199,15 +195,15 @@ export class CajaDashboardComponent implements OnInit, AfterViewInit {
   formularioPago = {
     monto: 0,
     montoRecibido: 0,
-    metodoPago: 'EFECTIVO' as MetodoPago,
+    metodoPago: '',
     referencia: '',
     observaciones: ''
   };
 
   formularioMovimiento = {
-    tipoMovimiento: 'GASTO_MENOR' as TipoMovimiento,
+    tipoMovimiento: '',
     monto: 0,
-    metodoPago: 'EFECTIVO' as MetodoPago,
+    metodoPago: '',
     concepto: '',
     referencia: '',
     observaciones: ''
@@ -278,7 +274,11 @@ export class CajaDashboardComponent implements OnInit, AfterViewInit {
       .pipe(
         catchError(() => of<CatalogoCaja>({
           sucursalActivaId: sucursalBase,
-          sucursales: []
+          sucursales: [],
+          metodosPago: [],
+          tiposMovimiento: [],
+          estadoSesionAbierta: '',
+          metodoPagoEfectivo: ''
         })),
         tap(catalogo => {
           this.actualizarVistaEnZona(() => {
@@ -496,9 +496,9 @@ export class CajaDashboardComponent implements OnInit, AfterViewInit {
       .subscribe({
         next: movimiento => {
           this.formularioMovimiento = {
-            tipoMovimiento: 'GASTO_MENOR',
+            tipoMovimiento: this.tiposMovimiento()[0]?.codigo ?? '',
             monto: 0,
-            metodoPago: 'EFECTIVO',
+            metodoPago: this.metodosPago()[0]?.codigo ?? '',
             concepto: '',
             referencia: '',
             observaciones: ''
@@ -667,7 +667,7 @@ export class CajaDashboardComponent implements OnInit, AfterViewInit {
   }
 
   calcularCambioPago(): number {
-    if (this.formularioPago.metodoPago !== 'EFECTIVO') {
+    if (this.formularioPago.metodoPago !== this.metodoPagoEfectivo()) {
       return 0;
     }
     const monto = Number(this.formularioPago.monto || 0);
@@ -694,6 +694,19 @@ export class CajaDashboardComponent implements OnInit, AfterViewInit {
 
   private aplicarCatalogo(catalogo: CatalogoCaja) {
     this.sucursales.set(catalogo.sucursales ?? []);
+    this.metodosPago.set(catalogo.metodosPago ?? []);
+    this.tiposMovimiento.set(catalogo.tiposMovimiento ?? []);
+    this.estadoSesionAbierta.set(catalogo.estadoSesionAbierta ?? '');
+    this.metodoPagoEfectivo.set(catalogo.metodoPagoEfectivo ?? '');
+    if (!this.metodosPago().some(metodo => metodo.codigo === this.formularioPago.metodoPago)) {
+      this.formularioPago.metodoPago = this.metodosPago()[0]?.codigo ?? '';
+    }
+    if (!this.metodosPago().some(metodo => metodo.codigo === this.formularioMovimiento.metodoPago)) {
+      this.formularioMovimiento.metodoPago = this.metodosPago()[0]?.codigo ?? '';
+    }
+    if (!this.tiposMovimiento().some(tipo => tipo.codigo === this.formularioMovimiento.tipoMovimiento)) {
+      this.formularioMovimiento.tipoMovimiento = this.tiposMovimiento()[0]?.codigo ?? '';
+    }
     const sucursalOperativa = catalogo.sucursalActivaId
       ?? this.sucursalesPermitidas()[0]
       ?? this.sucursales()[0]?.id
