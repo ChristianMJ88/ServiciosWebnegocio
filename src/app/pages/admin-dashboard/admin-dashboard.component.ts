@@ -14,7 +14,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { Observable } from 'rxjs';
 import { finalize } from 'rxjs/operators';
 import { AgendaOperationsSectionComponent } from '../../components/agenda/agenda-operations-section.component';
-import { buildWhatsAppUrl, formatAgendaStatusLabel, getDurationMinutes, getInitials } from '../../components/agenda/agenda.helpers';
+import { buildWhatsAppUrl, formatAgendaStatusLabel, getInitials } from '../../components/agenda/agenda.helpers';
 import {
   AgendaActionVm,
   AgendaAppointmentVm,
@@ -88,6 +88,17 @@ import { AdminDashboardLoader } from './admin-dashboard.loader';
 import { AdminCatalogFacade } from './admin-catalog.facade';
 import { AdminAccessFacade } from './admin-access.facade';
 import { AdminWhatsappFacade } from './admin-whatsapp.facade';
+import {
+  agruparCitasPorFecha,
+  calcularAnaliticaAgenda,
+  calcularDistribucionAgenda,
+  filtrarCitasPeriodo,
+  formatearFechaAgenda,
+  obtenerFechaLocalISO,
+  obtenerRangoSemana,
+  resumirAgenda,
+  sumarDiasAgenda
+} from './admin-agenda.helpers';
 import {
   construirPayloadPlantillaWhatsapp,
   construirPayloadPruebaWhatsapp,
@@ -321,7 +332,7 @@ export class AdminDashboardComponent implements OnInit {
   readonly fotoPerfilUsuario = computed(() => this.perfilUsuarioLocal().fotoDataUrl);
   readonly inicialesUsuarioAdmin = computed(() => getInitials(this.nombreUsuarioAdmin()));
   readonly citasRegistradasNotificacion = computed(() => {
-    const hoy = new Date(this.obtenerFechaLocalISO()).getTime();
+    const hoy = new Date(obtenerFechaLocalISO()).getTime();
     return this.citas().filter(cita => {
       const estado = cita.estado.toUpperCase();
       return !['CANCELADA', 'FINALIZADA', 'NO_ASISTIO'].includes(estado)
@@ -465,43 +476,7 @@ export class AdminDashboardComponent implements OnInit {
       etiqueta: `${hora.toString().padStart(2, '0')}:00`
     };
   });
-  readonly citasAgrupadas = computed(() => {
-    const agrupadas = new Map<string, {
-      fechaClave: string;
-      fechaTexto: string;
-      items: Array<CitaCliente & { horaTexto: string; rangoTexto: string }>;
-    }>();
-
-    const citasOrdenadas = [...this.citas()].sort((a, b) => new Date(a.inicio).getTime() - new Date(b.inicio).getTime());
-    for (const cita of citasOrdenadas) {
-      const inicio = new Date(cita.inicio);
-      const fin = new Date(cita.fin);
-      const fechaClave = cita.inicio.slice(0, 10);
-      const existente = agrupadas.get(fechaClave);
-      const item = {
-        ...cita,
-        horaTexto: inicio.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' }),
-        rangoTexto: `${inicio.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' })} - ${fin.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' })}`
-      };
-
-      if (existente) {
-        existente.items.push(item);
-        continue;
-      }
-
-      agrupadas.set(fechaClave, {
-        fechaClave,
-        fechaTexto: inicio.toLocaleDateString('es-MX', {
-          weekday: 'long',
-          day: 'numeric',
-          month: 'long'
-        }),
-        items: [item]
-      });
-    }
-
-    return Array.from(agrupadas.values());
-  });
+  readonly citasAgrupadas = computed(() => agruparCitasPorFecha(this.citas()));
   readonly fechasConCitasAgenda = computed(() =>
     Array.from(new Set(this.citas().map(cita => cita.inicio.slice(0, 10)))).sort((a, b) => a.localeCompare(b))
   );
@@ -509,51 +484,24 @@ export class AdminDashboardComponent implements OnInit {
     return this.fechaAgendaSeleccionada() ?? this.obtenerFechaAgendaInicial();
   });
   readonly fechaAgendaActivaTexto = computed(() =>
-    this.agendaViewMode() === 'week'
-      ? this.formatearRangoSemanaAgenda(this.fechaAgendaActiva())
-      : this.formatearFechaAgendaLarga(this.fechaAgendaActiva())
+    formatearFechaAgenda(this.fechaAgendaActiva(), this.agendaViewMode())
   );
   readonly citasDelDiaActivas = computed(() => {
     const fecha = this.fechaAgendaActiva();
     return this.citasAgrupadas().find(grupo => grupo.fechaClave === fecha)?.items ?? [];
   });
-  readonly citasPeriodoActivas = computed(() => {
-    if (this.agendaViewMode() === 'day') {
-      return this.citasDelDiaActivas();
-    }
-
-    const { desde, hasta } = this.obtenerRangoSemana(this.fechaAgendaActiva());
-    return this.citas()
-      .filter(cita => {
-        const fecha = cita.inicio.slice(0, 10);
-        return fecha >= desde && fecha <= hasta;
-      })
-      .sort((a, b) => new Date(a.inicio).getTime() - new Date(b.inicio).getTime());
-  });
-  readonly resumenAgendaActiva = computed(() => {
-    const citas = this.citasPeriodoActivas();
-    return {
-      total: citas.length,
-      pendientes: citas.filter(cita => cita.estado === 'PENDIENTE').length,
-      confirmadas: citas.filter(cita => cita.estado === 'CONFIRMADA').length,
-      colaboradores: new Set(citas.map(cita => cita.prestadorId)).size
-    };
-  });
-  readonly analiticaAgendaActiva = computed(() => {
-    const citas = this.citasPeriodoActivas();
-    const minutosReservados = citas.reduce((total, cita) => total + getDurationMinutes(cita.inicio, cita.fin), 0);
-    const multiplicador = this.agendaViewMode() === 'week' ? 7 : 1;
-    const capacidadMinutos = Math.max(this.colaboradoresAgenda().length, 1) * (this.finAgendaHora - this.inicioAgendaHora) * 60 * multiplicador;
-    const ocupacion = capacidadMinutos ? Math.min(100, Math.round((minutosReservados / capacidadMinutos) * 100)) : 0;
-
-    return {
-      ocupacion,
-      horasReservadas: Math.max(0, Math.round((minutosReservados / 60) * 10) / 10),
-      horasLibres: Math.max(0, Math.round(((capacidadMinutos - minutosReservados) / 60) * 10) / 10)
-    };
-  });
+  readonly citasPeriodoActivas = computed(() =>
+    filtrarCitasPeriodo(this.citas(), this.fechaAgendaActiva(), this.agendaViewMode())
+  );
+  readonly resumenAgendaActiva = computed(() => resumirAgenda(this.citasPeriodoActivas()));
+  readonly analiticaAgendaActiva = computed(() => calcularAnaliticaAgenda(
+    this.citasPeriodoActivas(),
+    this.colaboradoresAgenda().length,
+    this.finAgendaHora - this.inicioAgendaHora,
+    this.agendaViewMode()
+  ));
   readonly colaboradoresAgenda = computed(() => {
-    const rangoSemana = this.obtenerRangoSemana(this.fechaAgendaActiva());
+    const rangoSemana = obtenerRangoSemana(this.fechaAgendaActiva());
     const mapa = new Map<number, { id: number; nombre: string }>();
 
     for (const cita of this.citas()) {
@@ -589,7 +537,7 @@ export class AdminDashboardComponent implements OnInit {
 
     for (const colaborador of columnas) {
       const citasColumna = citasDelDia.filter(cita => cita.prestadorId === colaborador.id);
-      distribucionPorPrestador.set(colaborador.id, this.calcularDistribucionAgenda(citasColumna));
+      distribucionPorPrestador.set(colaborador.id, calcularDistribucionAgenda(citasColumna));
     }
 
     return citasDelDia.map(cita => {
@@ -999,43 +947,6 @@ export class AdminDashboardComponent implements OnInit {
     }
   }
 
-  private calcularDistribucionAgenda<T extends { inicio: string; fin: string }>(eventos: T[]) {
-    const ordenados = [...eventos].sort((a, b) => new Date(a.inicio).getTime() - new Date(b.inicio).getTime());
-    const distribucion = new Map<T, { lane: number; laneCount: number }>();
-    const finPorCarril: number[] = [];
-
-    for (const evento of ordenados) {
-      const inicio = new Date(evento.inicio).getTime();
-      const fin = new Date(evento.fin).getTime();
-      let lane = finPorCarril.findIndex(finCarril => finCarril <= inicio);
-
-      if (lane === -1) {
-        lane = finPorCarril.length;
-        finPorCarril.push(fin);
-      } else {
-        finPorCarril[lane] = fin;
-      }
-
-      const laneCount = Math.max(
-        1,
-        ordenados.filter(candidato => this.seSolapan(evento.inicio, evento.fin, candidato.inicio, candidato.fin)).length
-      );
-
-      distribucion.set(evento, { lane, laneCount });
-    }
-
-    return distribucion;
-  }
-
-  private seSolapan(inicioA: string, finA: string, inicioB: string, finB: string) {
-    const desdeA = new Date(inicioA).getTime();
-    const hastaA = new Date(finA).getTime();
-    const desdeB = new Date(inicioB).getTime();
-    const hastaB = new Date(finB).getTime();
-
-    return desdeA < hastaB && hastaA > desdeB;
-  }
-
   seleccionarFechaAgenda(fecha: string | null) {
     if (!fecha) {
       this.fechaAgendaSeleccionada.set(this.obtenerFechaAgendaInicial());
@@ -1048,12 +959,12 @@ export class AdminDashboardComponent implements OnInit {
 
   desplazarFechaAgenda(dias: number) {
     const salto = this.agendaViewMode() === 'week' ? dias * 7 : dias;
-    this.fechaAgendaSeleccionada.set(this.sumarDiasAgenda(this.fechaAgendaActiva(), salto));
+    this.fechaAgendaSeleccionada.set(sumarDiasAgenda(this.fechaAgendaActiva(), salto));
     this.citaAgendaSeleccionadaId.set(null);
   }
 
   irAHoyAgenda() {
-    this.fechaAgendaSeleccionada.set(this.obtenerFechaLocalISO());
+    this.fechaAgendaSeleccionada.set(obtenerFechaLocalISO());
     this.citaAgendaSeleccionadaId.set(null);
   }
 
@@ -2583,7 +2494,7 @@ export class AdminDashboardComponent implements OnInit {
 
   private obtenerFechaAgendaInicial(): string {
     const fechas = this.fechasConCitasAgenda();
-    const hoy = this.obtenerFechaLocalISO();
+    const hoy = obtenerFechaLocalISO();
     if (!fechas.length) {
       return hoy;
     }
@@ -2595,47 +2506,4 @@ export class AdminDashboardComponent implements OnInit {
     return fechas.find(fecha => fecha >= hoy) ?? fechas[0];
   }
 
-  private obtenerFechaLocalISO(fecha = new Date()): string {
-    const year = fecha.getFullYear();
-    const month = `${fecha.getMonth() + 1}`.padStart(2, '0');
-    const day = `${fecha.getDate()}`.padStart(2, '0');
-    return `${year}-${month}-${day}`;
-  }
-
-  private sumarDiasAgenda(fechaIso: string, dias: number): string {
-    const fecha = new Date(`${fechaIso}T12:00:00`);
-    fecha.setDate(fecha.getDate() + dias);
-    return this.obtenerFechaLocalISO(fecha);
-  }
-
-  private formatearFechaAgendaLarga(fechaIso: string): string {
-    const fecha = new Date(`${fechaIso}T12:00:00`);
-    return fecha.toLocaleDateString('es-MX', {
-      weekday: 'long',
-      day: 'numeric',
-      month: 'long',
-      year: 'numeric'
-    });
-  }
-
-  private obtenerRangoSemana(fechaIso: string) {
-    const fecha = new Date(`${fechaIso}T12:00:00`);
-    const diaActual = fecha.getDay();
-    const ajusteInicio = diaActual === 0 ? -6 : 1 - diaActual;
-    const inicio = new Date(fecha);
-    inicio.setDate(fecha.getDate() + ajusteInicio);
-    const fin = new Date(inicio);
-    fin.setDate(inicio.getDate() + 6);
-    return {
-      desde: this.obtenerFechaLocalISO(inicio),
-      hasta: this.obtenerFechaLocalISO(fin)
-    };
-  }
-
-  private formatearRangoSemanaAgenda(fechaIso: string): string {
-    const { desde, hasta } = this.obtenerRangoSemana(fechaIso);
-    const inicio = new Date(`${desde}T12:00:00`);
-    const fin = new Date(`${hasta}T12:00:00`);
-    return `${inicio.toLocaleDateString('es-MX', { day: 'numeric', month: 'short' })} - ${fin.toLocaleDateString('es-MX', { day: 'numeric', month: 'short', year: 'numeric' })}`;
-  }
 }
