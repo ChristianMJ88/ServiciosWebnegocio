@@ -159,7 +159,7 @@ export interface CrearSolicitudEsperaRecepcionPayload {
   horaDesde: string | null;
   horaHasta: string | null;
   aceptaWhatsapp: boolean;
-  canalOrigen: string;
+  canalOrigen?: string | null;
   notas: string | null;
 }
 

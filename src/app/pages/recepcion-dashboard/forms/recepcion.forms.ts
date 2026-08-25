@@ -11,3 +11,22 @@ export interface FormularioCitaRecepcion {
   notas: string;
   avisarWhatsapp: boolean;
 }
+
+export function crearFormularioCitaRecepcion(
+  fechaWalkIn: string,
+  sucursalId: number | null = null
+): FormularioCitaRecepcion {
+  return {
+    sucursalId,
+    servicioId: null,
+    clienteId: null,
+    prestadorId: null,
+    nombreCliente: '',
+    correoCliente: '',
+    telefonoCliente: '',
+    fechaWalkIn,
+    inicio: '',
+    notas: '',
+    avisarWhatsapp: true
+  };
+}

@@ -16,7 +16,7 @@ import { PerfilUsuarioLocal, UserProfileService } from '../../core/profile/user-
 import { UserProfileDialogComponent } from '../../shared/profile/user-profile-dialog.component';
 import { RecepcionSidePanelComponent } from './recepcion-side-panel.component';
 import { RecepcionAgendaSectionComponent } from './agenda/recepcion-agenda-section.component';
-import { FormularioCitaRecepcion } from './forms/recepcion.forms';
+import { FormularioCitaRecepcion, crearFormularioCitaRecepcion } from './forms/recepcion.forms';
 import {
   CatalogoRecepcion,
   CitaRecepcion,
@@ -148,19 +148,7 @@ export class RecepcionDashboardComponent implements OnInit, AfterViewInit {
     ].filter((item): item is { titulo: string; descripcion: string; icono: string; total: number } => !!item);
   });
 
-  formularioCita: FormularioCitaRecepcion = {
-    sucursalId: null as number | null,
-    servicioId: null as number | null,
-    clienteId: null as number | null,
-    prestadorId: null as number | null,
-    nombreCliente: '',
-    correoCliente: '',
-    telefonoCliente: '',
-    fechaWalkIn: this.fechaHoy(),
-    inicio: '',
-    notas: '',
-    avisarWhatsapp: true
-  };
+  formularioCita: FormularioCitaRecepcion = crearFormularioCitaRecepcion(this.fechaHoy());
 
   constructor() {
     this.busquedaCliente$
@@ -468,19 +456,7 @@ export class RecepcionDashboardComponent implements OnInit, AfterViewInit {
       .subscribe({
         next: respuesta => {
           this.mensaje.set(respuesta.mensaje);
-          this.formularioCita = {
-            sucursalId: this.sucursalActivaId(),
-            servicioId: null,
-            clienteId: null,
-            prestadorId: null,
-            nombreCliente: '',
-            correoCliente: '',
-            telefonoCliente: '',
-            fechaWalkIn: this.fechaAgenda(),
-            inicio: '',
-            notas: '',
-            avisarWhatsapp: true
-          };
+          this.formularioCita = crearFormularioCitaRecepcion(this.fechaAgenda(), this.sucursalActivaId());
           this.franjasDisponibles.set([]);
           this.mensajeWalkIn.set('');
           this.recargarAgenda();
@@ -516,7 +492,7 @@ export class RecepcionDashboardComponent implements OnInit, AfterViewInit {
       horaDesde: null,
       horaHasta: null,
       aceptaWhatsapp: this.formularioCita.avisarWhatsapp,
-      canalOrigen: 'MOSTRADOR',
+      canalOrigen: null,
       notas: this.formularioCita.notas.trim() || null
     })
       .pipe(finalize(() => this.guardando.set(false)))
@@ -528,19 +504,7 @@ export class RecepcionDashboardComponent implements OnInit, AfterViewInit {
               : 'Cliente registrado en espera para seguimiento desde recepción.'
           );
           this.solicitudesEspera.update(actuales => [solicitud, ...actuales]);
-          this.formularioCita = {
-            sucursalId: this.sucursalActivaId(),
-            servicioId: null,
-            clienteId: null,
-            prestadorId: null,
-            nombreCliente: '',
-            correoCliente: '',
-            telefonoCliente: '',
-            fechaWalkIn: this.fechaAgenda(),
-            inicio: '',
-            notas: '',
-            avisarWhatsapp: true
-          };
+          this.formularioCita = crearFormularioCitaRecepcion(this.fechaAgenda(), this.sucursalActivaId());
           this.franjasDisponibles.set([]);
           this.mensajeWalkIn.set('');
         },
