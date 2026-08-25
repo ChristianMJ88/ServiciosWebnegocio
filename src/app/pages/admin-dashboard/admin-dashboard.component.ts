@@ -95,39 +95,10 @@ import { AdminUsersAccessSectionComponent } from './admin-users-access-section.c
 import { AdminUsersRolesSectionComponent } from './admin-users-roles-section.component';
 import { AdminWhatsappInboxSectionComponent } from './admin-whatsapp-inbox-section.component';
 import { AdminWhatsappSectionComponent } from './admin-whatsapp-section.component';
-
-type SeccionAdmin =
-  | 'resumen'
-  | 'sitio'
-  | 'correo'
-  | 'whatsapp'
-  | 'mensajes'
-  | 'contactos'
-  | 'sucursales'
-  | 'servicios'
-  | 'usuarios'
-  | 'prestadores'
-  | 'reglas'
-  | 'excepciones'
-  | 'citas';
+import { GRUPOS_SIDEBAR_ADMIN, MODULOS_ADMIN, ModuloAdminDef, SeccionAdmin } from './admin-dashboard.config';
+import { buildWhatsappOnboardingChecklist, getWhatsappOnboardingStats } from './whatsapp-onboarding.helpers';
 
 type SubseccionUsuariosAdmin = 'usuarios' | 'roles' | 'actividad';
-
-type ModuloAdminDef = {
-  id: SeccionAdmin;
-  titulo: string;
-  descripcion: string;
-  abreviatura: string;
-  icono: string;
-  permiso?: string;
-};
-
-type GrupoSidebarAdmin = {
-  id: string;
-  titulo: string;
-  icono: string;
-  modulos: SeccionAdmin[];
-};
 
 type NotificacionAdmin = {
   id: string;
@@ -258,115 +229,12 @@ export class AdminDashboardComponent implements OnInit {
   readonly auditoriaSitio = computed(() => this.auditoriaConfiguracion().filter(item => item.modulo === 'SITIO'));
   readonly auditoriaCorreo = computed(() => this.auditoriaConfiguracion().filter(item => item.modulo === 'CORREO'));
   readonly auditoriaWhatsapp = computed(() => this.auditoriaConfiguracion().filter(item => item.modulo === 'WHATSAPP'));
-  readonly whatsappOnboardingChecklist = computed(() => {
-    const config = this.configuracionWhatsapp();
-    const plantillas = this.plantillasWhatsapp();
-    const tipoCuenta = config?.tipoCuentaTwilio ?? 'PLATAFORMA';
-    const tieneCredenciales = !!config?.accountSid && !!config?.authTokenConfigurado;
-    const subcuentaLista = tipoCuenta !== 'SUBCUENTA' || !!config?.subaccountSid;
-    const messagingServiceListo = !!config?.messagingServiceSid;
-    const channelSenderListo = !!config?.channelSenderSid;
-    const remitenteListo = !!config?.numeroRemitente;
-    const plantillasListas = plantillas.length > 0
-      || !!config?.plantillaSolicitudConfirmacionSid
-      || !!config?.plantillaReprogramadaPendienteSid
-      || !!config?.plantillaRecordatorioConfirmacionSid
-      || !!config?.plantillaCitaConfirmadaSid
-      || !!config?.plantillaRecordatorioSid
-      || !!config?.plantillaCancelacionSid
-      || !!config?.plantillaLiberadaSinConfirmacionSid
-      || !!config?.plantillaGraciasVisitaSid
-      || !!config?.plantillaRecordatorioRegresoSid
-      || !!config?.plantillaEspacioDisponibleWalkinSid
-      || !!config?.plantillaMenuBienvenidaSid;
-
-    return [
-      {
-        key: 'modelo',
-        done: !!tipoCuenta,
-        title: 'Modelo de cuenta definido',
-        detail:
-          tipoCuenta === 'SUBCUENTA'
-            ? 'El tenant operará en una subcuenta Twilio aislada.'
-            : tipoCuenta === 'CUENTA_PROPIA'
-              ? 'El tenant usará sus propias credenciales de Twilio.'
-              : 'El tenant opera con la cuenta plataforma.'
-      },
-      {
-        key: 'credenciales',
-        done: tieneCredenciales,
-        title: 'Credenciales operativas listas',
-        detail: tieneCredenciales
-          ? 'El tenant ya tiene Account SID y Auth Token disponibles.'
-          : 'Falta guardar credenciales válidas de Twilio para operar.'
-      },
-      {
-        key: 'subcuenta',
-        done: subcuentaLista,
-        title: 'Subcuenta provisionada',
-        detail:
-          tipoCuenta === 'SUBCUENTA'
-            ? (config?.subaccountSid
-              ? `Subcuenta registrada: ${config.subaccountSid}.`
-              : 'Aún falta crear o capturar la subcuenta del tenant.')
-            : 'No aplica para este modelo de cuenta.'
-      },
-      {
-        key: 'remitente',
-        done: remitenteListo,
-        title: 'Número remitente capturado',
-        detail: remitenteListo
-          ? `Remitente configurado: ${config?.numeroRemitente}.`
-          : 'Falta capturar el número remitente de WhatsApp.'
-      },
-      {
-        key: 'messaging',
-        done: messagingServiceListo,
-        title: 'Messaging Service listo',
-        detail: messagingServiceListo
-          ? `Messaging Service activo: ${config?.messagingServiceSid}.`
-          : 'Aún no se ha creado o capturado el Messaging Service SID.'
-      },
-      {
-        key: 'sender',
-        done: channelSenderListo,
-        title: 'Sender asociado al servicio',
-        detail: channelSenderListo
-          ? `Channel Sender detectado: ${config?.channelSenderSid}.`
-          : 'Falta detectar o asociar el Channel Sender SID (XE...).'
-      },
-      {
-        key: 'plantillas',
-        done: plantillasListas,
-        title: 'Plantillas disponibles',
-        detail: plantillasListas
-          ? `${plantillas.length || [config?.plantillaSolicitudConfirmacionSid, config?.plantillaReprogramadaPendienteSid, config?.plantillaRecordatorioConfirmacionSid, config?.plantillaCitaConfirmadaSid, config?.plantillaRecordatorioSid, config?.plantillaCancelacionSid, config?.plantillaLiberadaSinConfirmacionSid, config?.plantillaGraciasVisitaSid, config?.plantillaRecordatorioRegresoSid, config?.plantillaEspacioDisponibleWalkinSid, config?.plantillaMenuBienvenidaSid].filter(Boolean).length} plantilla(s) visibles para el tenant.`
-          : 'Aún no hay plantillas detectadas o configuradas.'
-      },
-      {
-        key: 'canal',
-        done: !!config?.habilitado,
-        title: 'Canal habilitado',
-        detail: config?.habilitado
-          ? 'WhatsApp ya está habilitado para este tenant.'
-          : 'El canal sigue deshabilitado aunque la configuración exista.'
-      }
-    ];
-  });
-  readonly whatsappOnboardingStats = computed(() => {
-    const checklist = this.whatsappOnboardingChecklist();
-    const completados = checklist.filter(item => item.done).length;
-    const total = checklist.length;
-    const porcentaje = total ? Math.round((completados / total) * 100) : 0;
-    const siguiente = checklist.find(item => !item.done) ?? null;
-
-    return {
-      completados,
-      total,
-      porcentaje,
-      siguiente
-    };
-  });
+  readonly whatsappOnboardingChecklist = computed(() =>
+    buildWhatsappOnboardingChecklist(this.configuracionWhatsapp(), this.plantillasWhatsapp().length)
+  );
+  readonly whatsappOnboardingStats = computed(() =>
+    getWhatsappOnboardingStats(this.whatsappOnboardingChecklist())
+  );
   readonly diasSemana = [
     { value: 1, label: 'Lunes' },
     { value: 2, label: 'Martes' },
@@ -386,34 +254,12 @@ export class AdminDashboardComponent implements OnInit {
     7: 'Domingo'
   };
   readonly tiposBloqueo = ['BLOQUEO', 'DESCANSO', 'VACACIONES', 'HORARIO_ESPECIAL'];
-  readonly modulosAdminBase: ModuloAdminDef[] = [
-    { id: 'resumen', titulo: 'Dashboard', descripcion: 'Indicadores clave, agenda e ingresos del negocio.', abreviatura: 'DB', icono: 'resumen' },
-    { id: 'sitio', titulo: 'Sitio web', descripcion: 'Slug, branding, dominio y publicación del tenant público.', abreviatura: 'SW', icono: 'sitio', permiso: 'CONFIGURACION_EMPRESA_GESTIONAR' },
-    { id: 'correo', titulo: 'Correo transaccional', descripcion: 'Graph o SMTP por tenant, con cifrado y migración de secretos.', abreviatura: 'CO', icono: 'correo', permiso: 'CONFIGURACION_EMPRESA_GESTIONAR' },
-    { id: 'whatsapp', titulo: 'WhatsApp y Twilio', descripcion: 'Sender, plantillas, pruebas y trazabilidad por tenant.', abreviatura: 'WA', icono: 'whatsapp', permiso: 'WHATSAPP_CONFIGURAR' },
-    { id: 'mensajes', titulo: 'Mensajes', descripcion: 'Inbox de conversaciones WhatsApp con clientes.', abreviatura: 'MS', icono: 'contactos', permiso: 'WHATSAPP_CONFIGURAR' },
-    { id: 'contactos', titulo: 'Contactos', descripcion: 'Mensajes recibidos desde el formulario web y seguimiento comercial.', abreviatura: 'CN', icono: 'contactos', permiso: 'CONTACTOS_ADMIN_VER' },
-    { id: 'sucursales', titulo: 'Sucursales', descripcion: 'Alta y mantenimiento de sedes operativas.', abreviatura: 'SU', icono: 'sucursal', permiso: 'SUCURSALES_GESTIONAR' },
-    { id: 'servicios', titulo: 'Servicios', descripcion: 'Catálogo, duración, buffers y precio.', abreviatura: 'SV', icono: 'servicio', permiso: 'SERVICIOS_GESTIONAR' },
-    { id: 'usuarios', titulo: 'Usuarios internos', descripcion: 'Recepción, caja y administradores internos.', abreviatura: 'UI', icono: 'prestador', permiso: 'USUARIOS_INTERNOS_GESTIONAR' },
-    { id: 'prestadores', titulo: 'Prestadores', descripcion: 'Usuarios staff y asignaciones de servicio.', abreviatura: 'PR', icono: 'prestador', permiso: 'PRESTADORES_GESTIONAR' },
-    { id: 'reglas', titulo: 'Horarios base', descripcion: 'Reglas semanales por sucursal o prestador.', abreviatura: 'HB', icono: 'horario', permiso: 'PRESTADORES_GESTIONAR' },
-    { id: 'excepciones', titulo: 'Bloqueos', descripcion: 'Vacaciones, descansos y cierres puntuales.', abreviatura: 'BL', icono: 'bloqueo', permiso: 'PRESTADORES_GESTIONAR' },
-    { id: 'citas', titulo: 'Agenda', descripcion: 'Seguimiento operativo y gestión detallada de reservas.', abreviatura: 'AG', icono: 'agenda', permiso: 'CITAS_ADMIN_GESTIONAR' }
-  ];
-  readonly gruposSidebarBase: GrupoSidebarAdmin[] = [
-    { id: 'operacion', titulo: 'Operación', icono: 'operacion', modulos: ['resumen', 'citas', 'contactos'] },
-    { id: 'canales', titulo: 'Canales', icono: 'canales', modulos: ['mensajes', 'whatsapp', 'correo'] },
-    { id: 'catalogo', titulo: 'Catálogo', icono: 'catalogo', modulos: ['servicios', 'sucursales'] },
-    { id: 'equipo', titulo: 'Equipo', icono: 'equipo', modulos: ['prestadores', 'usuarios'] },
-    { id: 'configuracion', titulo: 'Disponibilidad', icono: 'configuracion', modulos: ['reglas', 'excepciones', 'sitio'] }
-  ];
   readonly modulosAdmin = computed(() =>
-    this.modulosAdminBase.filter(modulo => !modulo.permiso || this.authService.tienePermiso(modulo.permiso))
+    MODULOS_ADMIN.filter(modulo => !modulo.capacidad || this.authService[modulo.capacidad]())
   );
   readonly gruposSidebar = computed(() => {
     const modulosDisponibles = new Map(this.modulosAdmin().map(modulo => [modulo.id, modulo]));
-    return this.gruposSidebarBase
+    return GRUPOS_SIDEBAR_ADMIN
       .map(grupo => ({
         ...grupo,
         modulosVisibles: grupo.modulos
@@ -1164,7 +1010,7 @@ export class AdminDashboardComponent implements OnInit {
   }
 
   private abrirGrupoSidebarDeSeccion(seccion: SeccionAdmin) {
-    const grupo = this.gruposSidebarBase.find(item => item.modulos.includes(seccion));
+    const grupo = GRUPOS_SIDEBAR_ADMIN.find(item => item.modulos.includes(seccion));
     if (!grupo) {
       return;
     }
