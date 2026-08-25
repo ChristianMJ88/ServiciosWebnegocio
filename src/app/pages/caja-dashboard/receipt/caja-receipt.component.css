@@ -1,0 +1,38 @@
+.caja-receipt-print-area {
+  display: none;
+}
+
+@media print {
+  body.printing-caja-receipt * {
+    visibility: hidden !important;
+  }
+
+  body.printing-caja-receipt .caja-receipt-print-area,
+  body.printing-caja-receipt .caja-receipt-print-area * {
+    visibility: visible !important;
+  }
+
+  body.printing-caja-receipt .caja-receipt-print-area {
+    display: block;
+    position: absolute;
+    inset: 0;
+    padding: 28px;
+    color: #1f2937;
+    font-family: Arial, sans-serif;
+  }
+
+  .caja-receipt-header { margin-bottom: 24px; }
+  .caja-receipt-header h1 { margin: 0; }
+  .caja-receipt-header small { display: block; margin-top: 6px; color: #6b7280; }
+  .caja-receipt-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 20px 0; }
+  .caja-receipt-grid div { padding: 14px; border: 1px solid #e5e7eb; border-radius: 12px; }
+  .caja-receipt-grid span { display: block; margin-bottom: 6px; color: #6b7280; font-size: 12px; text-transform: uppercase; }
+  .caja-receipt-grid strong { font-size: 18px; }
+  .caja-receipt-print-area table { width: 100%; margin-top: 20px; border-collapse: collapse; }
+  .caja-receipt-print-area th, .caja-receipt-print-area td { padding: 10px 8px; border-bottom: 1px solid #e5e7eb; text-align: left; }
+  .caja-receipt-print-area th { color: #6b7280; font-size: 12px; text-transform: uppercase; }
+  .caja-receipt-print-area .amount { text-align: right; }
+  .caja-receipt-totals { width: 280px; margin-top: 24px; margin-left: auto; }
+  .caja-receipt-totals div { display: flex; justify-content: space-between; margin-bottom: 8px; }
+  .caja-receipt-totals strong { font-size: 18px; }
+}

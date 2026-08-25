@@ -33,6 +33,10 @@ import { CajaDashboardFacade } from './data/caja-dashboard.facade';
 import { CajaPaymentsSectionComponent } from './payments/caja-payments-section.component';
 import { CajaSessionSectionComponent } from './session/caja-session-section.component';
 import { CajaMovementsSectionComponent } from './movements/caja-movements-section.component';
+import { CajaReceiptComponent } from './receipt/caja-receipt.component';
+import { construirComprobanteCaja } from './receipt/caja-receipt.builder';
+import { CajaReceiptDto } from './receipt/caja-receipt.dto';
+import { CajaReceiptPrintService } from './receipt/caja-receipt-print.service';
 import {
   construirApertura,
   construirCierre,
@@ -67,7 +71,8 @@ type VistaCaja = 'cobros' | 'sesion' | 'movimientos';
     UserProfileDialogComponent,
     CajaPaymentsSectionComponent,
     CajaSessionSectionComponent,
-    CajaMovementsSectionComponent
+    CajaMovementsSectionComponent,
+    CajaReceiptComponent
   ],
   templateUrl: './caja-dashboard.component.html',
   styleUrls: ['./caja-dashboard.component.css'],
@@ -82,6 +87,7 @@ export class CajaDashboardComponent implements OnInit, AfterViewInit {
   private readonly ngZone = inject(NgZone);
   private readonly changeDetectorRef = inject(ChangeDetectorRef);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly receiptPrintService = inject(CajaReceiptPrintService);
   private reintentoInicialProgramado = false;
 
   readonly loading = signal(false);
@@ -109,6 +115,7 @@ export class CajaDashboardComponent implements OnInit, AfterViewInit {
   readonly estadoSesionAbierta = signal('');
   readonly estadoSesionCerrada = signal('');
   readonly metodoPagoEfectivo = signal('');
+  readonly comprobante = signal<CajaReceiptDto | null>(null);
 
   readonly perfilUsuario = computed(() => this.userProfileService.perfilActual());
   readonly perfilRegistrado = computed(() => this.userProfileService.perfilRegistrado());
@@ -499,7 +506,7 @@ export class CajaDashboardComponent implements OnInit, AfterViewInit {
     this.vistaActiva.set(vista);
   }
 
-  imprimirComprobante() {
+  async imprimirComprobante() {
     const cita = this.citaSeleccionada();
     if (!cita) {
       this.error.set('Selecciona una cita para imprimir el comprobante.');
@@ -512,97 +519,12 @@ export class CajaDashboardComponent implements OnInit, AfterViewInit {
       return;
     }
 
-    const totalPagado = pagos.reduce((total, pago) => total + Number(pago.monto || 0), 0);
-    const pendiente = Math.max(Number(cita.total || 0) - totalPagado, 0);
-    const ventana = window.open('', '_blank', 'width=820,height=900');
-    if (!ventana) {
-      this.error.set('No pude abrir la ventana de impresión. Revisa si el navegador está bloqueando ventanas emergentes.');
-      return;
+    this.comprobante.set(construirComprobanteCaja(this.nombreEmpresa(), cita, pagos, this.metodosPago()));
+    try {
+      await this.receiptPrintService.printAfterRender();
+    } catch (error) {
+      this.error.set(this.extraerMensaje(error, 'No pude preparar el comprobante para impresión.'));
     }
-
-    const filasPagos = pagos
-      .map(pago => `
-        <tr>
-          <td>${this.formatearFechaHora(pago.registradoEn)}</td>
-          <td>${pago.metodoPago}</td>
-          <td>${pago.referencia ?? '-'}</td>
-          <td style="text-align:right;">${this.formatearMoneda(Number(pago.monto || 0))}</td>
-        </tr>
-      `)
-      .join('');
-
-    ventana.document.write(`
-      <html lang="es">
-        <head>
-          <title>Comprobante de cobro</title>
-          <style>
-            body { font-family: Arial, sans-serif; padding: 28px; color: #1f2937; }
-            h1, h2, p { margin: 0; }
-            .header { margin-bottom: 24px; }
-            .header small { color: #6b7280; display: block; margin-top: 6px; }
-            .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 20px 0; }
-            .card { border: 1px solid #e5e7eb; border-radius: 12px; padding: 14px; }
-            .label { display: block; font-size: 12px; text-transform: uppercase; color: #6b7280; margin-bottom: 6px; }
-            .value { font-size: 18px; font-weight: 700; }
-            table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-            th, td { padding: 10px 8px; border-bottom: 1px solid #e5e7eb; font-size: 14px; text-align: left; }
-            th { color: #6b7280; text-transform: uppercase; font-size: 12px; }
-            .totals { margin-top: 24px; width: 280px; margin-left: auto; }
-            .totals div { display: flex; justify-content: space-between; margin-bottom: 8px; }
-            .totals strong { font-size: 18px; }
-          </style>
-        </head>
-        <body>
-          <div class="header">
-            <h1>${this.nombreEmpresa()}</h1>
-            <small>Comprobante de cobro</small>
-          </div>
-
-          <div class="grid">
-            <div class="card">
-              <span class="label">Cliente</span>
-              <div class="value">${cita.clienteNombre}</div>
-            </div>
-            <div class="card">
-              <span class="label">Sucursal</span>
-              <div class="value">${cita.sucursalNombre}</div>
-            </div>
-            <div class="card">
-              <span class="label">Servicio</span>
-              <div class="value">${cita.servicioNombre}</div>
-            </div>
-            <div class="card">
-              <span class="label">Cita</span>
-              <div class="value">${this.formatearFechaHora(cita.inicio)}</div>
-            </div>
-          </div>
-
-          <h2>Pagos registrados</h2>
-          <table>
-            <thead>
-              <tr>
-                <th>Fecha</th>
-                <th>Método</th>
-                <th>Referencia</th>
-                <th style="text-align:right;">Monto</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${filasPagos}
-            </tbody>
-          </table>
-
-          <div class="totals">
-            <div><span>Total cita</span><span>${this.formatearMoneda(Number(cita.total || 0))}</span></div>
-            <div><span>Total pagado</span><span>${this.formatearMoneda(totalPagado)}</span></div>
-            <div><span>Pendiente</span><strong>${this.formatearMoneda(pendiente)}</strong></div>
-          </div>
-        </body>
-      </html>
-    `);
-    ventana.document.close();
-    ventana.focus();
-    ventana.print();
   }
 
   private obtenerSucursalOperativaId(): number | null {
@@ -685,17 +607,4 @@ export class CajaDashboardComponent implements OnInit, AfterViewInit {
     return httpError?.error?.message || httpError?.message || fallback;
   }
 
-  private formatearMoneda(valor: number): string {
-    return new Intl.NumberFormat('es-MX', {
-      style: 'currency',
-      currency: 'MXN'
-    }).format(valor || 0);
-  }
-
-  private formatearFechaHora(valor: string): string {
-    return new Intl.DateTimeFormat('es-MX', {
-      dateStyle: 'medium',
-      timeStyle: 'short'
-    }).format(new Date(valor));
-  }
 }

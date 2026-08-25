@@ -1,0 +1,28 @@
+@if (receipt; as comprobante) {
+  <article class="caja-receipt-print-area" aria-label="Comprobante de cobro">
+    <header class="caja-receipt-header">
+      <h1>{{ comprobante.empresa }}</h1>
+      <small>Comprobante de cobro</small>
+    </header>
+    <section class="caja-receipt-grid">
+      <div><span>Cliente</span><strong>{{ comprobante.cliente }}</strong></div>
+      <div><span>Sucursal</span><strong>{{ comprobante.sucursal }}</strong></div>
+      <div><span>Servicio</span><strong>{{ comprobante.servicio }}</strong></div>
+      <div><span>Cita</span><strong>{{ comprobante.inicioCita | date:'dd/MM/yyyy HH:mm':'':'es-MX' }}</strong></div>
+    </section>
+    <h2>Pagos registrados</h2>
+    <table>
+      <thead><tr><th>Fecha</th><th>Método</th><th>Referencia</th><th class="amount">Monto</th></tr></thead>
+      <tbody>
+        @for (pago of comprobante.pagos; track $index) {
+          <tr><td>{{ pago.fecha | date:'dd/MM/yyyy HH:mm':'':'es-MX' }}</td><td>{{ pago.metodo }}</td><td>{{ pago.referencia }}</td><td class="amount">{{ pago.monto | appMoney:comprobante.moneda:2:2 }}</td></tr>
+        }
+      </tbody>
+    </table>
+    <footer class="caja-receipt-totals">
+      <div><span>Total cita</span><span>{{ comprobante.total | appMoney:comprobante.moneda:2:2 }}</span></div>
+      <div><span>Total pagado</span><span>{{ comprobante.totalPagado | appMoney:comprobante.moneda:2:2 }}</span></div>
+      <div><span>Pendiente</span><strong>{{ comprobante.pendiente | appMoney:comprobante.moneda:2:2 }}</strong></div>
+    </footer>
+  </article>
+}
