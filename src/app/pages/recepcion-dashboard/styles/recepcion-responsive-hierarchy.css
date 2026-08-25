@@ -1,0 +1,187 @@
+/* Reception responsive hierarchy pass */
+.recepcion-main-column,
+.recepcion-side-column {
+  min-width: 0;
+  width: 100%;
+}
+
+.recepcion-main-column > .recepcion-card,
+.recepcion-side-column > .recepcion-card {
+  width: 100%;
+}
+
+@media (max-width: 1399px) {
+  .recepcion-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .recepcion-side-column {
+    position: static;
+  }
+}
+
+@media (max-width: 900px) {
+  .recepcion-toolbar {
+    position: sticky;
+    top: 0;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    min-height: 64px;
+    gap: 0.65rem;
+    padding: 0.6rem 0.8rem;
+    background: rgba(255, 255, 255, 0.96);
+    border-bottom: 1px solid rgba(148, 163, 184, 0.22);
+    box-shadow: 0 10px 24px rgba(15, 23, 42, 0.06);
+  }
+
+  .recepcion-toolbar-brand {
+    min-width: 0;
+    gap: 0.65rem;
+  }
+
+  .recepcion-brand-mark {
+    width: 40px;
+    height: 40px;
+    min-width: 40px;
+    border-radius: 11px;
+    font-size: 0.95rem;
+  }
+
+  .recepcion-brand-copy {
+    min-width: 0;
+  }
+
+  .recepcion-brand-eyebrow {
+    font-size: 0.62rem;
+    letter-spacing: 0.12em;
+  }
+
+  .recepcion-brand-title {
+    overflow: hidden;
+    color: #0f172a;
+    font-size: 0.96rem;
+    line-height: 1.1;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .recepcion-toolbar-actions {
+    width: auto;
+    min-width: 0;
+    justify-content: flex-end;
+    gap: 0.45rem;
+  }
+
+  .recepcion-toolbar-icon-button,
+  .recepcion-user-button {
+    width: 42px;
+    min-width: 42px;
+    height: 42px;
+    min-height: 42px;
+    padding: 0;
+    border-radius: 12px;
+    background: #ffffff;
+    border: 1px solid rgba(148, 163, 184, 0.28);
+    box-shadow: 0 8px 18px rgba(15, 23, 42, 0.05);
+  }
+
+  .recepcion-user-button {
+    gap: 0;
+    justify-content: center;
+  }
+
+  .recepcion-user-avatar {
+    width: 32px;
+    height: 32px;
+    min-width: 32px;
+    border-radius: 10px;
+    font-size: 0.82rem;
+  }
+
+  .toolbar-user-chevron {
+    display: none;
+  }
+
+  .recepcion-body {
+    padding: 0.85rem;
+  }
+
+  .recepcion-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0.85rem;
+  }
+
+  .recepcion-main-column {
+    order: 1;
+  }
+
+  .recepcion-side-column {
+    order: 2;
+  }
+}
+
+@media (max-width: 767px) {
+  .recepcion-hero,
+  .recepcion-metric-grid {
+    display: none;
+  }
+
+  .recepcion-body {
+    padding: 0.75rem;
+  }
+
+  .recepcion-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .recepcion-main-column {
+    order: 1;
+  }
+
+  .recepcion-side-column {
+    order: 2;
+  }
+
+  .recepcion-main-column > .recepcion-card,
+  .recepcion-card--quick.card {
+    border-radius: 13px;
+  }
+
+  .recepcion-appointment-head,
+  .recepcion-appointment-meta,
+  .recepcion-appointment-actions {
+    padding-left: 0.55rem;
+  }
+
+  .recepcion-appointment-actions {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .recepcion-appointment-actions .mat-mdc-stroked-button {
+    width: 100%;
+  }
+}
+
+@media (max-width: 520px) {
+  .recepcion-toolbar {
+    position: sticky;
+    padding-inline: 0.7rem;
+  }
+
+  .recepcion-brand-eyebrow {
+    display: none;
+  }
+
+  .recepcion-brand-title {
+    font-size: 0.92rem;
+  }
+
+  .recepcion-body {
+    padding-inline: 0.65rem;
+  }
+}
+

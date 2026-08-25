@@ -1,0 +1,388 @@
+/* Reception layout reset after visual QA */
+.recepcion-shell {
+  background: #f6f8fb;
+}
+
+.recepcion-toolbar {
+  min-height: 64px;
+  padding: 0.55rem 1rem;
+  background: rgba(255, 255, 255, 0.94);
+}
+
+.recepcion-brand-mark {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+}
+
+.recepcion-brand-eyebrow {
+  font-size: 0.64rem;
+  letter-spacing: 0.16em;
+}
+
+.recepcion-brand-title {
+  font-size: 0.95rem;
+}
+
+.recepcion-toolbar-actions .btn {
+  min-height: 34px;
+  padding-inline: 0.65rem;
+  border-radius: 8px;
+}
+
+.recepcion-user-button {
+  min-height: 40px;
+  border-radius: 10px;
+}
+
+.recepcion-body {
+  max-width: 1360px;
+  padding: 0.9rem 1rem 1.5rem;
+}
+
+.recepcion-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(360px, 460px);
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.recepcion-top-copy {
+  min-height: 112px;
+  align-items: center;
+  padding: 0.95rem 1rem;
+  border-radius: 12px;
+}
+
+.recepcion-top-copy h1 {
+  font-size: 1.55rem;
+}
+
+.recepcion-top-meta {
+  max-width: 560px;
+}
+
+.recepcion-top-pill {
+  min-height: 30px;
+  padding: 0.3rem 0.55rem;
+  border-radius: 8px;
+  font-size: 0.74rem;
+}
+
+.recepcion-context-inline {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 150px;
+  gap: 0.65rem;
+  align-content: center;
+  min-height: 112px;
+  padding: 0.95rem 1rem;
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  border-radius: 12px;
+  background: #ffffff;
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.05);
+}
+
+.recepcion-context-field,
+.recepcion-context-static {
+  display: grid;
+  gap: 0.3rem;
+  min-width: 0;
+}
+
+.recepcion-context-field label,
+.recepcion-context-static label,
+.recepcion-mini-label {
+  margin: 0;
+  color: #64748b;
+  font-size: 0.68rem;
+  font-weight: 850;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.recepcion-context-static strong {
+  min-height: 31px;
+  display: flex;
+  align-items: center;
+  padding: 0.3rem 0.55rem;
+  border: 1px solid rgba(148, 163, 184, 0.24);
+  border-radius: 8px;
+  background: #f8fafc;
+  font-size: 0.84rem;
+}
+
+.recepcion-metric-grid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.65rem;
+  margin-bottom: 0.75rem;
+}
+
+.recepcion-metric-card {
+  min-height: 72px;
+  padding: 0.7rem 0.8rem;
+  border-radius: 12px;
+}
+
+.recepcion-metric-card::after {
+  display: none;
+}
+
+.recepcion-metric-card span {
+  margin-bottom: 0.28rem;
+  font-size: 0.72rem;
+}
+
+.recepcion-metric-card strong {
+  font-size: 1.35rem;
+}
+
+.recepcion-grid {
+  grid-template-columns: minmax(0, 1fr) 470px;
+  gap: 0.75rem;
+  align-items: start;
+}
+
+.recepcion-main-column,
+.recepcion-side-column {
+  gap: 0.75rem;
+}
+
+.recepcion-card {
+  padding: 0.9rem;
+  border-radius: 12px;
+}
+
+.recepcion-card-heading {
+  margin-bottom: 0.72rem;
+}
+
+.recepcion-card-heading h2 {
+  font-size: 0.98rem;
+}
+
+.recepcion-appointment-card {
+  padding: 0.78rem 0.82rem;
+}
+
+.recepcion-appointment-head {
+  margin-bottom: 0.55rem;
+}
+
+.recepcion-appointment-head strong {
+  font-size: 0.92rem;
+}
+
+.recepcion-appointment-head span {
+  font-size: 0.8rem;
+}
+
+.recepcion-appointment-meta {
+  margin-bottom: 0.55rem;
+}
+
+.recepcion-appointment-actions {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.recepcion-appointment-actions .mat-mdc-stroked-button {
+  min-width: 0;
+  height: 34px;
+  padding: 0 0.6rem !important;
+  font-size: 0.78rem;
+}
+
+.recepcion-side-column {
+  position: sticky;
+  top: 78px;
+}
+
+.recepcion-client-box {
+  display: grid;
+  gap: 0.45rem;
+  margin-bottom: 0.75rem;
+  padding: 0.65rem;
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  border-radius: 10px;
+  background: #f8fafc;
+}
+
+.recepcion-empty--compact {
+  padding: 0.55rem 0.65rem;
+  font-size: 0.78rem;
+}
+
+.recepcion-form-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.55rem;
+}
+
+.recepcion-form-grid mat-form-field {
+  min-width: 0;
+}
+
+.recepcion-slot-panel,
+.recepcion-waitlist-panel {
+  padding: 0.65rem;
+  border-radius: 10px;
+}
+
+.recepcion-slot-toolbar {
+  align-items: flex-end;
+}
+
+.recepcion-slot-toolbar strong {
+  font-size: 0.86rem;
+}
+
+.recepcion-slot-toolbar .mat-mdc-stroked-button {
+  height: 34px;
+  padding-inline: 0.7rem !important;
+  font-size: 0.78rem;
+}
+
+.recepcion-slot-list {
+  gap: 0.4rem;
+}
+
+.recepcion-slot-chip {
+  min-width: 64px;
+  padding: 0.45rem 0.55rem;
+  font-size: 0.78rem;
+}
+
+.recepcion-form-actions .mat-mdc-unelevated-button {
+  width: 100%;
+  min-height: 40px;
+}
+
+.recepcion-quick-form {
+  display: grid;
+  gap: 0.9rem;
+}
+
+.recepcion-form-section {
+  display: grid;
+  gap: 0.65rem;
+  min-width: 0;
+  padding: 0.78rem;
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  border-radius: 12px;
+  background: #ffffff;
+}
+
+.recepcion-form-section-title {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  color: #0f172a;
+}
+
+.recepcion-form-section-title span {
+  width: 24px;
+  min-width: 24px;
+  height: 24px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  background: #eff6ff;
+  color: #1d4ed8;
+  font-size: 0.72rem;
+  font-weight: 850;
+}
+
+.recepcion-form-section-title strong {
+  font-size: 0.86rem;
+  font-weight: 850;
+}
+
+.recepcion-field-wide {
+  grid-column: 1 / -1;
+}
+
+.recepcion-quick-form .recepcion-form-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.7rem;
+}
+
+.recepcion-quick-form .recepcion-slot-panel,
+.recepcion-quick-form .recepcion-waitlist-panel {
+  border-radius: 12px;
+  background: #f8fafc;
+}
+
+.recepcion-quick-form .recepcion-form-actions {
+  margin-top: 0.1rem;
+}
+
+.recepcion-quick-form .recepcion-form-actions .mat-mdc-unelevated-button {
+  min-height: 44px;
+}
+
+.recepcion-waitlist-copy span,
+.recepcion-waitlist-hint {
+  font-size: 0.8rem;
+}
+
+.recepcion-shell ::ng-deep .mat-mdc-form-field {
+  --mat-form-field-container-height: 44px;
+}
+
+.recepcion-shell ::ng-deep .mat-mdc-form-field-infix {
+  min-height: 44px !important;
+  padding-top: 10px !important;
+  padding-bottom: 8px !important;
+}
+
+.recepcion-shell ::ng-deep textarea.mat-mdc-input-element {
+  min-height: 72px;
+}
+
+@media (max-width: 1200px) {
+  .recepcion-hero,
+  .recepcion-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .recepcion-side-column {
+    position: static;
+  }
+}
+
+@media (max-width: 900px) {
+  .recepcion-metric-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .recepcion-context-inline,
+  .recepcion-form-grid,
+  .recepcion-appointment-actions {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .recepcion-toolbar {
+    flex-wrap: wrap;
+  }
+
+  .recepcion-toolbar-actions {
+    width: 100%;
+    justify-content: flex-end;
+  }
+
+  .recepcion-body {
+    padding-inline: 0.75rem;
+  }
+
+  .recepcion-top-copy {
+    min-height: auto;
+    align-items: flex-start;
+  }
+
+  .recepcion-metric-grid {
+    grid-template-columns: 1fr;
+  }
+}
+

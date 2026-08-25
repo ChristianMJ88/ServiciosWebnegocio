@@ -1,0 +1,185 @@
+/* Reception card polish: match active appointments */
+.recepcion-side-column > .recepcion-card.card {
+  padding: 0;
+}
+
+.recepcion-card-body {
+  padding: 1rem;
+}
+
+.recepcion-card--quick.card,
+.recepcion-card--waitlist.card {
+  display: block;
+  overflow: hidden;
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  border-radius: 14px;
+  background: #ffffff;
+  box-shadow: 0 14px 34px rgba(15, 23, 42, 0.06);
+}
+
+.recepcion-card--quick.card {
+  border-left: 4px solid #2563eb;
+}
+
+.recepcion-card--quick .recepcion-card-heading {
+  margin-bottom: 0.95rem;
+}
+
+.recepcion-card--quick .recepcion-client-box {
+  display: grid;
+  gap: 0.55rem;
+  margin-bottom: 0.95rem;
+  padding: 0.85rem;
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  border-radius: 12px;
+  background: #f8fafc;
+}
+
+.recepcion-card--quick .recepcion-client-search {
+  display: grid;
+  gap: 0.45rem;
+  max-height: 260px;
+  overflow-y: auto;
+  padding-right: 0.15rem;
+}
+
+.recepcion-card--quick .recepcion-client-result {
+  appearance: none;
+  display: grid;
+  width: 100%;
+  min-width: 0;
+  gap: 0.12rem;
+  padding: 0.7rem 0.78rem;
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  border-radius: 10px;
+  background: #ffffff;
+  color: #0f172a;
+  text-align: left;
+  box-shadow: none;
+}
+
+.recepcion-card--quick .recepcion-client-result strong,
+.recepcion-card--quick .recepcion-client-result span {
+  display: block;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.recepcion-card--quick .recepcion-client-result strong {
+  font-size: 0.86rem;
+  font-weight: 850;
+}
+
+.recepcion-card--quick .recepcion-client-result span {
+  color: #64748b;
+  font-size: 0.78rem;
+}
+
+.recepcion-card--quick .recepcion-client-result:hover,
+.recepcion-card--quick .recepcion-client-result:focus-visible {
+  transform: none;
+  border-color: rgba(37, 99, 235, 0.36);
+  background: #f8fbff;
+  box-shadow: 0 10px 20px rgba(15, 23, 42, 0.06);
+  outline: none;
+}
+
+.recepcion-card--quick .recepcion-form-section {
+  background: #ffffff;
+}
+
+.recepcion-card--quick .recepcion-form-grid {
+  align-items: end;
+}
+
+.recepcion-card--quick .recepcion-field-wide {
+  grid-column: 1 / -1;
+}
+
+.recepcion-card--quick .recepcion-form-static,
+.recepcion-card--quick .recepcion-slot-panel,
+.recepcion-card--quick .recepcion-waitlist-panel,
+.recepcion-card--quick .recepcion-slot-empty {
+  background: #f8fafc;
+}
+
+.recepcion-card--quick .input-group > .form-control {
+  min-width: 0;
+}
+
+@media (max-width: 1199px) {
+  .recepcion-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .recepcion-side-column {
+    position: static;
+  }
+}
+
+@media (max-width: 900px) {
+  .recepcion-body {
+    padding-inline: 1rem;
+  }
+
+  .recepcion-grid {
+    gap: 0.85rem;
+  }
+
+  .recepcion-card-body {
+    padding: 0.9rem;
+  }
+}
+
+@media (max-width: 767px) {
+  .recepcion-hero,
+  .recepcion-metric-grid {
+    display: none;
+  }
+
+  .recepcion-body {
+    padding: 0.75rem;
+  }
+
+  .recepcion-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+  }
+
+  .recepcion-main-column,
+  .recepcion-side-column {
+    gap: 0.75rem;
+  }
+
+  .recepcion-card--quick .recepcion-form-grid,
+  .recepcion-card--quick .recepcion-slot-toolbar {
+    grid-template-columns: 1fr;
+  }
+
+  .recepcion-card--quick .recepcion-client-search {
+    max-height: 210px;
+  }
+}
+
+@media (max-width: 520px) {
+  .recepcion-toolbar {
+    position: static;
+  }
+
+  .recepcion-card-body {
+    padding: 0.82rem;
+  }
+
+  .recepcion-card--quick .recepcion-form-section,
+  .recepcion-card--quick .recepcion-client-box {
+    padding: 0.75rem;
+  }
+
+  .recepcion-card--quick .recepcion-card-heading h2 {
+    font-size: 1rem;
+  }
+}
+

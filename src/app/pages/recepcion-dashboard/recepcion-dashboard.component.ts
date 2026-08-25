@@ -46,7 +46,15 @@ import {
     RecepcionAgendaSectionComponent
   ],
   templateUrl: './recepcion-dashboard.component.html',
-  styleUrls: ['./recepcion-dashboard.component.css'],
+  styleUrls: [
+    './recepcion-dashboard.component.css',
+    './styles/recepcion-layout-reset.css',
+    './styles/recepcion-minimal-theme.css',
+    './styles/recepcion-quick-appointment.css',
+    './styles/recepcion-card-polish.css',
+    './styles/recepcion-responsive-hierarchy.css',
+    './styles/recepcion-professional-theme.css'
+  ],
   encapsulation: ViewEncapsulation.None
 })
 export class RecepcionDashboardComponent implements OnInit, AfterViewInit {
