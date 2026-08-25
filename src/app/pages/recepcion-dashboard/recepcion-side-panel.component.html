@@ -1,293 +1,35 @@
 <div class="recepcion-side-column">
   @if (puedeGestionarCitas) {
-    <section class="card recepcion-card recepcion-card--quick">
-      <div class="card-body recepcion-card-body">
-        <div class="recepcion-card-heading recepcion-card-heading--split">
-          <div>
-            <span class="recepcion-card-kicker">Alta rápida</span>
-            <h2>Registrar cita</h2>
-            <p>Captura cliente, servicio y horario disponible.</p>
-          </div>
-          <span class="recepcion-form-badge">Walk-in</span>
-        </div>
-        @if (puedeBuscarClientes) {
-          <div class="recepcion-client-box">
-            <label class="form-label" for="recepcionBuscarCliente">Buscar cliente</label>
-            <div class="input-group input-group-sm recepcion-search-control">
-              <span class="input-group-text"><i class="bi bi-search"></i></span>
-              <input
-                id="recepcionBuscarCliente"
-                class="form-control"
-                [ngModel]="terminoBusquedaCliente"
-                (ngModelChange)="searchChange.emit($event)"
-                placeholder="Nombre o teléfono">
-            </div>
-            @if (loadingBusqueda) {
-              <div class="recepcion-empty recepcion-empty--compact">Buscando clientes...</div>
-            }
-            @if (clientesEncontrados.length) {
-              <div class="recepcion-client-search">
-                @for (cliente of clientesEncontrados; track cliente) {
-                  <button type="button" class="recepcion-client-result" (click)="clientSelected.emit(cliente)">
-                    <strong>{{ cliente.nombreCompleto }}</strong>
-                    <span>{{ cliente.telefono }} · {{ cliente.correo }}</span>
-                  </button>
-                }
-              </div>
-            }
-          </div>
-        }
-        <form class="recepcion-quick-form" (ngSubmit)="saveAppointment.emit()">
-          <section class="recepcion-form-section">
-            <div class="recepcion-form-section-title">
-              <span>1</span>
-              <strong>Servicio y fecha</strong>
-            </div>
-            <div class="recepcion-form-grid">
-              @if (sucursales.length > 1) {
-                <div class="recepcion-field">
-                  <label class="form-label" for="sucursalCita">Sucursal</label>
-                  <select
-                    id="sucursalCita"
-                    class="form-select form-select-sm"
-                    name="sucursalCita"
-                    [(ngModel)]="formularioCita.sucursalId"
-                    (ngModelChange)="branchChange.emit($event)">
-                    <option [ngValue]="null">Selecciona sucursal</option>
-                    @for (sucursal of sucursales; track sucursal) {
-                      <option [ngValue]="sucursal.id">{{ sucursal.nombre }}</option>
-                    }
-                  </select>
-                </div>
-              } @else {
-                <div class="recepcion-form-static">
-                  <small>Sucursal</small>
-                  <strong>{{ sucursalActivaNombre }}</strong>
-                </div>
-              }
-              <div class="recepcion-field">
-                <label class="form-label" for="servicioCita">Servicio</label>
-                <select
-                  id="servicioCita"
-                  class="form-select form-select-sm"
-                  name="servicioCita"
-                  [(ngModel)]="formularioCita.servicioId"
-                  (ngModelChange)="serviceChange.emit($event)"
-                  required>
-                  <option [ngValue]="null">Selecciona servicio</option>
-                  @for (servicio of servicios; track servicio) {
-                    <option [ngValue]="servicio.id">{{ servicio.nombre }}</option>
-                  }
-                </select>
-              </div>
-              <div class="recepcion-field">
-                <label class="form-label" for="fechaWalkIn">Fecha</label>
-                <input
-                  id="fechaWalkIn"
-                  class="form-control form-control-sm"
-                  type="date"
-                  name="fechaWalkIn"
-                  [(ngModel)]="formularioCita.fechaWalkIn"
-                  (ngModelChange)="walkInDateChange.emit($event)"
-                  required>
-              </div>
-            </div>
-          </section>
-          <section class="recepcion-form-section">
-            <div class="recepcion-form-section-title">
-              <span>2</span>
-              <strong>Datos del cliente</strong>
-            </div>
-            <div class="recepcion-form-grid">
-              <div class="recepcion-field recepcion-field-wide">
-                <label class="form-label" for="nombreCliente">Nombre completo</label>
-                <input
-                  id="nombreCliente"
-                  class="form-control form-control-sm"
-                  name="nombreCliente"
-                  [(ngModel)]="formularioCita.nombreCliente"
-                  placeholder="Nombre y apellidos"
-                  required>
-              </div>
-              <div class="recepcion-field">
-                <label class="form-label" for="telefonoCliente">Teléfono</label>
-                <input
-                  id="telefonoCliente"
-                  class="form-control form-control-sm"
-                  name="telefonoCliente"
-                  [(ngModel)]="formularioCita.telefonoCliente"
-                  placeholder="+52..."
-                  required>
-              </div>
-              <div class="recepcion-field">
-                <label class="form-label" for="correoCliente">Correo</label>
-                <input
-                  id="correoCliente"
-                  class="form-control form-control-sm"
-                  type="email"
-                  name="correoCliente"
-                  [(ngModel)]="formularioCita.correoCliente"
-                  placeholder="cliente@email.com"
-                  required>
-              </div>
-            </div>
-          </section>
-          <section class="recepcion-form-section">
-            <div class="recepcion-form-section-title">
-              <span>3</span>
-              <strong>Horario</strong>
-            </div>
-            <div class="recepcion-slot-panel">
-              <div class="recepcion-slot-toolbar">
-                <div>
-                  <small>Horario sugerido</small>
-                  @if (formularioCita.inicio) {
-                    <strong>
-                      {{ formularioCita.inicio | date:'dd/MM/yyyy HH:mm':'':'es-MX' }}
-                    </strong>
-                  } @else {
-                    <strong>Selecciona una franja disponible</strong>
-                  }
-                </div>
-                <button
-                  class="btn btn-outline-primary btn-sm"
-                  type="button"
-                  (click)="loadSlots.emit()"
-                  [disabled]="loadingFranjas || !formularioCita.sucursalId || !formularioCita.servicioId">
-                  @if (loadingFranjas) {
-                    <span class="spinner-border spinner-border-sm me-1" aria-hidden="true"></span>
-                  }
-                  {{ loadingFranjas ? 'Buscando...' : 'Buscar horarios' }}
-                </button>
-              </div>
-              @if (franjasDisponibles.length) {
-                <div class="recepcion-slot-list">
-                  @for (franja of franjasDisponibles; track franja) {
-                    <button
-                      type="button"
-                      class="recepcion-slot-chip"
-                      [class.active]="formularioCita.inicio === franja.inicio"
-                      (click)="slotSelected.emit(franja)">
-                      {{ franja.hora }}
-                    </button>
-                  }
-                </div>
-              } @else {
-                @if (formularioCita.servicioId && !loadingFranjas) {
-                  <div class="recepcion-slot-empty">
-                    {{ mensajeWalkIn || 'Selecciona servicio y fecha para ver horarios libres sin chocar con la agenda.' }}
-                  </div>
-                }
-              }
-            </div>
-          </section>
-          @if (formularioCita.servicioId && !franjasDisponibles.length && !loadingFranjas) {
-            <div class="recepcion-waitlist-panel">
-              <div class="recepcion-waitlist-copy">
-                <small>Sin espacio inmediato</small>
-                <strong>Registrar intención del cliente</strong>
-                <span>
-                  Si hoy no hay lugar, podemos dejarlo en espera para este día y luego avisarle cuando se libere un espacio.
-                </span>
-              </div>
-              <div class="form-check recepcion-check">
-                <input
-                  id="avisarWhatsapp"
-                  class="form-check-input"
-                  type="checkbox"
-                  name="avisarWhatsapp"
-                  [(ngModel)]="formularioCita.avisarWhatsapp">
-                <label class="form-check-label" for="avisarWhatsapp">
-                  Avisar por WhatsApp cuando haya disponibilidad
-                </label>
-              </div>
-              <button class="btn btn-outline-primary btn-sm" type="button" (click)="registerWaitlist.emit()" [disabled]="guardando">
-                Registrar en espera
-              </button>
-            </div>
-          }
-          <section class="recepcion-form-section">
-            <div class="recepcion-form-section-title">
-              <span>4</span>
-              <strong>Notas</strong>
-            </div>
-            <div class="recepcion-field">
-              <label class="form-label" for="notasCita">Notas</label>
-              <textarea
-                id="notasCita"
-                class="form-control"
-                rows="3"
-                name="notasCita"
-                [(ngModel)]="formularioCita.notas"
-              placeholder="Indicaciones internas para recepción"></textarea>
-            </div>
-          </section>
-          <div class="recepcion-form-actions">
-            <button class="btn btn-primary" type="submit" [disabled]="guardando">
-              @if (guardando) {
-                <span class="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>
-              }
-              Registrar cita
-            </button>
-          </div>
-        </form>
-      </div>
-    </section>
+    <app-recepcion-quick-appointment
+      [puedeBuscarClientes]="puedeBuscarClientes"
+      [loadingBusqueda]="loadingBusqueda"
+      [terminoBusquedaCliente]="terminoBusquedaCliente"
+      [clientesEncontrados]="clientesEncontrados"
+      [sucursales]="sucursales"
+      [sucursalActivaNombre]="sucursalActivaNombre"
+      [servicios]="servicios"
+      [formularioCita]="formularioCita"
+      [loadingFranjas]="loadingFranjas"
+      [franjasDisponibles]="franjasDisponibles"
+      [mensajeWalkIn]="mensajeWalkIn"
+      [guardando]="guardando"
+      (searchChange)="searchChange.emit($event)"
+      (clientSelected)="clientSelected.emit($event)"
+      (branchChange)="branchChange.emit($event)"
+      (serviceChange)="serviceChange.emit($event)"
+      (walkInDateChange)="walkInDateChange.emit($event)"
+      (loadSlots)="loadSlots.emit()"
+      (slotSelected)="slotSelected.emit($event)"
+      (registerWaitlist)="registerWaitlist.emit()"
+      (saveAppointment)="saveAppointment.emit()" />
   }
-
   @if (solicitudesEspera.length) {
-    <section class="card recepcion-card recepcion-card--waitlist">
-      <div class="card-body recepcion-card-body">
-        <div class="recepcion-card-heading">
-          <span class="recepcion-card-kicker">Seguimiento</span>
-          <h2>Clientes en espera</h2>
-          <p>Solicitudes pendientes para la agenda de hoy.</p>
-        </div>
-        <div class="recepcion-waitlist-list">
-          @for (solicitud of solicitudesEspera; track solicitud) {
-            <div class="recepcion-waitlist-card">
-              <div class="recepcion-waitlist-head">
-                <div>
-                  <strong>{{ solicitud.nombreCliente }}</strong>
-                  <span>{{ solicitud.servicioNombre }} · {{ solicitud.sucursalNombre }}</span>
-                </div>
-                <span class="badge rounded-pill recepcion-status-badge">{{ etiquetaEstadoEspera(solicitud.estado) }}</span>
-              </div>
-              <div class="recepcion-appointment-meta">
-                <span>{{ solicitud.fechaDeseada | date:'dd/MM/yyyy':'':'es-MX' }}</span>
-                <span>{{ solicitud.telefonoCliente }}</span>
-                <span>{{ solicitud.aceptaWhatsapp ? 'Avisar por WhatsApp' : 'Seguimiento manual' }}</span>
-              </div>
-              @if (solicitud.notas) {
-                <div class="recepcion-appointment-note">
-                  {{ solicitud.notas }}
-                </div>
-              }
-              <div class="recepcion-waitlist-actions">
-                @if (solicitud.aceptaWhatsapp && solicitud.estado === estadoEsperaPendiente) {
-                  <button
-                    class="btn btn-outline-primary btn-sm"
-                    type="button"
-                    (click)="notifyWaitlist.emit(solicitud.id)"
-                    [disabled]="guardando">
-                    Notificar por WhatsApp
-                  </button>
-                }
-                @if (solicitud.estado === estadoEsperaNotificada) {
-                  <span class="recepcion-waitlist-hint">
-                    Ya fue notificado.
-                  </span>
-                }
-                @if (!solicitud.aceptaWhatsapp) {
-                  <span class="recepcion-waitlist-hint">
-                    Seguimiento manual.
-                  </span>
-                }
-              </div>
-            </div>
-          }
-        </div>
-      </div>
-    </section>
+    <app-recepcion-waitlist
+      [solicitudes]="solicitudesEspera"
+      [estados]="estadosEspera"
+      [estadoPendiente]="estadoEsperaPendiente"
+      [estadoNotificada]="estadoEsperaNotificada"
+      [guardando]="guardando"
+      (notify)="notifyWaitlist.emit($event)" />
   }
 </div>

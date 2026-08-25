@@ -1,25 +1,18 @@
+import { CommonModule, DatePipe } from '@angular/common';
 import { Component, EventEmitter, Input, Output } from '@angular/core';
-import {
-  ClienteRecepcion,
-  FranjaRecepcionDisponible,
-  OpcionRecepcion,
-  ServicioRecepcionCatalogo,
-  SolicitudEsperaRecepcion,
-  SucursalRecepcionCatalogo
-} from '../../core/recepcion/recepcion.service';
-import { FormularioCitaRecepcion } from './forms/recepcion.forms';
-import { RecepcionQuickAppointmentComponent } from './quick-appointment/recepcion-quick-appointment.component';
-import { RecepcionWaitlistComponent } from './waitlist/recepcion-waitlist.component';
+import { FormsModule } from '@angular/forms';
+import { ClienteRecepcion, FranjaRecepcionDisponible, ServicioRecepcionCatalogo, SucursalRecepcionCatalogo } from '../../../core/recepcion/recepcion.service';
+import { FormularioCitaRecepcion } from '../forms/recepcion.forms';
 
 @Component({
-  selector: 'app-recepcion-side-panel',
+  selector: 'app-recepcion-quick-appointment',
   standalone: true,
-  imports: [RecepcionQuickAppointmentComponent, RecepcionWaitlistComponent],
-  templateUrl: './recepcion-side-panel.component.html'
+  imports: [CommonModule, DatePipe, FormsModule],
+  templateUrl: './recepcion-quick-appointment.component.html',
+  styleUrls: ['./recepcion-quick-appointment.component.css']
 })
-export class RecepcionSidePanelComponent {
+export class RecepcionQuickAppointmentComponent {
   @Input({ required: true }) puedeBuscarClientes!: boolean;
-  @Input({ required: true }) puedeGestionarCitas!: boolean;
   @Input({ required: true }) loadingBusqueda!: boolean;
   @Input({ required: true }) terminoBusquedaCliente!: string;
   @Input({ required: true }) clientesEncontrados!: ClienteRecepcion[];
@@ -31,10 +24,6 @@ export class RecepcionSidePanelComponent {
   @Input({ required: true }) franjasDisponibles!: FranjaRecepcionDisponible[];
   @Input({ required: true }) mensajeWalkIn!: string;
   @Input({ required: true }) guardando!: boolean;
-  @Input({ required: true }) solicitudesEspera!: SolicitudEsperaRecepcion[];
-  @Input({ required: true }) estadosEspera!: OpcionRecepcion[];
-  @Input({ required: true }) estadoEsperaPendiente!: string;
-  @Input({ required: true }) estadoEsperaNotificada!: string;
 
   @Output() searchChange = new EventEmitter<string>();
   @Output() clientSelected = new EventEmitter<ClienteRecepcion>();
@@ -45,6 +34,4 @@ export class RecepcionSidePanelComponent {
   @Output() slotSelected = new EventEmitter<FranjaRecepcionDisponible>();
   @Output() registerWaitlist = new EventEmitter<void>();
   @Output() saveAppointment = new EventEmitter<void>();
-  @Output() notifyWaitlist = new EventEmitter<number>();
-
 }

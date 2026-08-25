@@ -1,5 +1,5 @@
 import { CommonModule, DatePipe } from '@angular/common';
-import { AfterViewInit, ChangeDetectorRef, Component, DestroyRef, NgZone, OnInit, computed, inject, signal } from '@angular/core';
+import { AfterViewInit, ChangeDetectorRef, Component, DestroyRef, NgZone, OnInit, ViewEncapsulation, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { BreakpointObserver } from '@angular/cdk/layout';
 import { FormsModule } from '@angular/forms';
@@ -16,6 +16,7 @@ import { PerfilUsuarioLocal, UserProfileService } from '../../core/profile/user-
 import { UserProfileDialogComponent } from '../../shared/profile/user-profile-dialog.component';
 import { RecepcionSidePanelComponent } from './recepcion-side-panel.component';
 import { RecepcionAgendaSectionComponent } from './agenda/recepcion-agenda-section.component';
+import { FormularioCitaRecepcion } from './forms/recepcion.forms';
 import {
   CatalogoRecepcion,
   CitaRecepcion,
@@ -45,7 +46,8 @@ import {
     RecepcionAgendaSectionComponent
   ],
   templateUrl: './recepcion-dashboard.component.html',
-  styleUrls: ['./recepcion-dashboard.component.css']
+  styleUrls: ['./recepcion-dashboard.component.css'],
+  encapsulation: ViewEncapsulation.None
 })
 export class RecepcionDashboardComponent implements OnInit, AfterViewInit {
   private readonly recepcionService = inject(RecepcionService);
@@ -146,7 +148,7 @@ export class RecepcionDashboardComponent implements OnInit, AfterViewInit {
     ].filter((item): item is { titulo: string; descripcion: string; icono: string; total: number } => !!item);
   });
 
-  formularioCita = {
+  formularioCita: FormularioCitaRecepcion = {
     sucursalId: null as number | null,
     servicioId: null as number | null,
     clienteId: null as number | null,

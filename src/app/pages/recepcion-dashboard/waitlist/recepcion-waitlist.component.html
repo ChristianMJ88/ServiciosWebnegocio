@@ -1,0 +1,43 @@
+<section class="card recepcion-card recepcion-card--waitlist">
+  <div class="card-body recepcion-card-body">
+    <div class="recepcion-card-heading">
+      <span class="recepcion-card-kicker">Seguimiento</span>
+      <h2>Clientes en espera</h2>
+      <p>Solicitudes pendientes para la agenda de hoy.</p>
+    </div>
+    <div class="recepcion-waitlist-list">
+      @for (solicitud of solicitudes; track solicitud.id) {
+        <div class="recepcion-waitlist-card">
+          <div class="recepcion-waitlist-head">
+            <div>
+              <strong>{{ solicitud.nombreCliente }}</strong>
+              <span>{{ solicitud.servicioNombre }} · {{ solicitud.sucursalNombre }}</span>
+            </div>
+            <span class="badge rounded-pill recepcion-status-badge">{{ etiquetaEstado(solicitud.estado) }}</span>
+          </div>
+          <div class="recepcion-appointment-meta">
+            <span>{{ solicitud.fechaDeseada | date:'dd/MM/yyyy':'':'es-MX' }}</span>
+            <span>{{ solicitud.telefonoCliente }}</span>
+            <span>{{ solicitud.aceptaWhatsapp ? 'Avisar por WhatsApp' : 'Seguimiento manual' }}</span>
+          </div>
+          @if (solicitud.notas) {
+            <div class="recepcion-appointment-note">{{ solicitud.notas }}</div>
+          }
+          <div class="recepcion-waitlist-actions">
+            @if (solicitud.aceptaWhatsapp && solicitud.estado === estadoPendiente) {
+              <button class="btn btn-outline-primary btn-sm" type="button" (click)="notify.emit(solicitud.id)" [disabled]="guardando">
+                Notificar por WhatsApp
+              </button>
+            }
+            @if (solicitud.estado === estadoNotificada) {
+              <span class="recepcion-waitlist-hint">Ya fue notificado.</span>
+            }
+            @if (!solicitud.aceptaWhatsapp) {
+              <span class="recepcion-waitlist-hint">Seguimiento manual.</span>
+            }
+          </div>
+        </div>
+      }
+    </div>
+  </div>
+</section>

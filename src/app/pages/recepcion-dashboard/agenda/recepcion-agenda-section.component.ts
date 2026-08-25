@@ -7,7 +7,7 @@ import { CitaRecepcion, OpcionRecepcion } from '../../../core/recepcion/recepcio
   standalone: true,
   imports: [CommonModule, DatePipe],
   templateUrl: './recepcion-agenda-section.component.html',
-  styleUrls: ['../recepcion-dashboard.component.css', './recepcion-agenda-section.component.css']
+  styleUrls: ['./recepcion-agenda-section.component.css']
 })
 export class RecepcionAgendaSectionComponent {
   @Input({ required: true }) citas!: CitaRecepcion[];
