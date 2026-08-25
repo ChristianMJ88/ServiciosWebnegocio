@@ -6,6 +6,10 @@
 - `session`: apertura, resumen y cierre de sesión.
 - `movements`: movimientos manuales e historial del turno.
 - `receipt`: DTO, transformación, presentación e impresión del comprobante.
+- `header`: toolbar, alertas, navegación superior y perfil.
+- `overview`: contexto operativo de sucursal, estado y métricas.
+- `navigation`: selector de vista y contexto del cobro activo.
+- `models`: contratos de presentación del dashboard.
 - La raíz conserva la coordinación del tablero y publica una sola vez los estilos prefijados de Caja.
 
 Los catálogos y reglas operativas deben provenir del backend.

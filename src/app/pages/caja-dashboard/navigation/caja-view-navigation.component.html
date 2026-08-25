@@ -1,0 +1,8 @@
+<div class="caja-control-strip">
+  @if (vistas.length > 1) {
+    <section class="caja-view-switcher">@for (vista of vistas; track vista.id) {<button type="button" class="caja-view-chip" [class.active]="vistaActiva === vista.id" (click)="viewSelected.emit(vista.id)">{{ vista.label }}</button>}</section>
+  }
+  @if (cobroActivo; as cita) {
+    <div class="caja-inline-context"><span class="caja-inline-context-label">Cobro activo</span><strong>{{ cita.clienteNombre }}</strong><small>{{ cita.servicioNombre }} · {{ cita.pendiente | appMoney:cita.moneda:2:2 }}</small></div>
+  }
+</div>

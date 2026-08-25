@@ -1,25 +1,11 @@
-import { CommonModule } from '@angular/common';
 import { AfterViewInit, ChangeDetectorRef, Component, DestroyRef, NgZone, OnInit, ViewEncapsulation, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { BreakpointObserver } from '@angular/cdk/layout';
-import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-import { MatBadgeModule } from '@angular/material/badge';
-import { MatButtonModule } from '@angular/material/button';
-import { MatCardModule } from '@angular/material/card';
-import { MatChipsModule } from '@angular/material/chips';
-import { MatDividerModule } from '@angular/material/divider';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
-import { MatMenuModule } from '@angular/material/menu';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
-import { MatSelectModule } from '@angular/material/select';
-import { MatToolbarModule } from '@angular/material/toolbar';
 import { finalize } from 'rxjs/operators';
 import { AuthService } from '../../core/auth/auth.service';
 import { PerfilUsuarioLocal, UserProfileService } from '../../core/profile/user-profile.service';
-import { UserProfileDialogComponent } from '../../shared/profile/user-profile-dialog.component';
-import { MoneyDisplayPipe } from '../../shared/pipes/money-display.pipe';
 import {
   CajaSesion,
   CatalogoCaja,
@@ -37,6 +23,10 @@ import { CajaReceiptComponent } from './receipt/caja-receipt.component';
 import { construirComprobanteCaja } from './receipt/caja-receipt.builder';
 import { CajaReceiptDto } from './receipt/caja-receipt.dto';
 import { CajaReceiptPrintService } from './receipt/caja-receipt-print.service';
+import { CajaHeaderComponent } from './header/caja-header.component';
+import { CajaOverviewComponent } from './overview/caja-overview.component';
+import { CajaViewNavigationComponent } from './navigation/caja-view-navigation.component';
+import { CajaMetricViewModel, CajaNotificationViewModel, CajaViewOption, VistaCaja } from './models/caja-dashboard.models';
 import {
   construirApertura,
   construirCierre,
@@ -48,27 +38,14 @@ import {
   crearFormularioPago
 } from './forms/caja.forms';
 
-type VistaCaja = 'cobros' | 'sesion' | 'movimientos';
-
 @Component({
   selector: 'app-caja-dashboard',
   standalone: true,
   imports: [
-    CommonModule,
-    FormsModule,
-    MoneyDisplayPipe,
-    MatBadgeModule,
-    MatButtonModule,
-    MatCardModule,
-    MatChipsModule,
-    MatDividerModule,
-    MatFormFieldModule,
-    MatInputModule,
-    MatMenuModule,
     MatProgressBarModule,
-    MatSelectModule,
-    MatToolbarModule,
-    UserProfileDialogComponent,
+    CajaHeaderComponent,
+    CajaOverviewComponent,
+    CajaViewNavigationComponent,
     CajaPaymentsSectionComponent,
     CajaSessionSectionComponent,
     CajaMovementsSectionComponent,
@@ -143,7 +120,7 @@ export class CajaDashboardComponent implements OnInit, AfterViewInit {
     this.estadoSesionAbierta() && this.sesionActual()?.estado === this.estadoSesionAbierta()
   ));
   readonly totalNotificaciones = computed(() => this.citasPorCobrar().length + (this.cajaAbierta() ? 0 : 1));
-  readonly notificacionesCaja = computed(() => [
+  readonly notificacionesCaja = computed<CajaNotificationViewModel[]>(() => [
     !this.cajaAbierta() ? { titulo: 'Caja cerrada', descripcion: 'Abre una sesión de caja para operar cobros.', icono: 'bi-cash-coin', total: 1 } : null,
     this.citasPorCobrar().length ? { titulo: 'Citas por cobrar', descripcion: `${this.citasPorCobrar().length} citas tienen saldo pendiente.`, icono: 'bi-receipt', total: this.citasPorCobrar().length } : null
   ].filter((item): item is { titulo: string; descripcion: string; icono: string; total: number } => !!item));
@@ -174,6 +151,10 @@ export class CajaDashboardComponent implements OnInit, AfterViewInit {
   });
   readonly sucursalActivaDireccion = computed(() => this.sucursalActiva()?.direccion ?? '');
   readonly sucursalActivaResuelta = computed(() => Boolean(this.sucursalActivaNombre()));
+  readonly estadoSesionEtiqueta = computed(() => {
+    const codigo = this.cajaAbierta() ? this.estadoSesionAbierta() : this.estadoSesionCerrada();
+    return this.estadosSesion().find(estado => estado.codigo === codigo)?.etiqueta ?? codigo;
+  });
   readonly mensajePagoBloqueado = computed(() =>
     this.cajaAbierta()
       ? ''
@@ -184,7 +165,7 @@ export class CajaDashboardComponent implements OnInit, AfterViewInit {
   );
   readonly citaSeleccionadaActualId = computed(() => this.citaSeleccionada()?.citaId ?? null);
   readonly vistasDisponibles = computed(() => {
-    const vistas: Array<{ id: VistaCaja; label: string }> = [];
+    const vistas: CajaViewOption[] = [];
     if (this.puedeCobrar()) {
       vistas.push({ id: 'cobros', label: 'Cobros' });
     }
@@ -199,19 +180,17 @@ export class CajaDashboardComponent implements OnInit, AfterViewInit {
   readonly totalPendiente = computed(() =>
     this.citasPorCobrar().reduce((total, cita) => total + (Number(cita.pendiente) || 0), 0)
   );
-  readonly metricas = computed(() => [
-    { label: 'Pendiente por cobrar', value: this.totalPendiente(), accent: 'primary' },
-    { label: 'Cobrado en turno', value: Number(this.resumen()?.totalCobrado ?? 0), accent: 'neutral' },
-    { label: 'Efectivo esperado', value: Number(this.resumen()?.saldoEsperadoCaja ?? 0), accent: 'neutral' },
-    { label: 'Citas por cobrar', value: this.citasPorCobrar().length, accent: 'soft' }
+  readonly metricas = computed<CajaMetricViewModel[]>(() => [
+    { label: 'Pendiente por cobrar', value: this.totalPendiente(), accent: 'primary', format: 'money' },
+    { label: 'Cobrado en turno', value: Number(this.resumen()?.totalCobrado ?? 0), accent: 'neutral', format: 'money' },
+    { label: 'Efectivo esperado', value: Number(this.resumen()?.saldoEsperadoCaja ?? 0), accent: 'neutral', format: 'money' },
+    { label: 'Citas por cobrar', value: this.citasPorCobrar().length, accent: 'soft', format: 'count' }
   ]);
 
   formularioApertura = crearFormularioApertura();
   formularioCierre = crearFormularioCierre();
   formularioPago = crearFormularioPago();
   formularioMovimiento = crearFormularioMovimiento();
-
-  sucursalSeleccionadaModel: number | null = null;
 
   ngOnInit(): void {
     this.authService.sincronizarSesionPersistida();
@@ -577,7 +556,6 @@ export class CajaDashboardComponent implements OnInit, AfterViewInit {
 
   private sincronizarSucursalOperativa(sucursalId: number | null) {
     this.sucursalActivaId.set(sucursalId);
-    this.sucursalSeleccionadaModel = sucursalId;
   }
 
   private sincronizarCitaSeleccionada() {

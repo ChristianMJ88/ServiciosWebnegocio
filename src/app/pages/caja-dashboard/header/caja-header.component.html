@@ -1,0 +1,34 @@
+<mat-toolbar class="caja-toolbar">
+  <div class="caja-toolbar-brand"><span class="caja-brand-mark">CA</span><div class="caja-brand-copy"><span class="caja-brand-eyebrow">Operación</span><span class="caja-brand-title">Caja</span></div></div>
+  <div class="caja-toolbar-actions">
+    <button mat-icon-button class="caja-toolbar-icon-button notification-trigger" [matMenuTriggerFor]="menuNotificaciones"
+      [matBadge]="totalNotificaciones" [matBadgeHidden]="!totalNotificaciones" matBadgeColor="accent" matBadgeSize="small" aria-label="Alertas de caja"><i class="bi bi-bell"></i></button>
+    @if (!panelMovil && puedeIrRecepcion) { <button class="btn btn-outline-secondary btn-sm" type="button" (click)="goReception.emit()">Recepción</button> }
+    @if (!panelMovil && puedeIrAdmin) { <button class="btn btn-outline-secondary btn-sm" type="button" (click)="goAdmin.emit()">Admin</button> }
+    <button mat-button [matMenuTriggerFor]="menuUsuario" class="caja-user-button" type="button">
+      <span class="caja-user-avatar">@if (fotoPerfilUsuario) { <img [src]="fotoPerfilUsuario" alt="" /> } @else { {{ inicialesUsuario }} }</span>
+      @if (!panelMovil) { <span class="caja-user-copy"><strong>{{ nombreUsuario }}</strong><small>{{ puestoUsuario }}</small></span> }
+      <i class="bi bi-chevron-down toolbar-user-chevron" aria-hidden="true"></i>
+    </button>
+  </div>
+</mat-toolbar>
+<mat-menu #menuNotificaciones="matMenu" class="notification-menu">
+  <div class="notification-panel">
+    <div class="notification-panel-header d-flex align-items-start justify-content-between gap-3"><div><span class="notification-eyebrow">Caja</span><h2>Centro de alertas</h2><p>{{ totalNotificaciones ? 'Pendientes de cobro y sesión.' : 'Caja sin pendientes.' }}</p></div><span class="badge rounded-pill notification-total">{{ totalNotificaciones }}</span></div>
+    @if (notificaciones.length) {
+      <div class="notification-list">@for (notificacion of notificaciones; track notificacion.titulo) {<button type="button" class="notification-item"><span class="notification-icon"><i class="bi" [ngClass]="notificacion.icono"></i></span><span class="notification-copy"><span class="notification-title-row"><strong>{{ notificacion.titulo }}</strong><span class="badge rounded-pill">{{ notificacion.total }}</span></span><span>{{ notificacion.descripcion }}</span><small>Caja</small></span></button>}</div>
+    } @else { <div class="notification-empty"><i class="bi bi-check2-circle"></i><strong>Sin pendientes</strong><span>No hay alertas de caja.</span></div> }
+  </div>
+</mat-menu>
+<mat-menu #menuUsuario="matMenu" class="toolbar-user-menu">
+  <div class="profile-menu-header" (click)="$event.stopPropagation()"><span class="caja-user-avatar profile-menu-avatar">@if (fotoPerfilUsuario) {<img [src]="fotoPerfilUsuario" alt="" />} @else { {{ inicialesUsuario }} }</span><div class="min-w-0"><strong class="text-truncate">{{ nombreUsuario }}</strong><span class="text-truncate">{{ correoUsuario }}</span></div></div>
+  <button mat-menu-item type="button" (click)="refresh.emit()">Actualizar</button>
+  <button mat-menu-item type="button" (click)="openProfile.emit()"><i class="bi bi-person-gear me-2"></i>Configuración de perfil</button>
+  @if (puedeIrRecepcion) { <button mat-menu-item type="button" (click)="goReception.emit()">Ir a recepción</button> }
+  @if (puedeIrAdmin) { <button mat-menu-item type="button" (click)="goAdmin.emit()">Ir a admin</button> }
+  <button mat-menu-item type="button" (click)="signOut.emit()">Cerrar sesión</button>
+</mat-menu>
+@if (perfilConfigAbierto) {
+  <app-user-profile-dialog [profile]="{ nombre: nombreUsuario, puesto: puestoUsuario, fotoDataUrl: fotoPerfilUsuario }" [initials]="inicialesUsuario"
+    (cancelled)="closeProfile.emit()" (saved)="saveProfile.emit($event)" (validationError)="profileValidationError.emit($event)" />
+}

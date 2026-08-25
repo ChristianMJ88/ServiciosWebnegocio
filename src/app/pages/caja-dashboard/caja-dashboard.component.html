@@ -1,227 +1,28 @@
 <section class="caja-shell">
-  <mat-toolbar class="caja-toolbar">
-    <div class="caja-toolbar-brand">
-      <span class="caja-brand-mark">CA</span>
-      <div class="caja-brand-copy">
-        <span class="caja-brand-eyebrow">Operación</span>
-        <span class="caja-brand-title">Caja</span>
-      </div>
-    </div>
-
-    <div class="caja-toolbar-actions">
-      <button mat-icon-button class="caja-toolbar-icon-button notification-trigger" [matMenuTriggerFor]="menuCajaNotificaciones" [matBadge]="totalNotificaciones()" [matBadgeHidden]="!totalNotificaciones()" matBadgeColor="accent" matBadgeSize="small" aria-label="Alertas de caja">
-        <i class="bi bi-bell"></i>
-      </button>
-      @if (!panelMovil() && puedeIrRecepcion()) {
-        <button class="btn btn-outline-secondary btn-sm" type="button" (click)="irARecepcion()">Recepción</button>
-      }
-      @if (!panelMovil() && puedeIrAdmin()) {
-        <button class="btn btn-outline-secondary btn-sm" type="button" (click)="irAAdmin()">Admin</button>
-      }
-      <button mat-button [matMenuTriggerFor]="menuUsuario" class="caja-user-button" type="button">
-        <span class="caja-user-avatar">
-          @if (fotoPerfilUsuario(); as fotoCaja) {
-            <img [src]="fotoCaja" alt="" />
-          } @else {
-            {{ inicialesUsuario() }}
-          }
-        </span>
-        @if (!panelMovil()) {
-          <span class="caja-user-copy">
-            <strong>{{ nombreUsuario() }}</strong>
-            <small>{{ puestoUsuario() }}</small>
-          </span>
-        }
-        <i class="bi bi-chevron-down toolbar-user-chevron" aria-hidden="true"></i>
-      </button>
-    </div>
-  </mat-toolbar>
-
-  <mat-menu #menuCajaNotificaciones="matMenu" class="notification-menu">
-    <div class="notification-panel">
-      <div class="notification-panel-header d-flex align-items-start justify-content-between gap-3">
-        <div>
-          <span class="notification-eyebrow">Caja</span>
-          <h2>Centro de alertas</h2>
-          <p>{{ totalNotificaciones() ? 'Pendientes de cobro y sesión.' : 'Caja sin pendientes.' }}</p>
-        </div>
-        <span class="badge rounded-pill notification-total">{{ totalNotificaciones() }}</span>
-      </div>
-      @if (notificacionesCaja().length) {
-        <div class="notification-list">
-          @for (notificacion of notificacionesCaja(); track notificacion) {
-            <button type="button" class="notification-item">
-              <span class="notification-icon"><i class="bi" [ngClass]="notificacion.icono"></i></span>
-              <span class="notification-copy">
-                <span class="notification-title-row"><strong>{{ notificacion.titulo }}</strong><span class="badge rounded-pill">{{ notificacion.total }}</span></span>
-                <span>{{ notificacion.descripcion }}</span>
-                <small>Caja</small>
-              </span>
-            </button>
-          }
-        </div>
-      } @else {
-        <div class="notification-empty"><i class="bi bi-check2-circle"></i><strong>Sin pendientes</strong><span>No hay alertas de caja.</span></div>
-      }
-    </div>
-  </mat-menu>
-
-  <mat-menu #menuUsuario="matMenu" class="toolbar-user-menu">
-    <div class="profile-menu-header" (click)="$event.stopPropagation()">
-      <span class="caja-user-avatar profile-menu-avatar">
-        @if (fotoPerfilUsuario(); as fotoCajaMenu) {
-          <img [src]="fotoCajaMenu" alt="" />
-        } @else {
-          {{ inicialesUsuario() }}
-        }
-      </span>
-      <div class="min-w-0">
-        <strong class="text-truncate">{{ nombreUsuario() }}</strong>
-        <span class="text-truncate">{{ correoUsuario() }}</span>
-      </div>
-    </div>
-    <button mat-menu-item type="button" (click)="recargarTablero()">Actualizar</button>
-    <button mat-menu-item type="button" (click)="abrirConfiguracionPerfil()"><i class="bi bi-person-gear me-2"></i>Configuración de perfil</button>
-    @if (puedeIrRecepcion()) {
-      <button mat-menu-item type="button" (click)="irARecepcion()">Ir a recepción</button>
-    }
-    @if (puedeIrAdmin()) {
-      <button mat-menu-item type="button" (click)="irAAdmin()">Ir a admin</button>
-    }
-    <button mat-menu-item type="button" (click)="logout()">Cerrar sesión</button>
-  </mat-menu>
-
-  @if (perfilConfigAbierto()) {
-    <app-user-profile-dialog
-      [profile]="{ nombre: nombreUsuario(), puesto: puestoUsuario(), fotoDataUrl: fotoPerfilUsuario() }"
-      [initials]="inicialesUsuario()"
-      (cancelled)="cerrarConfiguracionPerfil()"
-      (saved)="guardarConfiguracionPerfil($event)"
-      (validationError)="mostrarErrorPerfil($event)" />
-  }
+  <app-caja-header
+    [panelMovil]="panelMovil()" [puedeIrRecepcion]="puedeIrRecepcion()" [puedeIrAdmin]="puedeIrAdmin()"
+    [notificaciones]="notificacionesCaja()" [totalNotificaciones]="totalNotificaciones()"
+    [nombreUsuario]="nombreUsuario()" [correoUsuario]="correoUsuario()" [puestoUsuario]="puestoUsuario()"
+    [fotoPerfilUsuario]="fotoPerfilUsuario()" [inicialesUsuario]="inicialesUsuario()" [perfilConfigAbierto]="perfilConfigAbierto()"
+    (refresh)="recargarTablero()" (openProfile)="abrirConfiguracionPerfil()" (closeProfile)="cerrarConfiguracionPerfil()"
+    (saveProfile)="guardarConfiguracionPerfil($event)" (profileValidationError)="mostrarErrorPerfil($event)"
+    (goReception)="irARecepcion()" (goAdmin)="irAAdmin()" (signOut)="logout()" />
 
   @if (loading()) {
     <mat-progress-bar mode="indeterminate"></mat-progress-bar>
   }
 
   <div class="caja-body">
-    <header class="caja-top-strip">
-      <div class="caja-top-copy">
-        <div>
-          <span class="caja-eyebrow">Turno actual</span>
-          <h1>Caja</h1>
-        </div>
+    <app-caja-overview
+      [totalNotificaciones]="totalNotificaciones()" [estadoSesionEtiqueta]="estadoSesionEtiqueta()"
+      [cajaAbierta]="cajaAbierta()" [sucursalActivaId]="sucursalOperativaId()"
+      [sucursalActivaNombre]="sucursalActivaNombre()" [sucursalActivaDireccion]="sucursalActivaDireccion()"
+      [sucursalActivaResuelta]="sucursalActivaResuelta()" [sucursales]="sucursales()"
+      [citasPorCobrar]="citasPorCobrar().length" [metricas]="metricas()" [error]="error()" [mensaje]="mensaje()"
+      (branchSelected)="seleccionarSucursal($event)" />
 
-        <div class="caja-top-meta">
-          <span class="caja-top-pill">{{ totalNotificaciones() }} pendientes</span>
-          <span class="caja-top-pill">{{ cajaAbierta() ? 'Caja abierta' : 'Caja cerrada' }}</span>
-          @if (sucursalActivaNombre()) {
-            <span class="caja-top-pill">{{ sucursalActivaNombre() }}</span>
-          }
-          <span class="caja-top-pill">{{ citasPorCobrar().length }} cobrables</span>
-        </div>
-      </div>
-
-      <mat-card class="caja-sucursal-card">
-        <div class="caja-top-card-head">
-          <div>
-            <span class="caja-card-kicker">Sucursal activa</span>
-            <h2>{{ sucursalActivaNombre() || 'Cargando sucursal operativa...' }}</h2>
-          </div>
-          <div class="caja-status-pills caja-status-pills--head">
-            <span class="caja-status-pill" [class.is-open]="cajaAbierta()">
-              {{ cajaAbierta() ? 'Caja abierta' : 'Caja cerrada' }}
-            </span>
-            @if (sucursalActivaResuelta()) {
-              <span class="caja-status-pill">
-                Sucursal {{ sucursalOperativaId() }}
-              </span>
-            }
-          </div>
-        </div>
-
-        @if (sucursales().length > 1) {
-          <mat-form-field appearance="outline" class="w-100">
-            <mat-label>Sucursal</mat-label>
-            <mat-select
-              [(ngModel)]="sucursalSeleccionadaModel"
-              (ngModelChange)="seleccionarSucursal($event)">
-              @for (sucursal of sucursales(); track sucursal) {
-                <mat-option [value]="sucursal.id">
-                  {{ sucursal.nombre }}
-                </mat-option>
-              }
-            </mat-select>
-          </mat-form-field>
-        } @else {
-          @if (sucursalActivaResuelta()) {
-            <div class="caja-sucursal-fixed">
-              <strong>{{ sucursalActivaNombre() }}</strong>
-              <span>Sucursal operativa bloqueada por tu acceso.</span>
-            </div>
-          } @else {
-            <div class="caja-empty">
-              Cargando sucursal operativa...
-            </div>
-          }
-        }
-
-
-
-        @if (sucursalActivaDireccion()) {
-          <p class="caja-helper">
-            {{ sucursalActivaDireccion() }}
-          </p>
-        }
-
-      </mat-card>
-    </header>
-
-    @if (error()) {
-      <div class="alert alert-danger" role="alert">{{ error() }}</div>
-    }
-    @if (mensaje()) {
-      <div class="alert alert-success" role="status">{{ mensaje() }}</div>
-    }
-
-    <section class="caja-metric-grid">
-      @for (metrica of metricas(); track metrica) {
-        <mat-card class="caja-metric-card" [class.primary]="metrica.accent === 'primary'">
-          <span>{{ metrica.label }}</span>
-          <strong>
-            @if (metrica.label !== 'Citas por cobrar') {
-              {{ metrica.value | appMoney:'MXN':2:2 }}
-            } @else {
-              {{ metrica.value }}
-            }
-          </strong>
-        </mat-card>
-      }
-    </section>
-
-    <div class="caja-control-strip">
-      @if (vistasDisponibles().length > 1) {
-        <section class="caja-view-switcher">
-          @for (vista of vistasDisponibles(); track vista) {
-            <button
-              type="button"
-              class="caja-view-chip"
-              [class.active]="vistaActiva() === vista.id"
-              (click)="seleccionarVista(vista.id)">
-              {{ vista.label }}
-            </button>
-          }
-        </section>
-      }
-
-      @if (citaSeleccionada(); as citaActiva) {
-        <div class="caja-inline-context">
-          <span class="caja-inline-context-label">Cobro activo</span>
-          <strong>{{ citaActiva.clienteNombre }}</strong>
-          <small>{{ citaActiva.servicioNombre }} · {{ citaActiva.pendiente | appMoney:'MXN':2:2 }}</small>
-        </div>
-      }
-    </div>
+    <app-caja-view-navigation [vistas]="vistasDisponibles()" [vistaActiva]="vistaActiva()"
+      [cobroActivo]="citaSeleccionada()" (viewSelected)="seleccionarVista($event)" />
 
     @if (vistaActiva() === 'cobros') {
       <app-caja-payments-section
