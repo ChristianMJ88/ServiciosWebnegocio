@@ -33,14 +33,12 @@ import {
   DetectarChannelSenderWhatsappResponse,
   EnviarMensajeWhatsappPayload,
   ExcepcionDisponibilidadAdmin,
-  GuardarRolInternoPayload,
   GuardarConfiguracionCorreoPayload,
   GuardarConfiguracionSitioPayload,
   GuardarConfiguracionWhatsappPayload,
   GuardarExcepcionDisponibilidadPayload,
   GuardarPrestadorPayload,
   GuardarReglaDisponibilidadPayload,
-  GuardarUsuarioInternoPayload,
   GrupoServicioAdmin,
   LogMensajeWhatsappAdmin,
   MensajeWhatsappAdmin,
@@ -94,6 +92,15 @@ import { AdminWhatsappSectionComponent } from './admin-whatsapp-section.componen
 import { GRUPOS_SIDEBAR_ADMIN, MODULOS_ADMIN, ModuloAdminDef, SeccionAdmin } from './admin-dashboard.config';
 import { AdminDashboardLoader } from './admin-dashboard.loader';
 import { AdminCatalogFacade } from './admin-catalog.facade';
+import { AdminAccessFacade } from './admin-access.facade';
+import {
+  cambiarPermiso,
+  crearFormularioDesdePlantilla,
+  crearFormularioRolClonado,
+  crearFormularioRolInterno,
+  crearFormularioUsuarioInterno,
+  quitarPermisosHeredados
+} from './admin-access.helpers';
 import {
   crearFormularioGrupoServicio,
   crearFormularioServicio,
@@ -153,6 +160,7 @@ type NotificacionAdmin = {
 export class AdminDashboardComponent implements OnInit {
   private readonly adminService = inject(AdminService);
   private readonly catalogFacade = inject(AdminCatalogFacade);
+  private readonly accessFacade = inject(AdminAccessFacade);
   private readonly dashboardLoader = inject(AdminDashboardLoader);
   private readonly breakpointObserver = inject(BreakpointObserver);
   private readonly authService = inject(AuthService);
@@ -760,27 +768,9 @@ export class AdminDashboardComponent implements OnInit {
     servicioIds: []
   };
 
-  formularioUsuarioInterno: GuardarUsuarioInternoPayload = {
-    sucursalId: null,
-    sucursalIds: [],
-    correo: '',
-    contrasenaTemporal: '',
-    nombreCompleto: '',
-    telefono: '',
-    puesto: '',
-    rolEmpresaId: null,
-    permisosDirectos: [],
-    activo: true,
-    notas: ''
-  };
+  formularioUsuarioInterno = crearFormularioUsuarioInterno(null, null);
 
-  formularioRolInterno: GuardarRolInternoPayload = {
-    codigo: '',
-    nombre: '',
-    descripcion: '',
-    activo: true,
-    permisos: []
-  };
+  formularioRolInterno = crearFormularioRolInterno();
 
   formularioRegla: GuardarReglaDisponibilidadPayload = {
     tipoSujeto: 'SUCURSAL',
@@ -1994,38 +1984,17 @@ export class AdminDashboardComponent implements OnInit {
 
   editarUsuarioInterno(usuario: UsuarioInternoAdmin) {
     this.usuarioInternoEditandoId = usuario.usuarioId;
-    this.formularioUsuarioInterno = {
-      sucursalId: usuario.sucursalId,
-      sucursalIds: [...(usuario.sucursalIds ?? [])],
-      correo: usuario.correo,
-      contrasenaTemporal: '',
-      nombreCompleto: usuario.nombreCompleto,
-      telefono: usuario.telefono ?? '',
-      puesto: usuario.puesto ?? '',
-      rolEmpresaId: usuario.rolEmpresaId,
-      permisosDirectos: [...(usuario.permisosDirectos ?? [])],
-      activo: usuario.activo,
-      notas: usuario.notas ?? ''
-    };
+    this.formularioUsuarioInterno = crearFormularioUsuarioInterno(null, null, usuario);
     this.marcarCambioFormularioUsuarioInterno();
     this.enfocarFormularioUsuariosInternos();
   }
 
   cancelarEdicionUsuarioInterno() {
     this.usuarioInternoEditandoId = null;
-    this.formularioUsuarioInterno = {
-      sucursalId: this.sucursales().length === 1 ? this.sucursales()[0].id : null,
-      sucursalIds: [],
-      correo: '',
-      contrasenaTemporal: '',
-      nombreCompleto: '',
-      telefono: '',
-      puesto: '',
-      rolEmpresaId: this.rolInternoPorDefecto()?.id ?? null,
-      permisosDirectos: [],
-      activo: true,
-      notas: ''
-    };
+    this.formularioUsuarioInterno = crearFormularioUsuarioInterno(
+      this.sucursales().length === 1 ? this.sucursales()[0].id : null,
+      this.rolInternoPorDefecto()?.id ?? null
+    );
     this.marcarCambioFormularioUsuarioInterno();
   }
 
@@ -2038,39 +2007,21 @@ export class AdminDashboardComponent implements OnInit {
     this.rolInternoClonandoDesdeId = null;
     this.rolInternoClonandoNombreOrigen = null;
     this.rolInternoEditandoId = rol.id;
-    this.formularioRolInterno = {
-      codigo: rol.codigo,
-      nombre: rol.nombre,
-      descripcion: rol.descripcion ?? '',
-      activo: rol.activo,
-      permisos: [...rol.permisos]
-    };
+    this.formularioRolInterno = crearFormularioRolInterno(rol);
   }
 
   clonarRolInterno(rol: RolInternoAdmin) {
     this.rolInternoEditandoId = null;
     this.rolInternoClonandoDesdeId = rol.id;
     this.rolInternoClonandoNombreOrigen = rol.nombre;
-    this.formularioRolInterno = {
-      codigo: this.generarCodigoClonadoRol(rol.codigo),
-      nombre: this.generarNombreClonadoRol(rol.nombre),
-      descripcion: rol.descripcion ?? '',
-      activo: rol.activo,
-      permisos: [...rol.permisos]
-    };
+    this.formularioRolInterno = crearFormularioRolClonado(rol, this.rolesInternos());
   }
 
   usarPlantillaRolInterno(plantilla: PlantillaRolInternoAdmin) {
     this.rolInternoEditandoId = null;
     this.rolInternoClonandoDesdeId = null;
     this.rolInternoClonandoNombreOrigen = null;
-    this.formularioRolInterno = {
-      codigo: this.generarCodigoSugeridoPlantilla(plantilla.codigoSugerido),
-      nombre: this.generarNombreSugeridoPlantilla(plantilla.nombreSugerido),
-      descripcion: plantilla.descripcion,
-      activo: true,
-      permisos: [...plantilla.permisos]
-    };
+    this.formularioRolInterno = crearFormularioDesdePlantilla(plantilla, this.rolesInternos());
   }
 
   etiquetaAccionAuditoriaRol(accion: string): string {
@@ -2119,13 +2070,7 @@ export class AdminDashboardComponent implements OnInit {
     this.rolInternoEditandoId = null;
     this.rolInternoClonandoDesdeId = null;
     this.rolInternoClonandoNombreOrigen = null;
-    this.formularioRolInterno = {
-      codigo: '',
-      nombre: '',
-      descripcion: '',
-      activo: true,
-      permisos: []
-    };
+    this.formularioRolInterno = crearFormularioRolInterno();
   }
 
   eliminarRolInterno(rol: RolInternoAdmin) {
@@ -2145,7 +2090,7 @@ export class AdminDashboardComponent implements OnInit {
     this.error = '';
     this.mensajeExito = '';
 
-    this.adminService.eliminarRolInterno(rol.id)
+    this.accessFacade.eliminarRol(rol.id)
       .pipe(finalize(() => this.loading.set(false)))
       .subscribe({
         next: () => {
@@ -2164,38 +2109,7 @@ export class AdminDashboardComponent implements OnInit {
     this.loading.set(true);
     this.error = '';
     this.mensajeExito = '';
-    if (!this.formularioUsuarioInterno.rolEmpresaId) {
-      this.error = 'Selecciona explícitamente un rol para el usuario interno.';
-      this.loading.set(false);
-      return;
-    }
-    const contrasenaTemporal = this.normalizarTexto(this.formularioUsuarioInterno.contrasenaTemporal);
-    const errorContrasena = this.validarContrasenaUsuarioInterno(contrasenaTemporal);
-    if (errorContrasena) {
-      this.error = errorContrasena;
-      this.loading.set(false);
-      return;
-    }
-
-    const payload: GuardarUsuarioInternoPayload = {
-      ...this.formularioUsuarioInterno,
-      sucursalId: this.formularioUsuarioInterno.sucursalId,
-      sucursalIds: [...this.formularioUsuarioInterno.sucursalIds],
-      correo: this.formularioUsuarioInterno.correo.trim().toLowerCase(),
-      contrasenaTemporal,
-      telefono: this.normalizarTexto(this.formularioUsuarioInterno.telefono),
-      puesto: this.normalizarTexto(this.formularioUsuarioInterno.puesto),
-      notas: this.normalizarTexto(this.formularioUsuarioInterno.notas),
-      nombreCompleto: this.formularioUsuarioInterno.nombreCompleto.trim(),
-      rolEmpresaId: this.formularioUsuarioInterno.rolEmpresaId,
-      permisosDirectos: [...this.formularioUsuarioInterno.permisosDirectos]
-    };
-
-    const operacion = this.usuarioInternoEditandoId
-      ? this.adminService.actualizarUsuarioInterno(this.usuarioInternoEditandoId, payload)
-      : this.adminService.crearUsuarioInterno(payload);
-
-    operacion
+    this.accessFacade.guardarUsuario(this.usuarioInternoEditandoId, this.formularioUsuarioInterno)
       .pipe(finalize(() => this.loading.set(false)))
       .subscribe({
         next: () => {
@@ -2213,21 +2127,11 @@ export class AdminDashboardComponent implements OnInit {
     this.error = '';
     this.mensajeExito = '';
 
-    const payload: GuardarRolInternoPayload = {
-      codigo: this.formularioRolInterno.codigo.trim().toUpperCase(),
-      nombre: this.formularioRolInterno.nombre.trim(),
-      descripcion: this.normalizarTexto(this.formularioRolInterno.descripcion),
-      activo: this.formularioRolInterno.activo,
-      permisos: [...this.formularioRolInterno.permisos]
-    };
-
-    const operacion = this.rolInternoEditandoId
-      ? this.adminService.actualizarRolInterno(this.rolInternoEditandoId, payload)
-      : this.rolInternoClonandoDesdeId
-        ? this.adminService.clonarRolInterno(this.rolInternoClonandoDesdeId, payload)
-      : this.adminService.crearRolInterno(payload);
-
-    operacion
+    this.accessFacade.guardarRol(
+      this.rolInternoEditandoId,
+      this.rolInternoClonandoDesdeId,
+      this.formularioRolInterno
+    )
       .pipe(finalize(() => this.loading.set(false)))
       .subscribe({
         next: () => {
@@ -2245,13 +2149,7 @@ export class AdminDashboardComponent implements OnInit {
   }
 
   cambiarPermisoRol(codigo: string, seleccionado: boolean) {
-    const permisos = new Set(this.formularioRolInterno.permisos);
-    if (seleccionado) {
-      permisos.add(codigo);
-    } else {
-      permisos.delete(codigo);
-    }
-    this.formularioRolInterno.permisos = Array.from(permisos).sort((a, b) => a.localeCompare(b, 'es-MX'));
+    this.formularioRolInterno.permisos = cambiarPermiso(this.formularioRolInterno.permisos, codigo, seleccionado);
   }
 
   editarPrestador(prestador: PrestadorAdmin) {
@@ -2535,25 +2433,13 @@ export class AdminDashboardComponent implements OnInit {
     return null;
   }
 
-  private validarContrasenaUsuarioInterno(contrasenaTemporal: string | null): string | null {
-    if (!this.usuarioInternoEditandoId && !contrasenaTemporal) {
-      return 'La contraseña temporal es obligatoria para usuarios internos.';
-    }
-
-    if (contrasenaTemporal && (contrasenaTemporal.length < 8 || contrasenaTemporal.length > 100)) {
-      return 'La contraseña temporal debe tener entre 8 y 100 caracteres.';
-    }
-
-    return null;
-  }
-
   cambiarRolUsuarioInterno(rolEmpresaId: number | null) {
     const rol = this.rolesInternos().find(item => item.id === rolEmpresaId) ?? null;
     this.formularioUsuarioInterno.rolEmpresaId = rol?.id ?? null;
-    const heredados = new Set(rol?.permisos ?? []);
-    this.formularioUsuarioInterno.permisosDirectos = this.formularioUsuarioInterno.permisosDirectos
-      .filter(permiso => !heredados.has(permiso))
-      .sort((a, b) => a.localeCompare(b, 'es-MX'));
+    this.formularioUsuarioInterno.permisosDirectos = quitarPermisosHeredados(
+      this.formularioUsuarioInterno.permisosDirectos,
+      rol
+    );
     this.marcarCambioFormularioUsuarioInterno();
   }
 
@@ -2599,13 +2485,11 @@ export class AdminDashboardComponent implements OnInit {
   }
 
   cambiarPermisoDirectoUsuario(codigo: string, seleccionado: boolean) {
-    const permisos = new Set(this.formularioUsuarioInterno.permisosDirectos);
-    if (seleccionado) {
-      permisos.add(codigo);
-    } else {
-      permisos.delete(codigo);
-    }
-    this.formularioUsuarioInterno.permisosDirectos = Array.from(permisos).sort((a, b) => a.localeCompare(b, 'es-MX'));
+    this.formularioUsuarioInterno.permisosDirectos = cambiarPermiso(
+      this.formularioUsuarioInterno.permisosDirectos,
+      codigo,
+      seleccionado
+    );
     this.marcarCambioFormularioUsuarioInterno();
   }
 
@@ -2627,58 +2511,6 @@ export class AdminDashboardComponent implements OnInit {
 
   private marcarCambioFormularioUsuarioInterno() {
     this.formularioUsuarioInternoRevision.update(valor => valor + 1);
-  }
-
-  private generarCodigoClonadoRol(codigoOrigen: string): string {
-    const codigoBase = `${codigoOrigen}_COPIA`;
-    let codigo = codigoBase;
-    let consecutivo = 2;
-
-    while (this.rolesInternos().some(rol => rol.codigo === codigo)) {
-      codigo = `${codigoBase}_${consecutivo}`;
-      consecutivo += 1;
-    }
-
-    return codigo;
-  }
-
-  private generarNombreClonadoRol(nombreOrigen: string): string {
-    const nombreBase = `${nombreOrigen} copia`;
-    let nombre = nombreBase;
-    let consecutivo = 2;
-
-    while (this.rolesInternos().some(rol => rol.nombre.toLowerCase() === nombre.toLowerCase())) {
-      nombre = `${nombreBase} ${consecutivo}`;
-      consecutivo += 1;
-    }
-
-    return nombre;
-  }
-
-  private generarCodigoSugeridoPlantilla(codigoBase: string): string {
-    const base = codigoBase.trim().toUpperCase();
-    let codigo = base;
-    let consecutivo = 2;
-
-    while (this.rolesInternos().some(rol => rol.codigo === codigo)) {
-      codigo = `${base}_${consecutivo}`;
-      consecutivo += 1;
-    }
-
-    return codigo;
-  }
-
-  private generarNombreSugeridoPlantilla(nombreBase: string): string {
-    const base = nombreBase.trim();
-    let nombre = base;
-    let consecutivo = 2;
-
-    while (this.rolesInternos().some(rol => rol.nombre.toLowerCase() === nombre.toLowerCase())) {
-      nombre = `${base} ${consecutivo}`;
-      consecutivo += 1;
-    }
-
-    return nombre;
   }
 
   private obtenerGrupoPermiso(codigo: string): { id: string; titulo: string } {
