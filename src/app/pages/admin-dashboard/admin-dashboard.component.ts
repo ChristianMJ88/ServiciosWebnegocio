@@ -64,37 +64,37 @@ import { AuthService } from '../../core/auth/auth.service';
 import { CitaCliente } from '../../core/auth/client-appointments.service';
 import { PerfilUsuarioLocal, UserProfileService } from '../../core/profile/user-profile.service';
 import { UserProfileDialogComponent } from '../../shared/profile/user-profile-dialog.component';
-import { AdminBranchesSectionComponent } from './admin-branches-section.component';
-import { AdminContactsSectionComponent } from './admin-contacts-section.component';
-import { AdminEmailSectionComponent } from './admin-email-section.component';
-import { AdminExceptionsSectionComponent } from './admin-exceptions-section.component';
-import { AdminProvidersSectionComponent } from './admin-providers-section.component';
-import { AdminRulesSectionComponent } from './admin-rules-section.component';
-import { AdminSiteSectionComponent } from './admin-site-section.component';
-import { AdminServicesSectionComponent } from './admin-services-section.component';
-import { AdminSummarySectionComponent } from './admin-summary-section.component';
-import { AdminUsersActivitySectionComponent } from './admin-users-activity-section.component';
-import { AdminUsersAccessSectionComponent } from './admin-users-access-section.component';
-import { AdminUsersRolesSectionComponent } from './admin-users-roles-section.component';
-import { AdminWhatsappInboxSectionComponent } from './admin-whatsapp-inbox-section.component';
-import { AdminWhatsappSectionComponent } from './admin-whatsapp-section.component';
+import { AdminBranchesSectionComponent } from './catalog/admin-branches-section.component';
+import { AdminContactsSectionComponent } from './contacts/admin-contacts-section.component';
+import { AdminEmailSectionComponent } from './email/admin-email-section.component';
+import { AdminExceptionsSectionComponent } from './availability/admin-exceptions-section.component';
+import { AdminProvidersSectionComponent } from './providers/admin-providers-section.component';
+import { AdminRulesSectionComponent } from './availability/admin-rules-section.component';
+import { AdminSiteSectionComponent } from './site/admin-site-section.component';
+import { AdminServicesSectionComponent } from './catalog/admin-services-section.component';
+import { AdminSummarySectionComponent } from './overview/admin-summary-section.component';
+import { AdminUsersActivitySectionComponent } from './access/admin-users-activity-section.component';
+import { AdminUsersAccessSectionComponent } from './access/admin-users-access-section.component';
+import { AdminUsersRolesSectionComponent } from './access/admin-users-roles-section.component';
+import { AdminWhatsappInboxSectionComponent } from './whatsapp/admin-whatsapp-inbox-section.component';
+import { AdminWhatsappSectionComponent } from './whatsapp/admin-whatsapp-section.component';
 import { GRUPOS_SIDEBAR_ADMIN, MODULOS_ADMIN, ModuloAdminDef, SeccionAdmin } from './admin-dashboard.config';
 import { AdminDashboardLoader } from './admin-dashboard.loader';
-import { AdminCatalogFacade } from './admin-catalog.facade';
-import { AdminAccessFacade } from './admin-access.facade';
-import { AdminWhatsappFacade } from './admin-whatsapp.facade';
-import { AdminAvailabilityFacade } from './admin-availability.facade';
-import { AdminProvidersFacade } from './admin-providers.facade';
-import { AdminEmailFacade } from './admin-email.facade';
-import { crearFormularioCorreo } from './admin-email.forms';
-import { AdminSiteFacade } from './admin-site.facade';
-import { crearFormularioSitio } from './admin-site.forms';
+import { AdminCatalogFacade } from './catalog/admin-catalog.facade';
+import { AdminAccessFacade } from './access/admin-access.facade';
+import { AdminWhatsappFacade } from './whatsapp/admin-whatsapp.facade';
+import { AdminAvailabilityFacade } from './availability/admin-availability.facade';
+import { AdminProvidersFacade } from './providers/admin-providers.facade';
+import { AdminEmailFacade } from './email/admin-email.facade';
+import { crearFormularioCorreo } from './email/admin-email.forms';
+import { AdminSiteFacade } from './site/admin-site.facade';
+import { crearFormularioSitio } from './site/admin-site.forms';
 import {
   alternarServicioPrestador,
   crearFormularioPrestador,
   filtrarServiciosPrestador,
   sincronizarServiciosPrestador
-} from './admin-providers.forms';
+} from './providers/admin-providers.forms';
 import {
   construirSujetosDisponibilidad,
   completarFormularioExcepcionConMetadatos,
@@ -102,8 +102,8 @@ import {
   crearFormularioExcepcion,
   crearFormularioRegla,
   sincronizarSujetoSeleccionado
-} from './admin-availability.forms';
-import { SujetoDisponibilidadOption } from './admin-availability.types';
+} from './availability/admin-availability.forms';
+import { SujetoDisponibilidadOption } from './availability/admin-availability.types';
 import {
   agruparCitasPorFecha,
   calcularAnaliticaAgenda,
@@ -114,7 +114,7 @@ import {
   obtenerRangoSemana,
   resumirAgenda,
   sumarDiasAgenda
-} from './admin-agenda.helpers';
+} from './agenda/admin-agenda.helpers';
 import {
   construirPayloadPlantillaWhatsapp,
   construirPayloadPruebaWhatsapp,
@@ -128,7 +128,7 @@ import {
   crearFormularioProvisionMessagingService,
   crearFormularioProvisionSubcuenta,
   crearFormularioWhatsapp
-} from './admin-whatsapp.forms';
+} from './whatsapp/admin-whatsapp.forms';
 import {
   cambiarPermiso,
   crearFormularioDesdePlantilla,
@@ -136,7 +136,7 @@ import {
   crearFormularioRolInterno,
   crearFormularioUsuarioInterno,
   quitarPermisosHeredados
-} from './admin-access.helpers';
+} from './access/admin-access.helpers';
 import {
   crearFormularioGrupoServicio,
   crearFormularioServicio,
@@ -144,8 +144,8 @@ import {
   crearFormularioSucursal,
   mergeCatalogoById,
   ordenarCatalogo
-} from './admin-catalog.helpers';
-import { buildWhatsappOnboardingChecklist, getWhatsappOnboardingStats } from './whatsapp-onboarding.helpers';
+} from './catalog/admin-catalog.helpers';
+import { buildWhatsappOnboardingChecklist, getWhatsappOnboardingStats } from './whatsapp/whatsapp-onboarding.helpers';
 
 type SubseccionUsuariosAdmin = 'usuarios' | 'roles' | 'actividad';
 
