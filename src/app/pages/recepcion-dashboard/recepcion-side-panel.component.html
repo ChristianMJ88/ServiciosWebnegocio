@@ -251,7 +251,7 @@
                   <strong>{{ solicitud.nombreCliente }}</strong>
                   <span>{{ solicitud.servicioNombre }} · {{ solicitud.sucursalNombre }}</span>
                 </div>
-                <span class="badge rounded-pill recepcion-status-badge">{{ solicitud.estado }}</span>
+                <span class="badge rounded-pill recepcion-status-badge">{{ etiquetaEstadoEspera(solicitud.estado) }}</span>
               </div>
               <div class="recepcion-appointment-meta">
                 <span>{{ solicitud.fechaDeseada | date:'dd/MM/yyyy':'':'es-MX' }}</span>
@@ -264,7 +264,7 @@
                 </div>
               }
               <div class="recepcion-waitlist-actions">
-                @if (solicitud.aceptaWhatsapp && solicitud.estado === 'PENDIENTE') {
+                @if (solicitud.aceptaWhatsapp && solicitud.estado === estadoEsperaPendiente) {
                   <button
                     class="btn btn-outline-primary btn-sm"
                     type="button"
@@ -273,7 +273,7 @@
                     Notificar por WhatsApp
                   </button>
                 }
-                @if (solicitud.estado === 'NOTIFICADO') {
+                @if (solicitud.estado === estadoEsperaNotificada) {
                   <span class="recepcion-waitlist-hint">
                     Ya fue notificado.
                   </span>

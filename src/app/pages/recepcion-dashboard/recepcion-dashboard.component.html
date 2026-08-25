@@ -167,70 +167,19 @@
 
     <div class="recepcion-grid">
       <div class="recepcion-main-column">
-        <section class="card recepcion-card recepcion-card--agenda">
-          <div class="card-body recepcion-card-body">
-            <div class="recepcion-card-heading">
-              <span class="recepcion-card-kicker">Agenda del día</span>
-              <h2>Citas activas</h2>
-              <p>Clientes programados para la fecha y sucursal seleccionadas.</p>
-            </div>
-
-            @if (!citas().length) {
-              <div class="recepcion-empty">
-                No hay citas registradas para esta fecha en la sucursal seleccionada.
-              </div>
-            }
-
-            @if (citas().length) {
-              <div class="recepcion-appointments">
-                @for (cita of citas(); track cita) {
-                  <div class="recepcion-appointment-card">
-                    <div class="recepcion-appointment-head">
-                      <div>
-                        <strong>{{ cita.clienteNombre }}</strong>
-                        <span>{{ cita.servicioNombre }} · {{ cita.prestadorNombre }}</span>
-                      </div>
-                      <span class="badge rounded-pill recepcion-status-badge" [class.has-checkin]="!!cita.checkInEn">{{ cita.estado }}</span>
-                    </div>
-                    <div class="recepcion-appointment-meta">
-                      <span><i class="bi bi-clock"></i>{{ cita.inicio | date:'dd/MM/yyyy HH:mm':'':'es-MX' }}</span>
-                      <span><i class="bi bi-building"></i>{{ cita.sucursalNombre }}</span>
-                      <span><i class="bi bi-telephone"></i>{{ cita.clienteTelefono || 'Sin teléfono' }}</span>
-                      <span><i class="bi bi-envelope"></i>{{ cita.clienteCorreo || 'Sin correo' }}</span>
-                    </div>
-                    @if (cita.notas) {
-                      <div class="recepcion-appointment-note">
-                        {{ cita.notas }}
-                      </div>
-                    }
-                    <div class="recepcion-appointment-actions">
-                      @if (puedeRegistrarCheckIn()) {
-                        <button class="btn btn-outline-primary btn-sm" type="button" (click)="hacerCheckIn(cita.id)" [disabled]="guardando() || !!cita.checkInEn">
-                          {{ cita.checkInEn ? 'Check-in realizado' : 'Check-in' }}
-                        </button>
-                      }
-                      @if (puedeGestionarCitas()) {
-                        <button class="btn btn-outline-secondary btn-sm" type="button" (click)="confirmar(cita.id)" [disabled]="guardando() || cita.estado !== 'PENDIENTE'">
-                          Confirmar
-                        </button>
-                      }
-                      @if (puedeGestionarCitas()) {
-                        <button class="btn btn-outline-success btn-sm" type="button" (click)="finalizar(cita.id)" [disabled]="guardando() || !['PENDIENTE','CONFIRMADA'].includes(cita.estado)">
-                          Finalizar
-                        </button>
-                      }
-                      @if (puedeGestionarCitas()) {
-                        <button class="btn btn-outline-danger btn-sm" type="button" (click)="cancelar(cita.id)" [disabled]="guardando() || !['PENDIENTE','CONFIRMADA'].includes(cita.estado)">
-                          Cancelar
-                        </button>
-                      }
-                    </div>
-                  </div>
-                }
-              </div>
-            }
-          </div>
-        </section>
+        <app-recepcion-agenda-section
+          [citas]="citas()"
+          [guardando]="guardando()"
+          [puedeGestionarCitas]="puedeGestionarCitas()"
+          [puedeRegistrarCheckIn]="puedeRegistrarCheckIn()"
+          [estadosCita]="estadosCita()"
+          [estadoPendiente]="estadoCitaPendiente()"
+          [estadosFinalizables]="estadosCitaFinalizables()"
+          [estadosCancelables]="estadosCitaCancelables()"
+          (checkIn)="hacerCheckIn($event)"
+          (confirm)="confirmar($event)"
+          (finish)="finalizar($event)"
+          (cancel)="cancelar($event)" />
       </div>
 
       @defer {
@@ -249,6 +198,9 @@
         [mensajeWalkIn]="mensajeWalkIn()"
         [guardando]="guardando()"
         [solicitudesEspera]="solicitudesEspera()"
+        [estadosEspera]="estadosEspera()"
+        [estadoEsperaPendiente]="estadoEsperaPendiente()"
+        [estadoEsperaNotificada]="estadoEsperaNotificada()"
         (searchChange)="buscarCliente($event)"
         (clientSelected)="seleccionarCliente($event)"
         (branchChange)="cambiarSucursal($event)"

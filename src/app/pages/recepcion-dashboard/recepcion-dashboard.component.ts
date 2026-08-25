@@ -15,6 +15,7 @@ import { AuthService } from '../../core/auth/auth.service';
 import { PerfilUsuarioLocal, UserProfileService } from '../../core/profile/user-profile.service';
 import { UserProfileDialogComponent } from '../../shared/profile/user-profile-dialog.component';
 import { RecepcionSidePanelComponent } from './recepcion-side-panel.component';
+import { RecepcionAgendaSectionComponent } from './agenda/recepcion-agenda-section.component';
 import {
   CatalogoRecepcion,
   CitaRecepcion,
@@ -23,7 +24,8 @@ import {
   RecepcionService,
   SolicitudEsperaRecepcion,
   ServicioRecepcionCatalogo,
-  SucursalRecepcionCatalogo
+  SucursalRecepcionCatalogo,
+  OpcionRecepcion
 } from '../../core/recepcion/recepcion.service';
 
 @Component({
@@ -39,7 +41,8 @@ import {
     MatProgressBarModule,
     MatToolbarModule,
     UserProfileDialogComponent,
-    RecepcionSidePanelComponent
+    RecepcionSidePanelComponent,
+    RecepcionAgendaSectionComponent
   ],
   templateUrl: './recepcion-dashboard.component.html',
   styleUrls: ['./recepcion-dashboard.component.css']
@@ -74,6 +77,14 @@ export class RecepcionDashboardComponent implements OnInit, AfterViewInit {
   readonly loadingFranjas = signal(false);
   readonly franjasDisponibles = signal<FranjaRecepcionDisponible[]>([]);
   readonly mensajeWalkIn = signal('');
+  readonly estadosCita = signal<OpcionRecepcion[]>([]);
+  readonly estadoCitaPendiente = signal('');
+  readonly estadoCitaConfirmada = signal('');
+  readonly estadosCitaFinalizables = signal<string[]>([]);
+  readonly estadosCitaCancelables = signal<string[]>([]);
+  readonly estadosEspera = signal<OpcionRecepcion[]>([]);
+  readonly estadoEsperaPendiente = signal('');
+  readonly estadoEsperaNotificada = signal('');
 
   readonly perfilUsuario = computed(() => this.userProfileService.perfilActual());
   readonly perfilRegistrado = computed(() => this.userProfileService.perfilRegistrado());
@@ -118,16 +129,16 @@ export class RecepcionDashboardComponent implements OnInit, AfterViewInit {
     const citas = this.citas();
     return [
       { label: 'Citas del día', value: citas.length },
-      { label: 'Pendientes', value: citas.filter(cita => cita.estado === 'PENDIENTE').length },
-      { label: 'Confirmadas', value: citas.filter(cita => cita.estado === 'CONFIRMADA').length },
+      { label: 'Pendientes', value: citas.filter(cita => cita.estado === this.estadoCitaPendiente()).length },
+      { label: 'Confirmadas', value: citas.filter(cita => cita.estado === this.estadoCitaConfirmada()).length },
       { label: 'Con check-in', value: citas.filter(cita => !!cita.checkInEn).length }
     ];
   });
   readonly totalNotificaciones = computed(() =>
-    this.citas().filter(cita => cita.estado === 'PENDIENTE' || !cita.checkInEn).length
+    this.citas().filter(cita => cita.estado === this.estadoCitaPendiente() || !cita.checkInEn).length
   );
   readonly notificacionesRecepcion = computed(() => {
-    const pendientes = this.citas().filter(cita => cita.estado === 'PENDIENTE');
+    const pendientes = this.citas().filter(cita => cita.estado === this.estadoCitaPendiente());
     const sinCheckIn = this.citas().filter(cita => !cita.checkInEn);
     return [
       pendientes.length ? { titulo: 'Citas pendientes', descripcion: `${pendientes.length} citas necesitan seguimiento.`, icono: 'bi-calendar-check', total: pendientes.length } : null,
@@ -235,7 +246,15 @@ export class RecepcionDashboardComponent implements OnInit, AfterViewInit {
         catchError(() => of<CatalogoRecepcion>({
           sucursalActivaId: sucursalPreferida,
           sucursales: [],
-          servicios: []
+          servicios: [],
+          estadosCita: [],
+          estadoCitaPendiente: '',
+          estadoCitaConfirmada: '',
+          estadosCitaFinalizables: [],
+          estadosCitaCancelables: [],
+          estadosEspera: [],
+          estadoEsperaPendiente: '',
+          estadoEsperaNotificada: ''
         })),
         tap(catalogo => {
           this.actualizarVistaEnZona(() => {
@@ -300,7 +319,15 @@ export class RecepcionDashboardComponent implements OnInit, AfterViewInit {
         catchError(() => of<CatalogoRecepcion>({
           sucursalActivaId: sucursalId,
           sucursales: [],
-          servicios: []
+          servicios: [],
+          estadosCita: [],
+          estadoCitaPendiente: '',
+          estadoCitaConfirmada: '',
+          estadosCitaFinalizables: [],
+          estadosCitaCancelables: [],
+          estadosEspera: [],
+          estadoEsperaPendiente: '',
+          estadoEsperaNotificada: ''
         })),
         tap(catalogo => {
           this.actualizarVistaEnZona(() => {
@@ -623,6 +650,14 @@ export class RecepcionDashboardComponent implements OnInit, AfterViewInit {
     const sucursalJwt = this.authService.sucursalesPermitidas()[0] ?? null;
     this.sucursales.set(catalogo.sucursales ?? []);
     this.servicios.set(catalogo.servicios ?? []);
+    this.estadosCita.set(catalogo.estadosCita ?? []);
+    this.estadoCitaPendiente.set(catalogo.estadoCitaPendiente ?? '');
+    this.estadoCitaConfirmada.set(catalogo.estadoCitaConfirmada ?? '');
+    this.estadosCitaFinalizables.set(catalogo.estadosCitaFinalizables ?? []);
+    this.estadosCitaCancelables.set(catalogo.estadosCitaCancelables ?? []);
+    this.estadosEspera.set(catalogo.estadosEspera ?? []);
+    this.estadoEsperaPendiente.set(catalogo.estadoEsperaPendiente ?? '');
+    this.estadoEsperaNotificada.set(catalogo.estadoEsperaNotificada ?? '');
 
     const sucursalOperativa = catalogo.sucursalActivaId
       ?? sucursalJwt

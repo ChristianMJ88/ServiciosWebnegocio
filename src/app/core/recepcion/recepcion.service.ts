@@ -28,6 +28,19 @@ export interface CatalogoRecepcion {
   sucursalActivaId: number | null;
   sucursales: SucursalRecepcionCatalogo[];
   servicios: ServicioRecepcionCatalogo[];
+  estadosCita: OpcionRecepcion[];
+  estadoCitaPendiente: string;
+  estadoCitaConfirmada: string;
+  estadosCitaFinalizables: string[];
+  estadosCitaCancelables: string[];
+  estadosEspera: OpcionRecepcion[];
+  estadoEsperaPendiente: string;
+  estadoEsperaNotificada: string;
+}
+
+export interface OpcionRecepcion {
+  codigo: string;
+  etiqueta: string;
 }
 
 export interface FranjaRecepcionDisponible {

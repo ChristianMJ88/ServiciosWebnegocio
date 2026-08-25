@@ -1,0 +1,54 @@
+<section class="card recepcion-card recepcion-card--agenda">
+  <div class="card-body recepcion-card-body">
+    <div class="recepcion-card-heading">
+      <span class="recepcion-card-kicker">Agenda del día</span>
+      <h2>Citas activas</h2>
+      <p>Clientes programados para la fecha y sucursal seleccionadas.</p>
+    </div>
+
+    @if (!citas.length) {
+      <div class="recepcion-empty">No hay citas registradas para esta fecha en la sucursal seleccionada.</div>
+    } @else {
+      <div class="recepcion-appointments">
+        @for (cita of citas; track cita.id) {
+          <div class="recepcion-appointment-card">
+            <div class="recepcion-appointment-head">
+              <div>
+                <strong>{{ cita.clienteNombre }}</strong>
+                <span>{{ cita.servicioNombre }} · {{ cita.prestadorNombre }}</span>
+              </div>
+              <span class="badge rounded-pill recepcion-status-badge" [class.has-checkin]="!!cita.checkInEn">
+                {{ etiquetaEstado(cita.estado) }}
+              </span>
+            </div>
+            <div class="recepcion-appointment-meta">
+              <span><i class="bi bi-clock"></i>{{ cita.inicio | date:'dd/MM/yyyy HH:mm':'':'es-MX' }}</span>
+              <span><i class="bi bi-building"></i>{{ cita.sucursalNombre }}</span>
+              <span><i class="bi bi-telephone"></i>{{ cita.clienteTelefono || 'Sin teléfono' }}</span>
+              <span><i class="bi bi-envelope"></i>{{ cita.clienteCorreo || 'Sin correo' }}</span>
+            </div>
+            @if (cita.notas) {
+              <div class="recepcion-appointment-note">{{ cita.notas }}</div>
+            }
+            <div class="recepcion-appointment-actions">
+              @if (puedeRegistrarCheckIn) {
+                <button class="btn btn-outline-primary btn-sm" type="button" (click)="checkIn.emit(cita.id)"
+                  [disabled]="guardando || !!cita.checkInEn">
+                  {{ cita.checkInEn ? 'Check-in realizado' : 'Check-in' }}
+                </button>
+              }
+              @if (puedeGestionarCitas) {
+                <button class="btn btn-outline-secondary btn-sm" type="button" (click)="confirm.emit(cita.id)"
+                  [disabled]="guardando || cita.estado !== estadoPendiente">Confirmar</button>
+                <button class="btn btn-outline-success btn-sm" type="button" (click)="finish.emit(cita.id)"
+                  [disabled]="guardando || !estadosFinalizables.includes(cita.estado)">Finalizar</button>
+                <button class="btn btn-outline-danger btn-sm" type="button" (click)="cancel.emit(cita.id)"
+                  [disabled]="guardando || !estadosCancelables.includes(cita.estado)">Cancelar</button>
+              }
+            </div>
+          </div>
+        }
+      </div>
+    }
+  </div>
+</section>

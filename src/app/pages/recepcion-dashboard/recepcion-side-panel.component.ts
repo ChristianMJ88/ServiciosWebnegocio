@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import {
   ClienteRecepcion,
   FranjaRecepcionDisponible,
+  OpcionRecepcion,
   ServicioRecepcionCatalogo,
   SolicitudEsperaRecepcion,
   SucursalRecepcionCatalogo
@@ -48,6 +49,9 @@ export class RecepcionSidePanelComponent {
   @Input({ required: true }) mensajeWalkIn!: string;
   @Input({ required: true }) guardando!: boolean;
   @Input({ required: true }) solicitudesEspera!: SolicitudEsperaRecepcion[];
+  @Input({ required: true }) estadosEspera!: OpcionRecepcion[];
+  @Input({ required: true }) estadoEsperaPendiente!: string;
+  @Input({ required: true }) estadoEsperaNotificada!: string;
 
   @Output() searchChange = new EventEmitter<string>();
   @Output() clientSelected = new EventEmitter<ClienteRecepcion>();
@@ -59,4 +63,8 @@ export class RecepcionSidePanelComponent {
   @Output() registerWaitlist = new EventEmitter<void>();
   @Output() saveAppointment = new EventEmitter<void>();
   @Output() notifyWaitlist = new EventEmitter<number>();
+
+  etiquetaEstadoEspera(codigo: string): string {
+    return this.estadosEspera.find(estado => estado.codigo === codigo)?.etiqueta ?? codigo;
+  }
 }

@@ -18,6 +18,14 @@ import com.techprotech.agenda.modulos.citas.infraestructura.repositorio.CitaRepo
 import com.techprotech.agenda.modulos.citas.infraestructura.repositorio.HistorialEstadoCitaRepositorio;
 import com.techprotech.agenda.modulos.prestadores.infraestructura.repositorio.PrestadorServicioRepositorio;
 import com.techprotech.agenda.modulos.recepcion.api.dto.CatalogoRecepcionResponse;
+import static com.techprotech.agenda.modulos.recepcion.aplicacion.CatalogosRecepcion.ESTADO_CITA_PENDIENTE;
+import static com.techprotech.agenda.modulos.recepcion.aplicacion.CatalogosRecepcion.ESTADO_CITA_CONFIRMADA;
+import static com.techprotech.agenda.modulos.recepcion.aplicacion.CatalogosRecepcion.ESTADOS_CITA;
+import static com.techprotech.agenda.modulos.recepcion.aplicacion.CatalogosRecepcion.ESTADOS_CITA_CANCELABLES;
+import static com.techprotech.agenda.modulos.recepcion.aplicacion.CatalogosRecepcion.ESTADOS_CITA_FINALIZABLES;
+import static com.techprotech.agenda.modulos.recepcion.aplicacion.CatalogosRecepcion.ESTADOS_ESPERA;
+import static com.techprotech.agenda.modulos.recepcion.aplicacion.CatalogosRecepcion.ESTADO_ESPERA_NOTIFICADA;
+import static com.techprotech.agenda.modulos.recepcion.aplicacion.CatalogosRecepcion.ESTADO_ESPERA_PENDIENTE;
 import com.techprotech.agenda.modulos.recepcion.api.dto.CitaRecepcionResponse;
 import com.techprotech.agenda.modulos.recepcion.api.dto.ClienteRecepcionResponse;
 import com.techprotech.agenda.modulos.recepcion.api.dto.CrearCitaRecepcionRequest;
@@ -184,7 +192,19 @@ public class ServicioRecepcion {
                                 sucursal.getZonaHoraria()
                         ))
                         .toList(),
-                servicios
+                servicios,
+                ESTADOS_CITA.stream()
+                        .map(opcion -> new CatalogoRecepcionResponse.OpcionRecepcionResponse(opcion.codigo(), opcion.etiqueta()))
+                        .toList(),
+                ESTADO_CITA_PENDIENTE,
+                ESTADO_CITA_CONFIRMADA,
+                ESTADOS_CITA_FINALIZABLES,
+                ESTADOS_CITA_CANCELABLES,
+                ESTADOS_ESPERA.stream()
+                        .map(opcion -> new CatalogoRecepcionResponse.OpcionRecepcionResponse(opcion.codigo(), opcion.etiqueta()))
+                        .toList(),
+                ESTADO_ESPERA_PENDIENTE,
+                ESTADO_ESPERA_NOTIFICADA
         );
     }
 
