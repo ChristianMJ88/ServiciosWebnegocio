@@ -34,16 +34,12 @@ import {
   EnviarMensajeWhatsappPayload,
   ExcepcionDisponibilidadAdmin,
   GuardarRolInternoPayload,
-  GuardarGrupoServicioPayload,
   GuardarConfiguracionCorreoPayload,
   GuardarConfiguracionSitioPayload,
   GuardarConfiguracionWhatsappPayload,
   GuardarExcepcionDisponibilidadPayload,
   GuardarPrestadorPayload,
   GuardarReglaDisponibilidadPayload,
-  GuardarServicioPayload,
-  GuardarSubgrupoServicioPayload,
-  GuardarSucursalPayload,
   GuardarUsuarioInternoPayload,
   GrupoServicioAdmin,
   LogMensajeWhatsappAdmin,
@@ -97,6 +93,18 @@ import { AdminWhatsappInboxSectionComponent } from './admin-whatsapp-inbox-secti
 import { AdminWhatsappSectionComponent } from './admin-whatsapp-section.component';
 import { GRUPOS_SIDEBAR_ADMIN, MODULOS_ADMIN, ModuloAdminDef, SeccionAdmin } from './admin-dashboard.config';
 import { AdminDashboardLoader } from './admin-dashboard.loader';
+import {
+  construirPayloadGrupoServicio,
+  construirPayloadServicio,
+  construirPayloadSubgrupoServicio,
+  construirPayloadSucursal,
+  crearFormularioGrupoServicio,
+  crearFormularioServicio,
+  crearFormularioSubgrupoServicio,
+  crearFormularioSucursal,
+  mergeCatalogoById,
+  ordenarCatalogo
+} from './admin-catalog.helpers';
 import { buildWhatsappOnboardingChecklist, getWhatsappOnboardingStats } from './whatsapp-onboarding.helpers';
 
 type SubseccionUsuariosAdmin = 'usuarios' | 'roles' | 'actividad';
@@ -707,13 +715,7 @@ export class AdminDashboardComponent implements OnInit {
   excepcionEditandoId: number | null = null;
   plantillaWhatsappEmpresaEditandoId: number | null = null;
 
-  formularioSucursal: GuardarSucursalPayload = {
-    nombre: '',
-    direccion: '',
-    telefono: '',
-    zonaHoraria: 'America/Mexico_City',
-    activa: true
-  };
+  formularioSucursal = crearFormularioSucursal();
 
   formularioSitio: GuardarConfiguracionSitioPayload = {
     slug: '',
@@ -738,51 +740,16 @@ export class AdminDashboardComponent implements OnInit {
     publicado: false
   };
 
-  formularioGrupoServicio: GuardarGrupoServicioPayload = {
-    nombre: '',
-    slug: '',
-    descripcion: '',
-    imagenUrl: '',
-    icono: '',
-    ordenPublico: 10,
-    activo: true
-  };
+  formularioGrupoServicio = crearFormularioGrupoServicio();
 
-  formularioSubgrupoServicio: GuardarSubgrupoServicioPayload = {
-    grupoId: null,
-    nombre: '',
-    slug: '',
-    descripcion: '',
-    ordenPublico: 10,
-    activo: true
-  };
+  formularioSubgrupoServicio = crearFormularioSubgrupoServicio(null);
 
   formularioImportarCatalogo: ImportarCatalogoSugeridoPayload = {
     sugerenciaId: '',
     sucursalId: null
   };
 
-  formularioServicio: GuardarServicioPayload = {
-    sucursalId: 0,
-    sucursalIds: [],
-    grupoId: null,
-    subgrupoId: null,
-    nombre: '',
-    slug: '',
-    descripcion: '',
-    imagenUrl: '',
-    duracionMinutos: 60,
-    bufferAntesMinutos: 0,
-    bufferDespuesMinutos: 0,
-    precio: 0,
-    moneda: 'MXN',
-    ordenPublico: 10,
-    visiblePublico: true,
-    requiereAnticipo: false,
-    anticipoTipo: '',
-    anticipoValor: null,
-    activo: true
-  };
+  formularioServicio = crearFormularioServicio();
 
   formularioPrestador: GuardarPrestadorPayload = {
     sucursalId: 0,
@@ -1669,35 +1636,19 @@ export class AdminDashboardComponent implements OnInit {
 
   editarSucursal(sucursal: SucursalAdmin) {
     this.sucursalEditandoId = sucursal.id;
-    this.formularioSucursal = {
-      nombre: sucursal.nombre,
-      direccion: sucursal.direccion ?? '',
-      telefono: sucursal.telefono ?? '',
-      zonaHoraria: sucursal.zonaHoraria,
-      activa: sucursal.activa
-    };
+    this.formularioSucursal = crearFormularioSucursal(sucursal);
   }
 
   cancelarEdicionSucursal() {
     this.sucursalEditandoId = null;
-    this.formularioSucursal = {
-      nombre: '',
-      direccion: '',
-      telefono: '',
-      zonaHoraria: 'America/Mexico_City',
-      activa: true
-    };
+    this.formularioSucursal = crearFormularioSucursal();
   }
 
   guardarSucursal() {
     this.guardandoSucursal = true;
     this.error = '';
     this.mensajeExito = '';
-    const payload: GuardarSucursalPayload = {
-      ...this.formularioSucursal,
-      direccion: this.normalizarTexto(this.formularioSucursal.direccion),
-      telefono: this.normalizarTexto(this.formularioSucursal.telefono)
-    };
+    const payload = construirPayloadSucursal(this.formularioSucursal);
 
     const operacion = this.sucursalEditandoId
       ? this.adminService.actualizarSucursal(this.sucursalEditandoId, payload)
@@ -1718,41 +1669,19 @@ export class AdminDashboardComponent implements OnInit {
 
   editarGrupoServicio(grupo: GrupoServicioAdmin) {
     this.grupoServicioEditandoId = grupo.id;
-    this.formularioGrupoServicio = {
-      nombre: grupo.nombre,
-      slug: grupo.slug,
-      descripcion: grupo.descripcion ?? '',
-      imagenUrl: grupo.imagenUrl ?? '',
-      icono: grupo.icono ?? '',
-      ordenPublico: grupo.ordenPublico,
-      activo: grupo.activo
-    };
+    this.formularioGrupoServicio = crearFormularioGrupoServicio(grupo);
   }
 
   cancelarEdicionGrupoServicio() {
     this.grupoServicioEditandoId = null;
-    this.formularioGrupoServicio = {
-      nombre: '',
-      slug: '',
-      descripcion: '',
-      imagenUrl: '',
-      icono: '',
-      ordenPublico: 10,
-      activo: true
-    };
+    this.formularioGrupoServicio = crearFormularioGrupoServicio();
   }
 
   guardarGrupoServicio() {
     this.guardandoGrupoServicio = true;
     this.error = '';
     this.mensajeExito = '';
-    const payload: GuardarGrupoServicioPayload = {
-      ...this.formularioGrupoServicio,
-      slug: this.normalizarTexto(this.formularioGrupoServicio.slug),
-      descripcion: this.normalizarTexto(this.formularioGrupoServicio.descripcion),
-      imagenUrl: this.normalizarTexto(this.formularioGrupoServicio.imagenUrl),
-      icono: this.normalizarTexto(this.formularioGrupoServicio.icono)
-    };
+    const payload = construirPayloadGrupoServicio(this.formularioGrupoServicio);
     const operacion = this.grupoServicioEditandoId
       ? this.adminService.actualizarGrupoServicio(this.grupoServicioEditandoId, payload)
       : this.adminService.crearGrupoServicio(payload);
@@ -1772,37 +1701,19 @@ export class AdminDashboardComponent implements OnInit {
 
   editarSubgrupoServicio(subgrupo: SubgrupoServicioAdmin) {
     this.subgrupoServicioEditandoId = subgrupo.id;
-    this.formularioSubgrupoServicio = {
-      grupoId: subgrupo.grupoId,
-      nombre: subgrupo.nombre,
-      slug: subgrupo.slug,
-      descripcion: subgrupo.descripcion ?? '',
-      ordenPublico: subgrupo.ordenPublico,
-      activo: subgrupo.activo
-    };
+    this.formularioSubgrupoServicio = crearFormularioSubgrupoServicio(null, subgrupo);
   }
 
   cancelarEdicionSubgrupoServicio() {
     this.subgrupoServicioEditandoId = null;
-    this.formularioSubgrupoServicio = {
-      grupoId: this.gruposServicio()[0]?.id ?? null,
-      nombre: '',
-      slug: '',
-      descripcion: '',
-      ordenPublico: 10,
-      activo: true
-    };
+    this.formularioSubgrupoServicio = crearFormularioSubgrupoServicio(this.gruposServicio()[0]?.id ?? null);
   }
 
   guardarSubgrupoServicio() {
     this.guardandoSubgrupoServicio = true;
     this.error = '';
     this.mensajeExito = '';
-    const payload: GuardarSubgrupoServicioPayload = {
-      ...this.formularioSubgrupoServicio,
-      slug: this.normalizarTexto(this.formularioSubgrupoServicio.slug),
-      descripcion: this.normalizarTexto(this.formularioSubgrupoServicio.descripcion)
-    };
+    const payload = construirPayloadSubgrupoServicio(this.formularioSubgrupoServicio);
     const operacion = this.subgrupoServicioEditandoId
       ? this.adminService.actualizarSubgrupoServicio(this.subgrupoServicioEditandoId, payload)
       : this.adminService.crearSubgrupoServicio(payload);
@@ -1844,74 +1755,20 @@ export class AdminDashboardComponent implements OnInit {
 
   editarServicio(servicio: ServicioAdmin) {
     this.servicioEditandoId = servicio.id;
-    this.formularioServicio = {
-      sucursalId: servicio.sucursalId,
-      sucursalIds: [...(servicio.sucursalIds ?? [servicio.sucursalId])],
-      grupoId: servicio.grupoId,
-      subgrupoId: servicio.subgrupoId,
-      nombre: servicio.nombre,
-      slug: servicio.slug,
-      descripcion: servicio.descripcion ?? '',
-      imagenUrl: servicio.imagenUrl ?? '',
-      duracionMinutos: servicio.duracionMinutos,
-      bufferAntesMinutos: servicio.bufferAntesMinutos,
-      bufferDespuesMinutos: servicio.bufferDespuesMinutos,
-      precio: servicio.precio,
-      moneda: servicio.moneda,
-      ordenPublico: servicio.ordenPublico,
-      visiblePublico: servicio.visiblePublico,
-      requiereAnticipo: servicio.requiereAnticipo,
-      anticipoTipo: servicio.anticipoTipo ?? '',
-      anticipoValor: servicio.anticipoValor ?? null,
-      activo: servicio.activo
-    };
+    this.formularioServicio = crearFormularioServicio(0, servicio);
   }
 
   cancelarEdicionServicio() {
     const sucursalInicial = this.sucursales()[0]?.id ?? 0;
     this.servicioEditandoId = null;
-    this.formularioServicio = {
-      sucursalId: sucursalInicial,
-      sucursalIds: sucursalInicial ? [sucursalInicial] : [],
-      grupoId: null,
-      subgrupoId: null,
-      nombre: '',
-      slug: '',
-      descripcion: '',
-      imagenUrl: '',
-      duracionMinutos: 60,
-      bufferAntesMinutos: 0,
-      bufferDespuesMinutos: 0,
-      precio: 0,
-      moneda: 'MXN',
-      ordenPublico: 10,
-      visiblePublico: true,
-      requiereAnticipo: false,
-      anticipoTipo: '',
-      anticipoValor: null,
-      activo: true
-    };
+    this.formularioServicio = crearFormularioServicio(sucursalInicial);
   }
 
   guardarServicio() {
     this.guardandoServicio = true;
     this.error = '';
     this.mensajeExito = '';
-    const payload: GuardarServicioPayload = {
-      ...this.formularioServicio,
-      sucursalIds: [...(this.formularioServicio.sucursalIds ?? [])],
-      sucursalId: this.formularioServicio.sucursalId || this.formularioServicio.sucursalIds[0],
-      slug: this.normalizarTexto(this.formularioServicio.slug),
-      descripcion: this.normalizarTexto(this.formularioServicio.descripcion),
-      imagenUrl: this.normalizarTexto(this.formularioServicio.imagenUrl),
-      moneda: (this.formularioServicio.moneda || 'MXN').toUpperCase(),
-      anticipoTipo: this.formularioServicio.requiereAnticipo
-        ? this.normalizarTexto(this.formularioServicio.anticipoTipo)
-        : null,
-      anticipoValor: this.formularioServicio.requiereAnticipo
-        ? this.formularioServicio.anticipoValor
-        : null
-    };
+    const payload = construirPayloadServicio(this.formularioServicio);
 
     const operacion = this.servicioEditandoId
       ? this.adminService.actualizarServicio(this.servicioEditandoId, payload)
@@ -1939,25 +1796,8 @@ export class AdminDashboardComponent implements OnInit {
     this.error = '';
     this.mensajeExito = '';
 
-    const payload: GuardarServicioPayload = {
-      sucursalId: servicio.sucursalId,
-      sucursalIds: [...(servicio.sucursalIds ?? [servicio.sucursalId])],
-      grupoId: servicio.grupoId,
-      subgrupoId: servicio.subgrupoId,
-      nombre: servicio.nombre,
-      slug: servicio.slug,
-      descripcion: this.normalizarTexto(servicio.descripcion),
-      imagenUrl: this.normalizarTexto(servicio.imagenUrl),
-      duracionMinutos: servicio.duracionMinutos,
-      bufferAntesMinutos: servicio.bufferAntesMinutos,
-      bufferDespuesMinutos: servicio.bufferDespuesMinutos,
-      precio: servicio.precio,
-      moneda: (servicio.moneda || 'MXN').toUpperCase(),
-      ordenPublico: servicio.ordenPublico,
-      visiblePublico: servicio.visiblePublico,
-      requiereAnticipo: servicio.requiereAnticipo,
-      anticipoTipo: servicio.requiereAnticipo ? servicio.anticipoTipo : null,
-      anticipoValor: servicio.requiereAnticipo ? servicio.anticipoValor : null,
+    const payload = {
+      ...construirPayloadServicio(servicio),
       activo: !servicio.activo
     };
 
@@ -1989,7 +1829,7 @@ export class AdminDashboardComponent implements OnInit {
     this.mensajeExito = '';
 
     this.adminService.actualizarGrupoServicio(grupo.id, {
-      ...this.construirPayloadGrupoServicio(grupo),
+      ...construirPayloadGrupoServicio(grupo),
       activo: !grupo.activo
     })
       .pipe(finalize(() => this.guardandoGrupoServicio = false))
@@ -2018,7 +1858,7 @@ export class AdminDashboardComponent implements OnInit {
     this.mensajeExito = '';
 
     this.adminService.actualizarSubgrupoServicio(subgrupo.id, {
-      ...this.construirPayloadSubgrupoServicio(subgrupo),
+      ...construirPayloadSubgrupoServicio(subgrupo),
       activo: !subgrupo.activo
     })
       .pipe(finalize(() => this.guardandoSubgrupoServicio = false))
@@ -2052,15 +1892,15 @@ export class AdminDashboardComponent implements OnInit {
     this.guardandoGrupoServicio = true;
     this.error = '';
     this.mensajeExito = '';
-    this.gruposServicio.set(this.mergeById(this.gruposServicio(), cambios).sort(this.ordenarCatalogoAdmin));
+    this.gruposServicio.set(mergeCatalogoById(this.gruposServicio(), cambios).sort(ordenarCatalogo));
 
     forkJoin(cambios.map(grupo =>
-      this.adminService.actualizarGrupoServicio(grupo.id, this.construirPayloadGrupoServicio(grupo))
+      this.adminService.actualizarGrupoServicio(grupo.id, construirPayloadGrupoServicio(grupo))
     ))
       .pipe(finalize(() => this.guardandoGrupoServicio = false))
       .subscribe({
         next: gruposActualizados => {
-          this.gruposServicio.set(this.mergeById(this.gruposServicio(), gruposActualizados).sort(this.ordenarCatalogoAdmin));
+          this.gruposServicio.set(mergeCatalogoById(this.gruposServicio(), gruposActualizados).sort(ordenarCatalogo));
           this.mensajeExito = 'Orden de grupos actualizado.';
         },
         error: err => {
@@ -2088,15 +1928,15 @@ export class AdminDashboardComponent implements OnInit {
     this.guardandoSubgrupoServicio = true;
     this.error = '';
     this.mensajeExito = '';
-    this.subgruposServicio.set(this.mergeById(this.subgruposServicio(), cambios).sort(this.ordenarCatalogoAdmin));
+    this.subgruposServicio.set(mergeCatalogoById(this.subgruposServicio(), cambios).sort(ordenarCatalogo));
 
     forkJoin(cambios.map(subgrupo =>
-      this.adminService.actualizarSubgrupoServicio(subgrupo.id, this.construirPayloadSubgrupoServicio(subgrupo))
+      this.adminService.actualizarSubgrupoServicio(subgrupo.id, construirPayloadSubgrupoServicio(subgrupo))
     ))
       .pipe(finalize(() => this.guardandoSubgrupoServicio = false))
       .subscribe({
         next: subgruposActualizados => {
-          this.subgruposServicio.set(this.mergeById(this.subgruposServicio(), subgruposActualizados).sort(this.ordenarCatalogoAdmin));
+          this.subgruposServicio.set(mergeCatalogoById(this.subgruposServicio(), subgruposActualizados).sort(ordenarCatalogo));
           this.mensajeExito = 'Orden de subgrupos actualizado.';
         },
         error: err => {
@@ -2128,15 +1968,15 @@ export class AdminDashboardComponent implements OnInit {
     this.guardandoServicio = true;
     this.error = '';
     this.mensajeExito = '';
-    this.servicios.set(this.mergeById(this.servicios(), cambios).sort(this.ordenarCatalogoAdmin));
+    this.servicios.set(mergeCatalogoById(this.servicios(), cambios).sort(ordenarCatalogo));
 
     forkJoin(cambios.map(servicio =>
-      this.adminService.actualizarServicio(servicio.id, this.construirPayloadServicio(servicio))
+      this.adminService.actualizarServicio(servicio.id, construirPayloadServicio(servicio))
     ))
       .pipe(finalize(() => this.guardandoServicio = false))
       .subscribe({
         next: serviciosActualizados => {
-          this.servicios.set(this.mergeById(this.servicios(), serviciosActualizados).sort(this.ordenarCatalogoAdmin));
+          this.servicios.set(mergeCatalogoById(this.servicios(), serviciosActualizados).sort(ordenarCatalogo));
           this.actualizarServiciosPrestadorDisponibles();
           this.mensajeExito = 'Orden de servicios actualizado.';
         },
@@ -2674,62 +2514,6 @@ export class AdminDashboardComponent implements OnInit {
   private normalizarTexto(valor: string | null): string | null {
     const limpio = valor?.trim();
     return limpio ? limpio : null;
-  }
-
-  private construirPayloadGrupoServicio(grupo: GrupoServicioAdmin): GuardarGrupoServicioPayload {
-    return {
-      nombre: grupo.nombre,
-      slug: this.normalizarTexto(grupo.slug),
-      descripcion: this.normalizarTexto(grupo.descripcion),
-      imagenUrl: this.normalizarTexto(grupo.imagenUrl),
-      icono: this.normalizarTexto(grupo.icono),
-      ordenPublico: grupo.ordenPublico,
-      activo: grupo.activo
-    };
-  }
-
-  private construirPayloadSubgrupoServicio(subgrupo: SubgrupoServicioAdmin): GuardarSubgrupoServicioPayload {
-    return {
-      grupoId: subgrupo.grupoId,
-      nombre: subgrupo.nombre,
-      slug: this.normalizarTexto(subgrupo.slug),
-      descripcion: this.normalizarTexto(subgrupo.descripcion),
-      ordenPublico: subgrupo.ordenPublico,
-      activo: subgrupo.activo
-    };
-  }
-
-  private construirPayloadServicio(servicio: ServicioAdmin): GuardarServicioPayload {
-    return {
-      sucursalId: servicio.sucursalId,
-      sucursalIds: [...(servicio.sucursalIds ?? [servicio.sucursalId])],
-      grupoId: servicio.grupoId,
-      subgrupoId: servicio.subgrupoId,
-      nombre: servicio.nombre,
-      slug: this.normalizarTexto(servicio.slug),
-      descripcion: this.normalizarTexto(servicio.descripcion),
-      imagenUrl: this.normalizarTexto(servicio.imagenUrl),
-      duracionMinutos: servicio.duracionMinutos,
-      bufferAntesMinutos: servicio.bufferAntesMinutos,
-      bufferDespuesMinutos: servicio.bufferDespuesMinutos,
-      precio: servicio.precio,
-      moneda: (servicio.moneda || 'MXN').toUpperCase(),
-      ordenPublico: servicio.ordenPublico,
-      visiblePublico: servicio.visiblePublico,
-      requiereAnticipo: servicio.requiereAnticipo,
-      anticipoTipo: servicio.requiereAnticipo ? this.normalizarTexto(servicio.anticipoTipo) : null,
-      anticipoValor: servicio.requiereAnticipo ? servicio.anticipoValor : null,
-      activo: servicio.activo
-    };
-  }
-
-  private mergeById<T extends { id: number }>(actuales: T[], cambios: T[]): T[] {
-    const cambiosPorId = new Map(cambios.map(item => [item.id, item]));
-    return actuales.map(item => cambiosPorId.get(item.id) ?? item);
-  }
-
-  private ordenarCatalogoAdmin<T extends { ordenPublico: number; nombre: string }>(a: T, b: T): number {
-    return a.ordenPublico - b.ordenPublico || a.nombre.localeCompare(b.nombre, 'es-MX');
   }
 
   private construirAccionesAgendaAdmin(citaId: number, estado: string, whatsappUrl: string | null): AgendaActionVm[] {
