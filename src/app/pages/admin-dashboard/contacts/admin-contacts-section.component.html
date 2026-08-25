@@ -45,8 +45,8 @@
                     <span> · {{ contacto.telefono }}</span>
                   }</div>
                 </div>
-                <span class="status-pill contacto-status-pill" [ngClass]="claseEstadoContacto()(contacto.estado)">
-                  {{ formatearEstadoContacto()(contacto.estado) }}
+                <span class="status-pill contacto-status-pill" [ngClass]="claseEstado(contacto.estado)">
+                  {{ etiquetaEstado(contacto.estado) }}
                 </span>
               </div>
               <div class="service-metrics contacto-row__meta">
@@ -71,9 +71,9 @@
                   [ngModel]="contacto.estado"
                   (ngModelChange)="updateStatus.emit({ contacto, estado: $event })"
                   [disabled]="actualizandoContactoId() === contacto.id">
-                  @for (estado of estadosContactoDisponibles(); track estado) {
-                    <mat-option [value]="estado">
-                      {{ formatearEstadoContacto()(estado) }}
+                  @for (estado of estadosContactoDisponibles(); track estado.codigo) {
+                    <mat-option [value]="estado.codigo">
+                      {{ estado.etiqueta }}
                     </mat-option>
                   }
                 </mat-select>

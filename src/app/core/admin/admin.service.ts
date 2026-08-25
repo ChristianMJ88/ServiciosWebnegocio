@@ -648,6 +648,18 @@ export interface SolicitudContactoAdmin {
   creadaEn: string;
 }
 
+export interface EstadoContactoAdmin {
+  codigo: string;
+  etiqueta: string;
+}
+
+export interface MetadatosContactosAdmin {
+  estados: EstadoContactoAdmin[];
+  estadoNuevo: string;
+  estadoEnProceso: string;
+  estadoAtendido: string;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -912,6 +924,10 @@ export class AdminService {
 
   getContactos(): Observable<SolicitudContactoAdmin[]> {
     return this.http.get<SolicitudContactoAdmin[]>(`${environment.apiBaseUrl}/admin/contactos`);
+  }
+
+  getMetadatosContactos(): Observable<MetadatosContactosAdmin> {
+    return this.http.get<MetadatosContactosAdmin>(`${environment.apiBaseUrl}/admin/contactos/metadatos`);
   }
 
   actualizarEstadoContacto(id: number, estado: string): Observable<SolicitudContactoAdmin> {

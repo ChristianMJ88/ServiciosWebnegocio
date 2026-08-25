@@ -5,21 +5,28 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatSelectModule } from '@angular/material/select';
-import { SolicitudContactoAdmin } from '../../../core/admin/admin.service';
+import { EstadoContactoAdmin, SolicitudContactoAdmin } from '../../../core/admin/admin.service';
 
 @Component({
   selector: 'app-admin-contacts-section',
   standalone: true,
   imports: [CommonModule, FormsModule, MatButtonModule, MatCardModule, MatFormFieldModule, MatSelectModule],
-  templateUrl: './admin-contacts-section.component.html'
+  templateUrl: './admin-contacts-section.component.html',
+  styleUrls: ['./admin-contacts-section.component.css']
 })
 export class AdminContactsSectionComponent {
   readonly resumen = input.required<{ total: number; nuevos: number; enProceso: number; atendidos: number }>();
   readonly contactos = input<SolicitudContactoAdmin[]>([]);
-  readonly estadosContactoDisponibles = input<string[]>([]);
+  readonly estadosContactoDisponibles = input<EstadoContactoAdmin[]>([]);
   readonly actualizandoContactoId = input<number | null>(null);
-  readonly claseEstadoContacto = input.required<(estado: string) => string>();
-  readonly formatearEstadoContacto = input.required<(estado: string) => string>();
 
   readonly updateStatus = output<{ contacto: SolicitudContactoAdmin; estado: string }>();
+
+  claseEstado(estado: string): string {
+    return `contacto-estado-${estado.toLowerCase()}`;
+  }
+
+  etiquetaEstado(codigo: string): string {
+    return this.estadosContactoDisponibles().find(estado => estado.codigo === codigo)?.etiqueta ?? codigo;
+  }
 }

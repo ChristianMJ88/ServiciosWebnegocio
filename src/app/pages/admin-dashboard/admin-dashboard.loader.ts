@@ -32,6 +32,13 @@ export class AdminDashboardLoader {
         'No se pudieron cargar los contactos.',
         onError
       ),
+      metadatosContactos: this.cargarSi(
+        this.authService.puedeVerContactosAdmin(),
+        this.adminService.getMetadatosContactos(),
+        null,
+        'No se pudo cargar el catálogo de estados de contacto.',
+        onError
+      ),
       sucursales: this.cargarSi(
         this.authService.puedeGestionarSucursales()
           || this.authService.puedeGestionarServicios()

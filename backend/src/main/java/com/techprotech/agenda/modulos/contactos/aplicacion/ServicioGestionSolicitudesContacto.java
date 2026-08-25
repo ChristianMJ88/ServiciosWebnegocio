@@ -13,15 +13,12 @@ import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.util.List;
-import java.util.Set;
 
 import static org.springframework.http.HttpStatus.BAD_REQUEST;
 import static org.springframework.http.HttpStatus.NOT_FOUND;
 
 @Service
 public class ServicioGestionSolicitudesContacto {
-
-    private static final Set<String> ESTADOS_VALIDOS = Set.of("NUEVO", "EN_PROCESO", "ATENDIDO", "CERRADO");
 
     private final SolicitudContactoRepositorio solicitudContactoRepositorio;
     private final EmpresaRepositorio empresaRepositorio;
@@ -46,7 +43,7 @@ public class ServicioGestionSolicitudesContacto {
 
     @Transactional
     public SolicitudContactoAdminResponse actualizarEstado(Long empresaId, Long solicitudId, String estado) {
-        if (!ESTADOS_VALIDOS.contains(estado)) {
+        if (!EstadoSolicitudContacto.esValido(estado)) {
             throw new ResponseStatusException(BAD_REQUEST, "El estado indicado no es válido para la solicitud de contacto");
         }
 

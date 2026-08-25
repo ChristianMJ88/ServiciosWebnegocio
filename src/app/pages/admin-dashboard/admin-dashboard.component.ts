@@ -37,6 +37,7 @@ import {
   LogMensajeWhatsappAdmin,
   MensajeWhatsappAdmin,
   MetadatosDisponibilidadAdmin,
+  MetadatosContactosAdmin,
   PlantillaRolInternoAdmin,
   PlantillaWhatsappAdmin,
   PlantillaWhatsappEmpresaAdmin,
@@ -66,6 +67,8 @@ import { PerfilUsuarioLocal, UserProfileService } from '../../core/profile/user-
 import { UserProfileDialogComponent } from '../../shared/profile/user-profile-dialog.component';
 import { AdminBranchesSectionComponent } from './catalog/admin-branches-section.component';
 import { AdminContactsSectionComponent } from './contacts/admin-contacts-section.component';
+import { AdminContactsFacade } from './contacts/admin-contacts.facade';
+import { reemplazarContacto, resumirContactos } from './contacts/admin-contacts.helpers';
 import { AdminEmailSectionComponent } from './email/admin-email-section.component';
 import { AdminExceptionsSectionComponent } from './availability/admin-exceptions-section.component';
 import { AdminProvidersSectionComponent } from './providers/admin-providers-section.component';
@@ -202,6 +205,7 @@ export class AdminDashboardComponent implements OnInit {
   private readonly providersFacade = inject(AdminProvidersFacade);
   private readonly emailFacade = inject(AdminEmailFacade);
   private readonly siteFacade = inject(AdminSiteFacade);
+  private readonly contactsFacade = inject(AdminContactsFacade);
   private readonly dashboardLoader = inject(AdminDashboardLoader);
   private readonly breakpointObserver = inject(BreakpointObserver);
   private readonly authService = inject(AuthService);
@@ -241,6 +245,7 @@ export class AdminDashboardComponent implements OnInit {
   readonly resumen = signal<ResumenAdmin | null>(null);
   readonly citas = signal<CitaCliente[]>([]);
   readonly contactos = signal<SolicitudContactoAdmin[]>([]);
+  readonly metadatosContactos = signal<MetadatosContactosAdmin | null>(null);
   readonly sucursales = signal<SucursalAdmin[]>([]);
   readonly gruposServicio = signal<GrupoServicioAdmin[]>([]);
   readonly subgruposServicio = signal<SubgrupoServicioAdmin[]>([]);
@@ -355,7 +360,7 @@ export class AdminDashboardComponent implements OnInit {
   );
   readonly contactosNuevos = computed(() =>
     this.contactos()
-      .filter(contacto => contacto.estado === 'NUEVO')
+      .filter(contacto => contacto.estado === this.metadatosContactos()?.estadoNuevo)
       .sort((a, b) => new Date(b.creadaEn).getTime() - new Date(a.creadaEn).getTime())
   );
   readonly notificacionesDashboard = computed<NotificacionAdmin[]>(() => {
@@ -402,13 +407,8 @@ export class AdminDashboardComponent implements OnInit {
       .sort((a, b) => b.totalCitas - a.totalCitas || b.finalizadas - a.finalizadas)
       .slice(0, 6)
   );
-  readonly resumenContactos = computed(() => ({
-    total: this.contactos().length,
-    nuevos: this.contactos().filter(contacto => contacto.estado === 'NUEVO').length,
-    enProceso: this.contactos().filter(contacto => contacto.estado === 'EN_PROCESO').length,
-    atendidos: this.contactos().filter(contacto => contacto.estado === 'ATENDIDO').length
-  }));
-  readonly estadosContactoDisponibles = ['NUEVO', 'EN_PROCESO', 'ATENDIDO', 'CERRADO'];
+  readonly resumenContactos = computed(() => resumirContactos(this.contactos(), this.metadatosContactos()));
+  readonly estadosContactoDisponibles = computed(() => this.metadatosContactos()?.estados ?? []);
   readonly rolesUsuarioInterno = computed(() => this.rolesInternos());
   readonly rolUsuarioInternoSeleccionado = computed(() => {
     this.formularioUsuarioInternoRevision();
@@ -943,11 +943,12 @@ export class AdminDashboardComponent implements OnInit {
     this.dashboardLoader.cargar((error, mensaje) => this.marcarErrorCarga(error, mensaje))
       .pipe(finalize(() => this.actualizarVistaEnZona(() => this.loading.set(false))))
       .subscribe({
-        next: ({ resumen, citas, contactos, sucursales, gruposServicio, subgruposServicio, catalogosSugeridos, servicios, prestadores, rolesInternos, plantillasRolesInternos, auditoriaRolesInternos, permisos, usuariosInternos, reglas, metadatosDisponibilidad, excepciones, reporteServicios, reportePrestadores, configuracionSitio, configuracionCorreo, auditoriaConfiguracion, configuracionWhatsapp, plantillasWhatsapp, plantillasWhatsappEmpresa, logsWhatsapp, mensajesWhatsapp }) => {
+        next: ({ resumen, citas, contactos, metadatosContactos, sucursales, gruposServicio, subgruposServicio, catalogosSugeridos, servicios, prestadores, rolesInternos, plantillasRolesInternos, auditoriaRolesInternos, permisos, usuariosInternos, reglas, metadatosDisponibilidad, excepciones, reporteServicios, reportePrestadores, configuracionSitio, configuracionCorreo, auditoriaConfiguracion, configuracionWhatsapp, plantillasWhatsapp, plantillasWhatsappEmpresa, logsWhatsapp, mensajesWhatsapp }) => {
           this.actualizarVistaEnZona(() => {
             this.resumen.set(resumen);
             this.citas.set(citas);
             this.contactos.set(contactos);
+            this.metadatosContactos.set(metadatosContactos);
             this.sucursales.set(sucursales);
             this.gruposServicio.set(gruposServicio);
             this.subgruposServicio.set(subgruposServicio);
@@ -1048,37 +1049,17 @@ export class AdminDashboardComponent implements OnInit {
     this.error = '';
     this.mensajeExito = '';
 
-    this.adminService.actualizarEstadoContacto(contacto.id, estado)
+    this.contactsFacade.actualizarEstado(contacto.id, estado)
       .pipe(finalize(() => { this.actualizandoContactoId = null; }))
       .subscribe({
         next: contactoActualizado => {
-          this.contactos.update(contactos =>
-            contactos.map(item => item.id === contactoActualizado.id ? contactoActualizado : item)
-          );
+          this.contactos.update(contactos => reemplazarContacto(contactos, contactoActualizado));
           this.mensajeExito = 'El estado del contacto se actualizó correctamente.';
         },
         error: err => {
           this.error = err?.error?.mensaje || err?.message || 'No se pudo actualizar el estado del contacto.';
         }
       });
-  }
-
-  claseEstadoContacto(estado: string): string {
-    return `contacto-estado-${estado.toLowerCase()}`;
-  }
-
-  formatearEstadoContacto(estado: string): string {
-    switch (estado) {
-      case 'EN_PROCESO':
-        return 'En proceso';
-      case 'ATENDIDO':
-        return 'Atendido';
-      case 'CERRADO':
-        return 'Cerrado';
-      case 'NUEVO':
-      default:
-        return 'Nuevo';
-    }
   }
 
   guardarConfiguracionCorreo() {

@@ -2,6 +2,8 @@ package com.techprotech.agenda.modulos.contactos.api;
 
 import com.techprotech.agenda.modulos.contactos.api.dto.ActualizarEstadoSolicitudContactoRequest;
 import com.techprotech.agenda.modulos.contactos.api.dto.SolicitudContactoAdminResponse;
+import com.techprotech.agenda.modulos.contactos.api.dto.MetadatosContactosResponse;
+import com.techprotech.agenda.modulos.contactos.aplicacion.EstadoSolicitudContacto;
 import com.techprotech.agenda.modulos.contactos.aplicacion.ServicioGestionSolicitudesContacto;
 import com.techprotech.agenda.seguridad.jwt.UsuarioAutenticado;
 import jakarta.validation.Valid;
@@ -31,6 +33,19 @@ public class ControladorContactosAdmin {
     @PreAuthorize("hasAuthority('CONTACTOS_ADMIN_VER')")
     public List<SolicitudContactoAdminResponse> listar(@AuthenticationPrincipal UsuarioAutenticado usuario) {
         return servicioGestionSolicitudesContacto.listarPorEmpresa(usuario.empresaId());
+    }
+
+    @GetMapping("/metadatos")
+    @PreAuthorize("hasAuthority('CONTACTOS_ADMIN_VER')")
+    public MetadatosContactosResponse metadatos() {
+        return new MetadatosContactosResponse(
+                java.util.Arrays.stream(EstadoSolicitudContacto.values())
+                        .map(estado -> new MetadatosContactosResponse.EstadoContactoResponse(estado.name(), estado.etiqueta()))
+                        .toList(),
+                EstadoSolicitudContacto.NUEVO.name(),
+                EstadoSolicitudContacto.EN_PROCESO.name(),
+                EstadoSolicitudContacto.ATENDIDO.name()
+        );
     }
 
     @PatchMapping("/{id}/estado")

@@ -409,10 +409,8 @@
     <app-admin-contacts-section
       [resumen]="resumenContactos()"
       [contactos]="contactos()"
-      [estadosContactoDisponibles]="estadosContactoDisponibles"
+      [estadosContactoDisponibles]="estadosContactoDisponibles()"
       [actualizandoContactoId]="actualizandoContactoId"
-      [claseEstadoContacto]="claseEstadoContacto.bind(this)"
-      [formatearEstadoContacto]="formatearEstadoContacto.bind(this)"
       (updateStatus)="actualizarEstadoContacto($event.contacto, $event.estado)" />
     } @placeholder {
     <section class="section-stack">
