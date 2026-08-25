@@ -267,54 +267,13 @@
       </mat-menu>
 
       @if (perfilConfigAbierto()) {
-        <div class="profile-modal-backdrop" (click)="cerrarConfiguracionPerfil()"></div>
-      }
-      @if (perfilConfigAbierto()) {
-        <section class="profile-modal" role="dialog" aria-modal="true" aria-labelledby="profile-modal-title">
-          <div class="profile-modal-header">
-            <div>
-              <span class="content-header-kicker">Perfil</span>
-              <h2 id="profile-modal-title">Configuración de usuario</h2>
-              <p>Actualiza cómo se muestra tu perfil dentro del Backoffice.</p>
-            </div>
-            <button type="button" class="btn btn-light profile-modal-close" (click)="cerrarConfiguracionPerfil()" aria-label="Cerrar configuración">
-              <i class="bi bi-x-lg"></i>
-            </button>
-          </div>
-          <div class="profile-modal-body">
-            <div class="profile-photo-editor">
-              <span class="toolbar-user-avatar profile-photo-preview">
-                @if (formularioPerfilUsuario.fotoDataUrl) {
-                  <img [src]="formularioPerfilUsuario.fotoDataUrl" alt="" />
-                } @else {
-                  {{ inicialesUsuarioAdmin() }}
-                }
-              </span>
-              <div class="profile-photo-actions">
-                <label class="btn btn-primary btn-sm mb-0">
-                  <i class="bi bi-camera me-2" aria-hidden="true"></i>
-                  Subir foto
-                  <input type="file" accept="image/*" class="visually-hidden" (change)="seleccionarFotoPerfil($event)" />
-                </label>
-                <button type="button" class="btn btn-outline-secondary btn-sm" (click)="quitarFotoPerfil()">Quitar</button>
-              </div>
-            </div>
-            <div class="row g-3">
-              <div class="col-12">
-                <label class="form-label" for="perfil-nombre">Nombre visible</label>
-                <input id="perfil-nombre" name="perfilNombre" class="form-control" [(ngModel)]="formularioPerfilUsuario.nombre" />
-              </div>
-              <div class="col-12">
-                <label class="form-label" for="perfil-puesto">Rol o puesto</label>
-                <input id="perfil-puesto" name="perfilPuesto" class="form-control" [(ngModel)]="formularioPerfilUsuario.puesto" />
-              </div>
-            </div>
-          </div>
-          <div class="profile-modal-footer">
-            <button type="button" class="btn btn-outline-secondary" (click)="cerrarConfiguracionPerfil()">Cancelar</button>
-            <button type="button" class="btn btn-primary" (click)="guardarConfiguracionPerfil()">Guardar perfil</button>
-          </div>
-        </section>
+        <app-user-profile-dialog
+          [profile]="{ nombre: nombreUsuarioAdmin(), puesto: puestoUsuarioAdmin(), fotoDataUrl: fotoPerfilUsuario() }"
+          [initials]="inicialesUsuarioAdmin()"
+          contextLabel="Backoffice"
+          (cancelled)="cerrarConfiguracionPerfil()"
+          (saved)="guardarConfiguracionPerfil($event)"
+          (validationError)="mostrarErrorPerfil($event)" />
       }
 
       @if (loading()) {

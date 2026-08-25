@@ -1,0 +1,49 @@
+<div class="profile-dialog-backdrop" (click)="cancelled.emit()"></div>
+<section class="profile-dialog" role="dialog" aria-modal="true" aria-labelledby="profile-dialog-title">
+  <header class="profile-dialog__header">
+    <div>
+      <span class="profile-dialog__eyebrow">Perfil</span>
+      <h2 id="profile-dialog-title">Configuración de usuario</h2>
+      <p>Actualiza cómo se muestra tu perfil en {{ contextLabel() }}.</p>
+    </div>
+    <button type="button" class="profile-dialog__close" (click)="cancelled.emit()" aria-label="Cerrar configuración">
+      <i class="bi bi-x-lg" aria-hidden="true"></i>
+    </button>
+  </header>
+
+  <div class="profile-dialog__body">
+    <div class="profile-dialog__photo-editor">
+      <span class="profile-dialog__photo-preview">
+        @if (form.fotoDataUrl) {
+          <img [src]="form.fotoDataUrl" alt="" />
+        } @else {
+          {{ initials() }}
+        }
+      </span>
+      <div class="profile-dialog__photo-actions">
+        <label class="profile-dialog__upload">
+          <i class="bi bi-camera" aria-hidden="true"></i>
+          Subir foto
+          <input type="file" accept="image/*" (change)="selectPhoto($event)" />
+        </label>
+        <button type="button" class="profile-dialog__button profile-dialog__button--secondary" (click)="removePhoto()">Quitar</button>
+      </div>
+    </div>
+
+    <div class="profile-dialog__fields">
+      <label>
+        <span>Nombre visible</span>
+        <input name="profileName" [(ngModel)]="form.nombre" />
+      </label>
+      <label>
+        <span>Rol o puesto</span>
+        <input name="profilePosition" [(ngModel)]="form.puesto" />
+      </label>
+    </div>
+  </div>
+
+  <footer class="profile-dialog__footer">
+    <button type="button" class="profile-dialog__button profile-dialog__button--secondary" (click)="cancelled.emit()">Cancelar</button>
+    <button type="button" class="profile-dialog__button profile-dialog__button--primary" (click)="save()">Guardar perfil</button>
+  </footer>
+</section>

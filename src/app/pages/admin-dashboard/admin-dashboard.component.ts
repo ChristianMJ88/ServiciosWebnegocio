@@ -79,7 +79,8 @@ import {
 } from '../../core/admin/admin.service';
 import { AuthService } from '../../core/auth/auth.service';
 import { CitaCliente } from '../../core/auth/client-appointments.service';
-import { UserProfileService } from '../../core/profile/user-profile.service';
+import { PerfilUsuarioLocal, UserProfileService } from '../../core/profile/user-profile.service';
+import { UserProfileDialogComponent } from '../../shared/profile/user-profile-dialog.component';
 import { AdminBranchesSectionComponent } from './admin-branches-section.component';
 import { AdminContactsSectionComponent } from './admin-contacts-section.component';
 import { AdminEmailSectionComponent } from './admin-email-section.component';
@@ -138,12 +139,6 @@ type NotificacionAdmin = {
   total: number;
 };
 
-type PerfilUsuarioLocal = {
-  nombre: string;
-  puesto: string;
-  fotoDataUrl: string | null;
-};
-
 @Component({
   selector: 'app-admin-dashboard',
   standalone: true,
@@ -157,6 +152,7 @@ type PerfilUsuarioLocal = {
     MatMenuModule,
     MatTooltipModule,
     MatProgressBarModule,
+    UserProfileDialogComponent,
     AgendaOperationsSectionComponent,
     AdminBranchesSectionComponent,
     AdminEmailSectionComponent,
@@ -965,12 +961,6 @@ export class AdminDashboardComponent implements OnInit {
     notas: ''
   };
 
-  formularioPerfilUsuario: PerfilUsuarioLocal = {
-    nombre: '',
-    puesto: '',
-    fotoDataUrl: null
-  };
-
   formularioRolInterno: GuardarRolInternoPayload = {
     codigo: '',
     nombre: '',
@@ -1136,12 +1126,6 @@ export class AdminDashboardComponent implements OnInit {
   }
 
   abrirConfiguracionPerfil() {
-    const perfil = this.perfilUsuarioLocal();
-    this.formularioPerfilUsuario = {
-      nombre: this.nombreUsuarioAdmin(),
-      puesto: this.puestoUsuarioAdmin(),
-      fotoDataUrl: perfil.fotoDataUrl
-    };
     this.perfilConfigAbierto.set(true);
   }
 
@@ -1149,54 +1133,15 @@ export class AdminDashboardComponent implements OnInit {
     this.perfilConfigAbierto.set(false);
   }
 
-  guardarConfiguracionPerfil() {
-    const perfil: PerfilUsuarioLocal = {
-      nombre: this.formularioPerfilUsuario.nombre.trim(),
-      puesto: this.formularioPerfilUsuario.puesto.trim(),
-      fotoDataUrl: this.formularioPerfilUsuario.fotoDataUrl
-    };
+  guardarConfiguracionPerfil(perfil: PerfilUsuarioLocal) {
     this.perfilUsuarioLocal.set(perfil);
     this.persistirPerfilUsuarioLocal(perfil);
     this.perfilConfigAbierto.set(false);
     this.mensajeExito = 'Perfil actualizado.';
   }
 
-  seleccionarFotoPerfil(evento: Event) {
-    const input = evento.target as HTMLInputElement;
-    const archivo = input.files?.[0];
-    if (!archivo) {
-      return;
-    }
-
-    if (!archivo.type.startsWith('image/')) {
-      this.error = 'Selecciona una imagen válida para tu foto de perfil.';
-      input.value = '';
-      return;
-    }
-
-    if (archivo.size > 1_500_000) {
-      this.error = 'La imagen debe pesar menos de 1.5 MB.';
-      input.value = '';
-      return;
-    }
-
-    const lector = new FileReader();
-    lector.onload = () => {
-      this.actualizarVistaEnZona(() => {
-        this.formularioPerfilUsuario = {
-          ...this.formularioPerfilUsuario,
-          fotoDataUrl: typeof lector.result === 'string' ? lector.result : null
-        };
-      });
-    };
-    lector.readAsDataURL(archivo);
-  }
-
-  quitarFotoPerfil() {
-    this.formularioPerfilUsuario = {
-      ...this.formularioPerfilUsuario,
-      fotoDataUrl: null
-    };
+  mostrarErrorPerfil(mensaje: string) {
+    this.error = mensaje;
   }
 
   seleccionarSubseccionUsuarios(subseccion: SubseccionUsuariosAdmin) {

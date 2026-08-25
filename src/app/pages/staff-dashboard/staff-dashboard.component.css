@@ -108,13 +108,11 @@
 }
 
 .staff-user-avatar,
-.profile-photo-preview,
 .profile-menu-avatar {
   overflow: hidden;
 }
 
 .staff-user-avatar img,
-.profile-photo-preview img,
 .profile-menu-avatar img {
   width: 100%;
   height: 100%;

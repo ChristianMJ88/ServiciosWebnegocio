@@ -13,6 +13,7 @@ import { Observable, Subject, forkJoin, of } from 'rxjs';
 import { catchError, debounceTime, distinctUntilChanged, finalize, switchMap, tap } from 'rxjs/operators';
 import { AuthService } from '../../core/auth/auth.service';
 import { PerfilUsuarioLocal, UserProfileService } from '../../core/profile/user-profile.service';
+import { UserProfileDialogComponent } from '../../shared/profile/user-profile-dialog.component';
 import { RecepcionSidePanelComponent } from './recepcion-side-panel.component';
 import {
   CatalogoRecepcion,
@@ -37,6 +38,7 @@ import {
     MatMenuModule,
     MatProgressBarModule,
     MatToolbarModule,
+    UserProfileDialogComponent,
     RecepcionSidePanelComponent
   ],
   templateUrl: './recepcion-dashboard.component.html',
@@ -145,12 +147,6 @@ export class RecepcionDashboardComponent implements OnInit, AfterViewInit {
     inicio: '',
     notas: '',
     avisarWhatsapp: true
-  };
-
-  formularioPerfilUsuario: PerfilUsuarioLocal = {
-    nombre: '',
-    puesto: '',
-    fotoDataUrl: null
   };
 
   constructor() {
@@ -562,11 +558,6 @@ export class RecepcionDashboardComponent implements OnInit, AfterViewInit {
   }
 
   abrirConfiguracionPerfil() {
-    this.formularioPerfilUsuario = {
-      nombre: this.nombreUsuario(),
-      puesto: this.puestoUsuario(),
-      fotoDataUrl: this.fotoPerfilUsuario()
-    };
     this.perfilConfigAbierto.set(true);
   }
 
@@ -574,38 +565,14 @@ export class RecepcionDashboardComponent implements OnInit, AfterViewInit {
     this.perfilConfigAbierto.set(false);
   }
 
-  guardarConfiguracionPerfil() {
-    this.userProfileService.guardar(this.formularioPerfilUsuario);
+  guardarConfiguracionPerfil(perfil: PerfilUsuarioLocal) {
+    this.userProfileService.guardar(perfil);
     this.perfilConfigAbierto.set(false);
     this.mensaje.set('Perfil actualizado.');
   }
 
-  seleccionarFotoPerfil(evento: Event) {
-    const input = evento.target as HTMLInputElement;
-    const archivo = input.files?.[0];
-    if (!archivo) {
-      return;
-    }
-    if (!archivo.type.startsWith('image/') || archivo.size > 1_500_000) {
-      this.error.set('Selecciona una imagen válida menor a 1.5 MB.');
-      input.value = '';
-      return;
-    }
-    const lector = new FileReader();
-    lector.onload = () => this.actualizarVistaEnZona(() => {
-      this.formularioPerfilUsuario = {
-        ...this.formularioPerfilUsuario,
-        fotoDataUrl: typeof lector.result === 'string' ? lector.result : null
-      };
-    });
-    lector.readAsDataURL(archivo);
-  }
-
-  quitarFotoPerfil() {
-    this.formularioPerfilUsuario = {
-      ...this.formularioPerfilUsuario,
-      fotoDataUrl: null
-    };
+  mostrarErrorPerfil(mensaje: string) {
+    this.error.set(mensaje);
   }
 
   logout() {
