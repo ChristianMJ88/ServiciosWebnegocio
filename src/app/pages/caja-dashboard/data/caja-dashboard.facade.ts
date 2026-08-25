@@ -7,7 +7,9 @@ const catalogoVacio = (sucursalActivaId?: number | null): CatalogoCaja => ({
   sucursales: [],
   metodosPago: [],
   tiposMovimiento: [],
+  estadosSesion: [],
   estadoSesionAbierta: '',
+  estadoSesionCerrada: '',
   metodoPagoEfectivo: ''
 });
 

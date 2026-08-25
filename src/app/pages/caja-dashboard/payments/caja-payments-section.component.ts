@@ -27,7 +27,7 @@ import { FormularioPagoCaja } from '../forms/caja.forms';
     MatSelectModule
   ],
   templateUrl: './caja-payments-section.component.html',
-  styleUrls: ['../caja-dashboard.component.css', './caja-payments-section.component.css']
+  styleUrls: ['./caja-payments-section.component.css']
 })
 export class CajaPaymentsSectionComponent {
   @Input({ required: true }) citas!: CitaPorCobrar[];

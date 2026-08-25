@@ -17,7 +17,9 @@ export interface CatalogoCaja {
   sucursales: SucursalCaja[];
   metodosPago: OpcionCaja[];
   tiposMovimiento: OpcionCaja[];
+  estadosSesion: OpcionCaja[];
   estadoSesionAbierta: string;
+  estadoSesionCerrada: string;
   metodoPagoEfectivo: string;
 }
 

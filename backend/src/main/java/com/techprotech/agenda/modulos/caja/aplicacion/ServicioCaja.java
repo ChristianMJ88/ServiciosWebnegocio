@@ -110,7 +110,9 @@ public class ServicioCaja {
                         .toList(),
                 METODOS_PAGO.stream().map(opcion -> new CatalogoCajaResponse.OpcionCajaResponse(opcion.codigo(), opcion.etiqueta())).toList(),
                 TIPOS_MOVIMIENTO_MANUAL.stream().map(opcion -> new CatalogoCajaResponse.OpcionCajaResponse(opcion.codigo(), opcion.etiqueta())).toList(),
+                ESTADOS_SESION.stream().map(opcion -> new CatalogoCajaResponse.OpcionCajaResponse(opcion.codigo(), opcion.etiqueta())).toList(),
                 ESTADO_SESION_ABIERTA,
+                ESTADO_SESION_CERRADA,
                 METODO_PAGO_EFECTIVO
         );
     }

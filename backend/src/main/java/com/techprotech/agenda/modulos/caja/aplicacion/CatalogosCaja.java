@@ -5,6 +5,10 @@ import java.util.List;
 public final class CatalogosCaja {
     public static final String ESTADO_SESION_ABIERTA = "ABIERTA";
     public static final String ESTADO_SESION_CERRADA = "CERRADA";
+    public static final List<Opcion> ESTADOS_SESION = List.of(
+            new Opcion(ESTADO_SESION_ABIERTA, "Abierta"),
+            new Opcion(ESTADO_SESION_CERRADA, "Cerrada")
+    );
     public static final String METODO_PAGO_EFECTIVO = "EFECTIVO";
     public static final List<Opcion> METODOS_PAGO = List.of(
             new Opcion("EFECTIVO", "Efectivo"),

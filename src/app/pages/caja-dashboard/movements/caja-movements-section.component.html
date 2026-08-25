@@ -1,0 +1,80 @@
+<div class="caja-grid caja-grid-focus">
+  <div class="caja-main-column">
+    @if (puedeGestionar) {
+      <mat-card class="caja-card">
+        <div class="caja-card-heading"><span class="caja-card-kicker">Caja chica</span><h2>Movimientos del día</h2></div>
+        <form class="caja-form-grid" (ngSubmit)="saveMovement.emit()">
+          <mat-form-field appearance="outline">
+            <mat-label>Tipo de movimiento</mat-label>
+            <mat-select name="tipoMovimiento" [(ngModel)]="formulario.tipoMovimiento">
+              @for (tipo of tiposMovimiento; track tipo.codigo) {
+                <mat-option [value]="tipo.codigo">{{ tipo.etiqueta }}</mat-option>
+              }
+            </mat-select>
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Monto</mat-label>
+            <input matInput type="number" min="0.01" step="0.01" name="montoMovimiento" [(ngModel)]="formulario.monto" required>
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Método</mat-label>
+            <mat-select name="metodoMovimiento" [(ngModel)]="formulario.metodoPago">
+              @for (metodo of metodosPago; track metodo.codigo) {
+                <mat-option [value]="metodo.codigo">{{ metodo.etiqueta }}</mat-option>
+              }
+            </mat-select>
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Concepto</mat-label>
+            <input matInput name="conceptoMovimiento" [(ngModel)]="formulario.concepto" required>
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Referencia</mat-label>
+            <input matInput name="referenciaMovimiento" [(ngModel)]="formulario.referencia">
+          </mat-form-field>
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Observaciones</mat-label>
+            <textarea matInput rows="3" name="observacionesMovimiento" [(ngModel)]="formulario.observaciones"></textarea>
+          </mat-form-field>
+          <div class="caja-form-actions">
+            <button mat-flat-button color="primary" type="submit" [disabled]="guardando || !cajaAbierta">Guardar movimiento</button>
+          </div>
+        </form>
+        @if (ultimoMovimiento) {
+          <div class="caja-last-movement">
+            <span class="label">Último movimiento</span><strong>{{ ultimoMovimiento.concepto }}</strong>
+            <span>{{ etiquetaTipo(ultimoMovimiento.tipoMovimiento) }} · {{ ultimoMovimiento.monto | appMoney:'MXN':2:2 }}</span>
+          </div>
+        }
+        <div class="caja-history">
+          <div class="caja-subheading"><span>Historial del turno</span></div>
+          @if (!movimientos.length) {
+            <div class="caja-empty">Aún no hay movimientos registrados en el turno actual.</div>
+          } @else {
+            <div class="caja-history-list">
+              @for (movimiento of movimientos; track movimiento.id) {
+                <div class="caja-history-item">
+                  <div><strong>{{ movimiento.concepto }}</strong>
+                    <span>{{ etiquetaTipo(movimiento.tipoMovimiento) }}{{ movimiento.metodoPago ? ' · ' + etiquetaMetodo(movimiento.metodoPago) : '' }}{{ movimiento.referencia ? ' · ' + movimiento.referencia : '' }}</span>
+                  </div>
+                  <div class="caja-history-amount"><strong>{{ movimiento.monto | appMoney:'MXN':2:2 }}</strong><small>{{ movimiento.registradoEn | date:'dd/MM HH:mm':'':'es-MX' }}</small></div>
+                </div>
+              }
+            </div>
+          }
+        </div>
+      </mat-card>
+    }
+  </div>
+  <div class="caja-side-column">
+    <mat-card class="caja-card">
+      <div class="caja-card-heading"><span class="caja-card-kicker">Resumen</span><h2>Resumen del turno</h2></div>
+      <div class="caja-summary-grid">
+        <div><span class="label">Gastos menores</span><strong>{{ resumen?.totalGastos | appMoney:'MXN':2:2 }}</strong></div>
+        <div><span class="label">Retiros</span><strong>{{ resumen?.totalRetiros | appMoney:'MXN':2:2 }}</strong></div>
+        <div><span class="label">Saldo esperado</span><strong>{{ resumen?.saldoEsperadoCaja | appMoney:'MXN':2:2 }}</strong></div>
+        <div><span class="label">Caja</span><strong>{{ etiquetaEstadoSesion() }}</strong></div>
+      </div>
+    </mat-card>
+  </div>
+</div>

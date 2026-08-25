@@ -7,7 +7,9 @@ public record CatalogoCajaResponse(
         List<SucursalCajaCatalogoResponse> sucursales,
         List<OpcionCajaResponse> metodosPago,
         List<OpcionCajaResponse> tiposMovimiento,
+        List<OpcionCajaResponse> estadosSesion,
         String estadoSesionAbierta,
+        String estadoSesionCerrada,
         String metodoPagoEfectivo
 ) {
     public record OpcionCajaResponse(String codigo, String etiqueta) {

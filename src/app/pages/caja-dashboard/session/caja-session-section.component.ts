@@ -25,7 +25,7 @@ import { FormularioAperturaCaja, FormularioCierreCaja } from '../forms/caja.form
     MatInputModule
   ],
   templateUrl: './caja-session-section.component.html',
-  styleUrls: ['../caja-dashboard.component.css', './caja-session-section.component.css']
+  styleUrls: ['./caja-session-section.component.css']
 })
 export class CajaSessionSectionComponent {
   @Input({ required: true }) cajaAbierta!: boolean;

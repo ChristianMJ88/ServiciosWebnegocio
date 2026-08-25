@@ -1,5 +1,5 @@
-import { CommonModule, DatePipe } from '@angular/common';
-import { AfterViewInit, ChangeDetectorRef, Component, DestroyRef, NgZone, OnInit, computed, inject, signal } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { AfterViewInit, ChangeDetectorRef, Component, DestroyRef, NgZone, OnInit, ViewEncapsulation, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { BreakpointObserver } from '@angular/cdk/layout';
 import { FormsModule } from '@angular/forms';
@@ -32,6 +32,7 @@ import {
 import { CajaDashboardFacade } from './data/caja-dashboard.facade';
 import { CajaPaymentsSectionComponent } from './payments/caja-payments-section.component';
 import { CajaSessionSectionComponent } from './session/caja-session-section.component';
+import { CajaMovementsSectionComponent } from './movements/caja-movements-section.component';
 import {
   construirApertura,
   construirCierre,
@@ -50,7 +51,6 @@ type VistaCaja = 'cobros' | 'sesion' | 'movimientos';
   standalone: true,
   imports: [
     CommonModule,
-    DatePipe,
     FormsModule,
     MoneyDisplayPipe,
     MatBadgeModule,
@@ -66,10 +66,12 @@ type VistaCaja = 'cobros' | 'sesion' | 'movimientos';
     MatToolbarModule,
     UserProfileDialogComponent,
     CajaPaymentsSectionComponent,
-    CajaSessionSectionComponent
+    CajaSessionSectionComponent,
+    CajaMovementsSectionComponent
   ],
   templateUrl: './caja-dashboard.component.html',
-  styleUrls: ['./caja-dashboard.component.css']
+  styleUrls: ['./caja-dashboard.component.css'],
+  encapsulation: ViewEncapsulation.None
 })
 export class CajaDashboardComponent implements OnInit, AfterViewInit {
   private readonly cajaFacade = inject(CajaDashboardFacade);
@@ -103,7 +105,9 @@ export class CajaDashboardComponent implements OnInit, AfterViewInit {
   readonly mensaje = signal('');
   readonly metodosPago = signal<CatalogoCaja['metodosPago']>([]);
   readonly tiposMovimiento = signal<CatalogoCaja['tiposMovimiento']>([]);
+  readonly estadosSesion = signal<CatalogoCaja['estadosSesion']>([]);
   readonly estadoSesionAbierta = signal('');
+  readonly estadoSesionCerrada = signal('');
   readonly metodoPagoEfectivo = signal('');
 
   readonly perfilUsuario = computed(() => this.userProfileService.perfilActual());
@@ -619,7 +623,9 @@ export class CajaDashboardComponent implements OnInit, AfterViewInit {
     this.sucursales.set(catalogo.sucursales ?? []);
     this.metodosPago.set(catalogo.metodosPago ?? []);
     this.tiposMovimiento.set(catalogo.tiposMovimiento ?? []);
+    this.estadosSesion.set(catalogo.estadosSesion ?? []);
     this.estadoSesionAbierta.set(catalogo.estadoSesionAbierta ?? '');
+    this.estadoSesionCerrada.set(catalogo.estadoSesionCerrada ?? '');
     this.metodoPagoEfectivo.set(catalogo.metodoPagoEfectivo ?? '');
     if (!this.metodosPago().some(metodo => metodo.codigo === this.formularioPago.metodoPago)) {
       this.formularioPago.metodoPago = this.metodosPago()[0]?.codigo ?? '';
