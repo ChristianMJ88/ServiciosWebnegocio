@@ -1,1 +1,194 @@
-:host { display: block; }
+:host {
+  display: block;
+}
+
+.caja-card-kicker,
+.caja-eyebrow {
+  color: #756556;
+  font-size: 0.78rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.caja-top-strip {
+  display: grid;
+  grid-template-columns: minmax(0, 0.95fr) minmax(380px, 1.1fr);
+  gap: 1rem;
+  margin-bottom: 0.95rem;
+}
+
+.caja-top-copy {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1.05rem 1.15rem;
+  border-radius: 28px;
+  background: radial-gradient(circle at top right, rgba(255, 255, 255, 0.76), transparent 24%),
+    linear-gradient(135deg, rgba(255, 252, 246, 0.96), rgba(243, 246, 241, 0.94));
+  box-shadow: 0 18px 38px rgba(43, 41, 37, 0.08);
+  border: 1px solid rgba(86, 75, 63, 0.1);
+}
+
+.caja-top-copy h1 {
+  margin: 0.18rem 0 0;
+  font-size: clamp(1.35rem, 0.9vw + 1rem, 1.72rem);
+  line-height: 1.06;
+}
+
+.caja-top-meta,
+.caja-status-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+}
+
+.caja-top-meta {
+  justify-content: flex-end;
+}
+
+.caja-top-pill,
+.caja-status-pill {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  font-weight: 600;
+}
+
+.caja-top-pill {
+  padding: 0.48rem 0.8rem;
+  background: rgba(31, 112, 97, 0.09);
+  color: #245247;
+  font-size: 0.84rem;
+  border: 1px solid rgba(31, 112, 97, 0.08);
+}
+
+.caja-sucursal-card,
+.caja-metric-card {
+  border-radius: 24px;
+  box-shadow: 0 18px 36px rgba(43, 41, 37, 0.08);
+  border: 1px solid rgba(86, 75, 63, 0.1);
+}
+
+.caja-sucursal-card {
+  padding: 1rem 1.05rem;
+  background: rgba(255, 252, 246, 0.84);
+  backdrop-filter: blur(16px);
+}
+
+.caja-top-card-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.85rem;
+}
+
+.caja-helper {
+  margin: 0.18rem 0 0;
+  color: #6f6358;
+  font-size: 0.9rem;
+}
+
+.caja-sucursal-fixed {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  padding: 0.9rem 1rem;
+  border-radius: 18px;
+  background: rgba(31, 112, 97, 0.08);
+  color: #245247;
+}
+
+.caja-sucursal-fixed span {
+  color: #5f665f;
+  font-size: 0.92rem;
+}
+
+.caja-status-pills {
+  margin-top: 0.9rem;
+}
+
+.caja-status-pills--head {
+  margin-top: 0;
+  justify-content: flex-end;
+}
+
+.caja-status-pill {
+  padding: 0.45rem 0.8rem;
+  background: rgba(101, 91, 81, 0.09);
+  color: #64584f;
+  font-size: 0.86rem;
+}
+
+.caja-status-pill.is-open {
+  background: rgba(31, 112, 97, 0.12);
+  color: #1d5d52;
+}
+
+.caja-metric-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.85rem;
+  margin-bottom: 0.95rem;
+}
+
+.caja-metric-card {
+  padding: 0.82rem 0.95rem;
+  background: linear-gradient(180deg, rgba(255, 252, 246, 0.92), rgba(249, 246, 240, 0.96));
+}
+
+.caja-metric-card.primary {
+  background: linear-gradient(135deg, rgba(233, 178, 106, 0.2), rgba(255, 252, 246, 0.96));
+}
+
+.caja-metric-card span {
+  display: block;
+  color: #7b7068;
+  margin-bottom: 0.4rem;
+}
+
+.caja-metric-card strong {
+  font-size: 1.4rem;
+  line-height: 1.05;
+}
+
+.caja-empty {
+  padding: 0.95rem 1rem;
+  border-radius: 18px;
+  background: rgba(226, 220, 209, 0.55);
+  color: #665c55;
+  font-size: 0.94rem;
+}
+
+.alert {
+  margin-bottom: 1rem;
+  border-radius: 16px;
+}
+
+.w-100 {
+  width: 100%;
+}
+
+@media (max-width: 1199px) {
+  .caja-top-strip,
+  .caja-metric-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 767px) {
+  .caja-top-copy {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 1rem 1.05rem;
+  }
+
+  .caja-top-card-head {
+    flex-direction: column;
+  }
+
+  .caja-top-meta,
+  .caja-status-pills--head {
+    justify-content: flex-start;
+  }
+}

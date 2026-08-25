@@ -12,61 +12,6 @@
   color: #2b2925;
 }
 
-.caja-toolbar {
-  position: sticky;
-  top: 0;
-  z-index: 20;
-  display: flex;
-  justify-content: space-between;
-  gap: 1rem;
-  min-height: 78px;
-  padding: 0 1.5rem;
-  background: rgba(255, 252, 246, 0.78);
-  backdrop-filter: blur(20px);
-  border-bottom: 1px solid rgba(75, 62, 48, 0.12);
-  box-shadow: 0 10px 28px rgba(43, 41, 37, 0.05);
-}
-
-.caja-toolbar-brand,
-.caja-toolbar-actions,
-.caja-user-button {
-  display: flex;
-  align-items: center;
-}
-
-.caja-toolbar-brand {
-  gap: 0.9rem;
-}
-
-.caja-toolbar-actions {
-  gap: 0.75rem;
-}
-
-.caja-brand-mark,
-.caja-user-avatar {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 44px;
-  height: 44px;
-  border-radius: 14px;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-}
-
-.caja-brand-mark {
-  background: linear-gradient(135deg, #1d7263, #124d40 58%, #6a6758);
-  color: #fefcf7;
-  box-shadow: 0 12px 26px rgba(20, 80, 67, 0.18);
-}
-
-.caja-brand-copy,
-.caja-user-copy {
-  display: flex;
-  flex-direction: column;
-}
-
-.caja-brand-eyebrow,
 .caja-card-kicker,
 .caja-eyebrow,
 .label {
@@ -76,235 +21,16 @@
   text-transform: uppercase;
 }
 
-.caja-brand-title {
-  font-size: 1.1rem;
-  font-weight: 700;
-}
-
-.caja-user-button {
-  gap: 0.75rem;
-  padding: 0.2rem 0.4rem 0.2rem 0.2rem;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.62);
-  border: 1px solid rgba(86, 75, 63, 0.12);
-  box-shadow: 0 10px 20px rgba(43, 41, 37, 0.05);
-}
-
-.caja-user-avatar {
-  background: #e6ddd1;
-  color: #2b2925;
-}
-
-.caja-user-copy small {
-  color: #7d7065;
-}
-
 .caja-body {
   max-width: 1460px;
   margin: 0 auto;
   padding: 1.15rem 1.35rem 1.75rem;
 }
 
-.caja-top-strip {
-  display: grid;
-  grid-template-columns: minmax(0, 0.95fr) minmax(380px, 1.1fr);
-  gap: 1rem;
-  margin-bottom: 0.95rem;
-}
-
-.caja-top-copy {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-  padding: 1.05rem 1.15rem;
-  border-radius: 28px;
-  background:
-    radial-gradient(circle at top right, rgba(255, 255, 255, 0.76), transparent 24%),
-    linear-gradient(135deg, rgba(255, 252, 246, 0.96), rgba(243, 246, 241, 0.94));
-  box-shadow: 0 18px 38px rgba(43, 41, 37, 0.08);
-  border: 1px solid rgba(86, 75, 63, 0.1);
-}
-
-.caja-top-copy h1 {
-  margin: 0.18rem 0 0;
-  font-size: clamp(1.35rem, 0.9vw + 1rem, 1.72rem);
-  line-height: 1.06;
-}
-
-.caja-top-meta {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: flex-end;
-  gap: 0.55rem;
-}
-
-.caja-top-pill {
-  display: inline-flex;
-  align-items: center;
-  padding: 0.48rem 0.8rem;
-  border-radius: 999px;
-  background: rgba(31, 112, 97, 0.09);
-  color: #245247;
-  font-size: 0.84rem;
-  font-weight: 600;
-  border: 1px solid rgba(31, 112, 97, 0.08);
-}
-
-.caja-sucursal-card,
-.caja-card,
-.caja-metric-card {
+.caja-card {
   border-radius: 24px;
   box-shadow: 0 18px 36px rgba(43, 41, 37, 0.08);
   border: 1px solid rgba(86, 75, 63, 0.1);
-}
-
-.caja-sucursal-card {
-  padding: 1rem 1.05rem;
-  background: rgba(255, 252, 246, 0.84);
-  backdrop-filter: blur(16px);
-}
-
-.caja-top-card-head {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 0.85rem;
-}
-
-.caja-helper {
-  margin: 0.18rem 0 0;
-  color: #6f6358;
-  font-size: 0.9rem;
-}
-
-.caja-sucursal-fixed {
-  display: flex;
-  flex-direction: column;
-  gap: 0.35rem;
-  padding: 0.9rem 1rem;
-  border-radius: 18px;
-  background: rgba(31, 112, 97, 0.08);
-  color: #245247;
-}
-
-.caja-sucursal-fixed span {
-  color: #5f665f;
-  font-size: 0.92rem;
-}
-
-.caja-status-pills {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.55rem;
-  margin-top: 0.9rem;
-}
-
-.caja-status-pills--head {
-  margin-top: 0;
-  justify-content: flex-end;
-}
-
-.caja-status-pill {
-  display: inline-flex;
-  align-items: center;
-  padding: 0.45rem 0.8rem;
-  border-radius: 999px;
-  background: rgba(101, 91, 81, 0.09);
-  color: #64584f;
-  font-size: 0.86rem;
-  font-weight: 600;
-}
-
-.caja-status-pill.is-open {
-  background: rgba(31, 112, 97, 0.12);
-  color: #1d5d52;
-}
-
-.caja-control-strip {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.85rem;
-  margin-bottom: 0.9rem;
-}
-
-.caja-view-switcher {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.75rem;
-}
-
-.caja-inline-context {
-  display: grid;
-  gap: 0.16rem;
-  min-width: 0;
-  padding: 0.8rem 0.95rem;
-  border-radius: 18px;
-  background: rgba(255, 252, 246, 0.82);
-  border: 1px solid rgba(110, 93, 77, 0.08);
-  text-align: right;
-}
-
-.caja-inline-context-label {
-  color: #756556;
-  font-size: 0.76rem;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-}
-
-.caja-inline-context strong {
-  font-size: 0.98rem;
-  color: #2b2925;
-}
-
-.caja-inline-context small {
-  color: #7d7065;
-  font-size: 0.82rem;
-}
-
-.caja-view-chip {
-  border: 1px solid rgba(110, 93, 77, 0.12);
-  background: rgba(255, 252, 246, 0.88);
-  color: #5f564d;
-  border-radius: 999px;
-  padding: 0.65rem 1rem;
-  font-weight: 600;
-  transition: all 120ms ease;
-}
-
-.caja-view-chip.active {
-  background: linear-gradient(135deg, #1f7061, #145043);
-  border-color: transparent;
-  color: #fefcf7;
-  box-shadow: 0 10px 22px rgba(31, 112, 97, 0.18);
-}
-
-.caja-metric-grid {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 0.85rem;
-  margin-bottom: 0.95rem;
-}
-
-.caja-metric-card {
-  padding: 0.82rem 0.95rem;
-  background: linear-gradient(180deg, rgba(255, 252, 246, 0.92), rgba(249, 246, 240, 0.96));
-}
-
-.caja-metric-card.primary {
-  background: linear-gradient(135deg, rgba(233, 178, 106, 0.2), rgba(255, 252, 246, 0.96));
-}
-
-.caja-metric-card span {
-  display: block;
-  color: #7b7068;
-  margin-bottom: 0.4rem;
-}
-
-.caja-metric-card strong {
-  font-size: 1.4rem;
-  line-height: 1.05;
 }
 
 .caja-grid {
@@ -627,31 +353,14 @@ mat-chip.is-partial {
   margin-top: 0.2rem;
 }
 
-.alert {
-  margin-bottom: 1rem;
-  border-radius: 16px;
-}
-
 .caja-shell ::ng-deep .mat-mdc-stroked-button:not(:disabled),
 .caja-shell ::ng-deep .mat-mdc-button:not(:disabled),
 .caja-shell ::ng-deep .mat-mdc-unelevated-button:not(:disabled) {
   border-radius: 14px;
 }
 
-.caja-toolbar-actions ::ng-deep .mat-mdc-stroked-button:not(:disabled) {
-  background: rgba(255, 255, 255, 0.62);
-  border-color: rgba(86, 75, 63, 0.12);
-  box-shadow: 0 10px 20px rgba(43, 41, 37, 0.04);
-}
-
-.w-100 {
-  width: 100%;
-}
-
 @media (max-width: 1199px) {
-  .caja-grid,
-  .caja-top-strip,
-  .caja-metric-grid {
+  .caja-grid {
     grid-template-columns: 1fr;
   }
 
@@ -659,34 +368,11 @@ mat-chip.is-partial {
     position: static;
   }
 
-  .caja-control-strip {
-    flex-direction: column;
-    align-items: stretch;
-  }
-
-  .caja-inline-context {
-    text-align: left;
-  }
 }
 
 @media (max-width: 767px) {
-  .caja-toolbar {
-    padding: 0 1rem;
-  }
-
   .caja-body {
     padding: 1rem;
-  }
-
-  .caja-toolbar-actions {
-    flex-wrap: wrap;
-    justify-content: flex-end;
-  }
-
-  .caja-top-copy {
-    flex-direction: column;
-    align-items: flex-start;
-    padding: 1rem 1.05rem;
   }
 
   .caja-session-summary,
@@ -710,15 +396,4 @@ mat-chip.is-partial {
     gap: 0.35rem;
   }
 
-  .caja-top-card-head {
-    flex-direction: column;
-  }
-
-  .caja-top-meta {
-    justify-content: flex-start;
-  }
-
-  .caja-status-pills--head {
-    justify-content: flex-start;
-  }
 }
