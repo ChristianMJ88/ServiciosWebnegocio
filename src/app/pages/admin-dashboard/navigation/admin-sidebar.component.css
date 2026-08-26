@@ -73,3 +73,129 @@
 .sidebar-nav-item {
   gap: 0.75rem;
 }
+
+/* El sidebar gobierna su propia presentación; Bootstrap solo aporta los glifos. */
+.admin-sidebar .sidebar-brand {
+  padding-bottom: 1rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.admin-sidebar .sidebar-brand-mark {
+  width: 36px !important;
+  min-width: 36px !important;
+  height: 36px !important;
+  border: 0 !important;
+  border-radius: 50% !important;
+  background: rgba(255, 255, 255, 0.1) !important;
+  box-shadow: none !important;
+  font-size: 0.72rem;
+}
+
+.admin-sidebar .sidebar-brand-copy {
+  gap: 0.1rem;
+}
+
+.admin-sidebar .sidebar-nav {
+  gap: 0.15rem;
+}
+
+.admin-sidebar .sidebar-menu-group {
+  padding-block: 0.15rem;
+}
+
+.admin-sidebar .sidebar-menu-group + .sidebar-menu-group {
+  margin-top: 0.35rem;
+}
+
+.admin-sidebar .sidebar-menu-toggle {
+  min-height: 36px;
+  padding: 0.4rem 0.55rem;
+  border-radius: 6px;
+  color: rgba(202, 215, 235, 0.62);
+  background: transparent;
+  font-size: 0.68rem;
+  font-weight: 750;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.admin-sidebar .sidebar-menu-toggle:hover {
+  color: rgba(239, 245, 255, 0.92);
+  background: rgba(255, 255, 255, 0.035);
+}
+
+.admin-sidebar .sidebar-menu-toggle > i:first-child {
+  width: 18px;
+  color: rgba(161, 184, 220, 0.72);
+  font-size: 0.84rem;
+  text-align: center;
+}
+
+.admin-sidebar .sidebar-menu-chevron {
+  margin-left: auto;
+  font-size: 0.62rem;
+  opacity: 0.65;
+}
+
+.admin-sidebar .sidebar-submenu.is-open {
+  display: grid;
+  gap: 0.1rem;
+  padding: 0.15rem 0 0.25rem;
+}
+
+.admin-sidebar .sidebar-nav-item {
+  position: relative;
+  min-height: 42px !important;
+  padding: 0.48rem 0.65rem !important;
+  border: 0 !important;
+  border-radius: 6px !important;
+  color: rgba(224, 233, 247, 0.76) !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  transform: none !important;
+}
+
+.admin-sidebar .sidebar-nav-item::after {
+  display: none;
+}
+
+.admin-sidebar .sidebar-nav-item:hover {
+  color: #ffffff !important;
+  background: rgba(255, 255, 255, 0.045) !important;
+}
+
+.admin-sidebar .sidebar-nav-item.active-nav-item {
+  color: #ffffff !important;
+  background: rgba(93, 128, 255, 0.12) !important;
+}
+
+.admin-sidebar .sidebar-nav-item.active-nav-item::before {
+  top: 0.55rem;
+  bottom: 0.55rem;
+  left: 0;
+  width: 2px;
+  border-radius: 999px;
+  background: #62d7c7;
+}
+
+.admin-sidebar .sidebar-nav-icon {
+  width: 24px !important;
+  min-width: 24px !important;
+  height: 24px !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  color: rgba(176, 198, 230, 0.74) !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  font-size: 0.95rem;
+}
+
+.admin-sidebar .active-nav-item .sidebar-nav-icon {
+  color: #82e3d6 !important;
+  background: transparent !important;
+}
+
+.admin-sidebar .sidebar-nav-title {
+  font-size: 0.86rem;
+  font-weight: 600;
+}

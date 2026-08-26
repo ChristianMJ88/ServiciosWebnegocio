@@ -26,11 +26,7 @@
             aria-label="Alternar menú lateral"
             aria-controls="admin-sidebar"
             [attr.aria-expanded]="panelMovil() ? sidebarAbierto() : !sidebarCompacto()">
-            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-              <path d="M4 7h16" />
-              <path d="M4 12h16" />
-              <path d="M4 17h16" />
-            </svg>
+            <i class="bi bi-list" aria-hidden="true"></i>
           </button>
 
           <div class="topbar-brand topbar-brand--context" [attr.aria-label]="nombreEmpresa() + ' Backoffice'">

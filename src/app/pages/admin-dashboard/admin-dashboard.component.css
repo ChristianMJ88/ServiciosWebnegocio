@@ -2510,6 +2510,39 @@
   }
 }
 
+/* Control lateral: acción simple, sin apariencia de tarjeta. */
+.admin-toolbar .toolbar-hamburger {
+  width: 38px;
+  min-width: 38px;
+  height: 38px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  color: #40516d;
+  background: transparent;
+  box-shadow: none;
+  transition: color 160ms ease, background-color 160ms ease, transform 160ms ease;
+}
+
+.admin-toolbar .toolbar-hamburger:hover {
+  color: #1d4ed8;
+  background: rgba(37, 99, 235, 0.08);
+}
+
+.admin-toolbar .toolbar-hamburger:active {
+  transform: scale(0.94);
+}
+
+.admin-toolbar .toolbar-hamburger:focus-visible {
+  outline: 2px solid rgba(37, 99, 235, 0.45);
+  outline-offset: 2px;
+}
+
+.admin-toolbar .toolbar-hamburger i {
+  font-size: 1.45rem;
+  line-height: 1;
+}
+
 @media (max-width: 767.98px) {
   .admin-form-grid,
   .agenda-item,

@@ -8,7 +8,6 @@
       <span class="sidebar-brand-mark" aria-hidden="true">{{ inicialesEmpresa() }}</span>
       @if (mostrarContenido()) {
         <div class="sidebar-brand-copy">
-          <span class="sidebar-brand-chip">ADMIN</span>
           <span class="sidebar-brand-title">Backoffice</span>
           <span class="sidebar-brand-subtitle">{{ nombreEmpresa() }}</span>
         </div>
@@ -29,7 +28,6 @@
               [attr.aria-controls]="'sidebar-group-' + grupo.id">
               <i [class]="grupo.iconClass" aria-hidden="true"></i>
               <span class="sidebar-menu-title">{{ grupo.titulo }}</span>
-              <span class="sidebar-menu-count">{{ grupo.modulosVisibles.length }}</span>
               <i class="bi bi-chevron-down sidebar-menu-chevron" [class.is-open]="grupoExpandido(grupo.id)" aria-hidden="true"></i>
             </button>
           }
@@ -52,9 +50,7 @@
                 @if (mostrarContenido()) {
                   <span class="sidebar-nav-copy">
                     <span class="sidebar-nav-title">{{ modulo.titulo }}</span>
-                    <span class="sidebar-nav-description">{{ modulo.descripcion }}</span>
                   </span>
-                  <span class="sidebar-nav-badge">{{ modulo.abreviatura }}</span>
                 }
               </button>
             }
