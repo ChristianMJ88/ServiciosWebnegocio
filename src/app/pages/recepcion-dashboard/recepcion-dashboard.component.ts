@@ -19,6 +19,7 @@ import { RecepcionAgendaSectionComponent } from './agenda/recepcion-agenda-secti
 import { FormularioCitaRecepcion, crearFormularioCitaRecepcion } from './forms/recepcion.forms';
 import { RecepcionDashboardCoordinator } from './data/recepcion-dashboard.coordinator';
 import { RecepcionDashboardStore } from './state/recepcion-dashboard.store';
+import { RecepcionQuickAppointmentFacade } from './quick-appointment/recepcion-quick-appointment.facade';
 import {
   CatalogoRecepcion,
   CitaRecepcion,
@@ -61,6 +62,7 @@ export class RecepcionDashboardComponent implements OnInit, AfterViewInit {
   private readonly recepcionService = inject(RecepcionService);
   private readonly dashboardCoordinator = inject(RecepcionDashboardCoordinator);
   private readonly store = inject(RecepcionDashboardStore);
+  private readonly quickAppointmentFacade = inject(RecepcionQuickAppointmentFacade);
   private readonly authService = inject(AuthService);
   private readonly userProfileService = inject(UserProfileService);
   private readonly router = inject(Router);
@@ -176,7 +178,7 @@ export class RecepcionDashboardComponent implements OnInit, AfterViewInit {
         }
 
         this.store.setLoadingBusqueda(true);
-        this.recepcionService.buscarClientes(texto.trim())
+        this.quickAppointmentFacade.buscarClientes(texto)
           .pipe(finalize(() => this.store.setLoadingBusqueda(false)))
           .subscribe({
             next: clientes => this.actualizarVistaEnZona(() => this.store.setClientesEncontrados(clientes)),
@@ -324,7 +326,7 @@ export class RecepcionDashboardComponent implements OnInit, AfterViewInit {
     }
 
     this.store.setLoadingFranjas(true);
-    this.recepcionService.getFranjasDisponibles(sucursalId, servicioId, fecha)
+    this.quickAppointmentFacade.cargarFranjas(sucursalId, servicioId, fecha)
       .pipe(finalize(() => this.store.setLoadingFranjas(false)))
       .subscribe({
         next: franjas => this.actualizarVistaEnZona(() => {
@@ -368,7 +370,7 @@ export class RecepcionDashboardComponent implements OnInit, AfterViewInit {
     this.store.setError('');
     this.store.setMensaje('');
 
-    this.recepcionService.crearCita({
+    this.quickAppointmentFacade.crearCita({
       sucursalId: this.formularioCita.sucursalId,
       servicioId: this.formularioCita.servicioId,
       prestadorId: this.formularioCita.prestadorId,
@@ -408,7 +410,7 @@ export class RecepcionDashboardComponent implements OnInit, AfterViewInit {
     this.store.setError('');
     this.store.setMensaje('');
 
-    this.recepcionService.registrarEspera({
+    this.quickAppointmentFacade.registrarEspera({
       sucursalId: this.formularioCita.sucursalId,
       servicioId: this.formularioCita.servicioId,
       clienteId: this.formularioCita.clienteId,
