@@ -1,5 +1,6 @@
 import { Injectable, signal } from '@angular/core';
 import {
+  CatalogoRecepcion,
   CitaRecepcion,
   ClienteRecepcion,
   FranjaRecepcionDisponible,
@@ -8,6 +9,7 @@ import {
   SolicitudEsperaRecepcion,
   SucursalRecepcionCatalogo
 } from '../../../core/recepcion/recepcion.service';
+import { RecepcionDashboardSnapshot } from '../data/recepcion-dashboard.facade';
 
 @Injectable({ providedIn: 'root' })
 export class RecepcionDashboardStore {
@@ -88,6 +90,24 @@ export class RecepcionDashboardStore {
   setEstadosEspera(value: OpcionRecepcion[]): void { this.estadosEsperaState.set(value); }
   setEstadoEsperaPendiente(value: string): void { this.estadoEsperaPendienteState.set(value); }
   setEstadoEsperaNotificada(value: string): void { this.estadoEsperaNotificadaState.set(value); }
+
+  applyCatalog(catalogo: CatalogoRecepcion): void {
+    this.sucursalesState.set(catalogo.sucursales ?? []);
+    this.serviciosState.set(catalogo.servicios ?? []);
+    this.estadosCitaState.set(catalogo.estadosCita ?? []);
+    this.estadoCitaPendienteState.set(catalogo.estadoCitaPendiente ?? '');
+    this.estadoCitaConfirmadaState.set(catalogo.estadoCitaConfirmada ?? '');
+    this.estadosCitaFinalizablesState.set(catalogo.estadosCitaFinalizables ?? []);
+    this.estadosCitaCancelablesState.set(catalogo.estadosCitaCancelables ?? []);
+    this.estadosEsperaState.set(catalogo.estadosEspera ?? []);
+    this.estadoEsperaPendienteState.set(catalogo.estadoEsperaPendiente ?? '');
+    this.estadoEsperaNotificadaState.set(catalogo.estadoEsperaNotificada ?? '');
+  }
+
+  applySnapshot(snapshot: RecepcionDashboardSnapshot): void {
+    this.citasState.set(snapshot.agenda);
+    this.solicitudesEsperaState.set(snapshot.espera);
+  }
 
   private fechaLocalActual(): string {
     const ahora = new Date();

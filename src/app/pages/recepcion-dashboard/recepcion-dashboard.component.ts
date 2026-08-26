@@ -17,7 +17,7 @@ import { UserProfileDialogComponent } from '../../shared/profile/user-profile-di
 import { RecepcionSidePanelComponent } from './recepcion-side-panel.component';
 import { RecepcionAgendaSectionComponent } from './agenda/recepcion-agenda-section.component';
 import { FormularioCitaRecepcion, crearFormularioCitaRecepcion } from './forms/recepcion.forms';
-import { RecepcionDashboardFacade } from './data/recepcion-dashboard.facade';
+import { RecepcionDashboardCoordinator } from './data/recepcion-dashboard.coordinator';
 import { RecepcionDashboardStore } from './state/recepcion-dashboard.store';
 import {
   CatalogoRecepcion,
@@ -59,7 +59,7 @@ import {
 })
 export class RecepcionDashboardComponent implements OnInit, AfterViewInit {
   private readonly recepcionService = inject(RecepcionService);
-  private readonly dashboardFacade = inject(RecepcionDashboardFacade);
+  private readonly dashboardCoordinator = inject(RecepcionDashboardCoordinator);
   private readonly store = inject(RecepcionDashboardStore);
   private readonly authService = inject(AuthService);
   private readonly userProfileService = inject(UserProfileService);
@@ -237,62 +237,36 @@ export class RecepcionDashboardComponent implements OnInit, AfterViewInit {
   }
 
   cargarCatalogosYAgenda() {
-    this.store.setLoading(true);
-    this.store.setError('');
     const sucursalPreferida = this.sucursalActivaId();
 
-    this.dashboardFacade.cargarConCatalogo(this.fechaAgenda(), sucursalPreferida)
-      .pipe(finalize(() => this.store.setLoading(false)))
+    this.dashboardCoordinator.load(this.fechaAgenda(), sucursalPreferida)
       .subscribe({
-        next: ({ catalogo, agenda, espera }) => {
+        next: ({ catalogo, agenda }) => {
           this.actualizarVistaEnZona(() => {
             this.aplicarCatalogo(catalogo);
-            this.store.setCitas(agenda);
-            this.store.setSolicitudesEspera(espera);
             this.aplicarContextoDesdeAgenda(agenda);
-          });
-        },
-        error: error => {
-          this.actualizarVistaEnZona(() => {
-            this.store.setError(this.extraerMensaje(error, 'No pude cargar la agenda de recepción.'));
           });
         }
       });
   }
 
   recargarAgenda() {
-    this.store.setLoading(true);
-    this.store.setError('');
-
     const sucursalConsulta = this.sucursalActivaId() ?? this.sucursalesPermitidas()[0] ?? null;
 
-    this.dashboardFacade.cargarSnapshot(this.fechaAgenda(), sucursalConsulta)
-      .pipe(finalize(() => this.store.setLoading(false)))
+    this.dashboardCoordinator.refresh(this.fechaAgenda(), sucursalConsulta)
       .subscribe({
-        next: ({ agenda, espera }) => this.actualizarVistaEnZona(() => {
-          this.store.setCitas(agenda);
-          this.store.setSolicitudesEspera(espera);
+        next: ({ agenda }) => this.actualizarVistaEnZona(() => {
           this.aplicarContextoDesdeAgenda(agenda);
-        }),
-        error: error => this.actualizarVistaEnZona(() => this.store.setError(this.extraerMensaje(error, 'No pude actualizar la agenda.')))
+        })
       });
   }
 
   cambiarSucursal(sucursalId: number | null) {
-    this.store.setLoading(true);
-    this.store.setError('');
-
-    this.dashboardFacade.cargarConCatalogo(this.fechaAgenda(), sucursalId)
-      .pipe(finalize(() => this.store.setLoading(false)))
+    this.dashboardCoordinator.load(this.fechaAgenda(), sucursalId)
       .subscribe({
-        next: ({ catalogo, agenda, espera }) => this.actualizarVistaEnZona(() => {
+        next: ({ catalogo, agenda }) => this.actualizarVistaEnZona(() => {
           this.aplicarCatalogo(catalogo);
-          this.store.setCitas(agenda);
-          this.store.setSolicitudesEspera(espera);
           this.aplicarContextoDesdeAgenda(agenda);
-        }),
-        error: error => this.actualizarVistaEnZona(() => {
-          this.store.setError(this.extraerMensaje(error, 'No pude cambiar la sucursal de recepción.'));
         })
       });
   }
@@ -566,17 +540,6 @@ export class RecepcionDashboardComponent implements OnInit, AfterViewInit {
 
   private aplicarCatalogo(catalogo: CatalogoRecepcion) {
     const sucursalJwt = this.authService.sucursalesPermitidas()[0] ?? null;
-    this.store.setSucursales(catalogo.sucursales ?? []);
-    this.store.setServicios(catalogo.servicios ?? []);
-    this.store.setEstadosCita(catalogo.estadosCita ?? []);
-    this.store.setEstadoCitaPendiente(catalogo.estadoCitaPendiente ?? '');
-    this.store.setEstadoCitaConfirmada(catalogo.estadoCitaConfirmada ?? '');
-    this.store.setEstadosCitaFinalizables(catalogo.estadosCitaFinalizables ?? []);
-    this.store.setEstadosCitaCancelables(catalogo.estadosCitaCancelables ?? []);
-    this.store.setEstadosEspera(catalogo.estadosEspera ?? []);
-    this.store.setEstadoEsperaPendiente(catalogo.estadoEsperaPendiente ?? '');
-    this.store.setEstadoEsperaNotificada(catalogo.estadoEsperaNotificada ?? '');
-
     const sucursalOperativa = catalogo.sucursalActivaId
       ?? sucursalJwt
       ?? this.sucursalActivaId()
