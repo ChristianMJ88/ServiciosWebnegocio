@@ -118,6 +118,47 @@
   margin-top: 0.9rem;
 }
 
+.dashboard-appointment-pagination,
+.dashboard-appointment-pagination-actions {
+  display: flex;
+  align-items: center;
+}
+
+.dashboard-appointment-pagination {
+  justify-content: space-between;
+  gap: 0.8rem;
+  margin-top: 0.8rem;
+  padding-top: 0.8rem;
+  border-top: 1px solid rgba(203, 213, 225, 0.65);
+  color: #64748b;
+  font-size: 0.74rem;
+  font-weight: 700;
+}
+
+.dashboard-appointment-pagination-actions {
+  gap: 0.5rem;
+}
+
+.dashboard-appointment-pagination button {
+  width: 32px;
+  height: 32px;
+  display: inline-grid;
+  place-items: center;
+  padding: 0;
+  border: 1px solid rgba(148, 163, 184, 0.38);
+  border-radius: 9px;
+  color: #1d4ed8;
+  background: #fff;
+  cursor: pointer;
+}
+
+.dashboard-appointment-pagination button:disabled {
+  color: #94a3b8;
+  background: #f1f5f9;
+  cursor: not-allowed;
+  opacity: 0.65;
+}
+
 .dashboard-appointment {
   display: grid;
   grid-template-columns: 58px minmax(0, 1fr) auto;
@@ -348,6 +389,15 @@
   .dashboard-appointment-status {
     grid-column: 2;
     justify-self: start;
+  }
+
+  .dashboard-appointment-pagination {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .dashboard-appointment-pagination-actions {
+    justify-content: space-between;
   }
 
   .team-metric-row {

@@ -202,7 +202,8 @@
           @defer {
           <app-admin-summary-section
             [resumen]="resumen()"
-            [appointments]="agendaAppointmentsVm()"
+            [appointments]="dashboardAppointmentsVm()"
+            [dateDisplay]="fechaDashboardTexto()"
             [topPrestadoresPorIngreso]="topPrestadoresPorIngreso()"
             [topPrestadoresPorCitas]="topPrestadoresPorCitas()"
             [reporteServicios]="reporteServicios()"

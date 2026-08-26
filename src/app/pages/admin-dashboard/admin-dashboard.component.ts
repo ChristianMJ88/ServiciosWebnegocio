@@ -485,6 +485,9 @@ export class AdminDashboardComponent implements OnInit {
   readonly fechaAgendaActivaTexto = computed(() =>
     formatearFechaAgenda(this.fechaAgendaActiva(), this.agendaViewMode())
   );
+  readonly fechaDashboardTexto = computed(() =>
+    formatearFechaAgenda(this.fechaAgendaActiva(), 'day')
+  );
   readonly citasDelDiaActivas = computed(() => {
     const fecha = this.fechaAgendaActiva();
     return this.citasAgrupadas().find(grupo => grupo.fechaClave === fecha)?.items ?? [];
@@ -640,6 +643,9 @@ export class AdminDashboardComponent implements OnInit {
         actions: this.construirAccionesAgendaAdmin(cita.id, cita.estado, whatsappUrl)
       };
     })
+  );
+  readonly dashboardAppointmentsVm = computed(() =>
+    this.agendaAppointmentsVm().filter(cita => cita.start.startsWith(this.fechaAgendaActiva()))
   );
   readonly citaAgendaSeleccionada = computed<AgendaAppointmentVm | null>(() => {
     const citas = this.agendaAppointmentsVm();
