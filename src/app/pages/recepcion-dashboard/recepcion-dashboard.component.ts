@@ -18,16 +18,15 @@ import { RecepcionSidePanelComponent } from './recepcion-side-panel.component';
 import { RecepcionAgendaSectionComponent } from './agenda/recepcion-agenda-section.component';
 import { FormularioCitaRecepcion, crearFormularioCitaRecepcion } from './forms/recepcion.forms';
 import { RecepcionDashboardFacade } from './data/recepcion-dashboard.facade';
+import { RecepcionDashboardStore } from './state/recepcion-dashboard.store';
 import {
   CatalogoRecepcion,
   CitaRecepcion,
   ClienteRecepcion,
   FranjaRecepcionDisponible,
   RecepcionService,
-  SolicitudEsperaRecepcion,
   ServicioRecepcionCatalogo,
-  SucursalRecepcionCatalogo,
-  OpcionRecepcion
+  SucursalRecepcionCatalogo
 } from '../../core/recepcion/recepcion.service';
 
 @Component({
@@ -61,6 +60,7 @@ import {
 export class RecepcionDashboardComponent implements OnInit, AfterViewInit {
   private readonly recepcionService = inject(RecepcionService);
   private readonly dashboardFacade = inject(RecepcionDashboardFacade);
+  private readonly store = inject(RecepcionDashboardStore);
   private readonly authService = inject(AuthService);
   private readonly userProfileService = inject(UserProfileService);
   private readonly router = inject(Router);
@@ -71,32 +71,32 @@ export class RecepcionDashboardComponent implements OnInit, AfterViewInit {
   private readonly busquedaCliente$ = new Subject<string>();
   private reintentoInicialProgramado = false;
 
-  readonly loading = signal(false);
-  readonly loadingBusqueda = signal(false);
-  readonly guardando = signal(false);
+  readonly loading = this.store.loading;
+  readonly loadingBusqueda = this.store.loadingBusqueda;
+  readonly guardando = this.store.guardando;
+  readonly error = this.store.error;
+  readonly mensaje = this.store.mensaje;
+  readonly fechaAgenda = this.store.fechaAgenda;
+  readonly sucursalActivaId = this.store.sucursalActivaId;
+  readonly citas = this.store.citas;
+  readonly clientesEncontrados = this.store.clientesEncontrados;
+  readonly sucursales = this.store.sucursales;
+  readonly servicios = this.store.servicios;
+  readonly solicitudesEspera = this.store.solicitudesEspera;
+  readonly terminoBusquedaCliente = this.store.terminoBusquedaCliente;
+  readonly loadingFranjas = this.store.loadingFranjas;
+  readonly franjasDisponibles = this.store.franjasDisponibles;
+  readonly mensajeWalkIn = this.store.mensajeWalkIn;
+  readonly estadosCita = this.store.estadosCita;
+  readonly estadoCitaPendiente = this.store.estadoCitaPendiente;
+  readonly estadoCitaConfirmada = this.store.estadoCitaConfirmada;
+  readonly estadosCitaFinalizables = this.store.estadosCitaFinalizables;
+  readonly estadosCitaCancelables = this.store.estadosCitaCancelables;
+  readonly estadosEspera = this.store.estadosEspera;
+  readonly estadoEsperaPendiente = this.store.estadoEsperaPendiente;
+  readonly estadoEsperaNotificada = this.store.estadoEsperaNotificada;
   readonly panelMovil = signal(false);
   readonly perfilConfigAbierto = signal(false);
-  readonly error = signal('');
-  readonly mensaje = signal('');
-  readonly fechaAgenda = signal(this.fechaHoy());
-  readonly sucursalActivaId = signal<number | null>(null);
-  readonly citas = signal<CitaRecepcion[]>([]);
-  readonly clientesEncontrados = signal<ClienteRecepcion[]>([]);
-  readonly sucursales = signal<SucursalRecepcionCatalogo[]>([]);
-  readonly servicios = signal<ServicioRecepcionCatalogo[]>([]);
-  readonly solicitudesEspera = signal<SolicitudEsperaRecepcion[]>([]);
-  readonly terminoBusquedaCliente = signal('');
-  readonly loadingFranjas = signal(false);
-  readonly franjasDisponibles = signal<FranjaRecepcionDisponible[]>([]);
-  readonly mensajeWalkIn = signal('');
-  readonly estadosCita = signal<OpcionRecepcion[]>([]);
-  readonly estadoCitaPendiente = signal('');
-  readonly estadoCitaConfirmada = signal('');
-  readonly estadosCitaFinalizables = signal<string[]>([]);
-  readonly estadosCitaCancelables = signal<string[]>([]);
-  readonly estadosEspera = signal<OpcionRecepcion[]>([]);
-  readonly estadoEsperaPendiente = signal('');
-  readonly estadoEsperaNotificada = signal('');
 
   readonly perfilUsuario = computed(() => this.userProfileService.perfilActual());
   readonly perfilRegistrado = computed(() => this.userProfileService.perfilRegistrado());
@@ -158,7 +158,7 @@ export class RecepcionDashboardComponent implements OnInit, AfterViewInit {
     ].filter((item): item is { titulo: string; descripcion: string; icono: string; total: number } => !!item);
   });
 
-  formularioCita: FormularioCitaRecepcion = crearFormularioCitaRecepcion(this.fechaHoy());
+  formularioCita: FormularioCitaRecepcion = crearFormularioCitaRecepcion(this.fechaAgenda());
 
   constructor() {
     this.busquedaCliente$
@@ -170,17 +170,17 @@ export class RecepcionDashboardComponent implements OnInit, AfterViewInit {
       .subscribe(texto => {
         if (texto.trim().length < 2) {
           this.actualizarVistaEnZona(() => {
-            this.clientesEncontrados.set([]);
+            this.store.setClientesEncontrados([]);
           });
           return;
         }
 
-        this.loadingBusqueda.set(true);
+        this.store.setLoadingBusqueda(true);
         this.recepcionService.buscarClientes(texto.trim())
-          .pipe(finalize(() => this.loadingBusqueda.set(false)))
+          .pipe(finalize(() => this.store.setLoadingBusqueda(false)))
           .subscribe({
-            next: clientes => this.actualizarVistaEnZona(() => this.clientesEncontrados.set(clientes)),
-            error: () => this.actualizarVistaEnZona(() => this.clientesEncontrados.set([]))
+            next: clientes => this.actualizarVistaEnZona(() => this.store.setClientesEncontrados(clientes)),
+            error: () => this.actualizarVistaEnZona(() => this.store.setClientesEncontrados([]))
           });
       });
   }
@@ -190,7 +190,7 @@ export class RecepcionDashboardComponent implements OnInit, AfterViewInit {
     this.userProfileService.cargar();
     const sucursalInicial = this.authService.sucursalesPermitidas()[0] ?? null;
     if (sucursalInicial) {
-      this.sucursalActivaId.set(sucursalInicial);
+      this.store.setSucursalActivaId(sucursalInicial);
       this.formularioCita.sucursalId = sucursalInicial;
     }
     this.formularioCita.fechaWalkIn = this.fechaAgenda();
@@ -237,68 +237,68 @@ export class RecepcionDashboardComponent implements OnInit, AfterViewInit {
   }
 
   cargarCatalogosYAgenda() {
-    this.loading.set(true);
-    this.error.set('');
+    this.store.setLoading(true);
+    this.store.setError('');
     const sucursalPreferida = this.sucursalActivaId();
 
     this.dashboardFacade.cargarConCatalogo(this.fechaAgenda(), sucursalPreferida)
-      .pipe(finalize(() => this.loading.set(false)))
+      .pipe(finalize(() => this.store.setLoading(false)))
       .subscribe({
         next: ({ catalogo, agenda, espera }) => {
           this.actualizarVistaEnZona(() => {
             this.aplicarCatalogo(catalogo);
-            this.citas.set(agenda);
-            this.solicitudesEspera.set(espera);
+            this.store.setCitas(agenda);
+            this.store.setSolicitudesEspera(espera);
             this.aplicarContextoDesdeAgenda(agenda);
           });
         },
         error: error => {
           this.actualizarVistaEnZona(() => {
-            this.error.set(this.extraerMensaje(error, 'No pude cargar la agenda de recepción.'));
+            this.store.setError(this.extraerMensaje(error, 'No pude cargar la agenda de recepción.'));
           });
         }
       });
   }
 
   recargarAgenda() {
-    this.loading.set(true);
-    this.error.set('');
+    this.store.setLoading(true);
+    this.store.setError('');
 
     const sucursalConsulta = this.sucursalActivaId() ?? this.sucursalesPermitidas()[0] ?? null;
 
     this.dashboardFacade.cargarSnapshot(this.fechaAgenda(), sucursalConsulta)
-      .pipe(finalize(() => this.loading.set(false)))
+      .pipe(finalize(() => this.store.setLoading(false)))
       .subscribe({
         next: ({ agenda, espera }) => this.actualizarVistaEnZona(() => {
-          this.citas.set(agenda);
-          this.solicitudesEspera.set(espera);
+          this.store.setCitas(agenda);
+          this.store.setSolicitudesEspera(espera);
           this.aplicarContextoDesdeAgenda(agenda);
         }),
-        error: error => this.actualizarVistaEnZona(() => this.error.set(this.extraerMensaje(error, 'No pude actualizar la agenda.')))
+        error: error => this.actualizarVistaEnZona(() => this.store.setError(this.extraerMensaje(error, 'No pude actualizar la agenda.')))
       });
   }
 
   cambiarSucursal(sucursalId: number | null) {
-    this.loading.set(true);
-    this.error.set('');
+    this.store.setLoading(true);
+    this.store.setError('');
 
     this.dashboardFacade.cargarConCatalogo(this.fechaAgenda(), sucursalId)
-      .pipe(finalize(() => this.loading.set(false)))
+      .pipe(finalize(() => this.store.setLoading(false)))
       .subscribe({
         next: ({ catalogo, agenda, espera }) => this.actualizarVistaEnZona(() => {
           this.aplicarCatalogo(catalogo);
-          this.citas.set(agenda);
-          this.solicitudesEspera.set(espera);
+          this.store.setCitas(agenda);
+          this.store.setSolicitudesEspera(espera);
           this.aplicarContextoDesdeAgenda(agenda);
         }),
         error: error => this.actualizarVistaEnZona(() => {
-          this.error.set(this.extraerMensaje(error, 'No pude cambiar la sucursal de recepción.'));
+          this.store.setError(this.extraerMensaje(error, 'No pude cambiar la sucursal de recepción.'));
         })
       });
   }
 
   cambiarFecha(fecha: string) {
-    this.fechaAgenda.set(fecha);
+    this.store.setFechaAgenda(fecha);
     if (!this.formularioCita.fechaWalkIn) {
       this.formularioCita.fechaWalkIn = fecha;
     }
@@ -309,8 +309,8 @@ export class RecepcionDashboardComponent implements OnInit, AfterViewInit {
     this.formularioCita.servicioId = servicioId;
     this.formularioCita.prestadorId = null;
     this.formularioCita.inicio = '';
-    this.franjasDisponibles.set([]);
-    this.mensajeWalkIn.set('');
+    this.store.setFranjasDisponibles([]);
+    this.store.setMensajeWalkIn('');
 
     if (this.formularioCita.sucursalId && servicioId) {
       this.cargarFranjasWalkIn();
@@ -321,8 +321,8 @@ export class RecepcionDashboardComponent implements OnInit, AfterViewInit {
     this.formularioCita.fechaWalkIn = fecha;
     this.formularioCita.prestadorId = null;
     this.formularioCita.inicio = '';
-    this.franjasDisponibles.set([]);
-    this.mensajeWalkIn.set('');
+    this.store.setFranjasDisponibles([]);
+    this.store.setMensajeWalkIn('');
 
     if (this.formularioCita.sucursalId && this.formularioCita.servicioId) {
       this.cargarFranjasWalkIn();
@@ -332,7 +332,7 @@ export class RecepcionDashboardComponent implements OnInit, AfterViewInit {
   seleccionarFranjaWalkIn(franja: FranjaRecepcionDisponible) {
     this.formularioCita.inicio = franja.inicio;
     this.formularioCita.prestadorId = franja.prestadorId;
-    this.mensajeWalkIn.set(`Turno seleccionado: ${franja.hora}.`);
+    this.store.setMensajeWalkIn(`Turno seleccionado: ${franja.hora}.`);
   }
 
   cargarFranjasWalkIn() {
@@ -342,21 +342,21 @@ export class RecepcionDashboardComponent implements OnInit, AfterViewInit {
 
     this.formularioCita.inicio = '';
     this.formularioCita.prestadorId = null;
-    this.franjasDisponibles.set([]);
-    this.mensajeWalkIn.set('');
+    this.store.setFranjasDisponibles([]);
+    this.store.setMensajeWalkIn('');
 
     if (!sucursalId || !servicioId) {
       return;
     }
 
-    this.loadingFranjas.set(true);
+    this.store.setLoadingFranjas(true);
     this.recepcionService.getFranjasDisponibles(sucursalId, servicioId, fecha)
-      .pipe(finalize(() => this.loadingFranjas.set(false)))
+      .pipe(finalize(() => this.store.setLoadingFranjas(false)))
       .subscribe({
         next: franjas => this.actualizarVistaEnZona(() => {
-          this.franjasDisponibles.set(franjas);
+          this.store.setFranjasDisponibles(franjas);
           if (!franjas.length) {
-            this.mensajeWalkIn.set(
+            this.store.setMensajeWalkIn(
               'No hay horarios disponibles para esta fecha. Podemos dejar al cliente en espera y avisarle por WhatsApp con plantilla aprobada cuando se libere un espacio.'
             );
             return;
@@ -364,13 +364,13 @@ export class RecepcionDashboardComponent implements OnInit, AfterViewInit {
           this.seleccionarFranjaWalkIn(franjas[0]);
         }),
         error: error => this.actualizarVistaEnZona(() => {
-          this.error.set(this.extraerMensaje(error, 'No pude consultar horarios disponibles para walk-ins.'));
+          this.store.setError(this.extraerMensaje(error, 'No pude consultar horarios disponibles para walk-ins.'));
         })
       });
   }
 
   buscarCliente(texto: string) {
-    this.terminoBusquedaCliente.set(texto);
+    this.store.setTerminoBusquedaCliente(texto);
     this.busquedaCliente$.next(texto);
   }
 
@@ -380,19 +380,19 @@ export class RecepcionDashboardComponent implements OnInit, AfterViewInit {
     this.formularioCita.correoCliente = cliente.correo;
     this.formularioCita.telefonoCliente = cliente.telefono;
     this.formularioCita.avisarWhatsapp = cliente.aceptaWhatsapp;
-    this.clientesEncontrados.set([]);
-    this.terminoBusquedaCliente.set(cliente.nombreCompleto);
+    this.store.setClientesEncontrados([]);
+    this.store.setTerminoBusquedaCliente(cliente.nombreCompleto);
   }
 
   guardarCita() {
     if (!this.formularioCita.sucursalId || !this.formularioCita.servicioId || !this.formularioCita.inicio) {
-      this.error.set('Selecciona sucursal, servicio y una franja disponible para registrar la cita.');
+      this.store.setError('Selecciona sucursal, servicio y una franja disponible para registrar la cita.');
       return;
     }
 
-    this.guardando.set(true);
-    this.error.set('');
-    this.mensaje.set('');
+    this.store.setGuardando(true);
+    this.store.setError('');
+    this.store.setMensaje('');
 
     this.recepcionService.crearCita({
       sucursalId: this.formularioCita.sucursalId,
@@ -404,35 +404,35 @@ export class RecepcionDashboardComponent implements OnInit, AfterViewInit {
       inicio: new Date(this.formularioCita.inicio).toISOString(),
       notas: this.formularioCita.notas.trim() || null
     })
-      .pipe(finalize(() => this.guardando.set(false)))
+      .pipe(finalize(() => this.store.setGuardando(false)))
       .subscribe({
         next: respuesta => {
-          this.mensaje.set(respuesta.mensaje);
+          this.store.setMensaje(respuesta.mensaje);
           this.formularioCita = crearFormularioCitaRecepcion(this.fechaAgenda(), this.sucursalActivaId());
-          this.franjasDisponibles.set([]);
-          this.mensajeWalkIn.set('');
+          this.store.setFranjasDisponibles([]);
+          this.store.setMensajeWalkIn('');
           this.recargarAgenda();
         },
         error: error => {
-          this.error.set(this.extraerMensaje(error, 'No pude crear la cita desde recepción.'));
+          this.store.setError(this.extraerMensaje(error, 'No pude crear la cita desde recepción.'));
         }
       });
   }
 
   registrarEspera() {
     if (!this.formularioCita.sucursalId || !this.formularioCita.servicioId) {
-      this.error.set('Selecciona sucursal y servicio para registrar la espera.');
+      this.store.setError('Selecciona sucursal y servicio para registrar la espera.');
       return;
     }
 
     if (!this.formularioCita.nombreCliente.trim() || !this.formularioCita.telefonoCliente.trim()) {
-      this.error.set('Necesito al menos nombre y teléfono para registrar al cliente en espera.');
+      this.store.setError('Necesito al menos nombre y teléfono para registrar al cliente en espera.');
       return;
     }
 
-    this.guardando.set(true);
-    this.error.set('');
-    this.mensaje.set('');
+    this.store.setGuardando(true);
+    this.store.setError('');
+    this.store.setMensaje('');
 
     this.recepcionService.registrarEspera({
       sucursalId: this.formularioCita.sucursalId,
@@ -447,41 +447,41 @@ export class RecepcionDashboardComponent implements OnInit, AfterViewInit {
       canalOrigen: null,
       notas: this.formularioCita.notas.trim() || null
     })
-      .pipe(finalize(() => this.guardando.set(false)))
+      .pipe(finalize(() => this.store.setGuardando(false)))
       .subscribe({
         next: solicitud => {
-          this.mensaje.set(
+          this.store.setMensaje(
             solicitud.aceptaWhatsapp
               ? 'Cliente registrado en espera. Queda listo para notificarle por WhatsApp cuando se libere un espacio.'
               : 'Cliente registrado en espera para seguimiento desde recepción.'
           );
-          this.solicitudesEspera.update(actuales => [solicitud, ...actuales]);
+          this.store.updateSolicitudesEspera(actuales => [solicitud, ...actuales]);
           this.formularioCita = crearFormularioCitaRecepcion(this.fechaAgenda(), this.sucursalActivaId());
-          this.franjasDisponibles.set([]);
-          this.mensajeWalkIn.set('');
+          this.store.setFranjasDisponibles([]);
+          this.store.setMensajeWalkIn('');
         },
         error: error => {
-          this.error.set(this.extraerMensaje(error, 'No pude registrar al cliente en espera.'));
+          this.store.setError(this.extraerMensaje(error, 'No pude registrar al cliente en espera.'));
         }
       });
   }
 
   notificarEspera(solicitudId: number) {
-    this.guardando.set(true);
-    this.error.set('');
-    this.mensaje.set('');
+    this.store.setGuardando(true);
+    this.store.setError('');
+    this.store.setMensaje('');
 
     this.recepcionService.notificarEspera(solicitudId)
-      .pipe(finalize(() => this.guardando.set(false)))
+      .pipe(finalize(() => this.store.setGuardando(false)))
       .subscribe({
         next: solicitudActualizada => {
-          this.solicitudesEspera.update(actuales =>
+          this.store.updateSolicitudesEspera(actuales =>
             actuales.map(item => item.id === solicitudActualizada.id ? solicitudActualizada : item)
           );
-          this.mensaje.set('Se notificó al cliente por WhatsApp usando la plantilla configurada para esta empresa.');
+          this.store.setMensaje('Se notificó al cliente por WhatsApp usando la plantilla configurada para esta empresa.');
         },
         error: error => {
-          this.error.set(this.extraerMensaje(error, 'No pude enviar la notificación de WhatsApp para esta solicitud.'));
+          this.store.setError(this.extraerMensaje(error, 'No pude enviar la notificación de WhatsApp para esta solicitud.'));
         }
       });
   }
@@ -513,11 +513,11 @@ export class RecepcionDashboardComponent implements OnInit, AfterViewInit {
   guardarConfiguracionPerfil(perfil: PerfilUsuarioLocal) {
     this.userProfileService.guardar(perfil);
     this.perfilConfigAbierto.set(false);
-    this.mensaje.set('Perfil actualizado.');
+    this.store.setMensaje('Perfil actualizado.');
   }
 
   mostrarErrorPerfil(mensaje: string) {
-    this.error.set(mensaje);
+    this.store.setError(mensaje);
   }
 
   logout() {
@@ -547,35 +547,35 @@ export class RecepcionDashboardComponent implements OnInit, AfterViewInit {
   }
 
   private ejecutarAccion(accion: () => ReturnType<RecepcionService['confirmar']>, mensajeExito: string) {
-    this.guardando.set(true);
-    this.error.set('');
-    this.mensaje.set('');
+    this.store.setGuardando(true);
+    this.store.setError('');
+    this.store.setMensaje('');
 
     accion()
-      .pipe(finalize(() => this.guardando.set(false)))
+      .pipe(finalize(() => this.store.setGuardando(false)))
       .subscribe({
         next: () => {
-          this.mensaje.set(mensajeExito);
+          this.store.setMensaje(mensajeExito);
           this.recargarAgenda();
         },
         error: error => {
-          this.error.set(this.extraerMensaje(error, 'No pude completar la acción solicitada.'));
+          this.store.setError(this.extraerMensaje(error, 'No pude completar la acción solicitada.'));
         }
       });
   }
 
   private aplicarCatalogo(catalogo: CatalogoRecepcion) {
     const sucursalJwt = this.authService.sucursalesPermitidas()[0] ?? null;
-    this.sucursales.set(catalogo.sucursales ?? []);
-    this.servicios.set(catalogo.servicios ?? []);
-    this.estadosCita.set(catalogo.estadosCita ?? []);
-    this.estadoCitaPendiente.set(catalogo.estadoCitaPendiente ?? '');
-    this.estadoCitaConfirmada.set(catalogo.estadoCitaConfirmada ?? '');
-    this.estadosCitaFinalizables.set(catalogo.estadosCitaFinalizables ?? []);
-    this.estadosCitaCancelables.set(catalogo.estadosCitaCancelables ?? []);
-    this.estadosEspera.set(catalogo.estadosEspera ?? []);
-    this.estadoEsperaPendiente.set(catalogo.estadoEsperaPendiente ?? '');
-    this.estadoEsperaNotificada.set(catalogo.estadoEsperaNotificada ?? '');
+    this.store.setSucursales(catalogo.sucursales ?? []);
+    this.store.setServicios(catalogo.servicios ?? []);
+    this.store.setEstadosCita(catalogo.estadosCita ?? []);
+    this.store.setEstadoCitaPendiente(catalogo.estadoCitaPendiente ?? '');
+    this.store.setEstadoCitaConfirmada(catalogo.estadoCitaConfirmada ?? '');
+    this.store.setEstadosCitaFinalizables(catalogo.estadosCitaFinalizables ?? []);
+    this.store.setEstadosCitaCancelables(catalogo.estadosCitaCancelables ?? []);
+    this.store.setEstadosEspera(catalogo.estadosEspera ?? []);
+    this.store.setEstadoEsperaPendiente(catalogo.estadoEsperaPendiente ?? '');
+    this.store.setEstadoEsperaNotificada(catalogo.estadoEsperaNotificada ?? '');
 
     const sucursalOperativa = catalogo.sucursalActivaId
       ?? sucursalJwt
@@ -583,7 +583,7 @@ export class RecepcionDashboardComponent implements OnInit, AfterViewInit {
       ?? catalogo.sucursales[0]?.id
       ?? null;
 
-    this.sucursalActivaId.set(sucursalOperativa);
+    this.store.setSucursalActivaId(sucursalOperativa);
     this.formularioCita.sucursalId = sucursalOperativa;
     this.formularioCita.fechaWalkIn = this.formularioCita.fechaWalkIn || this.fechaAgenda();
 
@@ -594,7 +594,7 @@ export class RecepcionDashboardComponent implements OnInit, AfterViewInit {
       this.formularioCita.servicioId = null;
       this.formularioCita.inicio = '';
       this.formularioCita.prestadorId = null;
-      this.franjasDisponibles.set([]);
+      this.store.setFranjasDisponibles([]);
     }
 
     if (!this.formularioCita.servicioId && (catalogo.servicios ?? []).length === 1) {
@@ -622,7 +622,7 @@ export class RecepcionDashboardComponent implements OnInit, AfterViewInit {
             zonaHoraria: 'America/Mexico_City'
           } satisfies SucursalRecepcionCatalogo])
       ).values());
-      this.sucursales.set(sucursalesInferidas);
+      this.store.setSucursales(sucursalesInferidas);
     }
 
     if (!this.servicios().length && agenda.length) {
@@ -641,7 +641,7 @@ export class RecepcionDashboardComponent implements OnInit, AfterViewInit {
             moneda: cita.moneda ?? 'MXN'
           } satisfies ServicioRecepcionCatalogo])
       ).values());
-      this.servicios.set(serviciosInferidos);
+      this.store.setServicios(serviciosInferidos);
     }
 
     this.sincronizarContextoOperativo(agenda);
@@ -669,13 +669,13 @@ export class RecepcionDashboardComponent implements OnInit, AfterViewInit {
       ?? null;
 
     if (sucursalActualId) {
-      this.sucursalActivaId.set(sucursalActualId);
+      this.store.setSucursalActivaId(sucursalActualId);
       this.formularioCita.sucursalId = sucursalActualId;
     }
 
     if (!this.sucursales().length && sucursalActualId) {
       const nombreAgenda = agenda.find(cita => cita.sucursalId === sucursalActualId)?.sucursalNombre?.trim();
-      this.sucursales.set([
+      this.store.setSucursales([
         {
           id: sucursalActualId,
           empresaId: this.authService.sesionActual()?.empresaId ?? 0,
@@ -703,12 +703,8 @@ export class RecepcionDashboardComponent implements OnInit, AfterViewInit {
             moneda: cita.moneda ?? 'MXN'
           } satisfies ServicioRecepcionCatalogo])
       ).values());
-      this.servicios.set(serviciosInferidos);
+      this.store.setServicios(serviciosInferidos);
     }
-  }
-
-  private fechaHoy(): string {
-    return new Date().toISOString().slice(0, 10);
   }
 
   private extraerMensaje(error: unknown, fallback: string): string {
