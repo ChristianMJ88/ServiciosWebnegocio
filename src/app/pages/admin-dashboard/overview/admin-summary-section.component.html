@@ -6,23 +6,23 @@
         <strong class="dashboard-kpi-value">Operación del día</strong>
         <small class="dashboard-kpi-helper">Seguimiento rápido de agenda, ocupación e ingresos.</small>
       </article>
-      <article class="dashboard-kpi-card dashboard-kpi-card--accent">
+      <article class="dashboard-kpi-card dashboard-kpi-card--accent dashboard-kpi-card--primary">
         <span class="dashboard-kpi-label">Citas hoy</span>
         <strong class="dashboard-kpi-value">{{ r.citasHoy }}</strong>
       </article>
-      <article class="dashboard-kpi-card">
+      <article class="dashboard-kpi-card dashboard-kpi-card--status">
         <span class="dashboard-kpi-label">Pendientes</span>
         <strong class="dashboard-kpi-value">{{ r.pendientes }}</strong>
       </article>
-      <article class="dashboard-kpi-card">
+      <article class="dashboard-kpi-card dashboard-kpi-card--status">
         <span class="dashboard-kpi-label">Confirmadas</span>
         <strong class="dashboard-kpi-value">{{ r.confirmadas }}</strong>
       </article>
-      <article class="dashboard-kpi-card">
+      <article class="dashboard-kpi-card dashboard-kpi-card--money">
         <span class="dashboard-kpi-label">Ingreso programado</span>
         <strong class="dashboard-kpi-value">{{ r.ingresosProgramados | appMoney:'MXN':0:0 }}</strong>
       </article>
-      <article class="dashboard-kpi-card">
+      <article class="dashboard-kpi-card dashboard-kpi-card--money">
         <span class="dashboard-kpi-label">Ingreso finalizado</span>
         <strong class="dashboard-kpi-value">{{ r.ingresosFinalizados | appMoney:'MXN':0:0 }}</strong>
       </article>

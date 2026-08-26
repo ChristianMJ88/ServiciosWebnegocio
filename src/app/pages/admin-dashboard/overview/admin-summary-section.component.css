@@ -281,18 +281,46 @@
 }
 
 @media (max-width: 767.98px) {
-  .dashboard-kpi-strip,
+  .dashboard-kpi-strip {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.65rem;
+  }
+
   .dashboard-insights-grid,
   .report-grid {
     grid-template-columns: 1fr;
   }
 
   .dashboard-kpi-card--wide {
-    grid-column: auto;
+    display: none;
+  }
+
+  .dashboard-kpi-card--primary {
+    grid-column: 1 / -1;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    min-height: 70px;
+    background: linear-gradient(135deg, rgba(37, 99, 235, 0.14), rgba(45, 212, 191, 0.1));
   }
 
   .dashboard-kpi-card {
-    min-height: 92px;
+    min-height: 82px;
+    padding: 0.75rem;
+    border-radius: 14px;
+  }
+
+  .dashboard-kpi-label {
+    font-size: 0.68rem;
+    line-height: 1.25;
+  }
+
+  .dashboard-kpi-value {
+    font-size: clamp(1rem, 5vw, 1.3rem);
+    line-height: 1.15;
+  }
+
+  .dashboard-kpi-card--money .dashboard-kpi-value {
+    font-size: clamp(0.95rem, 4.5vw, 1.15rem);
   }
 
   .dashboard-priority-card,
@@ -330,5 +358,20 @@
 
   .team-metric-value {
     white-space: normal;
+  }
+}
+
+@media (max-width: 359.98px) {
+  .dashboard-kpi-strip {
+    gap: 0.5rem;
+  }
+
+  .dashboard-kpi-card {
+    min-height: 76px;
+    padding: 0.65rem;
+  }
+
+  .dashboard-kpi-label {
+    font-size: 0.64rem;
   }
 }
