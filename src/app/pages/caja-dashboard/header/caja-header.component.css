@@ -94,11 +94,44 @@
 
 @media (max-width: 767px) {
   .caja-toolbar {
-    padding: 0 1rem;
+    min-height: 62px;
+    gap: 0.5rem;
+    padding: 0.55rem 0.75rem;
   }
 
   .caja-toolbar-actions {
-    flex-wrap: wrap;
+    flex: 0 0 auto;
+    flex-wrap: nowrap;
     justify-content: flex-end;
+    gap: 0.4rem;
+  }
+
+  .caja-brand-eyebrow,
+  .caja-user-copy {
+    display: none;
+  }
+
+  .caja-toolbar-brand {
+    gap: 0.55rem;
+    overflow: hidden;
+  }
+
+  .caja-brand-mark,
+  .caja-user-avatar {
+    width: 38px;
+    min-width: 38px;
+    height: 38px;
+  }
+
+  .caja-brand-title {
+    overflow: hidden;
+    font-size: 0.95rem;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .caja-user-button {
+    gap: 0;
+    padding: 0.1rem;
   }
 }

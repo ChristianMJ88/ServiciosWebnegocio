@@ -170,9 +170,12 @@
 }
 
 @media (max-width: 1199px) {
-  .caja-top-strip,
-  .caja-metric-grid {
+  .caja-top-strip {
     grid-template-columns: 1fr;
+  }
+
+  .caja-metric-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
@@ -190,5 +193,26 @@
   .caja-top-meta,
   .caja-status-pills--head {
     justify-content: flex-start;
+  }
+
+  .caja-metric-grid {
+    gap: 0.65rem;
+  }
+
+  .caja-metric-card {
+    min-height: 82px;
+    padding: 0.75rem;
+    border-radius: 16px;
+  }
+
+  .caja-metric-card span {
+    margin-bottom: 0.25rem;
+    font-size: 0.72rem;
+    line-height: 1.25;
+  }
+
+  .caja-metric-card strong {
+    overflow-wrap: anywhere;
+    font-size: clamp(1rem, 5vw, 1.25rem);
   }
 }
