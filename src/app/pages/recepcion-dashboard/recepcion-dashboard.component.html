@@ -165,25 +165,67 @@
       }
     </section>
 
-    <div class="recepcion-grid">
-      <div class="recepcion-main-column">
-        <app-recepcion-agenda-section
-          [citas]="citas()"
-          [guardando]="guardando()"
-          [puedeGestionarCitas]="puedeGestionarCitas()"
-          [puedeRegistrarCheckIn]="puedeRegistrarCheckIn()"
-          [estadosCita]="estadosCita()"
-          [estadoPendiente]="estadoCitaPendiente()"
-          [estadosFinalizables]="estadosCitaFinalizables()"
-          [estadosCancelables]="estadosCitaCancelables()"
-          (checkIn)="hacerCheckIn($event)"
-          (confirm)="confirmar($event)"
-          (finish)="finalizar($event)"
-          (cancel)="cancelar($event)" />
-      </div>
+    @if (panelMovil()) {
+      <nav class="recepcion-mobile-switcher" role="tablist" aria-label="Herramientas de recepción">
+        <button
+          type="button"
+          role="tab"
+          class="recepcion-mobile-switcher__button"
+          [class.is-active]="vistaMovil() === 'agenda'"
+          [attr.aria-selected]="vistaMovil() === 'agenda'"
+          aria-controls="recepcion-panel-agenda"
+          matTooltip="Consulta y gestiona las citas del día"
+          matTooltipPosition="above"
+          (click)="seleccionarVistaMovil('agenda')">
+          <i class="bi bi-calendar2-check" aria-hidden="true"></i>
+          <span>Citas del día</span>
+          <strong>{{ citas().length }}</strong>
+        </button>
+        @if (puedeGestionarCitas()) {
+          <button
+            type="button"
+            role="tab"
+            class="recepcion-mobile-switcher__button"
+            [class.is-active]="vistaMovil() === 'alta'"
+            [attr.aria-selected]="vistaMovil() === 'alta'"
+            aria-controls="recepcion-panel-alta"
+            matTooltip="Registra una cita o agrega a lista de espera"
+            matTooltipPosition="above"
+            (click)="seleccionarVistaMovil('alta')">
+            <i class="bi bi-calendar-plus" aria-hidden="true"></i>
+            <span>Alta rápida</span>
+            @if (solicitudesEspera().length) {
+              <strong>{{ solicitudesEspera().length }}</strong>
+            }
+          </button>
+        }
+      </nav>
+    }
 
+    <div class="recepcion-grid" [class.is-mobile-panel]="panelMovil()">
+      @if (!panelMovil() || vistaMovil() === 'agenda') {
+        <div id="recepcion-panel-agenda" class="recepcion-main-column" role="tabpanel">
+          <app-recepcion-agenda-section
+            [citas]="citas()"
+            [guardando]="guardando()"
+            [puedeGestionarCitas]="puedeGestionarCitas()"
+            [puedeRegistrarCheckIn]="puedeRegistrarCheckIn()"
+            [estadosCita]="estadosCita()"
+            [estadoPendiente]="estadoCitaPendiente()"
+            [estadosFinalizables]="estadosCitaFinalizables()"
+            [estadosCancelables]="estadosCitaCancelables()"
+            (checkIn)="hacerCheckIn($event)"
+            (confirm)="confirmar($event)"
+            (finish)="finalizar($event)"
+            (cancel)="cancelar($event)" />
+        </div>
+      }
+
+      @if (!panelMovil() || vistaMovil() === 'alta') {
       @defer {
       <app-recepcion-side-panel
+        id="recepcion-panel-alta"
+        role="tabpanel"
         [puedeBuscarClientes]="puedeBuscarClientes()"
         [puedeGestionarCitas]="puedeGestionarCitas()"
         [loadingBusqueda]="loadingBusqueda()"
@@ -223,6 +265,7 @@
         </section>
       </div>
     }
+      }
   </div>
 </div>
 </section>

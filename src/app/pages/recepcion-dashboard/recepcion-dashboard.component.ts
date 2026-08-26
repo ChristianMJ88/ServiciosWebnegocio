@@ -9,6 +9,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatToolbarModule } from '@angular/material/toolbar';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { Subject } from 'rxjs';
 import { debounceTime, distinctUntilChanged, finalize } from 'rxjs/operators';
 import { AuthService } from '../../core/auth/auth.service';
@@ -41,6 +42,7 @@ import {
     MatMenuModule,
     MatProgressBarModule,
     MatToolbarModule,
+    MatTooltipModule,
     UserProfileDialogComponent,
     RecepcionSidePanelComponent,
     RecepcionAgendaSectionComponent
@@ -98,6 +100,7 @@ export class RecepcionDashboardComponent implements OnInit, AfterViewInit {
   readonly estadoEsperaPendiente = this.store.estadoEsperaPendiente;
   readonly estadoEsperaNotificada = this.store.estadoEsperaNotificada;
   readonly panelMovil = signal(false);
+  readonly vistaMovil = signal<'agenda' | 'alta'>('agenda');
   readonly perfilConfigAbierto = signal(false);
 
   readonly perfilUsuario = computed(() => this.userProfileService.perfilActual());
@@ -569,5 +572,9 @@ export class RecepcionDashboardComponent implements OnInit, AfterViewInit {
   private extraerMensaje(error: unknown, fallback: string): string {
     const httpError = error as { error?: { message?: string }; message?: string };
     return httpError?.error?.message || httpError?.message || fallback;
+  }
+
+  seleccionarVistaMovil(vista: 'agenda' | 'alta'): void {
+    this.vistaMovil.set(vista);
   }
 }
