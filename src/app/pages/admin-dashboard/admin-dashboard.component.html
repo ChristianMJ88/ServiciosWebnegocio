@@ -31,7 +31,11 @@
         aria-controls="admin-sidebar"
         [attr.aria-expanded]="sidebarAbierto()"
         [attr.aria-label]="sidebarAbierto() ? 'Contraer menú lateral' : 'Expandir menú lateral'">
-        <i [class]="sidebarAbierto() ? 'bi bi-chevron-left' : 'bi bi-chevron-right'" aria-hidden="true"></i>
+        <i
+          [class]="panelMovil()
+            ? (sidebarAbierto() ? 'bi bi-x-lg' : 'bi bi-list')
+            : (sidebarAbierto() ? 'bi bi-chevron-left' : 'bi bi-chevron-right')"
+          aria-hidden="true"></i>
       </button>
 
       <mat-toolbar class="admin-toolbar">
