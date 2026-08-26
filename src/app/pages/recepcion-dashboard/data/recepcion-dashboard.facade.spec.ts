@@ -41,4 +41,18 @@ describe('RecepcionDashboardFacade', () => {
     expect(resultado.agenda).toEqual([{ id: 21 }]);
     expect(resultado.espera).toEqual([]);
   });
+
+  it('propaga el error si el backend no entrega el catálogo operativo', async () => {
+    const errorBackend = new Error('catálogo no disponible');
+    const recepcionService = {
+      getCatalogo: vi.fn().mockReturnValue(throwError(() => errorBackend))
+    };
+    TestBed.configureTestingModule({
+      providers: [RecepcionDashboardFacade, { provide: RecepcionService, useValue: recepcionService }]
+    });
+
+    await expect(firstValueFrom(
+      TestBed.inject(RecepcionDashboardFacade).cargarConCatalogo('2026-08-25', 8)
+    )).rejects.toBe(errorBackend);
+  });
 });

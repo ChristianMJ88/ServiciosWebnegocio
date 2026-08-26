@@ -16,29 +16,12 @@ export interface RecepcionDashboardInitialData extends RecepcionDashboardSnapsho
   catalogo: CatalogoRecepcion;
 }
 
-export function crearCatalogoRecepcionVacio(sucursalActivaId?: number | null): CatalogoRecepcion {
-  return {
-    sucursalActivaId: sucursalActivaId ?? null,
-    sucursales: [],
-    servicios: [],
-    estadosCita: [],
-    estadoCitaPendiente: '',
-    estadoCitaConfirmada: '',
-    estadosCitaFinalizables: [],
-    estadosCitaCancelables: [],
-    estadosEspera: [],
-    estadoEsperaPendiente: '',
-    estadoEsperaNotificada: ''
-  };
-}
-
 @Injectable({ providedIn: 'root' })
 export class RecepcionDashboardFacade {
   private readonly recepcionService = inject(RecepcionService);
 
   cargarConCatalogo(fecha: string, sucursalId?: number | null) {
     return this.recepcionService.getCatalogo(sucursalId).pipe(
-      catchError(() => of(crearCatalogoRecepcionVacio(sucursalId))),
       switchMap(catalogo => {
         const sucursalOperativaId = catalogo.sucursalActivaId ?? sucursalId;
         return this.cargarSnapshot(fecha, sucursalOperativaId).pipe(

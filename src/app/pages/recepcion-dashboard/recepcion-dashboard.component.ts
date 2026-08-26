@@ -26,9 +26,7 @@ import {
   CatalogoRecepcion,
   CitaRecepcion,
   ClienteRecepcion,
-  FranjaRecepcionDisponible,
-  ServicioRecepcionCatalogo,
-  SucursalRecepcionCatalogo
+  FranjaRecepcionDisponible
 } from '../../core/recepcion/recepcion.service';
 
 @Component({
@@ -245,10 +243,9 @@ export class RecepcionDashboardComponent implements OnInit, AfterViewInit {
 
     this.dashboardCoordinator.load(this.fechaAgenda(), sucursalPreferida)
       .subscribe({
-        next: ({ catalogo, agenda }) => {
+        next: ({ catalogo }) => {
           this.actualizarVistaEnZona(() => {
             this.aplicarCatalogo(catalogo);
-            this.aplicarContextoDesdeAgenda(agenda);
           });
         }
       });
@@ -259,18 +256,15 @@ export class RecepcionDashboardComponent implements OnInit, AfterViewInit {
 
     this.dashboardCoordinator.refresh(this.fechaAgenda(), sucursalConsulta)
       .subscribe({
-        next: ({ agenda }) => this.actualizarVistaEnZona(() => {
-          this.aplicarContextoDesdeAgenda(agenda);
-        })
+        next: () => this.actualizarVistaEnZona(() => undefined)
       });
   }
 
   cambiarSucursal(sucursalId: number | null) {
     this.dashboardCoordinator.load(this.fechaAgenda(), sucursalId)
       .subscribe({
-        next: ({ catalogo, agenda }) => this.actualizarVistaEnZona(() => {
+        next: ({ catalogo }) => this.actualizarVistaEnZona(() => {
           this.aplicarCatalogo(catalogo);
-          this.aplicarContextoDesdeAgenda(agenda);
         })
       });
   }
@@ -543,10 +537,9 @@ export class RecepcionDashboardComponent implements OnInit, AfterViewInit {
   }
 
   private aplicarCatalogo(catalogo: CatalogoRecepcion) {
-    const sucursalJwt = this.authService.sucursalesPermitidas()[0] ?? null;
+    const sucursalActual = this.sucursalActivaId();
     const sucursalOperativa = catalogo.sucursalActivaId
-      ?? sucursalJwt
-      ?? this.sucursalActivaId()
+      ?? catalogo.sucursales.find(sucursal => sucursal.id === sucursalActual)?.id
       ?? catalogo.sucursales[0]?.id
       ?? null;
 
@@ -568,109 +561,8 @@ export class RecepcionDashboardComponent implements OnInit, AfterViewInit {
       this.formularioCita.servicioId = catalogo.servicios[0].id;
     }
 
-    this.sincronizarContextoOperativo();
-
     if (this.formularioCita.sucursalId && this.formularioCita.servicioId) {
       this.cargarFranjasWalkIn();
-    }
-  }
-
-  private aplicarContextoDesdeAgenda(agenda: CitaRecepcion[]) {
-    if (!this.sucursales().length && agenda.length) {
-      const sucursalesInferidas = Array.from(new Map(
-        agenda
-          .filter(cita => !!cita.sucursalId)
-          .map(cita => [cita.sucursalId, {
-            id: cita.sucursalId,
-            empresaId: this.authService.sesionActual()?.empresaId ?? 0,
-            nombre: cita.sucursalNombre,
-            direccion: '',
-            telefono: '',
-            zonaHoraria: 'America/Mexico_City'
-          } satisfies SucursalRecepcionCatalogo])
-      ).values());
-      this.store.setSucursales(sucursalesInferidas);
-    }
-
-    if (!this.servicios().length && agenda.length) {
-      const serviciosInferidos = Array.from(new Map(
-        agenda
-          .filter(cita => !!cita.servicioId)
-          .map(cita => [cita.servicioId, {
-            id: cita.servicioId,
-            sucursalId: cita.sucursalId,
-            nombre: cita.servicioNombre,
-            descripcion: '',
-            duracionMinutos: 60,
-            bufferAntesMinutos: 0,
-            bufferDespuesMinutos: 0,
-            precio: Number(cita.precio ?? 0),
-            moneda: cita.moneda ?? 'MXN'
-          } satisfies ServicioRecepcionCatalogo])
-      ).values());
-      this.store.setServicios(serviciosInferidos);
-    }
-
-    this.sincronizarContextoOperativo(agenda);
-
-    if (!this.formularioCita.servicioId && this.servicios().length === 1) {
-      this.formularioCita.servicioId = this.servicios()[0].id;
-    }
-
-    if (
-      this.formularioCita.sucursalId &&
-      this.formularioCita.servicioId &&
-      !this.franjasDisponibles().length &&
-      !this.loadingFranjas()
-    ) {
-      this.cargarFranjasWalkIn();
-    }
-  }
-
-  private sincronizarContextoOperativo(agenda: CitaRecepcion[] = this.citas()) {
-    const sucursalActualId = this.sucursalActivaId()
-      ?? this.formularioCita.sucursalId
-      ?? agenda[0]?.sucursalId
-      ?? this.sucursales()[0]?.id
-      ?? this.authService.sucursalesPermitidas()[0]
-      ?? null;
-
-    if (sucursalActualId) {
-      this.store.setSucursalActivaId(sucursalActualId);
-      this.formularioCita.sucursalId = sucursalActualId;
-    }
-
-    if (!this.sucursales().length && sucursalActualId) {
-      const nombreAgenda = agenda.find(cita => cita.sucursalId === sucursalActualId)?.sucursalNombre?.trim();
-      this.store.setSucursales([
-        {
-          id: sucursalActualId,
-          empresaId: this.authService.sesionActual()?.empresaId ?? 0,
-          nombre: nombreAgenda || `Sucursal ${sucursalActualId}`,
-          direccion: '',
-          telefono: '',
-          zonaHoraria: 'America/Mexico_City'
-        }
-      ]);
-    }
-
-    if (!this.servicios().length && agenda.length) {
-      const serviciosInferidos = Array.from(new Map(
-        agenda
-          .filter(cita => cita.sucursalId === this.formularioCita.sucursalId && !!cita.servicioId)
-          .map(cita => [cita.servicioId, {
-            id: cita.servicioId,
-            sucursalId: cita.sucursalId,
-            nombre: cita.servicioNombre,
-            descripcion: '',
-            duracionMinutos: 60,
-            bufferAntesMinutos: 0,
-            bufferDespuesMinutos: 0,
-            precio: Number(cita.precio ?? 0),
-            moneda: cita.moneda ?? 'MXN'
-          } satisfies ServicioRecepcionCatalogo])
-      ).values());
-      this.store.setServicios(serviciosInferidos);
     }
   }
 
