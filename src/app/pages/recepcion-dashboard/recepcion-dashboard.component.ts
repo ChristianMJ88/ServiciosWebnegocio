@@ -20,6 +20,7 @@ import { FormularioCitaRecepcion, crearFormularioCitaRecepcion } from './forms/r
 import { RecepcionDashboardCoordinator } from './data/recepcion-dashboard.coordinator';
 import { RecepcionDashboardStore } from './state/recepcion-dashboard.store';
 import { RecepcionQuickAppointmentFacade } from './quick-appointment/recepcion-quick-appointment.facade';
+import { RecepcionAgendaFacade } from './agenda/recepcion-agenda.facade';
 import {
   CatalogoRecepcion,
   CitaRecepcion,
@@ -63,6 +64,7 @@ export class RecepcionDashboardComponent implements OnInit, AfterViewInit {
   private readonly dashboardCoordinator = inject(RecepcionDashboardCoordinator);
   private readonly store = inject(RecepcionDashboardStore);
   private readonly quickAppointmentFacade = inject(RecepcionQuickAppointmentFacade);
+  private readonly agendaFacade = inject(RecepcionAgendaFacade);
   private readonly authService = inject(AuthService);
   private readonly userProfileService = inject(UserProfileService);
   private readonly router = inject(Router);
@@ -463,19 +465,19 @@ export class RecepcionDashboardComponent implements OnInit, AfterViewInit {
   }
 
   hacerCheckIn(citaId: number) {
-    this.ejecutarAccion(() => this.recepcionService.checkIn(citaId), 'Check-in realizado.');
+    this.ejecutarAccion(() => this.agendaFacade.hacerCheckIn(citaId), 'Check-in realizado.');
   }
 
   confirmar(citaId: number) {
-    this.ejecutarAccion(() => this.recepcionService.confirmar(citaId), 'Cita confirmada.');
+    this.ejecutarAccion(() => this.agendaFacade.confirmar(citaId), 'Cita confirmada.');
   }
 
   cancelar(citaId: number) {
-    this.ejecutarAccion(() => this.recepcionService.cancelar(citaId), 'Cita cancelada.');
+    this.ejecutarAccion(() => this.agendaFacade.cancelar(citaId), 'Cita cancelada.');
   }
 
   finalizar(citaId: number) {
-    this.ejecutarAccion(() => this.recepcionService.finalizar(citaId), 'Cita finalizada.');
+    this.ejecutarAccion(() => this.agendaFacade.finalizar(citaId), 'Cita finalizada.');
   }
 
   abrirConfiguracionPerfil() {
@@ -522,7 +524,7 @@ export class RecepcionDashboardComponent implements OnInit, AfterViewInit {
       .join('') || 'US';
   }
 
-  private ejecutarAccion(accion: () => ReturnType<RecepcionService['confirmar']>, mensajeExito: string) {
+  private ejecutarAccion(accion: () => ReturnType<RecepcionAgendaFacade['confirmar']>, mensajeExito: string) {
     this.store.setGuardando(true);
     this.store.setError('');
     this.store.setMensaje('');
