@@ -1,6 +1,8 @@
 
 import { Component, computed, input, output } from '@angular/core';
 import { AgendaDetailPanelComponent } from './agenda-detail-panel.component';
+import { AgendaFullCalendarComponent } from './agenda-full-calendar.component';
+import { AgendaCalendarView } from './agenda-full-calendar.helpers';
 import { AgendaTimelineComponent } from './agenda-timeline.component';
 import {
   AgendaAppointmentVm,
@@ -14,14 +16,14 @@ import {
 @Component({
   selector: 'app-agenda-operations-section',
   standalone: true,
-  imports: [AgendaTimelineComponent, AgendaDetailPanelComponent],
+  imports: [AgendaTimelineComponent, AgendaFullCalendarComponent, AgendaDetailPanelComponent],
   templateUrl: './agenda-operations-section.component.html',
   styleUrl: './agenda-operations-section.component.css'
 })
 export class AgendaOperationsSectionComponent {
   readonly theme = input<AgendaThemeMode>('light');
   readonly viewMode = input<AgendaViewMode>('day');
-  readonly availableViews = input<AgendaViewMode[]>(['day', 'week']);
+  readonly availableViews = input<AgendaViewMode[]>(['month', 'week', 'day', 'staff']);
   readonly eyebrow = input('Operación diaria');
   readonly title = input('Centro operativo de agenda');
   readonly dateLabel = input('Fecha seleccionada');
@@ -48,10 +50,14 @@ export class AgendaOperationsSectionComponent {
   readonly viewModeChange = output<AgendaViewMode>();
 
   readonly occupancyPercent = computed(() => Math.max(0, Math.min(100, this.occupancy()?.percent ?? 0)));
+  readonly calendarViewMode = computed<AgendaCalendarView>(() => {
+    const view = this.viewMode();
+    return view === 'staff' ? 'day' : view;
+  });
   readonly viewOptions = computed(() =>
     this.availableViews().map(view => ({
       id: view,
-      label: view === 'day' ? 'Día' : 'Semana'
+      label: this.viewLabel(view)
     }))
   );
 
@@ -65,5 +71,15 @@ export class AgendaOperationsSectionComponent {
 
   closeAppointment(): void {
     this.appointmentClosed.emit();
+  }
+
+  private viewLabel(view: AgendaViewMode): string {
+    const labels: Record<AgendaViewMode, string> = {
+      month: 'Mes',
+      week: 'Semana',
+      day: 'Día',
+      staff: 'Equipo'
+    };
+    return labels[view];
   }
 }

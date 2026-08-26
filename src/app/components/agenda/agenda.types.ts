@@ -1,5 +1,5 @@
 export type AgendaThemeMode = 'dark' | 'light';
-export type AgendaViewMode = 'day' | 'week';
+export type AgendaViewMode = 'month' | 'week' | 'day' | 'staff';
 
 export interface AgendaStatCardVm {
   label: string;

@@ -671,20 +671,24 @@
 }
 
 .agenda-timeline-mobile-card[data-status='pendiente'] {
-  background: linear-gradient(180deg, rgba(245, 158, 11, 0.22) 0%, rgba(10, 19, 35, 0.82) 100%);
+  background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+  border-left: 5px solid #f59e0b;
 }
 
 .agenda-timeline-mobile-card[data-status='confirmada'] {
-  background: linear-gradient(180deg, rgba(45, 212, 191, 0.18) 0%, rgba(10, 19, 35, 0.82) 100%);
+  background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+  border-left: 5px solid #22c55e;
 }
 
 .agenda-timeline-mobile-card[data-status='finalizada'] {
-  background: linear-gradient(180deg, rgba(96, 165, 250, 0.2) 0%, rgba(10, 19, 35, 0.82) 100%);
+  background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+  border-left: 5px solid #3b82f6;
 }
 
 .agenda-timeline-mobile-card[data-status='cancelada'],
 .agenda-timeline-mobile-card[data-status='no_asistio'] {
-  background: linear-gradient(180deg, rgba(248, 113, 113, 0.18) 0%, rgba(10, 19, 35, 0.82) 100%);
+  background: linear-gradient(135deg, #fff7f7 0%, #fee2e2 100%);
+  border-left: 5px solid #ef4444;
 }
 
 .agenda-timeline-mobile-card__top,
@@ -696,7 +700,7 @@
 }
 
 .agenda-timeline-mobile-card__time {
-  color: #cfe7ff;
+  color: #1d4ed8;
   font-size: 0.74rem;
   font-weight: 700;
 }
@@ -708,6 +712,27 @@
 
 .agenda-timeline-mobile-card__footer strong {
   color: var(--agenda-text);
+}
+
+.agenda-timeline[data-theme='dark'] .agenda-timeline-mobile-card[data-status='pendiente'] {
+  background: linear-gradient(180deg, rgba(245, 158, 11, 0.22) 0%, rgba(10, 19, 35, 0.92) 100%);
+}
+
+.agenda-timeline[data-theme='dark'] .agenda-timeline-mobile-card[data-status='confirmada'] {
+  background: linear-gradient(180deg, rgba(45, 212, 191, 0.18) 0%, rgba(10, 19, 35, 0.92) 100%);
+}
+
+.agenda-timeline[data-theme='dark'] .agenda-timeline-mobile-card[data-status='finalizada'] {
+  background: linear-gradient(180deg, rgba(96, 165, 250, 0.2) 0%, rgba(10, 19, 35, 0.92) 100%);
+}
+
+.agenda-timeline[data-theme='dark'] .agenda-timeline-mobile-card[data-status='cancelada'],
+.agenda-timeline[data-theme='dark'] .agenda-timeline-mobile-card[data-status='no_asistio'] {
+  background: linear-gradient(180deg, rgba(248, 113, 113, 0.18) 0%, rgba(10, 19, 35, 0.92) 100%);
+}
+
+.agenda-timeline[data-theme='dark'] .agenda-timeline-mobile-card__time {
+  color: #cfe7ff;
 }
 
 @media (max-width: 991.98px) {

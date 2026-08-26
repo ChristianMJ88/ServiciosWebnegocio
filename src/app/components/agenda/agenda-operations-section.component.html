@@ -61,19 +61,29 @@
   }
 
   <div class="agenda-operations__workspace">
-    <app-agenda-timeline
-      class="agenda-operations__timeline"
-      [theme]="theme()"
-      [collaborators]="collaborators()"
-      [appointments]="appointments()"
-      [hourLabels]="hourLabels()"
-      [selectedAppointmentId]="selectedAppointmentId()"
-      [viewMode]="viewMode()"
-      [anchorDate]="dateValue()"
-      [timelineWidthPx]="timelineWidthPx()"
-      [hourSlotHeight]="hourSlotHeight()"
-      [emptyMessage]="emptyMessage()"
-      (appointmentSelected)="appointmentSelected.emit($event)" />
+    @if (viewMode() === 'staff') {
+      <app-agenda-timeline
+        class="agenda-operations__timeline"
+        [theme]="theme()"
+        [collaborators]="collaborators()"
+        [appointments]="appointments()"
+        [hourLabels]="hourLabels()"
+        [selectedAppointmentId]="selectedAppointmentId()"
+        [viewMode]="'day'"
+        [anchorDate]="dateValue()"
+        [timelineWidthPx]="timelineWidthPx()"
+        [hourSlotHeight]="hourSlotHeight()"
+        [emptyMessage]="emptyMessage()"
+        (appointmentSelected)="appointmentSelected.emit($event)" />
+    } @else {
+      <app-agenda-full-calendar
+        [theme]="theme()"
+        [viewMode]="calendarViewMode()"
+        [anchorDate]="dateValue()"
+        [appointments]="appointments()"
+        (appointmentSelected)="appointmentSelected.emit($event)"
+        (dateSelected)="dateValueChange.emit($event)" />
+    }
   </div>
 
   @if (selectedAppointment()) {

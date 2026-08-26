@@ -4,9 +4,11 @@ import {
   calcularAnaliticaAgenda,
   calcularDistribucionAgenda,
   filtrarCitasPeriodo,
+  obtenerRangoMes,
   obtenerRangoSemana,
   resumirAgenda,
-  sumarDiasAgenda
+  sumarDiasAgenda,
+  sumarMesesAgenda
 } from './admin-agenda.helpers';
 
 const cita = (id: number, inicio: string, fin: string, estado = 'PENDIENTE', prestadorId = 1): CitaCliente => ({
@@ -30,6 +32,11 @@ describe('admin agenda helpers', () => {
   it('calcula semanas de lunes a domingo y desplazamientos sin depender del componente', () => {
     expect(obtenerRangoSemana('2026-08-25')).toEqual({ desde: '2026-08-24', hasta: '2026-08-30' });
     expect(sumarDiasAgenda('2026-08-25', 7)).toBe('2026-09-01');
+  });
+
+  it('calcula rangos y desplazamientos mensuales preservando un día válido', () => {
+    expect(obtenerRangoMes('2026-08-25')).toEqual({ desde: '2026-08-01', hasta: '2026-08-31' });
+    expect(sumarMesesAgenda('2026-01-31', 1)).toBe('2026-02-28');
   });
 
   it('filtra el periodo y resume estados y colaboradores', () => {

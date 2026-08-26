@@ -32,7 +32,30 @@ export function obtenerRangoSemana(fechaIso: string): RangoFechaAgenda {
   return { desde: obtenerFechaLocalISO(inicio), hasta: obtenerFechaLocalISO(fin) };
 }
 
+export function obtenerRangoMes(fechaIso: string): RangoFechaAgenda {
+  const fecha = new Date(`${fechaIso}T12:00:00`);
+  const inicio = new Date(fecha.getFullYear(), fecha.getMonth(), 1, 12);
+  const fin = new Date(fecha.getFullYear(), fecha.getMonth() + 1, 0, 12);
+  return { desde: obtenerFechaLocalISO(inicio), hasta: obtenerFechaLocalISO(fin) };
+}
+
+export function sumarMesesAgenda(fechaIso: string, meses: number): string {
+  const fecha = new Date(`${fechaIso}T12:00:00`);
+  const diaOriginal = fecha.getDate();
+  fecha.setDate(1);
+  fecha.setMonth(fecha.getMonth() + meses);
+  const ultimoDia = new Date(fecha.getFullYear(), fecha.getMonth() + 1, 0).getDate();
+  fecha.setDate(Math.min(diaOriginal, ultimoDia));
+  return obtenerFechaLocalISO(fecha);
+}
+
 export function formatearFechaAgenda(fechaIso: string, view: AgendaViewMode): string {
+  if (view === 'month') {
+    return new Date(`${fechaIso}T12:00:00`).toLocaleDateString('es-MX', {
+      month: 'long',
+      year: 'numeric'
+    });
+  }
   if (view === 'week') {
     const { desde, hasta } = obtenerRangoSemana(fechaIso);
     const inicio = new Date(`${desde}T12:00:00`);
@@ -74,7 +97,11 @@ export function agruparCitasPorFecha(citas: CitaCliente[]): GrupoFechaAgenda[] {
 }
 
 export function filtrarCitasPeriodo(citas: CitaCliente[], fecha: string, view: AgendaViewMode): CitaCliente[] {
-  const rango = view === 'week' ? obtenerRangoSemana(fecha) : { desde: fecha, hasta: fecha };
+  const rango = view === 'month'
+    ? obtenerRangoMes(fecha)
+    : view === 'week'
+      ? obtenerRangoSemana(fecha)
+      : { desde: fecha, hasta: fecha };
   return [...citas]
     .filter(cita => cita.inicio.slice(0, 10) >= rango.desde && cita.inicio.slice(0, 10) <= rango.hasta)
     .sort((a, b) => Date.parse(a.inicio) - Date.parse(b.inicio));
@@ -96,7 +123,8 @@ export function calcularAnaliticaAgenda(
   view: AgendaViewMode
 ): AnaliticaAgenda {
   const minutosReservados = citas.reduce((total, cita) => total + getDurationMinutes(cita.inicio, cita.fin), 0);
-  const capacidadMinutos = Math.max(totalColaboradores, 1) * horasDisponibles * 60 * (view === 'week' ? 7 : 1);
+  const multiplicadorPeriodo = view === 'month' ? 30 : view === 'week' ? 7 : 1;
+  const capacidadMinutos = Math.max(totalColaboradores, 1) * horasDisponibles * 60 * multiplicadorPeriodo;
   return {
     ocupacion: capacidadMinutos ? Math.min(100, Math.round((minutosReservados / capacidadMinutos) * 100)) : 0,
     horasReservadas: Math.max(0, Math.round((minutosReservados / 60) * 10) / 10),

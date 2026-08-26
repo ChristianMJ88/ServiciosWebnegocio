@@ -114,9 +114,11 @@ import {
   filtrarCitasPeriodo,
   formatearFechaAgenda,
   obtenerFechaLocalISO,
+  obtenerRangoMes,
   obtenerRangoSemana,
   resumirAgenda,
-  sumarDiasAgenda
+  sumarDiasAgenda,
+  sumarMesesAgenda
 } from './agenda/admin-agenda.helpers';
 import {
   construirPayloadPlantillaWhatsapp,
@@ -510,14 +512,17 @@ export class AdminDashboardComponent implements OnInit {
     this.agendaViewMode()
   ));
   readonly colaboradoresAgenda = computed(() => {
-    const rangoSemana = obtenerRangoSemana(this.fechaAgendaActiva());
+    const view = this.agendaViewMode();
+    const rango = view === 'month'
+      ? obtenerRangoMes(this.fechaAgendaActiva())
+      : view === 'week'
+        ? obtenerRangoSemana(this.fechaAgendaActiva())
+        : { desde: this.fechaAgendaActiva(), hasta: this.fechaAgendaActiva() };
     const mapa = new Map<number, { id: number; nombre: string }>();
 
     for (const cita of this.citas()) {
       const fecha = cita.inicio.slice(0, 10);
-      const mostrar = this.agendaViewMode() === 'day'
-        ? fecha === this.fechaAgendaActiva()
-        : fecha >= rangoSemana.desde && fecha <= rangoSemana.hasta;
+      const mostrar = fecha >= rango.desde && fecha <= rango.hasta;
 
       if (!mostrar) {
         continue;
@@ -572,7 +577,14 @@ export class AdminDashboardComponent implements OnInit {
       });
   });
   readonly resumenAgendaCards = computed<AgendaStatCardVm[]>(() => [
-    { label: this.agendaViewMode() === 'week' ? 'Citas de la semana' : 'Citas del día', value: this.resumenAgendaActiva().total },
+    {
+      label: this.agendaViewMode() === 'month'
+        ? 'Citas del mes'
+        : this.agendaViewMode() === 'week'
+          ? 'Citas de la semana'
+          : 'Citas del día',
+      value: this.resumenAgendaActiva().total
+    },
     { label: 'Pendientes', value: this.resumenAgendaActiva().pendientes },
     { label: 'Confirmadas', value: this.resumenAgendaActiva().confirmadas },
     { label: 'Colaboradores', value: this.resumenAgendaActiva().colaboradores }
@@ -593,7 +605,7 @@ export class AdminDashboardComponent implements OnInit {
     }))
   );
   readonly agendaAppointmentsVm = computed<AgendaAppointmentVm[]>(() =>
-    (this.agendaViewMode() === 'day'
+    (this.agendaViewMode() === 'staff'
       ? this.citasAgendaPosicionadas()
       : this.citasPeriodoActivas().map(cita => ({
           ...cita,
@@ -902,8 +914,11 @@ export class AdminDashboardComponent implements OnInit {
   }
 
   desplazarFechaAgenda(dias: number) {
-    const salto = this.agendaViewMode() === 'week' ? dias * 7 : dias;
-    this.fechaAgendaSeleccionada.set(sumarDiasAgenda(this.fechaAgendaActiva(), salto));
+    const view = this.agendaViewMode();
+    const nuevaFecha = view === 'month'
+      ? sumarMesesAgenda(this.fechaAgendaActiva(), dias)
+      : sumarDiasAgenda(this.fechaAgendaActiva(), view === 'week' ? dias * 7 : dias);
+    this.fechaAgendaSeleccionada.set(nuevaFecha);
     this.citaAgendaSeleccionadaId.set(null);
   }
 
