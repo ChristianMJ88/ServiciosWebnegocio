@@ -20,7 +20,12 @@
       @if (!panelMovil() && puedeIrAdmin()) {
         <button class="btn btn-outline-secondary btn-sm" type="button" (click)="irAAdmin()">Admin</button>
       }
-      <button mat-button [matMenuTriggerFor]="menuUsuario" class="recepcion-user-button" type="button">
+      <button
+        mat-button
+        [matMenuTriggerFor]="menuUsuario"
+        class="recepcion-user-button"
+        type="button"
+        [attr.aria-label]="'Abrir perfil de ' + nombreUsuario()">
         <span class="recepcion-user-avatar">
           @if (fotoPerfilUsuario(); as fotoRecepcion) {
             <img [src]="fotoRecepcion" alt="" />

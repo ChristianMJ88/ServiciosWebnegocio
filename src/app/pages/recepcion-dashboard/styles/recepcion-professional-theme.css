@@ -9,6 +9,8 @@
 }
 
 .recepcion-toolbar {
+  width: 100%;
+  min-width: 0;
   min-height: 68px;
   padding: 0.7rem clamp(0.9rem, 2vw, 1.5rem);
   background: rgba(255, 255, 255, 0.94);
@@ -17,6 +19,7 @@
 }
 
 .recepcion-toolbar-brand {
+  flex: 1 1 auto;
   min-width: 0;
   gap: 0.75rem;
 }
@@ -62,6 +65,8 @@
 }
 
 .recepcion-toolbar-actions {
+  flex: 0 0 auto;
+  min-width: 0;
   gap: 0.5rem;
 }
 
@@ -86,12 +91,36 @@
 }
 
 .recepcion-user-button {
+  max-width: min(260px, 42vw);
+  overflow: hidden;
   min-height: 42px;
   gap: 0.62rem;
   padding: 0.22rem 0.45rem 0.22rem 0.22rem;
   background: #ffffff;
   border: 1px solid rgba(148, 163, 184, 0.28);
   box-shadow: 0 10px 22px rgba(15, 23, 42, 0.05);
+}
+
+.recepcion-user-button .mdc-button__label {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 0.62rem;
+  overflow: hidden;
+}
+
+.recepcion-user-copy {
+  min-width: 0;
+  max-width: 160px;
+  overflow: hidden;
+}
+
+.recepcion-user-copy strong,
+.recepcion-user-copy small {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .recepcion-user-avatar {
@@ -651,6 +680,15 @@
     height: 40px;
     min-height: 40px;
     padding: 0;
+  }
+
+  .recepcion-user-button {
+    max-width: 40px;
+  }
+
+  .recepcion-user-button .mdc-button__label {
+    justify-content: center;
+    gap: 0;
   }
 
   .toolbar-user-chevron {

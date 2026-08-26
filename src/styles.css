@@ -639,12 +639,18 @@ small {
 .profile-menu-header {
   width: 280px;
   max-width: calc(100vw - 1.5rem);
+  box-sizing: border-box;
   display: flex;
   align-items: center;
   gap: 0.8rem;
   padding: 0.95rem;
   border-bottom: 1px solid rgba(203, 213, 225, 0.72);
   background: #f8fbff;
+}
+
+.profile-menu-header > div {
+  min-width: 0;
+  overflow: hidden;
 }
 
 .profile-menu-avatar {
@@ -656,6 +662,10 @@ small {
 .profile-menu-header strong,
 .profile-menu-header span {
   display: block;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .profile-menu-header strong {
