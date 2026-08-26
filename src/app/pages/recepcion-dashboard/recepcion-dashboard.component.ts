@@ -21,12 +21,12 @@ import { RecepcionDashboardCoordinator } from './data/recepcion-dashboard.coordi
 import { RecepcionDashboardStore } from './state/recepcion-dashboard.store';
 import { RecepcionQuickAppointmentFacade } from './quick-appointment/recepcion-quick-appointment.facade';
 import { RecepcionAgendaFacade } from './agenda/recepcion-agenda.facade';
+import { RecepcionWaitlistFacade } from './waitlist/recepcion-waitlist.facade';
 import {
   CatalogoRecepcion,
   CitaRecepcion,
   ClienteRecepcion,
   FranjaRecepcionDisponible,
-  RecepcionService,
   ServicioRecepcionCatalogo,
   SucursalRecepcionCatalogo
 } from '../../core/recepcion/recepcion.service';
@@ -60,11 +60,11 @@ import {
   encapsulation: ViewEncapsulation.None
 })
 export class RecepcionDashboardComponent implements OnInit, AfterViewInit {
-  private readonly recepcionService = inject(RecepcionService);
   private readonly dashboardCoordinator = inject(RecepcionDashboardCoordinator);
   private readonly store = inject(RecepcionDashboardStore);
   private readonly quickAppointmentFacade = inject(RecepcionQuickAppointmentFacade);
   private readonly agendaFacade = inject(RecepcionAgendaFacade);
+  private readonly waitlistFacade = inject(RecepcionWaitlistFacade);
   private readonly authService = inject(AuthService);
   private readonly userProfileService = inject(UserProfileService);
   private readonly router = inject(Router);
@@ -449,7 +449,7 @@ export class RecepcionDashboardComponent implements OnInit, AfterViewInit {
     this.store.setError('');
     this.store.setMensaje('');
 
-    this.recepcionService.notificarEspera(solicitudId)
+    this.waitlistFacade.notificar(solicitudId)
       .pipe(finalize(() => this.store.setGuardando(false)))
       .subscribe({
         next: solicitudActualizada => {
