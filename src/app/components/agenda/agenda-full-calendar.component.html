@@ -1,0 +1,12 @@
+<div class="agenda-fullcalendar" [attr.data-theme]="theme()">
+  <div class="agenda-fullcalendar__context">
+    <div class="agenda-fullcalendar__legend" aria-label="Estados de las citas">
+      <span><i class="is-pending"></i>Pendiente</span>
+      <span><i class="is-confirmed"></i>Confirmada</span>
+      <span><i class="is-completed"></i>Finalizada</span>
+      <span><i class="is-cancelled"></i>Cancelada</span>
+    </div>
+    <small>Selecciona una cita para consultar sus detalles</small>
+  </div>
+  <full-calendar [options]="options()" />
+</div>
