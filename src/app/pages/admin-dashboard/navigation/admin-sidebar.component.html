@@ -1,12 +1,12 @@
 <aside
   id="admin-sidebar"
   class="admin-sidebar"
-  [class.is-hidden]="oculto()"
+  [class.is-rail]="compacto()"
   aria-label="Navegación principal del panel administrativo">
   <div class="sidebar-brand">
     <div class="sidebar-brand-body">
       <span class="sidebar-brand-mark" aria-hidden="true">{{ inicialesEmpresa() }}</span>
-      @if (mostrarContenido()) {
+      @if (!compacto()) {
         <div class="sidebar-brand-copy">
           <span class="sidebar-brand-title">Backoffice</span>
           <span class="sidebar-brand-subtitle">{{ nombreEmpresa() }}</span>
@@ -19,22 +19,25 @@
     <nav class="sidebar-nav" aria-label="Secciones administrativas">
       @for (grupo of grupos(); track grupo.id) {
         <section class="sidebar-menu-group" [class.is-active]="grupoActivo(grupo)">
-          @if (mostrarContenido()) {
-            <button
-              type="button"
-              class="sidebar-menu-toggle"
-              (click)="alternarGrupo(grupo.id)"
-              [attr.aria-expanded]="grupoExpandido(grupo.id)"
-              [attr.aria-controls]="'sidebar-group-' + grupo.id">
-              <i [class]="grupo.iconClass" aria-hidden="true"></i>
+          <button
+            type="button"
+            class="sidebar-menu-toggle"
+            (click)="alternarGrupo(grupo.id)"
+            (mouseenter)="mostrarFlyout(grupo, $event)"
+            (mouseleave)="programarCierreFlyout()"
+            (focus)="mostrarFlyout(grupo, $event)"
+            [attr.aria-expanded]="compacto() ? grupoFlyout()?.id === grupo.id : grupoExpandido(grupo.id)"
+            [attr.aria-controls]="compacto() ? 'sidebar-flyout-' + grupo.id : 'sidebar-group-' + grupo.id">
+            <i [class]="grupo.iconClass" aria-hidden="true"></i>
+            @if (!compacto()) {
               <span class="sidebar-menu-title">{{ grupo.titulo }}</span>
               <i class="bi bi-chevron-down sidebar-menu-chevron" [class.is-open]="grupoExpandido(grupo.id)" aria-hidden="true"></i>
-            </button>
-          }
+            }
+          </button>
 
           <div
             class="sidebar-submenu"
-            [class.is-open]="grupoExpandido(grupo.id) || (compacto() && !movil())"
+            [class.is-open]="!compacto() && grupoExpandido(grupo.id)"
             [id]="'sidebar-group-' + grupo.id">
             @for (modulo of grupo.modulosVisibles; track modulo.id) {
               <button
@@ -43,15 +46,11 @@
                 (click)="seleccionar.emit(modulo.id)"
                 [class.active-nav-item]="seccionActiva() === modulo.id"
                 [attr.aria-current]="seccionActiva() === modulo.id ? 'page' : null"
-                [attr.aria-label]="modulo.titulo"
-                [matTooltip]="compacto() && !movil() ? modulo.titulo : ''"
-                matTooltipPosition="right">
+                [attr.aria-label]="modulo.titulo">
                 <span class="sidebar-nav-icon" aria-hidden="true"><i [class]="modulo.iconClass"></i></span>
-                @if (mostrarContenido()) {
-                  <span class="sidebar-nav-copy">
-                    <span class="sidebar-nav-title">{{ modulo.titulo }}</span>
-                  </span>
-                }
+                <span class="sidebar-nav-copy">
+                  <span class="sidebar-nav-title">{{ modulo.titulo }}</span>
+                </span>
               </button>
             }
           </div>
@@ -59,4 +58,26 @@
       }
     </nav>
   </div>
+
+  @if (compacto() && grupoFlyout(); as grupo) {
+    <section
+      class="sidebar-flyout"
+      [id]="'sidebar-flyout-' + grupo.id"
+      [style.top.px]="flyoutTop()"
+      (mouseenter)="cancelarCierreFlyout()"
+      (mouseleave)="programarCierreFlyout()"
+      aria-label="Submenú {{ grupo.titulo }}">
+      <span class="sidebar-flyout-title">{{ grupo.titulo }}</span>
+      @for (modulo of grupo.modulosVisibles; track modulo.id) {
+        <button
+          type="button"
+          class="sidebar-flyout-item"
+          [class.is-active]="seccionActiva() === modulo.id"
+          (click)="seleccionarDesdeFlyout(modulo.id)">
+          <i [class]="modulo.iconClass" aria-hidden="true"></i>
+          <span>{{ modulo.titulo }}</span>
+        </button>
+      }
+    </section>
+  }
 </aside>

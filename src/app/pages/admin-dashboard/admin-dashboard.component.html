@@ -1,34 +1,41 @@
 <section class="admin-shell">
-  @if (panelMovil() && sidebarAbierto()) {
-    <div
-      class="admin-backdrop"
-    (click)="cerrarSidebar()"></div>
-  }
+  <mat-drawer-container
+    class="admin-layout"
+    [class.is-mobile]="panelMovil()"
+    [class.is-rail]="!panelMovil() && !sidebarAbierto()"
+    [hasBackdrop]="panelMovil()"
+    [autosize]="true"
+    (backdropClick)="cerrarSidebar()">
+    <mat-drawer
+      class="admin-drawer"
+      position="start"
+      [mode]="panelMovil() ? 'over' : 'side'"
+      [opened]="panelMovil() ? sidebarAbierto() : true"
+      [disableClose]="!panelMovil()">
+      <app-admin-sidebar
+        [grupos]="gruposSidebar()"
+        [seccionActiva]="seccionActiva()"
+        [compacto]="!panelMovil() && !sidebarAbierto()"
+        [inicialesEmpresa]="inicialesEmpresa()"
+        [nombreEmpresa]="nombreEmpresa()"
+        (seleccionar)="seleccionarSeccion($event)" />
+    </mat-drawer>
 
-  <div class="admin-layout" [class.is-mobile]="panelMovil()" [class.is-compact]="sidebarCompacto() && !panelMovil()">
-    <app-admin-sidebar
-      [grupos]="gruposSidebar()"
-      [seccionActiva]="seccionActiva()"
-      [compacto]="sidebarCompacto()"
-      [movil]="panelMovil()"
-      [oculto]="panelMovil() && !sidebarAbierto()"
-      [inicialesEmpresa]="inicialesEmpresa()"
-      [nombreEmpresa]="nombreEmpresa()"
-      (seleccionar)="seleccionarSeccion($event)" />
+    <mat-drawer-content class="admin-content">
+      <button
+        type="button"
+        class="sidebar-edge-toggle"
+        [class.is-sidebar-open]="panelMovil() ? sidebarAbierto() : true"
+        [class.is-rail]="!panelMovil() && !sidebarAbierto()"
+        (click)="alternarSidebar()"
+        aria-controls="admin-sidebar"
+        [attr.aria-expanded]="sidebarAbierto()"
+        [attr.aria-label]="sidebarAbierto() ? 'Contraer menú lateral' : 'Expandir menú lateral'">
+        <i [class]="sidebarAbierto() ? 'bi bi-chevron-left' : 'bi bi-chevron-right'" aria-hidden="true"></i>
+      </button>
 
-    <div class="admin-content">
       <mat-toolbar class="admin-toolbar">
         <div class="topbar-left">
-          <button
-            type="button"
-            class="toolbar-hamburger"
-            (click)="alternarCompactoSidebar()"
-            aria-label="Alternar menú lateral"
-            aria-controls="admin-sidebar"
-            [attr.aria-expanded]="panelMovil() ? sidebarAbierto() : !sidebarCompacto()">
-            <i class="bi bi-list" aria-hidden="true"></i>
-          </button>
-
           <div class="topbar-brand topbar-brand--context" [attr.aria-label]="nombreEmpresa() + ' Backoffice'">
             <span class="topbar-brand-chip">ADMIN</span>
             <div class="topbar-brand-copy">
@@ -716,6 +723,6 @@
   </section>
 }
 </main>
-</div>
-</div>
+</mat-drawer-content>
+</mat-drawer-container>
 </section>

@@ -9,6 +9,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
+import { MatSidenavModule } from '@angular/material/sidenav';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { Observable } from 'rxjs';
 import { finalize } from 'rxjs/operators';
@@ -180,6 +181,7 @@ type NotificacionAdmin = {
     MatCardModule,
     MatMenuModule,
     MatProgressBarModule,
+    MatSidenavModule,
     UserProfileDialogComponent,
     AgendaOperationsSectionComponent,
     AdminBranchesSectionComponent,
@@ -233,7 +235,6 @@ export class AdminDashboardComponent implements OnInit {
   readonly formularioUsuarioInternoRevision = signal(0);
   readonly panelMovil = signal(false);
   readonly sidebarAbierto = signal(true);
-  readonly sidebarCompacto = signal(false);
   readonly perfilConfigAbierto = signal(false);
   readonly perfilUsuarioLocal = signal<PerfilUsuarioLocal>({
     nombre: '',
@@ -751,9 +752,6 @@ export class AdminDashboardComponent implements OnInit {
   private sincronizarSidebarConViewport(esMovil: boolean) {
     this.panelMovil.set(esMovil);
     this.sidebarAbierto.set(!esMovil);
-    if (esMovil) {
-      this.sidebarCompacto.set(false);
-    }
   }
 
   seleccionarSeccion(seccion: SeccionAdmin) {
@@ -807,14 +805,6 @@ export class AdminDashboardComponent implements OnInit {
 
   cerrarSidebar() {
     this.sidebarAbierto.set(false);
-  }
-
-  alternarCompactoSidebar() {
-    if (this.panelMovil()) {
-      this.sidebarAbierto.update(valor => !valor);
-      return;
-    }
-    this.sidebarCompacto.update(valor => !valor);
   }
 
   tituloSeccionActual(): string {

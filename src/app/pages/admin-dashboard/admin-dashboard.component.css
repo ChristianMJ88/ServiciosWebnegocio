@@ -171,30 +171,6 @@
   box-shadow: 0 16px 36px rgba(18, 28, 45, 0.08);
 }
 
-.toolbar-hamburger {
-  width: 48px;
-  height: 48px;
-  border-radius: 16px;
-  background:
-    radial-gradient(circle at top left, rgba(255, 255, 255, 0.86), transparent 52%),
-    linear-gradient(135deg, rgba(67, 121, 255, 0.22), rgba(255, 255, 255, 0.96));
-  border-color: rgba(136, 165, 221, 0.34);
-  box-shadow:
-    0 16px 30px rgba(19, 32, 54, 0.1),
-    inset 0 1px 0 rgba(255, 255, 255, 0.75);
-}
-
-.toolbar-hamburger svg {
-  width: 22px;
-  height: 22px;
-}
-
-.toolbar-hamburger svg path {
-  stroke: #193253;
-  stroke-width: 2.35;
-  stroke-linecap: round;
-}
-
 .topbar-brand--context {
   padding: 0.35rem 0.45rem 0.35rem 0;
 }
@@ -269,11 +245,6 @@
     padding: 0.9rem 1rem;
   }
 
-  .toolbar-hamburger {
-    width: 46px;
-    height: 46px;
-  }
-
   .topbar-brand--context {
     min-width: 0;
   }
@@ -308,28 +279,6 @@
 
 .topbar-left {
   gap: 1rem;
-}
-
-.toolbar-hamburger {
-  width: 46px;
-  height: 46px;
-  padding: 0;
-  border-radius: 16px;
-  border: 1px solid rgba(126, 154, 210, 0.26);
-  background: linear-gradient(135deg, rgba(67, 121, 255, 0.12), rgba(255, 255, 255, 0.96));
-  box-shadow: 0 14px 26px rgba(19, 32, 54, 0.08);
-}
-
-.toolbar-hamburger span {
-  display: none;
-}
-
-.toolbar-hamburger svg {
-  width: 20px;
-  height: 20px;
-  stroke: #20314d;
-  stroke-width: 2.2;
-  stroke-linecap: round;
 }
 
 .topbar-brand--context {
@@ -408,23 +357,9 @@
     linear-gradient(180deg, #f6f9fd 0%, #e8eff8 54%, #edf2f8 100%);
 }
 
-.admin-backdrop {
-  position: fixed;
-  inset: 0;
-  background: rgba(15, 23, 42, 0.16);
-  backdrop-filter: blur(8px);
-  z-index: 30;
-}
-
 .admin-layout {
+  --admin-sidebar-width: 290px;
   min-height: 100vh;
-  display: grid;
-  grid-template-columns: 290px minmax(0, 1fr);
-  align-items: stretch;
-}
-
-.admin-layout.is-compact {
-  grid-template-columns: 92px minmax(0, 1fr);
 }
 
 .admin-sidebar {
@@ -443,6 +378,54 @@
   border-right: 1px solid rgba(112, 138, 185, 0.18);
   box-shadow: 26px 0 52px rgba(7, 12, 23, 0.34);
   z-index: 15;
+  transition: transform 200ms ease, opacity 160ms ease;
+}
+
+.sidebar-edge-toggle {
+  position: fixed;
+  top: 19px;
+  left: 12px;
+  z-index: 40;
+  width: 38px;
+  height: 38px;
+  display: inline-grid;
+  place-items: center;
+  padding: 0;
+  border: 1px solid rgba(177, 195, 224, 0.42);
+  border-radius: 50%;
+  color: #40516d;
+  background: rgba(255, 255, 255, 0.94);
+  box-shadow: 0 8px 22px rgba(12, 25, 45, 0.12);
+  cursor: pointer;
+  transition: left 200ms ease, color 160ms ease, background-color 160ms ease, transform 160ms ease;
+}
+
+.sidebar-edge-toggle.is-sidebar-open {
+  left: calc(var(--admin-sidebar-width) - 19px);
+}
+
+.sidebar-edge-toggle.is-rail {
+  left: 57px;
+}
+
+.sidebar-edge-toggle:hover {
+  color: #1d4ed8;
+  background: #ffffff;
+  transform: scale(1.04);
+}
+
+.sidebar-edge-toggle:active {
+  transform: scale(0.94);
+}
+
+.sidebar-edge-toggle:focus-visible {
+  outline: 2px solid rgba(37, 99, 235, 0.48);
+  outline-offset: 2px;
+}
+
+.sidebar-edge-toggle i {
+  font-size: 1.15rem;
+  line-height: 1;
 }
 
 .sidebar-brand {
@@ -891,19 +874,6 @@
   line-height: 1.35;
 }
 
-.admin-layout.is-compact .sidebar-brand,
-.admin-layout.is-compact .sidebar-nav-item {
-  justify-content: center;
-}
-
-.admin-layout.is-compact .sidebar-brand {
-  padding-inline: 0;
-}
-
-.admin-layout.is-compact .sidebar-nav-item {
-  padding-inline: 0;
-}
-
 .admin-content {
   min-width: 0;
   display: flex;
@@ -937,34 +907,13 @@
 
 .topbar-left {
   flex: 1 1 auto;
+  transition: padding-left 200ms ease;
 }
 
 .toolbar-actions {
   justify-content: flex-end;
   row-gap: 0.5rem;
   margin-left: auto;
-}
-
-.toolbar-hamburger {
-  width: 40px;
-  height: 40px;
-  display: inline-flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 3px;
-  border-radius: 12px;
-  border: 1px solid rgba(176, 195, 221, 0.42);
-  background: rgba(255, 255, 255, 0.82);
-  box-shadow: 0 10px 20px rgba(22, 33, 52, 0.06);
-}
-
-.toolbar-hamburger span {
-  width: 16px;
-  height: 2px;
-  border-radius: 999px;
-  background: var(--dashboard-ink);
-  display: block;
 }
 
 .topbar-brand {
@@ -2393,7 +2342,6 @@
 }
 
 .sidebar-nav-item:focus-visible,
-.toolbar-hamburger:focus-visible,
 .toolbar-icon-button:focus-visible,
 .toolbar-user-button:focus-visible,
 .toolbar-refresh-button:focus-visible,
@@ -2422,6 +2370,7 @@
 
 @media (max-width: 991.98px) {
   .admin-layout {
+    --admin-sidebar-width: min(320px, calc(100vw - 2rem));
     display: block;
   }
 
@@ -2430,15 +2379,15 @@
     top: 0;
     bottom: 0;
     left: 0;
-    width: min(320px, calc(100vw - 2rem));
+    width: var(--admin-sidebar-width);
     height: auto;
     transform: translateX(0);
     transition: transform 180ms ease;
     z-index: 35;
   }
 
-  .admin-sidebar.is-hidden {
-    transform: translateX(-100%);
+  .sidebar-edge-toggle {
+    top: 14px;
   }
 
   .admin-toolbar {
@@ -2510,40 +2459,67 @@
   }
 }
 
-/* Control lateral: acción simple, sin apariencia de tarjeta. */
-.admin-toolbar .toolbar-hamburger {
-  width: 38px;
-  min-width: 38px;
-  height: 38px;
-  padding: 0;
-  border: 0;
-  border-radius: 50%;
-  color: #40516d;
+/* Angular Material gobierna el drawer; Bootstrap queda fuera de su comportamiento. */
+.admin-layout.mat-drawer-container {
+  --admin-sidebar-width: 290px;
+  display: block;
+  min-height: 100vh;
   background: transparent;
-  box-shadow: none;
-  transition: color 160ms ease, background-color 160ms ease, transform 160ms ease;
+  overflow: visible;
 }
 
-.admin-toolbar .toolbar-hamburger:hover {
-  color: #1d4ed8;
-  background: rgba(37, 99, 235, 0.08);
+.admin-layout .admin-drawer.mat-drawer {
+  width: var(--admin-sidebar-width);
+  border-right: 0;
+  background: transparent;
+  overflow: visible;
+  transition: width 200ms ease;
 }
 
-.admin-toolbar .toolbar-hamburger:active {
-  transform: scale(0.94);
+.admin-layout.is-rail .admin-drawer.mat-drawer {
+  --admin-sidebar-width: 76px;
+  width: var(--admin-sidebar-width);
 }
 
-.admin-toolbar .toolbar-hamburger:focus-visible {
-  outline: 2px solid rgba(37, 99, 235, 0.45);
-  outline-offset: 2px;
+.admin-layout .admin-drawer .mat-drawer-inner-container {
+  overflow: visible;
 }
 
-.admin-toolbar .toolbar-hamburger i {
-  font-size: 1.45rem;
-  line-height: 1;
+.admin-layout .mat-drawer-content {
+  min-height: 100vh;
+  overflow: visible;
+  transition: margin-left 200ms ease;
+}
+
+.admin-layout.is-rail .mat-drawer-content {
+  margin-left: 76px !important;
+}
+
+.admin-layout.is-rail .sidebar-edge-toggle {
+  left: 57px;
+}
+
+@media (max-width: 991.98px) {
+  .admin-layout.mat-drawer-container {
+    --admin-sidebar-width: min(320px, calc(100vw - 2rem));
+  }
+
+  .admin-layout .admin-drawer.mat-drawer {
+    position: fixed;
+  }
 }
 
 @media (max-width: 767.98px) {
+  .admin-layout.mat-drawer-container {
+    --admin-sidebar-width: min(300px, calc(100vw - 1.2rem));
+  }
+}
+
+@media (max-width: 767.98px) {
+  .admin-layout {
+    --admin-sidebar-width: min(300px, calc(100vw - 1.2rem));
+  }
+
   .admin-form-grid,
   .agenda-item,
   .agenda-calendar-header,
@@ -2572,7 +2548,7 @@
   }
 
   .admin-sidebar {
-    width: min(300px, calc(100vw - 1.2rem));
+    width: var(--admin-sidebar-width);
     padding: 1rem 0.85rem 0.85rem;
   }
 
@@ -2843,28 +2819,6 @@
 .admin-sidebar .sidebar-nav-item.active-nav-item .sidebar-nav-badge {
   color: #ffffff;
   background: rgba(255, 255, 255, 0.15);
-}
-
-.admin-layout.is-compact .admin-sidebar {
-  padding-inline: 0.7rem;
-}
-
-.admin-layout.is-compact .admin-sidebar .sidebar-brand {
-  padding-inline: 0;
-}
-
-.admin-layout.is-compact .admin-sidebar .sidebar-brand-body,
-.admin-layout.is-compact .admin-sidebar .sidebar-nav-item {
-  justify-content: center;
-}
-
-.admin-layout.is-compact .admin-sidebar .sidebar-nav {
-  padding: 0.5rem;
-}
-
-.admin-layout.is-compact .admin-sidebar .sidebar-nav-item {
-  min-height: 50px;
-  padding: 0.5rem;
 }
 
 @media (max-width: 991.98px) {
