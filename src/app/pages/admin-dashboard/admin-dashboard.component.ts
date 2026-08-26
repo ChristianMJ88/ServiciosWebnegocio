@@ -767,6 +767,11 @@ export class AdminDashboardComponent implements OnInit {
     }
   }
 
+  abrirCitaDesdeResumen(citaId: number): void {
+    this.seleccionarSeccion('citas');
+    this.seleccionarCitaAgenda(citaId);
+  }
+
   abrirNotificacion(notificacion: NotificacionAdmin) {
     this.seleccionarSeccion(notificacion.seccion);
   }

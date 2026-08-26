@@ -11,6 +11,8 @@
   --ops-text-soft: #64748b;
   --ops-accent: #2563eb;
   display: grid;
+  min-width: 0;
+  max-width: 100%;
   gap: 0.85rem;
   padding: 0.95rem;
   border-radius: 22px;
@@ -275,6 +277,9 @@
   grid-template-columns: minmax(0, 1fr);
   gap: 0;
   align-items: start;
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
 }
 
 .agenda-operations__timeline {
@@ -311,18 +316,31 @@
 
 @media (max-width: 767.98px) {
   .agenda-operations {
-    padding: 1rem;
-    border-radius: 22px;
+    padding: 0.75rem;
+    border-radius: 18px;
   }
 
   .agenda-operations__header,
   .agenda-operations__toolbar,
   .agenda-operations__toolbar-main {
+    width: 100%;
+    min-width: 0;
     flex-direction: column;
+  }
+
+  .agenda-operations__toolbar {
+    box-sizing: border-box;
+    padding: 0.7rem;
   }
 
   .agenda-operations__date-field {
     min-width: 100%;
+  }
+
+  .agenda-operations__date-field input {
+    box-sizing: border-box;
+    width: 100%;
+    min-width: 0;
   }
 
   .agenda-operations__nav {
@@ -332,11 +350,14 @@
   }
 
   .agenda-operations__view-switcher {
+    box-sizing: border-box;
     width: 100%;
     justify-content: stretch;
   }
 
   .agenda-operations__view-button {
+    min-width: 0;
+    padding-inline: 0.45rem;
     flex: 1 1 0;
   }
 
@@ -351,5 +372,11 @@
   .agenda-operations__modal-shell {
     padding: 0.95rem;
     align-items: end;
+  }
+}
+
+@media (max-width: 479.98px) {
+  .agenda-operations__stats {
+    grid-template-columns: 1fr;
   }
 }

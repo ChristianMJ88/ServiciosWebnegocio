@@ -202,26 +202,12 @@
           @defer {
           <app-admin-summary-section
             [resumen]="resumen()"
-            [viewMode]="agendaViewMode()"
-            [dateValue]="fechaAgendaActiva()"
-            [dateDisplay]="fechaAgendaActivaTexto()"
-            [hourLabels]="agendaHourLabels"
-            [collaborators]="agendaCollaboratorsVm()"
             [appointments]="agendaAppointmentsVm()"
-            [selectedAppointment]="citaAgendaSeleccionada()"
-            [selectedAppointmentId]="citaAgendaSeleccionadaId()"
-            [timelineWidthPx]="anchoAgendaTimeline()"
             [topPrestadoresPorIngreso]="topPrestadoresPorIngreso()"
             [topPrestadoresPorCitas]="topPrestadoresPorCitas()"
             [reporteServicios]="reporteServicios()"
-            (previousDay)="desplazarFechaAgenda(-1)"
-            (goToToday)="irAHoyAgenda()"
-            (nextDay)="desplazarFechaAgenda(1)"
-            (viewModeChange)="cambiarVistaAgenda($event)"
-            (dateValueChange)="seleccionarFechaAgenda($event)"
-            (appointmentSelected)="seleccionarCitaAgenda($event)"
-            (appointmentClosed)="cerrarDetalleAgenda()"
-            (appointmentAction)="gestionarAccionAgenda($event)" />
+            (openAgenda)="seleccionarSeccion('citas')"
+            (appointmentSelected)="abrirCitaDesdeResumen($event)" />
           } @placeholder {
           <section class="section-stack">
             <div class="workspace-card">

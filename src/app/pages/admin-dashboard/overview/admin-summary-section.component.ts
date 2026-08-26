@@ -1,14 +1,10 @@
 
 import { Component, computed, input, output } from '@angular/core';
+import { DatePipe } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
 import { MatDividerModule } from '@angular/material/divider';
-import { AgendaOperationsSectionComponent } from '../../../components/agenda/agenda-operations-section.component';
 import { MoneyDisplayPipe } from '../../../shared/pipes/money-display.pipe';
-import {
-  AgendaAppointmentVm,
-  AgendaCollaboratorVm,
-  AgendaViewMode
-} from '../../../components/agenda/agenda.types';
+import { AgendaAppointmentVm } from '../../../components/agenda/agenda.types';
 import {
   ReportePrestadorAdmin,
   ReporteServicioAdmin,
@@ -18,32 +14,26 @@ import {
 @Component({
   selector: 'app-admin-summary-section',
   standalone: true,
-  imports: [MatCardModule, MatDividerModule, AgendaOperationsSectionComponent, MoneyDisplayPipe],
-  templateUrl: './admin-summary-section.component.html'
+  imports: [DatePipe, MatCardModule, MatDividerModule, MoneyDisplayPipe],
+  templateUrl: './admin-summary-section.component.html',
+  styleUrl: './admin-summary-section.component.css'
 })
 export class AdminSummarySectionComponent {
   readonly resumen = input<ResumenAdmin | null>(null);
-  readonly viewMode = input<AgendaViewMode>('day');
-  readonly dateValue = input('');
-  readonly dateDisplay = input('');
-  readonly hourLabels = input<string[]>([]);
-  readonly collaborators = input<AgendaCollaboratorVm[]>([]);
   readonly appointments = input<AgendaAppointmentVm[]>([]);
-  readonly selectedAppointment = input<AgendaAppointmentVm | null>(null);
-  readonly selectedAppointmentId = input<number | null>(null);
-  readonly timelineWidthPx = input(960);
   readonly topPrestadoresPorIngreso = input<ReportePrestadorAdmin[]>([]);
   readonly topPrestadoresPorCitas = input<ReportePrestadorAdmin[]>([]);
   readonly reporteServicios = input<ReporteServicioAdmin[]>([]);
 
-  readonly previousDay = output<void>();
-  readonly nextDay = output<void>();
-  readonly goToToday = output<void>();
-  readonly dateValueChange = output<string>();
+  readonly openAgenda = output<void>();
   readonly appointmentSelected = output<number>();
-  readonly appointmentAction = output<{ actionId: string; appointmentId: number }>();
-  readonly appointmentClosed = output<void>();
-  readonly viewModeChange = output<AgendaViewMode>();
+
+  readonly citasPrioritarias = computed(() =>
+    [...this.appointments()]
+      .filter((cita) => !['CANCELADA', 'FINALIZADA', 'NO_ASISTIO'].includes(cita.status.toUpperCase()))
+      .sort((a, b) => a.start.localeCompare(b.start))
+      .slice(0, 5)
+  );
 
   private readonly maxIngresos = computed(() =>
     Math.max(...this.topPrestadoresPorIngreso().map((item) => item.ingresosFinalizados), 0)

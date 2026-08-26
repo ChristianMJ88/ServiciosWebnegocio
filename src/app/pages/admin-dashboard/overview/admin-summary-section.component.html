@@ -29,33 +29,42 @@
     </section>
   }
 
-  <app-agenda-operations-section
-    [theme]="'light'"
-    [viewMode]="viewMode()"
-    [availableViews]="['month', 'week', 'day', 'staff']"
-    [eyebrow]="'Agenda operativa'"
-    [title]="'Agenda integral de citas'"
-    [dateLabel]="'Fecha seleccionada'"
-    [dateValue]="dateValue()"
-    [dateDisplay]="dateDisplay()"
-    [summaryCards]="[]"
-    [occupancy]="null"
-    [hourLabels]="hourLabels()"
-    [collaborators]="collaborators()"
-    [appointments]="appointments()"
-    [selectedAppointment]="selectedAppointment()"
-    [selectedAppointmentId]="selectedAppointmentId()"
-    [timelineWidthPx]="timelineWidthPx()"
-    [hourSlotHeight]="86"
-    [emptyMessage]="'Aún no hay colaboradores o citas suficientes para construir la agenda visual.'"
-    (previousDay)="previousDay.emit()"
-    (goToToday)="goToToday.emit()"
-    (nextDay)="nextDay.emit()"
-    (viewModeChange)="viewModeChange.emit($event)"
-    (dateValueChange)="dateValueChange.emit($event)"
-    (appointmentSelected)="appointmentSelected.emit($event)"
-    (appointmentClosed)="appointmentClosed.emit()"
-    (appointmentAction)="appointmentAction.emit($event)" />
+  <mat-card class="dashboard-priority-card">
+    <header class="dashboard-priority-header">
+      <div>
+        <span class="section-eyebrow">Atención inmediata</span>
+        <h3>Próximas citas</h3>
+        <p>Lo más importante de la operación del día, sin duplicar el calendario.</p>
+      </div>
+      <button type="button" class="dashboard-agenda-link" (click)="openAgenda.emit()">
+        Ver agenda completa
+        <i class="bi bi-arrow-right" aria-hidden="true"></i>
+      </button>
+    </header>
+
+    @if (citasPrioritarias().length) {
+      <div class="dashboard-appointment-list">
+        @for (cita of citasPrioritarias(); track cita.id) {
+          <button
+            type="button"
+            class="dashboard-appointment"
+            (click)="appointmentSelected.emit(cita.id)">
+            <span class="dashboard-appointment-time">{{ cita.start | date:'HH:mm' }}</span>
+            <span class="dashboard-appointment-copy">
+              <strong>{{ cita.compactLabel || cita.title }}</strong>
+              <small>{{ cita.subtitle }} · {{ cita.collaboratorLabel || 'Sin prestador' }}</small>
+            </span>
+            <span class="dashboard-appointment-status">{{ cita.statusLabel }}</span>
+          </button>
+        }
+      </div>
+    } @else {
+      <div class="dashboard-priority-empty">
+        <i class="bi bi-calendar2-check" aria-hidden="true"></i>
+        <span>No hay citas pendientes o confirmadas para mostrar.</span>
+      </div>
+    }
+  </mat-card>
 
   @if (topPrestadoresPorIngreso().length) {
     <div class="dashboard-insights-grid">
