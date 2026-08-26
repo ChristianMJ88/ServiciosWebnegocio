@@ -4,6 +4,9 @@
 
 /* Global visual system */
 :root {
+  --layout-gutter: clamp(0.85rem, 2.5vw, 2rem);
+  --layout-section-gap: clamp(1rem, 2vw, 1.75rem);
+  --layout-content-max: 1440px;
   --bg-dark: #f8fbff;
   --bg-darker: #eef4fb;
   --bg-elevated: #ffffff;
@@ -35,9 +38,16 @@
   --tenant-body-font: Inter, "SF Pro Text", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
 }
 
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
 html,
 body {
   min-height: 100%;
+  min-width: 320px;
 }
 
 html {
@@ -52,6 +62,7 @@ html {
 
 body {
   margin: 0;
+  overflow-x: clip;
   font-family: var(--tenant-body-font);
   color: var(--text-gray);
   background:
@@ -61,6 +72,61 @@ body {
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
+}
+
+app-root {
+  display: block;
+  min-width: 0;
+}
+
+main,
+section,
+article,
+aside,
+header,
+footer,
+nav,
+div {
+  min-width: 0;
+}
+
+img,
+picture,
+video,
+canvas,
+svg {
+  max-width: 100%;
+}
+
+img,
+picture,
+video,
+canvas {
+  height: auto;
+}
+
+input,
+select,
+textarea {
+  max-width: 100%;
+}
+
+table {
+  max-width: 100%;
+}
+
+@media (max-width: 991.98px) {
+  :root {
+    --layout-gutter: clamp(0.9rem, 3vw, 1.4rem);
+    --layout-section-gap: 1rem;
+  }
+}
+
+@media (max-width: 575.98px) {
+  :root {
+    --layout-gutter: 0.85rem;
+    --layout-section-gap: 0.85rem;
+  }
 }
 
 h1,
