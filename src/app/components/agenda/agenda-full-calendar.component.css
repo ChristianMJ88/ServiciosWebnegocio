@@ -202,17 +202,69 @@
 
 @media (max-width: 767.98px) {
   .agenda-fullcalendar {
-    overflow-x: auto;
+    overflow: hidden;
     border-radius: 16px;
   }
 
   .agenda-fullcalendar full-calendar {
-    min-width: 620px;
-    padding: 0.35rem;
+    width: 100%;
+    min-width: 0;
+    padding: 0.25rem;
   }
 
   .agenda-fullcalendar__context {
     align-items: flex-start;
     flex-direction: column;
+  }
+
+  .agenda-fullcalendar .fc {
+    width: 100%;
+    min-width: 0;
+    font-size: 0.72rem;
+  }
+
+  .agenda-fullcalendar .fc-col-header-cell-cushion {
+    width: 100%;
+    overflow: hidden;
+    padding: 0.58rem 0.08rem;
+    font-size: 0.62rem;
+    letter-spacing: 0;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .agenda-fullcalendar .fc-daygrid-day-number {
+    min-width: 1.55rem;
+    min-height: 1.55rem;
+    margin: 0.16rem;
+    font-size: 0.68rem;
+  }
+
+  .agenda-fullcalendar .fc-timegrid-axis,
+  .agenda-fullcalendar .fc-timegrid-slot-label {
+    width: 2.6rem;
+  }
+
+  .agenda-fullcalendar .fc-timegrid-slot-label-cushion {
+    padding-inline: 0.15rem;
+    font-size: 0.58rem;
+  }
+
+  .agenda-fullcalendar .fc-event {
+    margin-inline: 1px;
+    border-left-width: 2px;
+    border-radius: 5px;
+  }
+
+  .agenda-fullcalendar .fc-event-main {
+    padding: 0.12rem 0.16rem;
+  }
+
+  .agenda-fullcalendar .fc-event-time,
+  .agenda-fullcalendar .fc-event-title {
+    overflow: hidden;
+    font-size: 0.58rem;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 }
