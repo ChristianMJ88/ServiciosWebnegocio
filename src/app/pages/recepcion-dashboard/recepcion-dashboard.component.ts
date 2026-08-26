@@ -9,14 +9,15 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatToolbarModule } from '@angular/material/toolbar';
-import { Observable, Subject, forkJoin, of } from 'rxjs';
-import { catchError, debounceTime, distinctUntilChanged, finalize, switchMap, tap } from 'rxjs/operators';
+import { Subject } from 'rxjs';
+import { debounceTime, distinctUntilChanged, finalize } from 'rxjs/operators';
 import { AuthService } from '../../core/auth/auth.service';
 import { PerfilUsuarioLocal, UserProfileService } from '../../core/profile/user-profile.service';
 import { UserProfileDialogComponent } from '../../shared/profile/user-profile-dialog.component';
 import { RecepcionSidePanelComponent } from './recepcion-side-panel.component';
 import { RecepcionAgendaSectionComponent } from './agenda/recepcion-agenda-section.component';
 import { FormularioCitaRecepcion, crearFormularioCitaRecepcion } from './forms/recepcion.forms';
+import { RecepcionDashboardFacade } from './data/recepcion-dashboard.facade';
 import {
   CatalogoRecepcion,
   CitaRecepcion,
@@ -59,6 +60,7 @@ import {
 })
 export class RecepcionDashboardComponent implements OnInit, AfterViewInit {
   private readonly recepcionService = inject(RecepcionService);
+  private readonly dashboardFacade = inject(RecepcionDashboardFacade);
   private readonly authService = inject(AuthService);
   private readonly userProfileService = inject(UserProfileService);
   private readonly router = inject(Router);
@@ -239,38 +241,12 @@ export class RecepcionDashboardComponent implements OnInit, AfterViewInit {
     this.error.set('');
     const sucursalPreferida = this.sucursalActivaId();
 
-    this.recepcionService.getCatalogo(sucursalPreferida)
-      .pipe(
-        catchError(() => of<CatalogoRecepcion>({
-          sucursalActivaId: sucursalPreferida,
-          sucursales: [],
-          servicios: [],
-          estadosCita: [],
-          estadoCitaPendiente: '',
-          estadoCitaConfirmada: '',
-          estadosCitaFinalizables: [],
-          estadosCitaCancelables: [],
-          estadosEspera: [],
-          estadoEsperaPendiente: '',
-          estadoEsperaNotificada: ''
-        })),
-        tap(catalogo => {
+    this.dashboardFacade.cargarConCatalogo(this.fechaAgenda(), sucursalPreferida)
+      .pipe(finalize(() => this.loading.set(false)))
+      .subscribe({
+        next: ({ catalogo, agenda, espera }) => {
           this.actualizarVistaEnZona(() => {
             this.aplicarCatalogo(catalogo);
-          });
-        }),
-        switchMap(catalogo => {
-          const sucursalId = catalogo.sucursalActivaId ?? this.sucursalActivaId();
-          return forkJoin({
-            agenda: this.cargarAgenda$(sucursalId),
-            espera: this.cargarSolicitudesEspera$(sucursalId)
-          });
-        }),
-        finalize(() => this.loading.set(false))
-      )
-      .subscribe({
-        next: ({ agenda, espera }) => {
-          this.actualizarVistaEnZona(() => {
             this.citas.set(agenda);
             this.solicitudesEspera.set(espera);
             this.aplicarContextoDesdeAgenda(agenda);
@@ -290,14 +266,8 @@ export class RecepcionDashboardComponent implements OnInit, AfterViewInit {
 
     const sucursalConsulta = this.sucursalActivaId() ?? this.sucursalesPermitidas()[0] ?? null;
 
-    this.recepcionService.getAgenda(this.fechaAgenda(), sucursalConsulta)
-      .pipe(
-        switchMap(agenda => forkJoin({
-          agenda: of(agenda),
-          espera: this.cargarSolicitudesEspera$(sucursalConsulta)
-        })),
-        finalize(() => this.loading.set(false))
-      )
+    this.dashboardFacade.cargarSnapshot(this.fechaAgenda(), sucursalConsulta)
+      .pipe(finalize(() => this.loading.set(false)))
       .subscribe({
         next: ({ agenda, espera }) => this.actualizarVistaEnZona(() => {
           this.citas.set(agenda);
@@ -312,37 +282,11 @@ export class RecepcionDashboardComponent implements OnInit, AfterViewInit {
     this.loading.set(true);
     this.error.set('');
 
-    this.recepcionService.getCatalogo(sucursalId)
-      .pipe(
-        catchError(() => of<CatalogoRecepcion>({
-          sucursalActivaId: sucursalId,
-          sucursales: [],
-          servicios: [],
-          estadosCita: [],
-          estadoCitaPendiente: '',
-          estadoCitaConfirmada: '',
-          estadosCitaFinalizables: [],
-          estadosCitaCancelables: [],
-          estadosEspera: [],
-          estadoEsperaPendiente: '',
-          estadoEsperaNotificada: ''
-        })),
-        tap(catalogo => {
-          this.actualizarVistaEnZona(() => {
-            this.aplicarCatalogo(catalogo);
-          });
-        }),
-        switchMap(catalogo => {
-          const sucursalConsulta = catalogo.sucursalActivaId ?? sucursalId;
-          return forkJoin({
-            agenda: this.cargarAgenda$(sucursalConsulta),
-            espera: this.cargarSolicitudesEspera$(sucursalConsulta)
-          });
-        }),
-        finalize(() => this.loading.set(false))
-      )
+    this.dashboardFacade.cargarConCatalogo(this.fechaAgenda(), sucursalId)
+      .pipe(finalize(() => this.loading.set(false)))
       .subscribe({
-        next: ({ agenda, espera }) => this.actualizarVistaEnZona(() => {
+        next: ({ catalogo, agenda, espera }) => this.actualizarVistaEnZona(() => {
+          this.aplicarCatalogo(catalogo);
           this.citas.set(agenda);
           this.solicitudesEspera.set(espera);
           this.aplicarContextoDesdeAgenda(agenda);
@@ -662,15 +606,6 @@ export class RecepcionDashboardComponent implements OnInit, AfterViewInit {
     if (this.formularioCita.sucursalId && this.formularioCita.servicioId) {
       this.cargarFranjasWalkIn();
     }
-  }
-
-  private cargarAgenda$(sucursalId?: number | null): Observable<CitaRecepcion[]> {
-    return this.recepcionService.getAgenda(this.fechaAgenda(), sucursalId);
-  }
-
-  private cargarSolicitudesEspera$(sucursalId?: number | null): Observable<SolicitudEsperaRecepcion[]> {
-    return this.recepcionService.getSolicitudesEspera(this.fechaAgenda(), sucursalId)
-      .pipe(catchError(() => of([])));
   }
 
   private aplicarContextoDesdeAgenda(agenda: CitaRecepcion[]) {
