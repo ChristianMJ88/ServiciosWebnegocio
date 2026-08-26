@@ -10,7 +10,6 @@ import { MatCardModule } from '@angular/material/card';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatToolbarModule } from '@angular/material/toolbar';
-import { MatTooltipModule } from '@angular/material/tooltip';
 import { Observable } from 'rxjs';
 import { finalize } from 'rxjs/operators';
 import { AgendaOperationsSectionComponent } from '../../components/agenda/agenda-operations-section.component';
@@ -76,12 +75,17 @@ import { AdminRulesSectionComponent } from './availability/admin-rules-section.c
 import { AdminSiteSectionComponent } from './site/admin-site-section.component';
 import { AdminServicesSectionComponent } from './catalog/admin-services-section.component';
 import { AdminSummarySectionComponent } from './overview/admin-summary-section.component';
+import { AdminSidebarComponent } from './navigation/admin-sidebar.component';
 import { AdminUsersActivitySectionComponent } from './access/admin-users-activity-section.component';
 import { AdminUsersAccessSectionComponent } from './access/admin-users-access-section.component';
 import { AdminUsersRolesSectionComponent } from './access/admin-users-roles-section.component';
 import { AdminWhatsappInboxSectionComponent } from './whatsapp/admin-whatsapp-inbox-section.component';
 import { AdminWhatsappSectionComponent } from './whatsapp/admin-whatsapp-section.component';
-import { GRUPOS_SIDEBAR_ADMIN, MODULOS_ADMIN, ModuloAdminDef, SeccionAdmin } from './admin-dashboard.config';
+import {
+  SeccionAdmin,
+  construirGruposSidebarAdmin,
+  filtrarModulosAdmin
+} from './admin-dashboard.config';
 import { AdminDashboardLoader } from './admin-dashboard.loader';
 import { AdminCatalogFacade } from './catalog/admin-catalog.facade';
 import { AdminAccessFacade } from './access/admin-access.facade';
@@ -175,7 +179,6 @@ type NotificacionAdmin = {
     MatButtonModule,
     MatCardModule,
     MatMenuModule,
-    MatTooltipModule,
     MatProgressBarModule,
     UserProfileDialogComponent,
     AgendaOperationsSectionComponent,
@@ -188,6 +191,7 @@ type NotificacionAdmin = {
     AdminSiteSectionComponent,
     AdminServicesSectionComponent,
     AdminSummarySectionComponent,
+    AdminSidebarComponent,
     AdminUsersActivitySectionComponent,
     AdminUsersAccessSectionComponent,
     AdminUsersRolesSectionComponent,
@@ -237,13 +241,6 @@ export class AdminDashboardComponent implements OnInit {
     fotoDataUrl: null
   });
   readonly perfilRegistrado = computed(() => this.userProfileService.perfilRegistrado());
-  readonly gruposSidebarAbiertos = signal<Record<string, boolean>>({
-    operacion: true,
-    canales: true,
-    catalogo: false,
-    equipo: false,
-    configuracion: false
-  });
   readonly resumen = signal<ResumenAdmin | null>(null);
   readonly citas = signal<CitaCliente[]>([]);
   readonly contactos = signal<SolicitudContactoAdmin[]>([]);
@@ -308,19 +305,9 @@ export class AdminDashboardComponent implements OnInit {
   readonly tiposBloqueo = computed(() => this.metadatosDisponibilidad()?.tiposBloqueo ?? []);
   readonly intervaloMinimoMinutos = computed(() => this.metadatosDisponibilidad()?.intervaloMinimoMinutos ?? 0);
   readonly modulosAdmin = computed(() =>
-    MODULOS_ADMIN.filter(modulo => !modulo.capacidad || this.authService[modulo.capacidad]())
+    filtrarModulosAdmin(this.authService.sesionActual()?.permisos ?? [])
   );
-  readonly gruposSidebar = computed(() => {
-    const modulosDisponibles = new Map(this.modulosAdmin().map(modulo => [modulo.id, modulo]));
-    return GRUPOS_SIDEBAR_ADMIN
-      .map(grupo => ({
-        ...grupo,
-        modulosVisibles: grupo.modulos
-          .map(moduloId => modulosDisponibles.get(moduloId))
-          .filter((modulo): modulo is ModuloAdminDef => !!modulo)
-      }))
-      .filter(grupo => grupo.modulosVisibles.length > 0);
-  });
+  readonly gruposSidebar = computed(() => construirGruposSidebarAdmin(this.modulosAdmin()));
   readonly moduloActivo = computed(() => this.modulosAdmin().find(modulo => modulo.id === this.seccionActiva()) ?? this.modulosAdmin()[0]);
   readonly nombreEmpresa = computed(() => this.authService.sesionActual()?.empresaNombre?.trim() || 'Empresa');
   readonly inicialesEmpresa = computed(() => getInitials(this.nombreEmpresa()));
@@ -774,7 +761,6 @@ export class AdminDashboardComponent implements OnInit {
       return;
     }
     this.seccionActiva.set(seccion);
-    this.abrirGrupoSidebarDeSeccion(seccion);
     if (seccion === 'usuarios') {
       this.subseccionUsuariosActiva.set('usuarios');
     }
@@ -810,31 +796,6 @@ export class AdminDashboardComponent implements OnInit {
     this.subseccionUsuariosActiva.set(subseccion);
   }
 
-  alternarGrupoSidebar(grupoId: string) {
-    this.gruposSidebarAbiertos.update(grupos => ({
-      ...grupos,
-      [grupoId]: !grupos[grupoId]
-    }));
-  }
-
-  grupoSidebarExpandido(grupoId: string): boolean {
-    return !!this.gruposSidebarAbiertos()[grupoId];
-  }
-
-  grupoSidebarActivo(grupo: { modulos: SeccionAdmin[] }): boolean {
-    return grupo.modulos.includes(this.seccionActiva());
-  }
-
-  private abrirGrupoSidebarDeSeccion(seccion: SeccionAdmin) {
-    const grupo = GRUPOS_SIDEBAR_ADMIN.find(item => item.modulos.includes(seccion));
-    if (!grupo) {
-      return;
-    }
-    this.gruposSidebarAbiertos.update(grupos => ({
-      ...grupos,
-      [grupo.id]: true
-    }));
-  }
 
   limpiarFiltroUsuariosInternos() {
     this.filtroUsuariosInternos.set('');

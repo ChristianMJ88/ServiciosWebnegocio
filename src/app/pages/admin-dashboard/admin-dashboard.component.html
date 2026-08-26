@@ -6,139 +6,15 @@
   }
 
   <div class="admin-layout" [class.is-mobile]="panelMovil()" [class.is-compact]="sidebarCompacto() && !panelMovil()">
-    <aside
-      id="admin-sidebar"
-      class="admin-sidebar d-flex flex-column"
-      [class.is-hidden]="panelMovil() && !sidebarAbierto()"
-      aria-label="Navegación principal del panel administrativo">
-      <div class="sidebar-brand">
-        <div class="sidebar-brand-body d-flex align-items-center gap-3">
-          <span class="sidebar-brand-mark rounded-3" aria-hidden="true">{{ inicialesEmpresa() }}</span>
-          @if (!sidebarCompacto() || panelMovil()) {
-            <div class="sidebar-brand-copy min-w-0">
-              <span class="badge rounded-pill text-bg-primary sidebar-brand-chip">ADMIN</span>
-              <span class="sidebar-brand-title text-truncate">Backoffice</span>
-              <span class="sidebar-brand-subtitle text-truncate">{{ nombreEmpresa() }}</span>
-            </div>
-          }
-        </div>
-      </div>
-
-      <div class="sidebar-nav-panel flex-grow-1">
-        <nav class="sidebar-nav sidebar-nav-body nav nav-pills flex-column gap-2" aria-label="Secciones administrativas">
-          @for (grupo of gruposSidebar(); track grupo) {
-            <section
-              class="sidebar-menu-group"
-              [class.is-active]="grupoSidebarActivo(grupo)">
-              @if (!sidebarCompacto() || panelMovil()) {
-                <button
-                  type="button"
-                  class="sidebar-menu-toggle d-flex align-items-center gap-2"
-                  (click)="alternarGrupoSidebar(grupo.id)"
-                  [attr.aria-expanded]="grupoSidebarExpandido(grupo.id)"
-                  [attr.aria-controls]="'sidebar-group-' + grupo.id"
-                  >
-                  <span class="sidebar-menu-icon" aria-hidden="true">
-                    @switch (grupo.icono) {
-                      @case ('operacion') {
-                        <i class="bi bi-grid-1x2-fill"></i>
-                      }
-                      @case ('canales') {
-                        <i class="bi bi-broadcast-pin"></i>
-                      }
-                      @case ('catalogo') {
-                        <i class="bi bi-folder2-open"></i>
-                      }
-                      @case ('equipo') {
-                        <i class="bi bi-people-fill"></i>
-                      }
-                      @default {
-                        <i class="bi bi-sliders"></i>
-                      }
-                    }
-                  </span>
-                  <span class="sidebar-menu-title text-truncate">{{ grupo.titulo }}</span>
-                  <span class="badge rounded-pill sidebar-menu-count ms-auto">{{ grupo.modulosVisibles.length }}</span>
-                  <i
-                    class="bi bi-chevron-down sidebar-menu-chevron"
-                    [class.is-open]="grupoSidebarExpandido(grupo.id)"
-                  aria-hidden="true"></i>
-                </button>
-              }
-              <div
-                class="sidebar-submenu collapse"
-                [class.show]="grupoSidebarExpandido(grupo.id) || (sidebarCompacto() && !panelMovil())"
-                [id]="'sidebar-group-' + grupo.id">
-                @for (modulo of grupo.modulosVisibles; track modulo) {
-                  <button
-                    type="button"
-                    class="nav-link sidebar-nav-item d-flex align-items-center gap-3"
-                    (click)="seleccionarSeccion(modulo.id)"
-                    [class.active-nav-item]="seccionActiva() === modulo.id"
-                    [class.active]="seccionActiva() === modulo.id"
-                    [attr.aria-current]="seccionActiva() === modulo.id ? 'page' : null"
-                    [attr.aria-label]="modulo.titulo"
-                    [matTooltip]="sidebarCompacto() && !panelMovil() ? modulo.titulo : ''"
-                    matTooltipPosition="right">
-                    <span class="sidebar-nav-icon rounded-3" aria-hidden="true">
-                      @switch (modulo.icono) {
-                        @case ('resumen') {
-                          <i class="bi bi-speedometer2"></i>
-                        }
-                        @case ('sucursal') {
-                          <i class="bi bi-buildings"></i>
-                        }
-                        @case ('servicio') {
-                          <i class="bi bi-list-check"></i>
-                        }
-                        @case ('prestador') {
-                          <i class="bi bi-person-badge"></i>
-                        }
-                        @case ('horario') {
-                          <i class="bi bi-calendar3"></i>
-                        }
-                        @case ('bloqueo') {
-                          <i class="bi bi-lock"></i>
-                        }
-                        @case ('correo') {
-                          <i class="bi bi-envelope-paper"></i>
-                        }
-                        @case ('sitio') {
-                          <i class="bi bi-window-sidebar"></i>
-                        }
-                        @case ('whatsapp') {
-                          <i class="bi bi-whatsapp"></i>
-                        }
-                        @case ('contactos') {
-                          <i class="bi bi-chat-left-text"></i>
-                        }
-                        @default {
-                          <i class="bi bi-calendar-week"></i>
-                        }
-                      }
-                    </span>
-                    @if (!sidebarCompacto() || panelMovil()) {
-                      <span class="sidebar-nav-copy min-w-0 flex-grow-1">
-                        <span class="sidebar-nav-title text-truncate">{{ modulo.titulo }}</span>
-                        <span class="sidebar-nav-description text-truncate">{{ modulo.descripcion }}</span>
-                      </span>
-                    }
-                    @if (!sidebarCompacto() || panelMovil()) {
-                      <span
-                        class="badge rounded-pill sidebar-nav-badge ms-auto"
-                        >
-                        {{ modulo.abreviatura }}
-                      </span>
-                    }
-                  </button>
-                }
-              </div>
-            </section>
-          }
-        </nav>
-      </div>
-
-    </aside>
+    <app-admin-sidebar
+      [grupos]="gruposSidebar()"
+      [seccionActiva]="seccionActiva()"
+      [compacto]="sidebarCompacto()"
+      [movil]="panelMovil()"
+      [oculto]="panelMovil() && !sidebarAbierto()"
+      [inicialesEmpresa]="inicialesEmpresa()"
+      [nombreEmpresa]="nombreEmpresa()"
+      (seleccionar)="seleccionarSeccion($event)" />
 
     <div class="admin-content">
       <mat-toolbar class="admin-toolbar">

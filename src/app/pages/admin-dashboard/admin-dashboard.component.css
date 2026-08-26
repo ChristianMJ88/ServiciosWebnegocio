@@ -1093,9 +1093,15 @@
 .admin-body {
   display: grid;
   gap: 1.5rem;
+  width: 100%;
+  min-width: 0;
   max-width: 1560px;
   margin: 0 auto;
   padding: 1.35rem 1.35rem 2rem;
+}
+
+.admin-body > * {
+  min-width: 0;
 }
 
 .content-header {
@@ -2727,7 +2733,7 @@
   overflow-x: hidden;
 }
 
-.admin-sidebar .sidebar-nav-item.nav-link {
+.admin-sidebar .sidebar-nav-item {
   min-height: 52px;
   padding: 0.52rem 0.62rem;
   color: rgba(236, 244, 255, 0.82) !important;
@@ -2736,15 +2742,14 @@
   background: transparent !important;
 }
 
-.admin-sidebar .sidebar-nav-item.nav-link:hover {
+.admin-sidebar .sidebar-nav-item:hover {
   color: #ffffff !important;
   background: rgba(255, 255, 255, 0.075) !important;
   border-color: rgba(168, 194, 241, 0.13);
   transform: translateX(2px);
 }
 
-.admin-sidebar .sidebar-nav-item.nav-link.active,
-.admin-sidebar .sidebar-nav-item.nav-link.active-nav-item {
+.admin-sidebar .sidebar-nav-item.active-nav-item {
   color: #ffffff !important;
   background:
     linear-gradient(135deg, rgba(67, 121, 255, 0.34), rgba(31, 199, 182, 0.2)),
@@ -2771,8 +2776,7 @@
   border: 1px solid rgba(174, 198, 242, 0.14) !important;
 }
 
-.admin-sidebar .active-nav-item .sidebar-nav-icon,
-.admin-sidebar .sidebar-nav-item.active .sidebar-nav-icon {
+.admin-sidebar .active-nav-item .sidebar-nav-icon {
   background: rgba(255, 255, 255, 0.14) !important;
   color: #ffffff !important;
   border-color: rgba(255, 255, 255, 0.2) !important;
@@ -2803,7 +2807,7 @@
   font-size: 0.68rem;
 }
 
-.admin-sidebar .sidebar-nav-item.active .sidebar-nav-badge {
+.admin-sidebar .sidebar-nav-item.active-nav-item .sidebar-nav-badge {
   color: #ffffff;
   background: rgba(255, 255, 255, 0.15);
 }
@@ -2817,7 +2821,7 @@
 }
 
 .admin-layout.is-compact .admin-sidebar .sidebar-brand-body,
-.admin-layout.is-compact .admin-sidebar .sidebar-nav-item.nav-link {
+.admin-layout.is-compact .admin-sidebar .sidebar-nav-item {
   justify-content: center;
 }
 
@@ -2825,7 +2829,7 @@
   padding: 0.5rem;
 }
 
-.admin-layout.is-compact .admin-sidebar .sidebar-nav-item.nav-link {
+.admin-layout.is-compact .admin-sidebar .sidebar-nav-item {
   min-height: 50px;
   padding: 0.5rem;
 }

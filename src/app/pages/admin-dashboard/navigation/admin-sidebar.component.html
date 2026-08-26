@@ -1,0 +1,66 @@
+<aside
+  id="admin-sidebar"
+  class="admin-sidebar"
+  [class.is-hidden]="oculto()"
+  aria-label="Navegación principal del panel administrativo">
+  <div class="sidebar-brand">
+    <div class="sidebar-brand-body">
+      <span class="sidebar-brand-mark" aria-hidden="true">{{ inicialesEmpresa() }}</span>
+      @if (mostrarContenido()) {
+        <div class="sidebar-brand-copy">
+          <span class="sidebar-brand-chip">ADMIN</span>
+          <span class="sidebar-brand-title">Backoffice</span>
+          <span class="sidebar-brand-subtitle">{{ nombreEmpresa() }}</span>
+        </div>
+      }
+    </div>
+  </div>
+
+  <div class="sidebar-nav-panel">
+    <nav class="sidebar-nav" aria-label="Secciones administrativas">
+      @for (grupo of grupos(); track grupo.id) {
+        <section class="sidebar-menu-group" [class.is-active]="grupoActivo(grupo)">
+          @if (mostrarContenido()) {
+            <button
+              type="button"
+              class="sidebar-menu-toggle"
+              (click)="alternarGrupo(grupo.id)"
+              [attr.aria-expanded]="grupoExpandido(grupo.id)"
+              [attr.aria-controls]="'sidebar-group-' + grupo.id">
+              <i [class]="grupo.iconClass" aria-hidden="true"></i>
+              <span class="sidebar-menu-title">{{ grupo.titulo }}</span>
+              <span class="sidebar-menu-count">{{ grupo.modulosVisibles.length }}</span>
+              <i class="bi bi-chevron-down sidebar-menu-chevron" [class.is-open]="grupoExpandido(grupo.id)" aria-hidden="true"></i>
+            </button>
+          }
+
+          <div
+            class="sidebar-submenu"
+            [class.is-open]="grupoExpandido(grupo.id) || (compacto() && !movil())"
+            [id]="'sidebar-group-' + grupo.id">
+            @for (modulo of grupo.modulosVisibles; track modulo.id) {
+              <button
+                type="button"
+                class="sidebar-nav-item"
+                (click)="seleccionar.emit(modulo.id)"
+                [class.active-nav-item]="seccionActiva() === modulo.id"
+                [attr.aria-current]="seccionActiva() === modulo.id ? 'page' : null"
+                [attr.aria-label]="modulo.titulo"
+                [matTooltip]="compacto() && !movil() ? modulo.titulo : ''"
+                matTooltipPosition="right">
+                <span class="sidebar-nav-icon" aria-hidden="true"><i [class]="modulo.iconClass"></i></span>
+                @if (mostrarContenido()) {
+                  <span class="sidebar-nav-copy">
+                    <span class="sidebar-nav-title">{{ modulo.titulo }}</span>
+                    <span class="sidebar-nav-description">{{ modulo.descripcion }}</span>
+                  </span>
+                  <span class="sidebar-nav-badge">{{ modulo.abreviatura }}</span>
+                }
+              </button>
+            }
+          </div>
+        </section>
+      }
+    </nav>
+  </div>
+</aside>

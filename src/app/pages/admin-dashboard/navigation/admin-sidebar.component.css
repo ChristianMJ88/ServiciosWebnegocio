@@ -1,0 +1,75 @@
+:host {
+  display: contents;
+}
+
+.admin-sidebar {
+  display: flex;
+  flex-direction: column;
+}
+
+.sidebar-brand-body,
+.sidebar-menu-toggle,
+.sidebar-nav-item {
+  display: flex;
+  align-items: center;
+}
+
+.sidebar-brand-body {
+  gap: 0.75rem;
+}
+
+.sidebar-brand-copy,
+.sidebar-nav-copy {
+  display: grid;
+  min-width: 0;
+}
+
+.sidebar-brand-title,
+.sidebar-brand-subtitle,
+.sidebar-menu-title,
+.sidebar-nav-title,
+.sidebar-nav-description {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sidebar-nav-panel {
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.sidebar-nav {
+  display: flex;
+  flex-direction: column;
+}
+
+.sidebar-menu-toggle,
+.sidebar-nav-item {
+  width: 100%;
+  border: 0;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.sidebar-menu-toggle {
+  gap: 0.65rem;
+}
+
+.sidebar-menu-count,
+.sidebar-nav-badge {
+  margin-left: auto;
+}
+
+.sidebar-submenu {
+  display: none;
+}
+
+.sidebar-submenu.is-open {
+  display: block;
+}
+
+.sidebar-nav-item {
+  gap: 0.75rem;
+}
