@@ -154,6 +154,34 @@
   font-weight: 650;
 }
 
+@media (max-width: 1199.98px) {
+  .recepcion-toolbar {
+    gap: 0.65rem;
+    padding-inline: 0.85rem;
+  }
+
+  .recepcion-toolbar-actions {
+    gap: 0.4rem;
+  }
+
+  .recepcion-user-button {
+    width: 42px;
+    min-width: 42px;
+    max-width: 42px;
+    padding: 0;
+  }
+
+  .recepcion-user-button .mdc-button__label {
+    justify-content: center;
+    gap: 0;
+  }
+
+  .recepcion-user-copy,
+  .toolbar-user-chevron {
+    display: none;
+  }
+}
+
 .recepcion-body {
   width: min(100%, 1480px);
   margin: 0 auto;
