@@ -3,15 +3,15 @@
     <div class="container refluora-hero__shell">
       <div class="refluora-hero__grid">
         <div class="refluora-hero__copy">
-          <span class="section-kicker section-kicker--hero">Agenda de citas para pequeños y medianos negocios</span>
-          <h1>Organiza tus citas y haz crecer tu negocio con Fluora.</h1>
+          <span class="section-kicker section-kicker--hero"><i class="bi bi-stars"></i> Agenda, CRM y operación en un solo lugar</span>
+          <h1>Organiza tu negocio y haz crecer cada relación.</h1>
           <p class="refluora-hero__lead">
-            Una agenda fácil y accesible para emprendedoras y negocios de servicios. Recibe reservas, publica tu minisitio web y administra clientes, recepción, caja y recordatorios desde un solo lugar.
+            Fluora es la plataforma para organizar citas, clientes y operación. Conecta tu agenda y CRM con herramientas como WhatsApp para que tu equipo atienda mejor y mantenga todo el contexto en un solo lugar.
           </p>
 
           <div class="refluora-hero__actions">
-            <a routerLink="/registro" class="btn btn-primary btn-lg rounded-pill">Probar Fluora 3 meses</a>
-            <a [attr.href]="platformHost.appUrl('/acceso')" class="btn btn-outline-light btn-lg rounded-pill hero-secondary-action">Ya tengo cuenta</a>
+            <a routerLink="/registro" class="btn btn-primary btn-lg rounded-pill">Probar Fluora gratis <i class="bi bi-arrow-right"></i></a>
+            <a [attr.href]="platformHost.appUrl('/acceso')" class="btn btn-outline-light btn-lg rounded-pill hero-secondary-action">Entrar a la app</a>
           </div>
 
           <div class="refluora-hero__signals" aria-label="Áreas principales">
@@ -32,56 +32,62 @@
 
         <div class="refluora-hero__visual">
           <div class="hero-preview">
-            <div class="hero-preview__topbar">
-              <span>Agenda</span>
-              <span>Clientes</span>
-              <span>Minisitio web</span>
+            <div class="hero-preview__chrome">
+              <div class="hero-preview__brand"><img src="/fluora-mark.svg" alt="" aria-hidden="true"><strong>Fluora</strong></div>
+              <span class="hero-preview__live"><i></i> Agenda y CRM sincronizados</span>
             </div>
 
-            <div class="hero-preview__body">
-              <div class="preview-column">
-                <div class="preview-card preview-card--message">
-                  <small>Nueva reserva</small>
-                  <strong>Cita confirmada</strong>
-                  <p>30 ago · 3:00 PM · Maquillaje</p>
-                </div>
-
-                <div class="preview-card">
-                  <small>Minisitio Fluora</small>
-                  <strong>Reserva recibida</strong>
-                  <p>Tu cliente eligió servicio, fecha y horario.</p>
+            <div class="conversation-demo" aria-label="Ejemplo de cómo una conversación de WhatsApp se organiza en la agenda y CRM de Fluora">
+              <div class="phone-frame">
+                <div class="phone-speaker" aria-hidden="true"></div>
+                <div class="phone-screen">
+                  <header class="chat-header-demo">
+                    <button type="button" aria-label="Volver"><i class="bi bi-chevron-left"></i></button>
+                    <span class="chat-avatar">ML</span>
+                    <div><strong>Mariana López</strong><small>en línea</small></div>
+                    <i class="bi bi-telephone"></i>
+                    <i class="bi bi-three-dots-vertical"></i>
+                  </header>
+                  <div class="chat-thread">
+                    <span class="chat-day">Hoy</span>
+                    <div class="chat-bubble chat-bubble--incoming message-one">
+                      Hola, ¿puedo reservar maquillaje para este viernes?
+                      <time>10:24</time>
+                    </div>
+                    <div class="chat-typing"><i></i><i></i><i></i></div>
+                    <div class="chat-bubble chat-bubble--outgoing message-two">
+                      ¡Hola, Mariana! Claro. Tenemos disponible a las 3:00 PM.
+                      <time>10:24 <i class="bi bi-check2-all"></i></time>
+                    </div>
+                    <div class="chat-bubble chat-bubble--incoming message-three">
+                      Perfecto, ese horario me funciona 😊
+                      <time>10:25</time>
+                    </div>
+                    <div class="chat-bubble chat-bubble--outgoing chat-bubble--confirmation message-four">
+                      <span><i class="bi bi-calendar2-check"></i></span>
+                      <div><small>Cita confirmada</small><strong>Viernes · 3:00 PM</strong></div>
+                      <time>10:25 <i class="bi bi-check2-all"></i></time>
+                    </div>
+                  </div>
+                  <div class="chat-composer"><i class="bi bi-plus-circle"></i><span>Mensaje</span><i class="bi bi-mic"></i></div>
                 </div>
               </div>
 
-              <div class="preview-flow">
-                <div class="preview-step">
-                  <span>1</span>
-                  <div>
-                  <strong>Publica tus servicios</strong>
-                    <p>Muestra información, imágenes, precios y horarios de tu negocio.</p>
-                  </div>
-                </div>
-                <div class="preview-step">
-                  <span>2</span>
-                  <div>
-                  <strong>Recibe la cita</strong>
-                    <p>La reserva entra a tu agenda y al CRM de clientes.</p>
-                  </div>
-                </div>
-                <div class="preview-step">
-                  <span>3</span>
-                  <div>
-                  <strong>Atiende y cobra</strong>
-                    <p>Recepción, caja y seguimiento trabajan con la misma información.</p>
-                  </div>
-                </div>
+              <div class="sync-rail" aria-label="Información organizada en la agenda y CRM de Fluora">
+                <div class="sync-line" aria-hidden="true"><i></i></div>
+                <article class="sync-event sync-event--contact">
+                  <span><i class="bi bi-person-check"></i></span>
+                  <div><small>Cliente en el CRM</small><strong>Mariana López</strong></div>
+                </article>
+                <article class="sync-event sync-event--booking">
+                  <span><i class="bi bi-calendar2-check"></i></span>
+                  <div><small>Cita en la agenda</small><strong>Viernes · 3:00 PM</strong></div>
+                </article>
+                <article class="sync-event sync-event--automation">
+                  <span><i class="bi bi-stars"></i></span>
+                  <div><small>Operación organizada</small><strong>Recordatorio listo</strong></div>
+                </article>
               </div>
-            </div>
-
-            <div class="hero-preview__footer">
-              <span>Cita organizada</span>
-              <span>Cliente registrado</span>
-              <span>Recordatorio programado</span>
             </div>
           </div>
         </div>
@@ -179,7 +185,7 @@
 
       <div class="pillar-grid">
         @for (item of pillars; track item) {
-          <article class="info-card info-card--soft">
+          <article class="info-card info-card--soft" [class.info-card--featured]="$index === 1">
             <h3>{{ item.title }}</h3>
             <p>{{ item.body }}</p>
           </article>
@@ -325,7 +331,7 @@
           Crea tu empresa en Fluora y reúne agenda, minisitio, clientes, recepción, caja y seguimiento en una plataforma accesible.
         </p>
         <div class="final-cta__actions">
-          <a routerLink="/registro" class="btn btn-primary btn-lg rounded-pill">Crear mi empresa</a>
+          <a routerLink="/registro" class="btn btn-primary btn-lg rounded-pill">Comenzar prueba gratis <i class="bi bi-arrow-right"></i></a>
           <a [attr.href]="platformHost.appUrl('/acceso')" class="btn btn-outline-light btn-lg rounded-pill">Entrar a la app</a>
         </div>
       </div>

@@ -1,4 +1,4 @@
-<footer class="site-footer">
+<footer class="site-footer" [class.site-footer--marketing]="!tenantActivo()">
   <div class="footer-shell">
     <div class="footer-grid">
       <div class="footer-brand-panel">
@@ -9,20 +9,21 @@
               [alt]="'Logo ' + tenantContext.nombreComercial()"
               class="footer-logo">
           } @else {
-            <img src="/fluora-logo.svg" alt="Logo Fluora" class="footer-wordmark">
+            <img src="/fluora-logo-dark.svg" alt="Fluora" class="footer-wordmark">
           }
           <div>
             <h3 class="footer-brand-title">{{ tenantActivo() ? tenantContext.nombreComercial() : 'Fluora' }}</h3>
-            <p class="footer-brand-copy">{{ tenantContext.descripcionCorta() }}</p>
+            <p class="footer-brand-copy">{{ tenantActivo() ? tenantContext.descripcionCorta() : 'Tu negocio, mejor organizado.' }}</p>
           </div>
         </div>
 
         <p class="footer-copy">
           {{ tenantActivo()
           ? 'Diseño, técnica y una atención cercana para que cada cita se sienta bien cuidada desde el primer momento.'
-          : 'Portal SaaS para separar tu marca comercial, operar tus paneles y publicar una web propia por empresa.' }}
+          : 'Reúne tus citas, clientes y operación diaria en un solo lugar. Menos pendientes dispersos y más tiempo para atender y hacer crecer tu negocio.' }}
         </p>
 
+        @if (tenantActivo()) {
         <div class="footer-socials">
           <a [href]="tenantContext.instagramUrl() || '#'" class="social-icon" aria-label="Instagram">
             <i class="bi bi-instagram"></i>
@@ -34,6 +35,7 @@
             <i class="bi bi-whatsapp"></i>
           </a>
         </div>
+        }
       </div>
 
       <div class="footer-links-panel">
@@ -103,22 +105,19 @@
       <div class="footer-links-panel">
         <h4 class="footer-title">Contacto</h4>
         <ul class="footer-contact-list">
-          <li>
-            <i class="bi bi-geo-alt"></i>
-            <span>{{ tenantContext.direccion() || 'Configuración de dirección pendiente' }}</span>
-          </li>
+          @if (tenantActivo() && tenantContext.direccion()) {
+            <li><i class="bi bi-geo-alt"></i><span>{{ tenantContext.direccion() }}</span></li>
+          }
           <li>
             <i class="bi bi-envelope"></i>
-            <span>{{ tenantContext.correo() || 'contacto@fluora.app' }}</span>
+            <a class="footer-link" [href]="'mailto:' + (tenantActivo() && tenantContext.correo() ? tenantContext.correo() : 'contacto@refluora.com')">{{ tenantActivo() && tenantContext.correo() ? tenantContext.correo() : 'contacto@refluora.com' }}</a>
           </li>
-          <li>
-            <i class="bi bi-telephone"></i>
-            <span>{{ tenantContext.telefono() || 'Por definir' }}</span>
-          </li>
-          <li>
-            <i class="bi bi-clock"></i>
-            <span>Lun a sáb, 9:00 AM a 7:00 PM</span>
-          </li>
+          @if (tenantActivo() && tenantContext.telefono()) {
+            <li><i class="bi bi-telephone"></i><span>{{ tenantContext.telefono() }}</span></li>
+          }
+          @if (tenantActivo()) {
+            <li><i class="bi bi-clock"></i><span>Lun a sáb, 9:00 AM a 7:00 PM</span></li>
+          }
         </ul>
       </div>
     </div>
@@ -131,8 +130,8 @@
         } @else {
           <a [attr.href]="accessHref()" class="footer-bottom-link">Acceso</a>
         }
-        <a href="#" class="footer-bottom-link">Privacidad</a>
-        <a href="#" class="footer-bottom-link">Términos</a>
+        <a href="/privacidad" class="footer-bottom-link">Privacidad</a>
+        <a href="/terminos" class="footer-bottom-link">Términos</a>
       </div>
     </div>
   </div>

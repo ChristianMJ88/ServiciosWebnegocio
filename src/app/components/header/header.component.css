@@ -260,8 +260,13 @@
 }
 
 .site-header--hero-integrated .header-button {
-  box-shadow: 0 18px 34px rgba(6, 17, 26, 0.22);
+  border: 1px solid #00f5a0;
+  color: #04130e;
+  background: #00f5a0;
+  box-shadow: 0 14px 34px rgba(0, 245, 160, 0.2);
 }
+
+.site-header--hero-integrated .header-link::after { background: rgba(255,255,255,.55); }
 
 .header-toggler {
   display: none;

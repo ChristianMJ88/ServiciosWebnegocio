@@ -14,7 +14,7 @@ export class TenantContextService {
   readonly dominioPrincipal = computed(() => this.tenant()?.dominioPrincipal ?? null);
   readonly nombreComercial = computed(() => this.tenant()?.nombreComercial ?? 'Fluora');
   readonly descripcionCorta = computed(() =>
-    this.tenant()?.descripcionCorta ?? 'Software multitenant para servicios, agenda y operación.'
+    this.tenant()?.descripcionCorta ?? 'Agenda, clientes y operación en un solo lugar.'
   );
   readonly colorPrimario = computed(() => this.tenant()?.colorPrimario ?? '#2563eb');
   readonly colorSecundario = computed(() => this.tenant()?.colorSecundario ?? '#0f766e');
