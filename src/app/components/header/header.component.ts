@@ -43,6 +43,7 @@ export class HeaderComponent {
   readonly registerLink = computed(() => this.tenantActivo() ? this.tenantContext.routeFor('registro') : '/registro');
   readonly ctaLink = computed(() => this.tenantActivo() ? this.tenantContext.routeFor('agendar') : '/registro');
   readonly accessHref = computed(() => this.platformHost.appUrl('/acceso'));
+  readonly marketingHomeHref = computed(() => this.platformHost.marketingUrl('/'));
   readonly featuresHref = computed(() => this.platformHost.marketingUrl('/#producto'));
   readonly workflowHref = computed(() => this.platformHost.marketingUrl('/#como-funciona'));
   readonly companiesHref = computed(() => this.platformHost.marketingUrl('/#beneficios'));

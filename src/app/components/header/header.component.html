@@ -53,19 +53,19 @@
           </li>
         } @else {
           <li class="header-nav-item">
-            <a class="header-link" [attr.href]="featuresHref()" (click)="onNavAction()">Plataforma</a>
+            <a class="header-link" [attr.href]="marketingHomeHref()" (click)="onNavAction()">Inicio</a>
           </li>
           <li class="header-nav-item">
             <a class="header-link" [attr.href]="workflowHref()" (click)="onNavAction()">Cómo funciona</a>
           </li>
           <li class="header-nav-item">
-            <a class="header-link" [attr.href]="companiesHref()" (click)="onNavAction()">Beneficios</a>
+            <a class="header-link" [attr.href]="companiesHref()" (click)="onNavAction()">Funciones</a>
           </li>
           <li class="header-nav-item">
             <a class="header-link" [attr.href]="pricingHref()" (click)="onNavAction()">Planes</a>
           </li>
           <li class="header-nav-item">
-            <a class="header-link" [attr.href]="faqHref()" (click)="onNavAction()">FAQ</a>
+            <a class="header-link" [attr.href]="faqHref()" (click)="onNavAction()">Preguntas</a>
           </li>
         }
         @if (tenantActivo()) {
@@ -117,7 +117,7 @@
             @if (tenantActivo()) {
               <a [routerLink]="ctaLink()" class="header-button" (click)="onNavAction()">Reservar</a>
             } @else {
-              <a [attr.href]="registerHref()" class="header-button" (click)="onNavAction()">Crear mi agenda</a>
+              <a [attr.href]="registerHref()" class="header-button" (click)="onNavAction()">Probar 3 meses</a>
             }
           </li>
         }

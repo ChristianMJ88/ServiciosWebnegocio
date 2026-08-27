@@ -3,16 +3,18 @@
     <div class="company-register__shell">
       <aside class="company-register__aside">
         <img src="/fluora-logo-dark.svg" alt="Logo Fluora" class="company-register__logo">
-        <span class="company-register__eyebrow">Onboarding de empresa</span>
-        <h1>Crea tu espacio en Fluora y deja tu negocio listo para operar.</h1>
+        <span class="company-register__eyebrow">Empieza hoy</span>
+        <h1>Cuéntanos sobre tu negocio. Fluora te ayuda con el resto.</h1>
         <p>
-          Este formulario crea tu empresa dentro de Fluora, con su persona administradora principal, su espacio público y su acceso central.
+          En unos minutos tendrás tu agenda, tu acceso principal y un minisitio listo para personalizar.
         </p>
 
+        <div class="company-register__trial"><i class="bi bi-gift"></i><div><strong>3 meses de Fluora PRO incluidos</strong><span>Registra tu negocio sin costo. Al finalizar podrás elegir el plan que mejor se adapte a ti.</span></div></div>
+
         <div class="company-register__panel">
-          <strong>Vista previa del slug</strong>
+          <strong>Dirección de tu minisitio</strong>
           <span>{{ slugPreview() }}</span>
-          <small>Tu sitio público inicial quedará disponible como `/e/{{ slugPreview() }}` mientras sigues en Firebase sin dominios propios.</small>
+          <small>Así se verá el enlace que podrás compartir con tus clientes: <b>/e/{{ slugPreview() }}</b></small>
         </div>
 
         <div class="company-register__list">
@@ -36,29 +38,30 @@
 
       <div class="company-register__card">
         <div class="company-register__header">
-          <span class="company-register__eyebrow company-register__eyebrow--dark">Alta inicial</span>
-          <h2>Datos del negocio y del administrador principal</h2>
-          <p>Cuando guardes, Fluora crea la empresa, la configuración inicial y el acceso principal para administrarla.</p>
+          <div class="company-register__progress"><span class="active">1 <small>Tu negocio</small></span><span>2 <small>Tu acceso</small></span><span>3 <small>Listo</small></span></div>
+          <span class="company-register__eyebrow company-register__eyebrow--dark">Crea tu espacio</span>
+          <h2>Empecemos con lo esencial</h2>
+          <p>Completa estos datos para preparar tu negocio y crear el acceso de la persona que lo administrará.</p>
         </div>
 
         <form [formGroup]="form" (ngSubmit)="onSubmit()" class="company-register__form">
           <div class="company-register__section">
-            <h3>Negocio</h3>
+            <h3><span>1</span> Sobre tu negocio</h3>
             <div class="company-register__grid">
               <label class="company-register__field company-register__field--full">
-                <span>Nombre de la empresa</span>
+                <span>¿Cómo se llama tu negocio?</span>
                 <input type="text" formControlName="nombreEmpresa" placeholder="Studio Magnolia" class="form-control">
               </label>
               <label class="company-register__field">
-                <span>Slug público</span>
+                <span>Elige la dirección de tu minisitio</span>
                 <input type="text" formControlName="slug" placeholder="studio-magnolia" class="form-control">
               </label>
               <label class="company-register__field">
-                <span>Giro</span>
+                <span>¿A qué se dedica?</span>
                 <input type="text" formControlName="giro" placeholder="Salón de uñas y belleza" class="form-control">
               </label>
               <label class="company-register__field company-register__field--full">
-                <span>Zona horaria</span>
+                <span>¿En qué zona horaria trabajas?</span>
                 <select formControlName="zonaHoraria" class="form-select">
                   <option value="America/Mexico_City">America/Mexico_City</option>
                   <option value="America/Bogota">America/Bogota</option>
@@ -70,22 +73,22 @@
           </div>
 
           <div class="company-register__section">
-            <h3>Administrador inicial</h3>
+            <h3><span>2</span> Tu acceso principal</h3>
             <div class="company-register__grid">
               <label class="company-register__field company-register__field--full">
-                <span>Nombre completo</span>
+                <span>Tu nombre completo</span>
                 <input type="text" formControlName="nombreAdministrador" placeholder="Ana García" class="form-control">
               </label>
               <label class="company-register__field">
-                <span>Correo</span>
+                <span>Tu correo de acceso</span>
                 <input type="email" formControlName="correoAdministrador" placeholder="ana@negocio.com" class="form-control">
               </label>
               <label class="company-register__field">
-                <span>Teléfono</span>
+                <span>Tu teléfono</span>
                 <input type="tel" formControlName="telefonoAdministrador" placeholder="5512345678" class="form-control">
               </label>
               <label class="company-register__field company-register__field--full">
-                <span>Contraseña</span>
+                <span>Crea una contraseña segura</span>
                 <input type="password" formControlName="contrasena" placeholder="Mínimo 8 caracteres" class="form-control">
               </label>
             </div>
@@ -94,7 +97,7 @@
           <div class="company-register__feedback">
             @if (form.invalid && (form.touched || form.dirty)) {
               <div class="text-danger small">
-                Revisa los datos del negocio y del administrador. El formulario debe quedar completo para crear la empresa.
+                Hay algunos datos pendientes. Revísalos para que podamos crear tu negocio.
               </div>
             }
             @if (error) {
@@ -107,14 +110,14 @@
           <div class="company-register__actions">
             <button type="submit" class="btn btn-primary btn-lg rounded-pill" [disabled]="loading()">
               @if (!loading()) {
-                <span>Crear empresa</span>
+                <span>Crear mi negocio</span>
               }
               @if (loading()) {
                 <span class="spinner-border spinner-border-sm"></span>
               }
             </button>
             <button type="button" class="btn btn-outline-dark btn-lg rounded-pill" (click)="cargarDemo()">
-              Cargar demo
+              Completar con un ejemplo
             </button>
           </div>
         </form>

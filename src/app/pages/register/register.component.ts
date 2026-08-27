@@ -23,18 +23,18 @@ export class RegisterComponent {
     ? [
         {
           icon: 'bi-building-add',
-          title: 'Acceso principal',
-          body: 'Crea la cuenta inicial con la que después configurarás tu empresa dentro de Fluora.'
+          title: 'Tu negocio en un solo lugar',
+          body: 'Configura tu agenda, servicios, clientes y equipo desde una misma cuenta.'
         },
         {
-          icon: 'bi-diagram-3',
-          title: 'Estructura por tenant',
-          body: 'Usuarios globales, permisos por empresa y separación clara entre app y sitio público.'
+          icon: 'bi-calendar2-check',
+          title: 'Agenda lista para crecer',
+          body: 'Organiza las citas del día y ayuda a tus clientes a reservar con facilidad.'
         },
         {
           icon: 'bi-window-stack',
-          title: 'Web incluida',
-          body: 'Tu negocio obtiene su propia presencia digital para reservas, servicios y contacto.'
+          title: 'Tu minisitio incluido',
+          body: 'Publica tus servicios, imágenes, precios e información para recibir reservaciones.'
         }
       ]
     : [
@@ -57,6 +57,7 @@ export class RegisterComponent {
 
   readonly loading = signal(false);
   readonly completed = signal(false);
+  readonly mostrarContrasena = signal(false);
   error = '';
 
   readonly form = this.fb.group({
@@ -95,8 +96,12 @@ export class RegisterComponent {
           }, 1200);
         },
         error: err => {
-          this.error = err?.message || 'No se pudo completar el registro.';
+          this.error = err?.message || 'No pudimos crear tu cuenta. Revisa la información e inténtalo nuevamente.';
         }
       });
+  }
+
+  alternarContrasena() {
+    this.mostrarContrasena.update(valor => !valor);
   }
 }

@@ -3,169 +3,65 @@
     <div class="auth-shell auth-shell--register">
       <aside class="auth-aside">
         <div class="auth-brand">
-          @if (!marketingMode()) {
-            <span class="auth-brand__mark">{{ tenantContext.initials() }}</span>
-          } @else {
-            <img src="/fluora-mark.svg" alt="Marca Fluora" class="auth-brand__logo">
-          }
-          <div>
-            <div class="auth-brand__eyebrow">{{ marketingMode() ? 'Fluora' : tenantContext.nombreComercial() }}</div>
-            <div class="auth-brand__name">{{ marketingMode() ? 'Registro inicial de empresa' : 'Registro de clientes' }}</div>
-          </div>
+          @if (!marketingMode()) { <span class="auth-brand__mark">{{ tenantContext.initials() }}</span> }
+          @else { <img src="/fluora-mark.svg" alt="Marca Fluora" class="auth-brand__logo"> }
+          <div><div class="auth-brand__eyebrow">{{ marketingMode() ? 'Fluora' : tenantContext.nombreComercial() }}</div><div class="auth-brand__name">{{ marketingMode() ? 'Tu negocio, más organizado' : 'Tu espacio de citas' }}</div></div>
         </div>
 
         <div class="auth-copy">
-          <span class="auth-copy__kicker">{{ marketingMode() ? 'Comienza en Fluora' : 'Nuevo acceso' }}</span>
-          <h1 class="auth-copy__title">
-            {{ marketingMode()
-            ? 'Crea tu acceso principal y empieza a configurar tu empresa.'
-            : 'Crea tu acceso y mantén tus citas a la mano.' }}
-          </h1>
-          <p class="auth-copy__description">
-            {{ marketingMode()
-            ? 'Este es el primer paso para entrar a Fluora. Después podrás continuar con la configuración de tu empresa, tu equipo y tu web pública.'
-            : 'Si ya te registramos una cita, aquí puedes activar tu acceso. Si aún no tienes cuenta, este mismo formulario te permite crearla.' }}
-          </p>
+          <span class="auth-copy__kicker">{{ marketingMode() ? 'Empieza hoy' : 'Crea tu cuenta' }}</span>
+          <h1 class="auth-copy__title">{{ marketingMode() ? 'Crea tu cuenta y empieza a organizar tu negocio.' : 'Tus citas y datos importantes, siempre a la mano.' }}</h1>
+          <p class="auth-copy__description">{{ marketingMode() ? 'Déjanos tus datos de acceso. Después podrás registrar tu negocio, publicar tus servicios y preparar tu agenda a tu ritmo.' : 'Completa tus datos para consultar tus próximas citas y mantener tu información en un solo lugar.' }}</p>
         </div>
 
+        @if (marketingMode()) {
+          <div class="trial-card"><span class="trial-card__icon"><i class="bi bi-stars"></i></span><div><strong>3 meses de Fluora PRO incluidos</strong><p>Registra tu negocio sin costo y explora todas las funciones. Al finalizar, podrás elegir el plan que mejor se adapte a ti.</p></div></div>
+        }
+
         <div class="auth-feature-list" aria-label="Ventajas del registro">
-          @for (item of featureItems(); track item) {
-            <div class="auth-feature-item">
-              <i class="bi" [ngClass]="item.icon"></i>
-              <div>
-                <strong>{{ item.title }}</strong>
-                <span>{{ item.body }}</span>
-              </div>
-            </div>
-          }
+          @for (item of featureItems(); track item) { <div class="auth-feature-item"><i class="bi" [ngClass]="item.icon"></i><div><strong>{{ item.title }}</strong><span>{{ item.body }}</span></div></div> }
         </div>
       </aside>
 
       <div class="auth-panel">
         <div class="auth-panel__header">
-          <span class="auth-panel__eyebrow">{{ marketingMode() ? 'Crear acceso principal' : 'Crear o activar acceso' }}</span>
-          <h2 class="auth-panel__title">{{ marketingMode() ? 'Completa tu alta en Fluora' : 'Completa tu registro' }}</h2>
-          <p class="auth-panel__description">
-            {{ marketingMode()
-            ? 'Ingresa tus datos para crear la cuenta con la que empezarás la configuración de tu empresa dentro de Fluora.'
-            : 'Ingresa tus datos para crear tu cuenta o activar el acceso de una cita que ya te registramos.' }}
-          </p>
+          @if (marketingMode()) { <div class="auth-progress" aria-label="Paso 1 de 3"><span class="active">1 <small>Tu cuenta</small></span><span>2 <small>Tu negocio</small></span><span>3 <small>Listo</small></span></div> }
+          <span class="auth-panel__eyebrow">{{ marketingMode() ? 'Paso 1 · Tu cuenta' : 'Tu información' }}</span>
+          <h2 class="auth-panel__title">{{ marketingMode() ? '¿Cómo podemos conocerte?' : 'Crea tu acceso' }}</h2>
+          <p class="auth-panel__description">{{ marketingMode() ? 'Usaremos estos datos para crear tu acceso seguro. Te tomará menos de dos minutos.' : 'Escribe tus datos para crear tu cuenta o activar el acceso que ya preparamos para ti.' }}</p>
         </div>
 
         <form [formGroup]="form" (ngSubmit)="onSubmit()" class="auth-form">
           <div class="auth-form-grid">
             <div class="auth-field auth-field--full">
-              <label class="form-label text-light opacity-75 small fw-semibold" for="register-nombre">Nombre completo</label>
-              <div class="input-group auth-input-group">
-                <span class="input-group-text"><i class="bi bi-person"></i></span>
-                <input
-                  id="register-nombre"
-                  type="text"
-                  formControlName="nombreCompleto"
-                  autocomplete="name"
-                  class="form-control"
-                  placeholder="Ana García"
-                  [class.is-invalid]="f['nombreCompleto'].touched && f['nombreCompleto'].invalid">
-              </div>
+              <label class="form-label" for="register-nombre">¿Cómo te llamas?</label>
+              <div class="input-group auth-input-group"><span class="input-group-text"><i class="bi bi-person"></i></span><input id="register-nombre" type="text" formControlName="nombreCompleto" autocomplete="name" class="form-control" placeholder="Ana García" [class.is-invalid]="f['nombreCompleto'].touched && f['nombreCompleto'].invalid"></div>
+              @if (f['nombreCompleto'].touched && f['nombreCompleto'].invalid) { <div class="invalid-feedback d-block">Cuéntanos tu nombre completo para continuar.</div> }
             </div>
-
             <div class="auth-field">
-              <label class="form-label text-light opacity-75 small fw-semibold" for="register-correo">Correo</label>
-              <div class="input-group auth-input-group">
-                <span class="input-group-text"><i class="bi bi-envelope"></i></span>
-                <input
-                  id="register-correo"
-                  type="email"
-                  formControlName="correo"
-                  autocomplete="email"
-                  class="form-control"
-                  placeholder="ana@mail.com"
-                  [class.is-invalid]="f['correo'].touched && f['correo'].invalid">
-              </div>
+              <label class="form-label" for="register-correo">Tu correo de acceso</label>
+              <div class="input-group auth-input-group"><span class="input-group-text"><i class="bi bi-envelope"></i></span><input id="register-correo" type="email" formControlName="correo" autocomplete="email" class="form-control" placeholder="nombre@correo.com" [class.is-invalid]="f['correo'].touched && f['correo'].invalid"></div>
+              @if (f['correo'].touched && f['correo'].invalid) { <div class="invalid-feedback d-block">Revisa que el correo tenga un formato válido.</div> }
             </div>
-
             <div class="auth-field">
-              <label class="form-label text-light opacity-75 small fw-semibold" for="register-telefono">Teléfono</label>
-              <div class="input-group auth-input-group">
-                <span class="input-group-text"><i class="bi bi-telephone"></i></span>
-                <input
-                  id="register-telefono"
-                  type="tel"
-                  formControlName="telefono"
-                  autocomplete="tel"
-                  class="form-control"
-                  placeholder="5512345678"
-                  [class.is-invalid]="f['telefono'].touched && f['telefono'].invalid">
-              </div>
+              <label class="form-label" for="register-telefono">Tu teléfono</label>
+              <div class="input-group auth-input-group"><span class="input-group-text"><i class="bi bi-telephone"></i></span><input id="register-telefono" type="tel" formControlName="telefono" autocomplete="tel" class="form-control" placeholder="55 1234 5678" [class.is-invalid]="f['telefono'].touched && f['telefono'].invalid"></div>
+              @if (f['telefono'].touched && f['telefono'].invalid) { <div class="invalid-feedback d-block">Escribe un teléfono de entre 10 y 15 dígitos.</div> }
             </div>
-
             <div class="auth-field auth-field--full">
-              <label class="form-label text-light opacity-75 small fw-semibold" for="register-contrasena">Contraseña</label>
-              <div class="input-group auth-input-group">
-                <span class="input-group-text"><i class="bi bi-lock"></i></span>
-                <input
-                  id="register-contrasena"
-                  type="password"
-                  formControlName="contrasena"
-                  autocomplete="new-password"
-                  class="form-control"
-                  placeholder="Mínimo 8 caracteres"
-                  [class.is-invalid]="f['contrasena'].touched && f['contrasena'].invalid">
-              </div>
+              <label class="form-label" for="register-contrasena">Crea una contraseña segura</label>
+              <div class="input-group auth-input-group"><span class="input-group-text"><i class="bi bi-lock"></i></span><input id="register-contrasena" [type]="mostrarContrasena() ? 'text' : 'password'" formControlName="contrasena" autocomplete="new-password" class="form-control" placeholder="Mínimo 8 caracteres" [class.is-invalid]="f['contrasena'].touched && f['contrasena'].invalid"><button type="button" class="auth-password-toggle" (click)="alternarContrasena()" [attr.aria-label]="mostrarContrasena() ? 'Ocultar contraseña' : 'Mostrar contraseña'"><i class="bi" [ngClass]="mostrarContrasena() ? 'bi-eye-slash' : 'bi-eye'"></i></button></div>
+              @if (f['contrasena'].touched && f['contrasena'].invalid) { <div class="invalid-feedback d-block">Tu contraseña necesita al menos 8 caracteres.</div> }
             </div>
           </div>
 
-          @if (f['nombreCompleto'].touched && f['nombreCompleto'].invalid) {
-            <div class="invalid-feedback d-block">
-              Ingresa tu nombre completo.
-            </div>
-          }
-          @if (f['correo'].touched && f['correo'].invalid) {
-            <div class="invalid-feedback d-block">
-              Ingresa un correo válido.
-            </div>
-          }
-          @if (f['telefono'].touched && f['telefono'].invalid) {
-            <div class="invalid-feedback d-block">
-              Ingresa un teléfono válido.
-            </div>
-          }
-          @if (f['contrasena'].touched && f['contrasena'].invalid) {
-            <div class="invalid-feedback d-block">
-              La contraseña debe tener al menos 8 caracteres.
-            </div>
-          }
-
-          @if (error) {
-            <div class="alert alert-danger auth-alert" role="alert">
-              {{ error }}
-            </div>
-          }
-
-          @if (completed()) {
-            <div class="alert alert-success auth-alert auth-alert--success" role="status">
-              {{ marketingMode()
-              ? 'Acceso principal listo. Redirigiendo al inicio de sesión de Fluora...'
-              : 'Acceso listo. Redirigiendo al inicio de sesión...' }}
-            </div>
-          }
-
-          <div class="d-grid auth-submit">
-            <button type="submit" class="btn btn-primary auth-submit__button" [disabled]="loading() || completed()">
-              @if (!loading()) {
-                <span>{{ marketingMode() ? 'Crear acceso principal' : 'Crear o activar acceso' }}</span>
-              }
-              @if (loading()) {
-                <span class="spinner-border spinner-border-sm me-2"></span>
-              }
-            </button>
-          </div>
+          @if (error) { <div class="alert alert-danger auth-alert" role="alert">{{ error }}</div> }
+          @if (completed()) { <div class="alert alert-success auth-alert auth-alert--success" role="status">{{ marketingMode() ? 'Tu cuenta está lista. Te llevamos al siguiente paso...' : 'Tu acceso está listo. Te llevamos al inicio de sesión...' }}</div> }
+          <div class="d-grid auth-submit"><button type="submit" class="btn btn-primary auth-submit__button" [disabled]="loading() || completed()">@if (!loading()) { <span>{{ marketingMode() ? 'Crear mi cuenta y continuar' : 'Crear mi cuenta' }}</span><i class="bi bi-arrow-right"></i> } @if (loading()) { <span class="spinner-border spinner-border-sm"></span><span>Creando tu cuenta...</span> }</button></div>
+          @if (marketingMode()) { <p class="auth-privacy"><i class="bi bi-shield-check"></i> Tus datos se utilizan únicamente para crear y proteger tu cuenta.</p> }
         </form>
 
-        <div class="auth-panel__footer">
-          <span class="text-light opacity-75">{{ marketingMode() ? '¿Ya tienes acceso?' : '¿Ya tienes cuenta?' }}</span>
-          <a [attr.href]="platformHost.appUrl('/acceso')" class="text-accent text-decoration-none fw-semibold">Inicia sesión</a>
-        </div>
+        <div class="auth-panel__footer"><span>{{ marketingMode() ? '¿Ya tienes una cuenta?' : '¿Ya tienes cuenta?' }}</span><a [attr.href]="platformHost.appUrl('/acceso')">Inicia sesión</a></div>
       </div>
     </div>
   </div>

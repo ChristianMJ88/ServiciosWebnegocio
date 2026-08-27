@@ -1,9 +1,9 @@
 .company-register {
   padding: 2rem 0 4rem;
   background:
-    radial-gradient(circle at top left, rgba(166, 77, 255, 0.08), transparent 24%),
-    radial-gradient(circle at bottom right, rgba(69, 212, 255, 0.1), transparent 26%),
-    linear-gradient(180deg, #faf8ff 0%, #f5f7ff 100%);
+    radial-gradient(circle at top left, rgba(37, 99, 235, 0.1), transparent 26%),
+    radial-gradient(circle at bottom right, rgba(15, 138, 120, 0.12), transparent 28%),
+    linear-gradient(180deg, #f8fafc 0%, #eef5f4 100%);
 }
 
 .company-register__container {
@@ -29,6 +29,8 @@
   gap: 1.35rem;
   align-content: start;
   padding: clamp(1.4rem, 3vw, 2.3rem);
+  color: #fff;
+  background: linear-gradient(155deg, #0e2430, #153c4d);
 }
 
 .company-register__card {
@@ -42,7 +44,7 @@
 .company-register__eyebrow {
   display: inline-flex;
   margin-bottom: 0.8rem;
-  color: #7a4cff;
+  color: #8ee8d3;
   font-size: 0.8rem;
   font-weight: 700;
   letter-spacing: 0.1em;
@@ -63,6 +65,7 @@
 
 .company-register h1 {
   font-size: clamp(2.3rem, 3vw, 3.8rem);
+  color: #fff;
 }
 
 .company-register h2 {
@@ -74,6 +77,12 @@
   color: #5b6476;
   line-height: 1.7;
 }
+
+.company-register__aside > p { color: rgba(255,255,255,.72); }
+.company-register__trial { display: grid; grid-template-columns: 44px 1fr; gap: .8rem; align-items: center; padding: 1rem; border: 1px solid rgba(167,243,208,.28); border-radius: 18px; background: rgba(255,255,255,.07); }
+.company-register__trial > i { width: 44px; height: 44px; display: grid; place-items: center; border-radius: 14px; color: #073e35; background: #a7f3d0; }
+.company-register__trial strong, .company-register__trial span { display: block; }
+.company-register__trial span { margin-top: .2rem; color: rgba(255,255,255,.67); font-size: .78rem; line-height: 1.45; }
 
 .company-register__panel,
 .company-register__item,
@@ -89,6 +98,11 @@
   gap: 0.45rem;
   padding: 1rem 1.1rem;
 }
+
+.company-register__aside .company-register__panel, .company-register__aside .company-register__item, .company-register__aside .company-register__capabilities article { border-color: rgba(255,255,255,.13); background: rgba(255,255,255,.075); }
+.company-register__aside .company-register__panel strong, .company-register__aside .company-register__item p, .company-register__aside .company-register__capabilities span { color: #fff; }
+.company-register__aside .company-register__panel span { color: #8ee8d3; }
+.company-register__aside .company-register__panel small { color: rgba(255,255,255,.64); }
 
 .company-register__panel strong {
   color: #172554;
@@ -167,6 +181,7 @@
   font-size: 1.1rem;
   font-weight: 800;
 }
+.company-register__section h3 > span { width: 28px; height: 28px; display: inline-grid; place-items: center; margin-right: .4rem; border-radius: 50%; color: #0f6f61; background: #d9f5ed; font-size: .72rem; }
 
 .company-register__grid {
   display: grid;
@@ -196,6 +211,12 @@
   border: 1px solid rgba(203, 213, 225, 0.92);
   box-shadow: none;
 }
+.company-register__field .form-control:focus, .company-register__field .form-select:focus { border-color: rgba(37,99,235,.6); box-shadow: 0 0 0 4px rgba(37,99,235,.09); }
+.company-register__actions .btn-primary { border: 0; background: linear-gradient(135deg, #2563eb, #0f8a78); box-shadow: 0 12px 28px rgba(37,99,235,.2); }
+.company-register__progress { display: grid; grid-template-columns: repeat(3,1fr); gap: .5rem; margin-bottom: 1.35rem; }
+.company-register__progress span { padding: .55rem .35rem; border-radius: 12px; color: #7a8995; background: #f1f5f7; font-size: .72rem; font-weight: 800; text-align: center; }
+.company-register__progress span.active { color: #0d6f61; background: #dcf7ef; }
+.company-register__progress small { margin-left: .2rem; font-size: .68rem; }
 
 .company-register__actions,
 .company-register__success-links {
@@ -231,6 +252,8 @@
   .company-register__shell {
     grid-template-columns: 1fr;
   }
+  .company-register__card { order: -1; }
+  .company-register__list, .company-register__capabilities { grid-template-columns: repeat(3,minmax(0,1fr)); }
 }
 
 @media (max-width: 767.98px) {
@@ -252,4 +275,8 @@
   .company-register__success-links {
     flex-direction: column;
   }
+  .company-register__list, .company-register__capabilities { grid-template-columns: 1fr; }
+  .company-register__actions { align-items: center; }
+  .company-register__actions .btn { width: min(100%, 310px); align-self: center; }
+  .company-register__actions .btn-outline-dark { width: auto; min-height: 40px; padding: .4rem .8rem; border-color: transparent; }
 }
