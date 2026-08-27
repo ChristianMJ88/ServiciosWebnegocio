@@ -24,9 +24,21 @@ export class FluoraHomeComponent {
   ];
 
   readonly heroSignals = [
-    'Agenda de citas',
-    'Minisitio web',
-    'Clientes y caja'
+    {
+      title: 'Te encuentran',
+      body: 'Tu minisitio muestra servicios y recibe reservas.',
+      icon: 'bi-window'
+    },
+    {
+      title: 'Tu agenda se organiza',
+      body: 'Cada cita llega con horario, servicio y responsable.',
+      icon: 'bi-calendar2-check'
+    },
+    {
+      title: 'Conoces a tus clientes',
+      body: 'El CRM conserva historial, atención y seguimiento.',
+      icon: 'bi-person-vcard'
+    }
   ];
 
   readonly painPoints = [

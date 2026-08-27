@@ -410,3 +410,106 @@
     transform: translateY(0);
   }
 }
+
+/* Navegación móvil de la landing oscura de Fluora. */
+@media (max-width: 991.98px) {
+  .site-header--fluora-home .header-shell {
+    border-color: transparent;
+    background: transparent;
+    box-shadow: none;
+    backdrop-filter: none;
+    transition:
+      background .34s ease,
+      border-color .34s ease,
+      box-shadow .34s ease,
+      transform .34s ease,
+      backdrop-filter .34s ease;
+  }
+
+  .site-header--fluora-home.site-header--detached .header-shell {
+    border-color: rgba(255, 255, 255, .14);
+    background: rgba(24, 32, 48, .96);
+    box-shadow: 0 18px 44px rgba(0, 0, 0, .42);
+    backdrop-filter: blur(20px);
+    transform: translateY(.15rem);
+  }
+
+  .site-header--fluora-home .brand-copy--marketing strong { color: #fff; }
+  .site-header--fluora-home .brand-copy--marketing small { color: #a8b4c7; }
+
+  .site-header--fluora-home .header-toggler {
+    width: 44px;
+    height: 44px;
+    display: grid;
+    align-content: center;
+    justify-content: center;
+    padding: 0;
+    appearance: none;
+    border: 1px solid transparent;
+    border-radius: 12px;
+    color: #fff;
+    background: transparent;
+    box-shadow: none !important;
+    cursor: pointer;
+    transition: background .2s ease, border-color .2s ease, transform .2s ease;
+  }
+
+  .site-header--fluora-home.site-header--detached .header-toggler {
+    border-color: rgba(255, 255, 255, .18);
+    background: rgba(255, 255, 255, .09);
+    box-shadow: inset 0 1px rgba(255, 255, 255, .04) !important;
+  }
+
+  .site-header--fluora-home .header-toggler:hover,
+  .site-header--fluora-home .header-toggler:focus-visible {
+    border-color: rgba(255, 255, 255, .24);
+    background: rgba(255, 255, 255, .1);
+  }
+
+  .site-header--fluora-home:not(.site-header--detached) .header-toggler:hover,
+  .site-header--fluora-home:not(.site-header--detached) .header-toggler:focus-visible {
+    border-color: rgba(255, 255, 255, .1);
+    background: rgba(255, 255, 255, .045);
+  }
+
+  .site-header--fluora-home .header-toggler:active { transform: scale(.96); }
+
+  .site-header--fluora-home .header-toggler:focus-visible {
+    outline: 2px solid #00f5a0;
+    outline-offset: 3px;
+  }
+
+  .site-header--fluora-home .header-toggler span {
+    width: 20px;
+    height: 2px;
+    margin: 2.5px 0;
+    background: #f1f5f9;
+    box-shadow: 0 0 12px rgba(255, 255, 255, .12);
+  }
+
+  .site-header--fluora-home .header-collapse,
+  .site-header--fluora-home.site-header--detached .header-collapse {
+    border-color: rgba(255, 255, 255, .11);
+    background: rgba(9, 13, 22, .96);
+    box-shadow: 0 26px 60px rgba(0, 0, 0, .42);
+    backdrop-filter: blur(24px);
+  }
+
+  .site-header--fluora-home .header-link,
+  .site-header--fluora-home.site-header--detached .header-link {
+    color: #cbd5e1 !important;
+    background: transparent;
+  }
+
+  .site-header--fluora-home .header-link:hover,
+  .site-header--fluora-home .header-link:focus-visible {
+    color: #fff !important;
+    background: rgba(255, 255, 255, .06);
+  }
+
+  .site-header--fluora-home .header-link-soft { color: #94a3b8 !important; }
+}
+
+@media (max-width: 575.98px) {
+  .site-header--fluora-home .header-toggler { width: 42px; height: 42px; border-radius: 11px; }
+}

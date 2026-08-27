@@ -14,9 +14,16 @@
             <a [attr.href]="platformHost.appUrl('/acceso')" class="btn btn-outline-light btn-lg rounded-pill hero-secondary-action">Entrar a la app</a>
           </div>
 
-          <div class="refluora-hero__signals" aria-label="Áreas principales">
-            @for (item of heroSignals; track item) {
-              <span>{{ item }}</span>
+          <div class="refluora-hero__signals" aria-label="Cómo Fluora organiza tu negocio">
+            @for (item of heroSignals; track item.title; let step = $index) {
+              <article class="hero-signal">
+                <span class="hero-signal__icon"><i [class]="'bi ' + item.icon"></i></span>
+                <div>
+                  <small>0{{ step + 1 }}</small>
+                  <strong>{{ item.title }}</strong>
+                  <p>{{ item.body }}</p>
+                </div>
+              </article>
             }
           </div>
 
