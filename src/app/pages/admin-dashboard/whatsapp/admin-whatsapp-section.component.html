@@ -1,6 +1,13 @@
-<section class="section-stack">
-  <div class="workspace-grid two-columns">
-    <mat-card class="workspace-card form-card">
+<section class="section-stack whatsapp-admin-section" [ngClass]="'whatsapp-view-' + vistaActiva">
+  <nav class="whatsapp-section-nav" aria-label="Secciones de administración de WhatsApp">
+    <button type="button" [class.is-active]="vistaActiva === 'estado'" (click)="seleccionarVista('estado')"><i class="bi bi-activity"></i><span>Estado</span></button>
+    <button type="button" [class.is-active]="vistaActiva === 'configuracion'" (click)="seleccionarVista('configuracion')"><i class="bi bi-sliders"></i><span>Configuración</span></button>
+    <button type="button" [class.is-active]="vistaActiva === 'plantillas'" (click)="seleccionarVista('plantillas')"><i class="bi bi-file-earmark-text"></i><span>Plantillas</span></button>
+    <button type="button" [class.is-active]="vistaActiva === 'actividad'" (click)="seleccionarVista('actividad')"><i class="bi bi-clock-history"></i><span>Actividad</span></button>
+  </nav>
+
+  <div class="workspace-grid two-columns whatsapp-module-grid">
+    <mat-card class="workspace-card form-card whatsapp-pane whatsapp-pane--configuracion">
       <div class="section-header">
         <div>
           <div class="section-eyebrow">Canal conversacional</div>
@@ -249,7 +256,7 @@
       </form>
     </mat-card>
 
-    <mat-card class="workspace-card form-card">
+    <mat-card class="workspace-card form-card whatsapp-pane whatsapp-pane--plantillas">
       <div class="section-header">
         <div>
           <div class="section-eyebrow">Catálogo tenant</div>
@@ -341,7 +348,7 @@
       }
     </mat-card>
 
-    <mat-card class="workspace-card list-card">
+    <mat-card class="workspace-card list-card whatsapp-pane whatsapp-pane--estado">
       <div class="section-header">
         <div>
           <div class="section-eyebrow">Salud operativa</div>
@@ -470,7 +477,7 @@
     </mat-card>
   </div>
 
-  <mat-card class="workspace-card list-card">
+  <mat-card class="workspace-card list-card whatsapp-pane whatsapp-pane--actividad">
     <div class="section-header">
       <div>
         <div class="section-eyebrow">Trazabilidad</div>
@@ -501,8 +508,8 @@
 
   </mat-card>
 
-  <div class="workspace-grid two-columns">
-    <mat-card class="workspace-card form-card">
+  <div class="workspace-grid two-columns whatsapp-module-grid">
+    <mat-card class="workspace-card form-card whatsapp-pane whatsapp-pane--plantillas">
       <div class="section-header">
         <div>
           <div class="section-eyebrow">Validación rápida</div>
@@ -551,7 +558,7 @@
       </form>
     </mat-card>
 
-    <mat-card class="workspace-card list-card">
+    <mat-card class="workspace-card list-card whatsapp-pane whatsapp-pane--plantillas">
       <div class="section-header">
         <div>
           <div class="section-eyebrow">Biblioteca</div>
@@ -586,7 +593,7 @@
     </mat-card>
   </div>
 
-  <mat-card class="workspace-card workspace-card-emphasis">
+  <mat-card class="workspace-card workspace-card-emphasis whatsapp-pane whatsapp-pane--actividad">
     <div class="section-header">
       <div>
         <div class="section-eyebrow">Trazabilidad</div>

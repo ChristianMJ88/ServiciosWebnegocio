@@ -1,281 +1,97 @@
-<section class="section-stack">
-  <div class="workspace-grid two-columns">
-    <mat-card class="workspace-card form-card">
-      <div class="section-header">
-        <div>
-          <div class="section-eyebrow">Multitenant</div>
-          <h3>Configuración pública del sitio</h3>
-        </div>
-      </div>
+<section class="site-editor">
+  <header class="site-editor__intro">
+    <div><span class="section-eyebrow">Personalización</span><h2>Diseña la experiencia de tu marca</h2><p>Configura lo que verán tus clientes y revisa el resultado mientras trabajas.</p></div>
+    <span class="site-editor__state" [class.is-live]="formularioSitio().publicado"><span></span>{{ formularioSitio().publicado ? 'Sitio publicado' : 'Borrador' }}</span>
+  </header>
 
-      <form class="admin-form-grid admin-form-shell" (ngSubmit)="save.emit()">
-        <div class="form-block-title full-width">Identidad del tenant</div>
+  <div class="site-editor__layout">
+    <aside class="site-editor__nav" aria-label="Secciones de personalización">
+      @for (seccion of secciones; track seccion.id) {
+        <button type="button" [class.is-active]="seccionActiva() === seccion.id" [attr.aria-current]="seccionActiva() === seccion.id ? 'step' : null" (click)="seccionActiva.set(seccion.id)">
+          <i [class]="seccion.icon"></i><span>{{ seccion.label }}</span><i class="bi bi-chevron-right site-editor__nav-arrow"></i>
+        </button>
+      }
+    </aside>
 
-        <mat-form-field appearance="outline">
-          <mat-label>Slug público</mat-label>
-          <input matInput name="sitioSlug" [(ngModel)]="formularioSitio().slug" maxlength="100" required>
-        </mat-form-field>
-
-        <mat-form-field appearance="outline">
-          <mat-label>Nombre comercial</mat-label>
-          <input matInput name="sitioNombreComercial" [(ngModel)]="formularioSitio().nombreComercial" maxlength="150" required>
-        </mat-form-field>
-
-        <div class="helper-text full-width">
-          URL Fluora: {{ rutaPublicaPreview() }}
-        </div>
-
-        <mat-form-field appearance="outline" class="full-width">
-          <mat-label>Dominio principal</mat-label>
-          <input matInput name="sitioDominioPrincipal" [(ngModel)]="formularioSitio().dominioPrincipal" maxlength="255" placeholder="reservas.tumarca.com">
-        </mat-form-field>
-
-        @if (dominioPrincipalPreview(); as dominioPrincipal) {
-          <div class="helper-text full-width">
-            Dominio personalizado: {{ dominioPrincipal }}
+    <form class="site-editor__form" (ngSubmit)="save.emit()">
+      @if (seccionActiva() === 'identidad') {
+        <section class="editor-panel">
+          <div class="editor-panel__heading"><span class="editor-panel__icon"><i class="bi bi-shop"></i></span><div><h3>Identidad del negocio</h3><p>Los datos con los que tus clientes reconocerán tu marca.</p></div></div>
+          <div class="editor-fields">
+            <mat-form-field appearance="outline"><mat-label>Nombre comercial</mat-label><input matInput name="sitioNombreComercial" [(ngModel)]="formularioSitio().nombreComercial" maxlength="150" required></mat-form-field>
+            <mat-form-field appearance="outline"><mat-label>Slug público</mat-label><input matInput name="sitioSlug" [(ngModel)]="formularioSitio().slug" maxlength="100" required><mat-hint>{{ rutaPublicaPreview() }}</mat-hint></mat-form-field>
+            <mat-form-field appearance="outline" class="full-width"><mat-label>Descripción corta</mat-label><textarea matInput rows="3" name="sitioDescripcionCorta" [(ngModel)]="formularioSitio().descripcionCorta" maxlength="255"></textarea><mat-hint align="end">{{ formularioSitio().descripcionCorta?.length || 0 }}/255</mat-hint></mat-form-field>
+            <mat-form-field appearance="outline" class="full-width"><mat-label>URL del logo</mat-label><input matInput name="sitioLogoUrl" [(ngModel)]="formularioSitio().logoUrl" maxlength="255" placeholder="https://..."></mat-form-field>
           </div>
-        }
-
-        <div class="form-block-title full-width">Branding y mensaje</div>
-
-        <mat-form-field appearance="outline" class="full-width">
-          <mat-label>Logo URL</mat-label>
-          <input matInput name="sitioLogoUrl" [(ngModel)]="formularioSitio().logoUrl" maxlength="255">
-        </mat-form-field>
-
-        <mat-form-field appearance="outline" class="full-width">
-          <mat-label>Descripción corta</mat-label>
-          <textarea matInput rows="3" name="sitioDescripcionCorta" [(ngModel)]="formularioSitio().descripcionCorta" maxlength="255"></textarea>
-        </mat-form-field>
-
-        <div class="full-width helper-text">
-          Define colores y tipografías para que el slug tome personalidad propia sin tocar código.
-        </div>
-
-        <label class="full-width helper-text">Color primario</label>
-        <div class="full-width d-flex align-items-center gap-3">
-          <input type="color" name="sitioColorPrimarioPicker" [(ngModel)]="formularioSitio().colorPrimario">
-          <mat-form-field appearance="outline" class="flex-fill">
-            <mat-label>Hex primario</mat-label>
-            <input matInput name="sitioColorPrimario" [(ngModel)]="formularioSitio().colorPrimario" maxlength="20" placeholder="#D14F7D">
-          </mat-form-field>
-        </div>
-
-        <label class="full-width helper-text">Color secundario</label>
-        <div class="full-width d-flex align-items-center gap-3">
-          <input type="color" name="sitioColorSecundarioPicker" [(ngModel)]="formularioSitio().colorSecundario">
-          <mat-form-field appearance="outline" class="flex-fill">
-            <mat-label>Hex secundario</mat-label>
-            <input matInput name="sitioColorSecundario" [(ngModel)]="formularioSitio().colorSecundario" maxlength="20" placeholder="#F6D9E3">
-          </mat-form-field>
-        </div>
-
-        <mat-form-field appearance="outline">
-          <mat-label>Fuente para títulos</mat-label>
-          <mat-select name="sitioFuenteTitulos" [(ngModel)]="formularioSitio().fuenteTitulos">
-            @for (fuente of fuentesDisponibles; track fuente) {
-              <mat-option [value]="fuente.value">{{ fuente.label }}</mat-option>
-            }
-          </mat-select>
-        </mat-form-field>
-
-        <mat-form-field appearance="outline">
-          <mat-label>Fuente para cuerpo</mat-label>
-          <mat-select name="sitioFuenteCuerpo" [(ngModel)]="formularioSitio().fuenteCuerpo">
-            @for (fuente of fuentesDisponibles; track fuente) {
-              <mat-option [value]="fuente.value">{{ fuente.label }}</mat-option>
-            }
-          </mat-select>
-        </mat-form-field>
-
-        <mat-form-field appearance="outline" class="full-width">
-          <mat-label>Título principal</mat-label>
-          <input matInput name="sitioHeroTitulo" [(ngModel)]="formularioSitio().heroTitulo" maxlength="180">
-        </mat-form-field>
-
-        <mat-form-field appearance="outline" class="full-width">
-          <mat-label>Subtítulo principal</mat-label>
-          <textarea matInput rows="4" name="sitioHeroSubtitulo" [(ngModel)]="formularioSitio().heroSubtitulo" maxlength="500"></textarea>
-        </mat-form-field>
-
-        <mat-form-field appearance="outline" class="full-width">
-          <mat-label>Imagen principal del hero</mat-label>
-          <input
-            matInput
-            name="sitioHeroImagenUrl"
-            [(ngModel)]="formularioSitio().heroImagenUrl"
-            maxlength="500"
-            placeholder="https://... o /tenant-hero-demo.png">
-          </mat-form-field>
-
-          <div class="helper-text full-width">
-            Usa una URL pública o una ruta dentro de <code>/public</code> para cambiar la imagen principal del hero.
-          </div>
-
-          <div class="form-block-title full-width">Contacto y redes</div>
-
-          <mat-form-field appearance="outline">
-            <mat-label>WhatsApp</mat-label>
-            <input matInput name="sitioWhatsapp" [(ngModel)]="formularioSitio().whatsapp" maxlength="30">
-          </mat-form-field>
-
-          <mat-form-field appearance="outline">
-            <mat-label>Teléfono</mat-label>
-            <input matInput name="sitioTelefono" [(ngModel)]="formularioSitio().telefono" maxlength="30">
-          </mat-form-field>
-
-          <mat-form-field appearance="outline">
-            <mat-label>Correo</mat-label>
-            <input matInput type="email" name="sitioCorreo" [(ngModel)]="formularioSitio().correo" maxlength="150">
-          </mat-form-field>
-
-          <mat-form-field appearance="outline">
-            <mat-label>Tema</mat-label>
-            <input matInput name="sitioTema" [(ngModel)]="formularioSitio().tema" maxlength="50">
-          </mat-form-field>
-
-          <mat-form-field appearance="outline" class="full-width">
-            <mat-label>Dirección</mat-label>
-            <textarea matInput rows="3" name="sitioDireccion" [(ngModel)]="formularioSitio().direccion" maxlength="255"></textarea>
-          </mat-form-field>
-
-          <mat-form-field appearance="outline">
-            <mat-label>Instagram URL</mat-label>
-            <input matInput name="sitioInstagramUrl" [(ngModel)]="formularioSitio().instagramUrl" maxlength="255">
-          </mat-form-field>
-
-          <mat-form-field appearance="outline">
-            <mat-label>Facebook URL</mat-label>
-            <input matInput name="sitioFacebookUrl" [(ngModel)]="formularioSitio().facebookUrl" maxlength="255">
-          </mat-form-field>
-
-          <mat-slide-toggle name="sitioPublicado" [(ngModel)]="formularioSitio().publicado" class="full-width">
-            Publicar sitio web de este tenant
-          </mat-slide-toggle>
-
-          <div class="helper-text full-width">
-            Despublicar el sitio no borra la configuración; solo deja de resolverlo como sitio público.
-          </div>
-
-          <div class="workspace-card list-card full-width" style="padding: 1rem; border-radius: 8px;">
-            <div class="section-eyebrow">Vista previa</div>
-            <div class="site-preview">
-              <img [src]="heroPreviewImage()" alt="Vista previa hero" class="site-preview__image">
-              <div class="site-preview__overlay"></div>
-              <div class="site-preview__content">
-                <div class="site-preview__url">{{ rutaPublicaPreview() }}</div>
-                <div class="site-preview__eyebrow">{{ formularioSitio().nombreComercial || 'Tu marca' }}</div>
-                <div class="site-preview__title">
-                  {{ formularioSitio().heroTitulo || formularioSitio().nombreComercial || 'Tu página pública' }}
-                </div>
-                <div class="site-preview__copy">
-                  {{ formularioSitio().heroSubtitulo || formularioSitio().descripcionCorta || 'El hero mostrará una imagen principal, un titular fuerte y accesos rápidos para reservar.' }}
-                </div>
-                <div class="site-preview__actions">
-                  <span>Agenda</span>
-                  <span>WhatsApp</span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div class="form-actions">
-            <button mat-flat-button color="primary" type="submit" [disabled]="guardandoSitio()">
-              {{ guardandoSitio() ? 'Guardando...' : 'Guardar sitio web' }}
-            </button>
-          </div>
-        </form>
-      </mat-card>
-
-      <mat-card class="workspace-card list-card">
-        <div class="section-header">
-          <div>
-            <div class="section-eyebrow">Vista rápida</div>
-            <h3>Estado del tenant público</h3>
-          </div>
-        </div>
-
-        @if (configuracionSitio(); as config) {
-          <div class="entity-list">
-            <article class="entity-row">
-              <div class="entity-main">
-                <div class="entity-title">Ruta pública por Fluora</div>
-                <div class="entity-meta">{{ rutaPublicaPreview() }}</div>
-              </div>
-              <div class="entity-side">
-                <span class="status-pill is-active">Slug</span>
-              </div>
-            </article>
-            <article class="entity-row">
-              <div class="entity-main">
-                <div class="entity-title">Dominio personalizado</div>
-                <div class="entity-meta">{{ config.dominioPrincipal || 'Sin configurar' }}</div>
-              </div>
-              <div class="entity-side">
-                <span class="status-pill" [class.is-active]="!!config.dominioPrincipal">{{ config.dominioPrincipal ? 'Listo' : 'Pendiente' }}</span>
-              </div>
-            </article>
-            <article class="entity-row">
-              <div class="entity-main">
-                <div class="entity-title">Publicación</div>
-                <div class="entity-meta">
-                  {{ config.publicado ? 'El tenant ya puede verse como sitio público.' : 'El tenant sigue en borrador y no se publica todavía.' }}
-                </div>
-              </div>
-              <div class="entity-side">
-                <span class="status-pill" [class.is-active]="config.publicado">{{ config.publicado ? 'Publicado' : 'Borrador' }}</span>
-              </div>
-            </article>
-            <article class="entity-row">
-              <div class="entity-main">
-                <div class="entity-title">Branding activo</div>
-                <div class="entity-meta">Primario: {{ config.colorPrimario || 'Sin definir' }}</div>
-                <div class="entity-meta">Secundario: {{ config.colorSecundario || 'Sin definir' }}</div>
-                <div class="entity-meta">Títulos: {{ config.fuenteTitulos || 'JAKARTA' }}</div>
-                <div class="entity-meta">Cuerpo: {{ config.fuenteCuerpo || 'INTER' }}</div>
-              </div>
-              <div class="entity-side">
-                <span class="status-pill" [class.is-active]="!!config.nombreComercial">{{ config.nombreComercial ? 'Configurable' : 'Pendiente' }}</span>
-              </div>
-            </article>
-          </div>
-        } @else {
-          <div class="agenda-empty">
-            No fue posible cargar la configuración del sitio web.
-          </div>
-        }
-
-      </mat-card>
-    </div>
-
-    <mat-card class="workspace-card list-card">
-      <div class="section-header">
-        <div>
-          <div class="section-eyebrow">Trazabilidad</div>
-          <h3>Actividad reciente del sitio web</h3>
-        </div>
-      </div>
-
-      @if (auditoriaSitio().length) {
-        <div class="entity-list">
-          @for (evento of auditoriaSitio(); track evento) {
-            <article class="entity-row">
-              <div class="entity-main">
-                <div class="entity-title">{{ etiquetaAccionAuditoriaConfiguracion()(evento.accion) }}</div>
-                <div class="entity-meta">{{ evento.resumen }}</div>
-                @if (evento.actorCorreo) {
-                  <div class="entity-meta">Por {{ evento.actorCorreo }}</div>
-                }
-              </div>
-              <div class="entity-side">
-                <span class="status-pill is-active">{{ evento.creadoEn | date:'dd/MM/yyyy HH:mm':'':'es-MX' }}</span>
-              </div>
-            </article>
-          }
-        </div>
-      } @else {
-        <div class="helper-text">Todavía no hay cambios auditados de la configuración del sitio.</div>
+        </section>
       }
 
-    </mat-card>
-  </section>
+      @if (seccionActiva() === 'apariencia') {
+        <section class="editor-panel">
+          <div class="editor-panel__heading"><span class="editor-panel__icon"><i class="bi bi-palette2"></i></span><div><h3>Colores y tipografía</h3><p>Crea una combinación reconocible, legible y consistente.</p></div></div>
+          <div class="color-grid">
+            <label class="color-control"><span>Color principal</span><div><input type="color" name="sitioColorPrimarioPicker" [(ngModel)]="formularioSitio().colorPrimario"><input name="sitioColorPrimario" [(ngModel)]="formularioSitio().colorPrimario" maxlength="20" aria-label="Código hexadecimal del color principal"></div></label>
+            <label class="color-control"><span>Color secundario</span><div><input type="color" name="sitioColorSecundarioPicker" [(ngModel)]="formularioSitio().colorSecundario"><input name="sitioColorSecundario" [(ngModel)]="formularioSitio().colorSecundario" maxlength="20" aria-label="Código hexadecimal del color secundario"></div></label>
+          </div>
+          <div class="editor-fields">
+            <mat-form-field appearance="outline"><mat-label>Fuente para títulos</mat-label><mat-select name="sitioFuenteTitulos" [(ngModel)]="formularioSitio().fuenteTitulos">@for (fuente of fuentesDisponibles; track fuente.value) {<mat-option [value]="fuente.value">{{ fuente.label }}</mat-option>}</mat-select></mat-form-field>
+            <mat-form-field appearance="outline"><mat-label>Fuente para textos</mat-label><mat-select name="sitioFuenteCuerpo" [(ngModel)]="formularioSitio().fuenteCuerpo">@for (fuente of fuentesDisponibles; track fuente.value) {<mat-option [value]="fuente.value">{{ fuente.label }}</mat-option>}</mat-select></mat-form-field>
+          </div>
+          <div class="brand-swatch"><span [style.background]="formularioSitio().colorPrimario || '#2563eb'"></span><span [style.background]="formularioSitio().colorSecundario || '#14b8a6'"></span><p><strong>{{ formularioSitio().nombreComercial || 'Tu marca' }}</strong><small>Vista rápida de tu combinación</small></p></div>
+        </section>
+      }
+
+      @if (seccionActiva() === 'portada') {
+        <section class="editor-panel">
+          <div class="editor-panel__heading"><span class="editor-panel__icon"><i class="bi bi-image"></i></span><div><h3>Portada principal</h3><p>El primer mensaje que recibirán tus visitantes.</p></div></div>
+          <div class="editor-fields">
+            <mat-form-field appearance="outline" class="full-width"><mat-label>Título principal</mat-label><input matInput name="sitioHeroTitulo" [(ngModel)]="formularioSitio().heroTitulo" maxlength="180"><mat-hint align="end">{{ formularioSitio().heroTitulo?.length || 0 }}/180</mat-hint></mat-form-field>
+            <mat-form-field appearance="outline" class="full-width"><mat-label>Subtítulo principal</mat-label><textarea matInput rows="4" name="sitioHeroSubtitulo" [(ngModel)]="formularioSitio().heroSubtitulo" maxlength="500"></textarea><mat-hint align="end">{{ formularioSitio().heroSubtitulo?.length || 0 }}/500</mat-hint></mat-form-field>
+            <mat-form-field appearance="outline" class="full-width"><mat-label>URL de la imagen principal</mat-label><input matInput name="sitioHeroImagenUrl" [(ngModel)]="formularioSitio().heroImagenUrl" maxlength="500" placeholder="https://... o /tenant-hero-demo.png"><mat-hint>Usa una imagen horizontal de alta calidad.</mat-hint></mat-form-field>
+          </div>
+        </section>
+      }
+
+      @if (seccionActiva() === 'contacto') {
+        <section class="editor-panel">
+          <div class="editor-panel__heading"><span class="editor-panel__icon"><i class="bi bi-chat-dots"></i></span><div><h3>Contacto y redes</h3><p>Facilita que tus clientes puedan encontrarte y conversar contigo.</p></div></div>
+          <div class="editor-fields">
+            <mat-form-field appearance="outline"><mat-label>WhatsApp</mat-label><input matInput name="sitioWhatsapp" [(ngModel)]="formularioSitio().whatsapp" maxlength="30"></mat-form-field>
+            <mat-form-field appearance="outline"><mat-label>Teléfono</mat-label><input matInput name="sitioTelefono" [(ngModel)]="formularioSitio().telefono" maxlength="30"></mat-form-field>
+            <mat-form-field appearance="outline" class="full-width"><mat-label>Correo</mat-label><input matInput type="email" name="sitioCorreo" [(ngModel)]="formularioSitio().correo" maxlength="150"></mat-form-field>
+            <mat-form-field appearance="outline" class="full-width"><mat-label>Dirección</mat-label><textarea matInput rows="3" name="sitioDireccion" [(ngModel)]="formularioSitio().direccion" maxlength="255"></textarea></mat-form-field>
+            <mat-form-field appearance="outline"><mat-label>Instagram</mat-label><input matInput name="sitioInstagramUrl" [(ngModel)]="formularioSitio().instagramUrl" maxlength="255"></mat-form-field>
+            <mat-form-field appearance="outline"><mat-label>Facebook</mat-label><input matInput name="sitioFacebookUrl" [(ngModel)]="formularioSitio().facebookUrl" maxlength="255"></mat-form-field>
+          </div>
+        </section>
+      }
+
+      @if (seccionActiva() === 'publicacion') {
+        <section class="editor-panel">
+          <div class="editor-panel__heading"><span class="editor-panel__icon"><i class="bi bi-globe2"></i></span><div><h3>Dominio y publicación</h3><p>Controla dónde está disponible tu sitio y cuándo hacerlo visible.</p></div></div>
+          <div class="editor-fields">
+            <mat-form-field appearance="outline" class="full-width"><mat-label>Dominio principal</mat-label><input matInput name="sitioDominioPrincipal" [(ngModel)]="formularioSitio().dominioPrincipal" maxlength="255" placeholder="reservas.tumarca.com"><mat-hint>{{ dominioPrincipalPreview() || 'Aún no configurado' }}</mat-hint></mat-form-field>
+            <mat-form-field appearance="outline" class="full-width"><mat-label>Tema interno</mat-label><input matInput name="sitioTema" [(ngModel)]="formularioSitio().tema" maxlength="50"></mat-form-field>
+          </div>
+          <label class="publish-control"><span class="publish-control__icon"><i class="bi bi-broadcast"></i></span><span><strong>Publicar sitio web</strong><small>Al activarlo, tus clientes podrán visitar la página pública.</small></span><mat-slide-toggle name="sitioPublicado" [(ngModel)]="formularioSitio().publicado" aria-label="Publicar sitio web"></mat-slide-toggle></label>
+          <div class="publication-url"><i class="bi bi-link-45deg"></i><span><small>URL pública de Fluora</small><strong>{{ rutaPublicaPreview() }}</strong></span></div>
+        </section>
+      }
+
+      <footer class="site-editor__actions"><span><i class="bi bi-shield-check"></i> Tus cambios permanecen protegidos hasta que decidas publicar.</span><button mat-flat-button color="primary" type="submit" [disabled]="guardandoSitio()"><i class="bi bi-check2 me-2"></i>{{ guardandoSitio() ? 'Guardando...' : 'Guardar cambios' }}</button></footer>
+    </form>
+
+    <aside class="site-editor__preview">
+      <div class="preview-toolbar"><div><span></span><span></span><span></span></div><strong>Vista previa</strong><i class="bi bi-display"></i></div>
+      <div class="site-preview">
+        <img [src]="heroPreviewImage()" alt="Vista previa de la portada" class="site-preview__image"><div class="site-preview__overlay"></div>
+        <div class="site-preview__content" [style.font-family]="fuenteCss(formularioSitio().fuenteCuerpo)"><div class="site-preview__brand">{{ formularioSitio().nombreComercial || 'Tu marca' }}</div><div class="site-preview__body"><div class="site-preview__eyebrow">Una experiencia hecha para ti</div><div class="site-preview__title" [style.font-family]="fuenteCss(formularioSitio().fuenteTitulos)">{{ formularioSitio().heroTitulo || formularioSitio().nombreComercial || 'Tu página pública' }}</div><div class="site-preview__copy">{{ formularioSitio().heroSubtitulo || formularioSitio().descripcionCorta || 'Presenta tu negocio, servicios y disponibilidad con una experiencia clara y memorable.' }}</div><div class="site-preview__actions"><span [style.background]="formularioSitio().colorPrimario || '#2563eb'">Reservar ahora</span><span>Contactar</span></div></div></div>
+      </div>
+      <div class="preview-meta"><span><i class="bi bi-phone"></i> Responsive</span><span><i class="bi bi-lightning-charge"></i> Actualización en vivo</span></div>
+    </aside>
+  </div>
+
+  <details class="site-audit"><summary><span><i class="bi bi-clock-history"></i> Actividad reciente</span><small>{{ auditoriaSitio().length }} movimientos</small></summary>
+    @if (auditoriaSitio().length) {<div class="site-audit__list">@for (evento of auditoriaSitio(); track evento) {<article><span></span><div><strong>{{ etiquetaAccionAuditoriaConfiguracion()(evento.accion) }}</strong><p>{{ evento.resumen }}</p></div><time>{{ evento.creadoEn | date:'dd/MM/yyyy HH:mm':'':'es-MX' }}</time></article>}</div>} @else {<p class="site-audit__empty">Todavía no hay cambios auditados en esta configuración.</p>}
+  </details>
+</section>

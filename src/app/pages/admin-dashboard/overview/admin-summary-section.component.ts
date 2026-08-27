@@ -8,6 +8,7 @@ import { AgendaAppointmentVm } from '../../../components/agenda/agenda.types';
 import {
   ReportePrestadorAdmin,
   ReporteServicioAdmin,
+  PeriodoReporteAdmin,
   ResumenAdmin
 } from '../../../core/admin/admin.service';
 
@@ -25,9 +26,13 @@ export class AdminSummarySectionComponent {
   readonly topPrestadoresPorIngreso = input<ReportePrestadorAdmin[]>([]);
   readonly topPrestadoresPorCitas = input<ReportePrestadorAdmin[]>([]);
   readonly reporteServicios = input<ReporteServicioAdmin[]>([]);
+  readonly periodos = input<PeriodoReporteAdmin[]>([]);
+  readonly periodoSeleccionado = input<PeriodoReporteAdmin | null>(null);
+  readonly cargandoPeriodo = input(false);
 
   readonly openAgenda = output<void>();
   readonly appointmentSelected = output<number>();
+  readonly periodChange = output<string>();
 
   readonly paginaCitas = signal(0);
   readonly citasPorPagina = 5;

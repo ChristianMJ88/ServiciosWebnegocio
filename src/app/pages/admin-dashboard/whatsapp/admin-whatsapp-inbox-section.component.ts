@@ -33,6 +33,7 @@ export class AdminWhatsappInboxSectionComponent implements OnChanges {
   filtro = '';
   telefonoSeleccionado: string | null = null;
   borrador = '';
+  conversacionAbiertaEnMovil = false;
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['mensajes']) {
       const conversaciones = this.conversaciones;
@@ -93,6 +94,11 @@ export class AdminWhatsappInboxSectionComponent implements OnChanges {
 
   seleccionarConversacion(telefono: string): void {
     this.telefonoSeleccionado = telefono;
+    this.conversacionAbiertaEnMovil = true;
+  }
+
+  volverAConversaciones(): void {
+    this.conversacionAbiertaEnMovil = false;
   }
 
   enviar(): void {

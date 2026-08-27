@@ -1,24 +1,20 @@
 <section class="section-stack">
   <div class="metric-grid">
     <mat-card class="metric-card metric-card-highlight">
-      <span>Total de mensajes</span>
-      <strong>{{ resumen().total }}</strong>
+      <i class="bi bi-inbox" aria-hidden="true"></i><div><span>Total</span><strong>{{ resumen().total }}</strong></div>
     </mat-card>
     <mat-card class="metric-card">
-      <span>Nuevos</span>
-      <strong>{{ resumen().nuevos }}</strong>
+      <i class="bi bi-stars" aria-hidden="true"></i><div><span>Nuevos</span><strong>{{ resumen().nuevos }}</strong></div>
     </mat-card>
     <mat-card class="metric-card">
-      <span>En proceso</span>
-      <strong>{{ resumen().enProceso }}</strong>
+      <i class="bi bi-hourglass-split" aria-hidden="true"></i><div><span>En proceso</span><strong>{{ resumen().enProceso }}</strong></div>
     </mat-card>
     <mat-card class="metric-card">
-      <span>Atendidos</span>
-      <strong>{{ resumen().atendidos }}</strong>
+      <i class="bi bi-check2-circle" aria-hidden="true"></i><div><span>Atendidos</span><strong>{{ resumen().atendidos }}</strong></div>
     </mat-card>
   </div>
 
-  <mat-card class="workspace-card workspace-card-emphasis">
+  <mat-card class="workspace-card contacts-workspace">
     <div class="section-header">
       <div>
         <div class="section-eyebrow">Bandeja comercial</div>
@@ -27,59 +23,73 @@
       <span class="agenda-date-pill">{{ contactos().length }} registros</span>
     </div>
 
+    <div class="contacts-toolbar">
+      <label class="contacts-search">
+        <i class="bi bi-search" aria-hidden="true"></i>
+        <input type="search" name="contactsSearch" [(ngModel)]="filtroTexto" placeholder="Buscar por nombre, correo, asunto o mensaje" aria-label="Buscar contactos">
+      </label>
+      <label class="contacts-filter">
+        <span>Estado</span>
+        <select name="contactsStatus" [(ngModel)]="filtroEstado" aria-label="Filtrar contactos por estado">
+          <option value="TODOS">Todos</option>
+          @for (estado of estadosContactoDisponibles(); track estado.codigo) {
+            <option [value]="estado.codigo">{{ estado.etiqueta }}</option>
+          }
+        </select>
+      </label>
+    </div>
+
     @if (!contactos().length) {
       <div class="agenda-empty">
         Aún no se han recibido mensajes desde el formulario de contacto.
       </div>
     }
 
-    @if (contactos().length) {
+    @if (contactos().length && !contactosFiltrados().length) {
+      <div class="contacts-no-results"><i class="bi bi-search"></i><strong>Sin coincidencias</strong><span>Prueba con otro nombre, asunto o estado.</span></div>
+    }
+
+    @if (contactosFiltrados().length) {
       <div class="entity-list">
-        @for (contacto of contactos(); track contacto) {
+        @for (contacto of contactosFiltrados(); track contacto.id) {
           <article class="entity-row contacto-row">
             <div class="entity-main contacto-row__main">
               <div class="contacto-row__header">
-                <div>
-                  <div class="entity-title">{{ contacto.nombreCompleto }}</div>
-                  <div class="entity-meta">{{ contacto.correo }}@if (contacto.telefono) {
-                    <span> · {{ contacto.telefono }}</span>
-                  }</div>
+                <div class="contacto-row__identity">
+                  <span class="contacto-row__avatar">{{ contacto.nombreCompleto.charAt(0) }}</span>
+                  <div>
+                    <div class="entity-title">{{ contacto.nombreCompleto }}</div>
+                    <div class="entity-meta">{{ contacto.correo }}</div>
+                  </div>
                 </div>
                 <span class="status-pill contacto-status-pill" [ngClass]="claseEstado(contacto.estado)">
                   {{ etiquetaEstado(contacto.estado) }}
                 </span>
               </div>
-              <div class="service-metrics contacto-row__meta">
-                <span>Asunto: {{ contacto.asunto }}</span>
-                <span>Canal: {{ contacto.canal }}</span>
-                <span>Recibido: {{ contacto.creadaEn | date:'medium':'':'es-MX' }}</span>
-                @if (contacto.notificadaEn) {
-                  <span>Notificado: {{ contacto.notificadaEn | date:'short':'':'es-MX' }}</span>
-                }
-                @if (!contacto.notificadaEn && contacto.notificacionCorreoProgramada) {
-                  <span>Notificación pendiente</span>
-                }
+              <div class="contacto-row__subject">{{ contacto.asunto }}</div>
+              <div class="contacto-row__details">
+                @if (contacto.telefono) { <span><i class="bi bi-telephone"></i>{{ contacto.telefono }}</span> }
+                <span><i class="bi bi-calendar3"></i>{{ contacto.creadaEn | date:'d MMM, HH:mm':'':'es-MX' }}</span>
+                <span><i class="bi bi-broadcast"></i>{{ contacto.canal }}</span>
               </div>
               <div class="contacto-row__message">
                 {{ contacto.mensaje }}
               </div>
             </div>
             <div class="entity-side contacto-row__side">
-              <mat-form-field appearance="outline" class="contacto-row__field">
-                <mat-label>Estado</mat-label>
-                <mat-select
+              <label class="contacto-row__field">
+                <span>Actualizar estado</span>
+                <select
                   [ngModel]="contacto.estado"
                   (ngModelChange)="updateStatus.emit({ contacto, estado: $event })"
                   [disabled]="actualizandoContactoId() === contacto.id">
                   @for (estado of estadosContactoDisponibles(); track estado.codigo) {
-                    <mat-option [value]="estado.codigo">
-                      {{ estado.etiqueta }}
-                    </mat-option>
+                    <option [value]="estado.codigo">{{ estado.etiqueta }}</option>
                   }
-                </mat-select>
-              </mat-form-field>
+                </select>
+              </label>
               <a mat-stroked-button [href]="'mailto:' + contacto.correo + '?subject=Re: ' + contacto.asunto">
-                Responder
+                <i class="bi bi-reply" aria-hidden="true"></i> Responder
               </a>
             </div>
           </article>

@@ -1,6 +1,8 @@
 @import '@angular/material/prebuilt-themes/azure-blue.css';
 @import 'bootstrap/dist/css/bootstrap.min.css';
 @import 'bootstrap-icons/font/bootstrap-icons.css';
+@import './app/pages/admin-dashboard/site/admin-site-section.component.css';
+@import './app/pages/admin-dashboard/admin-shell.css';
 
 /* Global visual system */
 :root {
@@ -26,7 +28,7 @@
   --text-light: var(--text-gray);
   --text-muted: #64748b;
   --text-dark: #0f172a;
-  --white: #ce0505;
+  --white: #ffffff;
   --success-color: #34d399;
   --warning-color: #fbbf24;
   --danger-color: #fb7185;

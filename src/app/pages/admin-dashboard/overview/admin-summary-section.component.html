@@ -1,28 +1,74 @@
 <section class="section-stack">
+  @if (periodoSeleccionado(); as periodo) {
+    <section class="dashboard-period-bar" aria-label="Periodo de los indicadores">
+      <div class="dashboard-period-copy">
+        <span class="dashboard-period-icon"><i class="bi bi-calendar-range" aria-hidden="true"></i></span>
+        <div>
+          <span>Periodo analizado</span>
+          <strong>{{ periodo.etiqueta }}</strong>
+          <small>
+            @if (periodo.desde && periodo.hasta) {
+              {{ periodo.desde | date:'d MMM y':'UTC' }} — {{ periodo.hasta | date:'d MMM y':'UTC' }}
+            } @else {
+              Desde el inicio de operaciones
+            }
+          </small>
+        </div>
+      </div>
+      <label class="dashboard-period-control">
+        <span>Consultar</span>
+        <select
+          [value]="periodo.codigo"
+          [disabled]="cargandoPeriodo()"
+          (change)="periodChange.emit($any($event.target).value)">
+          @for (opcion of periodos(); track opcion.codigo) {
+            <option [value]="opcion.codigo">{{ opcion.etiqueta }}</option>
+          }
+        </select>
+        @if (cargandoPeriodo()) {
+          <i class="bi bi-arrow-repeat dashboard-period-loading" aria-hidden="true"></i>
+        } @else {
+          <i class="bi bi-chevron-down" aria-hidden="true"></i>
+        }
+      </label>
+    </section>
+  }
+
   @if (resumen(); as r) {
     <section class="dashboard-kpi-strip">
-      <article class="dashboard-kpi-card dashboard-kpi-card--wide">
-        <span class="dashboard-kpi-label">Visión general</span>
-        <strong class="dashboard-kpi-value">Operación del día</strong>
-        <small class="dashboard-kpi-helper">Seguimiento rápido de agenda, ocupación e ingresos.</small>
-      </article>
       <article class="dashboard-kpi-card dashboard-kpi-card--accent dashboard-kpi-card--primary">
-        <span class="dashboard-kpi-label">Citas hoy</span>
-        <strong class="dashboard-kpi-value">{{ r.citasHoy }}</strong>
+        <span class="dashboard-kpi-icon"><i class="bi bi-calendar2-check"></i></span>
+        <span class="dashboard-kpi-label">Citas del periodo</span>
+        <strong class="dashboard-kpi-value">{{ r.totalCitas }}</strong>
       </article>
       <article class="dashboard-kpi-card dashboard-kpi-card--status">
+        <span class="dashboard-kpi-icon is-warning"><i class="bi bi-hourglass-split"></i></span>
         <span class="dashboard-kpi-label">Pendientes</span>
         <strong class="dashboard-kpi-value">{{ r.pendientes }}</strong>
       </article>
       <article class="dashboard-kpi-card dashboard-kpi-card--status">
+        <span class="dashboard-kpi-icon is-success"><i class="bi bi-check2-circle"></i></span>
         <span class="dashboard-kpi-label">Confirmadas</span>
         <strong class="dashboard-kpi-value">{{ r.confirmadas }}</strong>
       </article>
+      <article class="dashboard-kpi-card dashboard-kpi-card--status">
+        <span class="dashboard-kpi-icon is-complete"><i class="bi bi-check2-all"></i></span>
+        <span class="dashboard-kpi-label">Finalizadas</span>
+        <strong class="dashboard-kpi-value">{{ r.finalizadas }}</strong>
+      </article>
+      <article class="dashboard-kpi-card dashboard-kpi-card--status">
+        <span class="dashboard-kpi-icon is-muted"><i class="bi bi-calendar2-x"></i></span>
+        <span class="dashboard-kpi-label">No concretadas</span>
+        <strong class="dashboard-kpi-value">{{ r.canceladas + r.noAsistio }}</strong>
+        <small class="dashboard-kpi-helper">{{ r.canceladas }} canceladas · {{ r.noAsistio }} no asistieron</small>
+      </article>
       <article class="dashboard-kpi-card dashboard-kpi-card--money">
+        <span class="dashboard-kpi-icon is-money"><i class="bi bi-graph-up-arrow"></i></span>
         <span class="dashboard-kpi-label">Ingreso programado</span>
         <strong class="dashboard-kpi-value">{{ r.ingresosProgramados | appMoney:'MXN':0:0 }}</strong>
       </article>
       <article class="dashboard-kpi-card dashboard-kpi-card--money">
+        <span class="dashboard-kpi-icon is-money"><i class="bi bi-cash-stack"></i></span>
         <span class="dashboard-kpi-label">Ingreso finalizado</span>
         <strong class="dashboard-kpi-value">{{ r.ingresosFinalizados | appMoney:'MXN':0:0 }}</strong>
       </article>

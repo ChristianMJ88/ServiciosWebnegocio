@@ -41,6 +41,8 @@ import { WhatsappChecklistItem, WhatsappOnboardingStats } from './admin-whatsapp
   styleUrls: ['./admin-whatsapp-section.component.css']
 })
 export class AdminWhatsappSectionComponent {
+  vistaActiva: 'estado' | 'configuracion' | 'plantillas' | 'actividad' = 'estado';
+
   @Input({ required: true }) formularioWhatsapp!: GuardarConfiguracionWhatsappPayload;
   @Input({ required: true }) formularioProvisionSubcuentaWhatsapp!: ProvisionarSubcuentaWhatsappPayload;
   @Input({ required: true }) formularioProvisionMessagingServiceWhatsapp!: ProvisionarMessagingServiceWhatsappPayload;
@@ -74,4 +76,8 @@ export class AdminWhatsappSectionComponent {
   @Output() detectChannelSender = new EventEmitter<void>();
   @Output() associateChannelSender = new EventEmitter<void>();
   @Output() testTemplate = new EventEmitter<void>();
+
+  seleccionarVista(vista: 'estado' | 'configuracion' | 'plantillas' | 'actividad'): void {
+    this.vistaActiva = vista;
+  }
 }

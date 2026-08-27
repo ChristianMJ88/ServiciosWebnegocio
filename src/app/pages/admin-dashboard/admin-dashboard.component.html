@@ -41,10 +41,9 @@
 
       <mat-toolbar class="admin-toolbar">
         <div class="topbar-left">
-          <div class="topbar-brand topbar-brand--context" [attr.aria-label]="nombreEmpresa() + ' Backoffice'">
-            <span class="topbar-brand-chip">ADMIN</span>
+          <div class="topbar-brand topbar-brand--context" [attr.aria-label]="nombreEmpresa() + ' Centro de control'">
             <div class="topbar-brand-copy">
-              <span class="topbar-brand-title">Backoffice</span>
+              <span class="topbar-brand-title">Centro de control</span>
               <span class="topbar-brand-subtitle">{{ nombreEmpresa() }}</span>
             </div>
           </div>
@@ -165,7 +164,7 @@
         <header class="content-header" [class.is-services-header]="seccionActiva() === 'servicios'">
           <div class="content-header-copy">
             <div class="content-header-meta">
-              <span class="content-header-kicker">Backoffice</span>
+              <span class="content-header-kicker">{{ grupoActivoTitulo() }}</span>
               <span class="badge rounded-pill content-header-badge">{{ nombreEmpresa() }}</span>
             </div>
             <h1>{{ moduloActivo().titulo }}</h1>
@@ -173,9 +172,9 @@
           </div>
 
           <div class="content-header-actions">
-            <span class="header-status-chip">
+            <span class="header-status-chip" [class.is-clear]="!totalNotificaciones()">
               <i class="bi bi-activity" aria-hidden="true"></i>
-              {{ totalNotificaciones() }} pendientes
+              {{ totalNotificaciones() ? totalNotificaciones() + ' pendientes' : 'Todo al día' }}
             </span>
             <button type="button" class="btn btn-primary toolbar-refresh-button" (click)="recargar()">
               <i class="bi bi-arrow-clockwise me-2" aria-hidden="true"></i>
@@ -205,6 +204,10 @@
             [topPrestadoresPorIngreso]="topPrestadoresPorIngreso()"
             [topPrestadoresPorCitas]="topPrestadoresPorCitas()"
             [reporteServicios]="reporteServicios()"
+            [periodos]="periodosReporte()"
+            [periodoSeleccionado]="periodoReporteSeleccionado()"
+            [cargandoPeriodo]="cargandoPeriodoReporte()"
+            (periodChange)="cambiarPeriodoReporte($event)"
             (openAgenda)="seleccionarSeccion('citas')"
             (appointmentSelected)="abrirCitaDesdeResumen($event)" />
           } @placeholder {

@@ -88,6 +88,7 @@ export class AdminDashboardLoader {
       excepciones: this.cargarSi(puedeGestionarPrestadores, this.adminService.getExcepcionesDisponibilidad(), [], 'No se pudieron cargar las excepciones.', onError),
       reporteServicios: this.cargarSi(this.authService.puedeVerReportesAdmin(), this.adminService.getReporteServicios(), [], 'No se pudo cargar el reporte de servicios.', onError),
       reportePrestadores: this.cargarSi(this.authService.puedeVerReportesAdmin(), this.adminService.getReportePrestadores(), [], 'No se pudo cargar el reporte de prestadores.', onError),
+      periodosReporte: this.cargarSi(this.authService.puedeVerReportesAdmin(), this.adminService.getPeriodosReporte(), [], 'No se pudieron cargar los periodos de reporte.', onError),
       configuracionSitio: this.cargarSi(puedeGestionarConfiguracion, this.adminService.getConfiguracionSitio(), null, 'No se pudo cargar la configuración del sitio web.', onError),
       configuracionCorreo: this.cargarSi(puedeGestionarConfiguracion, this.adminService.getConfiguracionCorreo(), null, 'No se pudo cargar la configuración de correo.', onError),
       auditoriaConfiguracion: this.cargarSi(

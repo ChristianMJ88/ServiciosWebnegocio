@@ -1,5 +1,6 @@
 
 import { Component, inject } from '@angular/core';
+import { Meta, Title } from '@angular/platform-browser';
 import { Router, RouterLink } from '@angular/router';
 import { PlatformHostService } from '../../core/platform/platform-host.service';
 
@@ -13,121 +14,153 @@ import { PlatformHostService } from '../../core/platform/platform-host.service';
 export class FluoraHomeComponent {
   private readonly router = inject(Router);
   readonly platformHost = inject(PlatformHostService);
+  private readonly title = inject(Title);
+  private readonly meta = inject(Meta);
 
   readonly heroHighlights = [
-    'Centraliza WhatsApp, formularios web y redes en un solo flujo.',
-    'Convierte conversaciones en oportunidades con CRM y automatización.',
-    'Da seguimiento sin depender de tareas manuales.'
+    'Minisitio web personalizable incluido.',
+    'CRM, recepción y caja en una sola plataforma.',
+    'Recordatorios por WhatsApp y correo para reducir ausencias.'
   ];
 
   readonly heroSignals = [
-    'Atención',
-    'Ventas',
-    'Seguimiento'
+    'Agenda de citas',
+    'Minisitio web',
+    'Clientes y caja'
   ];
 
   readonly painPoints = [
     {
-      title: 'Mensajes dispersos',
-      body: 'El equipo responde desde varios canales sin contexto unificado ni visibilidad completa del historial.'
+      title: 'Citas bajo control',
+      body: 'Consulta horarios, servicios, responsables y estados sin depender de libretas, hojas de cálculo o mensajes sueltos.'
     },
     {
-      title: 'Seguimiento inconsistente',
-      body: 'Los leads se enfrían porque el siguiente paso depende de memoria, notas o mensajes sueltos.'
+      title: 'Una imagen profesional',
+      body: 'Publica un minisitio personalizable con información, imágenes, servicios, precios y formas de contacto.'
     },
     {
-      title: 'Poca claridad comercial',
-      body: 'Hay actividad, pero cuesta saber qué oportunidades avanzan, quién responde y qué canal convierte mejor.'
+      title: 'Clientes que regresan',
+      body: 'Conserva su historial y activa recordatorios y seguimientos para reducir ausencias y recuperar clientes.'
     }
   ];
 
   readonly pillars = [
     {
-      title: 'Inbox omnicanal',
-      body: 'Reúne conversaciones de WhatsApp, web y redes en una sola operación para responder con orden.'
+      title: 'Agenda y reservas',
+      body: 'Registra citas, administra disponibilidad y permite que tus clientes reserven desde tu minisitio.'
     },
     {
-      title: 'CRM conectado',
-      body: 'Cada conversación puede crear o actualizar una oportunidad con etapa, responsable e historial.'
+      title: 'CRM de clientes',
+      body: 'Mantén contactos, citas e historial organizados para brindar atención personalizada y dar seguimiento.'
     },
     {
-      title: 'Automatización con IA',
-      body: 'Clasifica, responde, asigna y activa seguimiento automático sin construir procesos complejos.'
+      title: 'Operación completa',
+      body: 'Coordina recepción, personal, caja, WhatsApp y correo institucional sin fragmentar la información.'
     }
   ];
 
   readonly workflow = [
     {
       step: '01',
-      title: 'Captura',
-      body: 'Los mensajes entran desde distintos canales y se centralizan en una sola vista.'
+      title: 'Publica',
+      body: 'Personaliza tu minisitio con tu marca, información, servicios, precios e imágenes.'
     },
     {
       step: '02',
-      title: 'Organiza',
-      body: 'Refluora clasifica la intención, registra el lead y lo mueve al flujo comercial correcto.'
+      title: 'Agenda',
+      body: 'Tus clientes reservan y la cita aparece organizada para el equipo y recepción.'
     },
     {
       step: '03',
-      title: 'Convierte',
-      body: 'Automatiza seguimiento, reduce tiempos de respuesta y da continuidad hasta el cierre.'
+      title: 'Atiende y fideliza',
+      body: 'Registra atención y cobro, envía recordatorios y da seguimiento para impulsar nuevas visitas.'
     }
   ];
 
   readonly capabilities = [
     {
-      title: 'Atención más rápida',
-      body: 'Responde antes sin ampliar equipo y sin depender de una sola persona.'
+      title: 'Menos ausencias',
+      body: 'Envía confirmaciones y recordatorios de citas por WhatsApp y correo electrónico.'
     },
     {
-      title: 'Pipeline visible',
-      body: 'Entiende qué conversaciones son oportunidades y en qué etapa se encuentra cada una.'
+      title: 'Información centralizada',
+      body: 'Agenda, clientes, equipo, servicios y pagos comparten una sola fuente de información.'
     },
     {
-      title: 'Seguimiento real',
-      body: 'Activa recordatorios y automatizaciones para que los leads no se queden a medias.'
+      title: 'Más clientes recurrentes',
+      body: 'Identifica a quién dar seguimiento y programa mensajes para invitarlo a regresar.'
     },
     {
-      title: 'Operación simple',
-      body: 'Menos herramientas sueltas y más claridad para ventas, atención y seguimiento.'
+      title: 'Costo razonable',
+      body: 'Una solución pensada para emprendedoras, pequeños negocios y empresas medianas que quieren crecer.'
     }
   ];
 
   readonly featureGroups = [
     {
-      title: 'Conversaciones en un solo lugar',
-      items: ['WhatsApp', 'Formularios web', 'Instagram y redes', 'Historial por contacto']
+      title: 'Agenda y presencia digital',
+      items: ['Agenda de citas', 'Reservas en línea', 'Minisitio personalizable', 'Servicios, precios e imágenes']
     },
     {
-      title: 'CRM y automatización',
-      items: ['Leads con etapa y responsable', 'Asignación automática', 'Seguimientos programados', 'Reglas por intención']
+      title: 'Clientes y seguimiento',
+      items: ['CRM de clientes', 'Historial de citas', 'Recordatorios automáticos', 'Campañas para volver a reservar']
     },
     {
-      title: 'Visibilidad y control',
-      items: ['Estado del pipeline', 'Métricas por canal', 'Tiempos de respuesta', 'Trazabilidad del equipo']
+      title: 'Operación del negocio',
+      items: ['Recepción de clientes', 'Caja y cobros', 'Personal y disponibilidad', 'WhatsApp y correo institucional']
+    }
+  ];
+
+  readonly plans = [
+    {
+      name: 'Emprende',
+      audience: 'Para comenzar con una imagen profesional',
+      price: '399',
+      featured: false,
+      features: ['1 sucursal', 'Hasta 2 usuarios', 'Agenda y reservas en línea', 'Minisitio web personalizable', 'CRM de clientes', 'Correo institucional y recordatorios']
+    },
+    {
+      name: 'Negocio',
+      audience: 'Para equipos que quieren operar y crecer',
+      price: '699',
+      featured: true,
+      features: ['1 sucursal', 'Hasta 8 usuarios', 'Todo lo incluido en Emprende', 'Recepción y control de llegada', 'Caja, cobros y reportes', 'WhatsApp y automatizaciones', 'Roles y permisos para el equipo']
+    },
+    {
+      name: 'Pro',
+      audience: 'Para empresas con mayor operación',
+      price: '1,199',
+      featured: false,
+      features: ['Hasta 3 sucursales', 'Hasta 20 usuarios', 'Todo lo incluido en Negocio', 'Operación y reportes por sucursal', 'Automatizaciones avanzadas', 'Seguimiento de clientes', 'Soporte prioritario']
     }
   ];
 
   readonly faqs = [
     {
-      question: '¿Refluora es solo para WhatsApp?',
-      answer: 'No. WhatsApp es una pieza importante, pero la plataforma está pensada para centralizar web, redes y otras entradas comerciales en un solo flujo.'
+      question: '¿Qué es Fluora Agenda?',
+      answer: 'Es una agenda de citas en línea para negocios de servicios que incluye minisitio web, CRM de clientes, recepción, caja y automatizaciones.'
     },
     {
-      question: '¿Es un CRM o una herramienta de automatización?',
-      answer: 'Es una plataforma que combina conversaciones, CRM, automatización e inteligencia artificial para que el proceso comercial viva en un mismo sistema.'
+      question: '¿Puedo publicar mis servicios y precios?',
+      answer: 'Sí. Tu minisitio es personalizable y permite mostrar información del negocio, imágenes, servicios, precios y datos de contacto.'
     },
     {
-      question: '¿Sirve para equipos pequeños?',
-      answer: 'Sí. De hecho, uno de sus mayores beneficios es ayudar a equipos pequeños o medianos a responder mejor y seguir oportunidades con más consistencia.'
+      question: '¿Sirve para emprendedoras y negocios pequeños?',
+      answer: 'Sí. Fluora está diseñada para ser fácil de usar y tener un costo razonable para emprendimientos, pequeños negocios y empresas medianas.'
     },
     {
-      question: '¿Puedo empezar simple y luego crecer?',
-      answer: 'Sí. La idea es comenzar con una operación clara y después sumar más automatización, más canales y más estructura comercial según el crecimiento del negocio.'
+      question: '¿Cómo ayuda a reducir las citas perdidas?',
+      answer: 'Fluora puede enviar confirmaciones y recordatorios por WhatsApp y correo, además de conservar el historial para dar seguimiento a tus clientes.'
     }
   ];
 
   constructor() {
+    this.title.setTitle('Fluora Agenda | Agenda de citas y minisitio para tu negocio');
+    this.meta.updateTag({ name: 'description', content: 'Agenda de citas para pequeños y medianos negocios. Incluye minisitio web personalizable, CRM, recepción, caja y recordatorios por WhatsApp y correo.' });
+    this.meta.updateTag({ name: 'keywords', content: 'agenda de citas, agenda para negocios, agenda online, minisitio web, CRM para pequeños negocios, recordatorio de citas, Fluora Agenda' });
+    this.meta.updateTag({ property: 'og:title', content: 'Fluora Agenda | Organiza citas y haz crecer tu negocio' });
+    this.meta.updateTag({ property: 'og:description', content: 'Agenda, minisitio web, clientes, recepción, caja y recordatorios en una plataforma accesible.' });
+    this.meta.updateTag({ property: 'og:type', content: 'website' });
     if (this.platformHost.hasDedicatedAppHost() && this.platformHost.isAppHost()) {
       void this.router.navigateByUrl('/acceso');
     }

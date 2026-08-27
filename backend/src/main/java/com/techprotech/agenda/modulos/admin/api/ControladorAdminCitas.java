@@ -35,6 +35,7 @@ import com.techprotech.agenda.modulos.admin.api.dto.PruebaPlantillaWhatsappReque
 import com.techprotech.agenda.modulos.admin.api.dto.PruebaPlantillaWhatsappResponse;
 import com.techprotech.agenda.modulos.admin.api.dto.ReportePrestadorAdminResponse;
 import com.techprotech.agenda.modulos.admin.api.dto.ReporteServicioAdminResponse;
+import com.techprotech.agenda.modulos.admin.api.dto.PeriodoReporteAdminResponse;
 import com.techprotech.agenda.modulos.admin.api.dto.RolInternoAdminRequest;
 import com.techprotech.agenda.modulos.admin.api.dto.RolInternoAdminResponse;
 import com.techprotech.agenda.modulos.admin.api.dto.ResumenAdminResponse;
@@ -61,7 +62,9 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.RequestParam;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @RestController
@@ -77,8 +80,12 @@ public class ControladorAdminCitas {
 
     @GetMapping("/resumen")
     @PreAuthorize("hasAuthority('PANEL_ADMIN_ACCESO')")
-    public ResumenAdminResponse resumen(@AuthenticationPrincipal UsuarioAutenticado usuario) {
-        return servicioAdminCitas.resumen(usuario.empresaId());
+    public ResumenAdminResponse resumen(
+            @AuthenticationPrincipal UsuarioAutenticado usuario,
+            @RequestParam(required = false) LocalDate desde,
+            @RequestParam(required = false) LocalDate hasta
+    ) {
+        return servicioAdminCitas.resumen(usuario.empresaId(), desde, hasta);
     }
 
     @GetMapping("/citas")
@@ -129,14 +136,28 @@ public class ControladorAdminCitas {
 
     @GetMapping("/reportes/servicios")
     @PreAuthorize("hasAuthority('REPORTES_ADMIN_VER')")
-    public List<ReporteServicioAdminResponse> reporteServicios(@AuthenticationPrincipal UsuarioAutenticado usuario) {
-        return servicioAdminCitas.reporteServicios(usuario.empresaId());
+    public List<ReporteServicioAdminResponse> reporteServicios(
+            @AuthenticationPrincipal UsuarioAutenticado usuario,
+            @RequestParam(required = false) LocalDate desde,
+            @RequestParam(required = false) LocalDate hasta
+    ) {
+        return servicioAdminCitas.reporteServicios(usuario.empresaId(), desde, hasta);
     }
 
     @GetMapping("/reportes/prestadores")
     @PreAuthorize("hasAuthority('REPORTES_ADMIN_VER')")
-    public List<ReportePrestadorAdminResponse> reportePrestadores(@AuthenticationPrincipal UsuarioAutenticado usuario) {
-        return servicioAdminCitas.reportePrestadores(usuario.empresaId());
+    public List<ReportePrestadorAdminResponse> reportePrestadores(
+            @AuthenticationPrincipal UsuarioAutenticado usuario,
+            @RequestParam(required = false) LocalDate desde,
+            @RequestParam(required = false) LocalDate hasta
+    ) {
+        return servicioAdminCitas.reportePrestadores(usuario.empresaId(), desde, hasta);
+    }
+
+    @GetMapping("/reportes/periodos")
+    @PreAuthorize("hasAuthority('REPORTES_ADMIN_VER')")
+    public List<PeriodoReporteAdminResponse> periodosReporte() {
+        return servicioAdminCitas.periodosReporte();
     }
 
     @GetMapping("/roles-internos")

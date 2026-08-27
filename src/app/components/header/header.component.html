@@ -16,10 +16,10 @@
           <strong>{{ brandName() }}</strong>
         </span>
       } @else {
-        <img src="/fluora-mark.svg" alt="Logo Refluora" class="brand-mark">
+        <img src="/fluora-mark.svg" alt="Logo de Fluora Agenda" class="brand-mark">
         <span class="brand-copy brand-copy--marketing">
           <strong>Fluora</strong>
-          <small>Agenda facil, rapido, organizate mejor</small>
+          <small>Agenda fácil, crece con orden</small>
         </span>
       }
     </a>
@@ -62,7 +62,10 @@
             <a class="header-link" [attr.href]="companiesHref()" (click)="onNavAction()">Beneficios</a>
           </li>
           <li class="header-nav-item">
-            <a class="header-link" [attr.href]="pricingHref()" (click)="onNavAction()">FAQ</a>
+            <a class="header-link" [attr.href]="pricingHref()" (click)="onNavAction()">Planes</a>
+          </li>
+          <li class="header-nav-item">
+            <a class="header-link" [attr.href]="faqHref()" (click)="onNavAction()">FAQ</a>
           </li>
         }
         @if (tenantActivo()) {
@@ -114,7 +117,7 @@
             @if (tenantActivo()) {
               <a [routerLink]="ctaLink()" class="header-button" (click)="onNavAction()">Reservar</a>
             } @else {
-              <a [attr.href]="registerHref()" class="header-button" (click)="onNavAction()">Solicitar demo</a>
+              <a [attr.href]="registerHref()" class="header-button" (click)="onNavAction()">Crear mi agenda</a>
             }
           </li>
         }

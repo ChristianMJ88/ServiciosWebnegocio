@@ -3,21 +3,21 @@
     <div class="container refluora-hero__shell">
       <div class="refluora-hero__grid">
         <div class="refluora-hero__copy">
-          <span class="section-kicker section-kicker--hero">WhatsApp, web y redes en un solo sistema</span>
-          <h1>Centraliza conversaciones y automatiza el seguimiento comercial.</h1>
+          <span class="section-kicker section-kicker--hero">Agenda de citas para pequeños y medianos negocios</span>
+          <h1>Organiza tus citas y haz crecer tu negocio con Fluora.</h1>
           <p class="refluora-hero__lead">
-            Fluora te ayuda a responder con más orden, convertir mensajes en oportunidades y dar seguimiento sin depender de tareas manuales.
+            Una agenda fácil y accesible para emprendedoras y negocios de servicios. Recibe reservas, publica tu minisitio web y administra clientes, recepción, caja y recordatorios desde un solo lugar.
           </p>
+
+          <div class="refluora-hero__actions">
+            <a routerLink="/registro" class="btn btn-primary btn-lg rounded-pill">Probar Fluora 3 meses</a>
+            <a [attr.href]="platformHost.appUrl('/acceso')" class="btn btn-outline-light btn-lg rounded-pill hero-secondary-action">Ya tengo cuenta</a>
+          </div>
 
           <div class="refluora-hero__signals" aria-label="Áreas principales">
             @for (item of heroSignals; track item) {
               <span>{{ item }}</span>
             }
-          </div>
-
-          <div class="refluora-hero__actions">
-            <a routerLink="/registro" class="btn btn-primary btn-lg rounded-pill">Crear mi empresa</a>
-            <a [attr.href]="platformHost.appUrl('/acceso')" class="btn btn-outline-light btn-lg rounded-pill">Entrar a la app</a>
           </div>
 
           <div class="refluora-hero__highlights">
@@ -33,23 +33,23 @@
         <div class="refluora-hero__visual">
           <div class="hero-preview">
             <div class="hero-preview__topbar">
-              <span>Inbox</span>
-              <span>CRM</span>
-              <span>Automatización</span>
+              <span>Agenda</span>
+              <span>Clientes</span>
+              <span>Minisitio web</span>
             </div>
 
             <div class="hero-preview__body">
               <div class="preview-column">
                 <div class="preview-card preview-card--message">
-                  <small>WhatsApp</small>
-                  <strong>Nuevo lead</strong>
-                  <p>“Hola, quiero información y precios.”</p>
+                  <small>Nueva reserva</small>
+                  <strong>Cita confirmada</strong>
+                  <p>30 ago · 3:00 PM · Maquillaje</p>
                 </div>
 
                 <div class="preview-card">
-                  <small>Formulario web</small>
-                  <strong>Lead registrado</strong>
-                  <p>Empresa con alto volumen de mensajes entrantes.</p>
+                  <small>Minisitio Fluora</small>
+                  <strong>Reserva recibida</strong>
+                  <p>Tu cliente eligió servicio, fecha y horario.</p>
                 </div>
               </div>
 
@@ -57,31 +57,31 @@
                 <div class="preview-step">
                   <span>1</span>
                   <div>
-                    <strong>Clasifica intención</strong>
-                    <p>Detecta si la conversación es comercial, soporte o seguimiento.</p>
+                  <strong>Publica tus servicios</strong>
+                    <p>Muestra información, imágenes, precios y horarios de tu negocio.</p>
                   </div>
                 </div>
                 <div class="preview-step">
                   <span>2</span>
                   <div>
-                    <strong>Crea oportunidad</strong>
-                    <p>Registra el lead en CRM con etapa y responsable.</p>
+                  <strong>Recibe la cita</strong>
+                    <p>La reserva entra a tu agenda y al CRM de clientes.</p>
                   </div>
                 </div>
                 <div class="preview-step">
                   <span>3</span>
                   <div>
-                    <strong>Activa seguimiento</strong>
-                    <p>Dispara recordatorio o siguiente acción automáticamente.</p>
+                  <strong>Atiende y cobra</strong>
+                    <p>Recepción, caja y seguimiento trabajan con la misma información.</p>
                   </div>
                 </div>
               </div>
             </div>
 
             <div class="hero-preview__footer">
-              <span>Respuesta inicial automatizada</span>
-              <span>Lead creado en CRM</span>
-              <span>Siguiente paso activado</span>
+              <span>Cita organizada</span>
+              <span>Cliente registrado</span>
+              <span>Recordatorio programado</span>
             </div>
           </div>
         </div>
@@ -89,13 +89,70 @@
     </div>
   </section>
 
+  <section class="conversion-strip" aria-label="Registro en Fluora">
+    <div class="container conversion-strip__inner">
+      <div>
+        <strong>Empieza hoy. Configura tu negocio paso a paso.</strong>
+        <span>Tu agenda y minisitio pueden estar listos para recibir reservas.</span>
+      </div>
+      <a routerLink="/registro" class="conversion-button">Activar 3 meses PRO <i class="bi bi-arrow-right"></i></a>
+    </div>
+  </section>
+
+  <section class="landing-section demo-section" id="demostracion">
+    <div class="container demo-grid">
+      <div class="demo-copy">
+        <span class="section-kicker">Míralo en acción</span>
+        <h2>Tu negocio también puede tener un minisitio listo para recibir citas.</h2>
+        <p>
+          Este es un ejemplo real creado con Fluora. Tus clientes pueden conocer tus servicios, consultar precios, contactarte y reservar desde cualquier dispositivo.
+        </p>
+        <ul class="demo-benefits">
+          <li><i class="bi bi-check2"></i> Tu marca, colores e información</li>
+          <li><i class="bi bi-check2"></i> Servicios, imágenes y precios</li>
+          <li><i class="bi bi-check2"></i> Reserva en línea y contacto por WhatsApp</li>
+        </ul>
+        <div class="demo-actions">
+          <a routerLink="/registro" class="btn btn-primary btn-lg rounded-pill">Quiero mi minisitio</a>
+          <a routerLink="/e/nail-air" class="demo-link">Explorar ejemplo <i class="bi bi-box-arrow-up-right"></i></a>
+        </div>
+      </div>
+      <a routerLink="/e/nail-air" class="demo-browser" aria-label="Abrir minisitio de demostración Nail Air">
+        <div class="demo-browser__bar"><span></span><span></span><span></span><small>fluora · Nail Air</small></div>
+        <img src="/fluora-nail-air-demo.png" alt="Ejemplo del minisitio web de Nail Air creado con Fluora Agenda" loading="lazy">
+        <span class="demo-browser__badge"><i class="bi bi-cursor-fill"></i> Demo interactiva</span>
+      </a>
+    </div>
+  </section>
+
+  <section class="landing-section journey-section" aria-labelledby="journey-title">
+    <div class="container">
+      <div class="section-head section-head--centered">
+        <span class="section-kicker">Del registro a tu primera cita</span>
+        <h2 id="journey-title">Fluora pone en movimiento tu negocio.</h2>
+        <p>Un flujo sencillo y conectado para comenzar sin conocimientos técnicos.</p>
+      </div>
+      <div class="journey-flow">
+        <article class="journey-step"><span>1</span><i class="bi bi-person-plus"></i><strong>Crea tu cuenta</strong><small>Registra tu empresa.</small></article>
+        <article class="journey-step"><span>2</span><i class="bi bi-palette"></i><strong>Personaliza</strong><small>Publica marca y servicios.</small></article>
+        <article class="journey-step"><span>3</span><i class="bi bi-calendar2-check"></i><strong>Recibe reservas</strong><small>Tu agenda se organiza.</small></article>
+        <article class="journey-step"><span>4</span><i class="bi bi-chat-heart"></i><strong>Haz que regresen</strong><small>Recuerda y da seguimiento.</small></article>
+      </div>
+      <div class="journey-cta">
+        <p><strong>No esperes a tener más citas para organizarte.</strong> Empieza con Fluora y crece sobre una base profesional.</p>
+        <a routerLink="/registro" class="btn btn-primary btn-lg rounded-pill">Comenzar mis 3 meses PRO</a>
+        <small>Sin conocimientos técnicos · Configuración guiada</small>
+      </div>
+    </div>
+  </section>
+
   <section class="landing-section landing-section--light">
     <div class="container">
       <div class="section-head section-head--centered">
-        <span class="section-kicker">El problema</span>
-        <h2>Atender mucho no siempre significa vender mejor.</h2>
+        <span class="section-kicker">Hecha para tu negocio</span>
+        <h2>Tu agenda deja de ser una libreta y se convierte en una herramienta de crecimiento.</h2>
         <p>
-          Cuando las conversaciones viven en varios canales y el seguimiento depende de procesos manuales, lo normal es perder contexto, velocidad y oportunidades.
+          Fluora ayuda a salones, spas, consultorios, estudios y negocios de servicios a trabajar con orden, ofrecer una experiencia profesional y reducir el tiempo dedicado a tareas repetitivas.
         </p>
       </div>
 
@@ -113,10 +170,10 @@
   <section class="landing-section" id="producto">
     <div class="container">
       <div class="section-head">
-        <span class="section-kicker">Qué resuelve Fluora</span>
-        <h2>Una sola plataforma para captar, organizar y mover cada oportunidad.</h2>
+        <span class="section-kicker">Todo incluido</span>
+        <h2>Mucho más que una agenda para registrar citas.</h2>
         <p>
-          La propuesta no es sumar otra herramienta. Es darle al equipo una operación más clara para atención, ventas y seguimiento.
+          Empieza con una agenda sencilla y suma las herramientas que necesitas para operar tu negocio sin pagar ni aprender múltiples sistemas.
         </p>
       </div>
 
@@ -135,9 +192,9 @@
     <div class="container">
       <div class="section-head section-head--centered">
         <span class="section-kicker">Cómo funciona</span>
-        <h2>Un flujo simple para pasar de conversación a seguimiento con orden.</h2>
+        <h2>De tu minisitio a una cita atendida, todo permanece conectado.</h2>
         <p>
-          Fluora debe sentirse fácil de entender desde la primera visita: entra el mensaje, se organiza la oportunidad y se activa el siguiente paso.
+          Tus clientes reservan, tu equipo recibe y atiende, caja registra el cobro y Fluora conserva el historial para ayudarte a lograr que regresen.
         </p>
       </div>
 
@@ -157,9 +214,9 @@
     <div class="container">
       <div class="section-head">
         <span class="section-kicker">Beneficios</span>
-        <h2>Más claridad para el equipo. Menos fuga de leads en el proceso.</h2>
+        <h2>Una experiencia profesional para ti, tu equipo y tus clientes.</h2>
         <p>
-          Fluora no necesita prometer magia. Su valor está en ordenar la operación comercial para que responder y seguir oportunidades sea más consistente.
+          Diseñada para que un negocio pequeño pueda empezar fácilmente y una empresa mediana pueda coordinar sucursales, personal y atención con mayor control.
         </p>
       </div>
 
@@ -178,7 +235,7 @@
     <div class="container">
       <div class="section-head section-head--centered">
         <span class="section-kicker">Capacidades clave</span>
-        <h2>Lo esencial para que la operación conversacional se vea seria, ordenada y escalable.</h2>
+        <h2>Las herramientas que necesitas para operar y crecer con orden.</h2>
       </div>
 
       <div class="feature-groups">
@@ -196,14 +253,54 @@
     </div>
   </section>
 
+  <section class="landing-section pricing-section" id="planes">
+    <div class="container">
+      <div class="section-head section-head--centered">
+        <span class="section-kicker">Planes para cada etapa</span>
+        <h2>Empieza con lo necesario. Crece sin cambiar de sistema.</h2>
+        <p>Precios mensuales propuestos en pesos mexicanos. Todos los planes conservan la información separada y segura de cada negocio.</p>
+      </div>
+      <aside class="trial-banner" aria-label="Promoción de registro">
+        <span class="trial-banner__icon"><i class="bi bi-gift"></i></span>
+        <div>
+          <span class="trial-banner__eyebrow">Beneficio de lanzamiento por tiempo limitado</span>
+          <h3>Registra tu negocio sin costo y disfruta el plan PRO durante 3 meses.</h3>
+          <p>Explora agenda, minisitio, CRM, recepción, caja y automatizaciones. Al finalizar el periodo podrás elegir el plan que mejor se adapte a tu negocio.</p>
+        </div>
+        <a routerLink="/registro">Comenzar ahora <i class="bi bi-arrow-right"></i></a>
+      </aside>
+      <p class="pricing-swipe-hint"><i class="bi bi-arrow-left-right"></i> Desliza para comparar los planes</p>
+      <div class="pricing-grid" aria-label="Planes de suscripción de Fluora" tabindex="0">
+        @for (plan of plans; track plan.name) {
+          <article class="pricing-card" [class.pricing-card--featured]="plan.featured">
+            @if (plan.featured) { <span class="pricing-card__popular">Más elegido</span> }
+            <div class="pricing-card__head">
+              <span>{{ plan.name }}</span>
+              <h3>{{ plan.audience }}</h3>
+              <div class="pricing-card__price"><strong>${{ plan.price }}</strong><span>MXN / mes</span></div>
+            </div>
+            <ul>
+              @for (feature of plan.features; track feature) { <li><i class="bi bi-check2-circle"></i>{{ feature }}</li> }
+            </ul>
+            <a routerLink="/registro" class="pricing-card__button">Comenzar con PRO gratis</a>
+          </article>
+        }
+      </div>
+      <div class="pricing-note">
+        <i class="bi bi-info-circle"></i>
+        <span>Los mensajes de WhatsApp y servicios de proveedores externos pueden generar consumos adicionales. Podemos ayudarte a elegir la configuración adecuada.</span>
+      </div>
+    </div>
+  </section>
+
   <section class="landing-section" id="faq">
     <div class="container">
       <div class="faq-shell">
         <div class="section-head">
           <span class="section-kicker">Preguntas frecuentes</span>
-          <h2>Las dudas clave deben resolverse antes de pedir acceso.</h2>
+          <h2>Todo lo que necesitas saber antes de comenzar.</h2>
           <p>
-            Esta sección ayuda a aclarar alcance, encaje y expectativas del producto sin forzar promesas que hoy no se puedan sostener.
+            Conoce cómo Fluora puede adaptarse a la etapa actual de tu negocio y acompañarte mientras creces.
           </p>
         </div>
 
@@ -223,9 +320,9 @@
     <div class="container">
       <div class="final-cta__card">
         <span class="section-kicker">Comienza</span>
-        <h2>Ordena tus conversaciones antes de que el crecimiento te complique más la operación.</h2>
+        <h2>Empieza a organizar tus citas y ofrece una experiencia que haga volver a tus clientes.</h2>
         <p>
-          Fluora está pensado para negocios que necesitan responder mejor, seguir oportunidades con más consistencia y operar con una base más sólida.
+          Crea tu empresa en Fluora y reúne agenda, minisitio, clientes, recepción, caja y seguimiento en una plataforma accesible.
         </p>
         <div class="final-cta__actions">
           <a routerLink="/registro" class="btn btn-primary btn-lg rounded-pill">Crear mi empresa</a>

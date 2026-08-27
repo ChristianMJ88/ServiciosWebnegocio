@@ -25,11 +25,11 @@ export class HeaderComponent {
   readonly rutaActual = signal(this.normalizarUrl(this.router.url));
   readonly navbarCondensed = signal(false);
   readonly mobileMenuOpen = signal(false);
-  readonly brandName = computed(() => this.tenantActivo() ? this.tenantContext.nombreComercial() : 'Refluora');
+  readonly brandName = computed(() => this.tenantActivo() ? this.tenantContext.nombreComercial() : 'Fluora');
   readonly brandSubtitle = computed(() =>
     this.tenantActivo()
       ? (this.tenantContext.descripcionCorta() || 'Experiencia digital para tus clientes.')
-      : 'CRM + Automatización + IA'
+      : 'Agenda para tu negocio'
   );
   readonly fluoraHomeActiva = computed(() => !this.tenantActivo() && this.rutaActual() === '/');
   readonly tenantHomeActiva = computed(() => this.tenantActivo() && this.rutaActual() === this.homeLink());
@@ -46,7 +46,8 @@ export class HeaderComponent {
   readonly featuresHref = computed(() => this.platformHost.marketingUrl('/#producto'));
   readonly workflowHref = computed(() => this.platformHost.marketingUrl('/#como-funciona'));
   readonly companiesHref = computed(() => this.platformHost.marketingUrl('/#beneficios'));
-  readonly pricingHref = computed(() => this.platformHost.marketingUrl('/#faq'));
+  readonly pricingHref = computed(() => this.platformHost.marketingUrl('/#planes'));
+  readonly faqHref = computed(() => this.platformHost.marketingUrl('/#faq'));
   readonly registerHref = computed(() => this.platformHost.marketingUrl('/registro'));
 
   constructor() {

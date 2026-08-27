@@ -1,3 +1,40 @@
 :host {
   display: block;
 }
+
+.whatsapp-admin-section { gap: .9rem; }
+.whatsapp-section-nav { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: .35rem; padding: .35rem; border: 1px solid #e5eaf0; border-radius: 12px; background: #fff; box-shadow: 0 4px 14px rgba(15, 23, 42, .035); }
+.whatsapp-section-nav button { min-width: 0; min-height: 42px; display: flex; align-items: center; justify-content: center; gap: .45rem; padding: .5rem .7rem; border: 0; border-radius: 9px; color: #64748b; background: transparent; font: inherit; font-size: .74rem; font-weight: 750; cursor: pointer; transition: color 150ms ease, background 150ms ease, box-shadow 150ms ease; }
+.whatsapp-section-nav button:hover { color: #334155; background: #f8fafc; }
+.whatsapp-section-nav button.is-active { color: #1d4ed8; background: #eff6ff; box-shadow: inset 0 0 0 1px #bfdbfe; }
+.whatsapp-section-nav i { font-size: .85rem; }
+.whatsapp-pane { display: none !important; }
+.whatsapp-view-estado .whatsapp-pane--estado,
+.whatsapp-view-configuracion .whatsapp-pane--configuracion,
+.whatsapp-view-plantillas .whatsapp-pane--plantillas,
+.whatsapp-view-actividad .whatsapp-pane--actividad { display: block !important; }
+.whatsapp-module-grid { grid-template-columns: minmax(0, 1fr) !important; }
+.whatsapp-view-plantillas .whatsapp-module-grid:last-of-type { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
+.whatsapp-view-configuracion .whatsapp-pane--configuracion { max-width: 980px; width: 100%; margin-inline: auto; }
+.whatsapp-view-configuracion .whatsapp-pane--configuracion { max-height: calc(100dvh - 235px); overflow: auto; overscroll-behavior: contain; }
+.whatsapp-view-actividad .whatsapp-pane--actividad .entity-list { max-height: 460px; overflow: auto; padding-right: .25rem; overscroll-behavior: contain; scrollbar-width: thin; }
+.whatsapp-view-plantillas .whatsapp-pane--plantillas { align-self: start; }
+.whatsapp-pane--estado { height: clamp(380px, calc(100dvh - 330px), 700px); padding: 1rem !important; overflow: auto; overscroll-behavior: contain; scrollbar-width: thin; }
+.whatsapp-pane--estado > .section-header { margin-bottom: .75rem; }
+.whatsapp-pane--estado .entity-list { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .6rem; }
+.whatsapp-pane--estado .entity-list + .entity-list { margin-top: .6rem; }
+.whatsapp-pane--estado .entity-row { min-width: 0; align-items: center; gap: .65rem; padding: .75rem .8rem; border-radius: 11px; background: #fff; }
+.whatsapp-pane--estado .entity-main { min-width: 0; }
+.whatsapp-pane--estado .entity-title { font-size: .78rem; }
+.whatsapp-pane--estado .entity-meta { overflow-wrap: anywhere; font-size: .68rem; line-height: 1.4; }
+.whatsapp-pane--estado .entity-side { min-width: auto; }
+.whatsapp-pane--estado .entity-list:first-of-type .entity-row:first-child { grid-column: 1 / -1; }
+
+@media (max-width: 767.98px) {
+  .whatsapp-section-nav { grid-template-columns: repeat(4, minmax(68px, 1fr)); overflow-x: auto; }
+  .whatsapp-section-nav button { flex-direction: column; gap: .15rem; min-height: 52px; padding: .4rem .25rem; font-size: .62rem; }
+  .whatsapp-view-plantillas .whatsapp-module-grid:last-of-type { grid-template-columns: 1fr !important; }
+  .whatsapp-view-configuracion .whatsapp-pane--configuracion { max-height: none; overflow: visible; }
+  .whatsapp-pane--estado { height: auto; overflow: visible; }
+  .whatsapp-pane--estado .entity-list { grid-template-columns: 1fr; }
+}

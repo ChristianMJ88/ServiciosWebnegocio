@@ -1,5 +1,5 @@
 import { Injectable, inject } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { CitaCliente } from '../auth/client-appointments.service';
@@ -14,6 +14,14 @@ export interface ResumenAdmin {
   citasHoy: number;
   ingresosProgramados: number;
   ingresosFinalizados: number;
+}
+
+export interface PeriodoReporteAdmin {
+  codigo: string;
+  etiqueta: string;
+  desde: string | null;
+  hasta: string | null;
+  predeterminado: boolean;
 }
 
 export interface OpcionTextoDisponibilidadAdmin {
@@ -666,8 +674,8 @@ export interface MetadatosContactosAdmin {
 export class AdminService {
   private readonly http = inject(HttpClient);
 
-  getResumen(): Observable<ResumenAdmin> {
-    return this.http.get<ResumenAdmin>(`${environment.apiBaseUrl}/admin/resumen`);
+  getResumen(periodo?: PeriodoReporteAdmin | null): Observable<ResumenAdmin> {
+    return this.http.get<ResumenAdmin>(`${environment.apiBaseUrl}/admin/resumen`, { params: this.paramsPeriodo(periodo) });
   }
 
   getCitas(): Observable<CitaCliente[]> {
@@ -834,12 +842,16 @@ export class AdminService {
     return this.http.patch<ExcepcionDisponibilidadAdmin>(`${environment.apiBaseUrl}/admin/disponibilidad/excepciones/${id}`, payload);
   }
 
-  getReporteServicios(): Observable<ReporteServicioAdmin[]> {
-    return this.http.get<ReporteServicioAdmin[]>(`${environment.apiBaseUrl}/admin/reportes/servicios`);
+  getReporteServicios(periodo?: PeriodoReporteAdmin | null): Observable<ReporteServicioAdmin[]> {
+    return this.http.get<ReporteServicioAdmin[]>(`${environment.apiBaseUrl}/admin/reportes/servicios`, { params: this.paramsPeriodo(periodo) });
   }
 
-  getReportePrestadores(): Observable<ReportePrestadorAdmin[]> {
-    return this.http.get<ReportePrestadorAdmin[]>(`${environment.apiBaseUrl}/admin/reportes/prestadores`);
+  getReportePrestadores(periodo?: PeriodoReporteAdmin | null): Observable<ReportePrestadorAdmin[]> {
+    return this.http.get<ReportePrestadorAdmin[]>(`${environment.apiBaseUrl}/admin/reportes/prestadores`, { params: this.paramsPeriodo(periodo) });
+  }
+
+  getPeriodosReporte(): Observable<PeriodoReporteAdmin[]> {
+    return this.http.get<PeriodoReporteAdmin[]>(`${environment.apiBaseUrl}/admin/reportes/periodos`);
   }
 
   getConfiguracionSitio(): Observable<ConfiguracionSitioAdmin> {
@@ -848,6 +860,14 @@ export class AdminService {
 
   actualizarConfiguracionSitio(payload: GuardarConfiguracionSitioPayload): Observable<ConfiguracionSitioAdmin> {
     return this.http.patch<ConfiguracionSitioAdmin>(`${environment.apiBaseUrl}/admin/configuracion-sitio`, payload);
+  }
+
+  private paramsPeriodo(periodo?: PeriodoReporteAdmin | null): HttpParams {
+    let params = new HttpParams();
+    if (periodo?.desde && periodo?.hasta) {
+      params = params.set('desde', periodo.desde).set('hasta', periodo.hasta);
+    }
+    return params;
   }
 
   getConfiguracionCorreo(): Observable<ConfiguracionCorreoAdmin> {

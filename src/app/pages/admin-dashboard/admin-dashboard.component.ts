@@ -11,7 +11,7 @@ import { MatMenuModule } from '@angular/material/menu';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatSidenavModule } from '@angular/material/sidenav';
 import { MatToolbarModule } from '@angular/material/toolbar';
-import { Observable } from 'rxjs';
+import { Observable, forkJoin } from 'rxjs';
 import { finalize } from 'rxjs/operators';
 import { AgendaOperationsSectionComponent } from '../../components/agenda/agenda-operations-section.component';
 import { buildWhatsAppUrl, formatAgendaStatusLabel, getInitials } from '../../components/agenda/agenda.helpers';
@@ -51,6 +51,7 @@ import {
   ImportarCatalogoSugeridoResponse,
   ReportePrestadorAdmin,
   ReporteServicioAdmin,
+  PeriodoReporteAdmin,
   PermisoAdmin,
   RolInternoAdmin,
   ReglaDisponibilidadAdmin,
@@ -283,6 +284,9 @@ export class AdminDashboardComponent implements OnInit {
   readonly metadatosDisponibilidad = signal<MetadatosDisponibilidadAdmin | null>(null);
   readonly reporteServicios = signal<ReporteServicioAdmin[]>([]);
   readonly reportePrestadores = signal<ReportePrestadorAdmin[]>([]);
+  readonly periodosReporte = signal<PeriodoReporteAdmin[]>([]);
+  readonly periodoReporteSeleccionado = signal<PeriodoReporteAdmin | null>(null);
+  readonly cargandoPeriodoReporte = signal(false);
   readonly configuracionSitio = signal<ConfiguracionSitioAdmin | null>(null);
   readonly configuracionCorreo = signal<ConfiguracionCorreoAdmin | null>(null);
   readonly configuracionWhatsapp = signal<ConfiguracionWhatsappAdmin | null>(null);
@@ -312,6 +316,11 @@ export class AdminDashboardComponent implements OnInit {
   );
   readonly gruposSidebar = computed(() => construirGruposSidebarAdmin(this.modulosAdmin()));
   readonly moduloActivo = computed(() => this.modulosAdmin().find(modulo => modulo.id === this.seccionActiva()) ?? this.modulosAdmin()[0]);
+  readonly grupoActivoTitulo = computed(() =>
+    this.gruposSidebar().find(grupo =>
+      grupo.modulosVisibles.some(modulo => modulo.id === this.seccionActiva())
+    )?.titulo ?? 'Centro de control'
+  );
   readonly nombreEmpresa = computed(() => this.authService.sesionActual()?.empresaNombre?.trim() || 'Empresa');
   readonly inicialesEmpresa = computed(() => getInitials(this.nombreEmpresa()));
   readonly correoUsuarioAdmin = computed(() => this.authService.sesionActual()?.correo ?? '');
@@ -922,7 +931,7 @@ export class AdminDashboardComponent implements OnInit {
     this.dashboardLoader.cargar((error, mensaje) => this.marcarErrorCarga(error, mensaje))
       .pipe(finalize(() => this.actualizarVistaEnZona(() => this.loading.set(false))))
       .subscribe({
-        next: ({ resumen, citas, contactos, metadatosContactos, sucursales, gruposServicio, subgruposServicio, catalogosSugeridos, servicios, prestadores, rolesInternos, plantillasRolesInternos, auditoriaRolesInternos, permisos, usuariosInternos, reglas, metadatosDisponibilidad, excepciones, reporteServicios, reportePrestadores, configuracionSitio, configuracionCorreo, auditoriaConfiguracion, configuracionWhatsapp, plantillasWhatsapp, plantillasWhatsappEmpresa, logsWhatsapp, mensajesWhatsapp }) => {
+        next: ({ resumen, citas, contactos, metadatosContactos, sucursales, gruposServicio, subgruposServicio, catalogosSugeridos, servicios, prestadores, rolesInternos, plantillasRolesInternos, auditoriaRolesInternos, permisos, usuariosInternos, reglas, metadatosDisponibilidad, excepciones, reporteServicios, reportePrestadores, periodosReporte, configuracionSitio, configuracionCorreo, auditoriaConfiguracion, configuracionWhatsapp, plantillasWhatsapp, plantillasWhatsappEmpresa, logsWhatsapp, mensajesWhatsapp }) => {
           this.actualizarVistaEnZona(() => {
             this.resumen.set(resumen);
             this.citas.set(citas);
@@ -956,6 +965,13 @@ export class AdminDashboardComponent implements OnInit {
             this.excepcionesDisponibilidad.set(excepciones);
             this.reporteServicios.set(reporteServicios);
             this.reportePrestadores.set(reportePrestadores);
+            this.periodosReporte.set(periodosReporte);
+            const codigoPeriodoActual = this.periodoReporteSeleccionado()?.codigo;
+            const periodoActivo = periodosReporte.find(periodo => periodo.codigo === codigoPeriodoActual)
+              ?? periodosReporte.find(periodo => periodo.predeterminado)
+              ?? periodosReporte[0]
+              ?? null;
+            this.periodoReporteSeleccionado.set(periodoActivo);
             this.configuracionSitio.set(configuracionSitio);
             this.configuracionCorreo.set(configuracionCorreo);
             this.auditoriaConfiguracion.set(auditoriaConfiguracion);
@@ -994,12 +1010,42 @@ export class AdminDashboardComponent implements OnInit {
             this.inicializarFechaAgenda();
             this.citaAgendaSeleccionadaId.set(null);
           });
+          const periodoActivo = this.periodoReporteSeleccionado();
+          if (periodoActivo) {
+            this.cargarDatosPeriodo(periodoActivo);
+          }
         },
         error: err => {
           this.actualizarVistaEnZona(() => {
             this.error = err?.error?.mensaje || err?.message || 'No se pudo cargar el panel administrativo.';
           });
         }
+      });
+  }
+
+  cambiarPeriodoReporte(codigo: string) {
+    const periodo = this.periodosReporte().find(opcion => opcion.codigo === codigo);
+    if (!periodo || periodo.codigo === this.periodoReporteSeleccionado()?.codigo) {
+      return;
+    }
+    this.periodoReporteSeleccionado.set(periodo);
+    this.cargarDatosPeriodo(periodo);
+  }
+
+  private cargarDatosPeriodo(periodo: PeriodoReporteAdmin) {
+    this.cargandoPeriodoReporte.set(true);
+    forkJoin({
+      resumen: this.adminService.getResumen(periodo),
+      servicios: this.adminService.getReporteServicios(periodo),
+      prestadores: this.adminService.getReportePrestadores(periodo)
+    }).pipe(finalize(() => this.cargandoPeriodoReporte.set(false)))
+      .subscribe({
+        next: ({ resumen, servicios, prestadores }) => {
+          this.resumen.set(resumen);
+          this.reporteServicios.set(servicios);
+          this.reportePrestadores.set(prestadores);
+        },
+        error: error => this.marcarErrorCarga(error, 'No se pudo cargar el periodo seleccionado.')
       });
   }
 

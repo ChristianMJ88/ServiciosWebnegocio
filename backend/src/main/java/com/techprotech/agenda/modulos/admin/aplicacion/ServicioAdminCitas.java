@@ -50,6 +50,7 @@ import com.techprotech.agenda.modulos.admin.api.dto.PruebaPlantillaWhatsappReque
 import com.techprotech.agenda.modulos.admin.api.dto.PruebaPlantillaWhatsappResponse;
 import com.techprotech.agenda.modulos.admin.api.dto.ReportePrestadorAdminResponse;
 import com.techprotech.agenda.modulos.admin.api.dto.ReporteServicioAdminResponse;
+import com.techprotech.agenda.modulos.admin.api.dto.PeriodoReporteAdminResponse;
 import com.techprotech.agenda.modulos.admin.api.dto.RolInternoAdminRequest;
 import com.techprotech.agenda.modulos.admin.api.dto.RolInternoAdminResponse;
 import com.techprotech.agenda.modulos.admin.api.dto.ServicioAdminRequest;
@@ -352,8 +353,8 @@ public class ServicioAdminCitas {
     }
 
     @Transactional(readOnly = true)
-    public ResumenAdminResponse resumen(Long empresaId) {
-        List<CitaEntidad> citas = citaRepositorio.findByEmpresaIdOrderByInicioDesc(empresaId);
+    public ResumenAdminResponse resumen(Long empresaId, LocalDate desde, LocalDate hasta) {
+        List<CitaEntidad> citas = citasReporte(empresaId, desde, hasta);
         LocalDate hoy = LocalDate.now();
         long total = citas.size();
         return new ResumenAdminResponse(
@@ -370,10 +371,10 @@ public class ServicioAdminCitas {
     }
 
     @Transactional(readOnly = true)
-    public List<ReporteServicioAdminResponse> reporteServicios(Long empresaId) {
+    public List<ReporteServicioAdminResponse> reporteServicios(Long empresaId, LocalDate desde, LocalDate hasta) {
         Map<Long, ServicioEntidad> servicios = servicioRepositorio.findByEmpresaIdOrderByNombreAsc(empresaId).stream()
                 .collect(Collectors.toMap(ServicioEntidad::getId, servicio -> servicio));
-        return citaRepositorio.findByEmpresaIdOrderByInicioDesc(empresaId).stream()
+        return citasReporte(empresaId, desde, hasta).stream()
                 .collect(Collectors.groupingBy(CitaEntidad::getServicioId))
                 .entrySet()
                 .stream()
@@ -396,8 +397,8 @@ public class ServicioAdminCitas {
     }
 
     @Transactional(readOnly = true)
-    public List<ReportePrestadorAdminResponse> reportePrestadores(Long empresaId) {
-        List<CitaEntidad> citas = citaRepositorio.findByEmpresaIdOrderByInicioDesc(empresaId);
+    public List<ReportePrestadorAdminResponse> reportePrestadores(Long empresaId, LocalDate desde, LocalDate hasta) {
+        List<CitaEntidad> citas = citasReporte(empresaId, desde, hasta);
         Set<Long> prestadorIds = citas.stream()
                 .map(CitaEntidad::getPrestadorId)
                 .filter(java.util.Objects::nonNull)
@@ -434,6 +435,44 @@ public class ServicioAdminCitas {
                                 .thenComparing(ReportePrestadorAdminResponse::totalCitas, Comparator.reverseOrder())
                 )
                 .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public List<PeriodoReporteAdminResponse> periodosReporte() {
+        LocalDate hoy = LocalDate.now();
+        return List.of(
+                new PeriodoReporteAdminResponse(
+                        "MES_ACTUAL",
+                        "Este mes",
+                        hoy.withDayOfMonth(1),
+                        hoy.withDayOfMonth(hoy.lengthOfMonth()),
+                        true
+                ),
+                new PeriodoReporteAdminResponse("ULTIMOS_30_DIAS", "Últimos 30 días", hoy.minusDays(29), hoy, false),
+                new PeriodoReporteAdminResponse("ULTIMOS_90_DIAS", "Últimos 90 días", hoy.minusDays(89), hoy, false),
+                new PeriodoReporteAdminResponse(
+                        "ANIO_ACTUAL",
+                        "Este año",
+                        hoy.withDayOfYear(1),
+                        hoy.withDayOfYear(hoy.lengthOfYear()),
+                        false
+                ),
+                new PeriodoReporteAdminResponse("TODO", "Todo el historial", null, null, false)
+        );
+    }
+
+    private List<CitaEntidad> citasReporte(Long empresaId, LocalDate desde, LocalDate hasta) {
+        if (desde == null && hasta == null) {
+            return citaRepositorio.findByEmpresaIdOrderByInicioDesc(empresaId);
+        }
+        if (desde == null || hasta == null || desde.isAfter(hasta)) {
+            throw new ResponseStatusException(BAD_REQUEST, "El periodo del reporte no es válido");
+        }
+        return citaRepositorio.findByEmpresaIdAndInicioBetweenOrderByInicioAsc(
+                empresaId,
+                desde.atStartOfDay(),
+                hasta.plusDays(1).atStartOfDay()
+        );
     }
 
     @Transactional(readOnly = true)

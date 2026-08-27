@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, computed, inject, input, output } from '@angular/core';
+import { Component, computed, inject, input, output, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
@@ -27,8 +27,7 @@ import { PlatformHostService } from '../../../core/platform/platform-host.servic
     MatSelectModule,
     MatSlideToggleModule
   ],
-  templateUrl: './admin-site-section.component.html',
-  styleUrl: './admin-site-section.component.css'
+  templateUrl: './admin-site-section.component.html'
 })
 export class AdminSiteSectionComponent {
   private readonly platformHost = inject(PlatformHostService);
@@ -41,6 +40,15 @@ export class AdminSiteSectionComponent {
   readonly etiquetaAccionAuditoriaConfiguracion = input.required<(accion: string) => string>();
 
   readonly save = output<void>();
+  readonly seccionActiva = signal<'identidad' | 'apariencia' | 'portada' | 'contacto' | 'publicacion'>('identidad');
+
+  readonly secciones = [
+    { id: 'identidad' as const, label: 'Identidad', icon: 'bi bi-shop' },
+    { id: 'apariencia' as const, label: 'Colores y tipografía', icon: 'bi bi-palette2' },
+    { id: 'portada' as const, label: 'Portada', icon: 'bi bi-image' },
+    { id: 'contacto' as const, label: 'Contacto y redes', icon: 'bi bi-chat-dots' },
+    { id: 'publicacion' as const, label: 'Dominio y publicación', icon: 'bi bi-globe2' }
+  ];
 
   readonly slugPreview = computed(() => this.normalizarSlug(
     this.formularioSitio().slug || this.formularioSitio().nombreComercial || 'mi-negocio'
@@ -62,6 +70,17 @@ export class AdminSiteSectionComponent {
     { value: 'MANROPE', label: 'Manrope' },
     { value: 'SYSTEM', label: 'Sistema' }
   ];
+
+  fuenteCss(valor?: string | null): string {
+    const fuentes: Record<string, string> = {
+      JAKARTA: '"Plus Jakarta Sans", Inter, sans-serif',
+      INTER: 'Inter, "Segoe UI", sans-serif',
+      PLAYFAIR: '"Playfair Display", Georgia, serif',
+      MANROPE: 'Manrope, Inter, sans-serif',
+      SYSTEM: 'system-ui, -apple-system, "Segoe UI", sans-serif'
+    };
+    return fuentes[valor || ''] || fuentes['INTER'];
+  }
 
   private normalizarSlug(valor: string): string {
     const slug = valor
