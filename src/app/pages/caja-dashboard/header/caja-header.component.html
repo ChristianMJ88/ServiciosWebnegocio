@@ -3,8 +3,18 @@
   <div class="caja-toolbar-actions">
     <button mat-icon-button class="caja-toolbar-icon-button notification-trigger" [matMenuTriggerFor]="menuNotificaciones"
       [matBadge]="totalNotificaciones" [matBadgeHidden]="!totalNotificaciones" matBadgeColor="accent" matBadgeSize="small" aria-label="Alertas de caja"><i class="bi bi-bell"></i></button>
-    @if (!panelMovil && puedeIrRecepcion) { <button class="btn btn-outline-secondary btn-sm" type="button" (click)="goReception.emit()">Recepción</button> }
-    @if (!panelMovil && puedeIrAdmin) { <button class="btn btn-outline-secondary btn-sm" type="button" (click)="goAdmin.emit()">Admin</button> }
+    @if (!panelMovil && puedeIrRecepcion) {
+      <button mat-stroked-button class="caja-nav-button" type="button" (click)="goReception.emit()">
+        <i class="bi bi-calendar2-check" aria-hidden="true"></i>
+        <span>Recepción</span>
+      </button>
+    }
+    @if (!panelMovil && puedeIrAdmin) {
+      <button mat-stroked-button class="caja-nav-button" type="button" (click)="goAdmin.emit()">
+        <i class="bi bi-grid" aria-hidden="true"></i>
+        <span>Admin</span>
+      </button>
+    }
     <button mat-button [matMenuTriggerFor]="menuUsuario" class="caja-user-button" type="button" [attr.aria-label]="'Abrir perfil de ' + nombreUsuario">
       <app-user-avatar class="caja-user-avatar" [imageUrl]="fotoPerfilUsuario" [initials]="inicialesUsuario" />
       @if (!panelMovil) { <span class="caja-user-copy"><strong>{{ nombreUsuario }}</strong><small>{{ puestoUsuario }}</small></span> }

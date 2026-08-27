@@ -15,10 +15,16 @@
         <i class="bi bi-bell"></i>
       </button>
       @if (!panelMovil() && puedeIrCaja()) {
-        <button class="btn btn-outline-secondary btn-sm" type="button" (click)="irACaja()">Caja</button>
+        <button mat-stroked-button class="recepcion-nav-button" type="button" (click)="irACaja()">
+          <i class="bi bi-wallet2" aria-hidden="true"></i>
+          <span>Caja</span>
+        </button>
       }
       @if (!panelMovil() && puedeIrAdmin()) {
-        <button class="btn btn-outline-secondary btn-sm" type="button" (click)="irAAdmin()">Admin</button>
+        <button mat-stroked-button class="recepcion-nav-button" type="button" (click)="irAAdmin()">
+          <i class="bi bi-grid" aria-hidden="true"></i>
+          <span>Admin</span>
+        </button>
       }
       <button
         mat-button

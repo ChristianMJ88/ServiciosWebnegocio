@@ -70,17 +70,26 @@
   gap: 0.5rem;
 }
 
-.recepcion-toolbar-actions .btn,
+.recepcion-nav-button,
 .recepcion-toolbar-icon-button,
 .recepcion-user-button {
   border-radius: 12px;
 }
 
-.recepcion-toolbar-actions .btn {
+.recepcion-nav-button {
   min-height: 38px;
   padding-inline: 0.8rem;
+  border-color: rgba(148, 163, 184, 0.3) !important;
+  background: rgba(255, 255, 255, 0.82);
+  color: #475569 !important;
   font-size: 0.8rem;
   font-weight: 750;
+}
+
+.recepcion-nav-button .mdc-button__label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.42rem;
 }
 
 .recepcion-toolbar-icon-button {
@@ -697,7 +706,7 @@
     padding: 0.58rem 0.72rem;
   }
 
-  .recepcion-toolbar-actions .btn {
+  .recepcion-nav-button {
     display: none;
   }
 
