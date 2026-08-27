@@ -401,11 +401,11 @@
 }
 
 .sidebar-edge-toggle.is-sidebar-open {
-  left: calc(var(--admin-sidebar-width) - 19px);
+  left: calc(var(--admin-sidebar-width) + 12px);
 }
 
 .sidebar-edge-toggle.is-rail {
-  left: 57px;
+  left: 88px;
 }
 
 .sidebar-edge-toggle:hover {
@@ -907,6 +907,7 @@
 
 .topbar-left {
   flex: 1 1 auto;
+  padding-left: 46px;
   transition: padding-left 200ms ease;
 }
 
@@ -2407,6 +2408,10 @@
     top: 14px;
   }
 
+  .topbar-left {
+    padding-left: 0;
+  }
+
   .admin-toolbar {
     min-height: 66px;
     padding: 0.8rem 1rem;
@@ -2513,7 +2518,7 @@
 }
 
 .admin-layout.is-rail .sidebar-edge-toggle {
-  left: 57px;
+  left: 88px;
 }
 
 @media (max-width: 991.98px) {
