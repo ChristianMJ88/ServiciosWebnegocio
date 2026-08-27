@@ -208,6 +208,7 @@ export class FluoraHomeComponent implements AfterViewInit, OnDestroy {
         gsap.set('.booking-request', { autoAlpha: .52, x: -10 });
         gsap.set('.agenda-connector i', { autoAlpha: .2, scaleX: .12, transformOrigin: 'left center' });
         gsap.set('.agenda-slot--active', { autoAlpha: .3, scale: .97, transformOrigin: 'center center' });
+        gsap.set('.agenda-confirmation', { autoAlpha: 0, y: 12, scale: .94, transformOrigin: 'center center' });
         gsap.set('.agenda-board footer span', { autoAlpha: .35, y: 4 });
 
         timeline
@@ -220,9 +221,12 @@ export class FluoraHomeComponent implements AfterViewInit, OnDestroy {
             duration: .55,
             ease: 'back.out(1.35)'
           }, '-=.12')
-          .to('.agenda-board footer span', { autoAlpha: 1, y: 0, duration: .42, stagger: .16, ease: 'power2.out' }, '-=.12')
+          .to('.agenda-confirmation', { autoAlpha: 1, y: 0, scale: 1, duration: .52, ease: 'back.out(1.55)' })
+          .to('.agenda-confirmation > span', { scale: 1.12, duration: .2, repeat: 1, yoyo: true, ease: 'power1.inOut' }, '-=.18')
+          .to('.agenda-board footer span', { autoAlpha: 1, y: 0, duration: .42, stagger: .16, ease: 'power2.out' }, '-=.08')
           .to({}, { duration: 2.5 })
           .to('.agenda-board footer span', { autoAlpha: .35, y: 4, duration: .35, stagger: .08 })
+          .to('.agenda-confirmation', { autoAlpha: 0, y: 10, scale: .96, duration: .35 }, '<')
           .to('.agenda-slot--active', { autoAlpha: .3, scale: .97, boxShadow: 'none', duration: .4 }, '<')
           .to('.agenda-connector i', { autoAlpha: .2, scaleX: .12, duration: .35 }, '<')
           .to('.booking-request', { autoAlpha: .52, x: -10, duration: .45 }, '<');
