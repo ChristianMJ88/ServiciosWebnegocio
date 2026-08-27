@@ -1,14 +1,20 @@
 <section class="staff-shell">
-  @if (panelMovil() && sidebarAbierto()) {
-    <div class="staff-backdrop" (click)="cerrarSidebar()"></div>
-  }
-
-  <div class="staff-layout" [class.is-compact]="sidebarCompacto() && !panelMovil()">
-    <aside
-      id="staff-sidebar"
-      class="staff-sidebar"
-      [class.is-hidden]="panelMovil() && !sidebarAbierto()"
-      aria-label="Navegación principal del panel staff">
+  <mat-drawer-container
+    class="staff-layout"
+    [class.is-compact]="sidebarCompacto() && !panelMovil()"
+    [hasBackdrop]="panelMovil()"
+    [autosize]="true"
+    (backdropClick)="cerrarSidebar()">
+    <mat-drawer
+      class="staff-drawer"
+      position="start"
+      [mode]="panelMovil() ? 'over' : 'side'"
+      [opened]="panelMovil() ? sidebarAbierto() : true"
+      [disableClose]="!panelMovil()">
+      <aside
+        id="staff-sidebar"
+        class="staff-sidebar"
+        aria-label="Navegación principal del panel staff">
       <div class="staff-sidebar-brand">
         <span class="staff-sidebar-brand-mark" aria-hidden="true">{{ inicialesEmpresa() }}</span>
         @if (!sidebarCompacto() || panelMovil()) {
@@ -76,9 +82,10 @@
           }
         </nav>
       </div>
-    </aside>
+      </aside>
+    </mat-drawer>
 
-    <div class="staff-content">
+    <mat-drawer-content class="staff-content">
       <mat-toolbar class="staff-toolbar">
         <div class="staff-topbar-left">
           <button
@@ -119,13 +126,10 @@
           </button>
 
           <button mat-button class="staff-user-button" [matMenuTriggerFor]="menuStaffUsuario" aria-label="Abrir menú de usuario" aria-haspopup="menu">
-            <span class="staff-user-avatar">
-              @if (fotoPerfilUsuario(); as fotoPerfilStaff) {
-                <img [src]="fotoPerfilStaff" alt="" />
-              } @else {
-                {{ inicialesUsuario() }}
-              }
-            </span>
+            <app-user-avatar
+              class="staff-user-avatar"
+              [imageUrl]="fotoPerfilUsuario()"
+              [initials]="inicialesUsuario()" />
             <span class="staff-user-meta">
               <span class="staff-user-name">{{ nombreUsuario() }}</span>
               <span class="staff-user-role">{{ puestoUsuario() }}</span>
@@ -166,20 +170,20 @@
 
       <mat-menu #menuStaffUsuario="matMenu" class="toolbar-user-menu">
         <div class="profile-menu-header" (click)="$event.stopPropagation()">
-          <span class="staff-user-avatar profile-menu-avatar">
-            @if (fotoPerfilUsuario(); as fotoPerfilStaffMenu) {
-              <img [src]="fotoPerfilStaffMenu" alt="" />
-            } @else {
-              {{ inicialesUsuario() }}
-            }
-          </span>
+          <app-user-avatar
+            class="staff-user-avatar profile-menu-avatar"
+            [imageUrl]="fotoPerfilUsuario()"
+            [initials]="inicialesUsuario()" />
           <div class="min-w-0">
             <strong class="text-truncate">{{ nombreUsuario() }}</strong>
             <span class="text-truncate">{{ correoUsuario() }}</span>
           </div>
         </div>
         <button mat-menu-item type="button" (click)="abrirConfiguracionPerfil()"><i class="bi bi-person-gear me-2"></i>Configuración de perfil</button>
-        <button mat-menu-item type="button" (click)="logout()">Cerrar sesión</button>
+        <button mat-menu-item class="profile-menu-signout" type="button" (click)="logout()">
+          <i class="bi bi-box-arrow-right" aria-hidden="true"></i>
+          <span>Cerrar sesión</span>
+        </button>
       </mat-menu>
 
       @if (perfilConfigAbierto()) {
@@ -315,6 +319,6 @@
     }
   }
 </main>
-</div>
-</div>
+    </mat-drawer-content>
+  </mat-drawer-container>
 </section>

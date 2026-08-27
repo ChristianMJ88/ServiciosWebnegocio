@@ -69,13 +69,10 @@
             [matMenuTriggerFor]="menuUsuario"
             [attr.aria-label]="'Abrir perfil de ' + nombreUsuarioAdmin()"
             aria-haspopup="menu">
-            <span class="toolbar-user-avatar">
-              @if (fotoPerfilUsuario(); as fotoPerfilTopbar) {
-                <img [src]="fotoPerfilTopbar" alt="" />
-              } @else {
-                {{ inicialesUsuarioAdmin() }}
-              }
-            </span>
+            <app-user-avatar
+              class="toolbar-user-avatar"
+              [imageUrl]="fotoPerfilUsuario()"
+              [initials]="inicialesUsuarioAdmin()" />
             <span class="toolbar-user-meta">
               <span class="toolbar-user-name">{{ nombreUsuarioAdmin() }}</span>
               <span class="toolbar-user-role">{{ puestoUsuarioAdmin() }}</span>
@@ -130,13 +127,10 @@
 
       <mat-menu #menuUsuario="matMenu" class="toolbar-user-menu">
         <div class="profile-menu-header" (click)="$event.stopPropagation()">
-          <span class="toolbar-user-avatar profile-menu-avatar">
-            @if (fotoPerfilUsuario(); as fotoPerfilMenu) {
-              <img [src]="fotoPerfilMenu" alt="" />
-            } @else {
-              {{ inicialesUsuarioAdmin() }}
-            }
-          </span>
+          <app-user-avatar
+            class="toolbar-user-avatar profile-menu-avatar"
+            [imageUrl]="fotoPerfilUsuario()"
+            [initials]="inicialesUsuarioAdmin()" />
           <div class="min-w-0">
             <strong class="text-truncate">{{ nombreUsuarioAdmin() }}</strong>
             <span class="text-truncate">{{ correoUsuarioAdmin() }}</span>
@@ -146,7 +140,10 @@
           <i class="bi bi-person-gear me-2" aria-hidden="true"></i>
           Configuración de perfil
         </button>
-        <button mat-menu-item type="button" (click)="logout()">Cerrar sesión</button>
+        <button mat-menu-item class="profile-menu-signout" type="button" (click)="logout()">
+          <i class="bi bi-box-arrow-right" aria-hidden="true"></i>
+          <span>Cerrar sesión</span>
+        </button>
       </mat-menu>
 
       @if (perfilConfigAbierto()) {

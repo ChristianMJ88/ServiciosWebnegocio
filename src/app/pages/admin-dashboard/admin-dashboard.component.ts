@@ -65,6 +65,7 @@ import { AuthService } from '../../core/auth/auth.service';
 import { CitaCliente } from '../../core/auth/client-appointments.service';
 import { PerfilUsuarioLocal, UserProfileService } from '../../core/profile/user-profile.service';
 import { UserProfileDialogComponent } from '../../shared/profile/user-profile-dialog.component';
+import { UserAvatarComponent } from '../../shared/profile/user-avatar.component';
 import { AdminBranchesSectionComponent } from './catalog/admin-branches-section.component';
 import { AdminContactsSectionComponent } from './contacts/admin-contacts-section.component';
 import { AdminContactsFacade } from './contacts/admin-contacts.facade';
@@ -183,6 +184,7 @@ type NotificacionAdmin = {
     MatProgressBarModule,
     MatSidenavModule,
     UserProfileDialogComponent,
+    UserAvatarComponent,
     AgendaOperationsSectionComponent,
     AdminBranchesSectionComponent,
     AdminEmailSectionComponent,
