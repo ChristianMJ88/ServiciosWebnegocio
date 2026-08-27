@@ -1,0 +1,5 @@
+@if (visibleImageUrl(); as avatarUrl) {
+  <img [src]="avatarUrl" alt="" (load)="validateImage($event)" (error)="rejectImage()" />
+} @else {
+  <span aria-hidden="true">{{ initials() }}</span>
+}

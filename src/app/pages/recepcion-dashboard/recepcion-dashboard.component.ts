@@ -15,6 +15,7 @@ import { debounceTime, distinctUntilChanged, finalize } from 'rxjs/operators';
 import { AuthService } from '../../core/auth/auth.service';
 import { PerfilUsuarioLocal, UserProfileService } from '../../core/profile/user-profile.service';
 import { UserProfileDialogComponent } from '../../shared/profile/user-profile-dialog.component';
+import { UserAvatarComponent } from '../../shared/profile/user-avatar.component';
 import { RecepcionSidePanelComponent } from './recepcion-side-panel.component';
 import { RecepcionAgendaSectionComponent } from './agenda/recepcion-agenda-section.component';
 import { FormularioCitaRecepcion, crearFormularioCitaRecepcion } from './forms/recepcion.forms';
@@ -43,6 +44,7 @@ import {
     MatProgressBarModule,
     MatToolbarModule,
     MatTooltipModule,
+    UserAvatarComponent,
     UserProfileDialogComponent,
     RecepcionSidePanelComponent,
     RecepcionAgendaSectionComponent

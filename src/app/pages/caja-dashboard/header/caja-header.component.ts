@@ -1,19 +1,21 @@
 import { CommonModule } from '@angular/common';
-import { Component, EventEmitter, Input, Output } from '@angular/core';
+import { Component, EventEmitter, Input, Output, ViewEncapsulation } from '@angular/core';
 import { MatBadgeModule } from '@angular/material/badge';
 import { MatButtonModule } from '@angular/material/button';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { PerfilUsuarioLocal } from '../../../core/profile/user-profile.service';
 import { UserProfileDialogComponent } from '../../../shared/profile/user-profile-dialog.component';
+import { UserAvatarComponent } from '../../../shared/profile/user-avatar.component';
 import { CajaNotificationViewModel } from '../models/caja-dashboard.models';
 
 @Component({
   selector: 'app-caja-header',
   standalone: true,
-  imports: [CommonModule, MatBadgeModule, MatButtonModule, MatMenuModule, MatToolbarModule, UserProfileDialogComponent],
+  imports: [CommonModule, MatBadgeModule, MatButtonModule, MatMenuModule, MatToolbarModule, UserAvatarComponent, UserProfileDialogComponent],
   templateUrl: './caja-header.component.html',
-  styleUrls: ['./caja-header.component.css']
+  styleUrls: ['./caja-header.component.css'],
+  encapsulation: ViewEncapsulation.None
 })
 export class CajaHeaderComponent {
   @Input({ required: true }) panelMovil!: boolean;

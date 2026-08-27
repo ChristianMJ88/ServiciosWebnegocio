@@ -26,13 +26,10 @@
         class="recepcion-user-button"
         type="button"
         [attr.aria-label]="'Abrir perfil de ' + nombreUsuario()">
-        <span class="recepcion-user-avatar">
-          @if (fotoPerfilUsuario(); as fotoRecepcion) {
-            <img [src]="fotoRecepcion" alt="" />
-          } @else {
-            {{ inicialesUsuario() }}
-          }
-        </span>
+        <app-user-avatar
+          class="recepcion-user-avatar"
+          [imageUrl]="fotoPerfilUsuario()"
+          [initials]="inicialesUsuario()" />
         @if (!panelMovil()) {
           <span class="recepcion-user-copy">
             <strong>{{ nombreUsuario() }}</strong>
@@ -75,13 +72,10 @@
 
   <mat-menu #menuUsuario="matMenu" class="toolbar-user-menu">
     <div class="profile-menu-header" (click)="$event.stopPropagation()">
-      <span class="recepcion-user-avatar profile-menu-avatar">
-        @if (fotoPerfilUsuario(); as fotoRecepcionMenu) {
-          <img [src]="fotoRecepcionMenu" alt="" />
-        } @else {
-          {{ inicialesUsuario() }}
-        }
-      </span>
+      <app-user-avatar
+        class="recepcion-user-avatar profile-menu-avatar"
+        [imageUrl]="fotoPerfilUsuario()"
+        [initials]="inicialesUsuario()" />
       <div class="min-w-0">
         <strong class="text-truncate">{{ nombreUsuario() }}</strong>
         <span class="text-truncate">{{ correoUsuario() }}</span>

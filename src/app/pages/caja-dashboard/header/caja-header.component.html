@@ -5,8 +5,8 @@
       [matBadge]="totalNotificaciones" [matBadgeHidden]="!totalNotificaciones" matBadgeColor="accent" matBadgeSize="small" aria-label="Alertas de caja"><i class="bi bi-bell"></i></button>
     @if (!panelMovil && puedeIrRecepcion) { <button class="btn btn-outline-secondary btn-sm" type="button" (click)="goReception.emit()">Recepción</button> }
     @if (!panelMovil && puedeIrAdmin) { <button class="btn btn-outline-secondary btn-sm" type="button" (click)="goAdmin.emit()">Admin</button> }
-    <button mat-button [matMenuTriggerFor]="menuUsuario" class="caja-user-button" type="button">
-      <span class="caja-user-avatar">@if (fotoPerfilUsuario) { <img [src]="fotoPerfilUsuario" alt="" /> } @else { {{ inicialesUsuario }} }</span>
+    <button mat-button [matMenuTriggerFor]="menuUsuario" class="caja-user-button" type="button" [attr.aria-label]="'Abrir perfil de ' + nombreUsuario">
+      <app-user-avatar class="caja-user-avatar" [imageUrl]="fotoPerfilUsuario" [initials]="inicialesUsuario" />
       @if (!panelMovil) { <span class="caja-user-copy"><strong>{{ nombreUsuario }}</strong><small>{{ puestoUsuario }}</small></span> }
       <i class="bi bi-chevron-down toolbar-user-chevron" aria-hidden="true"></i>
     </button>
@@ -21,7 +21,7 @@
   </div>
 </mat-menu>
 <mat-menu #menuUsuario="matMenu" class="toolbar-user-menu">
-  <div class="profile-menu-header" (click)="$event.stopPropagation()"><span class="caja-user-avatar profile-menu-avatar">@if (fotoPerfilUsuario) {<img [src]="fotoPerfilUsuario" alt="" />} @else { {{ inicialesUsuario }} }</span><div class="min-w-0"><strong class="text-truncate">{{ nombreUsuario }}</strong><span class="text-truncate">{{ correoUsuario }}</span></div></div>
+  <div class="profile-menu-header" (click)="$event.stopPropagation()"><app-user-avatar class="caja-user-avatar profile-menu-avatar" [imageUrl]="fotoPerfilUsuario" [initials]="inicialesUsuario" /><div class="min-w-0"><strong class="text-truncate">{{ nombreUsuario }}</strong><span class="text-truncate">{{ correoUsuario }}</span></div></div>
   <button mat-menu-item type="button" (click)="refresh.emit()">Actualizar</button>
   <button mat-menu-item type="button" (click)="openProfile.emit()"><i class="bi bi-person-gear me-2"></i>Configuración de perfil</button>
   @if (puedeIrRecepcion) { <button mat-menu-item type="button" (click)="goReception.emit()">Ir a recepción</button> }
