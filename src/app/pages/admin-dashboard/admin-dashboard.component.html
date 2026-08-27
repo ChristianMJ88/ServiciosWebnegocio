@@ -67,7 +67,7 @@
             mat-button
             class="toolbar-user-button"
             [matMenuTriggerFor]="menuUsuario"
-            aria-label="Abrir menú de usuario"
+            [attr.aria-label]="'Abrir perfil de ' + nombreUsuarioAdmin()"
             aria-haspopup="menu">
             <span class="toolbar-user-avatar">
               @if (fotoPerfilUsuario(); as fotoPerfilTopbar) {

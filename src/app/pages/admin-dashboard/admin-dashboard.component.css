@@ -911,6 +911,8 @@
 }
 
 .toolbar-actions {
+  flex: 0 1 auto;
+  max-width: 50%;
   justify-content: flex-end;
   row-gap: 0.5rem;
   margin-left: auto;
@@ -963,14 +965,27 @@
 
 .toolbar-user-button {
   display: inline-flex;
+  flex: 0 1 250px;
+  width: auto;
+  min-width: 0;
   align-items: center;
   gap: 0.65rem;
   min-height: 40px;
-  max-width: min(100%, 250px);
+  max-width: 250px;
+  overflow: hidden;
   padding: 0.18rem 0.2rem 0.18rem 0.45rem;
   background: rgba(255, 255, 255, 0.82);
   border: 1px solid rgba(176, 195, 221, 0.42);
   box-shadow: 0 12px 26px rgba(15, 23, 42, 0.06);
+}
+
+.toolbar-user-button .mdc-button__label {
+  display: flex;
+  width: 100%;
+  min-width: 0;
+  align-items: center;
+  gap: 0.65rem;
+  overflow: hidden;
 }
 
 .toolbar-user-avatar {
@@ -995,6 +1010,8 @@
 }
 
 .toolbar-user-meta {
+  flex: 1 1 auto;
+  max-width: 155px;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
@@ -2862,12 +2879,22 @@
 
   .toolbar-actions {
     flex: 0 0 auto;
+    max-width: none;
     gap: 0.35rem;
   }
 
   .toolbar-user-button {
+    flex-basis: 40px;
+    width: 40px;
+    min-width: 40px;
+    max-width: 40px;
     gap: 0;
     padding: 0.18rem;
+  }
+
+  .toolbar-user-button .mdc-button__label {
+    justify-content: center;
+    gap: 0;
   }
 
   .toolbar-user-chevron {
