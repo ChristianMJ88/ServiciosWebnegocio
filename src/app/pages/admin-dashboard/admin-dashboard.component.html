@@ -27,15 +27,16 @@
         class="sidebar-edge-toggle"
         [class.is-sidebar-open]="panelMovil() ? sidebarAbierto() : true"
         [class.is-rail]="!panelMovil() && !sidebarAbierto()"
+        [class.is-mobile-open]="panelMovil() && sidebarAbierto()"
         (click)="alternarSidebar()"
         aria-controls="admin-sidebar"
         [attr.aria-expanded]="sidebarAbierto()"
         [attr.aria-label]="sidebarAbierto() ? 'Contraer menú lateral' : 'Expandir menú lateral'">
-        <i
-          [class]="panelMovil()
-            ? (sidebarAbierto() ? 'bi bi-x-lg' : 'bi bi-list')
-            : (sidebarAbierto() ? 'bi bi-chevron-left' : 'bi bi-chevron-right')"
-          aria-hidden="true"></i>
+        <span class="sidebar-toggle-glyph" aria-hidden="true">
+          <span></span>
+          <span></span>
+          <span></span>
+        </span>
       </button>
 
       <mat-toolbar class="admin-toolbar">

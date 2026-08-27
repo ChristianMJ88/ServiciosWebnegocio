@@ -386,18 +386,19 @@
   top: 19px;
   left: 12px;
   z-index: 40;
-  width: 38px;
-  height: 38px;
+  width: 40px;
+  height: 40px;
   display: inline-grid;
   place-items: center;
   padding: 0;
-  border: 1px solid rgba(177, 195, 224, 0.42);
-  border-radius: 50%;
+  border: 1px solid rgba(177, 195, 224, 0.5);
+  border-radius: 12px;
   color: #40516d;
-  background: rgba(255, 255, 255, 0.94);
-  box-shadow: 0 8px 22px rgba(12, 25, 45, 0.12);
+  background: rgba(255, 255, 255, 0.78);
+  box-shadow: 0 8px 18px rgba(12, 25, 45, 0.08);
+  backdrop-filter: blur(12px);
   cursor: pointer;
-  transition: left 200ms ease, color 160ms ease, background-color 160ms ease, transform 160ms ease;
+  transition: left 200ms ease, color 160ms ease, border-color 160ms ease, background-color 160ms ease, transform 160ms ease;
 }
 
 .sidebar-edge-toggle.is-sidebar-open {
@@ -411,11 +412,55 @@
 .sidebar-edge-toggle:hover {
   color: #1d4ed8;
   background: #ffffff;
-  transform: scale(1.04);
+  border-color: rgba(79, 116, 217, 0.42);
+  transform: translateY(-1px);
 }
 
 .sidebar-edge-toggle:active {
-  transform: scale(0.94);
+  transform: translateY(0);
+}
+
+.sidebar-toggle-glyph {
+  width: 18px;
+  height: 14px;
+  display: inline-flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.sidebar-toggle-glyph span {
+  width: 18px;
+  height: 2px;
+  border-radius: 999px;
+  background: currentColor;
+  transition: width 160ms ease, transform 180ms ease, opacity 160ms ease;
+  transform-origin: center;
+}
+
+.sidebar-toggle-glyph span:nth-child(2) {
+  width: 13px;
+}
+
+.sidebar-edge-toggle.is-rail .sidebar-toggle-glyph span:nth-child(2) {
+  width: 18px;
+}
+
+.sidebar-edge-toggle.is-rail .sidebar-toggle-glyph span:first-child,
+.sidebar-edge-toggle.is-rail .sidebar-toggle-glyph span:last-child {
+  width: 13px;
+  align-self: flex-end;
+}
+
+.sidebar-edge-toggle.is-mobile-open .sidebar-toggle-glyph span:first-child {
+  transform: translateY(6px) rotate(45deg);
+}
+
+.sidebar-edge-toggle.is-mobile-open .sidebar-toggle-glyph span:nth-child(2) {
+  opacity: 0;
+}
+
+.sidebar-edge-toggle.is-mobile-open .sidebar-toggle-glyph span:last-child {
+  transform: translateY(-6px) rotate(-45deg);
 }
 
 .sidebar-edge-toggle:focus-visible {
