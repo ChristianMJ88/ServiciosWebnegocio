@@ -1,7 +1,8 @@
 
-import { Component, inject } from '@angular/core';
+import { AfterViewInit, Component, ElementRef, NgZone, OnDestroy, inject } from '@angular/core';
 import { Meta, Title } from '@angular/platform-browser';
 import { Router, RouterLink } from '@angular/router';
+import { gsap } from 'gsap';
 import { PlatformHostService } from '../../core/platform/platform-host.service';
 import { SeoService } from '../../core/seo/seo.service';
 
@@ -12,12 +13,15 @@ import { SeoService } from '../../core/seo/seo.service';
   templateUrl: './fluora-home.component.html',
   styleUrl: './fluora-home.component.css'
 })
-export class FluoraHomeComponent {
+export class FluoraHomeComponent implements AfterViewInit, OnDestroy {
   private readonly router = inject(Router);
+  private readonly elementRef = inject<ElementRef<HTMLElement>>(ElementRef);
+  private readonly zone = inject(NgZone);
   readonly platformHost = inject(PlatformHostService);
   private readonly title = inject(Title);
   private readonly meta = inject(Meta);
   private readonly seo = inject(SeoService);
+  private agendaAnimation?: gsap.Context;
 
   readonly heroHighlights = [
     'Agenda por integrante y disponibilidad sin cruces.',
@@ -188,5 +192,46 @@ export class FluoraHomeComponent {
     if (this.platformHost.hasDedicatedAppHost() && this.platformHost.isAppHost()) {
       void this.router.navigateByUrl('/acceso');
     }
+  }
+
+  ngAfterViewInit(): void {
+    if (typeof window === 'undefined' || window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      return;
+    }
+
+    this.zone.runOutsideAngular(() => {
+      const host = this.elementRef.nativeElement;
+      host.classList.add('gsap-enhanced');
+      this.agendaAnimation = gsap.context(() => {
+        const timeline = gsap.timeline({ repeat: -1, repeatDelay: .8 });
+
+        gsap.set('.booking-request', { autoAlpha: .52, x: -10 });
+        gsap.set('.agenda-connector i', { autoAlpha: .2, scaleX: .12, transformOrigin: 'left center' });
+        gsap.set('.agenda-slot--active', { autoAlpha: .3, scale: .97, transformOrigin: 'center center' });
+        gsap.set('.agenda-board footer span', { autoAlpha: .35, y: 4 });
+
+        timeline
+          .to('.booking-request', { autoAlpha: 1, x: 0, duration: .65, ease: 'power2.out' })
+          .to('.agenda-connector i', { autoAlpha: 1, scaleX: 1, duration: .7, ease: 'power2.inOut' }, '-=.08')
+          .to('.agenda-slot--active', {
+            autoAlpha: 1,
+            scale: 1,
+            boxShadow: '0 12px 30px rgba(76,95,124,.16)',
+            duration: .55,
+            ease: 'back.out(1.35)'
+          }, '-=.12')
+          .to('.agenda-board footer span', { autoAlpha: 1, y: 0, duration: .42, stagger: .16, ease: 'power2.out' }, '-=.12')
+          .to({}, { duration: 2.5 })
+          .to('.agenda-board footer span', { autoAlpha: .35, y: 4, duration: .35, stagger: .08 })
+          .to('.agenda-slot--active', { autoAlpha: .3, scale: .97, boxShadow: 'none', duration: .4 }, '<')
+          .to('.agenda-connector i', { autoAlpha: .2, scaleX: .12, duration: .35 }, '<')
+          .to('.booking-request', { autoAlpha: .52, x: -10, duration: .45 }, '<');
+      }, host);
+    });
+  }
+
+  ngOnDestroy(): void {
+    this.agendaAnimation?.revert();
+    this.elementRef.nativeElement.classList.remove('gsap-enhanced');
   }
 }

@@ -38,62 +38,28 @@
         </div>
 
         <div class="refluora-hero__visual">
-          <div class="hero-preview">
+          <div class="hero-preview agenda-preview">
             <div class="hero-preview__chrome">
               <div class="hero-preview__brand"><img src="/fluora-mark.svg" alt="" aria-hidden="true"><strong>Fluora</strong></div>
-              <span class="hero-preview__live"><i></i> WhatsApp conectado con Fluora</span>
+              <span class="hero-preview__live"><i></i> Agenda disponible</span>
             </div>
-
-            <div class="conversation-demo" aria-label="Ejemplo de cómo una conversación de WhatsApp se organiza en la agenda y CRM de Fluora">
-              <div class="phone-frame">
-                <div class="phone-speaker" aria-hidden="true"></div>
-                <div class="phone-screen">
-                  <header class="chat-header-demo">
-                    <button type="button" aria-label="Volver"><i class="bi bi-chevron-left"></i></button>
-                    <span class="chat-avatar">ML</span>
-                    <div><strong>Mariana López</strong><small>en línea</small></div>
-                    <i class="bi bi-telephone"></i>
-                    <i class="bi bi-three-dots-vertical"></i>
-                  </header>
-                  <div class="chat-thread">
-                    <span class="chat-day">Hoy</span>
-                    <div class="chat-bubble chat-bubble--incoming message-one">
-                      Hola, ¿puedo reservar maquillaje para este viernes?
-                      <time>10:24</time>
-                    </div>
-                    <div class="chat-typing"><i></i><i></i><i></i></div>
-                    <div class="chat-bubble chat-bubble--outgoing message-two">
-                      ¡Hola, Mariana! Claro. Tenemos disponible a las 3:00 PM.
-                      <time>10:24 <i class="bi bi-check2-all"></i></time>
-                    </div>
-                    <div class="chat-bubble chat-bubble--incoming message-three">
-                      Perfecto, ese horario me funciona 😊
-                      <time>10:25</time>
-                    </div>
-                    <div class="chat-bubble chat-bubble--outgoing chat-bubble--confirmation message-four">
-                      <span><i class="bi bi-calendar2-check"></i></span>
-                      <div><small>Cita confirmada</small><strong>Viernes · 3:00 PM</strong></div>
-                      <time>10:25 <i class="bi bi-check2-all"></i></time>
-                    </div>
-                  </div>
-                  <div class="chat-composer"><i class="bi bi-plus-circle"></i><span>Mensaje</span><i class="bi bi-mic"></i></div>
+            <div class="agenda-flow" aria-label="Ejemplo animado de una reserva que entra desde el minisitio y se organiza en Fluora">
+              <article class="booking-request">
+                <span class="booking-request__source"><i class="bi bi-window"></i> Reserva desde tu minisitio</span>
+                <div class="booking-request__person"><span>ML</span><div><strong>Mariana López</strong><small>Maquillaje social</small></div></div>
+                <dl><div><dt>Fecha</dt><dd>Viernes 28</dd></div><div><dt>Horario</dt><dd>3:00 PM</dd></div></dl>
+                <span class="booking-request__status"><i class="bi bi-check2-circle"></i> Horario disponible</span>
+              </article>
+              <div class="agenda-connector" aria-hidden="true"><i></i></div>
+              <div class="agenda-board">
+                <header><div><small>Agenda del equipo</small><strong>Viernes 28</strong></div><span>Hoy</span></header>
+                <div class="agenda-team"><span class="is-active">Andrea</span><span>Sofía</span><span>Todos</span></div>
+                <div class="agenda-timeline">
+                  <time>2 PM</time><div class="agenda-slot"></div>
+                  <time>3 PM</time><div class="agenda-slot agenda-slot--active"><small>Nueva cita</small><strong>Mariana · Maquillaje</strong><span>Andrea</span></div>
+                  <time>4 PM</time><div class="agenda-slot"></div>
                 </div>
-              </div>
-
-              <div class="sync-rail" aria-label="Información organizada en la agenda y CRM de Fluora">
-                <div class="sync-line" aria-hidden="true"><i></i></div>
-                <article class="sync-event sync-event--contact">
-                  <span><i class="bi bi-person-check"></i></span>
-                  <div><small>Cliente en el CRM</small><strong>Mariana López</strong></div>
-                </article>
-                <article class="sync-event sync-event--booking">
-                  <span><i class="bi bi-calendar2-check"></i></span>
-                  <div><small>Cita en la agenda</small><strong>Viernes · 3:00 PM</strong></div>
-                </article>
-                <article class="sync-event sync-event--automation">
-                  <span><i class="bi bi-stars"></i></span>
-                  <div><small>Operación organizada</small><strong>Recordatorio listo</strong></div>
-                </article>
+                <footer><span><i class="bi bi-person-check"></i> Cliente en CRM</span><span><i class="bi bi-chat-dots"></i> Recordatorio listo</span></footer>
               </div>
             </div>
           </div>
@@ -219,6 +185,56 @@
             <p>{{ item.body }}</p>
           </article>
         }
+      </div>
+    </div>
+  </section>
+
+  <section class="landing-section whatsapp-section" id="whatsapp">
+    <div class="container whatsapp-section__grid">
+      <div class="whatsapp-section__copy">
+        <span class="section-kicker">WhatsApp conectado</span>
+        <h2>Convierte conversaciones en citas organizadas.</h2>
+        <p>Integra WhatsApp para atender mensajes, confirmar horarios y mantener cada conversación conectada con la agenda y el historial del cliente.</p>
+        <ul class="demo-benefits">
+          <li><i class="bi bi-check2"></i> Identifica al cliente en el CRM</li>
+          <li><i class="bi bi-check2"></i> Lleva la cita a la agenda correcta</li>
+          <li><i class="bi bi-check2"></i> Prepara confirmaciones y recordatorios</li>
+        </ul>
+        <a routerLink="/registro" class="btn btn-primary btn-lg rounded-pill">Organizar mis conversaciones</a>
+        <small class="whatsapp-section__note">Integración opcional de acuerdo con las necesidades de tu negocio.</small>
+      </div>
+
+      <div class="whatsapp-visual">
+        <div class="hero-preview__chrome">
+          <div class="hero-preview__brand"><img src="/fluora-mark.svg" alt="" aria-hidden="true"><strong>Fluora</strong></div>
+          <span class="hero-preview__live"><i></i> WhatsApp conectado</span>
+        </div>
+        <div class="conversation-demo" aria-label="Ejemplo de una conversación de WhatsApp conectada con la agenda y CRM de Fluora">
+          <div class="phone-frame">
+            <div class="phone-speaker" aria-hidden="true"></div>
+            <div class="phone-screen">
+              <header class="chat-header-demo">
+                <button type="button" aria-label="Volver"><i class="bi bi-chevron-left"></i></button><span class="chat-avatar">ML</span>
+                <div><strong>Mariana López</strong><small>en línea</small></div><i class="bi bi-telephone"></i><i class="bi bi-three-dots-vertical"></i>
+              </header>
+              <div class="chat-thread">
+                <span class="chat-day">Hoy</span>
+                <div class="chat-bubble chat-bubble--incoming message-one">Hola, ¿puedo reservar maquillaje para este viernes?<time>10:24</time></div>
+                <div class="chat-typing"><i></i><i></i><i></i></div>
+                <div class="chat-bubble chat-bubble--outgoing message-two">¡Hola, Mariana! Claro. Tenemos disponible a las 3:00 PM.<time>10:24 <i class="bi bi-check2-all"></i></time></div>
+                <div class="chat-bubble chat-bubble--incoming message-three">Perfecto, ese horario me funciona 😊<time>10:25</time></div>
+                <div class="chat-bubble chat-bubble--outgoing chat-bubble--confirmation message-four"><span><i class="bi bi-calendar2-check"></i></span><div><small>Cita confirmada</small><strong>Viernes · 3:00 PM</strong></div><time>10:25 <i class="bi bi-check2-all"></i></time></div>
+              </div>
+              <div class="chat-composer"><i class="bi bi-plus-circle"></i><span>Mensaje</span><i class="bi bi-mic"></i></div>
+            </div>
+          </div>
+          <div class="sync-rail" aria-label="Información organizada en Fluora">
+            <div class="sync-line" aria-hidden="true"><i></i></div>
+            <article class="sync-event sync-event--contact"><span><i class="bi bi-person-check"></i></span><div><small>Cliente en CRM</small><strong>Mariana López</strong></div></article>
+            <article class="sync-event sync-event--booking"><span><i class="bi bi-calendar2-check"></i></span><div><small>Cita en agenda</small><strong>Viernes · 3:00 PM</strong></div></article>
+            <article class="sync-event sync-event--automation"><span><i class="bi bi-stars"></i></span><div><small>Seguimiento</small><strong>Recordatorio listo</strong></div></article>
+          </div>
+        </div>
       </div>
     </div>
   </section>

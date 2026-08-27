@@ -112,6 +112,51 @@
   .trial-banner > a { grid-column: auto; width: min(100%, 280px); justify-self: center; }
 }
 
+/* Hero: una reserva entra desde el minisitio y ocupa un horario real. */
+.agenda-preview { min-height: 570px; }
+.agenda-flow { position: relative; z-index: 1; display: grid; grid-template-columns: minmax(180px,.72fr) 42px minmax(260px,1fr); align-items: center; min-height: 500px; }
+.booking-request, .agenda-board { border: 1px solid rgba(255,255,255,.1); background: rgba(14,21,33,.94); box-shadow: 0 28px 70px rgba(0,0,0,.34); }
+.booking-request { position: relative; z-index: 2; padding: 1rem; border-radius: 1.1rem; }
+.booking-request__source, .booking-request__status { display: flex; align-items: center; gap: .4rem; font-size: .58rem; font-weight: 700; }
+.booking-request__source { color: #9eacc0; }.booking-request__source i { color: #8497b4; }
+.booking-request__person { display: flex; align-items: center; gap: .65rem; margin: 1rem 0; }
+.booking-request__person > span { width: 34px; height: 34px; display: grid; place-items: center; border-radius: 50%; color: #dbe5f4; background: #394b66; font-size: .62rem; font-weight: 800; }
+.booking-request__person div { display: grid; }.booking-request__person strong { color: #f4f7fb; font-size: .73rem; }.booking-request__person small { color: #7f8da2; font-size: .55rem; }
+.booking-request dl { display: grid; grid-template-columns: 1fr 1fr; gap: .45rem; margin: 0 0 .8rem; }
+.booking-request dl div { padding: .55rem; border-radius: .65rem; background: rgba(255,255,255,.035); }.booking-request dt { color: #69788d; font-size: .48rem; text-transform: uppercase; }.booking-request dd { margin: .15rem 0 0; color: #dfe7f2; font-size: .62rem; font-weight: 700; }
+.booking-request__status { padding-top: .75rem; border-top: 1px solid rgba(255,255,255,.07); color: #8fa5c3; }
+.agenda-connector { position: relative; height: 2px; overflow: hidden; background: rgba(255,255,255,.1); }.agenda-connector i { display: block; width: 45%; height: 100%; background: #7087a8; }
+.agenda-board { overflow: hidden; border-radius: 1.25rem; }
+.agenda-board > header { display: flex; align-items: center; justify-content: space-between; padding: 1rem; border-bottom: 1px solid rgba(255,255,255,.07); }.agenda-board > header div { display: grid; }.agenda-board > header small { color: #718096; font-size: .52rem; }.agenda-board > header strong { color: #f3f6fa; font-size: .82rem; }.agenda-board > header > span { padding: .3rem .55rem; border-radius: .45rem; color: #aebbd0; background: rgba(255,255,255,.05); font-size: .52rem; }
+.agenda-team { display: flex; gap: .35rem; padding: .75rem 1rem 0; }.agenda-team span { padding: .3rem .55rem; border-radius: 2rem; color: #718096; font-size: .5rem; }.agenda-team .is-active { color: #dbe5f3; background: rgba(112,135,168,.2); }
+.agenda-timeline { display: grid; grid-template-columns: 34px 1fr; align-items: stretch; padding: .65rem 1rem 1rem; }.agenda-timeline time { padding-top: .55rem; color: #5f6e82; font-size: .47rem; }.agenda-slot { min-height: 68px; border-top: 1px solid rgba(255,255,255,.065); }.agenda-slot--active { position: relative; display: grid; align-content: center; min-height: 82px; margin: .12rem 0; padding: .65rem .75rem; border: 1px solid rgba(112,135,168,.36); border-left: 3px solid #7087a8; border-radius: .65rem; background: linear-gradient(90deg,rgba(72,94,126,.34),rgba(72,94,126,.13)); }.agenda-slot--active small { color: #8192aa; font-size: .48rem; text-transform: uppercase; }.agenda-slot--active strong { margin-top: .12rem; color: #eff4fa; font-size: .65rem; }.agenda-slot--active span { margin-top: .2rem; color: #8c9db3; font-size: .52rem; }
+.agenda-board footer { display: flex; flex-wrap: wrap; gap: .4rem; padding: .75rem 1rem; border-top: 1px solid rgba(255,255,255,.07); }.agenda-board footer span { display: inline-flex; align-items: center; gap: .3rem; color: #8291a6; font-size: .5rem; }
+
+/* WhatsApp conserva su demostración, ahora como integración secundaria. */
+.whatsapp-section { overflow: hidden; }
+.whatsapp-section__grid { display: grid; grid-template-columns: minmax(280px,.72fr) minmax(540px,1.28fr); align-items: center; gap: clamp(2rem,5vw,5rem); }
+.whatsapp-section__copy h2 { max-width: 12ch; margin: 1rem 0; color: #fff; font-size: clamp(2rem,4vw,3.5rem); line-height: 1; letter-spacing: -.045em; }.whatsapp-section__copy > p { max-width: 560px; color: #a7b3c6; line-height: 1.75; }.whatsapp-section__copy .demo-benefits { margin: 1.5rem 0; }.whatsapp-section__note { display: block; max-width: 440px; margin-top: .8rem; color: #75849a; font-size: .68rem; line-height: 1.5; }
+.whatsapp-visual { padding: 1rem; border: 1px solid rgba(255,255,255,.09); border-radius: 1.6rem; background: rgba(255,255,255,.03); box-shadow: 0 36px 86px rgba(0,0,0,.35); backdrop-filter: blur(18px); }.whatsapp-visual .conversation-demo { max-width: 650px; margin-inline: auto; }
+.refluora-hero__signals { grid-template-columns: repeat(4,minmax(0,1fr)); max-width: 760px; }
+
+@media (max-width: 1199.98px) {
+  .agenda-flow { grid-template-columns: minmax(160px,.65fr) 28px minmax(240px,1fr); }
+  .whatsapp-section__grid { grid-template-columns: 1fr; }.whatsapp-section__copy { max-width: 680px; }.whatsapp-section__copy h2 { max-width: 14ch; }.whatsapp-visual { width: min(100%,720px); margin-inline: auto; }
+}
+@media (max-width: 767.98px) {
+  .agenda-preview { min-height: 0; }
+  .agenda-flow { grid-template-columns: 1fr; gap: .7rem; min-height: 0; }.booking-request { width: min(100%,330px); margin-inline: auto; }.agenda-connector { width: 2px; height: 30px; margin-inline: auto; }.agenda-connector i { width: 100%; height: 45%; }.agenda-board { width: min(100%,420px); margin-inline: auto; }
+  .whatsapp-section__grid { gap: 2rem; }.whatsapp-visual { padding: .75rem; }.whatsapp-visual .conversation-demo { width: 100%; }.whatsapp-section__copy { text-align: left; }
+  .refluora-hero__signals { grid-template-columns: 1fr; }
+}
+@media (max-width: 575.98px) {
+  .agenda-preview { padding: .7rem; }.agenda-preview .hero-preview__chrome { margin-bottom: .65rem; }.agenda-flow { gap: .55rem; }.booking-request { padding: .8rem; }.booking-request__person { margin: .7rem 0; }.agenda-slot { min-height: 52px; }.agenda-slot--active { min-height: 68px; }.agenda-board footer { display: grid; grid-template-columns: 1fr 1fr; }
+  .whatsapp-visual .hero-preview__chrome { padding-inline: .15rem; }.whatsapp-visual .hero-preview__live { font-size: .58rem; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .booking-request,.agenda-connector i,.agenda-slot--active,.agenda-board footer span { animation:none; opacity:1; transform:none; }
+}
+
 /* Fluora marketing system: dark canvas, glass surfaces and one action color. */
 .refluora-page {
   --fluora-bg: #090d16;
@@ -192,18 +237,6 @@
 .hero-preview__brand img { width: 1.65rem; height: 1.65rem; }
 .hero-preview__live { display: inline-flex; align-items: center; gap: .42rem; color: #94a3b8; font-size: .68rem; }
 .hero-preview__live i { width: .42rem; height: .42rem; border-radius: 50%; background: #69c29d; box-shadow: 0 0 0 4px rgba(105,194,157,.1); }
-.channel-row { display: flex; flex-wrap: wrap; gap: .45rem; }
-.channel-badge { display: inline-flex; align-items: center; gap: .35rem; padding: .38rem .58rem; border: 1px solid rgba(255,255,255,.08); border-radius: .65rem; color: #b8c3d2; background: rgba(255,255,255,.035); font-size: .66rem; box-shadow: 0 8px 22px rgba(0,0,0,.16); }
-.channel-badge--whatsapp i { color: #6bbd99; }
-.channel-badge--instagram i { color: #bd8db4; }
-.preview-card, .preview-step { border-color: rgba(255,255,255,.08); border-radius: 1rem; background: rgba(255,255,255,.035); box-shadow: 0 16px 34px rgba(0,0,0,.2); }
-.preview-card--message { background: linear-gradient(145deg, rgba(61,119,170,.15), rgba(255,255,255,.03)); }
-.preview-card--crm { margin-left: 1.25rem; }
-.preview-card small { color: #8ea0b7; }
-.preview-card p, .preview-step p { color: #94a3b8; font-size: .82rem; }
-.preview-step span { border-radius: .7rem; color: #aebbd0; background: rgba(255,255,255,.06); }
-.preview-step--automation { position: relative; border-color: transparent; background: linear-gradient(#101622, #101622) padding-box, linear-gradient(135deg, rgba(122,107,255,.75), rgba(0,229,255,.55)) border-box; box-shadow: 0 18px 45px rgba(43,91,170,.16); }
-.hero-preview__footer span { border: 1px solid rgba(255,255,255,.06); background: rgba(255,255,255,.025); color: #94a3b8; }
 
 .conversion-strip,
 .demo-section,
@@ -411,37 +444,6 @@
   pointer-events: none;
 }
 
-.hero-preview__topbar {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.65rem;
-  margin-bottom: 1rem;
-}
-
-.hero-preview__topbar span {
-  padding: 0.42rem 0.75rem;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.08);
-  color: rgba(248, 246, 242, 0.85);
-  font-size: 0.78rem;
-  font-weight: 600;
-}
-
-.hero-preview__body {
-  display: grid;
-  grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.05fr);
-  gap: 1rem;
-  position: relative;
-  z-index: 1;
-}
-
-.preview-column {
-  display: grid;
-  gap: 0.8rem;
-}
-
-.preview-card,
-.preview-step,
 .info-card,
 .workflow-card,
 .feature-group,
@@ -449,86 +451,6 @@
   border: 1px solid rgba(18, 52, 70, 0.08);
   border-radius: 1.5rem;
   box-shadow: 0 18px 40px rgba(18, 32, 43, 0.06);
-}
-
-.preview-card {
-  padding: 1rem;
-  border-color: rgba(255, 255, 255, 0.08);
-  background: rgba(255, 255, 255, 0.06);
-}
-
-.preview-card--message {
-  background: linear-gradient(180deg, rgba(38, 103, 255, 0.18), rgba(84, 210, 255, 0.08));
-}
-
-.preview-card small {
-  display: inline-flex;
-  margin-bottom: 0.45rem;
-  color: #ffd39d;
-  font-size: 0.76rem;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-
-.preview-card strong,
-.preview-step strong {
-  display: block;
-  color: #ffffff;
-}
-
-.preview-card p,
-.preview-step p {
-  margin: 0.35rem 0 0;
-  color: rgba(248, 246, 242, 0.8);
-  line-height: 1.6;
-}
-
-.preview-flow {
-  display: grid;
-  gap: 0.8rem;
-}
-
-.hero-preview__footer {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.65rem;
-  margin-top: 1rem;
-  position: relative;
-  z-index: 1;
-}
-
-.hero-preview__footer span {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 2rem;
-  padding: 0.38rem 0.7rem;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.07);
-  color: rgba(248, 246, 242, 0.84);
-  font-size: 0.76rem;
-}
-
-.preview-step {
-  display: grid;
-  grid-template-columns: auto 1fr;
-  gap: 0.9rem;
-  padding: 1rem;
-  border-color: rgba(255, 255, 255, 0.08);
-  background: rgba(255, 255, 255, 0.05);
-}
-
-.preview-step span {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 2.3rem;
-  height: 2.3rem;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.12);
-  color: #ffffff;
-  font-weight: 800;
 }
 
 .landing-section {
@@ -1211,3 +1133,37 @@
   .feature-group:last-child { grid-column: auto; }
   .audience-line { margin-top: -.5rem; font-size: .68rem; line-height: 1.65; }
 }
+
+/* Agenda luminosa: contraste amable dentro del hero oscuro. */
+.refluora-hero__signals { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.agenda-preview { background: linear-gradient(145deg,rgba(255,255,255,.055),rgba(255,255,255,.025)); }
+.booking-request,
+.agenda-board { border-color: rgba(148,163,184,.25); color: #263247; background: #f6f3ee; box-shadow: 0 28px 70px rgba(0,0,0,.28); }
+.booking-request { background: linear-gradient(145deg,#fbfaf7,#edf2f7); }
+.booking-request__source { color: #64748b; }.booking-request__source i { color: #7186a5; }
+.booking-request__person > span { color: #fff; background: #778ba8; }
+.booking-request__person strong { color: #1e293b; }.booking-request__person small { color: #718096; }
+.booking-request dl div { border: 1px solid rgba(148,163,184,.17); background: rgba(255,255,255,.68); }
+.booking-request dt { color: #8290a3; }.booking-request dd { color: #334155; }
+.booking-request__status { border-color: rgba(100,116,139,.16); color: #607895; }
+.agenda-connector { background: rgba(174,188,207,.35); }.agenda-connector i { background: #8ca0ba; }
+.agenda-board { background: linear-gradient(180deg,#fbfaf7,#f1f4f7); }
+.agenda-board > header { border-color: rgba(100,116,139,.15); }.agenda-board > header small { color: #7b8798; }.agenda-board > header strong { color: #253249; }.agenda-board > header > span { color: #66758a; background: #e8edf3; }
+.agenda-team span { color: #8793a3; }.agenda-team .is-active { color: #425675; background: #dfe7f1; }
+.agenda-timeline time { color: #8a96a6; }.agenda-slot { border-color: rgba(100,116,139,.17); }
+.agenda-slot--active { border-color: #b8c5d8; border-left-color: #748ba9; background: linear-gradient(90deg,#e1e8f2,#edf1f6); opacity: .28; }
+.agenda-slot--active small { color: #74849a; }.agenda-slot--active strong { color: #2f3d52; }.agenda-slot--active span { color: #6f7f93; }
+.agenda-board footer { border-color: rgba(100,116,139,.15); }.agenda-board footer span { color: #65758a; opacity: .35; }
+@media (max-width: 767.98px) {
+  .refluora-hero__signals { grid-template-columns: 1fr; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .agenda-slot--active,
+  .agenda-board footer span { opacity: 1; }
+}
+
+:host(.gsap-enhanced) .booking-request,
+:host(.gsap-enhanced) .agenda-connector i,
+:host(.gsap-enhanced) .agenda-slot--active,
+:host(.gsap-enhanced) .agenda-board footer span { animation: none; }
