@@ -22,6 +22,8 @@ export class FluoraHomeComponent implements AfterViewInit, OnDestroy {
   private readonly meta = inject(Meta);
   private readonly seo = inject(SeoService);
   private agendaAnimation?: gsap.Context;
+  private agendaTimeline?: gsap.core.Timeline;
+  private heroObserver?: IntersectionObserver;
 
   readonly heroHighlights = [
     'Agenda por integrante y disponibilidad sin cruces.',
@@ -203,7 +205,19 @@ export class FluoraHomeComponent implements AfterViewInit, OnDestroy {
       const host = this.elementRef.nativeElement;
       host.classList.add('gsap-enhanced');
       this.agendaAnimation = gsap.context(() => {
-        const timeline = gsap.timeline({ repeat: -1, repeatDelay: .8 });
+        gsap.timeline({ defaults: { ease: 'power2.out' } })
+          .from('.section-kicker--hero', { autoAlpha: 0, y: -8, duration: .4 })
+          .from('.refluora-hero h1', { autoAlpha: 0, y: 24, filter: 'blur(6px)', duration: .72 }, '-=.18')
+          .from('.refluora-hero__lead', { autoAlpha: 0, y: 14, duration: .5 }, '-=.38')
+          .from('.refluora-hero__actions > *', { autoAlpha: 0, y: 10, duration: .4, stagger: .1 }, '-=.25')
+          .from('.hero-signal', { autoAlpha: 0, y: 12, duration: .42, stagger: .08 }, '-=.15')
+          .from('.highlight-item', { autoAlpha: 0, x: -8, duration: .35, stagger: .07 }, '-=.2')
+          .fromTo('.refluora-hero__actions .btn-primary',
+            { boxShadow: '0 14px 38px rgba(0,245,160,.2)' },
+            { boxShadow: '0 18px 48px rgba(0,245,160,.34)', duration: .5, repeat: 1, yoyo: true },
+            '-=.08');
+
+        this.agendaTimeline = gsap.timeline({ repeat: -1, repeatDelay: 1 });
 
         gsap.set('.booking-request', { autoAlpha: .52, x: -10 });
         gsap.set('.agenda-connector i', { autoAlpha: .2, scaleX: .12, transformOrigin: 'left center' });
@@ -211,9 +225,11 @@ export class FluoraHomeComponent implements AfterViewInit, OnDestroy {
         gsap.set('.agenda-confirmation', { autoAlpha: 0, y: 12, scale: .94, transformOrigin: 'center center' });
         gsap.set('.agenda-board footer span', { autoAlpha: .35, y: 4 });
 
-        timeline
+        this.agendaTimeline
           .to('.booking-request', { autoAlpha: 1, x: 0, duration: .65, ease: 'power2.out' })
+          .to('.booking-request dl div', { backgroundColor: '#e8eef6', borderColor: '#b8c7da', duration: .3, stagger: .12, repeat: 1, yoyo: true }, '-=.12')
           .to('.agenda-connector i', { autoAlpha: 1, scaleX: 1, duration: .7, ease: 'power2.inOut' }, '-=.08')
+          .to('.agenda-team .is-active', { scale: 1.06, duration: .24, repeat: 1, yoyo: true, ease: 'power1.inOut' }, '-=.25')
           .to('.agenda-slot--active', {
             autoAlpha: 1,
             scale: 1,
@@ -231,10 +247,21 @@ export class FluoraHomeComponent implements AfterViewInit, OnDestroy {
           .to('.agenda-connector i', { autoAlpha: .2, scaleX: .12, duration: .35 }, '<')
           .to('.booking-request', { autoAlpha: .52, x: -10, duration: .45 }, '<');
       }, host);
+
+      if ('IntersectionObserver' in window) {
+        const hero = host.querySelector('.refluora-hero');
+        if (hero) {
+          this.heroObserver = new IntersectionObserver(([entry]) => {
+            entry.isIntersecting ? this.agendaTimeline?.resume() : this.agendaTimeline?.pause();
+          }, { threshold: .15 });
+          this.heroObserver.observe(hero);
+        }
+      }
     });
   }
 
   ngOnDestroy(): void {
+    this.heroObserver?.disconnect();
     this.agendaAnimation?.revert();
     this.elementRef.nativeElement.classList.remove('gsap-enhanced');
   }

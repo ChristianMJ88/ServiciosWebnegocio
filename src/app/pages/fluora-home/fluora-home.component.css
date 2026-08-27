@@ -1147,15 +1147,17 @@
 .booking-request dt { color: #8290a3; }.booking-request dd { color: #334155; }
 .booking-request__status { border-color: rgba(100,116,139,.16); color: #607895; }
 .agenda-connector { background: rgba(174,188,207,.35); }.agenda-connector i { background: #8ca0ba; }
-.agenda-board { background: linear-gradient(180deg,#fbfaf7,#f1f4f7); }
-.agenda-board > header { border-color: rgba(100,116,139,.15); }.agenda-board > header small { color: #7b8798; }.agenda-board > header strong { color: #253249; }.agenda-board > header > span { color: #66758a; background: #e8edf3; }
+.agenda-board { background: linear-gradient(180deg,#fffdfa 0%,#f3f6f9 58%,#edf1f5 100%); box-shadow: 0 28px 70px rgba(13,24,42,.25),inset 0 1px rgba(255,255,255,.9); }
+.agenda-board > header { border-color: rgba(100,116,139,.15); background: linear-gradient(90deg,rgba(226,232,240,.62),rgba(248,250,252,.7)); }.agenda-board > header small { color: #7b8798; }.agenda-board > header strong { color: #253249; }.agenda-board > header > span { color: #66758a; background: #e8edf3; }
 .agenda-team span { color: #8793a3; }.agenda-team .is-active { color: #425675; background: #dfe7f1; }
 .agenda-timeline time { color: #8a96a6; }.agenda-slot { border-color: rgba(100,116,139,.17); }
-.agenda-slot--active { border-color: #b8c5d8; border-left-color: #748ba9; background: linear-gradient(90deg,#e1e8f2,#edf1f6); opacity: .28; }
+.agenda-slot--active { overflow: hidden; border-color: #b8c5d8; border-left-color: #748ba9; background: linear-gradient(100deg,#dfe7f2,#eef2f7); opacity: .28; }
+.agenda-slot--active::after { content: ''; position: absolute; inset: 0; background: linear-gradient(105deg,transparent 28%,rgba(255,255,255,.72) 48%,transparent 68%); transform: translateX(-120%); animation: appointment-sheen 4.8s ease-in-out infinite 2.2s; pointer-events: none; }
 .agenda-slot--active small { color: #74849a; }.agenda-slot--active strong { color: #2f3d52; }.agenda-slot--active span { color: #6f7f93; }
 .agenda-board footer { border-color: rgba(100,116,139,.15); }.agenda-board footer span { color: #65758a; opacity: .35; }
 .agenda-confirmation { position: absolute; z-index: 4; right: .85rem; bottom: 3.25rem; width: min(82%,230px); display: grid; grid-template-columns: auto 1fr; align-items: center; gap: .65rem; padding: .72rem; border: 1px solid #b6c5d9; border-radius: .85rem; color: #324158; background: rgba(248,250,252,.97); box-shadow: 0 18px 42px rgba(51,65,85,.2); }
 .agenda-board { position: relative; }.agenda-confirmation > span { width: 32px; height: 32px; display: grid; place-items: center; border-radius: 50%; color: #fff; background: #748ba9; box-shadow: 0 6px 16px rgba(72,93,122,.2); }.agenda-confirmation > div { display: grid; }.agenda-confirmation small { color: #718096; font-size: .46rem; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; }.agenda-confirmation strong { margin-top: .08rem; color: #26354a; font-size: .61rem; }.agenda-confirmation p { margin: .12rem 0 0; color: #748196; font-size: .5rem; }
+@keyframes appointment-sheen { 0%,55%{transform:translateX(-120%)} 75%,100%{transform:translateX(120%)} }
 @media (max-width: 767.98px) {
   .refluora-hero__signals { grid-template-columns: 1fr; }
   .agenda-confirmation { right: .65rem; bottom: 3.15rem; }
@@ -1164,6 +1166,7 @@
 @media (prefers-reduced-motion: reduce) {
   .agenda-slot--active,
   .agenda-board footer span { opacity: 1; }
+  .agenda-slot--active::after { animation: none; }
 }
 
 :host(.gsap-enhanced) .booking-request,
