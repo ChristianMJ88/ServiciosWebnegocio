@@ -1,13 +1,13 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, of } from 'rxjs';
+import { Observable, of, throwError } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
 import { TenantSiteConfig } from './tenant.types';
 
 const DEMO_TENANT: TenantSiteConfig = {
   empresaId: 1,
-  slug: 'nail-art',
+  slug: 'nail-air',
   nombreComercial: 'Nail Art Studio',
   dominioPrincipal: null,
   logoUrl: '/NailArt_logo.jpeg',
@@ -47,7 +47,9 @@ export class TenantSiteService {
 
     return this.http
       .get<TenantSiteConfig>(`${environment.apiBaseUrl}/publico/sitio/${slugNormalizado}`)
-      .pipe(catchError(() => of(this.resolveFallback(slugNormalizado))));
+      .pipe(catchError(error => slugNormalizado === DEMO_TENANT.slug
+        ? of(DEMO_TENANT)
+        : throwError(() => error)));
   }
 
   getByHostname(hostname: string): Observable<TenantSiteConfig> {

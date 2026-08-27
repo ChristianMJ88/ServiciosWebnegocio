@@ -6,6 +6,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.util.List;
+
 @Service
 public class ServicioSitioPublico {
 
@@ -29,6 +31,10 @@ public class ServicioSitioPublico {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "No existe un sitio publicado para ese dominio"));
 
         return mapearSitio(sitio);
+    }
+
+    public IndiceSitiosPublicosResponse obtenerIndicePublicado() {
+        return new IndiceSitiosPublicosResponse(List.copyOf(empresaSitioConfigRepositorio.findSlugsPublicados()));
     }
 
     private SitioPublicoResponse mapearSitio(EmpresaSitioConfigEntidad sitio) {

@@ -1,4 +1,11 @@
 {
+  "functions": {
+    "source": "functions",
+    "runtime": "nodejs20",
+    "predeploy": [
+      "npm --prefix functions run prepare"
+    ]
+  },
   "hosting": [
     {
       "target": "marketing",
@@ -47,6 +54,20 @@
         }
       ],
       "rewrites": [
+        {
+          "source": "/sitemap.xml",
+          "function": {
+            "functionId": "sitemap",
+            "region": "us-central1"
+          }
+        },
+        {
+          "source": "/e/**",
+          "function": {
+            "functionId": "tenantPage",
+            "region": "us-central1"
+          }
+        },
         {
           "source": "**",
           "destination": "/index.html"

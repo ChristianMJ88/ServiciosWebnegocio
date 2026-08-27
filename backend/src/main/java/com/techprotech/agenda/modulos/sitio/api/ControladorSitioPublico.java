@@ -1,5 +1,6 @@
 package com.techprotech.agenda.modulos.sitio.api;
 
+import com.techprotech.agenda.modulos.sitio.aplicacion.IndiceSitiosPublicosResponse;
 import com.techprotech.agenda.modulos.sitio.aplicacion.ServicioSitioPublico;
 import com.techprotech.agenda.modulos.sitio.aplicacion.SitioPublicoResponse;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -15,6 +16,11 @@ public class ControladorSitioPublico {
 
     public ControladorSitioPublico(ServicioSitioPublico servicioSitioPublico) {
         this.servicioSitioPublico = servicioSitioPublico;
+    }
+
+    @GetMapping("/indice")
+    public IndiceSitiosPublicosResponse obtenerIndicePublicado() {
+        return servicioSitioPublico.obtenerIndicePublicado();
     }
 
     @GetMapping("/{slug}")
