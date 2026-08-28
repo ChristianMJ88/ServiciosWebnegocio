@@ -3,11 +3,11 @@
   "private": true,
   "type": "commonjs",
   "engines": {
-    "node": "20"
+    "node": "22"
   },
   "main": "index.js",
   "scripts": {
-    "prepare": "node scripts/prepare-template.mjs",
+    "prepare-template": "node scripts/prepare-template.mjs",
     "test": "node --test"
   },
   "dependencies": {
