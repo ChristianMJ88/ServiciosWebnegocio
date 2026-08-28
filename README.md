@@ -1,5 +1,12 @@
 # ServiciosWebnegocio
 
+## Documentación de producción de Fluora
+
+La arquitectura desplegada, cuentas, dominios, backend, base de datos, Firebase, SEO por empresa, costos, validaciones y recuperación están documentados en:
+
+- [docs/fluora-produccion-runbook.md](docs/fluora-produccion-runbook.md)
+- [docs/deploy-fluora-firebase.md](docs/deploy-fluora-firebase.md)
+
 This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 21.0.4.
 
 ## Node version
