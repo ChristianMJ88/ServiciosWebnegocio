@@ -6,7 +6,7 @@ const { onRequest } = require('firebase-functions/v2/https');
 const { logger } = require('firebase-functions');
 const { renderNotFound, renderSitemap, renderTenantHtml } = require('./seo-renderer');
 
-const API_BASE_URL = 'https://fluora-agenda-api-902851659104.us-central1.run.app/api/v1';
+const API_BASE_URL = 'https://api.refluora.com/api/v1';
 const template = readFileSync(join(__dirname, 'template', 'index.html'), 'utf8');
 
 exports.tenantPage = onRequest(
