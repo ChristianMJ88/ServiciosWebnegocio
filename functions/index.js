@@ -9,6 +9,7 @@ const { renderNotFound, renderSitemap, renderTenantHtml } = require('./seo-rende
 
 const apiBaseUrlParam = defineString('FLUORA_API_BASE_URL');
 const marketingOriginParam = defineString('FLUORA_MARKETING_ORIGIN');
+const backendOriginParam = defineString('FLUORA_BACKEND_ORIGIN');
 const template = readFileSync(join(__dirname, 'template', 'index.html'), 'utf8');
 
 function runtimeConfig() {
@@ -19,6 +20,46 @@ function runtimeConfig() {
   }
   return { apiBaseUrl, marketingOrigin };
 }
+
+exports.apiProxy = onRequest(
+  { region: 'us-central1', memory: '256MiB', timeoutSeconds: 60, maxInstances: 20 },
+  async (request, response) => {
+    const backendOrigin = backendOriginParam.value().trim().replace(/\/+$/, '');
+    if (!backendOrigin) {
+      response.status(503).json({ mensaje: 'La API no está configurada' });
+      return;
+    }
+
+    const targetUrl = `${backendOrigin}${request.originalUrl || request.url}`;
+    const headers = {};
+    for (const [name, value] of Object.entries(request.headers)) {
+      if (!value || ['host', 'content-length', 'connection'].includes(name.toLowerCase())) continue;
+      headers[name] = Array.isArray(value) ? value.join(', ') : value;
+    }
+
+    try {
+      const method = request.method.toUpperCase();
+      const upstream = await fetch(targetUrl, {
+        method,
+        headers,
+        body: ['GET', 'HEAD'].includes(method) ? undefined : request.rawBody,
+        redirect: 'manual',
+        signal: AbortSignal.timeout(55000)
+      });
+
+      const contentType = upstream.headers.get('content-type');
+      const cacheControl = upstream.headers.get('cache-control');
+      if (contentType) response.set('Content-Type', contentType);
+      if (cacheControl) response.set('Cache-Control', cacheControl);
+      else response.set('Cache-Control', 'no-store');
+
+      response.status(upstream.status).send(Buffer.from(await upstream.arrayBuffer()));
+    } catch (error) {
+      logger.error('No fue posible conectar con el backend de Fluora.', { error });
+      response.status(503).set('Cache-Control', 'no-store').json({ mensaje: 'La API no está disponible temporalmente' });
+    }
+  }
+);
 
 exports.tenantPage = onRequest(
   { region: 'us-central1', memory: '256MiB', timeoutSeconds: 15, maxInstances: 10 },

@@ -6,7 +6,7 @@ const esHostLocal = ['localhost', '127.0.0.1', '::1'].includes(window.location.h
 // En desarrollo dejamos que api-base-url.ts resuelva el backend local.
 // En hosts publicados conservamos la API de produccion como valor por defecto.
 if (!window.__AGENDA_API_BASE_URL__ && !esHostLocal) {
-  window.__AGENDA_API_BASE_URL__ = 'https://api.refluora.com/api/v1';
+  window.__AGENDA_API_BASE_URL__ = '/api/v1';
 }
 window.__FLUORA_MARKETING_ORIGIN__ = window.__FLUORA_MARKETING_ORIGIN__ || 'https://refluora.com';
 window.__FLUORA_APP_ORIGIN__ = window.__FLUORA_APP_ORIGIN__ || 'https://app.refluora.com';
