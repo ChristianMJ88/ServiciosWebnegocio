@@ -1,6 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { SeoService } from './seo.service';
 import { TenantSiteConfig } from '../tenant/tenant.types';
+import { PlatformHostService } from '../platform/platform-host.service';
 
 describe('SeoService', () => {
   const tenant: TenantSiteConfig = {
@@ -28,7 +29,14 @@ describe('SeoService', () => {
   };
 
   beforeEach(() => {
-    TestBed.configureTestingModule({});
+    TestBed.configureTestingModule({
+      providers: [{
+        provide: PlatformHostService,
+        useValue: {
+          marketingUrl: (path = '') => `https://example.test${path.startsWith('/') ? path : `/${path}`}`
+        }
+      }]
+    });
     document.getElementById('tenant-structured-data')?.remove();
   });
 
@@ -38,9 +46,9 @@ describe('SeoService', () => {
 
     expect(document.title).toBe('Nail Air | Reserva tu cita en línea');
     expect(document.querySelector<HTMLLinkElement>('link[rel="canonical"]')?.href)
-      .toBe('https://refluora.com/e/nail-art');
+      .toBe('https://example.test/e/nail-art');
     expect(document.querySelector<HTMLMetaElement>('meta[property="og:url"]')?.content)
-      .toBe('https://refluora.com/e/nail-art');
+      .toBe('https://example.test/e/nail-art');
     expect(document.querySelector<HTMLMetaElement>('meta[name="robots"]')?.content)
       .toContain('index');
   });
@@ -53,7 +61,7 @@ describe('SeoService', () => {
     const schema = JSON.parse(script?.textContent || '{}') as Record<string, unknown>;
     expect(schema['@type']).toBe('LocalBusiness');
     expect(schema['name']).toBe('Nail Air');
-    expect(schema['url']).toBe('https://refluora.com/e/nail-art');
+    expect(schema['url']).toBe('https://example.test/e/nail-art');
   });
 
   it('marca como no indexable un sitio no publicado', () => {

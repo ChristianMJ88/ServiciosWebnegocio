@@ -1,7 +1,5 @@
 'use strict';
 
-const MARKETING_ORIGIN = 'https://refluora.com';
-
 function escapeHtml(value) {
   return String(value ?? '')
     .replaceAll('&', '&amp;')
@@ -11,10 +9,10 @@ function escapeHtml(value) {
     .replaceAll("'", '&#039;');
 }
 
-function absoluteUrl(value) {
+function absoluteUrl(value, marketingOrigin) {
   if (!value) return null;
   if (/^https?:\/\//i.test(value)) return value;
-  return `${MARKETING_ORIGIN}${value.startsWith('/') ? value : `/${value}`}`;
+  return `${marketingOrigin}${value.startsWith('/') ? value : `/${value}`}`;
 }
 
 function descriptionFor(tenant) {
@@ -31,7 +29,7 @@ function removeSeoTags(html) {
     .replace(/<script\s+type=["']application\/ld\+json["'][^>]*>[\s\S]*?<\/script>\s*/gi, '');
 }
 
-function localBusinessSchema(tenant, canonical, description, image) {
+function localBusinessSchema(tenant, canonical, description, image, marketingOrigin) {
   const schema = {
     '@context': 'https://schema.org',
     '@type': 'LocalBusiness',
@@ -42,7 +40,7 @@ function localBusinessSchema(tenant, canonical, description, image) {
   };
 
   if (image) schema.image = image;
-  if (tenant.logoUrl) schema.logo = absoluteUrl(tenant.logoUrl);
+  if (tenant.logoUrl) schema.logo = absoluteUrl(tenant.logoUrl, marketingOrigin);
   if (tenant.telefono || tenant.whatsapp) schema.telephone = tenant.telefono || tenant.whatsapp;
   if (tenant.correo) schema.email = tenant.correo;
   if (tenant.direccion) schema.address = { '@type': 'PostalAddress', streetAddress: tenant.direccion };
@@ -51,13 +49,13 @@ function localBusinessSchema(tenant, canonical, description, image) {
   return schema;
 }
 
-function renderTenantHtml(template, tenant, requestPath) {
+function renderTenantHtml(template, tenant, requestPath, marketingOrigin) {
   const cleanPath = requestPath.split('?')[0].split('#')[0];
-  const canonical = `${MARKETING_ORIGIN}${cleanPath}`;
+  const canonical = `${marketingOrigin}${cleanPath}`;
   const description = descriptionFor(tenant);
   const title = `${tenant.nombreComercial} | Reserva tu cita en línea`;
-  const image = absoluteUrl(tenant.heroImagenUrl || tenant.logoUrl);
-  const schema = localBusinessSchema(tenant, canonical, description, image);
+  const image = absoluteUrl(tenant.heroImagenUrl || tenant.logoUrl, marketingOrigin);
+  const schema = localBusinessSchema(tenant, canonical, description, image, marketingOrigin);
   const tenantRuntimeJson = JSON.stringify(tenant)
     .replace(/</g, '\\u003c')
     .replace(/\u2028/g, '\\u2028')
@@ -84,18 +82,18 @@ function renderTenantHtml(template, tenant, requestPath) {
   return removeSeoTags(template).replace('</head>', `  ${tags}\n</head>`);
 }
 
-function renderNotFound(slug) {
+function renderNotFound(slug, marketingOrigin) {
   const safeSlug = escapeHtml(slug);
-  return `<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow"><title>Negocio no encontrado | Fluora</title></head><body><main><h1>Este sitio no está disponible</h1><p>No encontramos un negocio publicado con la dirección ${safeSlug}.</p><a href="${MARKETING_ORIGIN}">Volver a Fluora</a></main></body></html>`;
+  return `<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow"><title>Negocio no encontrado | Fluora</title></head><body><main><h1>Este sitio no está disponible</h1><p>No encontramos un negocio publicado con la dirección ${safeSlug}.</p><a href="${marketingOrigin}">Volver a Fluora</a></main></body></html>`;
 }
 
-function renderSitemap(slugs) {
+function renderSitemap(slugs, marketingOrigin) {
   const tenantUrls = [...new Set(slugs)]
     .filter(slug => /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug))
-    .map(slug => `  <url><loc>${MARKETING_ORIGIN}/e/${escapeHtml(slug)}</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>`);
+    .map(slug => `  <url><loc>${marketingOrigin}/e/${escapeHtml(slug)}</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>`);
   const urls = [
-    `  <url><loc>${MARKETING_ORIGIN}/</loc><changefreq>weekly</changefreq><priority>1.0</priority></url>`,
-    `  <url><loc>${MARKETING_ORIGIN}/registro</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>`,
+    `  <url><loc>${marketingOrigin}/</loc><changefreq>weekly</changefreq><priority>1.0</priority></url>`,
+    `  <url><loc>${marketingOrigin}/registro</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>`,
     ...tenantUrls
   ];
   return `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls.join('\n')}\n</urlset>`;

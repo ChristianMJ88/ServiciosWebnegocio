@@ -9,14 +9,6 @@ function cleanOrigin(origin: string | null | undefined): string {
   return (origin ?? '').trim().replace(/\/+$/, '');
 }
 
-function isDefaultFluoraPlaceholder(origin: string): boolean {
-  return origin === 'https://fluora.com'
-    || origin === 'https://app.fluora.com'
-    || origin === 'https://refluora.com'
-    || origin === 'https://www.refluora.com'
-    || origin === 'https://app.refluora.com';
-}
-
 function getHostnameFromOrigin(origin: string): string {
   if (!origin) {
     return '';
@@ -53,15 +45,7 @@ export class PlatformHostService {
   private readonly appHostnameValue = getHostnameFromOrigin(this.appOriginValue);
 
   private resolveOrigin(configuredOrigin: string): string {
-    if (!configuredOrigin) {
-      return this.currentOriginValue;
-    }
-
-    if (isDefaultFluoraPlaceholder(configuredOrigin) && configuredOrigin !== this.currentOriginValue) {
-      return this.currentOriginValue;
-    }
-
-    return configuredOrigin;
+    return configuredOrigin || this.currentOriginValue;
   }
 
   currentHostname(): string {

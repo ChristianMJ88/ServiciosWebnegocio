@@ -2,18 +2,18 @@ import { DOCUMENT } from '@angular/common';
 import { Injectable, inject } from '@angular/core';
 import { Meta, Title } from '@angular/platform-browser';
 import { TenantSiteConfig } from '../tenant/tenant.types';
-
-const MARKETING_ORIGIN = 'https://refluora.com';
+import { PlatformHostService } from '../platform/platform-host.service';
 
 @Injectable({ providedIn: 'root' })
 export class SeoService {
   private readonly document = inject(DOCUMENT);
   private readonly meta = inject(Meta);
   private readonly title = inject(Title);
+  private readonly platformHost = inject(PlatformHostService);
 
   applyTenant(config: TenantSiteConfig, path = `/e/${config.slug}`): void {
     const canonicalPath = path.split('?')[0].split('#')[0] || `/e/${config.slug}`;
-    const canonical = `${MARKETING_ORIGIN}${canonicalPath}`;
+    const canonical = this.platformHost.marketingUrl(canonicalPath);
     const description = this.tenantDescription(config);
     const pageTitle = `${config.nombreComercial} | Reserva tu cita en línea`;
     const image = config.heroImagenUrl || config.logoUrl;
@@ -44,7 +44,7 @@ export class SeoService {
   }
 
   applyMarketing(): void {
-    this.setCanonical(`${MARKETING_ORIGIN}/`);
+    this.setCanonical(this.platformHost.marketingUrl('/'));
     this.removeTenantStructuredData();
   }
 
@@ -107,6 +107,6 @@ export class SeoService {
 
   private absoluteUrl(value: string): string {
     if (/^https?:\/\//i.test(value)) return value;
-    return `${MARKETING_ORIGIN}${value.startsWith('/') ? value : `/${value}`}`;
+    return this.platformHost.marketingUrl(value);
   }
 }
