@@ -7,6 +7,7 @@ import com.techprotech.agenda.compartido.whatsapp.PropiedadesWhatsapp;
 import com.techprotech.agenda.compartido.whatsapp.ClienteWhatsappTwilio;
 import com.techprotech.agenda.compartido.whatsapp.ResultadoEnvioWhatsapp;
 import com.techprotech.agenda.compartido.whatsapp.ServicioConfiguracionWhatsappEmpresa;
+import com.techprotech.agenda.compartido.whatsapp.ContextoEmpresaWhatsapp;
 import com.techprotech.agenda.compartido.whatsapp.ServicioPlantillasWhatsappEmpresa;
 import com.techprotech.agenda.modulos.autenticacion.infraestructura.entidad.ClienteEntidad;
 import com.techprotech.agenda.modulos.autenticacion.infraestructura.entidad.EmpresaEntidad;
@@ -85,6 +86,7 @@ public class ServicioWhatsappCitas {
     );
 
     private final PropiedadesWhatsapp propiedadesWhatsapp;
+    private final ContextoEmpresaWhatsapp contextoEmpresaWhatsapp;
     private final ServicioConfiguracionWhatsappEmpresa servicioConfiguracionWhatsappEmpresa;
     private final ServicioPlantillasWhatsappEmpresa servicioPlantillasWhatsappEmpresa;
     private final ClienteWhatsappTwilio clienteWhatsappTwilio;
@@ -104,6 +106,7 @@ public class ServicioWhatsappCitas {
 
     public ServicioWhatsappCitas(
             PropiedadesWhatsapp propiedadesWhatsapp,
+            ContextoEmpresaWhatsapp contextoEmpresaWhatsapp,
             ServicioConfiguracionWhatsappEmpresa servicioConfiguracionWhatsappEmpresa,
             ServicioPlantillasWhatsappEmpresa servicioPlantillasWhatsappEmpresa,
             ClienteWhatsappTwilio clienteWhatsappTwilio,
@@ -122,6 +125,7 @@ public class ServicioWhatsappCitas {
             MensajeWhatsappRepositorio mensajeWhatsappRepositorio
     ) {
         this.propiedadesWhatsapp = propiedadesWhatsapp;
+        this.contextoEmpresaWhatsapp = contextoEmpresaWhatsapp;
         this.servicioConfiguracionWhatsappEmpresa = servicioConfiguracionWhatsappEmpresa;
         this.servicioPlantillasWhatsappEmpresa = servicioPlantillasWhatsappEmpresa;
         this.clienteWhatsappTwilio = clienteWhatsappTwilio;
@@ -140,7 +144,11 @@ public class ServicioWhatsappCitas {
         this.mensajeWhatsappRepositorio = mensajeWhatsappRepositorio;
     }
 
-    public RespuestaWhatsapp procesarWebhook(String telefonoRemitente, String mensajeOriginal) {
+    public RespuestaWhatsapp procesarWebhook(Long empresaId, String telefonoRemitente, String mensajeOriginal) {
+        return contextoEmpresaWhatsapp.ejecutar(empresaId, () -> procesarWebhookInterno(telefonoRemitente, mensajeOriginal));
+    }
+
+    private RespuestaWhatsapp procesarWebhookInterno(String telefonoRemitente, String mensajeOriginal) {
         String respuesta = procesarMensaje(telefonoRemitente, mensajeOriginal);
         RespuestaWhatsapp respuestaConContenido = deserializarRespuestaContenido(respuesta);
         if (respuestaConContenido != null) {
@@ -154,7 +162,11 @@ public class ServicioWhatsappCitas {
         return RespuestaWhatsapp.texto(respuesta);
     }
 
-    public boolean enviarContenidoInteractivo(String telefonoRemitente, RespuestaWhatsapp respuesta) {
+    public boolean enviarContenidoInteractivo(Long empresaId, String telefonoRemitente, RespuestaWhatsapp respuesta) {
+        return contextoEmpresaWhatsapp.ejecutar(empresaId, () -> enviarContenidoInteractivoInterno(telefonoRemitente, respuesta));
+    }
+
+    private boolean enviarContenidoInteractivoInterno(String telefonoRemitente, RespuestaWhatsapp respuesta) {
         if (respuesta == null || !respuesta.tieneContenidoInteractivo()) {
             return false;
         }
@@ -198,7 +210,11 @@ public class ServicioWhatsappCitas {
         }
     }
 
-    public void registrarMensajeEntrante(String telefonoRemitente, String mensaje) {
+    public void registrarMensajeEntrante(Long empresaId, String telefonoRemitente, String mensaje) {
+        contextoEmpresaWhatsapp.ejecutar(empresaId, () -> registrarMensajeEntranteInterno(telefonoRemitente, mensaje));
+    }
+
+    private void registrarMensajeEntranteInterno(String telefonoRemitente, String mensaje) {
         registrarMensajeWhatsapp(
                 telefonoRemitente,
                 "ENTRANTE",
@@ -211,7 +227,11 @@ public class ServicioWhatsappCitas {
         );
     }
 
-    public void registrarMensajeSalienteTexto(String telefonoDestino, String mensaje) {
+    public void registrarMensajeSalienteTexto(Long empresaId, String telefonoDestino, String mensaje) {
+        contextoEmpresaWhatsapp.ejecutar(empresaId, () -> registrarMensajeSalienteTextoInterno(telefonoDestino, mensaje));
+    }
+
+    private void registrarMensajeSalienteTextoInterno(String telefonoDestino, String mensaje) {
         registrarMensajeWhatsapp(
                 telefonoDestino,
                 "SALIENTE",
@@ -2187,7 +2207,7 @@ public class ServicioWhatsappCitas {
     }
 
     private Long obtenerEmpresaId() {
-        return propiedadesWhatsapp.empresaIdPorDefecto() != null ? propiedadesWhatsapp.empresaIdPorDefecto() : 1L;
+        return contextoEmpresaWhatsapp.requerirEmpresaId();
     }
 
     private Long extraerIdSimple(String mensaje, String ayuda) {

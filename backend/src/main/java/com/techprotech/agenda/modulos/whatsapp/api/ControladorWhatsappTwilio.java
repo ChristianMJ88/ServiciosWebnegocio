@@ -2,6 +2,10 @@ package com.techprotech.agenda.modulos.whatsapp.api;
 
 import com.techprotech.agenda.modulos.whatsapp.aplicacion.ServicioWhatsappCitas;
 import com.techprotech.agenda.compartido.whatsapp.ServicioEstadoEntregaWhatsapp;
+import com.techprotech.agenda.compartido.whatsapp.ConfiguracionWhatsappEmpresaEntidad;
+import com.techprotech.agenda.compartido.whatsapp.ResolutorEmpresaWebhookWhatsapp;
+import com.techprotech.agenda.compartido.whatsapp.ValidadorFirmaWebhookTwilio;
+import jakarta.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.MediaType;
@@ -20,24 +24,36 @@ public class ControladorWhatsappTwilio {
 
     private final ServicioWhatsappCitas servicioWhatsappCitas;
     private final ServicioEstadoEntregaWhatsapp servicioEstadoEntregaWhatsapp;
+    private final ResolutorEmpresaWebhookWhatsapp resolutorEmpresaWebhookWhatsapp;
+    private final ValidadorFirmaWebhookTwilio validadorFirmaWebhookTwilio;
 
     public ControladorWhatsappTwilio(
             ServicioWhatsappCitas servicioWhatsappCitas,
-            ServicioEstadoEntregaWhatsapp servicioEstadoEntregaWhatsapp
+            ServicioEstadoEntregaWhatsapp servicioEstadoEntregaWhatsapp,
+            ResolutorEmpresaWebhookWhatsapp resolutorEmpresaWebhookWhatsapp,
+            ValidadorFirmaWebhookTwilio validadorFirmaWebhookTwilio
     ) {
         this.servicioWhatsappCitas = servicioWhatsappCitas;
         this.servicioEstadoEntregaWhatsapp = servicioEstadoEntregaWhatsapp;
+        this.resolutorEmpresaWebhookWhatsapp = resolutorEmpresaWebhookWhatsapp;
+        this.validadorFirmaWebhookTwilio = validadorFirmaWebhookTwilio;
     }
 
     @PostMapping(value = "/webhook", consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE, produces = MediaType.APPLICATION_XML_VALUE)
-    public ResponseEntity<String> recibir(@RequestParam MultiValueMap<String, String> params) {
+    public ResponseEntity<String> recibir(
+            HttpServletRequest request,
+            @RequestParam MultiValueMap<String, String> params
+    ) {
+        ConfiguracionWhatsappEmpresaEntidad configuracion = resolutorEmpresaWebhookWhatsapp.resolver(params);
+        Long empresaId = configuracion.getEmpresaId();
+        validadorFirmaWebhookTwilio.validar(empresaId, request, params, request.getHeader("X-Twilio-Signature"));
         String from = params.getFirst("From");
         String body = resolverMensajeEntrante(params);
-        servicioWhatsappCitas.registrarMensajeEntrante(from, resolverMensajeVisibleEntrante(params, body));
+        servicioWhatsappCitas.registrarMensajeEntrante(empresaId, from, resolverMensajeVisibleEntrante(params, body));
 
         ServicioWhatsappCitas.RespuestaWhatsapp respuesta;
         try {
-            respuesta = servicioWhatsappCitas.procesarWebhook(from, body);
+            respuesta = servicioWhatsappCitas.procesarWebhook(empresaId, from, body);
         } catch (Exception ex) {
             LOGGER.error("No se pudo procesar el webhook de WhatsApp", ex);
             respuesta = ServicioWhatsappCitas.RespuestaWhatsapp.texto(
@@ -47,11 +63,18 @@ public class ControladorWhatsappTwilio {
 
         return ResponseEntity.ok()
                 .contentType(MediaType.APPLICATION_XML)
-                .body(construirRespuestaTwiml(from, respuesta));
+                .body(construirRespuestaTwiml(empresaId, from, respuesta));
     }
 
     @PostMapping(value = "/status", consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE)
-    public ResponseEntity<Void> recibirEstado(@RequestParam MultiValueMap<String, String> params) {
+    public ResponseEntity<Void> recibirEstado(
+            HttpServletRequest request,
+            @RequestParam MultiValueMap<String, String> params
+    ) {
+        ConfiguracionWhatsappEmpresaEntidad configuracion = resolutorEmpresaWebhookWhatsapp.resolver(params);
+        validadorFirmaWebhookTwilio.validar(
+                configuracion.getEmpresaId(), request, params, request.getHeader("X-Twilio-Signature")
+        );
         try {
             servicioEstadoEntregaWhatsapp.registrarActualizacion(
                     params.getFirst("MessageSid"),
@@ -75,12 +98,12 @@ public class ControladorWhatsappTwilio {
                 .replace("'", "&apos;");
     }
 
-    private String construirRespuestaTwiml(String telefonoRemitente, ServicioWhatsappCitas.RespuestaWhatsapp respuesta) {
+    private String construirRespuestaTwiml(Long empresaId, String telefonoRemitente, ServicioWhatsappCitas.RespuestaWhatsapp respuesta) {
         if (respuesta == null) {
             return "<Response></Response>";
         }
 
-        if (respuesta.tieneContenidoInteractivo() && servicioWhatsappCitas.enviarContenidoInteractivo(telefonoRemitente, respuesta)) {
+        if (respuesta.tieneContenidoInteractivo() && servicioWhatsappCitas.enviarContenidoInteractivo(empresaId, telefonoRemitente, respuesta)) {
             return "<Response></Response>";
         }
 
@@ -88,7 +111,7 @@ public class ControladorWhatsappTwilio {
             return "<Response></Response>";
         }
 
-        servicioWhatsappCitas.registrarMensajeSalienteTexto(telefonoRemitente, respuesta.mensaje());
+        servicioWhatsappCitas.registrarMensajeSalienteTexto(empresaId, telefonoRemitente, respuesta.mensaje());
         return """
                 <Response>
                   <Message>%s</Message>

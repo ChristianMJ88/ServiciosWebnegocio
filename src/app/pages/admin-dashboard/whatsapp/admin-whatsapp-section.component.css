@@ -38,3 +38,48 @@
   .whatsapp-pane--estado { height: auto; overflow: visible; }
   .whatsapp-pane--estado .entity-list { grid-template-columns: 1fr; }
 }
+.whatsapp-connect-card {
+  display: grid;
+  gap: 1rem;
+  padding: 1.25rem;
+  border: 1px solid color-mix(in srgb, #25d366 38%, transparent);
+  background: linear-gradient(135deg, color-mix(in srgb, #25d366 9%, white), white 58%);
+}
+
+.whatsapp-connect-copy h3,
+.whatsapp-connect-copy p {
+  margin: 0;
+}
+
+.whatsapp-connect-copy p {
+  margin-top: .45rem;
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.whatsapp-connect-form {
+  display: grid;
+  grid-template-columns: minmax(210px, 1fr) minmax(240px, 1fr) auto;
+  gap: .75rem;
+  align-items: start;
+}
+
+.whatsapp-connect-form button {
+  min-height: 56px;
+  padding-inline: 1.4rem;
+  background: #128c4a;
+  color: white;
+}
+
+.whatsapp-connect-status {
+  margin: 0;
+}
+
+.whatsapp-connect-error {
+  color: #b42318;
+}
+
+@media (max-width: 900px) {
+  .whatsapp-connect-form {
+    grid-template-columns: 1fr;
+  }
+}

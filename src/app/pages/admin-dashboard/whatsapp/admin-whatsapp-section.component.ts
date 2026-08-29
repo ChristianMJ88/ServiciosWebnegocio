@@ -1,6 +1,7 @@
 import { CommonModule } from '@angular/common';
-import { Component, EventEmitter, Input, Output } from '@angular/core';
+import { Component, EventEmitter, Input, OnDestroy, OnInit, Output, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { firstValueFrom } from 'rxjs';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -19,9 +20,12 @@ import {
   PlantillaWhatsappEmpresaAdmin,
   ProbarPlantillaWhatsappPayload,
   ProvisionarMessagingServiceWhatsappPayload,
-  ProvisionarSubcuentaWhatsappPayload
+  ProvisionarSubcuentaWhatsappPayload,
+  OnboardingWhatsappResponse,
+  AdminService
 } from '../../../core/admin/admin.service';
 import { WhatsappChecklistItem, WhatsappOnboardingStats } from './admin-whatsapp.types';
+import { MetaEmbeddedSignupService } from './meta-embedded-signup.service';
 
 @Component({
   selector: 'app-admin-whatsapp-section',
@@ -40,8 +44,17 @@ import { WhatsappChecklistItem, WhatsappOnboardingStats } from './admin-whatsapp
   templateUrl: './admin-whatsapp-section.component.html',
   styleUrls: ['./admin-whatsapp-section.component.css']
 })
-export class AdminWhatsappSectionComponent {
+export class AdminWhatsappSectionComponent implements OnInit, OnDestroy {
+  private readonly adminService = inject(AdminService);
+  private readonly embeddedSignup = inject(MetaEmbeddedSignupService);
+
   vistaActiva: 'estado' | 'configuracion' | 'plantillas' | 'actividad' = 'estado';
+  onboardingTechProvider: OnboardingWhatsappResponse | null = null;
+  telefonoOnboarding = '';
+  displayNameOnboarding = '';
+  conectandoWhatsapp = false;
+  errorOnboarding: string | null = null;
+  private actualizacionOnboardingId: ReturnType<typeof setTimeout> | null = null;
 
   @Input({ required: true }) formularioWhatsapp!: GuardarConfiguracionWhatsappPayload;
   @Input({ required: true }) formularioProvisionSubcuentaWhatsapp!: ProvisionarSubcuentaWhatsappPayload;
@@ -76,6 +89,83 @@ export class AdminWhatsappSectionComponent {
   @Output() detectChannelSender = new EventEmitter<void>();
   @Output() associateChannelSender = new EventEmitter<void>();
   @Output() testTemplate = new EventEmitter<void>();
+
+  ngOnInit(): void {
+    this.cargarEstadoOnboarding();
+  }
+
+  ngOnDestroy(): void {
+    if (this.actualizacionOnboardingId) clearTimeout(this.actualizacionOnboardingId);
+  }
+
+  cargarEstadoOnboarding(): void {
+    this.adminService.getEstadoOnboardingWhatsapp().subscribe({
+      next: estado => {
+        this.onboardingTechProvider = estado;
+        this.telefonoOnboarding ||= estado.telefonoE164 ?? '';
+        this.displayNameOnboarding ||= estado.displayName ?? '';
+        this.programarActualizacion(estado);
+      },
+      error: () => this.errorOnboarding = 'No fue posible consultar el estado de conexión de WhatsApp.'
+    });
+  }
+
+  async agregarWhatsapp(): Promise<void> {
+    if (this.conectandoWhatsapp) return;
+    this.errorOnboarding = null;
+    this.conectandoWhatsapp = true;
+    try {
+      const inicio = await firstValueFrom(this.adminService.iniciarOnboardingWhatsapp({
+          telefonoE164: this.telefonoOnboarding.trim(),
+          displayName: this.displayNameOnboarding.trim()
+        }));
+      this.onboardingTechProvider = inicio;
+      if (!inicio.metaAppId || !inicio.configurationId || !inicio.partnerSolutionId) {
+        throw new Error('La plataforma todavía no tiene los identificadores de Embedded Signup.');
+      }
+      const meta = await this.embeddedSignup.abrir({
+        appId: inicio.metaAppId,
+        configurationId: inicio.configurationId,
+        partnerSolutionId: inicio.partnerSolutionId
+      });
+      this.onboardingTechProvider = await firstValueFrom(this.adminService.completarOnboardingWhatsapp({
+        onboardingId: inicio.onboardingId,
+        wabaId: meta.wabaId,
+        phoneNumberId: meta.phoneNumberId,
+        telefonoE164: this.telefonoOnboarding.trim()
+      }));
+      this.programarActualizacion(this.onboardingTechProvider);
+    } catch (error) {
+      this.errorOnboarding = error instanceof Error ? error.message : 'No fue posible conectar WhatsApp.';
+      this.cargarEstadoOnboarding();
+    } finally {
+      this.conectandoWhatsapp = false;
+    }
+  }
+
+  estadoOnboardingActivo(): boolean {
+    return this.onboardingTechProvider?.estado === 'ACTIVO';
+  }
+
+  async reintentarOnboarding(): Promise<void> {
+    if (this.conectandoWhatsapp) return;
+    this.conectandoWhatsapp = true;
+    this.errorOnboarding = null;
+    try {
+      this.onboardingTechProvider = await firstValueFrom(this.adminService.reintentarOnboardingWhatsapp());
+      this.programarActualizacion(this.onboardingTechProvider);
+    } catch (error) {
+      this.errorOnboarding = error instanceof Error ? error.message : 'No fue posible reintentar la configuración.';
+    } finally {
+      this.conectandoWhatsapp = false;
+    }
+  }
+
+  private programarActualizacion(estado: OnboardingWhatsappResponse): void {
+    if (this.actualizacionOnboardingId) clearTimeout(this.actualizacionOnboardingId);
+    if (!['CONFIGURANDO', 'PENDIENTE_APROBACION'].includes(estado.estado)) return;
+    this.actualizacionOnboardingId = setTimeout(() => this.cargarEstadoOnboarding(), 5000);
+  }
 
   seleccionarVista(vista: 'estado' | 'configuracion' | 'plantillas' | 'actividad'): void {
     this.vistaActiva = vista;

@@ -1,4 +1,57 @@
 <section class="section-stack whatsapp-admin-section" [ngClass]="'whatsapp-view-' + vistaActiva">
+  <mat-card class="workspace-card whatsapp-connect-card">
+    <div class="whatsapp-connect-copy">
+      <div class="section-eyebrow">Conexión automatizada</div>
+      <h3>{{ estadoOnboardingActivo() ? 'WhatsApp conectado' : 'Agrega WhatsApp a tu negocio' }}</h3>
+      <p>
+        @if (estadoOnboardingActivo()) {
+          El número {{ onboardingTechProvider?.telefonoE164 }} está conectado mediante la cuenta empresarial del negocio.
+        } @else {
+          Autoriza tu negocio con Meta. Fluora creará la subcuenta Twilio, registrará el sender y configurará los webhooks automáticamente.
+        }
+      </p>
+    </div>
+
+    @if (!estadoOnboardingActivo()) {
+      <div class="whatsapp-connect-form">
+        <mat-form-field appearance="outline">
+          <mat-label>Número con código de país</mat-label>
+          <input matInput [(ngModel)]="telefonoOnboarding" name="telefonoOnboarding" placeholder="+525512345678">
+        </mat-form-field>
+        <mat-form-field appearance="outline">
+          <mat-label>Nombre visible del negocio</mat-label>
+          <input matInput [(ngModel)]="displayNameOnboarding" name="displayNameOnboarding" maxlength="150">
+        </mat-form-field>
+        <button
+          mat-flat-button
+          type="button"
+          (click)="agregarWhatsapp()"
+          [disabled]="conectandoWhatsapp || !telefonoOnboarding.trim() || !displayNameOnboarding.trim() || onboardingTechProvider?.embeddedSignupDisponible === false">
+          {{ conectandoWhatsapp ? 'Configurando…' : 'Agregar WhatsApp' }}
+        </button>
+      </div>
+    }
+
+    @if (onboardingTechProvider) {
+      <div class="helper-text whatsapp-connect-status">
+        Estado: {{ onboardingTechProvider.estado }} · Paso: {{ onboardingTechProvider.pasoActual || '—' }}
+        @if (!onboardingTechProvider.embeddedSignupDisponible) {
+          <br>La plataforma está esperando la aprobación y los identificadores de Meta/Twilio.
+        }
+      </div>
+    }
+    @if (errorOnboarding) {
+      <div class="helper-text whatsapp-connect-error">{{ errorOnboarding }}</div>
+    }
+    @if (onboardingTechProvider?.estado === 'ERROR_RECUPERABLE' && onboardingTechProvider?.wabaId) {
+      <div class="form-actions">
+        <button mat-stroked-button type="button" (click)="reintentarOnboarding()" [disabled]="conectandoWhatsapp">
+          Reintentar configuración
+        </button>
+      </div>
+    }
+  </mat-card>
+
   <nav class="whatsapp-section-nav" aria-label="Secciones de administración de WhatsApp">
     <button type="button" [class.is-active]="vistaActiva === 'estado'" (click)="seleccionarVista('estado')"><i class="bi bi-activity"></i><span>Estado</span></button>
     <button type="button" [class.is-active]="vistaActiva === 'configuracion'" (click)="seleccionarVista('configuracion')"><i class="bi bi-sliders"></i><span>Configuración</span></button>

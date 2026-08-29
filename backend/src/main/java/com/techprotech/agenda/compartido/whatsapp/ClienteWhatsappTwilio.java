@@ -11,6 +11,7 @@ import org.springframework.web.client.RestClient;
 
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -254,6 +255,71 @@ public class ClienteWhatsappTwilio {
                 .filter(sender -> NormalizadorTelefonoWhatsapp.coincide(sender.senderId(), senderObjetivo))
                 .findFirst()
                 .orElse(null);
+    }
+
+    public SenderTwilioWhatsapp registrarSenderWhatsapp(
+            Long empresaId,
+            String telefonoE164,
+            String wabaId,
+            String callbackUrl,
+            String statusCallbackUrl,
+            String displayName
+    ) {
+        ConfiguracionWhatsappResolvida configuracion = servicioConfiguracionWhatsappEmpresa.resolver(empresaId);
+        if (!tieneTexto(configuracion.accountSid()) || !tieneTexto(configuracion.authToken())) {
+            throw new IllegalStateException("Faltan credenciales de la subcuenta Twilio del tenant");
+        }
+
+        Map<String, Object> payload = new LinkedHashMap<>();
+        payload.put("sender_id", NormalizadorTelefonoWhatsapp.aDireccionWhatsapp(telefonoE164));
+        payload.put("configuration", Map.of("waba_id", wabaId));
+
+        Map<String, Object> webhook = new LinkedHashMap<>();
+        webhook.put("callback_url", callbackUrl);
+        webhook.put("callback_method", "POST");
+        if (tieneTexto(statusCallbackUrl)) {
+            webhook.put("status_callback_url", statusCallbackUrl);
+        }
+        payload.put("webhook", webhook);
+        if (tieneTexto(displayName)) {
+            payload.put("profile", Map.of("name", displayName));
+        }
+
+        JsonNode respuesta = messagingRestClient.post()
+                .uri("https://messaging.twilio.com/v2/Channels/Senders")
+                .headers(headers -> headers.setBasicAuth(configuracion.accountSid(), configuracion.authToken()))
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(payload)
+                .retrieve()
+                .body(JsonNode.class);
+
+        if (respuesta == null || !tieneTexto(respuesta.path("sid").asText(null))) {
+            throw new IllegalStateException("Twilio no devolvio el sender de WhatsApp creado");
+        }
+        return mapearSender(respuesta);
+    }
+
+    public SenderTwilioWhatsapp obtenerSenderWhatsapp(Long empresaId, String channelSenderSid) {
+        ConfiguracionWhatsappResolvida configuracion = servicioConfiguracionWhatsappEmpresa.resolver(empresaId);
+        JsonNode respuesta = messagingRestClient.get()
+                .uri("https://messaging.twilio.com/v2/Channels/Senders/{sid}", channelSenderSid)
+                .headers(headers -> headers.setBasicAuth(configuracion.accountSid(), configuracion.authToken()))
+                .retrieve()
+                .body(JsonNode.class);
+        if (respuesta == null) {
+            throw new IllegalStateException("Twilio no devolvio el estado del sender de WhatsApp");
+        }
+        return mapearSender(respuesta);
+    }
+
+    private SenderTwilioWhatsapp mapearSender(JsonNode item) {
+        return new SenderTwilioWhatsapp(
+                item.path("sid").asText(null),
+                item.path("sender_id").asText(null),
+                item.path("status").asText(null),
+                item.path("profile").path("name").asText(null),
+                item.path("configuration").path("waba_id").asText(null)
+        );
     }
 
     private List<SenderTwilioWhatsapp> listarSendersWhatsapp(ConfiguracionWhatsappResolvida configuracion) {

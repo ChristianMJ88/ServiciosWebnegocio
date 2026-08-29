@@ -5,7 +5,11 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 @ConfigurationProperties(prefix = "aplicacion.whatsapp")
 public record PropiedadesWhatsapp(
         boolean habilitado,
-        Long empresaIdPorDefecto,
+        boolean validarFirmaWebhook,
+        String webhookPublicBaseUrl,
+        String metaAppId,
+        String embeddedSignupConfigurationId,
+        String partnerSolutionId,
         String accountSid,
         String authToken,
         String numeroRemitente,

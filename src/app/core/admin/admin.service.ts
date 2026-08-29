@@ -641,6 +641,35 @@ export interface DetectarChannelSenderWhatsappResponse {
   configuracion: ConfiguracionWhatsappAdmin;
 }
 
+export interface OnboardingWhatsappResponse {
+  onboardingId: string;
+  estado: string;
+  pasoActual: string | null;
+  telefonoE164: string | null;
+  displayName: string | null;
+  wabaId: string | null;
+  phoneNumberId: string | null;
+  channelSenderSid: string | null;
+  ultimoError: string | null;
+  actualizadoEn: string | null;
+  embeddedSignupDisponible: boolean;
+  metaAppId: string | null;
+  configurationId: string | null;
+  partnerSolutionId: string | null;
+}
+
+export interface IniciarOnboardingWhatsappPayload {
+  telefonoE164: string;
+  displayName: string;
+}
+
+export interface CompletarOnboardingWhatsappPayload {
+  onboardingId: string;
+  wabaId: string;
+  phoneNumberId: string | null;
+  telefonoE164: string;
+}
+
 export interface SolicitudContactoAdmin {
   id: number;
   empresaId: number;
@@ -940,6 +969,22 @@ export class AdminService {
 
   detectarChannelSenderWhatsapp(): Observable<DetectarChannelSenderWhatsappResponse> {
     return this.http.post<DetectarChannelSenderWhatsappResponse>(`${environment.apiBaseUrl}/admin/configuracion-whatsapp/detectar-channel-sender`, {});
+  }
+
+  getEstadoOnboardingWhatsapp(): Observable<OnboardingWhatsappResponse> {
+    return this.http.get<OnboardingWhatsappResponse>(`${environment.apiBaseUrl}/admin/whatsapp/onboarding/estado`);
+  }
+
+  iniciarOnboardingWhatsapp(payload: IniciarOnboardingWhatsappPayload): Observable<OnboardingWhatsappResponse> {
+    return this.http.post<OnboardingWhatsappResponse>(`${environment.apiBaseUrl}/admin/whatsapp/onboarding/iniciar`, payload);
+  }
+
+  completarOnboardingWhatsapp(payload: CompletarOnboardingWhatsappPayload): Observable<OnboardingWhatsappResponse> {
+    return this.http.post<OnboardingWhatsappResponse>(`${environment.apiBaseUrl}/admin/whatsapp/onboarding/completar`, payload);
+  }
+
+  reintentarOnboardingWhatsapp(): Observable<OnboardingWhatsappResponse> {
+    return this.http.post<OnboardingWhatsappResponse>(`${environment.apiBaseUrl}/admin/whatsapp/onboarding/reintentar`, {});
   }
 
   getContactos(): Observable<SolicitudContactoAdmin[]> {

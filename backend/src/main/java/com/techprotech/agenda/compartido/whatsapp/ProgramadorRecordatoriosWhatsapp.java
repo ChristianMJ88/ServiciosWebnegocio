@@ -9,7 +9,8 @@ import com.techprotech.agenda.modulos.citas.infraestructura.repositorio.CitaRepo
 import com.techprotech.agenda.modulos.citas.infraestructura.repositorio.HistorialEstadoCitaRepositorio;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -17,12 +18,15 @@ import java.util.List;
 @Service
 public class ProgramadorRecordatoriosWhatsapp {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(ProgramadorRecordatoriosWhatsapp.class);
+
     private final CitaRepositorio citaRepositorio;
     private final ClienteRepositorio clienteRepositorio;
     private final BandejaSalidaNotificacionRepositorio bandejaSalidaNotificacionRepositorio;
     private final ServicioOutboxWhatsappCitas servicioOutboxWhatsappCitas;
     private final PropiedadesWhatsapp propiedadesWhatsapp;
     private final HistorialEstadoCitaRepositorio historialEstadoCitaRepositorio;
+    private final ConfiguracionWhatsappEmpresaRepositorio configuracionWhatsappEmpresaRepositorio;
 
     public ProgramadorRecordatoriosWhatsapp(
             CitaRepositorio citaRepositorio,
@@ -30,7 +34,8 @@ public class ProgramadorRecordatoriosWhatsapp {
             BandejaSalidaNotificacionRepositorio bandejaSalidaNotificacionRepositorio,
             ServicioOutboxWhatsappCitas servicioOutboxWhatsappCitas,
             PropiedadesWhatsapp propiedadesWhatsapp,
-            HistorialEstadoCitaRepositorio historialEstadoCitaRepositorio
+            HistorialEstadoCitaRepositorio historialEstadoCitaRepositorio,
+            ConfiguracionWhatsappEmpresaRepositorio configuracionWhatsappEmpresaRepositorio
     ) {
         this.citaRepositorio = citaRepositorio;
         this.clienteRepositorio = clienteRepositorio;
@@ -38,22 +43,31 @@ public class ProgramadorRecordatoriosWhatsapp {
         this.servicioOutboxWhatsappCitas = servicioOutboxWhatsappCitas;
         this.propiedadesWhatsapp = propiedadesWhatsapp;
         this.historialEstadoCitaRepositorio = historialEstadoCitaRepositorio;
+        this.configuracionWhatsappEmpresaRepositorio = configuracionWhatsappEmpresaRepositorio;
     }
 
     @Scheduled(
             fixedDelayString = "${aplicacion.whatsapp.recordatorios.delay-ms:60000}",
             initialDelayString = "${aplicacion.whatsapp.recordatorios.initial-delay-ms:30000}"
     )
-    @Transactional
     public void programarPendientes() {
         if (!propiedadesWhatsapp.habilitado()) {
             return;
         }
 
+        for (ConfiguracionWhatsappEmpresaEntidad configuracion : configuracionWhatsappEmpresaRepositorio.findByHabilitadoTrueOrderByEmpresaIdAsc()) {
+            try {
+                programarPendientes(configuracion.getEmpresaId());
+            } catch (Exception ex) {
+                LOGGER.error("No se pudieron programar recordatorios de WhatsApp para la empresa {}", configuracion.getEmpresaId(), ex);
+            }
+        }
+    }
+
+    private void programarPendientes(Long empresaId) {
         LocalDateTime ahora = LocalDateTime.now();
         LocalDateTime inicioVentana = ahora.plusHours(propiedadesWhatsapp.recordatorioHorasAntes());
         LocalDateTime finVentana = inicioVentana.plusMinutes(propiedadesWhatsapp.ventanaRecordatorioMinutos());
-        Long empresaId = propiedadesWhatsapp.empresaIdPorDefecto() != null ? propiedadesWhatsapp.empresaIdPorDefecto() : 1L;
 
         List<CitaEntidad> citas = citaRepositorio.findByEmpresaIdAndInicioBetweenAndEstadoInOrderByInicioAsc(
                 empresaId,
@@ -105,13 +119,21 @@ public class ProgramadorRecordatoriosWhatsapp {
             fixedDelayString = "${aplicacion.whatsapp.recordatorios.delay-ms:60000}",
             initialDelayString = "${aplicacion.whatsapp.recordatorios.initial-delay-ms:45000}"
     )
-    @Transactional
     public void liberarPendientesSinConfirmacion() {
         if (!propiedadesWhatsapp.habilitado()) {
             return;
         }
 
-        Long empresaId = propiedadesWhatsapp.empresaIdPorDefecto() != null ? propiedadesWhatsapp.empresaIdPorDefecto() : 1L;
+        for (ConfiguracionWhatsappEmpresaEntidad configuracion : configuracionWhatsappEmpresaRepositorio.findByHabilitadoTrueOrderByEmpresaIdAsc()) {
+            try {
+                liberarPendientesSinConfirmacion(configuracion.getEmpresaId());
+            } catch (Exception ex) {
+                LOGGER.error("No se pudieron liberar citas sin confirmacion para la empresa {}", configuracion.getEmpresaId(), ex);
+            }
+        }
+    }
+
+    private void liberarPendientesSinConfirmacion(Long empresaId) {
         LocalDateTime limite = LocalDateTime.now().plusHours(propiedadesWhatsapp.liberacionSinConfirmacionHorasAntes());
 
         List<CitaEntidad> citas = citaRepositorio.findByEmpresaIdAndInicioBeforeAndEstadoOrderByInicioAsc(

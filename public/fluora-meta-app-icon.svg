@@ -1,0 +1,19 @@
+<svg width="1024" height="1024" viewBox="0 0 256 256" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="markA" x1="44" y1="54" x2="197" y2="195" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#C86BFF"/>
+      <stop offset="0.48" stop-color="#6B45FF"/>
+      <stop offset="1" stop-color="#21D8F5"/>
+    </linearGradient>
+    <linearGradient id="markB" x1="58" y1="38" x2="214" y2="171" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#F47CE7"/>
+      <stop offset="0.45" stop-color="#8A4DFF"/>
+      <stop offset="1" stop-color="#2487FF"/>
+    </linearGradient>
+  </defs>
+  <rect width="256" height="256" fill="#171E47"/>
+  <path d="M52 139C77 98 116 60 164 48C185 42 205 47 220 63C186 52 156 64 129 86C109 101 91 120 71 137C63 144 57 145 52 139Z" fill="url(#markA)"/>
+  <path d="M56 153C86 129 114 101 143 79C171 57 202 49 225 66C241 77 245 97 238 118C231 96 217 86 198 87C172 89 149 104 129 121C107 139 84 159 60 166C54 161 52 157 56 153Z" fill="url(#markB)"/>
+  <path d="M89 185C115 194 141 185 164 168C185 151 202 130 228 120C236 117 244 116 252 118C248 144 232 164 208 179C172 202 121 205 89 185Z" fill="url(#markA)"/>
+  <path d="M77 82C104 63 137 56 164 66C138 67 117 79 101 96C84 114 70 126 56 129C49 118 48 108 52 98C56 90 65 84 77 82Z" fill="#EFB6FF" fill-opacity="0.85"/>
+</svg>

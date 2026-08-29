@@ -38,6 +38,21 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/register/register.component').then((m) => m.RegisterComponent)
   },
   { path: '', loadComponent: () => import('./pages/fluora-home/fluora-home.component').then((m) => m.FluoraHomeComponent) },
+  {
+    path: 'privacidad',
+    loadComponent: () => import('./pages/legal/legal-page.component').then((m) => m.LegalPageComponent),
+    data: { legalDocument: 'privacy' }
+  },
+  {
+    path: 'terminos',
+    loadComponent: () => import('./pages/legal/legal-page.component').then((m) => m.LegalPageComponent),
+    data: { legalDocument: 'terms' }
+  },
+  {
+    path: 'eliminacion-de-datos',
+    loadComponent: () => import('./pages/legal/legal-page.component').then((m) => m.LegalPageComponent),
+    data: { legalDocument: 'deletion' }
+  },
   { path: 'acceso', loadComponent: () => import('./pages/fluora-access/fluora-access.component').then((m) => m.FluoraAccessComponent) },
   {
     path: 'registro',

@@ -2,6 +2,10 @@ logging:
   level:
     root: WARN
 
+aplicacion:
+  whatsapp:
+    validar-firma-webhook: ${TWILIO_VALIDAR_FIRMA_WEBHOOK:true}
+
 management:
   health:
     mail:
