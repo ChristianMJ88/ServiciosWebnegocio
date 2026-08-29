@@ -17,7 +17,7 @@ class ServicioSitioPublicoTest {
                 new Class<?>[]{EmpresaSitioConfigRepositorio.class},
                 (proxy, method, args) -> {
                     if (method.getName().equals("findSlugsPublicados")) {
-                        return List.of("barberia-centro", "nail-air");
+                        return List.of("barberia-centro", "nail-art");
                     }
                     throw new UnsupportedOperationException(method.getName());
                 }
@@ -26,6 +26,6 @@ class ServicioSitioPublicoTest {
 
         IndiceSitiosPublicosResponse response = servicio.obtenerIndicePublicado();
 
-        assertEquals(List.of("barberia-centro", "nail-air"), response.slugs());
+        assertEquals(List.of("barberia-centro", "nail-art"), response.slugs());
     }
 }

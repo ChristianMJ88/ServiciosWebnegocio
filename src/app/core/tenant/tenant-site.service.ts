@@ -7,7 +7,7 @@ import { TenantSiteConfig } from './tenant.types';
 
 const DEMO_TENANT: TenantSiteConfig = {
   empresaId: 1,
-  slug: 'nail-air',
+  slug: 'nail-art',
   nombreComercial: 'Nail Art Studio',
   dominioPrincipal: null,
   logoUrl: '/NailArt_logo.jpeg',

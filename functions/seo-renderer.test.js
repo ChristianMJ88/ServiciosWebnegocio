@@ -8,16 +8,16 @@ const template = '<!doctype html><html><head><title>Fluora</title><meta name="de
 
 test('inyecta metadatos del negocio y conserva la aplicación Angular', () => {
   const html = renderTenantHtml(template, {
-    slug: 'nail-air',
+    slug: 'nail-art',
     nombreComercial: 'Nail Air',
     descripcionCorta: 'Belleza y cuidado personal.',
     heroImagenUrl: '/hero.png',
     logoUrl: '/logo.png',
     publicado: true
-  }, '/e/nail-air');
+  }, '/e/nail-art');
 
   assert.match(html, /<title>Nail Air \| Reserva tu cita en línea<\/title>/);
-  assert.match(html, /https:\/\/refluora\.com\/e\/nail-air/);
+  assert.match(html, /https:\/\/refluora\.com\/e\/nail-art/);
   assert.match(html, /property="og:image" content="https:\/\/refluora\.com\/hero\.png"/);
   assert.match(html, /"@type":"LocalBusiness"/);
   assert.match(html, /<app-root><\/app-root>/);
@@ -37,12 +37,12 @@ test('escapa contenido proporcionado por el tenant', () => {
 });
 
 test('genera sitemap con páginas base y slugs válidos sin duplicados', () => {
-  const xml = renderSitemap(['nail-air', 'barberia-centro', 'nail-air', '../privado']);
+  const xml = renderSitemap(['nail-art', 'barberia-centro', 'nail-art', '../privado']);
 
   assert.match(xml, /https:\/\/refluora\.com\/<\/loc>/);
   assert.match(xml, /https:\/\/refluora\.com\/registro<\/loc>/);
-  assert.match(xml, /https:\/\/refluora\.com\/e\/nail-air<\/loc>/);
+  assert.match(xml, /https:\/\/refluora\.com\/e\/nail-art<\/loc>/);
   assert.match(xml, /https:\/\/refluora\.com\/e\/barberia-centro<\/loc>/);
-  assert.equal((xml.match(/\/e\/nail-air/g) || []).length, 1);
+  assert.equal((xml.match(/\/e\/nail-art/g) || []).length, 1);
   assert.doesNotMatch(xml, /privado/);
 });
