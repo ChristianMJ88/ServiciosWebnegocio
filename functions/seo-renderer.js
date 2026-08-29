@@ -58,6 +58,10 @@ function renderTenantHtml(template, tenant, requestPath) {
   const title = `${tenant.nombreComercial} | Reserva tu cita en línea`;
   const image = absoluteUrl(tenant.heroImagenUrl || tenant.logoUrl);
   const schema = localBusinessSchema(tenant, canonical, description, image);
+  const tenantRuntimeJson = JSON.stringify(tenant)
+    .replace(/</g, '\\u003c')
+    .replace(/\u2028/g, '\\u2028')
+    .replace(/\u2029/g, '\\u2029');
   const tags = [
     `<title>${escapeHtml(title)}</title>`,
     `<meta name="description" content="${escapeHtml(description)}">`,
@@ -73,7 +77,8 @@ function renderTenantHtml(template, tenant, requestPath) {
     `<meta name="twitter:description" content="${escapeHtml(description)}">`,
     image ? `<meta property="og:image" content="${escapeHtml(image)}">` : '',
     image ? `<meta name="twitter:image" content="${escapeHtml(image)}">` : '',
-    `<script type="application/ld+json" id="tenant-structured-data">${JSON.stringify(schema).replace(/</g, '\\u003c')}</script>`
+    `<script type="application/ld+json" id="tenant-structured-data">${JSON.stringify(schema).replace(/</g, '\\u003c')}</script>`,
+    `<script>window.__FLUORA_TENANT__=${tenantRuntimeJson};</script>`
   ].filter(Boolean).join('\n  ');
 
   return removeSeoTags(template).replace('</head>', `  ${tags}\n</head>`);

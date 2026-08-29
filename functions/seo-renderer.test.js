@@ -20,6 +20,8 @@ test('inyecta metadatos del negocio y conserva la aplicación Angular', () => {
   assert.match(html, /https:\/\/refluora\.com\/e\/nail-art/);
   assert.match(html, /property="og:image" content="https:\/\/refluora\.com\/hero\.png"/);
   assert.match(html, /"@type":"LocalBusiness"/);
+  assert.match(html, /window\.__FLUORA_TENANT__=/);
+  assert.match(html, /"slug":"nail-art"/);
   assert.match(html, /<app-root><\/app-root>/);
   assert.doesNotMatch(html, /content="General"/);
 });
@@ -32,6 +34,7 @@ test('escapa contenido proporcionado por el tenant', () => {
   }, '/e/seguro');
 
   assert.doesNotMatch(html, /<title><script>/);
+  assert.doesNotMatch(html, /window\.__FLUORA_TENANT__=.*<script>/);
   assert.match(html, /&lt;script&gt;/);
   assert.match(html, /Seguro &amp; confiable/);
 });
