@@ -154,7 +154,7 @@ export class ServicesComponent implements OnInit {
   }
 
   imagenServicio(grupo: GrupoCatalogoPublico, servicio: ServicioCatalogo): string {
-    return servicio.imagenUrl || grupo.imagenUrl || this.tenantContext.logoUrl() || '/NailArt_logo.jpeg';
+    return servicio.imagenUrl || grupo.imagenUrl || this.tenantContext.logoUrl() || '/fluora-mark.svg';
   }
 
   subgruposVisibles(grupo: GrupoCatalogoPublico): SubgrupoCatalogoPublico[] {

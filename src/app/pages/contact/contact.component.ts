@@ -2,7 +2,6 @@
 import { Component, inject } from '@angular/core';
 import { FormsModule, NgForm } from '@angular/forms';
 import { finalize } from 'rxjs/operators';
-import { environment } from '../../../environments/environment';
 import { ContactService } from '../../services/contact.service';
 import { TenantContextService } from '../../core/tenant/tenant-context.service';
 
@@ -37,10 +36,16 @@ export class ContactComponent {
     this.sending = true;
     this.successMessage = '';
     this.errorMessage = '';
+    const empresaId = this.tenantContext.empresaId();
+    if (!empresaId) {
+      this.sending = false;
+      this.errorMessage = 'No se pudo identificar el negocio para enviar el mensaje.';
+      return;
+    }
 
     this.contactService
       .sendContact({
-        empresaId: this.tenantContext.empresaId() ?? environment.empresaId,
+        empresaId,
         nombreCompleto: this.contactData.fullName.trim(),
         telefono: this.contactData.phone.trim() || null,
         correo: this.contactData.email.trim(),

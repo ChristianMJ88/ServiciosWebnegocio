@@ -47,7 +47,7 @@
           <div class="editor-fields">
             <mat-form-field appearance="outline" class="full-width"><mat-label>Título principal</mat-label><input matInput name="sitioHeroTitulo" [(ngModel)]="formularioSitio().heroTitulo" maxlength="180"><mat-hint align="end">{{ formularioSitio().heroTitulo?.length || 0 }}/180</mat-hint></mat-form-field>
             <mat-form-field appearance="outline" class="full-width"><mat-label>Subtítulo principal</mat-label><textarea matInput rows="4" name="sitioHeroSubtitulo" [(ngModel)]="formularioSitio().heroSubtitulo" maxlength="500"></textarea><mat-hint align="end">{{ formularioSitio().heroSubtitulo?.length || 0 }}/500</mat-hint></mat-form-field>
-            <mat-form-field appearance="outline" class="full-width"><mat-label>URL de la imagen principal</mat-label><input matInput name="sitioHeroImagenUrl" [(ngModel)]="formularioSitio().heroImagenUrl" maxlength="500" placeholder="https://... o /tenant-hero-demo.png"><mat-hint>Usa una imagen horizontal de alta calidad.</mat-hint></mat-form-field>
+            <mat-form-field appearance="outline" class="full-width"><mat-label>URL de la imagen principal</mat-label><input matInput name="sitioHeroImagenUrl" [(ngModel)]="formularioSitio().heroImagenUrl" maxlength="500" placeholder="https://... o /fluora-showcase-sites.svg"><mat-hint>Usa una imagen horizontal de alta calidad.</mat-hint></mat-form-field>
           </div>
         </section>
       }

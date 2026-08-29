@@ -371,6 +371,10 @@ export class AuthService {
   }
 
   private obtenerEmpresaIdActual(): number {
-    return this.tenantContext.empresaId() ?? environment.empresaId;
+    const empresaId = this.tenantContext.empresaId();
+    if (!empresaId) {
+      throw new Error('No hay un tenant activo para esta operación');
+    }
+    return empresaId;
   }
 }

@@ -2499,13 +2499,7 @@ public class ServicioWhatsappCitas {
         if (!tieneTexto(nombre)) {
             return "Sucursal";
         }
-        String visible = nombre.replace("NailArt Studio", "").trim();
-        if (visible.startsWith("-")) {
-            visible = visible.substring(1).trim();
-        }
-        if (visible.isBlank()) {
-            visible = nombre.trim();
-        }
+        String visible = nombre.trim();
         return visible.length() > 28 ? visible.substring(0, 28).trim() + "..." : visible;
     }
 

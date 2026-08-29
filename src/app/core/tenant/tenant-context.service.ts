@@ -22,7 +22,7 @@ export class TenantContextService {
   readonly fuenteCuerpo = computed(() => this.tenant()?.fuenteCuerpo ?? 'INTER');
   readonly heroTitulo = computed(() => this.tenant()?.heroTitulo ?? this.nombreComercial());
   readonly heroSubtitulo = computed(() => this.tenant()?.heroSubtitulo ?? this.descripcionCorta());
-  readonly heroImagenUrl = computed(() => this.tenant()?.heroImagenUrl ?? '/tenant-hero-demo.png');
+  readonly heroImagenUrl = computed(() => this.tenant()?.heroImagenUrl ?? '/fluora-showcase-sites.svg');
   readonly logoUrl = computed(() => this.tenant()?.logoUrl ?? null);
   readonly whatsapp = computed(() => this.tenant()?.whatsapp ?? null);
   readonly telefono = computed(() => this.tenant()?.telefono ?? this.tenant()?.whatsapp ?? '');

@@ -31,7 +31,7 @@ import { PlatformHostService } from '../../../core/platform/platform-host.servic
 })
 export class AdminSiteSectionComponent {
   private readonly platformHost = inject(PlatformHostService);
-  readonly defaultHeroImage = '/tenant-hero-demo.png';
+  readonly defaultHeroImage = '/fluora-showcase-sites.svg';
 
   readonly formularioSitio = input.required<GuardarConfiguracionSitioPayload>();
   readonly guardandoSitio = input(false);

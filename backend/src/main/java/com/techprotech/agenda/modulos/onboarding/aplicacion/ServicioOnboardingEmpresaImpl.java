@@ -131,7 +131,7 @@ public class ServicioOnboardingEmpresaImpl implements ServicioOnboardingEmpresa 
         sitio.setDireccion("Configura la dirección principal de tu negocio");
         sitio.setInstagramUrl("");
         sitio.setFacebookUrl("");
-        sitio.setTema("nail-art-base");
+        sitio.setTema("fluora-base");
         sitio.setPublicado(true);
         empresaSitioConfigRepositorio.save(sitio);
     }

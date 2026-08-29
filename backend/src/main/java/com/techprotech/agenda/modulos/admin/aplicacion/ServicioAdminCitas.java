@@ -155,7 +155,7 @@ public class ServicioAdminCitas {
                             new GrupoSugeridoDef(
                                     "Uñas",
                                     "Servicios principales para manos y pies.",
-                                    "/NailArt_logo.jpeg",
+                                    "/fluora-mark.svg",
                                     "spa",
                                     10,
                                     List.of(
@@ -2284,7 +2284,7 @@ public class ServicioAdminCitas {
         configuracion.setColorSecundario("#F6D9E3");
         configuracion.setFuenteTitulos("JAKARTA");
         configuracion.setFuenteCuerpo("INTER");
-        configuracion.setTema("nail-art-base");
+        configuracion.setTema("fluora-base");
         configuracion.setPublicado(false);
         return configuracion;
     }
@@ -2361,7 +2361,7 @@ public class ServicioAdminCitas {
 
     private String normalizarTema(String valor) {
         String limpio = normalizarOpcional(valor);
-        return limpio != null ? limpio : "nail-art-base";
+        return limpio != null ? limpio : "fluora-base";
     }
 
     private String normalizarFuente(String valor, String fallback) {

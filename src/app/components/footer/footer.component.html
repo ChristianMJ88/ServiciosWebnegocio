@@ -73,28 +73,28 @@
         <ul class="footer-links-list">
           <li>
             @if (tenantActivo()) {
-              <a [routerLink]="servicesLink()" class="footer-link">Manicura premium</a>
+              <a [routerLink]="homeLink()" class="footer-link">Inicio</a>
             } @else {
               <a [attr.href]="featuresHref()" class="footer-link">Agenda y reservas</a>
             }
           </li>
           <li>
             @if (tenantActivo()) {
-              <a [routerLink]="servicesLink()" class="footer-link">Gel semipermanente</a>
+              <a [routerLink]="servicesLink()" class="footer-link">Servicios</a>
             } @else {
               <a [attr.href]="featuresHref()" class="footer-link">Paneles por rol</a>
             }
           </li>
           <li>
             @if (tenantActivo()) {
-              <a [routerLink]="servicesLink()" class="footer-link">Nail art</a>
+              <a [routerLink]="bookingLink()" class="footer-link">Reservar cita</a>
             } @else {
               <a [attr.href]="showcaseHref()" class="footer-link">Web pública por empresa</a>
             }
           </li>
           <li>
             @if (tenantActivo()) {
-              <a [routerLink]="servicesLink()" class="footer-link">Pedicura spa</a>
+              <a [routerLink]="contactLink()" class="footer-link">Contacto</a>
             } @else {
               <a [attr.href]="reviewsHref()" class="footer-link">Reseñas y referencias</a>
             }
