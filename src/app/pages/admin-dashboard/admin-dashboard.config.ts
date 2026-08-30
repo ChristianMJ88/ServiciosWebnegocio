@@ -51,6 +51,12 @@ export const MODULOS_ADMIN: readonly ModuloAdminDef[] = [
   { id: 'citas', titulo: 'Agenda', descripcion: 'Seguimiento operativo y gestión detallada de reservas.', abreviatura: 'AG', iconClass: 'bi bi-calendar-week', permiso: PERMISOS.citasAdminGestionar }
 ];
 
+const SECCIONES_ADMIN = new Set<string>(MODULOS_ADMIN.map(modulo => modulo.id));
+
+export function esSeccionAdmin(valor: string | null | undefined): valor is SeccionAdmin {
+  return typeof valor === 'string' && SECCIONES_ADMIN.has(valor);
+}
+
 export const GRUPOS_SIDEBAR_ADMIN: readonly GrupoSidebarAdmin[] = [
   { id: 'operacion', titulo: 'Operación', iconClass: 'bi bi-grid-1x2-fill', modulos: ['resumen', 'citas', 'contactos'] },
   { id: 'canales', titulo: 'Canales', iconClass: 'bi bi-broadcast-pin', modulos: ['mensajes', 'whatsapp', 'correo'] },

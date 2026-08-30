@@ -3,7 +3,7 @@ import { ChangeDetectorRef, Component, DestroyRef, NgZone, OnInit, ViewEncapsula
 import { FormsModule } from '@angular/forms';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { BreakpointObserver } from '@angular/cdk/layout';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { MatBadgeModule } from '@angular/material/badge';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
@@ -87,6 +87,7 @@ import { AdminWhatsappSectionComponent } from './whatsapp/admin-whatsapp-section
 import {
   SeccionAdmin,
   construirGruposSidebarAdmin,
+  esSeccionAdmin,
   filtrarModulosAdmin
 } from './admin-dashboard.config';
 import { AdminDashboardLoader } from './admin-dashboard.loader';
@@ -222,6 +223,7 @@ export class AdminDashboardComponent implements OnInit {
   private readonly authService = inject(AuthService);
   private readonly userProfileService = inject(UserProfileService);
   private readonly router = inject(Router);
+  private readonly activatedRoute = inject(ActivatedRoute);
   private readonly ngZone = inject(NgZone);
   private readonly changeDetectorRef = inject(ChangeDetectorRef);
   private readonly destroyRef = inject(DestroyRef);
@@ -740,6 +742,17 @@ export class AdminDashboardComponent implements OnInit {
   formularioAsociacionChannelSenderWhatsapp = crearFormularioAsociacionSender();
 
   ngOnInit(): void {
+    this.activatedRoute.paramMap
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(parametros => {
+        const seccion = parametros.get('seccion');
+        if (esSeccionAdmin(seccion)) {
+          this.seccionActiva.set(seccion);
+        } else {
+          void this.router.navigate(['/admin', 'resumen'], { replaceUrl: true });
+        }
+      });
+
     this.actualizarVistaEnZona(() => {
       this.cargarPerfilUsuarioLocal();
       this.sincronizarSidebarConViewport(this.breakpointObserver.isMatched('(max-width: 991px)'));
@@ -776,6 +789,7 @@ export class AdminDashboardComponent implements OnInit {
       return;
     }
     this.seccionActiva.set(seccion);
+    void this.router.navigate(['/admin', seccion]);
     if (seccion === 'usuarios') {
       this.subseccionUsuariosActiva.set('usuarios');
     }
@@ -2191,7 +2205,9 @@ export class AdminDashboardComponent implements OnInit {
   private asegurarSeccionActivaDisponible() {
     const modulos = this.modulosAdmin();
     if (!modulos.some(modulo => modulo.id === this.seccionActiva()) && modulos.length > 0) {
-      this.seccionActiva.set(modulos[0].id);
+      const seccionDisponible = modulos[0].id;
+      this.seccionActiva.set(seccionDisponible);
+      void this.router.navigate(['/admin', seccionDisponible], { replaceUrl: true });
     }
   }
 

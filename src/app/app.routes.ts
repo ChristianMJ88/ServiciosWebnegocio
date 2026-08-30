@@ -88,6 +88,11 @@ export const routes: Routes = [
   },
   {
     path: 'admin',
+    redirectTo: 'admin/resumen',
+    pathMatch: 'full'
+  },
+  {
+    path: 'admin/:seccion',
     loadComponent: () => import('./pages/admin-dashboard/admin-dashboard.component').then((m) => m.AdminDashboardComponent),
     canActivate: [roleGuard],
     data: { permissions: [PERMISOS.panelAdmin], layout: 'panel' }
