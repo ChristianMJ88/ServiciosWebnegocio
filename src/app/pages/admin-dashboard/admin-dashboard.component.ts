@@ -1144,6 +1144,20 @@ export class AdminDashboardComponent implements OnInit {
       });
   }
 
+  conectarCorreoGoogle() {
+    this.guardandoCorreo = true;
+    this.error = '';
+    this.mensajeExito = '';
+    this.adminService.iniciarOAuthCorreoGoogle()
+      .pipe(finalize(() => this.guardandoCorreo = false))
+      .subscribe({
+        next: response => window.location.assign(response.urlAutorizacion),
+        error: err => {
+          this.error = err?.error?.mensaje || err?.message || 'No se pudo iniciar la conexión con Gmail.';
+        }
+      });
+  }
+
   usarCorreoPlataforma() {
     this.guardandoCorreo = true;
     this.error = '';

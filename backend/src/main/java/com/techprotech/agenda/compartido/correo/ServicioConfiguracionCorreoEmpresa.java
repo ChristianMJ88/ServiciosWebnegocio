@@ -62,7 +62,9 @@ public class ServicioConfiguracionCorreoEmpresa {
 
         return new ConfiguracionCorreoResolvida(
                 entidad.getEmpresaId(),
-                entidad.isHabilitado() && configuracionMinimaValida(
+                entidad.isHabilitado() && (proveedor == ProveedorCorreo.GMAIL
+                        ? entidad.getGmailOauthRefreshToken() != null && !entidad.getGmailOauthRefreshToken().isBlank()
+                        : configuracionMinimaValida(
                         proveedor,
                         remitente,
                         smtpHost,
@@ -74,7 +76,7 @@ public class ServicioConfiguracionCorreoEmpresa {
                         graphCertificateThumbprint,
                         graphPrivateKeyPem,
                         graphOauthRefreshToken
-                ),
+                )),
                 proveedor,
                 remitente,
                 nombreRemitente,

@@ -9,11 +9,12 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.security.servlet.UserDetailsServiceAutoConfiguration;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import com.techprotech.agenda.compartido.correo.PropiedadesOAuthCorreoMicrosoft;
+import com.techprotech.agenda.compartido.correo.PropiedadesOAuthCorreoGoogle;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
 @SpringBootApplication(exclude = UserDetailsServiceAutoConfiguration.class)
 @EnableScheduling
-@EnableConfigurationProperties({PropiedadesJwt.class, PropiedadesCorreo.class, PropiedadesCorreoPlataforma.class, PropiedadesOAuthCorreoMicrosoft.class, PropiedadesWhatsapp.class})
+@EnableConfigurationProperties({PropiedadesJwt.class, PropiedadesCorreo.class, PropiedadesCorreoPlataforma.class, PropiedadesOAuthCorreoMicrosoft.class, PropiedadesOAuthCorreoGoogle.class, PropiedadesWhatsapp.class})
 public class AgendaApplication {
 
     public static void main(String[] args) {

@@ -72,6 +72,12 @@ aplicacion:
       private-key-pem: ${CORREO_MICROSOFT_OAUTH_PRIVATE_KEY_PEM:}
       redirect-uri: ${CORREO_MICROSOFT_OAUTH_REDIRECT_URI:https://api.refluora.com/api/v1/admin/correo/oauth/microsoft/callback}
       frontend-resultado-url: ${CORREO_MICROSOFT_OAUTH_FRONTEND_RESULTADO_URL:https://app.refluora.com/admin/correo}
+    google-oauth:
+      habilitado: ${CORREO_GOOGLE_OAUTH_HABILITADO:false}
+      client-id: ${CORREO_GOOGLE_OAUTH_CLIENT_ID:}
+      client-secret: ${CORREO_GOOGLE_OAUTH_CLIENT_SECRET:}
+      redirect-uri: ${CORREO_GOOGLE_OAUTH_REDIRECT_URI:https://api.refluora.com/api/v1/admin/correo/oauth/google/callback}
+      frontend-resultado-url: ${CORREO_GOOGLE_OAUTH_FRONTEND_RESULTADO_URL:https://app.refluora.com/admin/correo}
     llave-cifrado-secretos: ${CORREO_LLAVE_CIFRADO_SECRETOS:}
     lote-maximo-outbox: ${CORREO_LOTE_MAXIMO_OUTBOX:20}
     retraso-reintento-segundos: ${CORREO_REINTENTO_SEGUNDOS:60}

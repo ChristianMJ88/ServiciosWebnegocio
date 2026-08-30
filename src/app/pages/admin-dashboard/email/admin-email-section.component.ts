@@ -45,6 +45,7 @@ export class AdminEmailSectionComponent {
   readonly migrateSecrets = output<void>();
   readonly usePlatform = output<void>();
   readonly connectMicrosoft = output<void>();
+  readonly connectGoogle = output<void>();
 
   readonly mostrandoOpciones = signal(false);
   readonly mostrarAvanzado = signal(false);
@@ -54,10 +55,15 @@ export class AdminEmailSectionComponent {
     this.mostrandoOpciones.set(true);
   }
 
-  seleccionarProveedor(proveedor: 'GRAPH' | 'SMTP'): void {
+  seleccionarProveedor(proveedor: 'GRAPH' | 'GMAIL' | 'SMTP'): void {
     if (proveedor === 'GRAPH') {
       this.mostrandoOpciones.set(false);
       this.connectMicrosoft.emit();
+      return;
+    }
+    if (proveedor === 'GMAIL') {
+      this.mostrandoOpciones.set(false);
+      this.connectGoogle.emit();
       return;
     }
     this.formularioCorreo().proveedor = proveedor;

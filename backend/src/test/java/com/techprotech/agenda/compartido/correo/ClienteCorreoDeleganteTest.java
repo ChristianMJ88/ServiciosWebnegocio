@@ -21,7 +21,7 @@ class ClienteCorreoDeleganteTest {
             }
         };
         ClienteCorreoSendgridFalso sendgrid = new ClienteCorreoSendgridFalso();
-        ClienteCorreoDelegante delegante = new ClienteCorreoDelegante(smtp, graph, sendgrid);
+        ClienteCorreoDelegante delegante = new ClienteCorreoDelegante(smtp, graph, sendgrid, null);
         ConfiguracionCorreoResolvida tenant = configuracion(ProveedorCorreo.GRAPH, "tenant@cliente.com");
         ConfiguracionCorreoResolvida canonica = configuracion(ProveedorCorreo.SENDGRID, "no-reply@refluora.com");
         MensajeCorreoSaliente mensaje = new MensajeCorreoSaliente(
@@ -41,7 +41,7 @@ class ClienteCorreoDeleganteTest {
         ClienteCorreoSmtp smtp = new ClienteCorreoSmtp(new MailProperties());
         ClienteCorreoGraph graph = new ClienteCorreoGraph(RestClient.builder());
         ClienteCorreoSendgridFalso sendgrid = new ClienteCorreoSendgridFalso();
-        ClienteCorreoDelegante delegante = new ClienteCorreoDelegante(smtp, graph, sendgrid);
+        ClienteCorreoDelegante delegante = new ClienteCorreoDelegante(smtp, graph, sendgrid, null);
         ConfiguracionCorreoResolvida canonica = configuracion(ProveedorCorreo.SENDGRID, "no-reply@refluora.com");
         MensajeCorreoSaliente mensaje = new MensajeCorreoSaliente(
                 "cliente@example.com", "Asunto", "Texto", "<p>Texto</p>", "contacto@refluora.com", List.of()

@@ -79,4 +79,16 @@ public class ConfiguracionCorreoEmpresaEntidad {
     @Column(name = "graph_oauth_conectado_en")
     private LocalDateTime graphOauthConectadoEn;
 
+    @Column(name = "gmail_user_id", length = 150)
+    private String gmailUserId;
+
+    @Column(name = "gmail_oauth_refresh_token", columnDefinition = "TEXT")
+    private String gmailOauthRefreshToken;
+
+    @Column(name = "gmail_oauth_scopes", length = 500)
+    private String gmailOauthScopes;
+
+    @Column(name = "gmail_oauth_conectado_en")
+    private LocalDateTime gmailOauthConectadoEn;
+
 }

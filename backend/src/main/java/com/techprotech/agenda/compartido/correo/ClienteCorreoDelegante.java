@@ -11,15 +11,18 @@ public class ClienteCorreoDelegante implements ClienteCorreoSaliente {
     private final ClienteCorreoSmtp clienteCorreoSmtp;
     private final ClienteCorreoGraph clienteCorreoGraph;
     private final ClienteCorreoSendgrid clienteCorreoSendgrid;
+    private final ClienteCorreoGmail clienteCorreoGmail;
 
     public ClienteCorreoDelegante(
             ClienteCorreoSmtp clienteCorreoSmtp,
             ClienteCorreoGraph clienteCorreoGraph,
-            ClienteCorreoSendgrid clienteCorreoSendgrid
+            ClienteCorreoSendgrid clienteCorreoSendgrid,
+            ClienteCorreoGmail clienteCorreoGmail
     ) {
         this.clienteCorreoSmtp = clienteCorreoSmtp;
         this.clienteCorreoGraph = clienteCorreoGraph;
         this.clienteCorreoSendgrid = clienteCorreoSendgrid;
+        this.clienteCorreoGmail = clienteCorreoGmail;
     }
 
     @Override
@@ -29,7 +32,9 @@ public class ClienteCorreoDelegante implements ClienteCorreoSaliente {
             return;
         }
         try {
-            if (configuracion.proveedor() == ProveedorCorreo.GRAPH) {
+            if (configuracion.proveedor() == ProveedorCorreo.GMAIL) {
+                clienteCorreoGmail.enviar(configuracion, mensaje);
+            } else if (configuracion.proveedor() == ProveedorCorreo.GRAPH) {
                 clienteCorreoGraph.enviar(configuracion, mensaje);
             } else {
                 clienteCorreoSmtp.enviar(configuracion, mensaje);

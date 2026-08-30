@@ -6,7 +6,7 @@
         <h3>Tu correo está conectado</h3>
         <p>
           Los mensajes salen con la identidad de este negocio mediante
-          {{ configuracionCorreo()?.proveedor === 'GRAPH' ? 'Microsoft 365' : 'tu servidor de correo' }}.
+          {{ configuracionCorreo()?.proveedor === 'GRAPH' ? 'Microsoft 365' : (configuracionCorreo()?.proveedor === 'GMAIL' ? 'Gmail' : 'tu servidor de correo') }}.
           Si el proveedor presenta una falla, Fluora protege la entrega con su canal canónico.
         </p>
       } @else {
@@ -50,6 +50,10 @@
           <span class="provider-logo microsoft">M</span>
           <span><strong>Microsoft 365</strong><small>Conecta tu cuenta de forma segura con Microsoft</small></span>
         </button>
+        <button class="provider-option" type="button" (click)="seleccionarProveedor('GMAIL')">
+          <span class="provider-logo gmail">G</span>
+          <span><strong>Gmail o Google Workspace</strong><small>Autoriza el envío de forma segura con Google</small></span>
+        </button>
         <button class="provider-option" type="button" (click)="seleccionarProveedor('SMTP')">
           <span class="provider-logo smtp">@</span>
           <span><strong>Otro proveedor</strong><small>Hostinger, Google Workspace u otro servidor SMTP</small></span>
@@ -75,6 +79,7 @@
           <mat-label>Proveedor de envío</mat-label>
           <mat-select name="correoProveedor" [(ngModel)]="formularioCorreo().proveedor">
             <mat-option value="GRAPH">Microsoft Graph</mat-option>
+            <mat-option value="GMAIL">Gmail API</mat-option>
             <mat-option value="SMTP">SMTP</mat-option>
           </mat-select>
         </mat-form-field>

@@ -3,6 +3,7 @@ package com.techprotech.agenda.compartido.correo;
 public enum ProveedorCorreo {
     SMTP,
     GRAPH,
+    GMAIL,
     SENDGRID;
 
     public static ProveedorCorreo desdeValor(String valor, ProveedorCorreo valorPorDefecto) {

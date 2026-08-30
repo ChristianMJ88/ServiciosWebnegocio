@@ -40,6 +40,7 @@ public class ConfiguracionSeguridad {
                         ).permitAll()
                         .requestMatchers("/api/v1/onboarding/**").permitAll()
                         .requestMatchers("/api/v1/admin/correo/oauth/microsoft/callback").permitAll()
+                        .requestMatchers("/api/v1/admin/correo/oauth/google/callback").permitAll()
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(filtroAutenticacionJwt, UsernamePasswordAuthenticationFilter.class);

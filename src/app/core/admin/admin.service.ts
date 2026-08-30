@@ -921,6 +921,10 @@ export class AdminService {
     return this.http.get<{ urlAutorizacion: string }>(`${environment.apiBaseUrl}/admin/correo/oauth/microsoft/iniciar`);
   }
 
+  iniciarOAuthCorreoGoogle(): Observable<{ urlAutorizacion: string }> {
+    return this.http.get<{ urlAutorizacion: string }>(`${environment.apiBaseUrl}/admin/correo/oauth/google/iniciar`);
+  }
+
   getConfiguracionWhatsapp(): Observable<ConfiguracionWhatsappAdmin> {
     return this.http.get<ConfiguracionWhatsappAdmin>(`${environment.apiBaseUrl}/admin/configuracion-whatsapp`);
   }
