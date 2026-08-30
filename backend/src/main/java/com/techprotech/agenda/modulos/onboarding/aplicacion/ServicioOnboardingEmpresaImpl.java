@@ -1,5 +1,7 @@
 package com.techprotech.agenda.modulos.onboarding.aplicacion;
 
+import com.techprotech.agenda.compartido.correo.BienvenidaEmpresaCorreo;
+import com.techprotech.agenda.compartido.correo.ServicioOutboxCorreoBienvenida;
 import com.techprotech.agenda.modulos.autenticacion.aplicacion.ServicioRolesEmpresa;
 import com.techprotech.agenda.modulos.autenticacion.infraestructura.entidad.EmpresaEntidad;
 import com.techprotech.agenda.modulos.autenticacion.infraestructura.entidad.PermisoEntidad;
@@ -50,6 +52,7 @@ public class ServicioOnboardingEmpresaImpl implements ServicioOnboardingEmpresa 
     private final RolEmpresaPermisoRepositorio rolEmpresaPermisoRepositorio;
     private final ServicioRolesEmpresa servicioRolesEmpresa;
     private final PasswordEncoder passwordEncoder;
+    private final ServicioOutboxCorreoBienvenida servicioOutboxCorreoBienvenida;
 
     public ServicioOnboardingEmpresaImpl(
             EmpresaRepositorio empresaRepositorio,
@@ -61,7 +64,8 @@ public class ServicioOnboardingEmpresaImpl implements ServicioOnboardingEmpresa 
             RolEmpresaRepositorio rolEmpresaRepositorio,
             RolEmpresaPermisoRepositorio rolEmpresaPermisoRepositorio,
             ServicioRolesEmpresa servicioRolesEmpresa,
-            PasswordEncoder passwordEncoder
+            PasswordEncoder passwordEncoder,
+            ServicioOutboxCorreoBienvenida servicioOutboxCorreoBienvenida
     ) {
         this.empresaRepositorio = empresaRepositorio;
         this.usuarioRepositorio = usuarioRepositorio;
@@ -73,6 +77,7 @@ public class ServicioOnboardingEmpresaImpl implements ServicioOnboardingEmpresa 
         this.rolEmpresaPermisoRepositorio = rolEmpresaPermisoRepositorio;
         this.servicioRolesEmpresa = servicioRolesEmpresa;
         this.passwordEncoder = passwordEncoder;
+        this.servicioOutboxCorreoBienvenida = servicioOutboxCorreoBienvenida;
     }
 
     @Override
@@ -92,6 +97,13 @@ public class ServicioOnboardingEmpresaImpl implements ServicioOnboardingEmpresa 
         provisionarRolesEmpresa(empresa.getId());
         crearSitioBase(empresa, request, slug);
         crearAdministradorInicial(empresa, correoAdministrador, request);
+        servicioOutboxCorreoBienvenida.programar(new BienvenidaEmpresaCorreo(
+                empresa.getId(),
+                empresa.getNombre(),
+                request.nombreAdministrador().trim(),
+                correoAdministrador,
+                slug
+        ));
 
         return new RegistrarEmpresaResponse(
                 empresa.getId(),

@@ -22,6 +22,7 @@ public class ProcesadorOutboxCorreo {
     private final ServicioCorreoCitas servicioCorreoCitas;
     private final ServicioCorreoEventosCita servicioCorreoEventosCita;
     private final ServicioCorreoContactos servicioCorreoContactos;
+    private final ServicioCorreoBienvenida servicioCorreoBienvenida;
     private final ServicioGestionSolicitudesContacto servicioGestionSolicitudesContacto;
     private final PropiedadesCorreo propiedadesCorreo;
     private final ObjectMapper objectMapper;
@@ -31,6 +32,7 @@ public class ProcesadorOutboxCorreo {
             ServicioCorreoCitas servicioCorreoCitas,
             ServicioCorreoEventosCita servicioCorreoEventosCita,
             ServicioCorreoContactos servicioCorreoContactos,
+            ServicioCorreoBienvenida servicioCorreoBienvenida,
             ServicioGestionSolicitudesContacto servicioGestionSolicitudesContacto,
             PropiedadesCorreo propiedadesCorreo,
             ObjectMapper objectMapper
@@ -39,6 +41,7 @@ public class ProcesadorOutboxCorreo {
         this.servicioCorreoCitas = servicioCorreoCitas;
         this.servicioCorreoEventosCita = servicioCorreoEventosCita;
         this.servicioCorreoContactos = servicioCorreoContactos;
+        this.servicioCorreoBienvenida = servicioCorreoBienvenida;
         this.servicioGestionSolicitudesContacto = servicioGestionSolicitudesContacto;
         this.propiedadesCorreo = propiedadesCorreo;
         this.objectMapper = objectMapper;
@@ -94,6 +97,13 @@ public class ProcesadorOutboxCorreo {
             );
             servicioCorreoContactos.enviarNotificacion(pendiente.getEmpresaId(), notificacion);
             servicioGestionSolicitudesContacto.marcarNotificada(notificacion.solicitudContactoId());
+            return;
+        }
+
+        if ("EMPRESA_BIENVENIDA_EMAIL".equals(pendiente.getTipoEvento())) {
+            BienvenidaEmpresaCorreo bienvenida = objectMapper.readValue(
+                    pendiente.getPayloadJson(), BienvenidaEmpresaCorreo.class);
+            servicioCorreoBienvenida.enviar(bienvenida);
             return;
         }
 
