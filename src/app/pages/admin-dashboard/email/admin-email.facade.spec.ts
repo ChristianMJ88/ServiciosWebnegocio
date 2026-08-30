@@ -8,6 +8,7 @@ import { crearFormularioCorreo } from './admin-email.forms';
 describe('AdminEmailFacade', () => {
   const adminService = {
     actualizarConfiguracionCorreo: vi.fn(),
+    usarCorreoPlataforma: vi.fn(),
     migrarSecretosCorreo: vi.fn(),
     getConfiguracionCorreo: vi.fn()
   };
@@ -40,5 +41,14 @@ describe('AdminEmailFacade', () => {
 
     expect(adminService.getConfiguracionCorreo).toHaveBeenCalledOnce();
     expect(resultado).toEqual({ resultado: { actualizada: true, mensaje: 'Ok' }, configuracion: { habilitado: true } });
+  });
+
+  it('activa el fallback de plataforma sin enviar secretos del tenant', async () => {
+    adminService.usarCorreoPlataforma.mockReturnValue(of({ habilitado: false, proveedor: null }));
+
+    const resultado = await firstValueFrom(facade.usarCorreoPlataforma());
+
+    expect(adminService.usarCorreoPlataforma).toHaveBeenCalledOnce();
+    expect(resultado).toEqual({ habilitado: false, proveedor: null });
   });
 });

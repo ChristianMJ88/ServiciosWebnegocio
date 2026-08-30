@@ -1,3 +1,74 @@
 :host {
   display: block;
 }
+
+.email-onboarding-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 32px;
+  padding: 28px;
+  background: linear-gradient(135deg, rgba(32, 49, 82, 0.98), rgba(40, 79, 119, 0.94));
+  color: #fff;
+  overflow: hidden;
+}
+
+.email-onboarding-copy { max-width: 680px; }
+.email-onboarding-copy h3 { margin: 6px 0 8px; font-size: 1.55rem; }
+.email-onboarding-copy p { margin: 0; color: rgba(255, 255, 255, 0.78); line-height: 1.65; }
+.email-onboarding-card .section-eyebrow { color: #8bdcff; }
+
+.email-onboarding-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 10px;
+  min-width: 320px;
+}
+
+.email-onboarding-actions .mat-mdc-button:not(.mat-mdc-unelevated-button),
+.email-onboarding-actions .mat-mdc-outlined-button { color: #fff; }
+
+.email-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  justify-content: flex-end;
+  color: rgba(255,255,255,.82);
+  font-size: .86rem;
+  font-weight: 700;
+}
+
+.email-status-dot { width: 9px; height: 9px; border-radius: 50%; background: #7ee2a8; box-shadow: 0 0 0 5px rgba(126,226,168,.15); }
+.email-status.is-custom .email-status-dot { background: #8bdcff; box-shadow: 0 0 0 5px rgba(139,220,255,.15); }
+
+.provider-picker { padding: 24px; }
+.provider-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+.provider-option {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 20px;
+  border: 1px solid rgba(26, 64, 96, .14);
+  border-radius: 18px;
+  background: #fff;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: transform .18s ease, border-color .18s ease, box-shadow .18s ease;
+}
+.provider-option:hover { transform: translateY(-2px); border-color: #249aca; box-shadow: 0 12px 28px rgba(24, 63, 92, .1); }
+.provider-option span:last-child { display: grid; gap: 4px; }
+.provider-option small { color: #667a8c; line-height: 1.45; }
+.provider-logo { display: grid; place-items: center; width: 48px; height: 48px; border-radius: 14px; font-size: 1.25rem; font-weight: 800; flex: 0 0 auto; }
+.provider-logo.microsoft { background: #eef4ff; color: #2563eb; }
+.provider-logo.smtp { background: #eefaf8; color: #087f6b; }
+
+@media (max-width: 900px) {
+  .email-onboarding-card { align-items: flex-start; flex-direction: column; }
+  .email-onboarding-actions { justify-content: flex-start; min-width: 0; width: 100%; }
+  .email-status { justify-content: flex-start; }
+  .provider-grid { grid-template-columns: 1fr; }
+}

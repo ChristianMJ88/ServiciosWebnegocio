@@ -907,6 +907,10 @@ export class AdminService {
     return this.http.patch<ConfiguracionCorreoAdmin>(`${environment.apiBaseUrl}/admin/configuracion-correo`, payload);
   }
 
+  usarCorreoPlataforma(): Observable<ConfiguracionCorreoAdmin> {
+    return this.http.delete<ConfiguracionCorreoAdmin>(`${environment.apiBaseUrl}/admin/configuracion-correo`);
+  }
+
   migrarSecretosCorreo(): Observable<MigracionSecretosCorreoResponse> {
     return this.http.post<MigracionSecretosCorreoResponse>(`${environment.apiBaseUrl}/admin/configuracion-correo/migrar-secretos`, {});
   }

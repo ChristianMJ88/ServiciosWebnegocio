@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, input, output } from '@angular/core';
+import { Component, input, output, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
@@ -43,4 +43,23 @@ export class AdminEmailSectionComponent {
 
   readonly save = output<void>();
   readonly migrateSecrets = output<void>();
+  readonly usePlatform = output<void>();
+
+  readonly mostrandoOpciones = signal(false);
+  readonly mostrarAvanzado = signal(false);
+
+  iniciarConexion(): void {
+    this.mostrandoOpciones.set(true);
+  }
+
+  seleccionarProveedor(proveedor: 'GRAPH' | 'SMTP'): void {
+    this.formularioCorreo().proveedor = proveedor;
+    this.formularioCorreo().habilitado = true;
+    this.mostrandoOpciones.set(false);
+    this.mostrarAvanzado.set(true);
+  }
+
+  alternarAvanzado(): void {
+    this.mostrarAvanzado.update(valor => !valor);
+  }
 }

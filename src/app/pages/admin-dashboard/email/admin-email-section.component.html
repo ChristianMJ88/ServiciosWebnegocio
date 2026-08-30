@@ -1,5 +1,65 @@
 <section class="section-stack">
+  <mat-card class="workspace-card email-onboarding-card">
+    <div class="email-onboarding-copy">
+      <div class="section-eyebrow">Correo de confirmaciones</div>
+      @if (configuracionCorreo()?.proveedor && configuracionCorreo()?.habilitado) {
+        <h3>Tu correo está conectado</h3>
+        <p>
+          Los mensajes salen con la identidad de este negocio mediante
+          {{ configuracionCorreo()?.proveedor === 'GRAPH' ? 'Microsoft' : 'tu servidor de correo' }}.
+          Si el proveedor presenta una falla, Fluora protege la entrega con su canal canónico.
+        </p>
+      } @else {
+        <h3>Fluora administra tus confirmaciones</h3>
+        <p>
+          El negocio ya puede enviar confirmaciones con el canal seguro de Fluora. Puedes conectar
+          un correo propio cuando quieras para personalizar el remitente.
+        </p>
+      }
+    </div>
+    <div class="email-onboarding-actions">
+      <span class="email-status" [class.is-custom]="!!configuracionCorreo()?.proveedor && !!configuracionCorreo()?.habilitado">
+        <span class="email-status-dot"></span>
+        {{ configuracionCorreo()?.proveedor && configuracionCorreo()?.habilitado ? 'Correo propio activo' : 'Correo Fluora activo' }}
+      </span>
+      <button mat-flat-button color="primary" type="button" (click)="iniciarConexion()">
+        {{ configuracionCorreo()?.proveedor ? 'Cambiar correo' : 'Agregar correo' }}
+      </button>
+      @if (configuracionCorreo()?.proveedor) {
+        <button mat-stroked-button type="button" (click)="usePlatform.emit()" [disabled]="guardandoCorreo()">
+          Usar correo de Fluora
+        </button>
+      }
+      <button mat-button type="button" (click)="alternarAvanzado()">
+        {{ mostrarAvanzado() ? 'Ocultar configuración avanzada' : 'Configuración avanzada' }}
+      </button>
+    </div>
+  </mat-card>
+
+  @if (mostrandoOpciones()) {
+    <mat-card class="workspace-card provider-picker">
+      <div class="section-header">
+        <div>
+          <div class="section-eyebrow">Agregar correo</div>
+          <h3>¿Desde dónde quieres enviar?</h3>
+          <p class="helper-text mb-0">La configuración se guarda sólo para este negocio.</p>
+        </div>
+      </div>
+      <div class="provider-grid">
+        <button class="provider-option" type="button" (click)="seleccionarProveedor('GRAPH')">
+          <span class="provider-logo microsoft">M</span>
+          <span><strong>Microsoft 365</strong><small>Correo empresarial mediante Microsoft Graph</small></span>
+        </button>
+        <button class="provider-option" type="button" (click)="seleccionarProveedor('SMTP')">
+          <span class="provider-logo smtp">@</span>
+          <span><strong>Otro proveedor</strong><small>Hostinger, Google Workspace u otro servidor SMTP</small></span>
+        </button>
+      </div>
+    </mat-card>
+  }
+
   <div class="workspace-grid two-columns">
+    @if (mostrarAvanzado()) {
     <mat-card class="workspace-card form-card">
       <div class="section-header">
         <div>
@@ -119,6 +179,7 @@
         </div>
       </form>
     </mat-card>
+    }
 
     <mat-card class="workspace-card list-card">
       <div class="section-header">

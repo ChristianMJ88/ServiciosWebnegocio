@@ -1119,6 +1119,24 @@ export class AdminDashboardComponent implements OnInit {
       });
   }
 
+  usarCorreoPlataforma() {
+    this.guardandoCorreo = true;
+    this.error = '';
+    this.mensajeExito = '';
+    this.emailFacade.usarCorreoPlataforma()
+      .pipe(finalize(() => this.guardandoCorreo = false))
+      .subscribe({
+        next: response => {
+          this.configuracionCorreo.set(response);
+          this.sincronizarFormularioCorreo(response);
+          this.mensajeExito = 'Fluora administrará el envío de confirmaciones de este negocio.';
+        },
+        error: err => {
+          this.error = err?.error?.mensaje || err?.message || 'No se pudo activar el correo administrado por Fluora.';
+        }
+      });
+  }
+
   migrarSecretosCorreo() {
     this.migrandoSecretosCorreo = true;
     this.error = '';

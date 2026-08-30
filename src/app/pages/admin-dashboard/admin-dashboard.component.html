@@ -259,6 +259,7 @@
         [auditoriaCorreo]="auditoriaCorreo()"
         [etiquetaAccionAuditoriaConfiguracion]="etiquetaAccionAuditoriaConfiguracion.bind(this)"
         (save)="guardarConfiguracionCorreo()"
+        (usePlatform)="usarCorreoPlataforma()"
         (migrateSecrets)="migrarSecretosCorreo()" />
       } @placeholder {
       <section class="section-stack">

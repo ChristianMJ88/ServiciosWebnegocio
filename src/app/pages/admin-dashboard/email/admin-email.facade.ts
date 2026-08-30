@@ -11,6 +11,10 @@ export class AdminEmailFacade {
     return this.adminService.actualizarConfiguracionCorreo(construirPayloadCorreo(formulario));
   }
 
+  usarCorreoPlataforma() {
+    return this.adminService.usarCorreoPlataforma();
+  }
+
   migrarSecretosYRecargar() {
     return this.adminService.migrarSecretosCorreo().pipe(
       switchMap(resultado => this.adminService.getConfiguracionCorreo().pipe(

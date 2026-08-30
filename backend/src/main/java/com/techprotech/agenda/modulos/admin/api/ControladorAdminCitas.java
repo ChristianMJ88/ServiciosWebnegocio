@@ -253,6 +253,14 @@ public class ControladorAdminCitas {
         return servicioAdminCitas.actualizarConfiguracionCorreo(usuario.empresaId(), usuario.usuarioId(), request);
     }
 
+    @DeleteMapping("/configuracion-correo")
+    @PreAuthorize("hasAuthority('CONFIGURACION_EMPRESA_GESTIONAR')")
+    public ConfiguracionCorreoAdminResponse usarCorreoPlataforma(
+            @AuthenticationPrincipal UsuarioAutenticado usuario
+    ) {
+        return servicioAdminCitas.usarCorreoPlataforma(usuario.empresaId(), usuario.usuarioId());
+    }
+
     @PostMapping("/configuracion-correo/migrar-secretos")
     @PreAuthorize("hasAuthority('CONFIGURACION_EMPRESA_GESTIONAR')")
     public MigracionSecretosCorreoResponse migrarSecretosCorreo(@AuthenticationPrincipal UsuarioAutenticado usuario) {

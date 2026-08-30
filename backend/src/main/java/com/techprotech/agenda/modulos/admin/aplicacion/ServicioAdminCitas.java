@@ -607,6 +607,28 @@ public class ServicioAdminCitas {
     }
 
     @Transactional
+    public ConfiguracionCorreoAdminResponse usarCorreoPlataforma(Long empresaId, Long usuarioActorId) {
+        configuracionCorreoEmpresaRepositorio.findById(empresaId).ifPresent(configuracion -> {
+            String snapshotAntes = snapshotConfiguracionCorreo(configuracion);
+            configuracionCorreoEmpresaRepositorio.delete(configuracion);
+            registrarAuditoriaConfiguracion(
+                    empresaId,
+                    usuarioActorId,
+                    "CORREO",
+                    "CORREO_PLATAFORMA_ACTIVADO",
+                    "Se activó el correo canónico administrado por Fluora",
+                    snapshotAntes,
+                    null
+            );
+        });
+
+        ConfiguracionCorreoEmpresaEntidad fallback = new ConfiguracionCorreoEmpresaEntidad();
+        fallback.setEmpresaId(empresaId);
+        fallback.setHabilitado(false);
+        return mapearConfiguracionCorreo(fallback);
+    }
+
+    @Transactional
     public MigracionSecretosCorreoResponse migrarSecretosCorreo(Long empresaId, Long usuarioActorId) {
         ConfiguracionCorreoEmpresaEntidad configuracion = configuracionCorreoEmpresaRepositorio.findById(empresaId)
                 .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "No existe configuracion de correo para la empresa"));
