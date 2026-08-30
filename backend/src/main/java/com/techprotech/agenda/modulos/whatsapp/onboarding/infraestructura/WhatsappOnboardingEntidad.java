@@ -15,7 +15,7 @@ import java.time.LocalDateTime;
 @Table(name = "whatsapp_onboarding")
 public class WhatsappOnboardingEntidad {
     @Id
-    @Column(length = 36)
+    @Column(columnDefinition = "CHAR(36)")
     private String id;
 
     @Column(name = "empresa_id", nullable = false, unique = true)
