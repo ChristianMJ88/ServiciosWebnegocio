@@ -7,6 +7,7 @@ import org.springframework.boot.autoconfigure.mail.MailProperties;
 import java.lang.reflect.Proxy;
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
+import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
@@ -57,6 +58,27 @@ class ServicioOutboxCorreoCitasTest {
 
         assertFalse(programado);
         assertTrue(guardados.isEmpty());
+    }
+
+    @Test
+    void programaEventoMultitenantDeCitaConPayloadMinimo() {
+        List<BandejaSalidaNotificacionEntidad> guardados = new ArrayList<>();
+        ServicioOutboxCorreoCitas servicio = new ServicioOutboxCorreoCitas(
+                crearRepositorioOutbox(guardados),
+                new ServicioConfiguracionCorreoEmpresa(
+                        crearRepositorioConfiguracion(crearConfigEmpresaActiva()),
+                        new PropiedadesCorreo(true, "SMTP", "fallback@agenda.local", "Agenda", null, null, null, null, null, null, null, "llave-prueba", 20, 60),
+                        crearMailProperties(),
+                        new ProtectorSecretosCorreo(new PropiedadesCorreo(true, "SMTP", "fallback@agenda.local", "Agenda", null, null, null, null, null, null, null, "llave-prueba", 20, 60))
+                ),
+                new ObjectMapper().findAndRegisterModules()
+        );
+
+        boolean programado = servicio.programarRegistrada(1L, 45L, LocalDateTime.parse("2026-03-25T10:00:00"));
+
+        assertTrue(programado);
+        assertEquals("CITA_REGISTRADA_EMAIL", guardados.getFirst().getTipoEvento());
+        assertTrue(guardados.getFirst().getPayloadJson().contains("\"citaId\":45"));
     }
 
     private ConfirmacionCitaCorreo crearConfirmacion() {
@@ -112,6 +134,7 @@ class ServicioOutboxCorreoCitasTest {
                         yield entidad;
                     }
                     case "reclamarPendientesEmail" -> List.of();
+                    case "existsByAgregadoIdAndCanalAndTipoEventoAndEstadoIn" -> false;
                     case "toString" -> "RepositorioOutboxStub";
                     case "hashCode" -> System.identityHashCode(proxy);
                     case "equals" -> proxy == args[0];

@@ -1,6 +1,5 @@
 package com.techprotech.agenda.modulos.citas.aplicacion;
 
-import com.techprotech.agenda.compartido.correo.ConfirmacionCitaCorreo;
 import com.techprotech.agenda.compartido.correo.ServicioCorreoCitas;
 import com.techprotech.agenda.compartido.correo.ServicioOutboxCorreoCitas;
 import com.techprotech.agenda.compartido.whatsapp.ServicioOutboxWhatsappCitas;
@@ -186,24 +185,8 @@ public class ServicioCitas {
 
         OffsetDateTime inicioRespuesta = cita.getInicio().atZone(zona).toOffsetDateTime();
         OffsetDateTime finRespuesta = cita.getFin().atZone(zona).toOffsetDateTime();
-        boolean correoConfirmacionProgramado = servicioOutboxCorreoCitas.programarConfirmacion(
-                empresaId,
-                new ConfirmacionCitaCorreo(
-                    cita.getId(),
-                    empresa.getNombre(),
-                    request.nombreCliente().trim(),
-                    request.correoCliente().trim().toLowerCase(),
-                    servicio.getNombre(),
-                    sucursal.getNombre(),
-                    sucursal.getDireccion(),
-                    sucursal.getTelefono(),
-                    inicioRespuesta,
-                    finRespuesta,
-                    zona,
-                    cita.getPrecio(),
-                    cita.getMoneda()
-                )
-        );
+        boolean correoConfirmacionProgramado = servicioOutboxCorreoCitas.programarRegistrada(
+                empresaId, cita.getId(), cita.getInicio());
         if (programarWhatsappConfirmacion) {
             servicioOutboxWhatsappCitas.programarConfirmacion(
                     empresaId,
@@ -324,24 +307,8 @@ public class ServicioCitas {
 
             OffsetDateTime inicioRespuesta = cita.getInicio().atZone(zona).toOffsetDateTime();
             OffsetDateTime finRespuesta = cita.getFin().atZone(zona).toOffsetDateTime();
-            boolean correoConfirmacionProgramado = servicioOutboxCorreoCitas.programarConfirmacion(
-                    empresaId,
-                    new ConfirmacionCitaCorreo(
-                            cita.getId(),
-                            empresa.getNombre(),
-                            request.nombreCliente().trim(),
-                            request.correoCliente().trim().toLowerCase(),
-                            servicio.getNombre(),
-                            sucursal.getNombre(),
-                            sucursal.getDireccion(),
-                            sucursal.getTelefono(),
-                            inicioRespuesta,
-                            finRespuesta,
-                            zona,
-                            cita.getPrecio(),
-                            cita.getMoneda()
-                    )
-            );
+            boolean correoConfirmacionProgramado = servicioOutboxCorreoCitas.programarRegistrada(
+                    empresaId, cita.getId(), cita.getInicio());
 
             citas.add(new CitaCreadaResponse(
                     cita.getId(),

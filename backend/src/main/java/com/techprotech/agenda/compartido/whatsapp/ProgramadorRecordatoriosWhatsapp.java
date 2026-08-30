@@ -1,8 +1,11 @@
 package com.techprotech.agenda.compartido.whatsapp;
 
 import com.techprotech.agenda.compartido.correo.BandejaSalidaNotificacionRepositorio;
+import com.techprotech.agenda.compartido.correo.ServicioOutboxCorreoCitas;
+import com.techprotech.agenda.modulos.autenticacion.infraestructura.entidad.EmpresaEntidad;
 import com.techprotech.agenda.modulos.autenticacion.infraestructura.entidad.ClienteEntidad;
 import com.techprotech.agenda.modulos.autenticacion.infraestructura.repositorio.ClienteRepositorio;
+import com.techprotech.agenda.modulos.autenticacion.infraestructura.repositorio.EmpresaRepositorio;
 import com.techprotech.agenda.modulos.citas.infraestructura.entidad.CitaEntidad;
 import com.techprotech.agenda.modulos.citas.infraestructura.entidad.HistorialEstadoCitaEntidad;
 import com.techprotech.agenda.modulos.citas.infraestructura.repositorio.CitaRepositorio;
@@ -27,6 +30,8 @@ public class ProgramadorRecordatoriosWhatsapp {
     private final PropiedadesWhatsapp propiedadesWhatsapp;
     private final HistorialEstadoCitaRepositorio historialEstadoCitaRepositorio;
     private final ConfiguracionWhatsappEmpresaRepositorio configuracionWhatsappEmpresaRepositorio;
+    private final ServicioOutboxCorreoCitas servicioOutboxCorreoCitas;
+    private final EmpresaRepositorio empresaRepositorio;
 
     public ProgramadorRecordatoriosWhatsapp(
             CitaRepositorio citaRepositorio,
@@ -35,7 +40,9 @@ public class ProgramadorRecordatoriosWhatsapp {
             ServicioOutboxWhatsappCitas servicioOutboxWhatsappCitas,
             PropiedadesWhatsapp propiedadesWhatsapp,
             HistorialEstadoCitaRepositorio historialEstadoCitaRepositorio,
-            ConfiguracionWhatsappEmpresaRepositorio configuracionWhatsappEmpresaRepositorio
+            ConfiguracionWhatsappEmpresaRepositorio configuracionWhatsappEmpresaRepositorio,
+            ServicioOutboxCorreoCitas servicioOutboxCorreoCitas,
+            EmpresaRepositorio empresaRepositorio
     ) {
         this.citaRepositorio = citaRepositorio;
         this.clienteRepositorio = clienteRepositorio;
@@ -44,6 +51,8 @@ public class ProgramadorRecordatoriosWhatsapp {
         this.propiedadesWhatsapp = propiedadesWhatsapp;
         this.historialEstadoCitaRepositorio = historialEstadoCitaRepositorio;
         this.configuracionWhatsappEmpresaRepositorio = configuracionWhatsappEmpresaRepositorio;
+        this.servicioOutboxCorreoCitas = servicioOutboxCorreoCitas;
+        this.empresaRepositorio = empresaRepositorio;
     }
 
     @Scheduled(
@@ -51,15 +60,11 @@ public class ProgramadorRecordatoriosWhatsapp {
             initialDelayString = "${aplicacion.whatsapp.recordatorios.initial-delay-ms:30000}"
     )
     public void programarPendientes() {
-        if (!propiedadesWhatsapp.habilitado()) {
-            return;
-        }
-
-        for (ConfiguracionWhatsappEmpresaEntidad configuracion : configuracionWhatsappEmpresaRepositorio.findByHabilitadoTrueOrderByEmpresaIdAsc()) {
+        for (EmpresaEntidad empresa : empresaRepositorio.findAll()) {
             try {
-                programarPendientes(configuracion.getEmpresaId());
+                programarPendientes(empresa.getId());
             } catch (Exception ex) {
-                LOGGER.error("No se pudieron programar recordatorios de WhatsApp para la empresa {}", configuracion.getEmpresaId(), ex);
+                LOGGER.error("No se pudieron programar recordatorios para la empresa {}", empresa.getId(), ex);
             }
         }
     }
@@ -77,6 +82,15 @@ public class ProgramadorRecordatoriosWhatsapp {
         );
 
         for (CitaEntidad cita : citas) {
+            if ("PENDIENTE".equals(cita.getEstado())) {
+                servicioOutboxCorreoCitas.programarRecordatorioConfirmacion(empresaId, cita.getId(), cita.getInicio());
+            } else {
+                servicioOutboxCorreoCitas.programarRecordatorio(empresaId, cita.getId(), cita.getInicio());
+            }
+
+            if (!whatsappHabilitado(empresaId)) {
+                continue;
+            }
             String tipoEvento = "PENDIENTE".equals(cita.getEstado())
                     ? "CITA_RECORDATORIO_CONFIRMACION_WHATSAPP"
                     : "CITA_RECORDATORIO_WHATSAPP";
@@ -120,15 +134,11 @@ public class ProgramadorRecordatoriosWhatsapp {
             initialDelayString = "${aplicacion.whatsapp.recordatorios.initial-delay-ms:45000}"
     )
     public void liberarPendientesSinConfirmacion() {
-        if (!propiedadesWhatsapp.habilitado()) {
-            return;
-        }
-
-        for (ConfiguracionWhatsappEmpresaEntidad configuracion : configuracionWhatsappEmpresaRepositorio.findByHabilitadoTrueOrderByEmpresaIdAsc()) {
+        for (EmpresaEntidad empresa : empresaRepositorio.findAll()) {
             try {
-                liberarPendientesSinConfirmacion(configuracion.getEmpresaId());
+                liberarPendientesSinConfirmacion(empresa.getId());
             } catch (Exception ex) {
-                LOGGER.error("No se pudieron liberar citas sin confirmacion para la empresa {}", configuracion.getEmpresaId(), ex);
+                LOGGER.error("No se pudieron liberar citas sin confirmacion para la empresa {}", empresa.getId(), ex);
             }
         }
     }
@@ -155,6 +165,13 @@ public class ProgramadorRecordatoriosWhatsapp {
             historial.setMotivo("Liberada automaticamente por falta de confirmacion");
             historialEstadoCitaRepositorio.save(historial);
 
+            servicioOutboxCorreoCitas.programarLiberadaSinConfirmacion(
+                    empresaId, cita.getId(), cita.getInicio());
+
+            if (!whatsappHabilitado(empresaId)) {
+                continue;
+            }
+
             ClienteEntidad cliente = clienteRepositorio.findById(cita.getClienteId()).orElse(null);
             if (cliente == null || !cliente.isAceptaWhatsapp() || cliente.getTelefono() == null || cliente.getTelefono().isBlank()) {
                 continue;
@@ -167,5 +184,12 @@ public class ProgramadorRecordatoriosWhatsapp {
                     cita.getInicio()
             );
         }
+    }
+
+    private boolean whatsappHabilitado(Long empresaId) {
+        return propiedadesWhatsapp.habilitado()
+                && configuracionWhatsappEmpresaRepositorio.findById(empresaId)
+                .map(ConfiguracionWhatsappEmpresaEntidad::isHabilitado)
+                .orElse(false);
     }
 }

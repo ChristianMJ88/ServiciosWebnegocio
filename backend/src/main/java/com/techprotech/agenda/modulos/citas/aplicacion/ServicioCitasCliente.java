@@ -1,5 +1,6 @@
 package com.techprotech.agenda.modulos.citas.aplicacion;
 
+import com.techprotech.agenda.compartido.correo.ServicioOutboxCorreoCitas;
 import com.techprotech.agenda.compartido.whatsapp.ServicioOutboxWhatsappCitas;
 import com.techprotech.agenda.modulos.citas.api.dto.CitaClienteResponse;
 import com.techprotech.agenda.modulos.autenticacion.infraestructura.entidad.ClienteEntidad;
@@ -41,6 +42,7 @@ public class ServicioCitasCliente {
     private final ClienteRepositorio clienteRepositorio;
     private final UsuarioRepositorio usuarioRepositorio;
     private final ServicioOutboxWhatsappCitas servicioOutboxWhatsappCitas;
+    private final ServicioOutboxCorreoCitas servicioOutboxCorreoCitas;
 
     public ServicioCitasCliente(
             CitaRepositorio citaRepositorio,
@@ -51,7 +53,8 @@ public class ServicioCitasCliente {
             ServicioConsultaDisponibilidad servicioConsultaDisponibilidad,
             ClienteRepositorio clienteRepositorio,
             UsuarioRepositorio usuarioRepositorio,
-            ServicioOutboxWhatsappCitas servicioOutboxWhatsappCitas
+            ServicioOutboxWhatsappCitas servicioOutboxWhatsappCitas,
+            ServicioOutboxCorreoCitas servicioOutboxCorreoCitas
     ) {
         this.citaRepositorio = citaRepositorio;
         this.historialEstadoCitaRepositorio = historialEstadoCitaRepositorio;
@@ -62,6 +65,7 @@ public class ServicioCitasCliente {
         this.clienteRepositorio = clienteRepositorio;
         this.usuarioRepositorio = usuarioRepositorio;
         this.servicioOutboxWhatsappCitas = servicioOutboxWhatsappCitas;
+        this.servicioOutboxCorreoCitas = servicioOutboxCorreoCitas;
     }
 
     @Transactional(readOnly = true)
@@ -100,6 +104,8 @@ public class ServicioCitasCliente {
         historial.setCambiadoPorUsuarioId(clienteId);
         historial.setMotivo("Confirmacion realizada por el cliente");
         historialEstadoCitaRepositorio.save(historial);
+
+        servicioOutboxCorreoCitas.programarConfirmada(empresaId, cita.getId(), cita.getInicio());
 
         ClienteEntidad cliente = clienteRepositorio.findById(clienteId).orElse(null);
         if (programarWhatsappConfirmacion && cliente != null && cliente.isAceptaWhatsapp() && cliente.getTelefono() != null && !cliente.getTelefono().isBlank()) {
@@ -140,6 +146,7 @@ public class ServicioCitasCliente {
         historial.setCambiadoPorUsuarioId(clienteId);
         historial.setMotivo("Cancelacion realizada por el cliente");
         historialEstadoCitaRepositorio.save(historial);
+        servicioOutboxCorreoCitas.programarCanceladaCliente(empresaId, cita.getId(), cita.getInicio());
     }
 
     @Transactional
@@ -187,6 +194,8 @@ public class ServicioCitasCliente {
         historial.setCambiadoPorUsuarioId(clienteId);
         historial.setMotivo("Reprogramacion realizada por el cliente");
         historialEstadoCitaRepositorio.save(historial);
+
+        servicioOutboxCorreoCitas.programarReprogramada(empresaId, cita.getId(), cita.getInicio());
 
         ClienteEntidad cliente = clienteRepositorio.findById(clienteId).orElse(null);
         if (cliente != null && cliente.isAceptaWhatsapp() && cliente.getTelefono() != null && !cliente.getTelefono().isBlank()) {

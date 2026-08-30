@@ -15,6 +15,7 @@ import com.techprotech.agenda.compartido.whatsapp.PlantillaWhatsappEmpresaReposi
 import com.techprotech.agenda.compartido.whatsapp.ResultadoEnvioWhatsapp;
 import com.techprotech.agenda.compartido.whatsapp.ServicioConfiguracionWhatsappEmpresa;
 import com.techprotech.agenda.compartido.whatsapp.ServicioOutboxWhatsappCitas;
+import com.techprotech.agenda.compartido.correo.ServicioOutboxCorreoCitas;
 import com.techprotech.agenda.modulos.admin.api.dto.ConfiguracionCorreoAdminRequest;
 import com.techprotech.agenda.modulos.admin.api.dto.ConfiguracionCorreoAdminResponse;
 import com.techprotech.agenda.modulos.admin.api.dto.ConfiguracionSitioAdminRequest;
@@ -273,6 +274,7 @@ public class ServicioAdminCitas {
     private final ServicioConfiguracionWhatsappEmpresa servicioConfiguracionWhatsappEmpresa;
     private final ClienteWhatsappTwilio clienteWhatsappTwilio;
     private final ServicioOutboxWhatsappCitas servicioOutboxWhatsappCitas;
+    private final ServicioOutboxCorreoCitas servicioOutboxCorreoCitas;
     private final BandejaSalidaNotificacionRepositorio bandejaSalidaNotificacionRepositorio;
     private final MensajeWhatsappRepositorio mensajeWhatsappRepositorio;
     private final AuditoriaConfiguracionEmpresaRepositorio auditoriaConfiguracionEmpresaRepositorio;
@@ -309,6 +311,7 @@ public class ServicioAdminCitas {
             ServicioConfiguracionWhatsappEmpresa servicioConfiguracionWhatsappEmpresa,
             ClienteWhatsappTwilio clienteWhatsappTwilio,
             ServicioOutboxWhatsappCitas servicioOutboxWhatsappCitas,
+            ServicioOutboxCorreoCitas servicioOutboxCorreoCitas,
             BandejaSalidaNotificacionRepositorio bandejaSalidaNotificacionRepositorio,
             MensajeWhatsappRepositorio mensajeWhatsappRepositorio,
             AuditoriaConfiguracionEmpresaRepositorio auditoriaConfiguracionEmpresaRepositorio,
@@ -344,6 +347,7 @@ public class ServicioAdminCitas {
         this.servicioConfiguracionWhatsappEmpresa = servicioConfiguracionWhatsappEmpresa;
         this.clienteWhatsappTwilio = clienteWhatsappTwilio;
         this.servicioOutboxWhatsappCitas = servicioOutboxWhatsappCitas;
+        this.servicioOutboxCorreoCitas = servicioOutboxCorreoCitas;
         this.bandejaSalidaNotificacionRepositorio = bandejaSalidaNotificacionRepositorio;
         this.mensajeWhatsappRepositorio = mensajeWhatsappRepositorio;
         this.auditoriaConfiguracionEmpresaRepositorio = auditoriaConfiguracionEmpresaRepositorio;
@@ -1285,6 +1289,20 @@ public class ServicioAdminCitas {
         historial.setCambiadoPorUsuarioId(usuarioAdminId);
         historial.setMotivo("Cambio de estado realizado por administracion");
         historialEstadoCitaRepositorio.save(historial);
+
+        if (!nuevoEstado.equals(estadoAnterior)) {
+            switch (nuevoEstado) {
+                case "CONFIRMADA" -> servicioOutboxCorreoCitas.programarConfirmada(
+                        empresaId, cita.getId(), cita.getInicio());
+                case "CANCELADA" -> servicioOutboxCorreoCitas.programarCanceladaNegocio(
+                        empresaId, cita.getId(), cita.getInicio());
+                case "FINALIZADA" -> servicioOutboxCorreoCitas.programarGraciasVisita(
+                        empresaId, cita.getId(), cita.getInicio());
+                case "NO_ASISTIO" -> servicioOutboxCorreoCitas.programarNoAsistio(
+                        empresaId, cita.getId(), cita.getInicio());
+                default -> { }
+            }
+        }
 
         if ("CANCELADA".equals(nuevoEstado) && !"CANCELADA".equals(estadoAnterior)) {
             clienteRepositorio.findById(cita.getClienteId())

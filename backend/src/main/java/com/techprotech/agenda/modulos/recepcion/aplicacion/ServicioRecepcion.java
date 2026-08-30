@@ -1,5 +1,6 @@
 package com.techprotech.agenda.modulos.recepcion.aplicacion;
 
+import com.techprotech.agenda.compartido.correo.ServicioOutboxCorreoCitas;
 import com.techprotech.agenda.compartido.whatsapp.ClienteWhatsappTwilio;
 import com.techprotech.agenda.compartido.whatsapp.ServicioConfiguracionWhatsappEmpresa;
 import com.techprotech.agenda.compartido.whatsapp.ServicioOutboxWhatsappCitas;
@@ -78,6 +79,7 @@ public class ServicioRecepcion {
     private final ServicioCitas servicioCitas;
     private final ServicioCitasCliente servicioCitasCliente;
     private final ServicioOutboxWhatsappCitas servicioOutboxWhatsappCitas;
+    private final ServicioOutboxCorreoCitas servicioOutboxCorreoCitas;
     private final ServicioConsultaDisponibilidad servicioConsultaDisponibilidad;
     private final SolicitudEsperaRecepcionRepositorio solicitudEsperaRecepcionRepositorio;
     private final ClienteWhatsappTwilio clienteWhatsappTwilio;
@@ -95,6 +97,7 @@ public class ServicioRecepcion {
             ServicioCitas servicioCitas,
             ServicioCitasCliente servicioCitasCliente,
             ServicioOutboxWhatsappCitas servicioOutboxWhatsappCitas,
+            ServicioOutboxCorreoCitas servicioOutboxCorreoCitas,
             ServicioConsultaDisponibilidad servicioConsultaDisponibilidad,
             SolicitudEsperaRecepcionRepositorio solicitudEsperaRecepcionRepositorio,
             ClienteWhatsappTwilio clienteWhatsappTwilio,
@@ -111,6 +114,7 @@ public class ServicioRecepcion {
         this.servicioCitas = servicioCitas;
         this.servicioCitasCliente = servicioCitasCliente;
         this.servicioOutboxWhatsappCitas = servicioOutboxWhatsappCitas;
+        this.servicioOutboxCorreoCitas = servicioOutboxCorreoCitas;
         this.servicioConsultaDisponibilidad = servicioConsultaDisponibilidad;
         this.solicitudEsperaRecepcionRepositorio = solicitudEsperaRecepcionRepositorio;
         this.clienteWhatsappTwilio = clienteWhatsappTwilio;
@@ -458,6 +462,7 @@ public class ServicioRecepcion {
             String estadoAnterior = cita.getEstado();
             cita.setEstado("CONFIRMADA");
             guardarHistorial(cita.getId(), estadoAnterior, "CONFIRMADA", usuarioId, "Check-in en recepción");
+            servicioOutboxCorreoCitas.programarConfirmada(empresaId, cita.getId(), cita.getInicio());
         }
         return mapearCita(citaRepositorio.save(cita));
     }
@@ -473,6 +478,7 @@ public class ServicioRecepcion {
         cita.setEstado("CONFIRMADA");
         citaRepositorio.save(cita);
         guardarHistorial(cita.getId(), estadoAnterior, "CONFIRMADA", usuarioId, "Confirmación desde recepción");
+        servicioOutboxCorreoCitas.programarConfirmada(empresaId, cita.getId(), cita.getInicio());
         return mapearCita(cita);
     }
 
@@ -487,6 +493,7 @@ public class ServicioRecepcion {
         cita.setEstado("FINALIZADA");
         citaRepositorio.save(cita);
         guardarHistorial(cita.getId(), estadoAnterior, "FINALIZADA", usuarioId, "Cierre desde recepción");
+        servicioOutboxCorreoCitas.programarGraciasVisita(empresaId, cita.getId(), cita.getInicio());
         clienteRepositorio.findById(cita.getClienteId())
                 .filter(cliente -> cliente.isAceptaWhatsapp() && cliente.getTelefono() != null && !cliente.getTelefono().isBlank())
                 .ifPresent(cliente -> servicioOutboxWhatsappCitas.programarGraciasVisita(
@@ -511,6 +518,7 @@ public class ServicioRecepcion {
         cita.setMotivoCancelacion("Cancelada desde recepción");
         citaRepositorio.save(cita);
         guardarHistorial(cita.getId(), estadoAnterior, "CANCELADA", usuarioId, "Cancelación desde recepción");
+        servicioOutboxCorreoCitas.programarCanceladaNegocio(empresaId, cita.getId(), cita.getInicio());
         clienteRepositorio.findById(cita.getClienteId())
                 .filter(cliente -> cliente.isAceptaWhatsapp() && cliente.getTelefono() != null && !cliente.getTelefono().isBlank())
                 .ifPresent(cliente -> servicioOutboxWhatsappCitas.programarCancelacionNegocio(

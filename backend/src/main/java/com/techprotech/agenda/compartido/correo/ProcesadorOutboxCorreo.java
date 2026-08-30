@@ -20,6 +20,7 @@ public class ProcesadorOutboxCorreo {
 
     private final BandejaSalidaNotificacionRepositorio bandejaSalidaNotificacionRepositorio;
     private final ServicioCorreoCitas servicioCorreoCitas;
+    private final ServicioCorreoEventosCita servicioCorreoEventosCita;
     private final ServicioCorreoContactos servicioCorreoContactos;
     private final ServicioGestionSolicitudesContacto servicioGestionSolicitudesContacto;
     private final PropiedadesCorreo propiedadesCorreo;
@@ -28,6 +29,7 @@ public class ProcesadorOutboxCorreo {
     public ProcesadorOutboxCorreo(
             BandejaSalidaNotificacionRepositorio bandejaSalidaNotificacionRepositorio,
             ServicioCorreoCitas servicioCorreoCitas,
+            ServicioCorreoEventosCita servicioCorreoEventosCita,
             ServicioCorreoContactos servicioCorreoContactos,
             ServicioGestionSolicitudesContacto servicioGestionSolicitudesContacto,
             PropiedadesCorreo propiedadesCorreo,
@@ -35,6 +37,7 @@ public class ProcesadorOutboxCorreo {
     ) {
         this.bandejaSalidaNotificacionRepositorio = bandejaSalidaNotificacionRepositorio;
         this.servicioCorreoCitas = servicioCorreoCitas;
+        this.servicioCorreoEventosCita = servicioCorreoEventosCita;
         this.servicioCorreoContactos = servicioCorreoContactos;
         this.servicioGestionSolicitudesContacto = servicioGestionSolicitudesContacto;
         this.propiedadesCorreo = propiedadesCorreo;
@@ -69,6 +72,15 @@ public class ProcesadorOutboxCorreo {
     }
 
     private void procesarSegunEvento(BandejaSalidaNotificacionEntidad pendiente) throws JsonProcessingException {
+        if (pendiente.getTipoEvento().startsWith("CITA_") && pendiente.getTipoEvento().endsWith("_EMAIL")) {
+            EventoCitaCorreoPayload payload = objectMapper.readValue(
+                    pendiente.getPayloadJson(),
+                    EventoCitaCorreoPayload.class
+            );
+            servicioCorreoEventosCita.enviar(pendiente.getEmpresaId(), pendiente.getTipoEvento(), payload);
+            return;
+        }
+
         if ("CITA_CONFIRMADA".equals(pendiente.getTipoEvento())) {
             ConfirmacionCitaCorreo confirmacion = objectMapper.readValue(pendiente.getPayloadJson(), ConfirmacionCitaCorreo.class);
             servicioCorreoCitas.enviarConfirmacion(pendiente.getEmpresaId(), confirmacion);

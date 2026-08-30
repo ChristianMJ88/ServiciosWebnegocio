@@ -204,6 +204,7 @@ class ServicioAdminCitasCorreoTest {
                 null,
                 null,
                 null,
+                null,
                 crearAuditoriaConfiguracionRepositorio(),
                 crearAuditoriaRolRepositorio(),
                 new ObjectMapper(),
