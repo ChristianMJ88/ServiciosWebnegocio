@@ -129,6 +129,8 @@ Multitenancy:
 
 - La identidad del remitente y el proveedor de envio (`SMTP` o `GRAPH`) pueden configurarse por empresa en `configuracion_correo_empresa`.
 - Si una empresa no tiene configuracion propia, se usa el fallback global.
+- El fallback canonico de plataforma puede usar SendGrid sin guardar ni copiar su API key en cada tenant. Si el proveedor del tenant falla antes de aceptar el mensaje, se intenta el fallback de Fluora.
+- Un tenant que deshabilita explicitamente el correo permanece deshabilitado.
 - La cita ya no espera a que el correo se envie en el request HTTP; solo deja el evento en outbox.
 - `smtp_password` y `graph_client_secret` ya soportan formato cifrado con prefijo `enc:v1:`. Si detectan texto plano, siguen funcionando temporalmente para facilitar migracion.
 - El modulo admin expone:
@@ -209,6 +211,15 @@ Fallback global opcional en `application.yml`:
 - `CORREO_GRAPH_CLIENT_ID=...`
 - `CORREO_GRAPH_CLIENT_SECRET=...`
 - `CORREO_GRAPH_USER_ID=no-reply@notificaciones.tecprotech.com.mx`
+
+Fallback canonico de Fluora con SendGrid:
+
+- `CORREO_PROVEEDOR_POR_DEFECTO=SENDGRID`
+- `CORREO_REMITENTE_POR_DEFECTO=no-reply@refluora.com`
+- `CORREO_NOMBRE_REMITENTE_POR_DEFECTO=Fluora`
+- `CORREO_RESPONDER_A_POR_DEFECTO=contacto@refluora.com`
+- `CORREO_PLATAFORMA_HABILITADO=true`
+- `SENDGRID_API_KEY` desde un gestor de secretos, nunca desde el repositorio
 
 Para pruebas locales puedes usar un SMTP de desarrollo como MailHog o Mailpit.
 

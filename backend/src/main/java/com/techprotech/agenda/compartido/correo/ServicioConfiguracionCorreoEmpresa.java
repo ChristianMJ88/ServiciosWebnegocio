@@ -154,6 +154,10 @@ public class ServicioConfiguracionCorreoEmpresa {
                     && (tieneCertificado || tieneSecret);
         }
 
+        if (proveedor == ProveedorCorreo.SENDGRID) {
+            return true;
+        }
+
         return smtpHost != null && !smtpHost.isBlank()
                 && smtpPort > 0;
     }

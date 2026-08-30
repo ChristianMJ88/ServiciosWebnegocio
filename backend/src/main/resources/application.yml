@@ -68,6 +68,12 @@ aplicacion:
     llave-cifrado-secretos: ${CORREO_LLAVE_CIFRADO_SECRETOS:}
     lote-maximo-outbox: ${CORREO_LOTE_MAXIMO_OUTBOX:20}
     retraso-reintento-segundos: ${CORREO_REINTENTO_SEGUNDOS:60}
+    plataforma:
+      habilitado: ${CORREO_PLATAFORMA_HABILITADO:false}
+      sendgrid-api-key: ${SENDGRID_API_KEY:}
+      remitente: ${CORREO_PLATAFORMA_REMITENTE:no-reply@refluora.com}
+      nombre-remitente: ${CORREO_PLATAFORMA_NOMBRE_REMITENTE:Fluora}
+      responder-a: ${CORREO_PLATAFORMA_RESPONDER_A:contacto@refluora.com}
   whatsapp:
     habilitado: ${WHATSAPP_HABILITADO:true}
     validar-firma-webhook: ${TWILIO_VALIDAR_FIRMA_WEBHOOK:false}
