@@ -145,7 +145,7 @@ class ServicioAdminCitasCorreoTest {
                 new ConfiguracionCorreoAdminRequest(
                         true,
                         "GRAPH",
-                        "no-reply@notificaciones.tecprotech.com.mx",
+                        "no-reply@tecprotech.com.mx",
                         "TecProTech",
                         "soporte@tecprotech.com.mx",
                         null,
@@ -157,7 +157,7 @@ class ServicioAdminCitasCorreoTest {
                         "tenant-id",
                         "client-id",
                         "graph-secret",
-                        "no-reply@notificaciones.tecprotech.com.mx",
+                        "no-reply@tecprotech.com.mx",
                         null,
                         null
                 )

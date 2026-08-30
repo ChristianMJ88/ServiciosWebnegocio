@@ -115,7 +115,7 @@ class ServicioConfiguracionCorreoEmpresaTest {
         entidad.setEmpresaId(21L);
         entidad.setHabilitado(true);
         entidad.setProveedor("GRAPH");
-        entidad.setRemitente("no-reply@notificaciones.tecprotech.com.mx");
+        entidad.setRemitente("no-reply@tecprotech.com.mx");
         entidad.setNombreRemitente("TecProTech");
         entidad.setResponderA("soporte@tecprotech.com.mx");
         entidad.setGraphTenantId("tenant-id");
@@ -123,7 +123,7 @@ class ServicioConfiguracionCorreoEmpresaTest {
         entidad.setGraphClientSecret(new ProtectorSecretosCorreo(
                 new PropiedadesCorreo(true, "GRAPH", "global@agenda.local", "Agenda Global", null, null, null, null, null, null, null, "llave-prueba", 20, 60)
         ).encriptar("graph-secret"));
-        entidad.setGraphUserId("no-reply@notificaciones.tecprotech.com.mx");
+        entidad.setGraphUserId("no-reply@tecprotech.com.mx");
 
         ServicioConfiguracionCorreoEmpresa servicio = new ServicioConfiguracionCorreoEmpresa(
                 crearRepositorio(Optional.of(entidad)),
@@ -139,7 +139,7 @@ class ServicioConfiguracionCorreoEmpresaTest {
         assertEquals("tenant-id", configuracion.graphTenantId());
         assertEquals("client-id", configuracion.graphClientId());
         assertEquals("graph-secret", configuracion.graphClientSecret());
-        assertEquals("no-reply@notificaciones.tecprotech.com.mx", configuracion.graphUserId());
+        assertEquals("no-reply@tecprotech.com.mx", configuracion.graphUserId());
     }
 
     private MailProperties crearMailProperties(String host, int port, String username, String password) {

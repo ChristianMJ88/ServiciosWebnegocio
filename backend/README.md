@@ -194,13 +194,13 @@ VALUES (
   1,
   TRUE,
   'GRAPH',
-  'no-reply@notificaciones.tecprotech.com.mx',
+  'no-reply@tecprotech.com.mx',
   'TecProTech',
   'soporte@tecprotech.com.mx',
   'tu-tenant-id',
   'tu-client-id',
   'tu-client-secret',
-  'no-reply@notificaciones.tecprotech.com.mx'
+  'no-reply@tecprotech.com.mx'
 );
 ```
 
@@ -210,7 +210,7 @@ Fallback global opcional en `application.yml`:
 - `CORREO_GRAPH_TENANT_ID=...`
 - `CORREO_GRAPH_CLIENT_ID=...`
 - `CORREO_GRAPH_CLIENT_SECRET=...`
-- `CORREO_GRAPH_USER_ID=no-reply@notificaciones.tecprotech.com.mx`
+- `CORREO_GRAPH_USER_ID=no-reply@tecprotech.com.mx`
 
 Fallback canonico de Fluora con SendGrid:
 
