@@ -47,6 +47,7 @@ export class AdminEmailSectionComponent {
 
   readonly mostrandoOpciones = signal(false);
   readonly mostrarAvanzado = signal(false);
+  readonly confirmandoUsoPlataforma = signal(false);
 
   iniciarConexion(): void {
     this.mostrandoOpciones.set(true);
@@ -61,5 +62,14 @@ export class AdminEmailSectionComponent {
 
   alternarAvanzado(): void {
     this.mostrarAvanzado.update(valor => !valor);
+  }
+
+  solicitarUsoPlataforma(): void {
+    if (!this.confirmandoUsoPlataforma()) {
+      this.confirmandoUsoPlataforma.set(true);
+      return;
+    }
+    this.confirmandoUsoPlataforma.set(false);
+    this.usePlatform.emit();
   }
 }

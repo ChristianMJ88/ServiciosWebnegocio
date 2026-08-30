@@ -26,8 +26,8 @@
         {{ configuracionCorreo()?.proveedor ? 'Cambiar correo' : 'Agregar correo' }}
       </button>
       @if (configuracionCorreo()?.proveedor) {
-        <button mat-stroked-button type="button" (click)="usePlatform.emit()" [disabled]="guardandoCorreo()">
-          Usar correo de Fluora
+        <button mat-stroked-button type="button" (click)="solicitarUsoPlataforma()" [disabled]="guardandoCorreo()">
+          {{ confirmandoUsoPlataforma() ? 'Confirmar y eliminar conexión propia' : 'Usar correo de Fluora' }}
         </button>
       }
       <button mat-button type="button" (click)="alternarAvanzado()">
