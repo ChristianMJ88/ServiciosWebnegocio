@@ -44,6 +44,7 @@ export class AdminEmailSectionComponent {
   readonly save = output<void>();
   readonly migrateSecrets = output<void>();
   readonly usePlatform = output<void>();
+  readonly connectMicrosoft = output<void>();
 
   readonly mostrandoOpciones = signal(false);
   readonly mostrarAvanzado = signal(false);
@@ -54,6 +55,11 @@ export class AdminEmailSectionComponent {
   }
 
   seleccionarProveedor(proveedor: 'GRAPH' | 'SMTP'): void {
+    if (proveedor === 'GRAPH') {
+      this.mostrandoOpciones.set(false);
+      this.connectMicrosoft.emit();
+      return;
+    }
     this.formularioCorreo().proveedor = proveedor;
     this.formularioCorreo().habilitado = true;
     this.mostrandoOpciones.set(false);

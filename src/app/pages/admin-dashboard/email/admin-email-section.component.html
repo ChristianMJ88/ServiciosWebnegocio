@@ -6,7 +6,7 @@
         <h3>Tu correo está conectado</h3>
         <p>
           Los mensajes salen con la identidad de este negocio mediante
-          {{ configuracionCorreo()?.proveedor === 'GRAPH' ? 'Microsoft' : 'tu servidor de correo' }}.
+          {{ configuracionCorreo()?.proveedor === 'GRAPH' ? 'Microsoft 365' : 'tu servidor de correo' }}.
           Si el proveedor presenta una falla, Fluora protege la entrega con su canal canónico.
         </p>
       } @else {
@@ -48,7 +48,7 @@
       <div class="provider-grid">
         <button class="provider-option" type="button" (click)="seleccionarProveedor('GRAPH')">
           <span class="provider-logo microsoft">M</span>
-          <span><strong>Microsoft 365</strong><small>Correo empresarial mediante Microsoft Graph</small></span>
+          <span><strong>Microsoft 365</strong><small>Conecta tu cuenta de forma segura con Microsoft</small></span>
         </button>
         <button class="provider-option" type="button" (click)="seleccionarProveedor('SMTP')">
           <span class="provider-logo smtp">@</span>

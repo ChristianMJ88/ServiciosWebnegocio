@@ -753,6 +753,17 @@ export class AdminDashboardComponent implements OnInit {
         }
       });
 
+    this.activatedRoute.queryParamMap
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(parametros => {
+        const resultadoOAuth = parametros.get('correoOAuth');
+        if (resultadoOAuth === 'ok') {
+          this.mensajeExito = 'Microsoft 365 quedó conectado para este negocio.';
+        } else if (resultadoOAuth === 'error') {
+          this.error = parametros.get('mensaje') || 'No se pudo conectar Microsoft 365.';
+        }
+      });
+
     this.actualizarVistaEnZona(() => {
       this.cargarPerfilUsuarioLocal();
       this.sincronizarSidebarConViewport(this.breakpointObserver.isMatched('(max-width: 991px)'));
@@ -1115,6 +1126,20 @@ export class AdminDashboardComponent implements OnInit {
         },
         error: err => {
           this.error = err?.error?.mensaje || err?.message || 'No se pudo guardar la configuración de correo.';
+        }
+      });
+  }
+
+  conectarCorreoMicrosoft() {
+    this.guardandoCorreo = true;
+    this.error = '';
+    this.mensajeExito = '';
+    this.adminService.iniciarOAuthCorreoMicrosoft()
+      .pipe(finalize(() => this.guardandoCorreo = false))
+      .subscribe({
+        next: response => window.location.assign(response.urlAutorizacion),
+        error: err => {
+          this.error = err?.error?.mensaje || err?.message || 'No se pudo iniciar la conexión con Microsoft 365.';
         }
       });
   }

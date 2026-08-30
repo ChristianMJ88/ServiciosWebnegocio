@@ -25,7 +25,7 @@ public class ServicioConfiguracionCorreoEmpresa {
 
     public ConfiguracionCorreoResolvida resolver(Long empresaId) {
         if (!propiedadesCorreo.habilitado()) {
-            return new ConfiguracionCorreoResolvida(false, ProveedorCorreo.SMTP, null, null, null, null, 0, null, null, false, false, null, null, null, null, null, null);
+            return new ConfiguracionCorreoResolvida(empresaId, false, ProveedorCorreo.SMTP, null, null, null, null, 0, null, null, false, false, null, null, null, null, null, null, null);
         }
 
         return configuracionCorreoEmpresaRepositorio.findById(empresaId)
@@ -56,8 +56,12 @@ public class ServicioConfiguracionCorreoEmpresa {
         String graphPrivateKeyPem = protectorSecretosCorreo.desencriptarSiNecesario(
                 valorOPropiedad(entidad.getGraphPrivateKeyPem(), propiedadesCorreo.graphPrivateKeyPem())
         );
+        String graphOauthRefreshToken = protectorSecretosCorreo.desencriptarSiNecesario(
+                entidad.getGraphOauthRefreshToken(), "graph_oauth_refresh_token"
+        );
 
         return new ConfiguracionCorreoResolvida(
+                entidad.getEmpresaId(),
                 entidad.isHabilitado() && configuracionMinimaValida(
                         proveedor,
                         remitente,
@@ -68,7 +72,8 @@ public class ServicioConfiguracionCorreoEmpresa {
                         graphClientSecret,
                         graphUserId,
                         graphCertificateThumbprint,
-                        graphPrivateKeyPem
+                        graphPrivateKeyPem,
+                        graphOauthRefreshToken
                 ),
                 proveedor,
                 remitente,
@@ -85,7 +90,8 @@ public class ServicioConfiguracionCorreoEmpresa {
                 graphClientSecret,
                 graphUserId,
                 graphCertificateThumbprint,
-                graphPrivateKeyPem
+                graphPrivateKeyPem,
+                graphOauthRefreshToken
         );
     }
 
@@ -97,6 +103,7 @@ public class ServicioConfiguracionCorreoEmpresa {
         boolean smtpAuth = Boolean.parseBoolean(mailProperties.getProperties().getOrDefault("mail.smtp.auth", "false"));
         boolean smtpStartTls = Boolean.parseBoolean(mailProperties.getProperties().getOrDefault("mail.smtp.starttls.enable", "false"));
         return new ConfiguracionCorreoResolvida(
+                null,
                 configuracionMinimaValida(
                         proveedor,
                         remitente,
@@ -107,7 +114,8 @@ public class ServicioConfiguracionCorreoEmpresa {
                         propiedadesCorreo.graphClientSecret(),
                         propiedadesCorreo.graphUserId(),
                         propiedadesCorreo.graphCertificateThumbprint(),
-                        propiedadesCorreo.graphPrivateKeyPem()
+                        propiedadesCorreo.graphPrivateKeyPem(),
+                        null
                 ),
                 proveedor,
                 remitente,
@@ -124,7 +132,8 @@ public class ServicioConfiguracionCorreoEmpresa {
                 propiedadesCorreo.graphClientSecret(),
                 propiedadesCorreo.graphUserId(),
                 propiedadesCorreo.graphCertificateThumbprint(),
-                propiedadesCorreo.graphPrivateKeyPem()
+                propiedadesCorreo.graphPrivateKeyPem(),
+                null
         );
     }
 
@@ -138,13 +147,17 @@ public class ServicioConfiguracionCorreoEmpresa {
             String graphClientSecret,
             String graphUserId,
             String graphCertificateThumbprint,
-            String graphPrivateKeyPem
+            String graphPrivateKeyPem,
+            String graphOauthRefreshToken
     ) {
         if (remitente == null || remitente.isBlank()) {
             return false;
         }
 
         if (proveedor == ProveedorCorreo.GRAPH) {
+            if (graphOauthRefreshToken != null && !graphOauthRefreshToken.isBlank()) {
+                return graphUserId != null && !graphUserId.isBlank();
+            }
             boolean tieneCertificado = graphCertificateThumbprint != null && !graphCertificateThumbprint.isBlank()
                     && graphPrivateKeyPem != null && !graphPrivateKeyPem.isBlank();
             boolean tieneSecret = graphClientSecret != null && !graphClientSecret.isBlank();

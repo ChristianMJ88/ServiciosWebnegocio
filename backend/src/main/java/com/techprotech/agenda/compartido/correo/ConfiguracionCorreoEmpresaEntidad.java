@@ -7,6 +7,8 @@ import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.time.LocalDateTime;
+
 @Setter
 @Getter
 @Entity
@@ -67,5 +69,14 @@ public class ConfiguracionCorreoEmpresaEntidad {
 
     @Column(name = "graph_private_key_pem", columnDefinition = "TEXT")
     private String graphPrivateKeyPem;
+
+    @Column(name = "graph_oauth_refresh_token", columnDefinition = "TEXT")
+    private String graphOauthRefreshToken;
+
+    @Column(name = "graph_oauth_scopes", length = 500)
+    private String graphOauthScopes;
+
+    @Column(name = "graph_oauth_conectado_en")
+    private LocalDateTime graphOauthConectadoEn;
 
 }

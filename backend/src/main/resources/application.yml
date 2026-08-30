@@ -65,6 +65,13 @@ aplicacion:
     graph-user-id: ${CORREO_GRAPH_USER_ID:}
     graph-certificate-thumbprint: ${CORREO_GRAPH_CERTIFICATE_THUMBPRINT:}
     graph-private-key-pem: ${CORREO_GRAPH_PRIVATE_KEY_PEM:}
+    microsoft-oauth:
+      habilitado: ${CORREO_MICROSOFT_OAUTH_HABILITADO:false}
+      client-id: ${CORREO_MICROSOFT_OAUTH_CLIENT_ID:}
+      certificate-thumbprint: ${CORREO_MICROSOFT_OAUTH_CERTIFICATE_THUMBPRINT:}
+      private-key-pem: ${CORREO_MICROSOFT_OAUTH_PRIVATE_KEY_PEM:}
+      redirect-uri: ${CORREO_MICROSOFT_OAUTH_REDIRECT_URI:https://api.refluora.com/api/v1/admin/correo/oauth/microsoft/callback}
+      frontend-resultado-url: ${CORREO_MICROSOFT_OAUTH_FRONTEND_RESULTADO_URL:https://app.refluora.com/admin/correo}
     llave-cifrado-secretos: ${CORREO_LLAVE_CIFRADO_SECRETOS:}
     lote-maximo-outbox: ${CORREO_LOTE_MAXIMO_OUTBOX:20}
     retraso-reintento-segundos: ${CORREO_REINTENTO_SEGUNDOS:60}

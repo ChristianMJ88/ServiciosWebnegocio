@@ -72,13 +72,14 @@ public class ClienteCorreoSendgrid {
 
     public ConfiguracionCorreoResolvida configuracionCanonica() {
         return new ConfiguracionCorreoResolvida(
+                null,
                 propiedades.habilitado() && !esVacio(propiedades.sendgridApiKey()) && !esVacio(propiedades.remitente()),
                 ProveedorCorreo.SENDGRID,
                 propiedades.remitente(),
                 propiedades.nombreRemitente(),
                 propiedades.responderA(),
                 null, 0, null, null, false, false,
-                null, null, null, null, null, null
+                null, null, null, null, null, null, null
         );
     }
 

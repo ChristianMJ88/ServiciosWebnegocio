@@ -3,6 +3,7 @@ package com.techprotech.agenda.compartido.correo;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import org.springframework.http.MediaType;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
@@ -31,15 +32,27 @@ public class ClienteCorreoGraph {
     private static final String CLIENT_ASSERTION_TYPE = "urn:ietf:params:oauth:client-assertion-type:jwt-bearer";
 
     private final RestClient restClient;
+    private ServicioOAuthCorreoMicrosoft servicioOAuth;
 
     public ClienteCorreoGraph(RestClient.Builder restClientBuilder) {
         this.restClient = restClientBuilder.build();
     }
 
+    @Autowired
+    void configurarOAuth(ServicioOAuthCorreoMicrosoft servicioOAuth) {
+        this.servicioOAuth = servicioOAuth;
+    }
+
     public void enviar(ConfiguracionCorreoResolvida configuracion, MensajeCorreoSaliente mensaje) {
         try {
-            String accessToken = obtenerAccessToken(configuracion);
-            String userIdCodificado = URLEncoder.encode(configuracion.graphUserId(), StandardCharsets.UTF_8);
+            boolean conexionDelegada = configuracion.graphOauthRefreshToken() != null
+                    && !configuracion.graphOauthRefreshToken().isBlank();
+            String accessToken = conexionDelegada
+                    ? servicioOAuth.obtenerAccessToken(configuracion)
+                    : obtenerAccessToken(configuracion);
+            String destinoGraph = conexionDelegada
+                    ? GRAPH_BASE_URL + "/me/sendMail"
+                    : GRAPH_BASE_URL + "/users/" + URLEncoder.encode(configuracion.graphUserId(), StandardCharsets.UTF_8) + "/sendMail";
 
             List<Map<String, Object>> attachments = new ArrayList<>();
             if (mensaje.adjuntos() != null) {
@@ -75,7 +88,7 @@ public class ClienteCorreoGraph {
             );
 
             restClient.post()
-                    .uri(GRAPH_BASE_URL + "/users/" + userIdCodificado + "/sendMail")
+                    .uri(destinoGraph)
                     .contentType(MediaType.APPLICATION_JSON)
                     .headers(headers -> headers.setBearerAuth(accessToken))
                     .body(payload)

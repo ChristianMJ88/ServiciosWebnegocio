@@ -571,6 +571,11 @@ public class ServicioAdminCitas {
         configuracion.setGraphClientId(normalizarOpcional(request.graphClientId()));
         configuracion.setGraphUserId(normalizarOpcional(request.graphUserId()));
         configuracion.setGraphCertificateThumbprint(normalizarOpcional(request.graphCertificateThumbprint()));
+        if (proveedor != ProveedorCorreo.GRAPH) {
+            configuracion.setGraphOauthRefreshToken(null);
+            configuracion.setGraphOauthScopes(null);
+            configuracion.setGraphOauthConectadoEn(null);
+        }
 
         if (request.smtpPassword() != null) {
             String passwordNormalizado = normalizarOpcional(request.smtpPassword());
@@ -2155,7 +2160,9 @@ public class ServicioAdminCitas {
                 graphCifrada,
                 configuracion.getGraphCertificateThumbprint(),
                 graphPrivateKeyConfigurada,
-                graphPrivateKeyCifrada
+                graphPrivateKeyCifrada,
+                configuracion.getGraphOauthRefreshToken() != null && !configuracion.getGraphOauthRefreshToken().isBlank(),
+                configuracion.getGraphOauthConectadoEn() != null ? configuracion.getGraphOauthConectadoEn().toString() : null
         );
     }
 

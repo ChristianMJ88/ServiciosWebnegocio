@@ -39,6 +39,7 @@ public class ConfiguracionSeguridad {
                                 "/api/v1/auth/cerrar-sesion"
                         ).permitAll()
                         .requestMatchers("/api/v1/onboarding/**").permitAll()
+                        .requestMatchers("/api/v1/admin/correo/oauth/microsoft/callback").permitAll()
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(filtroAutenticacionJwt, UsernamePasswordAuthenticationFilter.class);

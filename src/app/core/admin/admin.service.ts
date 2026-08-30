@@ -424,6 +424,8 @@ export interface ConfiguracionCorreoAdmin {
   graphCertificateThumbprint: string | null;
   graphPrivateKeyConfigurada: boolean;
   graphPrivateKeyCifrada: boolean;
+  graphOauthConectado?: boolean;
+  graphOauthConectadoEn?: string | null;
 }
 
 export interface GuardarConfiguracionCorreoPayload {
@@ -913,6 +915,10 @@ export class AdminService {
 
   migrarSecretosCorreo(): Observable<MigracionSecretosCorreoResponse> {
     return this.http.post<MigracionSecretosCorreoResponse>(`${environment.apiBaseUrl}/admin/configuracion-correo/migrar-secretos`, {});
+  }
+
+  iniciarOAuthCorreoMicrosoft(): Observable<{ urlAutorizacion: string }> {
+    return this.http.get<{ urlAutorizacion: string }>(`${environment.apiBaseUrl}/admin/correo/oauth/microsoft/iniciar`);
   }
 
   getConfiguracionWhatsapp(): Observable<ConfiguracionWhatsappAdmin> {

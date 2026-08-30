@@ -21,6 +21,8 @@ public record ConfiguracionCorreoAdminResponse(
         boolean graphClientSecretCifrado,
         String graphCertificateThumbprint,
         boolean graphPrivateKeyConfigurada,
-        boolean graphPrivateKeyCifrada
+        boolean graphPrivateKeyCifrada,
+        boolean graphOauthConectado,
+        String graphOauthConectadoEn
 ) {
 }
