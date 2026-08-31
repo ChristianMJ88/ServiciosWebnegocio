@@ -49,7 +49,9 @@ exports.apiProxy = onRequest(
 
       const contentType = upstream.headers.get('content-type');
       const cacheControl = upstream.headers.get('cache-control');
+      const location = upstream.headers.get('location');
       if (contentType) response.set('Content-Type', contentType);
+      if (location) response.set('Location', location);
       if (cacheControl) response.set('Cache-Control', cacheControl);
       else response.set('Cache-Control', 'no-store');
 
