@@ -3,6 +3,8 @@ package com.techprotech.agenda.modulos.autenticacion.social;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.techprotech.agenda.compartido.correo.ProtectorSecretosCorreo;
 import org.springframework.http.MediaType;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
@@ -16,6 +18,7 @@ import java.util.UUID;
 
 @Service
 public class ServicioAutenticacionSocialGoogle {
+    private static final Logger LOGGER = LoggerFactory.getLogger(ServicioAutenticacionSocialGoogle.class);
     private static final String AUTORIZACION = "https://accounts.google.com/o/oauth2/v2/auth";
     private static final String TOKEN = "https://oauth2.googleapis.com/token";
     private static final String PERFIL = "https://openidconnect.googleapis.com/v1/userinfo";
@@ -93,6 +96,8 @@ public class ServicioAutenticacionSocialGoogle {
             );
             return resultadoFrontend(cifrar(registro), null);
         } catch (Exception ex) {
+            LOGGER.warn("No se pudo completar el registro social con Google: {}: {}",
+                    ex.getClass().getSimpleName(), ex.getMessage());
             return resultadoFrontend(null, "No se pudo validar tu cuenta de Google");
         }
     }
