@@ -35,7 +35,10 @@ export interface RegistrarEmpresaResponse {
   correoAdministrador: string;
   rutaSitioPublico: string;
   rutaAcceso: string;
+  requiereConfirmacionCorreo: boolean;
 }
+
+export interface ConfirmarCorreoResponse { mensaje: string; rutaAcceso: string; }
 
 @Injectable({
   providedIn: 'root'
@@ -61,5 +64,9 @@ export class OnboardingService {
 
   urlInicioSocial(ruta: string): string {
     return `${environment.apiBaseUrl}${ruta}`;
+  }
+
+  confirmarCorreo(token: string): Observable<ConfirmarCorreoResponse> {
+    return this.http.post<ConfirmarCorreoResponse>(`${environment.apiBaseUrl}/publico/onboarding/verificacion-correo/confirmar`, {token});
   }
 }

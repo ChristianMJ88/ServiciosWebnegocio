@@ -59,6 +59,7 @@ public class ServicioOnboardingEmpresaImpl implements ServicioOnboardingEmpresa 
     private final ServicioOutboxCorreoBienvenida servicioOutboxCorreoBienvenida;
     private final ServicioAutenticacionSocialGoogle autenticacionSocialGoogle;
     private final UsuarioIdentidadExternaRepositorio identidadExternaRepositorio;
+    private final ServicioVerificacionCorreoOnboarding verificacionCorreo;
 
     public ServicioOnboardingEmpresaImpl(
             EmpresaRepositorio empresaRepositorio,
@@ -73,7 +74,8 @@ public class ServicioOnboardingEmpresaImpl implements ServicioOnboardingEmpresa 
             PasswordEncoder passwordEncoder,
             ServicioOutboxCorreoBienvenida servicioOutboxCorreoBienvenida,
             ServicioAutenticacionSocialGoogle autenticacionSocialGoogle,
-            UsuarioIdentidadExternaRepositorio identidadExternaRepositorio
+            UsuarioIdentidadExternaRepositorio identidadExternaRepositorio,
+            ServicioVerificacionCorreoOnboarding verificacionCorreo
     ) {
         this.empresaRepositorio = empresaRepositorio;
         this.usuarioRepositorio = usuarioRepositorio;
@@ -88,6 +90,7 @@ public class ServicioOnboardingEmpresaImpl implements ServicioOnboardingEmpresa 
         this.servicioOutboxCorreoBienvenida = servicioOutboxCorreoBienvenida;
         this.autenticacionSocialGoogle = autenticacionSocialGoogle;
         this.identidadExternaRepositorio = identidadExternaRepositorio;
+        this.verificacionCorreo = verificacionCorreo;
     }
 
     @Override
@@ -109,15 +112,11 @@ public class ServicioOnboardingEmpresaImpl implements ServicioOnboardingEmpresa 
         crearSucursalPrincipal(empresa, request);
         provisionarRolesEmpresa(empresa.getId());
         crearSitioBase(empresa, request, slug, correoAdministrador);
-        UsuarioEntidad administrador = crearAdministradorInicial(empresa, correoAdministrador, request);
+        boolean requiereConfirmacion = perfilSocial == null;
+        UsuarioEntidad administrador = crearAdministradorInicial(empresa, correoAdministrador, request, !requiereConfirmacion);
         vincularIdentidadSocial(administrador, perfilSocial);
-        servicioOutboxCorreoBienvenida.programar(new BienvenidaEmpresaCorreo(
-                empresa.getId(),
-                empresa.getNombre(),
-                request.nombreAdministrador().trim(),
-                correoAdministrador,
-                slug
-        ));
+        if (requiereConfirmacion) verificacionCorreo.enviar(empresa, administrador, request.nombreAdministrador().trim());
+        else servicioOutboxCorreoBienvenida.programar(new BienvenidaEmpresaCorreo(empresa.getId(), empresa.getNombre(), request.nombreAdministrador().trim(), correoAdministrador, slug));
 
         return new RegistrarEmpresaResponse(
                 empresa.getId(),
@@ -125,7 +124,8 @@ public class ServicioOnboardingEmpresaImpl implements ServicioOnboardingEmpresa 
                 empresa.getNombre(),
                 correoAdministrador,
                 "/e/" + slug,
-                "/acceso"
+                "/acceso",
+                requiereConfirmacion
         );
     }
 
@@ -162,7 +162,7 @@ public class ServicioOnboardingEmpresaImpl implements ServicioOnboardingEmpresa 
         empresaSitioConfigRepositorio.save(sitio);
     }
 
-    private UsuarioEntidad crearAdministradorInicial(EmpresaEntidad empresa, String correoAdministrador, RegistrarEmpresaRequest request) {
+    private UsuarioEntidad crearAdministradorInicial(EmpresaEntidad empresa, String correoAdministrador, RegistrarEmpresaRequest request, boolean habilitado) {
         if (usuarioRepositorio.existsByEmpresaIdAndCorreo(empresa.getId(), correoAdministrador)) {
             throw new ResponseStatusException(CONFLICT, "Ya existe un usuario administrador con ese correo en la empresa");
         }
@@ -171,7 +171,7 @@ public class ServicioOnboardingEmpresaImpl implements ServicioOnboardingEmpresa 
         usuario.setEmpresaId(empresa.getId());
         usuario.setCorreo(correoAdministrador);
         usuario.setContrasenaHash(passwordEncoder.encode(request.contrasena()));
-        usuario.setHabilitado(true);
+        usuario.setHabilitado(habilitado);
         usuario.setBloqueado(false);
         usuario = usuarioRepositorio.save(usuario);
         servicioRolesEmpresa.asignarRolEmpresa(usuario, empresa.getId(), "ADMIN");

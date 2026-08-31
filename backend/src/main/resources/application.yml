@@ -46,6 +46,10 @@ management:
         enabled: true
 
 aplicacion:
+  onboarding:
+    verificacion-correo:
+      url: ${ONBOARDING_VERIFICACION_CORREO_URL:}
+      minutos-vigencia: ${ONBOARDING_VERIFICACION_CORREO_MINUTOS:30}
   invitaciones:
     url-aceptacion: ${INVITACIONES_URL_ACEPTACION}
     horas-vigencia: ${INVITACIONES_HORAS_VIGENCIA:72}

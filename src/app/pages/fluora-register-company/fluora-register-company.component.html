@@ -117,7 +117,7 @@
               </label>
               <label class="company-register__field company-register__field--full">
                 <span>Crea una contraseña segura</span>
-                <input type="password" formControlName="contrasena" placeholder="Mínimo 8 caracteres" class="form-control">
+                <input type="password" formControlName="contrasena" placeholder="Mínimo 10 caracteres" class="form-control">
               </label>
             </div>
           </div>
@@ -154,11 +154,13 @@
           <div class="company-register__success">
             <span class="company-register__success-eyebrow">Empresa creada</span>
             <h3>{{ result.nombreEmpresa }} ya quedó lista en Fluora.</h3>
-            <p>
-              Fluora creó la empresa, el acceso principal y el sitio base. Ya puedes entrar al acceso central o abrir la web pública generada.
-            </p>
+            @if (result.requiereConfirmacionCorreo) {
+              <p>Tu negocio y acceso están preparados. Revisa tu correo y confirma el enlace para activar el acceso principal.</p>
+            } @else {
+              <p>Fluora creó la empresa, el acceso principal y el sitio base. Ya puedes entrar al acceso central o abrir la web pública generada.</p>
+            }
             <div class="company-register__success-links">
-              <a [attr.href]="accesoUrl()" class="btn btn-primary rounded-pill">Ir a iniciar sesión</a>
+              @if (!result.requiereConfirmacionCorreo) { <a [attr.href]="accesoUrl()" class="btn btn-primary rounded-pill">Ir a iniciar sesión</a> }
               <a [attr.href]="sitioUrl()" class="btn btn-outline-dark rounded-pill">Ver sitio público</a>
             </div>
             <small>Slug generado: {{ result.slug }}</small>

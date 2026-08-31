@@ -55,6 +55,7 @@ export const routes: Routes = [
   },
   { path: 'acceso', loadComponent: () => import('./pages/fluora-access/fluora-access.component').then((m) => m.FluoraAccessComponent) },
   { path: 'invitacion/aceptar', loadComponent: () => import('./pages/accept-user-invitation/accept-user-invitation.component').then((m) => m.AcceptUserInvitationComponent) },
+  { path: 'verificar-correo', loadComponent: () => import('./pages/verify-email/verify-email.component').then((m) => m.VerifyEmailComponent) },
   { path: 'recuperar-contrasena', loadComponent: () => import('./pages/password-recovery/password-recovery.component').then((m) => m.PasswordRecoveryComponent) },
   { path: 'recuperar-contrasena/confirmar', loadComponent: () => import('./pages/password-recovery/password-recovery.component').then((m) => m.PasswordRecoveryComponent) },
   {

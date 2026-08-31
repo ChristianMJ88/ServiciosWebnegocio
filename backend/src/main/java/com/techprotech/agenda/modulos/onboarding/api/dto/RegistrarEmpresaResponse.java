@@ -6,6 +6,7 @@ public record RegistrarEmpresaResponse(
         String nombreEmpresa,
         String correoAdministrador,
         String rutaSitioPublico,
-        String rutaAcceso
+        String rutaAcceso,
+        boolean requiereConfirmacionCorreo
 ) {
 }
