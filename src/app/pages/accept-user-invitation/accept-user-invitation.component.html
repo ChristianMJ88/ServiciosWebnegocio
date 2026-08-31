@@ -19,7 +19,7 @@
         <ul class="invite-requirements">
           <li>Mínimo 10 caracteres</li><li>Una mayúscula y una minúscula</li><li>Un número y un símbolo</li>
         </ul>
-        <small>El enlace es personal, vence en 72 horas y solo puede usarse una vez.</small>
+        <small>El enlace es personal, vence el {{ expirationLabel(invitation.expiraEn) }} y solo puede usarse una vez.</small>
         @if (error) { <div class="invite-error">{{ error }}</div> }
         <button type="submit" class="invite-button" [disabled]="saving()">{{ saving() ? 'Creando acceso…' : 'Aceptar invitación' }}</button>
       </form>

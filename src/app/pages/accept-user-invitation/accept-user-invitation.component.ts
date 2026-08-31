@@ -48,4 +48,8 @@ export class AcceptUserInvitationComponent implements OnInit {
         error: err => this.error = err?.error?.message || err?.error?.mensaje || 'No se pudo aceptar la invitación.'
       });
   }
+
+  expirationLabel(value: string): string {
+    return new Intl.DateTimeFormat('es-MX', { dateStyle: 'long', timeStyle: 'short' }).format(new Date(value));
+  }
 }

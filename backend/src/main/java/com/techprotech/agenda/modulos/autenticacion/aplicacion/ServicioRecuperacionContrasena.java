@@ -21,12 +21,14 @@ public class ServicioRecuperacionContrasena {
     private final RecuperacionContrasenaRepositorio recuperaciones;
     private final ServicioConfiguracionCorreoEmpresa configuracionCorreo; private final ClienteCorreoSaliente correo;
     private final PasswordEncoder encoder; private final SecureRandom random = new SecureRandom(); private final String url;
+    private final long minutosVigencia; private final PropiedadesCorreo propiedadesCorreo;
     public ServicioRecuperacionContrasena(UsuarioRepositorio usuarios, EmpresaRepositorio empresas,
             RecuperacionContrasenaRepositorio recuperaciones, ServicioConfiguracionCorreoEmpresa configuracionCorreo,
-            ClienteCorreoSaliente correo, PasswordEncoder encoder,
-            @Value("${aplicacion.recuperacion-contrasena.url:https://app.refluora.com/recuperar-contrasena/confirmar}") String url) {
+            ClienteCorreoSaliente correo, PasswordEncoder encoder, PropiedadesCorreo propiedadesCorreo,
+            @Value("${aplicacion.recuperacion-contrasena.url}") String url,
+            @Value("${aplicacion.recuperacion-contrasena.minutos-vigencia}") long minutosVigencia) {
         this.usuarios=usuarios; this.empresas=empresas; this.recuperaciones=recuperaciones;
-        this.configuracionCorreo=configuracionCorreo; this.correo=correo; this.encoder=encoder; this.url=url;
+        this.configuracionCorreo=configuracionCorreo; this.correo=correo; this.encoder=encoder; this.propiedadesCorreo=propiedadesCorreo; this.url=url; this.minutosVigencia=minutosVigencia;
     }
     @Transactional
     public void solicitar(String correoSolicitado) {
@@ -37,7 +39,7 @@ public class ServicioRecuperacionContrasena {
             recuperaciones.findByUsuarioIdAndEstado(usuario.getId(), "PENDIENTE").forEach(vieja -> { vieja.setEstado("CANCELADA"); recuperaciones.save(vieja); });
             String token=token(); RecuperacionContrasenaEntidad r=new RecuperacionContrasenaEntidad();
             r.setUsuarioId(usuario.getId()); r.setEmpresaId(usuario.getEmpresaId()); r.setTokenHash(hash(token));
-            r.setEstado("PENDIENTE"); r.setExpiraEn(ahora.plusMinutes(30)); r.setCreadoEn(ahora); recuperaciones.save(r);
+            r.setEstado("PENDIENTE"); r.setExpiraEn(ahora.plusMinutes(minutosVigencia)); r.setCreadoEn(ahora); recuperaciones.save(r);
             enviar(usuario, token);
         });
     }
@@ -58,9 +60,10 @@ public class ServicioRecuperacionContrasena {
     private void enviar(UsuarioEntidad usuario,String token) {
         EmpresaEntidad empresa=empresas.findById(usuario.getEmpresaId()).orElseThrow(); ConfiguracionCorreoResolvida config=configuracionCorreo.resolver(empresa.getId());
         if(!config.habilitado()) throw new IllegalStateException("No hay correo disponible"); String enlace=url+"?token="+token;
-        String texto="Solicitaste recuperar tu contraseña de "+empresa.getNombre()+" en Fluora.\n\n"+enlace+"\n\nEl enlace vence en 30 minutos y solo puede usarse una vez.";
-        String html="<div style=\"font-family:Arial,sans-serif;max-width:600px;margin:auto;color:#173b57\"><h1>Recupera tu acceso</h1><p>Recibimos una solicitud para cambiar tu contraseña de <strong>"+esc(empresa.getNombre())+"</strong>.</p><p><a style=\"background:#6c4cff;color:#fff;padding:12px 20px;border-radius:8px;text-decoration:none;display:inline-block\" href=\""+enlace+"\">Crear nueva contraseña</a></p><p>El enlace vence en 30 minutos y solo puede usarse una vez. Si no hiciste la solicitud, ignora este mensaje.</p></div>";
-        correo.enviar(config,new MensajeCorreoSaliente(usuario.getCorreo(),"Recupera tu acceso a "+empresa.getNombre()+" | Fluora",texto,html,config.responderA(),List.of()));
+        String plataforma=propiedadesCorreo.nombreRemitentePorDefecto();
+        String texto="Solicitaste recuperar tu contraseña de "+empresa.getNombre()+" en "+plataforma+".\n\n"+enlace+"\n\nEl enlace vence en "+minutosVigencia+" minutos y solo puede usarse una vez.";
+        String html="<div style=\"font-family:Arial,sans-serif;max-width:600px;margin:auto;color:#173b57\"><h1>Recupera tu acceso</h1><p>Recibimos una solicitud para cambiar tu contraseña de <strong>"+esc(empresa.getNombre())+"</strong>.</p><p><a style=\"background:#6c4cff;color:#fff;padding:12px 20px;border-radius:8px;text-decoration:none;display:inline-block\" href=\""+enlace+"\">Crear nueva contraseña</a></p><p>El enlace vence en "+minutosVigencia+" minutos y solo puede usarse una vez. Si no hiciste la solicitud, ignora este mensaje.</p></div>";
+        correo.enviar(config,new MensajeCorreoSaliente(usuario.getCorreo(),"Recupera tu acceso a "+empresa.getNombre()+" | "+plataforma,texto,html,config.responderA(),List.of()));
     }
     private String token(){byte[] b=new byte[32];random.nextBytes(b);return Base64.getUrlEncoder().withoutPadding().encodeToString(b);}
     private String hash(String t){try{return HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(t.getBytes(StandardCharsets.UTF_8)));}catch(Exception e){throw new IllegalStateException(e);}}

@@ -38,6 +38,8 @@ public class ServicioInvitacionesUsuario {
     private final ObjectMapper objectMapper;
     private final SecureRandom secureRandom = new SecureRandom();
     private final String urlAceptacion;
+    private final long horasVigencia;
+    private final PropiedadesCorreo propiedadesCorreo;
 
     public ServicioInvitacionesUsuario(
             InvitacionUsuarioEmpresaRepositorio invitaciones,
@@ -48,7 +50,9 @@ public class ServicioInvitacionesUsuario {
             ServicioAutenticacionSocialGoogle socialGoogle,
             UsuarioIdentidadExternaRepositorio identidades,
             ObjectMapper objectMapper,
-            @Value("${aplicacion.invitaciones.url-aceptacion:https://app.refluora.com/invitacion/aceptar}") String urlAceptacion
+            PropiedadesCorreo propiedadesCorreo,
+            @Value("${aplicacion.invitaciones.url-aceptacion}") String urlAceptacion,
+            @Value("${aplicacion.invitaciones.horas-vigencia}") long horasVigencia
     ) {
         this.invitaciones = invitaciones;
         this.empresas = empresas;
@@ -58,7 +62,9 @@ public class ServicioInvitacionesUsuario {
         this.socialGoogle = socialGoogle;
         this.identidades = identidades;
         this.objectMapper = objectMapper;
+        this.propiedadesCorreo = propiedadesCorreo;
         this.urlAceptacion = urlAceptacion;
+        this.horasVigencia = horasVigencia;
     }
 
     @Transactional
@@ -92,7 +98,7 @@ public class ServicioInvitacionesUsuario {
         invitacion.setNotas(request.notas());
         invitacion.setTokenHash(hash(token));
         invitacion.setEstado("PENDIENTE");
-        invitacion.setExpiraEn(ahora.plusHours(72));
+        invitacion.setExpiraEn(ahora.plusHours(horasVigencia));
         invitacion.setCreadaPorUsuarioId(actorId);
         invitacion.setCreadoEn(ahora);
         invitacion.setActualizadoEn(ahora);
@@ -160,17 +166,19 @@ public class ServicioInvitacionesUsuario {
         ConfiguracionCorreoResolvida config = configuracionCorreo.resolver(empresa.getId());
         if (!config.habilitado()) throw new IllegalStateException("No hay un correo canónico o del tenant disponible");
         String enlace = urlAceptacion + "?token=" + token;
+        String plataforma = propiedadesCorreo.nombreRemitentePorDefecto();
+        String soporte = propiedadesCorreo.responderAPorDefecto();
         String texto = "Hola " + invitacion.getNombreCompleto() + ",\n\n" + empresa.getNombre()
-                + " te invitó a formar parte de su equipo en Fluora.\nCrea tu contraseña y acepta la invitación aquí:\n"
-                + enlace + "\n\nEl enlace vence en 72 horas y solo puede utilizarse una vez.\n\n¿Dudas? contacto@refluora.com";
+                + " te invitó a formar parte de su equipo en " + plataforma + ".\nCrea tu contraseña y acepta la invitación aquí:\n"
+                + enlace + "\n\nEl enlace vence en " + horasVigencia + " horas y solo puede utilizarse una vez.\n\n¿Dudas? " + soporte;
         String html = "<div style=\"font-family:Arial,sans-serif;max-width:600px;margin:auto;color:#173b57\">"
                 + "<h1>Te damos la bienvenida a " + escapar(empresa.getNombre()) + "</h1><p>Hola "
-                + escapar(invitacion.getNombreCompleto()) + ",</p><p>Has recibido una invitación para formar parte del equipo en Fluora.</p>"
+                + escapar(invitacion.getNombreCompleto()) + ",</p><p>Has recibido una invitación para formar parte del equipo en " + escapar(plataforma) + ".</p>"
                 + "<p><a style=\"background:#6c4cff;color:white;padding:12px 20px;border-radius:8px;text-decoration:none;display:inline-block\" href=\""
-                + enlace + "\">Aceptar invitación</a></p><p>Este enlace vence en 72 horas y solo puede utilizarse una vez.</p>"
-                + "<p style=\"color:#607080\">Si no esperabas esta invitación, ignora este mensaje.<br>¿Dudas? contacto@refluora.com</p></div>";
+                + enlace + "\">Aceptar invitación</a></p><p>Este enlace vence en " + horasVigencia + " horas y solo puede utilizarse una vez.</p>"
+                + "<p style=\"color:#607080\">Si no esperabas esta invitación, ignora este mensaje.<br>¿Dudas? " + escapar(soporte) + "</p></div>";
         clienteCorreo.enviar(config, new MensajeCorreoSaliente(invitacion.getCorreo(),
-                "Invitación para unirte a " + empresa.getNombre() + " en Fluora", texto, html, config.responderA(), List.of()));
+                "Invitación para unirte a " + empresa.getNombre() + " en " + plataforma, texto, html, config.responderA(), List.of()));
     }
 
     private String generarToken() { byte[] bytes = new byte[32]; secureRandom.nextBytes(bytes); return Base64.getUrlEncoder().withoutPadding().encodeToString(bytes); }
