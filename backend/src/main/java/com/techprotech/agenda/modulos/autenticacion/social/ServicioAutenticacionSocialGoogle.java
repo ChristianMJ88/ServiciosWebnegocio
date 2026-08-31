@@ -13,6 +13,7 @@ import org.springframework.web.util.UriComponentsBuilder;
 
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
+import java.util.Base64;
 import java.util.Map;
 import java.util.UUID;
 
@@ -106,7 +107,7 @@ public class ServicioAutenticacionSocialGoogle {
     public PerfilRegistroSocial validarTokenRegistro(String token) {
         try {
             Map<String, Object> datos = objectMapper.readValue(
-                    protector.desencriptarSiNecesario(token, "registro_social"), Map.class);
+                    protector.desencriptarSiNecesario(desprotegerDeUrl(token), "registro_social"), Map.class);
             long exp = ((Number) datos.get("exp")).longValue();
             if (exp < Instant.now().getEpochSecond()) {
                 throw new IllegalArgumentException("El registro social expiró");
@@ -123,7 +124,8 @@ public class ServicioAutenticacionSocialGoogle {
     }
 
     private void validarState(String state) throws Exception {
-        Map<?, ?> datos = objectMapper.readValue(protector.desencriptarSiNecesario(state, "oauth_state_social"), Map.class);
+        Map<?, ?> datos = objectMapper.readValue(
+                protector.desencriptarSiNecesario(desprotegerDeUrl(state), "oauth_state_social"), Map.class);
         if (((Number) datos.get("exp")).longValue() < Instant.now().getEpochSecond()) {
             throw new IllegalArgumentException("El estado OAuth expiró");
         }
@@ -138,10 +140,16 @@ public class ServicioAutenticacionSocialGoogle {
 
     private String cifrar(Map<String, Object> datos) {
         try {
-            return protector.encriptar(objectMapper.writeValueAsString(datos));
+            String cifrado = protector.encriptar(objectMapper.writeValueAsString(datos));
+            return Base64.getUrlEncoder().withoutPadding().encodeToString(cifrado.getBytes(StandardCharsets.UTF_8));
         } catch (Exception ex) {
             throw new IllegalStateException("No se pudo proteger el registro social", ex);
         }
+    }
+
+    private String desprotegerDeUrl(String valor) {
+        if (valor == null || valor.isBlank()) throw new IllegalArgumentException("Falta el valor OAuth");
+        return new String(Base64.getUrlDecoder().decode(valor), StandardCharsets.UTF_8);
     }
 
     private String requerido(Map<String, Object> datos, String clave) {
