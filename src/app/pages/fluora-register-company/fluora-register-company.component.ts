@@ -1,6 +1,7 @@
 
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { ActivatedRoute } from '@angular/router';
 import { finalize } from 'rxjs/operators';
 import { OnboardingService, RegistrarEmpresaResponse } from '../../core/onboarding/onboarding.service';
 import { PlatformHostService } from '../../core/platform/platform-host.service';
@@ -12,13 +13,18 @@ import { PlatformHostService } from '../../core/platform/platform-host.service';
   templateUrl: './fluora-register-company.component.html',
   styleUrl: './fluora-register-company.component.css'
 })
-export class FluoraRegisterCompanyComponent {
+export class FluoraRegisterCompanyComponent implements OnInit {
   private readonly fb = inject(FormBuilder);
   private readonly onboardingService = inject(OnboardingService);
+  private readonly route = inject(ActivatedRoute);
   readonly platformHost = inject(PlatformHostService);
 
   readonly loading = signal(false);
   readonly submitted = signal<RegistrarEmpresaResponse | null>(null);
+  readonly socialLoading = signal(false);
+  readonly socialToken = signal<string | null>(null);
+  readonly socialProvider = signal<string | null>(null);
+  readonly socialConfig = signal({google: false, microsoft: false, apple: false, googleInicioUrl: null as string | null});
   readonly slugPreview = computed(() => this.slugify(this.form.value.slug || this.form.value.nombreEmpresa || 'tu-negocio'));
   error = '';
 
@@ -45,6 +51,18 @@ export class FluoraRegisterCompanyComponent {
     'Web pública inicial para empezar pruebas de tu negocio.'
   ];
 
+  ngOnInit(): void {
+    this.onboardingService.configuracionRegistroSocial().subscribe({
+      next: config => this.socialConfig.set(config),
+      error: () => this.socialConfig.set({google: false, microsoft: false, apple: false, googleInicioUrl: null})
+    });
+
+    const errorSocial = this.route.snapshot.queryParamMap.get('errorSocial');
+    if (errorSocial) this.error = errorSocial;
+    const token = this.route.snapshot.queryParamMap.get('registroSocial');
+    if (token) this.cargarPerfilSocial(token);
+  }
+
   get f() {
     return this.form.controls;
   }
@@ -65,6 +83,33 @@ export class FluoraRegisterCompanyComponent {
     this.submitted.set(null);
   }
 
+  continuarConGoogle(): void {
+    const ruta = this.socialConfig().googleInicioUrl;
+    if (!ruta || !this.socialConfig().google) return;
+    window.location.assign(this.onboardingService.urlInicioSocial(ruta));
+  }
+
+  private cargarPerfilSocial(token: string): void {
+    this.socialLoading.set(true);
+    this.onboardingService.perfilRegistroSocial(token)
+      .pipe(finalize(() => this.socialLoading.set(false)))
+      .subscribe({
+        next: perfil => {
+          this.socialToken.set(token);
+          this.socialProvider.set(perfil.proveedor);
+          this.form.patchValue({
+            nombreAdministrador: perfil.nombre,
+            correoAdministrador: perfil.correo
+          });
+          this.form.controls.correoAdministrador.disable();
+          this.error = '';
+        },
+        error: err => {
+          this.error = err?.error?.message || 'La autorización social expiró. Inténtalo nuevamente.';
+        }
+      });
+  }
+
   onSubmit() {
     if (this.form.invalid) {
       this.form.markAllAsTouched();
@@ -75,15 +120,17 @@ export class FluoraRegisterCompanyComponent {
     this.error = '';
     this.submitted.set(null);
 
+    const valores = this.form.getRawValue();
     this.onboardingService.registrarEmpresa({
-      nombreEmpresa: this.form.value.nombreEmpresa!.trim(),
-      slug: (this.form.value.slug || '').trim() || undefined,
-      giro: this.form.value.giro!.trim(),
-      nombreAdministrador: this.form.value.nombreAdministrador!.trim(),
-      correoAdministrador: this.form.value.correoAdministrador!.trim().toLowerCase(),
-      telefonoAdministrador: this.form.value.telefonoAdministrador!.trim(),
-      contrasena: this.form.value.contrasena!,
-      zonaHoraria: this.form.value.zonaHoraria!.trim()
+      nombreEmpresa: valores.nombreEmpresa!.trim(),
+      slug: (valores.slug || '').trim() || undefined,
+      giro: valores.giro!.trim(),
+      nombreAdministrador: valores.nombreAdministrador!.trim(),
+      correoAdministrador: valores.correoAdministrador!.trim().toLowerCase(),
+      telefonoAdministrador: valores.telefonoAdministrador!.trim(),
+      contrasena: valores.contrasena!,
+      zonaHoraria: valores.zonaHoraria!.trim(),
+      registroSocialToken: this.socialToken() || undefined
     })
       .pipe(finalize(() => this.loading.set(false)))
       .subscribe({

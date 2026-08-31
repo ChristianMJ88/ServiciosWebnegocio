@@ -63,6 +63,7 @@
 .fluora-access__field {
   min-width: 0;
 }
+.fluora-access__password-head{display:flex;justify-content:space-between;gap:1rem;align-items:center}.fluora-access__password-head a{font-size:.88rem;color:#2563eb;text-decoration:none}
 
 .fluora-access__input-group {
   overflow: hidden;

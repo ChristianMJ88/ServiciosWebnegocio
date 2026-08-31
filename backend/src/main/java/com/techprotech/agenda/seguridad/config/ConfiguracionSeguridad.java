@@ -39,6 +39,7 @@ public class ConfiguracionSeguridad {
                                 "/api/v1/auth/cerrar-sesion"
                         ).permitAll()
                         .requestMatchers("/api/v1/onboarding/**").permitAll()
+                        .requestMatchers("/api/v1/auth/social/**").permitAll()
                         .requestMatchers("/api/v1/admin/correo/oauth/microsoft/callback").permitAll()
                         .requestMatchers("/api/v1/admin/correo/oauth/google/callback").permitAll()
                         .anyRequest().authenticated()

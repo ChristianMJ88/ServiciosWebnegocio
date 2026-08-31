@@ -2015,6 +2015,18 @@ public class ServicioAdminCitas {
         return construirUsuarioInternoResponse(usuario, perfil, rolEmpresa, empresaId);
     }
 
+    @Transactional(readOnly = true)
+    public void validarInvitacionUsuarioInterno(Long empresaId, UsuarioInternoAdminRequest request) {
+        RolEmpresaEntidad rolEmpresa = resolverRolUsuarioInterno(empresaId, request.rolEmpresaId());
+        validarSucursalUsuarioInterno(empresaId, request.sucursalId());
+        validarSucursalesPermitidasUsuarioInterno(empresaId, request.sucursalIds(), request.sucursalId());
+        normalizarPermisosDirectosUsuario(request.permisosDirectos(), rolEmpresa);
+        String correoNormalizado = request.correo().trim().toLowerCase();
+        usuarioRepositorio.findByEmpresaIdAndCorreo(empresaId, correoNormalizado).ifPresent(usuario -> {
+            throw new ResponseStatusException(CONFLICT, "Ya existe un usuario con ese correo en la empresa");
+        });
+    }
+
     @Transactional
     public UsuarioInternoAdminResponse actualizarUsuarioInterno(Long empresaId, Long usuarioActorId, Long usuarioId, UsuarioInternoAdminRequest request) {
         RolEmpresaEntidad rolEmpresa = resolverRolUsuarioInterno(empresaId, request.rolEmpresaId());

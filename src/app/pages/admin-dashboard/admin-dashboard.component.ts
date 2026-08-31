@@ -1869,6 +1869,9 @@ export class AdminDashboardComponent implements OnInit {
       .pipe(finalize(() => this.loading.set(false)))
       .subscribe({
         next: () => {
+          this.mensajeExito = this.usuarioInternoEditandoId
+            ? 'El acceso del usuario fue actualizado.'
+            : 'La invitación fue enviada. La persona creará su propia contraseña.';
           this.cancelarEdicionUsuarioInterno();
           this.recargar();
         },

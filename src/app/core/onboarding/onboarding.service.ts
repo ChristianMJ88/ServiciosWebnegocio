@@ -12,6 +12,20 @@ export interface RegistrarEmpresaPayload {
   telefonoAdministrador: string;
   contrasena: string;
   zonaHoraria?: string;
+  registroSocialToken?: string;
+}
+
+export interface ConfiguracionRegistroSocial {
+  google: boolean;
+  microsoft: boolean;
+  apple: boolean;
+  googleInicioUrl: string | null;
+}
+
+export interface PerfilRegistroSocial {
+  proveedor: string;
+  correo: string;
+  nombre: string;
 }
 
 export interface RegistrarEmpresaResponse {
@@ -35,5 +49,17 @@ export class OnboardingService {
     }
 
     return this.http.post<RegistrarEmpresaResponse>(`${environment.apiBaseUrl}/onboarding/empresas`, payload);
+  }
+
+  configuracionRegistroSocial(): Observable<ConfiguracionRegistroSocial> {
+    return this.http.get<ConfiguracionRegistroSocial>(`${environment.apiBaseUrl}/auth/social/configuracion`);
+  }
+
+  perfilRegistroSocial(token: string): Observable<PerfilRegistroSocial> {
+    return this.http.post<PerfilRegistroSocial>(`${environment.apiBaseUrl}/auth/social/perfil-registro`, {token});
+  }
+
+  urlInicioSocial(ruta: string): string {
+    return `${environment.apiBaseUrl}${ruta}`;
   }
 }

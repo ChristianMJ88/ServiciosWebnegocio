@@ -38,5 +38,10 @@ public class UsuarioEntidad {
     @Column(name = "ultimo_acceso_en")
     private LocalDateTime ultimoAccesoEn;
 
-}
+    @Column(name = "intentos_login_fallidos", nullable = false)
+    private int intentosLoginFallidos;
 
+    @Column(name = "login_bloqueado_hasta")
+    private LocalDateTime loginBloqueadoHasta;
+
+}

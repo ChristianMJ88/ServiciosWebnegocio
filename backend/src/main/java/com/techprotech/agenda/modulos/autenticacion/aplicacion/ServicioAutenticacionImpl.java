@@ -50,6 +50,7 @@ public class ServicioAutenticacionImpl implements ServicioAutenticacion {
     private final ServicioRolesEmpresa servicioRolesEmpresa;
     private final TokenActualizacionRepositorio tokenActualizacionRepositorio;
     private final PasswordEncoder passwordEncoder;
+    private final ServicioProteccionAcceso proteccionAcceso;
 
     public ServicioAutenticacionImpl(
             ServicioTokenJwt servicioTokenJwt,
@@ -59,7 +60,8 @@ public class ServicioAutenticacionImpl implements ServicioAutenticacion {
             ClienteRepositorio clienteRepositorio,
             ServicioRolesEmpresa servicioRolesEmpresa,
             TokenActualizacionRepositorio tokenActualizacionRepositorio,
-            PasswordEncoder passwordEncoder
+            PasswordEncoder passwordEncoder,
+            ServicioProteccionAcceso proteccionAcceso
     ) {
         this.servicioTokenJwt = servicioTokenJwt;
         this.propiedadesJwt = propiedadesJwt;
@@ -69,6 +71,7 @@ public class ServicioAutenticacionImpl implements ServicioAutenticacion {
         this.servicioRolesEmpresa = servicioRolesEmpresa;
         this.tokenActualizacionRepositorio = tokenActualizacionRepositorio;
         this.passwordEncoder = passwordEncoder;
+        this.proteccionAcceso = proteccionAcceso;
     }
 
     @Override
@@ -96,12 +99,14 @@ public class ServicioAutenticacionImpl implements ServicioAutenticacion {
             );
             throw new ResponseStatusException(FORBIDDEN, "El usuario no tiene acceso habilitado");
         }
+        validarBloqueoTemporal(usuario);
 
         if (esClientePendienteActivacion(usuario) && tieneRolCliente(usuario.getEmpresaId(), usuario.getId())) {
             throw new ResponseStatusException(FORBIDDEN, "Tu acceso aun no esta activado. Completa tu registro para continuar.");
         }
 
         if (!passwordEncoder.matches(request.contrasena(), usuario.getContrasenaHash())) {
+            proteccionAcceso.registrarIntentoFallido(usuario.getId());
             log.warn("Intento de inicio de sesion con contrasena invalida: empresaId={}, correo={}", request.empresaId(), correoNormalizado);
             throw new ResponseStatusException(UNAUTHORIZED, "Credenciales invalidas");
         }
@@ -109,6 +114,7 @@ public class ServicioAutenticacionImpl implements ServicioAutenticacion {
         List<String> roles = servicioRolesEmpresa.obtenerCodigosRolUsuario(usuario.getEmpresaId(), usuario.getId());
 
         usuario.setUltimoAccesoEn(LocalDateTime.now());
+        proteccionAcceso.limpiar(usuario);
         usuarioRepositorio.save(usuario);
 
         return emitirTokens(usuario, roles);
@@ -123,11 +129,16 @@ public class ServicioAutenticacionImpl implements ServicioAutenticacion {
             throw new ResponseStatusException(UNAUTHORIZED, "Credenciales invalidas");
         }
 
-        List<UsuarioEntidad> usuariosConCredenciales = coincidencias.stream()
+        List<UsuarioEntidad> candidatos = coincidencias.stream().filter(usuario -> !proteccionAcceso.estaBloqueadoTemporalmente(usuario)).toList();
+        if (candidatos.isEmpty()) {
+            throw new ResponseStatusException(UNAUTHORIZED, "Credenciales invalidas");
+        }
+        List<UsuarioEntidad> usuariosConCredenciales = candidatos.stream()
                 .filter(usuario -> passwordEncoder.matches(request.contrasena(), usuario.getContrasenaHash()))
                 .toList();
 
         if (usuariosConCredenciales.isEmpty()) {
+            candidatos.forEach(usuario -> proteccionAcceso.registrarIntentoFallido(usuario.getId()));
             log.warn("Intento de inicio de sesion central con contrasena invalida: correo={}", correoNormalizado);
             throw new ResponseStatusException(UNAUTHORIZED, "Credenciales invalidas");
         }
@@ -274,7 +285,7 @@ public class ServicioAutenticacionImpl implements ServicioAutenticacion {
     }
 
     private boolean usuarioPuedeIniciarSesion(UsuarioEntidad usuario) {
-        if (!usuario.isHabilitado() || usuario.isBloqueado()) {
+        if (!usuario.isHabilitado() || usuario.isBloqueado() || proteccionAcceso.estaBloqueadoTemporalmente(usuario)) {
             return false;
         }
         return !(esClientePendienteActivacion(usuario) && tieneRolCliente(usuario.getEmpresaId(), usuario.getId()));
@@ -289,6 +300,7 @@ public class ServicioAutenticacionImpl implements ServicioAutenticacion {
     private RespuestaAccesoApp autenticarUsuarioApp(UsuarioEntidad usuario) {
         List<String> roles = servicioRolesEmpresa.obtenerCodigosRolUsuario(usuario.getEmpresaId(), usuario.getId());
         usuario.setUltimoAccesoEn(LocalDateTime.now());
+        proteccionAcceso.limpiar(usuario);
         usuarioRepositorio.save(usuario);
 
         return new RespuestaAccesoApp(
@@ -297,6 +309,12 @@ public class ServicioAutenticacionImpl implements ServicioAutenticacion {
                 null,
                 emitirTokens(usuario, roles)
         );
+    }
+
+    private void validarBloqueoTemporal(UsuarioEntidad usuario) {
+        if (proteccionAcceso.estaBloqueadoTemporalmente(usuario)) {
+            throw new ResponseStatusException(UNAUTHORIZED, "Credenciales invalidas");
+        }
     }
 
     private RespuestaTokenJwt emitirTokens(UsuarioEntidad usuario, List<String> roles) {

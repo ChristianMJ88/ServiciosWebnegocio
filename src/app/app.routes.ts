@@ -54,6 +54,9 @@ export const routes: Routes = [
     data: { legalDocument: 'deletion' }
   },
   { path: 'acceso', loadComponent: () => import('./pages/fluora-access/fluora-access.component').then((m) => m.FluoraAccessComponent) },
+  { path: 'invitacion/aceptar', loadComponent: () => import('./pages/accept-user-invitation/accept-user-invitation.component').then((m) => m.AcceptUserInvitationComponent) },
+  { path: 'recuperar-contrasena', loadComponent: () => import('./pages/password-recovery/password-recovery.component').then((m) => m.PasswordRecoveryComponent) },
+  { path: 'recuperar-contrasena/confirmar', loadComponent: () => import('./pages/password-recovery/password-recovery.component').then((m) => m.PasswordRecoveryComponent) },
   {
     path: 'registro',
     loadComponent: () => import('./pages/fluora-register-company/fluora-register-company.component').then((m) => m.FluoraRegisterCompanyComponent)

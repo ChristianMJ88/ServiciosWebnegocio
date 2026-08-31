@@ -3,7 +3,7 @@
     <div class="section-header">
       <div>
         <div class="section-eyebrow">Operación interna</div>
-        <h3>{{ usuarioInternoEditandoId ? 'Editar acceso de usuario' : 'Nuevo usuario interno' }}</h3>
+        <h3>{{ usuarioInternoEditandoId ? 'Editar acceso de usuario' : 'Invitar usuario interno' }}</h3>
       </div>
       @if (usuarioInternoEditandoId) {
         <button mat-stroked-button type="button" (click)="clearEdit.emit()">
@@ -13,7 +13,7 @@
     </div>
 
     <div class="helper-text full-width users-helper-banner">
-      Primero asignas un <strong>rol</strong>. Luego, solo si hace falta, agregas permisos extra para ese usuario.
+      Primero asignas un <strong>rol</strong>. Al guardar, Fluora enviará una invitación segura para que la persona cree su propia contraseña.
     </div>
 
     <div class="users-access-summary">
@@ -182,20 +182,6 @@
       </mat-form-field>
 
       <mat-form-field appearance="outline">
-        <mat-label>Contraseña temporal</mat-label>
-        <input
-          matInput
-          type="password"
-          name="usuarioInternoPassword"
-          [(ngModel)]="formularioUsuarioInterno.contrasenaTemporal"
-          minlength="8"
-          maxlength="100">
-        <mat-hint>
-          {{ usuarioInternoEditandoId ? 'Opcional al editar. Si la cambias, usa mínimo 8 caracteres.' : 'Obligatoria al crear. Usa mínimo 8 caracteres.' }}
-        </mat-hint>
-      </mat-form-field>
-
-      <mat-form-field appearance="outline">
         <mat-label>Teléfono</mat-label>
         <input matInput name="usuarioInternoTelefono" [(ngModel)]="formularioUsuarioInterno.telefono" maxlength="30">
       </mat-form-field>
@@ -216,7 +202,7 @@
 
       <div class="form-actions">
         <button mat-flat-button color="primary" type="submit">
-          {{ usuarioInternoEditandoId ? 'Actualizar usuario' : 'Crear usuario interno' }}
+          {{ usuarioInternoEditandoId ? 'Actualizar usuario' : 'Enviar invitación' }}
         </button>
       </div>
     </form>

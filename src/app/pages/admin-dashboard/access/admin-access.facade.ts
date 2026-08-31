@@ -1,4 +1,5 @@
 import { Injectable, inject } from '@angular/core';
+import { Observable } from 'rxjs';
 import { AdminService, GuardarRolInternoPayload, GuardarUsuarioInternoPayload } from '../../../core/admin/admin.service';
 import { construirPayloadRolInterno, construirPayloadUsuarioInterno } from './admin-access.helpers';
 
@@ -6,11 +7,11 @@ import { construirPayloadRolInterno, construirPayloadUsuarioInterno } from './ad
 export class AdminAccessFacade {
   private readonly adminService = inject(AdminService);
 
-  guardarUsuario(id: number | null, formulario: GuardarUsuarioInternoPayload) {
+  guardarUsuario(id: number | null, formulario: GuardarUsuarioInternoPayload): Observable<unknown> {
     const payload = construirPayloadUsuarioInterno(formulario);
     return id
       ? this.adminService.actualizarUsuarioInterno(id, payload)
-      : this.adminService.crearUsuarioInterno(payload);
+      : this.adminService.invitarUsuarioInterno(payload);
   }
 
   guardarRol(id: number | null, clonarDesdeId: number | null, formulario: GuardarRolInternoPayload) {

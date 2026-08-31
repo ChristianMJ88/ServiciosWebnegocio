@@ -284,6 +284,14 @@ export interface GuardarUsuarioInternoPayload {
   notas: string | null;
 }
 
+export interface InvitacionUsuarioAdmin {
+  id: number;
+  correo: string;
+  nombreCompleto: string;
+  estado: string;
+  expiraEn: string;
+}
+
 export interface ReglaDisponibilidadAdmin {
   id: number;
   tipoSujeto: string;
@@ -831,6 +839,10 @@ export class AdminService {
 
   crearUsuarioInterno(payload: GuardarUsuarioInternoPayload): Observable<UsuarioInternoAdmin> {
     return this.http.post<UsuarioInternoAdmin>(`${environment.apiBaseUrl}/admin/usuarios-internos`, payload);
+  }
+
+  invitarUsuarioInterno(payload: GuardarUsuarioInternoPayload): Observable<InvitacionUsuarioAdmin> {
+    return this.http.post<InvitacionUsuarioAdmin>(`${environment.apiBaseUrl}/admin/usuarios-internos/invitaciones`, payload);
   }
 
   actualizarUsuarioInterno(id: number, payload: GuardarUsuarioInternoPayload): Observable<UsuarioInternoAdmin> {

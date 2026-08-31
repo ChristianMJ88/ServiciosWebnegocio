@@ -170,6 +170,17 @@
   margin-bottom: 1.5rem;
 }
 
+.company-register__social { display: grid; gap: 1rem; padding: 1.1rem; border: 1px solid #d7e3ea; border-radius: 22px; background: #f8fbfc; }
+.company-register__social h3 { margin: 0 0 .35rem; color: #172554; font-size: 1.05rem; }
+.company-register__social .company-register__eyebrow { margin-bottom: .35rem; }
+.company-register__social-buttons { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: .65rem; }
+.company-register__social-button { display: grid; grid-template-columns: auto 1fr; gap: .5rem; align-items: center; min-height: 48px; border: 1px solid #cbd5e1; border-radius: 14px; background: #fff; color: #243447; font-size: .82rem; font-weight: 700; text-align: left; }
+.company-register__social-button small { grid-column: 2; color: #81909d; font-size: .66rem; }
+.company-register__social-button:not(:disabled):hover { border-color: #2563eb; box-shadow: 0 6px 18px rgba(37,99,235,.1); }
+.company-register__social-connected { padding: .75rem .85rem; border-radius: 14px; color: #0f6f61; background: #dcf7ef; font-size: .8rem; font-weight: 700; }
+.company-register__divider { display: flex; align-items: center; gap: .75rem; margin: 1.2rem 0; color: #73818e; font-size: .75rem; text-align: center; }
+.company-register__divider::before, .company-register__divider::after { content: ''; flex: 1; height: 1px; background: #dbe4ea; }
+
 .company-register__section + .company-register__section {
   margin-top: 1.4rem;
 }
@@ -276,6 +287,7 @@
     flex-direction: column;
   }
   .company-register__list, .company-register__capabilities { grid-template-columns: 1fr; }
+  .company-register__social-buttons { grid-template-columns: 1fr; }
   .company-register__actions { align-items: center; }
   .company-register__actions .btn { width: min(100%, 310px); align-self: center; }
   .company-register__actions .btn-outline-dark { width: auto; min-height: 40px; padding: .4rem .8rem; border-color: transparent; }

@@ -1,7 +1,7 @@
 
 import { Component, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Router } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { finalize } from 'rxjs/operators';
 import { AuthService, EmpresaAccesoApp } from '../../core/auth/auth.service';
 import { PlatformHostService } from '../../core/platform/platform-host.service';
@@ -9,7 +9,7 @@ import { PlatformHostService } from '../../core/platform/platform-host.service';
 @Component({
   selector: 'app-fluora-access',
   standalone: true,
-  imports: [ReactiveFormsModule],
+  imports: [ReactiveFormsModule, RouterLink],
   templateUrl: './fluora-access.component.html',
   styleUrl: './fluora-access.component.css'
 })

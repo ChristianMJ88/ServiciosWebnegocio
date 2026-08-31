@@ -44,6 +44,33 @@
           <p>Completa estos datos para preparar tu negocio y crear el acceso de la persona que lo administrará.</p>
         </div>
 
+        <section class="company-register__social" aria-labelledby="registro-social-titulo">
+          <div>
+            <span class="company-register__eyebrow company-register__eyebrow--dark">Registro opcional</span>
+            <h3 id="registro-social-titulo">Acelera tu registro con una cuenta existente</h3>
+            <p>Solo usaremos tu nombre y correo. Los datos del negocio permanecen visibles para que tú los confirmes.</p>
+          </div>
+          <div class="company-register__social-buttons">
+            <button type="button" class="btn company-register__social-button" (click)="continuarConGoogle()" [disabled]="!socialConfig().google || socialLoading()">
+              <i class="bi bi-google"></i><span>Continuar con Google</span>
+            </button>
+            <button type="button" class="btn company-register__social-button" disabled title="Se habilitará en el siguiente paso">
+              <i class="bi bi-microsoft"></i><span>Continuar con Microsoft</span><small>Próximamente</small>
+            </button>
+            <button type="button" class="btn company-register__social-button" disabled title="Requiere credenciales de Apple Developer">
+              <i class="bi bi-apple"></i><span>Continuar con Apple</span><small>Próximamente</small>
+            </button>
+          </div>
+          @if (socialProvider()) {
+            <div class="company-register__social-connected">
+              <i class="bi bi-check-circle-fill"></i>
+              Identidad verificada con {{ socialProvider() }}. Confirma los datos restantes para crear tu negocio.
+            </div>
+          }
+        </section>
+
+        <div class="company-register__divider"><span>o completa el registro manualmente</span></div>
+
         <form [formGroup]="form" (ngSubmit)="onSubmit()" class="company-register__form">
           <div class="company-register__section">
             <h3><span>1</span> Sobre tu negocio</h3>
@@ -82,6 +109,7 @@
               <label class="company-register__field">
                 <span>Tu correo de acceso</span>
                 <input type="email" formControlName="correoAdministrador" placeholder="ana@negocio.com" class="form-control">
+                @if (socialProvider()) { <small>Correo verificado por {{ socialProvider() }}.</small> }
               </label>
               <label class="company-register__field">
                 <span>Tu teléfono</span>

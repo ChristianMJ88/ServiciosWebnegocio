@@ -17,6 +17,10 @@ import com.techprotech.agenda.modulos.autenticacion.infraestructura.repositorio.
 import com.techprotech.agenda.modulos.autenticacion.infraestructura.repositorio.RolPermisoRepositorio;
 import com.techprotech.agenda.modulos.autenticacion.infraestructura.repositorio.RolRepositorio;
 import com.techprotech.agenda.modulos.autenticacion.infraestructura.repositorio.UsuarioRepositorio;
+import com.techprotech.agenda.modulos.autenticacion.social.PerfilRegistroSocial;
+import com.techprotech.agenda.modulos.autenticacion.social.ServicioAutenticacionSocialGoogle;
+import com.techprotech.agenda.modulos.autenticacion.social.UsuarioIdentidadExternaEntidad;
+import com.techprotech.agenda.modulos.autenticacion.social.UsuarioIdentidadExternaRepositorio;
 import com.techprotech.agenda.modulos.onboarding.api.dto.RegistrarEmpresaRequest;
 import com.techprotech.agenda.modulos.onboarding.api.dto.RegistrarEmpresaResponse;
 import com.techprotech.agenda.modulos.sitio.infraestructura.entidad.EmpresaSitioConfigEntidad;
@@ -53,6 +57,8 @@ public class ServicioOnboardingEmpresaImpl implements ServicioOnboardingEmpresa 
     private final ServicioRolesEmpresa servicioRolesEmpresa;
     private final PasswordEncoder passwordEncoder;
     private final ServicioOutboxCorreoBienvenida servicioOutboxCorreoBienvenida;
+    private final ServicioAutenticacionSocialGoogle autenticacionSocialGoogle;
+    private final UsuarioIdentidadExternaRepositorio identidadExternaRepositorio;
 
     public ServicioOnboardingEmpresaImpl(
             EmpresaRepositorio empresaRepositorio,
@@ -65,7 +71,9 @@ public class ServicioOnboardingEmpresaImpl implements ServicioOnboardingEmpresa 
             RolEmpresaPermisoRepositorio rolEmpresaPermisoRepositorio,
             ServicioRolesEmpresa servicioRolesEmpresa,
             PasswordEncoder passwordEncoder,
-            ServicioOutboxCorreoBienvenida servicioOutboxCorreoBienvenida
+            ServicioOutboxCorreoBienvenida servicioOutboxCorreoBienvenida,
+            ServicioAutenticacionSocialGoogle autenticacionSocialGoogle,
+            UsuarioIdentidadExternaRepositorio identidadExternaRepositorio
     ) {
         this.empresaRepositorio = empresaRepositorio;
         this.usuarioRepositorio = usuarioRepositorio;
@@ -78,13 +86,18 @@ public class ServicioOnboardingEmpresaImpl implements ServicioOnboardingEmpresa 
         this.servicioRolesEmpresa = servicioRolesEmpresa;
         this.passwordEncoder = passwordEncoder;
         this.servicioOutboxCorreoBienvenida = servicioOutboxCorreoBienvenida;
+        this.autenticacionSocialGoogle = autenticacionSocialGoogle;
+        this.identidadExternaRepositorio = identidadExternaRepositorio;
     }
 
     @Override
     @Transactional
     public RegistrarEmpresaResponse registrarEmpresa(RegistrarEmpresaRequest request) {
         String slug = resolverSlugDisponible(request.slug(), request.nombreEmpresa());
-        String correoAdministrador = request.correoAdministrador().trim().toLowerCase(Locale.ROOT);
+        PerfilRegistroSocial perfilSocial = resolverPerfilSocial(request.registroSocialToken());
+        String correoAdministrador = perfilSocial == null
+                ? request.correoAdministrador().trim().toLowerCase(Locale.ROOT)
+                : perfilSocial.correo().trim().toLowerCase(Locale.ROOT);
 
         EmpresaEntidad empresa = new EmpresaEntidad();
         empresa.setNombre(request.nombreEmpresa().trim());
@@ -95,8 +108,9 @@ public class ServicioOnboardingEmpresaImpl implements ServicioOnboardingEmpresa 
 
         crearSucursalPrincipal(empresa, request);
         provisionarRolesEmpresa(empresa.getId());
-        crearSitioBase(empresa, request, slug);
-        crearAdministradorInicial(empresa, correoAdministrador, request);
+        crearSitioBase(empresa, request, slug, correoAdministrador);
+        UsuarioEntidad administrador = crearAdministradorInicial(empresa, correoAdministrador, request);
+        vincularIdentidadSocial(administrador, perfilSocial);
         servicioOutboxCorreoBienvenida.programar(new BienvenidaEmpresaCorreo(
                 empresa.getId(),
                 empresa.getNombre(),
@@ -126,7 +140,7 @@ public class ServicioOnboardingEmpresaImpl implements ServicioOnboardingEmpresa 
         sucursalRepositorio.save(sucursal);
     }
 
-    private void crearSitioBase(EmpresaEntidad empresa, RegistrarEmpresaRequest request, String slug) {
+    private void crearSitioBase(EmpresaEntidad empresa, RegistrarEmpresaRequest request, String slug, String correoAdministrador) {
         EmpresaSitioConfigEntidad sitio = new EmpresaSitioConfigEntidad();
         sitio.setEmpresaId(empresa.getId());
         sitio.setSlug(slug);
@@ -139,7 +153,7 @@ public class ServicioOnboardingEmpresaImpl implements ServicioOnboardingEmpresa 
         sitio.setHeroSubtitulo("Configura servicios, branding y equipo desde Fluora para publicar una experiencia propia por empresa.");
         sitio.setWhatsapp(limpiarTelefono(request.telefonoAdministrador()));
         sitio.setTelefono(request.telefonoAdministrador().trim());
-        sitio.setCorreo(request.correoAdministrador().trim().toLowerCase(Locale.ROOT));
+        sitio.setCorreo(correoAdministrador);
         sitio.setDireccion("Configura la dirección principal de tu negocio");
         sitio.setInstagramUrl("");
         sitio.setFacebookUrl("");
@@ -148,7 +162,7 @@ public class ServicioOnboardingEmpresaImpl implements ServicioOnboardingEmpresa 
         empresaSitioConfigRepositorio.save(sitio);
     }
 
-    private void crearAdministradorInicial(EmpresaEntidad empresa, String correoAdministrador, RegistrarEmpresaRequest request) {
+    private UsuarioEntidad crearAdministradorInicial(EmpresaEntidad empresa, String correoAdministrador, RegistrarEmpresaRequest request) {
         if (usuarioRepositorio.existsByEmpresaIdAndCorreo(empresa.getId(), correoAdministrador)) {
             throw new ResponseStatusException(CONFLICT, "Ya existe un usuario administrador con ese correo en la empresa");
         }
@@ -161,6 +175,23 @@ public class ServicioOnboardingEmpresaImpl implements ServicioOnboardingEmpresa 
         usuario.setBloqueado(false);
         usuario = usuarioRepositorio.save(usuario);
         servicioRolesEmpresa.asignarRolEmpresa(usuario, empresa.getId(), "ADMIN");
+        return usuario;
+    }
+
+    private PerfilRegistroSocial resolverPerfilSocial(String token) {
+        if (token == null || token.isBlank()) return null;
+        return autenticacionSocialGoogle.validarTokenRegistro(token);
+    }
+
+    private void vincularIdentidadSocial(UsuarioEntidad usuario, PerfilRegistroSocial perfil) {
+        if (perfil == null || identidadExternaRepositorio.existsByUsuarioIdAndProveedor(usuario.getId(), perfil.proveedor())) return;
+        UsuarioIdentidadExternaEntidad identidad = new UsuarioIdentidadExternaEntidad();
+        identidad.setUsuarioId(usuario.getId());
+        identidad.setProveedor(perfil.proveedor());
+        identidad.setSubjectProveedor(perfil.subject());
+        identidad.setCorreoVerificado(perfil.correo());
+        identidad.setCreadoEn(java.time.LocalDateTime.now());
+        identidadExternaRepositorio.save(identidad);
     }
 
     private void provisionarRolesEmpresa(Long empresaId) {
