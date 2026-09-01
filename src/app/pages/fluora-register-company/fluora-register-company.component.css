@@ -182,6 +182,8 @@
 .company-register__social-button small { grid-column: 2; color: #81909d; font-size: .66rem; }
 .company-register__social-button:not(:disabled):hover { border-color: #64748b; background: #f8fafc; box-shadow: 0 4px 12px rgba(15,23,42,.08); }
 .company-register__social-button:focus-visible { outline: 3px solid rgba(37,99,235,.22); outline-offset: 2px; }
+.company-register__social-skeleton { min-height: 52px; border: 1px solid #e2e8f0; border-radius: 10px; background: linear-gradient(100deg,#eef3f7 25%,#fff 45%,#eef3f7 65%); background-size: 220% 100%; animation: company-social-loading 1.2s ease-in-out infinite; }
+@keyframes company-social-loading { to { background-position-x: -220%; } }
 .company-register__social-connected { margin-top: 1rem; padding: .75rem .85rem; border-radius: 14px; color: #0f6f61; background: #dcf7ef; font-size: .8rem; font-weight: 700; }
 .company-register__divider { display: flex; align-items: center; gap: .75rem; margin: 1.2rem 0; color: #73818e; font-size: .75rem; text-align: center; }
 .company-register__divider::before, .company-register__divider::after { content: ''; flex: 1; height: 1px; background: #dbe4ea; }

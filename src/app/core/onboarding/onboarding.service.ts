@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, throwError } from 'rxjs';
+import { Observable, catchError, concat, of, shareReplay, tap, throwError } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { RespuestaAccesoApp, RespuestaTokenJwt } from '../auth/auth.service';
 
@@ -62,6 +62,8 @@ export interface ConfirmarCorreoResponse { mensaje: string; rutaAcceso: string; 
 })
 export class OnboardingService {
   private readonly http = inject(HttpClient);
+  private readonly socialConfigStorageKey = 'fluora_social_config';
+  private socialConfigRequest?: Observable<ConfiguracionRegistroSocial>;
 
   registrarEmpresa(payload: RegistrarEmpresaPayload): Observable<RegistrarEmpresaResponse> {
     if (!environment.apiBaseUrl) {
@@ -72,7 +74,35 @@ export class OnboardingService {
   }
 
   configuracionRegistroSocial(): Observable<ConfiguracionRegistroSocial> {
-    return this.http.get<ConfiguracionRegistroSocial>(`${environment.apiBaseUrl}/auth/social/configuracion`);
+    if (this.socialConfigRequest) return this.socialConfigRequest;
+
+    const cache = this.leerConfiguracionSocialCache();
+    const remota = this.http.get<ConfiguracionRegistroSocial>(`${environment.apiBaseUrl}/auth/social/configuracion`).pipe(
+      tap(config => this.guardarConfiguracionSocialCache(config)),
+      catchError(error => cache ? of(cache) : throwError(() => error)),
+      shareReplay({bufferSize: 1, refCount: false})
+    );
+    this.socialConfigRequest = cache ? concat(of(cache), remota) : remota;
+    return this.socialConfigRequest;
+  }
+
+  private leerConfiguracionSocialCache(): ConfiguracionRegistroSocial | null {
+    try {
+      const valor = globalThis.localStorage?.getItem(this.socialConfigStorageKey);
+      if (!valor) return null;
+      const config = JSON.parse(valor) as ConfiguracionRegistroSocial;
+      return typeof config.google === 'boolean' && typeof config.microsoft === 'boolean' ? config : null;
+    } catch {
+      return null;
+    }
+  }
+
+  private guardarConfiguracionSocialCache(config: ConfiguracionRegistroSocial): void {
+    try {
+      globalThis.localStorage?.setItem(this.socialConfigStorageKey, JSON.stringify(config));
+    } catch {
+      // El acceso sigue funcionando aunque el navegador no permita almacenamiento local.
+    }
   }
 
   perfilRegistroSocial(token: string): Observable<PerfilRegistroSocial> {

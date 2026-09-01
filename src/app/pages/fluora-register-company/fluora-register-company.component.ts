@@ -27,6 +27,7 @@ export class FluoraRegisterCompanyComponent implements OnInit {
   readonly socialToken = signal<string | null>(null);
   readonly socialProvider = signal<string | null>(null);
   readonly socialConfig = signal({google: false, microsoft: false, apple: false, googleInicioUrl: null as string | null, googleAccesoUrl: null as string | null, microsoftInicioUrl: null as string | null, microsoftAccesoUrl: null as string | null});
+  readonly socialConfigReady = signal(false);
   readonly paso = signal<1 | 2 | 3>(1);
   readonly slugPreview = computed(() => this.slugify(this.form.value.slug || this.form.value.nombreEmpresa || 'tu-negocio'));
   error = '';
@@ -45,8 +46,14 @@ export class FluoraRegisterCompanyComponent implements OnInit {
 
   ngOnInit(): void {
     this.onboardingService.configuracionRegistroSocial().subscribe({
-      next: config => this.socialConfig.set(config),
-      error: () => this.socialConfig.set({google: false, microsoft: false, apple: false, googleInicioUrl: null, googleAccesoUrl: null, microsoftInicioUrl: null, microsoftAccesoUrl: null})
+      next: config => {
+        this.socialConfig.set(config);
+        this.socialConfigReady.set(true);
+      },
+      error: () => {
+        this.socialConfig.set({google: false, microsoft: false, apple: false, googleInicioUrl: null, googleAccesoUrl: null, microsoftInicioUrl: null, microsoftAccesoUrl: null});
+        this.socialConfigReady.set(true);
+      }
     });
 
     const errorSocial = this.route.snapshot.queryParamMap.get('errorSocial');

@@ -95,6 +95,17 @@
 
 .fluora-access__social-button:disabled { cursor: wait; opacity: .6; }
 
+.fluora-access__social-skeleton {
+  min-height: 52px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  background: linear-gradient(100deg, #f1f5f9 25%, #fff 45%, #f1f5f9 65%);
+  background-size: 220% 100%;
+  animation: fluora-social-loading 1.2s ease-in-out infinite;
+}
+
+@keyframes fluora-social-loading { to { background-position-x: -220%; } }
+
 .fluora-access__divider {
   display: flex;
   align-items: center;
