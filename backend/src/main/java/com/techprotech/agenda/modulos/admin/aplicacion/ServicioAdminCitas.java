@@ -136,6 +136,7 @@ import java.util.stream.Collectors;
 import static org.springframework.http.HttpStatus.CONFLICT;
 import static org.springframework.http.HttpStatus.NOT_FOUND;
 import static org.springframework.http.HttpStatus.BAD_REQUEST;
+import static org.springframework.http.HttpStatus.PRECONDITION_REQUIRED;
 
 @Service
 public class ServicioAdminCitas {
@@ -503,6 +504,9 @@ public class ServicioAdminCitas {
 
     @Transactional
     public ConfiguracionSitioAdminResponse actualizarConfiguracionSitio(Long empresaId, Long usuarioActorId, ConfiguracionSitioAdminRequest request) {
+        if (request.publicado()) {
+            exigirCorreoVerificado(empresaId, usuarioActorId, "publicar el sitio");
+        }
         EmpresaEntidad empresa = empresaRepositorio.findById(empresaId)
                 .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "La empresa indicada no existe"));
         EmpresaSitioConfigEntidad configuracion = empresaSitioConfigRepositorio.findById(empresaId)
@@ -552,6 +556,9 @@ public class ServicioAdminCitas {
 
     @Transactional
     public ConfiguracionCorreoAdminResponse actualizarConfiguracionCorreo(Long empresaId, Long usuarioActorId, ConfiguracionCorreoAdminRequest request) {
+        if (request.habilitado()) {
+            exigirCorreoVerificado(empresaId, usuarioActorId, "activar un correo del negocio");
+        }
         ConfiguracionCorreoEmpresaEntidad configuracion = configuracionCorreoEmpresaRepositorio.findById(empresaId)
                 .orElseGet(() -> {
                     ConfiguracionCorreoEmpresaEntidad nueva = new ConfiguracionCorreoEmpresaEntidad();
@@ -704,6 +711,9 @@ public class ServicioAdminCitas {
 
     @Transactional
     public ConfiguracionWhatsappAdminResponse actualizarConfiguracionWhatsapp(Long empresaId, Long usuarioActorId, ConfiguracionWhatsappAdminRequest request) {
+        if (request.habilitado()) {
+            exigirCorreoVerificado(empresaId, usuarioActorId, "activar WhatsApp");
+        }
         ConfiguracionWhatsappEmpresaEntidad configuracion = configuracionWhatsappEmpresaRepositorio.findById(empresaId)
                 .orElseGet(() -> {
                     ConfiguracionWhatsappEmpresaEntidad nueva = new ConfiguracionWhatsappEmpresaEntidad();
@@ -1972,6 +1982,7 @@ public class ServicioAdminCitas {
 
     @Transactional
     public UsuarioInternoAdminResponse crearUsuarioInterno(Long empresaId, Long usuarioActorId, UsuarioInternoAdminRequest request) {
+        exigirCorreoVerificado(empresaId, usuarioActorId, "agregar personal");
         RolEmpresaEntidad rolEmpresa = resolverRolUsuarioInterno(empresaId, request.rolEmpresaId());
         validarSucursalUsuarioInterno(empresaId, request.sucursalId());
         List<Long> sucursalesPermitidas = validarSucursalesPermitidasUsuarioInterno(empresaId, request.sucursalIds(), request.sucursalId());
@@ -3492,6 +3503,20 @@ public class ServicioAdminCitas {
             return BigDecimal.ZERO;
         }
         return total.divide(BigDecimal.valueOf(cantidad), 2, java.math.RoundingMode.HALF_UP);
+    }
+
+    private void exigirCorreoVerificado(Long empresaId, Long usuarioActorId, String accion) {
+        if (usuarioActorId == null) {
+            return;
+        }
+        UsuarioEntidad actor = usuarioRepositorio.findByIdAndEmpresaId(usuarioActorId, empresaId)
+                .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "La cuenta administradora no existe"));
+        if (actor.getCorreoVerificadoEn() == null) {
+            throw new ResponseStatusException(
+                    PRECONDITION_REQUIRED,
+                    "Confirma tu correo electrónico antes de " + accion
+            );
+        }
     }
 
     private record CatalogoSugeridoDef(

@@ -16,28 +16,44 @@ import java.io.IOException;
 @RequestMapping("/api/v1/auth/social")
 public class ControladorAutenticacionSocial {
     private final ServicioAutenticacionSocialGoogle google;
+    private final ServicioAutenticacionSocialMicrosoft microsoft;
+    private final ServicioTokenRegistroSocial tokens;
+    private final ServicioAccesoSocial accesoSocial;
 
-    public ControladorAutenticacionSocial(ServicioAutenticacionSocialGoogle google) {
+    public ControladorAutenticacionSocial(ServicioAutenticacionSocialGoogle google,
+            ServicioAutenticacionSocialMicrosoft microsoft, ServicioTokenRegistroSocial tokens,
+            ServicioAccesoSocial accesoSocial) {
         this.google = google;
+        this.microsoft = microsoft;
+        this.tokens = tokens;
+        this.accesoSocial = accesoSocial;
     }
 
     @GetMapping("/configuracion")
     public ResponseEntity<ConfiguracionSocialResponse> configuracion() {
         return ResponseEntity.ok(new ConfiguracionSocialResponse(
-                google.estaHabilitado(), false, false,
-                google.estaHabilitado() ? "/auth/social/google/iniciar" : null
+                google.estaHabilitado(), microsoft.estaHabilitado(), false,
+                google.estaHabilitado() ? "/auth/social/google/iniciar" : null,
+                google.estaHabilitado() ? "/auth/social/google/iniciar-acceso" : null,
+                microsoft.estaHabilitado() ? "/auth/social/microsoft/iniciar" : null,
+                microsoft.estaHabilitado() ? "/auth/social/microsoft/iniciar-acceso" : null
         ));
     }
 
     @PostMapping("/perfil-registro")
     public ResponseEntity<PerfilRegistroSocialResponse> perfilRegistro(@Valid @RequestBody TokenRegistroSocialRequest request) {
-        PerfilRegistroSocial perfil = google.validarTokenRegistro(request.token());
+        PerfilRegistroSocial perfil = tokens.validarToken(request.token());
         return ResponseEntity.ok(new PerfilRegistroSocialResponse(perfil.proveedor(), perfil.correo(), perfil.nombre()));
     }
 
     @GetMapping("/google/iniciar")
     public void iniciarGoogle(HttpServletResponse response) throws IOException {
         response.sendRedirect(google.construirUrlInicio());
+    }
+
+    @GetMapping("/google/iniciar-acceso")
+    public void iniciarAccesoGoogle(HttpServletResponse response) throws IOException {
+        response.sendRedirect(google.construirUrlInicio("ACCESO"));
     }
 
     @GetMapping("/google/callback")
@@ -48,5 +64,31 @@ public class ControladorAutenticacionSocial {
             HttpServletResponse response
     ) throws IOException {
         response.sendRedirect(google.completar(code, state, error));
+    }
+
+    @GetMapping("/microsoft/iniciar")
+    public void iniciarMicrosoft(HttpServletResponse response) throws IOException {
+        response.sendRedirect(microsoft.construirUrlInicio("REGISTRO"));
+    }
+
+    @GetMapping("/microsoft/iniciar-acceso")
+    public void iniciarAccesoMicrosoft(HttpServletResponse response) throws IOException {
+        response.sendRedirect(microsoft.construirUrlInicio("ACCESO"));
+    }
+
+    @GetMapping("/microsoft/callback")
+    public void callbackMicrosoft(
+            @RequestParam(required = false) String code,
+            @RequestParam(required = false) String state,
+            @RequestParam(required = false) String error,
+            HttpServletResponse response
+    ) throws IOException {
+        response.sendRedirect(microsoft.completar(code, state, error));
+    }
+
+    @PostMapping("/intercambiar-acceso")
+    public ResponseEntity<com.techprotech.agenda.modulos.autenticacion.api.dto.RespuestaAccesoApp> intercambiarAcceso(
+            @Valid @RequestBody IntercambiarAccesoSocialRequest request) {
+        return ResponseEntity.ok(accesoSocial.intercambiar(request.codigo(), request.empresaId()));
     }
 }

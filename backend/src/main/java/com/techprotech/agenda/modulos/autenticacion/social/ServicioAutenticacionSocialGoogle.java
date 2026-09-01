@@ -1,7 +1,5 @@
 package com.techprotech.agenda.modulos.autenticacion.social;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.techprotech.agenda.compartido.correo.ProtectorSecretosCorreo;
 import org.springframework.http.MediaType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -12,10 +10,7 @@ import org.springframework.web.client.RestClient;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.nio.charset.StandardCharsets;
-import java.time.Instant;
-import java.util.Base64;
 import java.util.Map;
-import java.util.UUID;
 
 @Service
 public class ServicioAutenticacionSocialGoogle {
@@ -26,19 +21,19 @@ public class ServicioAutenticacionSocialGoogle {
     private static final String SCOPES = "openid email profile";
 
     private final PropiedadesAutenticacionSocial propiedades;
-    private final ProtectorSecretosCorreo protector;
-    private final ObjectMapper objectMapper;
+    private final ServicioTokenRegistroSocial tokens;
+    private final ServicioAccesoSocial accesoSocial;
     private final RestClient restClient;
 
     public ServicioAutenticacionSocialGoogle(
             PropiedadesAutenticacionSocial propiedades,
-            ProtectorSecretosCorreo protector,
-            ObjectMapper objectMapper,
+            ServicioTokenRegistroSocial tokens,
+            ServicioAccesoSocial accesoSocial,
             RestClient.Builder builder
     ) {
         this.propiedades = propiedades;
-        this.protector = protector;
-        this.objectMapper = objectMapper;
+        this.tokens = tokens;
+        this.accesoSocial = accesoSocial;
         this.restClient = builder.build();
     }
 
@@ -50,11 +45,12 @@ public class ServicioAutenticacionSocialGoogle {
     }
 
     public String construirUrlInicio() {
+        return construirUrlInicio("REGISTRO");
+    }
+
+    public String construirUrlInicio(String destino) {
         validarConfiguracion();
-        String state = cifrar(Map.of(
-                "exp", Instant.now().plusSeconds(600).getEpochSecond(),
-                "nonce", UUID.randomUUID().toString()
-        ));
+        String state = tokens.crearEstado("GOOGLE", destino);
         return UriComponentsBuilder.fromHttpUrl(AUTORIZACION)
                 .queryParam("client_id", propiedades.googleClientId())
                 .queryParam("redirect_uri", propiedades.googleRedirectUri())
@@ -67,11 +63,14 @@ public class ServicioAutenticacionSocialGoogle {
 
     @SuppressWarnings("unchecked")
     public String completar(String code, String state, String error) {
-        if (error != null && !error.isBlank()) {
-            return resultadoFrontend(null, "Google no autorizó el registro");
-        }
+        String destino = "REGISTRO";
         try {
-            validarState(state);
+            destino = tokens.validarEstado(state, "GOOGLE");
+            if (error != null && !error.isBlank()) {
+                return "ACCESO".equals(destino)
+                        ? resultadoAcceso(null, "Google no autorizó el acceso")
+                        : resultadoRegistro(null, "Google no autorizó el registro");
+            }
             MultiValueMap<String, String> form = new LinkedMultiValueMap<>();
             form.add("client_id", propiedades.googleClientId());
             form.add("client_secret", propiedades.googleClientSecret());
@@ -88,68 +87,40 @@ public class ServicioAutenticacionSocialGoogle {
             if (perfil == null || !Boolean.TRUE.equals(perfil.get("email_verified"))) {
                 throw new IllegalStateException("Google no confirmó el correo");
             }
-            Map<String, Object> registro = Map.of(
-                    "proveedor", "GOOGLE",
-                    "subject", requerido(perfil, "sub"),
-                    "correo", requerido(perfil, "email").trim().toLowerCase(),
-                    "nombre", String.valueOf(perfil.getOrDefault("name", perfil.get("email"))),
-                    "exp", Instant.now().plusSeconds(600).getEpochSecond()
+            PerfilRegistroSocial registro = new PerfilRegistroSocial(
+                    "GOOGLE",
+                    requerido(perfil, "sub"),
+                    requerido(perfil, "email").trim().toLowerCase(),
+                    String.valueOf(perfil.getOrDefault("name", perfil.get("email")))
             );
-            return resultadoFrontend(cifrar(registro), null);
+            if ("ACCESO".equals(destino)) return resultadoAcceso(accesoSocial.crearCodigo(registro), null);
+            return resultadoRegistro(tokens.crearToken(registro), null);
         } catch (Exception ex) {
             LOGGER.warn("No se pudo completar el registro social con Google: {}: {}",
                     ex.getClass().getSimpleName(), ex.getMessage());
-            return resultadoFrontend(null, "No se pudo validar tu cuenta de Google");
+            return "ACCESO".equals(destino)
+                    ? resultadoAcceso(null, "No se pudo validar tu cuenta de Google")
+                    : resultadoRegistro(null, "No se pudo validar tu cuenta de Google");
         }
     }
 
     @SuppressWarnings("unchecked")
     public PerfilRegistroSocial validarTokenRegistro(String token) {
-        try {
-            Map<String, Object> datos = objectMapper.readValue(
-                    protector.desencriptarSiNecesario(desprotegerDeUrl(token), "registro_social"), Map.class);
-            long exp = ((Number) datos.get("exp")).longValue();
-            if (exp < Instant.now().getEpochSecond()) {
-                throw new IllegalArgumentException("El registro social expiró");
-            }
-            return new PerfilRegistroSocial(
-                    requerido(datos, "proveedor"),
-                    requerido(datos, "subject"),
-                    requerido(datos, "correo"),
-                    requerido(datos, "nombre")
-            );
-        } catch (Exception ex) {
-            throw new IllegalArgumentException("El registro social no es válido o expiró", ex);
-        }
+        return tokens.validarToken(token);
     }
 
-    private void validarState(String state) throws Exception {
-        Map<?, ?> datos = objectMapper.readValue(
-                protector.desencriptarSiNecesario(desprotegerDeUrl(state), "oauth_state_social"), Map.class);
-        if (((Number) datos.get("exp")).longValue() < Instant.now().getEpochSecond()) {
-            throw new IllegalArgumentException("El estado OAuth expiró");
-        }
-    }
-
-    private String resultadoFrontend(String token, String error) {
+    private String resultadoRegistro(String token, String error) {
         UriComponentsBuilder builder = UriComponentsBuilder.fromHttpUrl(propiedades.frontendRegistroUrl());
         if (token != null) builder.queryParam("registroSocial", token);
         if (error != null) builder.queryParam("errorSocial", error);
         return builder.build().encode(StandardCharsets.UTF_8).toUriString();
     }
 
-    private String cifrar(Map<String, Object> datos) {
-        try {
-            String cifrado = protector.encriptar(objectMapper.writeValueAsString(datos));
-            return Base64.getUrlEncoder().withoutPadding().encodeToString(cifrado.getBytes(StandardCharsets.UTF_8));
-        } catch (Exception ex) {
-            throw new IllegalStateException("No se pudo proteger el registro social", ex);
-        }
-    }
-
-    private String desprotegerDeUrl(String valor) {
-        if (valor == null || valor.isBlank()) throw new IllegalArgumentException("Falta el valor OAuth");
-        return new String(Base64.getUrlDecoder().decode(valor), StandardCharsets.UTF_8);
+    private String resultadoAcceso(String codigo, String error) {
+        UriComponentsBuilder builder = UriComponentsBuilder.fromHttpUrl(propiedades.frontendAccesoUrl());
+        if (codigo != null) builder.queryParam("inicioSocial", codigo);
+        if (error != null) builder.queryParam("errorSocial", error);
+        return builder.build().encode(StandardCharsets.UTF_8).toUriString();
     }
 
     private String requerido(Map<String, Object> datos, String clave) {

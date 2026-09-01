@@ -12,6 +12,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.authentication.HttpStatusEntryPoint;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.http.HttpMethod;
 
 import static org.springframework.http.HttpStatus.UNAUTHORIZED;
 
@@ -38,7 +39,7 @@ public class ConfiguracionSeguridad {
                                 "/api/v1/auth/refrescar-token",
                                 "/api/v1/auth/cerrar-sesion"
                         ).permitAll()
-                        .requestMatchers("/api/v1/onboarding/**").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/v1/onboarding/empresas").permitAll()
                         .requestMatchers("/api/v1/auth/social/**").permitAll()
                         .requestMatchers("/api/v1/admin/correo/oauth/microsoft/callback").permitAll()
                         .requestMatchers("/api/v1/admin/correo/oauth/google/callback").permitAll()

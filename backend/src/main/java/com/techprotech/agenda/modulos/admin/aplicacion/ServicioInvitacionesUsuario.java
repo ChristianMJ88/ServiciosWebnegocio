@@ -8,8 +8,9 @@ import com.techprotech.agenda.modulos.admin.infraestructura.entidad.InvitacionUs
 import com.techprotech.agenda.modulos.admin.infraestructura.repositorio.InvitacionUsuarioEmpresaRepositorio;
 import com.techprotech.agenda.modulos.autenticacion.infraestructura.entidad.EmpresaEntidad;
 import com.techprotech.agenda.modulos.autenticacion.infraestructura.repositorio.EmpresaRepositorio;
+import com.techprotech.agenda.modulos.autenticacion.infraestructura.repositorio.UsuarioRepositorio;
 import com.techprotech.agenda.modulos.autenticacion.social.PerfilRegistroSocial;
-import com.techprotech.agenda.modulos.autenticacion.social.ServicioAutenticacionSocialGoogle;
+import com.techprotech.agenda.modulos.autenticacion.social.ServicioTokenRegistroSocial;
 import com.techprotech.agenda.modulos.autenticacion.social.UsuarioIdentidadExternaEntidad;
 import com.techprotech.agenda.modulos.autenticacion.social.UsuarioIdentidadExternaRepositorio;
 import org.springframework.beans.factory.annotation.Value;
@@ -30,10 +31,11 @@ import java.util.HexFormat;
 public class ServicioInvitacionesUsuario {
     private final InvitacionUsuarioEmpresaRepositorio invitaciones;
     private final EmpresaRepositorio empresas;
+    private final UsuarioRepositorio usuarios;
     private final ServicioAdminCitas admin;
     private final ServicioConfiguracionCorreoEmpresa configuracionCorreo;
     private final ClienteCorreoSaliente clienteCorreo;
-    private final ServicioAutenticacionSocialGoogle socialGoogle;
+    private final ServicioTokenRegistroSocial tokensSociales;
     private final UsuarioIdentidadExternaRepositorio identidades;
     private final ObjectMapper objectMapper;
     private final SecureRandom secureRandom = new SecureRandom();
@@ -44,10 +46,11 @@ public class ServicioInvitacionesUsuario {
     public ServicioInvitacionesUsuario(
             InvitacionUsuarioEmpresaRepositorio invitaciones,
             EmpresaRepositorio empresas,
+            UsuarioRepositorio usuarios,
             ServicioAdminCitas admin,
             ServicioConfiguracionCorreoEmpresa configuracionCorreo,
             ClienteCorreoSaliente clienteCorreo,
-            ServicioAutenticacionSocialGoogle socialGoogle,
+            ServicioTokenRegistroSocial tokensSociales,
             UsuarioIdentidadExternaRepositorio identidades,
             ObjectMapper objectMapper,
             PropiedadesCorreo propiedadesCorreo,
@@ -56,10 +59,11 @@ public class ServicioInvitacionesUsuario {
     ) {
         this.invitaciones = invitaciones;
         this.empresas = empresas;
+        this.usuarios = usuarios;
         this.admin = admin;
         this.configuracionCorreo = configuracionCorreo;
         this.clienteCorreo = clienteCorreo;
-        this.socialGoogle = socialGoogle;
+        this.tokensSociales = tokensSociales;
         this.identidades = identidades;
         this.objectMapper = objectMapper;
         this.propiedadesCorreo = propiedadesCorreo;
@@ -69,6 +73,14 @@ public class ServicioInvitacionesUsuario {
 
     @Transactional
     public InvitacionUsuarioResponse invitar(Long empresaId, Long actorId, UsuarioInternoAdminRequest request) {
+        var actor = usuarios.findByIdAndEmpresaId(actorId, empresaId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "La cuenta administradora no existe"));
+        if (actor.getCorreoVerificadoEn() == null) {
+            throw new ResponseStatusException(
+                    HttpStatus.PRECONDITION_REQUIRED,
+                    "Confirma tu correo electrónico antes de invitar personal"
+            );
+        }
         UsuarioInternoAdminRequest solicitud = new UsuarioInternoAdminRequest(
                 request.sucursalId(), request.sucursalIds(), request.correo(), null, request.nombreCompleto(),
                 request.telefono(), request.puesto(), request.rolEmpresaId(), request.permisosDirectos(), true, request.notas());
@@ -121,7 +133,7 @@ public class ServicioInvitacionesUsuario {
         InvitacionUsuarioEmpresaEntidad invitacion = resolverVigente(request.token());
         PerfilRegistroSocial perfilSocial = null;
         if (request.registroSocialToken() != null && !request.registroSocialToken().isBlank()) {
-            perfilSocial = socialGoogle.validarTokenRegistro(request.registroSocialToken());
+            perfilSocial = tokensSociales.validarToken(request.registroSocialToken());
             if (!invitacion.getCorreo().equalsIgnoreCase(perfilSocial.correo())) {
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "La cuenta social no corresponde al correo invitado");
             }

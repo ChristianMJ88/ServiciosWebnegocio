@@ -16,6 +16,7 @@ export interface SesionUsuario {
   permisos: string[];
   sucursalesPermitidas: number[];
   correo: string;
+  correoVerificado: boolean;
 }
 
 interface LoginRequest {
@@ -32,7 +33,7 @@ interface RegistroRequest {
   contrasena: string;
 }
 
-interface RespuestaTokenJwt {
+export interface RespuestaTokenJwt {
   tokenAcceso: string;
   tokenActualizacion: string;
   tipoToken: string;
@@ -40,6 +41,7 @@ interface RespuestaTokenJwt {
   empresaId: number;
   empresaSlug?: string;
   empresaNombre?: string;
+  correoVerificado: boolean;
   roles: string[];
   permisos: string[];
   sucursalesPermitidas: number[];
@@ -310,6 +312,10 @@ export class AuthService {
     });
   }
 
+  adoptarSesion(response: RespuestaTokenJwt, correo: string): void {
+    this.persistirSesionDesdeRespuesta(response, correo.trim().toLowerCase());
+  }
+
   private saveSession(sesion: SesionUsuario) {
     this.ngZone.run(() => {
       localStorage.setItem(this.storageKey, JSON.stringify(sesion));
@@ -329,7 +335,8 @@ export class AuthService {
       roles: response.roles,
       permisos: response.permisos ?? [],
       sucursalesPermitidas: response.sucursalesPermitidas ?? [],
-      correo: payload?.sub || correoFallback || this.sesion()?.correo || ''
+      correo: payload?.sub || correoFallback || this.sesion()?.correo || '',
+      correoVerificado: response.correoVerificado ?? false
     };
     this.saveSession(sesion);
   }

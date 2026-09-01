@@ -161,6 +161,13 @@
       }
 
       <main class="admin-body" id="admin-main">
+        @if (seccionActiva() === 'resumen' && estadoOnboarding(); as estado) {
+          <app-admin-onboarding-card
+            [estado]="estado"
+            [reenviando]="reenviandoConfirmacion()"
+            (reenviar)="reenviarConfirmacionCorreo()"
+            (abrirPaso)="abrirPasoOnboarding($event)" />
+        }
         <header class="content-header" [class.is-services-header]="seccionActiva() === 'servicios'">
           <div class="content-header-copy">
             <div class="content-header-meta">

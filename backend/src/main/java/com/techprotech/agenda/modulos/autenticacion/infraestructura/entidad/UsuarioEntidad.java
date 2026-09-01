@@ -26,6 +26,9 @@ public class UsuarioEntidad {
     @Column(nullable = false, length = 150)
     private String correo;
 
+    @Column(name = "correo_verificado_en")
+    private LocalDateTime correoVerificadoEn;
+
     @Column(name = "contrasena_hash", nullable = false, length = 255)
     private String contrasenaHash;
 

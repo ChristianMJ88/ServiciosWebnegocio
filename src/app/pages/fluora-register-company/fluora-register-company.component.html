@@ -4,166 +4,69 @@
       <aside class="company-register__aside">
         <img src="/fluora-logo-dark.svg" alt="Logo Fluora" class="company-register__logo">
         <span class="company-register__eyebrow">Empieza hoy</span>
-        <h1>Cuéntanos sobre tu negocio. Fluora te ayuda con el resto.</h1>
-        <p>
-          En unos minutos tendrás tu agenda, tu acceso principal y un minisitio listo para personalizar.
-        </p>
-
-        <div class="company-register__trial"><i class="bi bi-gift"></i><div><strong>3 meses de Fluora PRO incluidos</strong><span>Registra tu negocio sin costo. Al finalizar podrás elegir el plan que mejor se adapte a ti.</span></div></div>
-
-        <div class="company-register__panel">
-          <strong>Dirección de tu minisitio</strong>
-          <span>{{ slugPreview() }}</span>
-          <small>Así se verá el enlace que podrás compartir con tus clientes: <b>/e/{{ slugPreview() }}</b></small>
-        </div>
-
+        <h1>Crea tu cuenta. Configura tu negocio a tu ritmo.</h1>
+        <p>Primero protegemos tu acceso y después preparamos únicamente lo esencial para entrar a Fluora.</p>
+        <div class="company-register__trial"><i class="bi bi-gift"></i><div><strong>3 meses de Fluora PRO incluidos</strong><span>Conoce el producto antes de elegir un plan.</span></div></div>
+        @if (paso() >= 2) {
+          <div class="company-register__panel"><strong>Dirección sugerida de tu minisitio</strong><span>{{ slugPreview() }}</span><small>Podrás editarla antes de publicar: <b>/e/{{ slugPreview() }}</b></small></div>
+        }
         <div class="company-register__list">
-          @for (step of setupSteps; track step; let i = $index) {
-            <article class="company-register__item">
-              <span>{{ i + 1 }}</span>
-              <p>{{ step }}</p>
-            </article>
-          }
-        </div>
-
-        <div class="company-register__capabilities">
-          @for (item of capabilities; track item) {
-            <article>
-              <i class="bi bi-stars"></i>
-              <span>{{ item }}</span>
-            </article>
-          }
+          <article class="company-register__item"><span>1</span><p>Crea tu identidad de acceso.</p></article>
+          <article class="company-register__item"><span>2</span><p>Indica lo esencial de tu negocio.</p></article>
+          <article class="company-register__item"><span>3</span><p>Continúa con una guía breve dentro del panel.</p></article>
         </div>
       </aside>
 
       <div class="company-register__card">
         <div class="company-register__header">
-          <div class="company-register__progress"><span class="active">1 <small>Tu negocio</small></span><span>2 <small>Tu acceso</small></span><span>3 <small>Listo</small></span></div>
-          <span class="company-register__eyebrow company-register__eyebrow--dark">Crea tu espacio</span>
-          <h2>Empecemos con lo esencial</h2>
-          <p>Completa estos datos para preparar tu negocio y crear el acceso de la persona que lo administrará.</p>
+          <div class="company-register__progress"><span [class.active]="paso() === 1">1 <small>Tu cuenta</small></span><span [class.active]="paso() === 2">2 <small>Tu negocio</small></span><span [class.active]="paso() === 3">3 <small>Listo</small></span></div>
+          <span class="company-register__eyebrow company-register__eyebrow--dark">Menos de dos minutos</span>
+          <h2>@if (paso() === 1) { Crea tu acceso } @else if (paso() === 2) { Cuéntanos lo esencial } @else { Tu negocio está preparado }</h2>
+          <p>@if (paso() === 1) { Usa correo y contraseña o una cuenta verificada. } @else if (paso() === 2) { Lo demás lo configurarás con una guía dentro de Fluora. } @else { Ya puedes entrar y completar la activación a tu ritmo. }</p>
         </div>
 
-        <section class="company-register__social" aria-labelledby="registro-social-titulo">
-          <div>
-            <span class="company-register__eyebrow company-register__eyebrow--dark">Registro opcional</span>
-            <h3 id="registro-social-titulo">Acelera tu registro con una cuenta existente</h3>
-            <p>Solo usaremos tu nombre y correo. Los datos del negocio permanecen visibles para que tú los confirmes.</p>
-          </div>
-          <div class="company-register__social-buttons">
-            <button type="button" class="btn company-register__social-button" (click)="continuarConGoogle()" [disabled]="!socialConfig().google || socialLoading()">
-              <i class="bi bi-google"></i><span>Continuar con Google</span>
-            </button>
-            <button type="button" class="btn company-register__social-button" disabled title="Se habilitará en el siguiente paso">
-              <i class="bi bi-microsoft"></i><span>Continuar con Microsoft</span><small>Próximamente</small>
-            </button>
-            <button type="button" class="btn company-register__social-button" disabled title="Requiere credenciales de Apple Developer">
-              <i class="bi bi-apple"></i><span>Continuar con Apple</span><small>Próximamente</small>
-            </button>
-          </div>
-          @if (socialProvider()) {
-            <div class="company-register__social-connected">
-              <i class="bi bi-check-circle-fill"></i>
-              Identidad verificada con {{ socialProvider() }}. Confirma los datos restantes para crear tu negocio.
+        @if (paso() === 1) {
+          <section class="company-register__social" aria-labelledby="registro-social-titulo">
+            <div><h3 id="registro-social-titulo">Elige cómo crear tu cuenta</h3><p>Google verifica tu correo automáticamente. También puedes registrarte manualmente.</p></div>
+            <div class="company-register__social-buttons">
+              <button type="button" class="btn company-register__social-button" (click)="continuarConGoogle()" [disabled]="!socialConfig().google || socialLoading()"><i class="bi bi-google"></i><span>Continuar con Google</span></button>
+              <button type="button" class="btn company-register__social-button" (click)="continuarConMicrosoft()" [disabled]="!socialConfig().microsoft || socialLoading()"><i class="bi bi-microsoft"></i><span>Continuar con Microsoft</span></button>
             </div>
-          }
-        </section>
+            @if (socialProvider()) { <div class="company-register__social-connected"><i class="bi bi-check-circle-fill"></i> Correo verificado con {{ socialProvider() }}.</div> }
+          </section>
+          <div class="company-register__divider"><span>o crea tu cuenta manualmente</span></div>
+          <form [formGroup]="form" class="company-register__form" (ngSubmit)="continuarANegocio()">
+            <div class="company-register__section"><h3><span>1</span> Tu cuenta</h3><div class="company-register__grid">
+              <label class="company-register__field company-register__field--full"><span>Nombre completo</span><input type="text" formControlName="nombreAdministrador" autocomplete="name" placeholder="Ana García" class="form-control"></label>
+              <label class="company-register__field"><span>Correo de acceso</span><input type="email" formControlName="correoAdministrador" autocomplete="email" placeholder="ana@correo.com" class="form-control">@if (socialProvider()) { <small>Correo verificado por {{ socialProvider() }}.</small> }</label>
+              <label class="company-register__field"><span>Teléfono</span><input type="tel" formControlName="telefonoAdministrador" autocomplete="tel" placeholder="5512345678" class="form-control"></label>
+              @if (!socialProvider()) { <label class="company-register__field company-register__field--full"><span>Crea una contraseña segura</span><input type="password" formControlName="contrasena" autocomplete="new-password" placeholder="Usa una frase fácil de recordar" class="form-control"></label> }
+            </div></div>
+            @if (error) { <div class="alert alert-danger mb-0">{{ error }}</div> }
+            <div class="company-register__actions"><button type="submit" class="btn btn-primary btn-lg rounded-pill"><span>Continuar con mi negocio</span><i class="bi bi-arrow-right"></i></button></div>
+          </form>
+        }
 
-        <div class="company-register__divider"><span>o completa el registro manualmente</span></div>
+        @if (paso() === 2) {
+          <form [formGroup]="form" (ngSubmit)="onSubmit()" class="company-register__form">
+            <div class="company-register__section"><h3><span>2</span> Tu negocio</h3><div class="company-register__grid">
+              <label class="company-register__field company-register__field--full"><span>Nombre del negocio</span><input type="text" formControlName="nombreEmpresa" placeholder="Studio Magnolia" class="form-control"></label>
+              <label class="company-register__field"><span>Categoría</span><input type="text" formControlName="giro" placeholder="Describe la actividad del negocio" class="form-control"></label>
+              <label class="company-register__field"><span>Personas que atenderán</span><input type="number" min="1" max="500" formControlName="tamanoEquipo" class="form-control"></label>
+              <label class="company-register__field company-register__field--full"><span>Dirección del minisitio</span><input type="text" formControlName="slug" [placeholder]="slugPreview()" class="form-control"><small>La reservaremos ahora; tú decidirás cuándo publicarla.</small></label>
+              <label class="company-register__field company-register__field--full"><span>Zona horaria detectada</span><input type="text" formControlName="zonaHoraria" class="form-control"><small>La usamos para mostrar correctamente citas y recordatorios.</small></label>
+            </div></div>
+            @if (form.invalid && (form.touched || form.dirty)) { <div class="text-danger small">Revisa los datos pendientes para continuar.</div> }
+            @if (error) { <div class="alert alert-danger mb-0">{{ error }}</div> }
+            <div class="company-register__actions"><button type="button" class="btn btn-outline-dark btn-lg rounded-pill" (click)="volverACuenta()">Volver</button><button type="submit" class="btn btn-primary btn-lg rounded-pill" [disabled]="loading()">@if (!loading()) { <span>Crear mi negocio</span> } @else { <span class="spinner-border spinner-border-sm"></span> }</button></div>
+          </form>
+        }
 
-        <form [formGroup]="form" (ngSubmit)="onSubmit()" class="company-register__form">
-          <div class="company-register__section">
-            <h3><span>1</span> Sobre tu negocio</h3>
-            <div class="company-register__grid">
-              <label class="company-register__field company-register__field--full">
-                <span>¿Cómo se llama tu negocio?</span>
-                <input type="text" formControlName="nombreEmpresa" placeholder="Studio Magnolia" class="form-control">
-              </label>
-              <label class="company-register__field">
-                <span>Elige la dirección de tu minisitio</span>
-                <input type="text" formControlName="slug" placeholder="studio-magnolia" class="form-control">
-              </label>
-              <label class="company-register__field">
-                <span>¿A qué se dedica?</span>
-                <input type="text" formControlName="giro" placeholder="Salón de uñas y belleza" class="form-control">
-              </label>
-              <label class="company-register__field company-register__field--full">
-                <span>¿En qué zona horaria trabajas?</span>
-                <select formControlName="zonaHoraria" class="form-select">
-                  <option value="America/Mexico_City">America/Mexico_City</option>
-                  <option value="America/Bogota">America/Bogota</option>
-                  <option value="America/Lima">America/Lima</option>
-                  <option value="America/Santiago">America/Santiago</option>
-                </select>
-              </label>
-            </div>
-          </div>
-
-          <div class="company-register__section">
-            <h3><span>2</span> Tu acceso principal</h3>
-            <div class="company-register__grid">
-              <label class="company-register__field company-register__field--full">
-                <span>Tu nombre completo</span>
-                <input type="text" formControlName="nombreAdministrador" placeholder="Ana García" class="form-control">
-              </label>
-              <label class="company-register__field">
-                <span>Tu correo de acceso</span>
-                <input type="email" formControlName="correoAdministrador" placeholder="ana@negocio.com" class="form-control">
-                @if (socialProvider()) { <small>Correo verificado por {{ socialProvider() }}.</small> }
-              </label>
-              <label class="company-register__field">
-                <span>Tu teléfono</span>
-                <input type="tel" formControlName="telefonoAdministrador" placeholder="5512345678" class="form-control">
-              </label>
-              <label class="company-register__field company-register__field--full">
-                <span>Crea una contraseña segura</span>
-                <input type="password" formControlName="contrasena" placeholder="Mínimo 10 caracteres" class="form-control">
-              </label>
-            </div>
-          </div>
-
-          <div class="company-register__feedback">
-            @if (form.invalid && (form.touched || form.dirty)) {
-              <div class="text-danger small">
-                Hay algunos datos pendientes. Revísalos para que podamos crear tu negocio.
-              </div>
-            }
-            @if (error) {
-              <div class="alert alert-danger mb-0">
-                {{ error }}
-              </div>
-            }
-          </div>
-
-          <div class="company-register__actions">
-            <button type="submit" class="btn btn-primary btn-lg rounded-pill" [disabled]="loading()">
-              @if (!loading()) {
-                <span>Crear mi negocio</span>
-              }
-              @if (loading()) {
-                <span class="spinner-border spinner-border-sm"></span>
-              }
-            </button>
-            <button type="button" class="btn btn-outline-dark btn-lg rounded-pill" (click)="cargarDemo()">
-              Completar con un ejemplo
-            </button>
-          </div>
-        </form>
-
-        @if (submitted(); as result) {
+        @if (paso() === 3 && submitted(); as result) {
           <div class="company-register__success">
-            <span class="company-register__success-eyebrow">Empresa creada</span>
-            <h3>{{ result.nombreEmpresa }} ya quedó lista en Fluora.</h3>
-            @if (result.requiereConfirmacionCorreo) {
-              <p>Tu negocio y acceso están preparados. Revisa tu correo y confirma el enlace para activar el acceso principal.</p>
-            } @else {
-              <p>Fluora creó la empresa, el acceso principal y el sitio base. Ya puedes entrar al acceso central o abrir la web pública generada.</p>
-            }
-            <div class="company-register__success-links">
-              @if (!result.requiereConfirmacionCorreo) { <a [attr.href]="accesoUrl()" class="btn btn-primary rounded-pill">Ir a iniciar sesión</a> }
-              <a [attr.href]="sitioUrl()" class="btn btn-outline-dark rounded-pill">Ver sitio público</a>
-            </div>
-            <small>Slug generado: {{ result.slug }}</small>
+            <span class="company-register__success-eyebrow">Todo preparado</span><h3>{{ result.nombreEmpresa }} ya está listo para configurarse.</h3>
+            @if (result.requiereConfirmacionCorreo) { <p>Enviamos un enlace a <strong>{{ result.correoAdministrador }}</strong>. Puedes entrar ahora; confirma después para publicar e integrar servicios.</p> } @else { <p>Tu correo ya está verificado. Continúa con el primer servicio y los horarios de tu negocio.</p> }
+            <div class="company-register__success-links"><button type="button" class="btn btn-primary rounded-pill" (click)="entrarAlPanel()">Entrar a Fluora</button></div><small>Minisitio reservado: /e/{{ result.slug }}</small>
           </div>
         }
       </div>

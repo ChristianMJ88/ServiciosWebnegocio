@@ -1,5 +1,7 @@
 package com.techprotech.agenda.modulos.onboarding.api.dto;
 
+import com.techprotech.agenda.modulos.autenticacion.api.dto.RespuestaTokenJwt;
+
 public record RegistrarEmpresaResponse(
         Long empresaId,
         String slug,
@@ -7,6 +9,7 @@ public record RegistrarEmpresaResponse(
         String correoAdministrador,
         String rutaSitioPublico,
         String rutaAcceso,
-        boolean requiereConfirmacionCorreo
+        boolean requiereConfirmacionCorreo,
+        RespuestaTokenJwt sesion
 ) {
 }

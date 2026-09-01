@@ -3,6 +3,7 @@ package com.techprotech.agenda.modulos.onboarding.aplicacion;
 import com.techprotech.agenda.compartido.correo.BienvenidaEmpresaCorreo;
 import com.techprotech.agenda.compartido.correo.ServicioOutboxCorreoBienvenida;
 import com.techprotech.agenda.modulos.autenticacion.aplicacion.ServicioRolesEmpresa;
+import com.techprotech.agenda.modulos.autenticacion.aplicacion.ServicioAutenticacion;
 import com.techprotech.agenda.modulos.autenticacion.infraestructura.entidad.EmpresaEntidad;
 import com.techprotech.agenda.modulos.autenticacion.infraestructura.entidad.PermisoEntidad;
 import com.techprotech.agenda.modulos.autenticacion.infraestructura.entidad.RolEmpresaEntidad;
@@ -18,11 +19,13 @@ import com.techprotech.agenda.modulos.autenticacion.infraestructura.repositorio.
 import com.techprotech.agenda.modulos.autenticacion.infraestructura.repositorio.RolRepositorio;
 import com.techprotech.agenda.modulos.autenticacion.infraestructura.repositorio.UsuarioRepositorio;
 import com.techprotech.agenda.modulos.autenticacion.social.PerfilRegistroSocial;
-import com.techprotech.agenda.modulos.autenticacion.social.ServicioAutenticacionSocialGoogle;
+import com.techprotech.agenda.modulos.autenticacion.social.ServicioTokenRegistroSocial;
 import com.techprotech.agenda.modulos.autenticacion.social.UsuarioIdentidadExternaEntidad;
 import com.techprotech.agenda.modulos.autenticacion.social.UsuarioIdentidadExternaRepositorio;
 import com.techprotech.agenda.modulos.onboarding.api.dto.RegistrarEmpresaRequest;
 import com.techprotech.agenda.modulos.onboarding.api.dto.RegistrarEmpresaResponse;
+import com.techprotech.agenda.modulos.onboarding.infraestructura.entidad.EmpresaOnboardingProgresoEntidad;
+import com.techprotech.agenda.modulos.onboarding.infraestructura.repositorio.EmpresaOnboardingProgresoRepositorio;
 import com.techprotech.agenda.modulos.sitio.infraestructura.entidad.EmpresaSitioConfigEntidad;
 import com.techprotech.agenda.modulos.sitio.infraestructura.repositorio.EmpresaSitioConfigRepositorio;
 import com.techprotech.agenda.modulos.sucursales.infraestructura.entidad.SucursalEntidad;
@@ -37,9 +40,12 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.UUID;
+import java.time.LocalDateTime;
 
 import static org.springframework.http.HttpStatus.CONFLICT;
 import static org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR;
+import static org.springframework.http.HttpStatus.BAD_REQUEST;
 
 @Service
 public class ServicioOnboardingEmpresaImpl implements ServicioOnboardingEmpresa {
@@ -57,9 +63,11 @@ public class ServicioOnboardingEmpresaImpl implements ServicioOnboardingEmpresa 
     private final ServicioRolesEmpresa servicioRolesEmpresa;
     private final PasswordEncoder passwordEncoder;
     private final ServicioOutboxCorreoBienvenida servicioOutboxCorreoBienvenida;
-    private final ServicioAutenticacionSocialGoogle autenticacionSocialGoogle;
+    private final ServicioTokenRegistroSocial tokenRegistroSocial;
     private final UsuarioIdentidadExternaRepositorio identidadExternaRepositorio;
     private final ServicioVerificacionCorreoOnboarding verificacionCorreo;
+    private final ServicioAutenticacion servicioAutenticacion;
+    private final EmpresaOnboardingProgresoRepositorio progresoRepositorio;
 
     public ServicioOnboardingEmpresaImpl(
             EmpresaRepositorio empresaRepositorio,
@@ -73,9 +81,11 @@ public class ServicioOnboardingEmpresaImpl implements ServicioOnboardingEmpresa 
             ServicioRolesEmpresa servicioRolesEmpresa,
             PasswordEncoder passwordEncoder,
             ServicioOutboxCorreoBienvenida servicioOutboxCorreoBienvenida,
-            ServicioAutenticacionSocialGoogle autenticacionSocialGoogle,
+            ServicioTokenRegistroSocial tokenRegistroSocial,
             UsuarioIdentidadExternaRepositorio identidadExternaRepositorio,
-            ServicioVerificacionCorreoOnboarding verificacionCorreo
+            ServicioVerificacionCorreoOnboarding verificacionCorreo,
+            ServicioAutenticacion servicioAutenticacion,
+            EmpresaOnboardingProgresoRepositorio progresoRepositorio
     ) {
         this.empresaRepositorio = empresaRepositorio;
         this.usuarioRepositorio = usuarioRepositorio;
@@ -88,9 +98,11 @@ public class ServicioOnboardingEmpresaImpl implements ServicioOnboardingEmpresa 
         this.servicioRolesEmpresa = servicioRolesEmpresa;
         this.passwordEncoder = passwordEncoder;
         this.servicioOutboxCorreoBienvenida = servicioOutboxCorreoBienvenida;
-        this.autenticacionSocialGoogle = autenticacionSocialGoogle;
+        this.tokenRegistroSocial = tokenRegistroSocial;
         this.identidadExternaRepositorio = identidadExternaRepositorio;
         this.verificacionCorreo = verificacionCorreo;
+        this.servicioAutenticacion = servicioAutenticacion;
+        this.progresoRepositorio = progresoRepositorio;
     }
 
     @Override
@@ -113,10 +125,13 @@ public class ServicioOnboardingEmpresaImpl implements ServicioOnboardingEmpresa 
         provisionarRolesEmpresa(empresa.getId());
         crearSitioBase(empresa, request, slug, correoAdministrador);
         boolean requiereConfirmacion = perfilSocial == null;
-        UsuarioEntidad administrador = crearAdministradorInicial(empresa, correoAdministrador, request, !requiereConfirmacion);
+        UsuarioEntidad administrador = crearAdministradorInicial(empresa, correoAdministrador, request, perfilSocial);
+        crearProgresoInicial(empresa.getId(), request);
         vincularIdentidadSocial(administrador, perfilSocial);
         if (requiereConfirmacion) verificacionCorreo.enviar(empresa, administrador, request.nombreAdministrador().trim());
         else servicioOutboxCorreoBienvenida.programar(new BienvenidaEmpresaCorreo(empresa.getId(), empresa.getNombre(), request.nombreAdministrador().trim(), correoAdministrador, slug));
+
+        var sesion = servicioAutenticacion.emitirSesionOnboarding(empresa.getId(), administrador.getId());
 
         return new RegistrarEmpresaResponse(
                 empresa.getId(),
@@ -125,7 +140,8 @@ public class ServicioOnboardingEmpresaImpl implements ServicioOnboardingEmpresa 
                 correoAdministrador,
                 "/e/" + slug,
                 "/acceso",
-                requiereConfirmacion
+                requiereConfirmacion,
+                sesion
         );
     }
 
@@ -158,11 +174,11 @@ public class ServicioOnboardingEmpresaImpl implements ServicioOnboardingEmpresa 
         sitio.setInstagramUrl("");
         sitio.setFacebookUrl("");
         sitio.setTema("fluora-base");
-        sitio.setPublicado(true);
+        sitio.setPublicado(false);
         empresaSitioConfigRepositorio.save(sitio);
     }
 
-    private UsuarioEntidad crearAdministradorInicial(EmpresaEntidad empresa, String correoAdministrador, RegistrarEmpresaRequest request, boolean habilitado) {
+    private UsuarioEntidad crearAdministradorInicial(EmpresaEntidad empresa, String correoAdministrador, RegistrarEmpresaRequest request, PerfilRegistroSocial perfilSocial) {
         if (usuarioRepositorio.existsByEmpresaIdAndCorreo(empresa.getId(), correoAdministrador)) {
             throw new ResponseStatusException(CONFLICT, "Ya existe un usuario administrador con ese correo en la empresa");
         }
@@ -170,17 +186,33 @@ public class ServicioOnboardingEmpresaImpl implements ServicioOnboardingEmpresa 
         UsuarioEntidad usuario = new UsuarioEntidad();
         usuario.setEmpresaId(empresa.getId());
         usuario.setCorreo(correoAdministrador);
-        usuario.setContrasenaHash(passwordEncoder.encode(request.contrasena()));
-        usuario.setHabilitado(habilitado);
+        if (perfilSocial == null && (request.contrasena() == null || request.contrasena().isBlank())) {
+            throw new ResponseStatusException(BAD_REQUEST, "Crea una contraseña para continuar");
+        }
+        String credencial = perfilSocial == null ? request.contrasena() : UUID.randomUUID().toString();
+        usuario.setContrasenaHash(passwordEncoder.encode(credencial));
+        usuario.setCorreoVerificadoEn(perfilSocial == null ? null : LocalDateTime.now());
+        usuario.setHabilitado(true);
         usuario.setBloqueado(false);
         usuario = usuarioRepositorio.save(usuario);
         servicioRolesEmpresa.asignarRolEmpresa(usuario, empresa.getId(), "ADMIN");
         return usuario;
     }
 
+    private void crearProgresoInicial(Long empresaId, RegistrarEmpresaRequest request) {
+        EmpresaOnboardingProgresoEntidad progreso = new EmpresaOnboardingProgresoEntidad();
+        progreso.setEmpresaId(empresaId);
+        progreso.setCategoria(request.giro().trim());
+        progreso.setTamanoEquipo(request.tamanoEquipo().trim());
+        progreso.setPasoRecomendado("CONFIGURAR_HORARIO");
+        progreso.setCreadoEn(LocalDateTime.now());
+        progreso.setActualizadoEn(LocalDateTime.now());
+        progresoRepositorio.save(progreso);
+    }
+
     private PerfilRegistroSocial resolverPerfilSocial(String token) {
         if (token == null || token.isBlank()) return null;
-        return autenticacionSocialGoogle.validarTokenRegistro(token);
+        return tokenRegistroSocial.validarToken(token);
     }
 
     private void vincularIdentidadSocial(UsuarioEntidad usuario, PerfilRegistroSocial perfil) {

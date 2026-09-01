@@ -17,4 +17,6 @@ public interface ReglaDisponibilidadRepositorio extends JpaRepository<ReglaDispo
     Optional<ReglaDisponibilidadEntidad> findByIdAndEmpresaId(Long id, Long empresaId);
 
     Optional<ReglaDisponibilidadEntidad> findByIdAndEmpresaIdAndTipoSujetoAndSujetoId(Long id, Long empresaId, String tipoSujeto, Long sujetoId);
+
+    long countByEmpresaId(Long empresaId);
 }

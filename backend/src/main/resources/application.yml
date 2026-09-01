@@ -64,7 +64,17 @@ aplicacion:
     google-client-id: ${AUTH_SOCIAL_GOOGLE_CLIENT_ID:}
     google-client-secret: ${AUTH_SOCIAL_GOOGLE_CLIENT_SECRET:}
     google-redirect-uri: ${AUTH_SOCIAL_GOOGLE_REDIRECT_URI:}
+    microsoft-habilitado: ${AUTH_SOCIAL_MICROSOFT_HABILITADO:false}
+    microsoft-client-id: ${AUTH_SOCIAL_MICROSOFT_CLIENT_ID:}
+    microsoft-certificate-thumbprint: ${AUTH_SOCIAL_MICROSOFT_CERTIFICATE_THUMBPRINT:}
+    microsoft-private-key-pem: ${AUTH_SOCIAL_MICROSOFT_PRIVATE_KEY_PEM:}
+    microsoft-redirect-uri: ${AUTH_SOCIAL_MICROSOFT_REDIRECT_URI:}
     frontend-registro-url: ${AUTH_SOCIAL_FRONTEND_REGISTRO_URL:}
+    frontend-acceso-url: ${AUTH_SOCIAL_FRONTEND_ACCESO_URL:}
+  correo-bienvenida:
+    soporte: ${CORREO_BIENVENIDA_SOPORTE:contacto@refluora.com}
+    url-acceso: ${CORREO_BIENVENIDA_URL_ACCESO:https://app.refluora.com/acceso}
+    origen-publico: ${CORREO_BIENVENIDA_ORIGEN_PUBLICO:https://refluora.com}
   cors:
     origenes-permitidos: ${CORS_ORIGENES:http://localhost:4200,http://127.0.0.1:4200,https://refluora.com,https://www.refluora.com,https://app.refluora.com,https://fir-serviciosweb-b2901.web.app,https://fir-serviciosweb-b2901.firebaseapp.com,https://fluora.web.app}
   jwt:

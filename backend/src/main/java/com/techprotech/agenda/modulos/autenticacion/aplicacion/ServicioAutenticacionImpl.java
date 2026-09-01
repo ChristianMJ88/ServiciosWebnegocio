@@ -233,6 +233,18 @@ public class ServicioAutenticacionImpl implements ServicioAutenticacion {
         crearPerfilCliente(usuario.getId(), request.nombreCompleto().trim(), request.telefono().trim());
     }
 
+    @Override
+    @Transactional
+    public RespuestaTokenJwt emitirSesionOnboarding(Long empresaId, Long usuarioId) {
+        UsuarioEntidad usuario = usuarioRepositorio.findByIdAndEmpresaId(usuarioId, empresaId)
+                .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "No se encontró la cuenta creada"));
+        if (!usuario.isHabilitado() || usuario.isBloqueado()) {
+            throw new ResponseStatusException(FORBIDDEN, "La cuenta creada no está disponible");
+        }
+        List<String> roles = servicioRolesEmpresa.obtenerCodigosRolUsuario(empresaId, usuarioId);
+        return emitirTokens(usuario, roles);
+    }
+
     private UsuarioEntidad crearNuevoCliente(RegistrarClienteRequest request, String correoNormalizado) {
         UsuarioEntidad usuario = new UsuarioEntidad();
         usuario.setEmpresaId(request.empresaId());
@@ -351,6 +363,7 @@ public class ServicioAutenticacionImpl implements ServicioAutenticacion {
                 usuario.getEmpresaId(),
                 empresa.getSlug(),
                 empresa.getNombre(),
+                usuario.getCorreoVerificadoEn() != null,
                 roles,
                 permisos,
                 sucursalesPermitidas

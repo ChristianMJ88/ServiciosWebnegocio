@@ -261,3 +261,22 @@ f2701b8  chore: conectar firebase al backend de fluora
 - Mantener `api.refluora.com` como Solo DNS para el dominio administrado de Google.
 - Confirmar recurso y dependencias antes de eliminar o desvincular infraestructura.
 
+## 16. Identidad social de Microsoft
+
+El inicio de sesión de usuarios con Microsoft es independiente del conector Microsoft Graph que cada tenant puede usar para enviar correo. No deben intercambiar variables ni callbacks.
+
+Variables exclusivas del acceso social:
+
+```text
+AUTH_SOCIAL_MICROSOFT_HABILITADO=true
+AUTH_SOCIAL_MICROSOFT_CLIENT_ID=<id de la aplicación de identidad>
+AUTH_SOCIAL_MICROSOFT_CERTIFICATE_THUMBPRINT=<huella del certificado>
+AUTH_SOCIAL_MICROSOFT_PRIVATE_KEY_PEM=<llave privada desde Secret Manager>
+AUTH_SOCIAL_MICROSOFT_REDIRECT_URI=https://api.refluora.com/api/v1/auth/social/microsoft/callback
+AUTH_SOCIAL_FRONTEND_REGISTRO_URL=https://app.refluora.com/registro
+AUTH_SOCIAL_FRONTEND_ACCESO_URL=https://app.refluora.com/acceso
+```
+
+En Microsoft Entra, la aplicación de identidad debe admitir organizaciones múltiples, tener permiso delegado `User.Read` y registrar exactamente el URI de callback anterior. La llave privada nunca se versiona: se suministra desde Secret Manager.
+
+El callback entrega un código aleatorio con vigencia de cinco minutos. El código se guarda mediante hash, se consume una sola vez y permite seleccionar empresa cuando la misma identidad pertenece a varios tenants.

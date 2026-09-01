@@ -8,4 +8,6 @@ import java.util.List;
 public interface AuditoriaConfiguracionEmpresaRepositorio extends JpaRepository<AuditoriaConfiguracionEmpresaEntidad, Long> {
 
     List<AuditoriaConfiguracionEmpresaEntidad> findTop30ByEmpresaIdOrderByCreadoEnDesc(Long empresaId);
+
+    boolean existsByEmpresaIdAndAccion(Long empresaId, String accion);
 }

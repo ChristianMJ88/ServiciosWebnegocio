@@ -18,4 +18,6 @@ public interface ServicioAutenticacion {
     void cerrarSesion(RefrescarTokenRequest request);
 
     void registrarCliente(RegistrarClienteRequest request);
+
+    RespuestaTokenJwt emitirSesionOnboarding(Long empresaId, Long usuarioId);
 }

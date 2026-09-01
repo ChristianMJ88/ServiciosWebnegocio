@@ -63,6 +63,7 @@ import {
   UsuarioInternoAdmin
 } from '../../core/admin/admin.service';
 import { AuthService } from '../../core/auth/auth.service';
+import { EstadoOnboarding, OnboardingService } from '../../core/onboarding/onboarding.service';
 import { CitaCliente } from '../../core/auth/client-appointments.service';
 import { PerfilUsuarioLocal, UserProfileService } from '../../core/profile/user-profile.service';
 import { UserProfileDialogComponent } from '../../shared/profile/user-profile-dialog.component';
@@ -78,6 +79,7 @@ import { AdminRulesSectionComponent } from './availability/admin-rules-section.c
 import { AdminSiteSectionComponent } from './site/admin-site-section.component';
 import { AdminServicesSectionComponent } from './catalog/admin-services-section.component';
 import { AdminSummarySectionComponent } from './overview/admin-summary-section.component';
+import { AdminOnboardingCardComponent } from './onboarding/admin-onboarding-card.component';
 import { AdminSidebarComponent } from './navigation/admin-sidebar.component';
 import { AdminUsersActivitySectionComponent } from './access/admin-users-activity-section.component';
 import { AdminUsersAccessSectionComponent } from './access/admin-users-access-section.component';
@@ -197,6 +199,7 @@ type NotificacionAdmin = {
     AdminSiteSectionComponent,
     AdminServicesSectionComponent,
     AdminSummarySectionComponent,
+    AdminOnboardingCardComponent,
     AdminSidebarComponent,
     AdminUsersActivitySectionComponent,
     AdminUsersAccessSectionComponent,
@@ -221,6 +224,7 @@ export class AdminDashboardComponent implements OnInit {
   private readonly dashboardLoader = inject(AdminDashboardLoader);
   private readonly breakpointObserver = inject(BreakpointObserver);
   private readonly authService = inject(AuthService);
+  private readonly onboardingService = inject(OnboardingService);
   private readonly userProfileService = inject(UserProfileService);
   private readonly router = inject(Router);
   private readonly activatedRoute = inject(ActivatedRoute);
@@ -231,6 +235,8 @@ export class AdminDashboardComponent implements OnInit {
   private readonly finAgendaHora = 20;
   private readonly alturaHoraAgenda = 86;
   readonly loading = signal(false);
+  readonly estadoOnboarding = signal<EstadoOnboarding | null>(null);
+  readonly reenviandoConfirmacion = signal(false);
   readonly fechaAgendaSeleccionada = signal<string | null>(null);
   readonly agendaViewMode = signal<AgendaViewMode>('day');
   readonly citaAgendaSeleccionadaId = signal<number | null>(null);
@@ -770,6 +776,7 @@ export class AdminDashboardComponent implements OnInit {
     });
 
     if (this.authService.asegurarSesion()) {
+      this.cargarEstadoOnboarding();
       this.recargar();
     }
 
@@ -940,6 +947,33 @@ export class AdminDashboardComponent implements OnInit {
   logout() {
     this.authService.logout();
     void this.router.navigateByUrl('/login');
+  }
+
+  cargarEstadoOnboarding(): void {
+    this.onboardingService.estado().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+      next: estado => this.estadoOnboarding.set(estado),
+      error: () => this.estadoOnboarding.set(null)
+    });
+  }
+
+  reenviarConfirmacionCorreo(): void {
+    if (this.reenviandoConfirmacion()) return;
+    this.reenviandoConfirmacion.set(true);
+    this.onboardingService.reenviarConfirmacion()
+      .pipe(finalize(() => this.reenviandoConfirmacion.set(false)), takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: () => this.mensajeExito = 'Enviamos un nuevo enlace de confirmación.',
+        error: error => this.error = error?.error?.message || 'No pudimos reenviar el enlace todavía.'
+      });
+  }
+
+  abrirPasoOnboarding(paso: string): void {
+    const seccion: SeccionAdmin = paso === 'CONFIGURAR_HORARIO' ? 'reglas'
+      : paso === 'CREAR_SERVICIO' ? 'servicios'
+      : paso === 'AGREGAR_PERSONAL' ? 'prestadores'
+      : paso === 'PERSONALIZAR_SITIO' ? 'sitio'
+      : 'citas';
+    this.seleccionarSeccion(seccion);
   }
 
   recargar() {

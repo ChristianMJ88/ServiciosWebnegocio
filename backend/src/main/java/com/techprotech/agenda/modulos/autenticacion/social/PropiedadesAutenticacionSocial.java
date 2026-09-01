@@ -8,6 +8,12 @@ public record PropiedadesAutenticacionSocial(
         String googleClientId,
         String googleClientSecret,
         String googleRedirectUri,
-        String frontendRegistroUrl
+        boolean microsoftHabilitado,
+        String microsoftClientId,
+        String microsoftCertificateThumbprint,
+        String microsoftPrivateKeyPem,
+        String microsoftRedirectUri,
+        String frontendRegistroUrl,
+        String frontendAccesoUrl
 ) {
 }

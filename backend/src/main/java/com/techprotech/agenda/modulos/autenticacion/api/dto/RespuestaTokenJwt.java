@@ -10,6 +10,7 @@ public record RespuestaTokenJwt(
         Long empresaId,
         String empresaSlug,
         String empresaNombre,
+        boolean correoVerificado,
         List<String> roles,
         List<String> permisos,
         List<Long> sucursalesPermitidas

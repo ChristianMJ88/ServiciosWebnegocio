@@ -5,6 +5,7 @@ import { ActivatedRoute } from '@angular/router';
 import { finalize } from 'rxjs/operators';
 import { OnboardingService, RegistrarEmpresaResponse } from '../../core/onboarding/onboarding.service';
 import { PlatformHostService } from '../../core/platform/platform-host.service';
+import { AuthService } from '../../core/auth/auth.service';
 
 @Component({
   selector: 'app-fluora-register-company',
@@ -18,43 +19,34 @@ export class FluoraRegisterCompanyComponent implements OnInit {
   private readonly onboardingService = inject(OnboardingService);
   private readonly route = inject(ActivatedRoute);
   readonly platformHost = inject(PlatformHostService);
+  private readonly authService = inject(AuthService);
 
   readonly loading = signal(false);
   readonly submitted = signal<RegistrarEmpresaResponse | null>(null);
   readonly socialLoading = signal(false);
   readonly socialToken = signal<string | null>(null);
   readonly socialProvider = signal<string | null>(null);
-  readonly socialConfig = signal({google: false, microsoft: false, apple: false, googleInicioUrl: null as string | null});
+  readonly socialConfig = signal({google: false, microsoft: false, apple: false, googleInicioUrl: null as string | null, googleAccesoUrl: null as string | null, microsoftInicioUrl: null as string | null, microsoftAccesoUrl: null as string | null});
+  readonly paso = signal<1 | 2 | 3>(1);
   readonly slugPreview = computed(() => this.slugify(this.form.value.slug || this.form.value.nombreEmpresa || 'tu-negocio'));
   error = '';
 
   readonly form = this.fb.group({
     nombreEmpresa: ['', [Validators.required, Validators.minLength(3), Validators.maxLength(150)]],
     slug: ['', [Validators.maxLength(100)]],
-    giro: ['Salón de uñas y belleza', [Validators.required, Validators.minLength(3), Validators.maxLength(120)]],
+    giro: ['', [Validators.required, Validators.minLength(3), Validators.maxLength(120)]],
+    tamanoEquipo: [1, [Validators.required, Validators.min(1), Validators.max(500)]],
     nombreAdministrador: ['', [Validators.required, Validators.minLength(3), Validators.maxLength(150)]],
     correoAdministrador: ['', [Validators.required, Validators.email, Validators.maxLength(150)]],
     telefonoAdministrador: ['', [Validators.required, Validators.pattern('^[0-9+ ]{10,30}$')]],
     contrasena: ['', [Validators.required, Validators.minLength(8), Validators.maxLength(120)]],
-    zonaHoraria: ['America/Mexico_City', [Validators.required, Validators.maxLength(60)]]
+    zonaHoraria: [Intl.DateTimeFormat().resolvedOptions().timeZone, [Validators.required, Validators.maxLength(60)]]
   });
-
-  readonly setupSteps = [
-    'Se crea tu empresa y su dirección web inicial.',
-    'Se genera el acceso principal para administrar el negocio.',
-    'Fluora deja lista una sucursal principal y la web base de tu negocio.'
-  ];
-
-  readonly capabilities = [
-    'Acceso central por correo y contraseña.',
-    'Panel admin listo para configurar sucursales y servicios.',
-    'Web pública inicial para empezar pruebas de tu negocio.'
-  ];
 
   ngOnInit(): void {
     this.onboardingService.configuracionRegistroSocial().subscribe({
       next: config => this.socialConfig.set(config),
-      error: () => this.socialConfig.set({google: false, microsoft: false, apple: false, googleInicioUrl: null})
+      error: () => this.socialConfig.set({google: false, microsoft: false, apple: false, googleInicioUrl: null, googleAccesoUrl: null, microsoftInicioUrl: null, microsoftAccesoUrl: null})
     });
 
     const errorSocial = this.route.snapshot.queryParamMap.get('errorSocial');
@@ -67,25 +59,33 @@ export class FluoraRegisterCompanyComponent implements OnInit {
     return this.form.controls;
   }
 
-  cargarDemo() {
-    const timestamp = Date.now().toString().slice(-6);
-    this.form.patchValue({
-      nombreEmpresa: `Studio Demo ${timestamp}`,
-      slug: `studio-demo-${timestamp}`,
-      giro: 'Salón de uñas y belleza',
-      nombreAdministrador: 'Christian Mejía',
-      correoAdministrador: `demo${timestamp}@fluora.local`,
-      telefonoAdministrador: '5512345678',
-      contrasena: 'Demo12345!',
-      zonaHoraria: 'America/Mexico_City'
-    });
-    this.error = '';
-    this.submitted.set(null);
+  continuarANegocio(): void {
+    this.form.controls.nombreAdministrador.markAsTouched();
+    this.form.controls.correoAdministrador.markAsTouched();
+    this.form.controls.telefonoAdministrador.markAsTouched();
+    this.form.controls.contrasena.markAsTouched();
+    const identidadInvalida = this.form.controls.nombreAdministrador.invalid
+      || this.form.controls.correoAdministrador.invalid
+      || this.form.controls.telefonoAdministrador.invalid
+      || (!this.socialToken() && this.form.controls.contrasena.invalid);
+    if (identidadInvalida) return;
+    this.paso.set(2);
+    globalThis.scrollTo({top: 0, behavior: 'smooth'});
+  }
+
+  volverACuenta(): void {
+    this.paso.set(1);
   }
 
   continuarConGoogle(): void {
     const ruta = this.socialConfig().googleInicioUrl;
     if (!ruta || !this.socialConfig().google) return;
+    window.location.assign(this.onboardingService.urlInicioSocial(ruta));
+  }
+
+  continuarConMicrosoft(): void {
+    const ruta = this.socialConfig().microsoftInicioUrl;
+    if (!ruta || !this.socialConfig().microsoft) return;
     window.location.assign(this.onboardingService.urlInicioSocial(ruta));
   }
 
@@ -102,6 +102,9 @@ export class FluoraRegisterCompanyComponent implements OnInit {
             correoAdministrador: perfil.correo
           });
           this.form.controls.correoAdministrador.disable();
+          this.form.controls.contrasena.clearValidators();
+          this.form.controls.contrasena.setValue('');
+          this.form.controls.contrasena.updateValueAndValidity();
           this.error = '';
         },
         error: err => {
@@ -125,17 +128,20 @@ export class FluoraRegisterCompanyComponent implements OnInit {
       nombreEmpresa: valores.nombreEmpresa!.trim(),
       slug: (valores.slug || '').trim() || undefined,
       giro: valores.giro!.trim(),
+      tamanoEquipo: String(valores.tamanoEquipo),
       nombreAdministrador: valores.nombreAdministrador!.trim(),
       correoAdministrador: valores.correoAdministrador!.trim().toLowerCase(),
       telefonoAdministrador: valores.telefonoAdministrador!.trim(),
-      contrasena: valores.contrasena!,
+      contrasena: valores.contrasena || '',
       zonaHoraria: valores.zonaHoraria!.trim(),
       registroSocialToken: this.socialToken() || undefined
     })
       .pipe(finalize(() => this.loading.set(false)))
       .subscribe({
         next: response => {
+          this.authService.adoptarSesion(response.sesion, response.correoAdministrador);
           this.submitted.set(response);
+          this.paso.set(3);
         },
         error: err => {
           this.error = err?.error?.message || err?.error?.mensaje || err?.message || 'No se pudo crear la empresa.';
@@ -151,6 +157,10 @@ export class FluoraRegisterCompanyComponent implements OnInit {
   accesoUrl(): string {
     const response = this.submitted();
     return response ? this.platformHost.appUrl(response.rutaAcceso) : this.platformHost.appUrl('/acceso');
+  }
+
+  entrarAlPanel(): void {
+    globalThis.location.href = this.platformHost.appUrl('/admin/resumen');
   }
 
   private slugify(value: string): string {

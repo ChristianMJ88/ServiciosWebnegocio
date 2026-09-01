@@ -1,0 +1,30 @@
+<section class="activation-card" aria-labelledby="activation-title">
+  @if (!estado().correoVerificado) {
+    <div class="activation-email" role="status">
+      <i class="bi bi-envelope-check" aria-hidden="true"></i>
+      <div><strong>Confirma tu correo para proteger la cuenta</strong><span>Enviamos el enlace a {{ estado().correo }}. Puedes seguir configurando Fluora.</span></div>
+      <button type="button" (click)="reenviar.emit()" [disabled]="reenviando()">{{ reenviando() ? 'Enviando…' : 'Reenviar enlace' }}</button>
+    </div>
+  }
+
+  <div class="activation-main">
+    <div class="activation-copy">
+      <span class="activation-eyebrow">Primeros pasos</span>
+      <h2 id="activation-title">Prepara tu negocio sin hacerlo todo de una vez</h2>
+      <p>Completa una acción ahora. Tu progreso se conservará para continuar después.</p>
+      <div class="activation-progress"><span [style.width.%]="estado().pasosCompletados / estado().totalPasos * 100"></span></div>
+      <small>{{ estado().pasosCompletados }} de {{ estado().totalPasos }} pasos completados</small>
+    </div>
+    @if (estado().pasosPendientes.length) {
+      <button type="button" class="activation-primary" (click)="abrirPaso.emit(estado().pasosPendientes[0])">
+        Continuar con el siguiente paso <i class="bi bi-arrow-right"></i>
+      </button>
+    }
+  </div>
+
+  <div class="activation-steps">
+    @for (paso of estado().pasosPendientes; track paso; let i = $index) {
+      <button type="button" (click)="abrirPaso.emit(paso)"><span>{{ i + 1 }}</span><strong>{{ paso === 'CONFIGURAR_HORARIO' ? 'Configurar horarios' : paso === 'CREAR_SERVICIO' ? 'Crear el primer servicio' : paso === 'AGREGAR_PERSONAL' ? 'Agregar personal' : paso === 'PERSONALIZAR_SITIO' ? 'Personalizar el minisitio' : 'Crear una cita de prueba' }}</strong><i class="bi bi-chevron-right"></i></button>
+    }
+  </div>
+</section>

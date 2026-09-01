@@ -2,11 +2,13 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, throwError } from 'rxjs';
 import { environment } from '../../../environments/environment';
+import { RespuestaAccesoApp, RespuestaTokenJwt } from '../auth/auth.service';
 
 export interface RegistrarEmpresaPayload {
   nombreEmpresa: string;
   slug?: string;
   giro: string;
+  tamanoEquipo: string;
   nombreAdministrador: string;
   correoAdministrador: string;
   telefonoAdministrador: string;
@@ -20,6 +22,9 @@ export interface ConfiguracionRegistroSocial {
   microsoft: boolean;
   apple: boolean;
   googleInicioUrl: string | null;
+  googleAccesoUrl: string | null;
+  microsoftInicioUrl: string | null;
+  microsoftAccesoUrl: string | null;
 }
 
 export interface PerfilRegistroSocial {
@@ -36,6 +41,18 @@ export interface RegistrarEmpresaResponse {
   rutaSitioPublico: string;
   rutaAcceso: string;
   requiereConfirmacionCorreo: boolean;
+  sesion: RespuestaTokenJwt;
+}
+
+export interface EstadoOnboarding {
+  correoVerificado: boolean;
+  correo: string;
+  categoria: string;
+  tamanoEquipo: string;
+  pasoRecomendado: string;
+  pasosCompletados: number;
+  totalPasos: number;
+  pasosPendientes: string[];
 }
 
 export interface ConfirmarCorreoResponse { mensaje: string; rutaAcceso: string; }
@@ -68,5 +85,17 @@ export class OnboardingService {
 
   confirmarCorreo(token: string): Observable<ConfirmarCorreoResponse> {
     return this.http.post<ConfirmarCorreoResponse>(`${environment.apiBaseUrl}/publico/onboarding/verificacion-correo/confirmar`, {token});
+  }
+
+  estado(): Observable<EstadoOnboarding> {
+    return this.http.get<EstadoOnboarding>(`${environment.apiBaseUrl}/onboarding/estado`);
+  }
+
+  reenviarConfirmacion(): Observable<void> {
+    return this.http.post<void>(`${environment.apiBaseUrl}/onboarding/estado/reenviar-confirmacion`, {});
+  }
+
+  intercambiarAccesoSocial(codigo: string, empresaId?: number): Observable<RespuestaAccesoApp> {
+    return this.http.post<RespuestaAccesoApp>(`${environment.apiBaseUrl}/auth/social/intercambiar-acceso`, {codigo, empresaId});
   }
 }
