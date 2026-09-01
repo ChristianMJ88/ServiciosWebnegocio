@@ -14,7 +14,8 @@ public class CodigoAccesoSocialEntidad {
     private Long id;
     @Column(nullable = false, length = 30) private String proveedor;
     @Column(name = "subject_proveedor", nullable = false, length = 255) private String subjectProveedor;
-    @Column(name = "token_hash", nullable = false, length = 64) private String tokenHash;
+    @Column(name = "token_hash", nullable = false, length = 64, columnDefinition = "CHAR(64)")
+    private String tokenHash;
     @Column(name = "expira_en", nullable = false) private LocalDateTime expiraEn;
     @Column(name = "usado_en") private LocalDateTime usadoEn;
     @Column(name = "creado_en", nullable = false) private LocalDateTime creadoEn;
