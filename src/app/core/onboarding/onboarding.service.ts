@@ -12,7 +12,7 @@ export interface RegistrarEmpresaPayload {
   nombreAdministrador: string;
   correoAdministrador: string;
   telefonoAdministrador: string;
-  contrasena: string;
+  contrasena?: string;
   zonaHoraria?: string;
   registroSocialToken?: string;
 }

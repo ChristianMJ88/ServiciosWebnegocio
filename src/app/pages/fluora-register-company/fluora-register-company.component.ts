@@ -131,6 +131,7 @@ export class FluoraRegisterCompanyComponent implements OnInit {
     this.submitted.set(null);
 
     const valores = this.form.getRawValue();
+    const registroSocialToken = this.socialToken() || undefined;
     this.onboardingService.registrarEmpresa({
       nombreEmpresa: valores.nombreEmpresa!.trim(),
       slug: (valores.slug || '').trim() || undefined,
@@ -139,9 +140,9 @@ export class FluoraRegisterCompanyComponent implements OnInit {
       nombreAdministrador: valores.nombreAdministrador!.trim(),
       correoAdministrador: valores.correoAdministrador!.trim().toLowerCase(),
       telefonoAdministrador: valores.telefonoAdministrador!.trim(),
-      contrasena: valores.contrasena || '',
+      contrasena: registroSocialToken ? undefined : valores.contrasena || undefined,
       zonaHoraria: valores.zonaHoraria!.trim(),
-      registroSocialToken: this.socialToken() || undefined
+      registroSocialToken
     })
       .pipe(finalize(() => this.loading.set(false)))
       .subscribe({
