@@ -26,15 +26,6 @@
         </div>
 
         @if (paso() === 1) {
-          <section class="company-register__social" aria-labelledby="registro-social-titulo">
-            <div><h3 id="registro-social-titulo">Elige cómo crear tu cuenta</h3><p>Google verifica tu correo automáticamente. También puedes registrarte manualmente.</p></div>
-            <div class="company-register__social-buttons">
-              <button type="button" class="btn company-register__social-button" (click)="continuarConGoogle()" [disabled]="!socialConfig().google || socialLoading()"><i class="bi bi-google"></i><span>Continuar con Google</span></button>
-              <button type="button" class="btn company-register__social-button" (click)="continuarConMicrosoft()" [disabled]="!socialConfig().microsoft || socialLoading()"><i class="bi bi-microsoft"></i><span>Continuar con Microsoft</span></button>
-            </div>
-            @if (socialProvider()) { <div class="company-register__social-connected"><i class="bi bi-check-circle-fill"></i> Correo verificado con {{ socialProvider() }}.</div> }
-          </section>
-          <div class="company-register__divider"><span>o crea tu cuenta manualmente</span></div>
           <form [formGroup]="form" class="company-register__form" (ngSubmit)="continuarANegocio()">
             <div class="company-register__section"><h3><span>1</span> Tu cuenta</h3><div class="company-register__grid">
               <label class="company-register__field company-register__field--full"><span>Nombre completo</span><input type="text" formControlName="nombreAdministrador" autocomplete="name" placeholder="Ana García" class="form-control"></label>
@@ -45,6 +36,17 @@
             @if (error) { <div class="alert alert-danger mb-0">{{ error }}</div> }
             <div class="company-register__actions"><button type="submit" class="btn btn-primary btn-lg rounded-pill"><span>Continuar con mi negocio</span><i class="bi bi-arrow-right"></i></button></div>
           </form>
+          @if (!socialProvider() && (socialConfig().google || socialConfig().microsoft)) {
+            <div class="company-register__divider"><span>O crea tu cuenta con</span></div>
+            <section class="company-register__social" aria-labelledby="registro-social-titulo">
+              <div><h3 id="registro-social-titulo">Acceso rápido</h3><p>Google o Microsoft validarán tu correo; después completarás los datos esenciales de tu negocio.</p></div>
+              <div class="company-register__social-buttons">
+                @if (socialConfig().google) { <button type="button" class="btn company-register__social-button" (click)="continuarConGoogle()" [disabled]="socialLoading()"><i class="bi bi-google company-register__provider-icon company-register__provider-icon--google" aria-hidden="true"></i><span>Continuar con Google</span></button> }
+                @if (socialConfig().microsoft) { <button type="button" class="btn company-register__social-button" (click)="continuarConMicrosoft()" [disabled]="socialLoading()"><i class="bi bi-microsoft company-register__provider-icon company-register__provider-icon--microsoft" aria-hidden="true"></i><span>Continuar con Microsoft</span></button> }
+              </div>
+            </section>
+          }
+          @if (socialProvider()) { <div class="company-register__social-connected"><i class="bi bi-check-circle-fill"></i> Correo verificado con {{ socialProvider() }}.</div> }
         }
 
         @if (paso() === 2) {

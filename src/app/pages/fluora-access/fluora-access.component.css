@@ -54,10 +54,69 @@
   color: #64748b;
 }
 
+.fluora-access__social {
+  display: grid;
+  gap: 0.75rem;
+  margin-top: 0;
+}
+
+.fluora-access__social-button {
+  position: relative;
+  display: grid;
+  grid-template-columns: 24px 1fr 24px;
+  align-items: center;
+  width: 100%;
+  min-height: 52px;
+  padding: 0.7rem 1rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  background: #fff;
+  color: #1d1c1d;
+  font: inherit;
+  font-weight: 700;
+  transition: border-color .18s ease, box-shadow .18s ease, background-color .18s ease;
+}
+
+.fluora-access__social-button span { grid-column: 2; }
+.fluora-access__provider-icon { grid-column: 1; font-size: 1.2rem; }
+.fluora-access__provider-icon--google { color: #4285f4; }
+.fluora-access__provider-icon--microsoft { color: #f25022; }
+
+.fluora-access__social-button:not(:disabled):hover {
+  border-color: #64748b;
+  background: #f8fafc;
+  box-shadow: 0 3px 10px rgba(15, 23, 42, .08);
+}
+
+.fluora-access__social-button:focus-visible {
+  outline: 3px solid rgba(37, 99, 235, .22);
+  outline-offset: 2px;
+}
+
+.fluora-access__social-button:disabled { cursor: wait; opacity: .6; }
+
+.fluora-access__divider {
+  display: flex;
+  align-items: center;
+  gap: .8rem;
+  margin: 1.5rem 0 1rem;
+  color: #64748b;
+  font-size: .8rem;
+  text-align: center;
+}
+
+.fluora-access__divider::before,
+.fluora-access__divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: #e2e8f0;
+}
+
 .fluora-access__form {
   display: grid;
   gap: 1rem;
-  margin-top: 1.75rem;
+  margin-top: 1.35rem;
 }
 
 .fluora-access__field {

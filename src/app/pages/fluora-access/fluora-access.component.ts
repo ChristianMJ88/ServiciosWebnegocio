@@ -89,7 +89,7 @@ export class FluoraAccessComponent implements OnInit {
             return;
           }
           if (!response.sesion) {
-            this.error = 'Microsoft no devolvió una sesión válida.';
+            this.error = 'El proveedor no devolvió una sesión válida.';
             return;
           }
           this.codigoAccesoSocial.set(null);
@@ -97,7 +97,7 @@ export class FluoraAccessComponent implements OnInit {
           this.authService.adoptarSesion(response.sesion, '');
           void this.router.navigateByUrl(this.authService.rutaPanelPersistida());
         },
-        error: err => this.error = err?.error?.mensaje || err?.error?.detail || 'No se pudo iniciar sesión con Microsoft.'
+        error: err => this.error = err?.error?.mensaje || err?.error?.detail || 'No se pudo iniciar sesión con la cuenta seleccionada.'
       });
   }
 

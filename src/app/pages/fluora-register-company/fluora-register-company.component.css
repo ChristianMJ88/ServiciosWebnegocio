@@ -170,14 +170,19 @@
   margin-bottom: 1.5rem;
 }
 
-.company-register__social { display: grid; gap: 1rem; padding: 1.1rem; border: 1px solid #d7e3ea; border-radius: 22px; background: #f8fbfc; }
+.company-register__social { display: grid; gap: 1rem; padding: 1.1rem; border: 1px solid #d7e3ea; border-radius: 14px; background: #f8fbfc; }
 .company-register__social h3 { margin: 0 0 .35rem; color: #172554; font-size: 1.05rem; }
 .company-register__social .company-register__eyebrow { margin-bottom: .35rem; }
-.company-register__social-buttons { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: .65rem; }
-.company-register__social-button { display: grid; grid-template-columns: auto 1fr; gap: .5rem; align-items: center; min-height: 48px; border: 1px solid #cbd5e1; border-radius: 14px; background: #fff; color: #243447; font-size: .82rem; font-weight: 700; text-align: left; }
+.company-register__social-buttons { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: .65rem; }
+.company-register__social-button { display: grid; grid-template-columns: 24px 1fr 24px; gap: .5rem; align-items: center; min-height: 52px; border: 1px solid #cbd5e1; border-radius: 10px; background: #fff; color: #1d1c1d; font-size: .86rem; font-weight: 700; text-align: center; }
+.company-register__social-button span { grid-column: 2; }
+.company-register__provider-icon { grid-column: 1; font-size: 1.15rem; }
+.company-register__provider-icon--google { color: #4285f4; }
+.company-register__provider-icon--microsoft { color: #f25022; }
 .company-register__social-button small { grid-column: 2; color: #81909d; font-size: .66rem; }
-.company-register__social-button:not(:disabled):hover { border-color: #2563eb; box-shadow: 0 6px 18px rgba(37,99,235,.1); }
-.company-register__social-connected { padding: .75rem .85rem; border-radius: 14px; color: #0f6f61; background: #dcf7ef; font-size: .8rem; font-weight: 700; }
+.company-register__social-button:not(:disabled):hover { border-color: #64748b; background: #f8fafc; box-shadow: 0 4px 12px rgba(15,23,42,.08); }
+.company-register__social-button:focus-visible { outline: 3px solid rgba(37,99,235,.22); outline-offset: 2px; }
+.company-register__social-connected { margin-top: 1rem; padding: .75rem .85rem; border-radius: 14px; color: #0f6f61; background: #dcf7ef; font-size: .8rem; font-weight: 700; }
 .company-register__divider { display: flex; align-items: center; gap: .75rem; margin: 1.2rem 0; color: #73818e; font-size: .75rem; text-align: center; }
 .company-register__divider::before, .company-register__divider::after { content: ''; flex: 1; height: 1px; background: #dbe4ea; }
 

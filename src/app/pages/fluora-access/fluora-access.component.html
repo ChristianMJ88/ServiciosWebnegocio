@@ -11,20 +11,6 @@
         <p>Ingresa con tu usuario y contraseña.</p>
       </div>
 
-      @if (googleHabilitado() || microsoftHabilitado()) {
-        @if (googleHabilitado()) {
-          <button type="button" class="btn btn-outline-dark fluora-access__submit mb-2" (click)="continuarConGoogle()" [disabled]="loading()">
-            <i class="bi bi-google me-2"></i> Continuar con Google
-          </button>
-        }
-        @if (microsoftHabilitado()) {
-          <button type="button" class="btn btn-outline-dark fluora-access__submit mb-3" (click)="continuarConMicrosoft()" [disabled]="loading()">
-            <i class="bi bi-microsoft me-2"></i> Continuar con Microsoft
-          </button>
-        }
-        <div class="text-center text-muted small mb-3">o utiliza tu correo y contraseña</div>
-      }
-
       <form [formGroup]="form" (ngSubmit)="iniciarSesion()" class="fluora-access__form">
         <div class="fluora-access__field">
           <label for="correo" class="form-label">Usuario</label>
@@ -73,6 +59,24 @@
           }
         </button>
       </form>
+
+      @if (googleHabilitado() || microsoftHabilitado()) {
+        <div class="fluora-access__divider"><span>O continúa con</span></div>
+        <div class="fluora-access__social" aria-label="Opciones de acceso social">
+          @if (googleHabilitado()) {
+            <button type="button" class="fluora-access__social-button" (click)="continuarConGoogle()" [disabled]="loading()">
+              <i class="bi bi-google fluora-access__provider-icon fluora-access__provider-icon--google" aria-hidden="true"></i>
+              <span>Continuar con Google</span>
+            </button>
+          }
+          @if (microsoftHabilitado()) {
+            <button type="button" class="fluora-access__social-button" (click)="continuarConMicrosoft()" [disabled]="loading()">
+              <i class="bi bi-microsoft fluora-access__provider-icon fluora-access__provider-icon--microsoft" aria-hidden="true"></i>
+              <span>Continuar con Microsoft</span>
+            </button>
+          }
+        </div>
+      }
 
       @if (empresas().length) {
         <div class="fluora-access__companies">
