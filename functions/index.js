@@ -95,7 +95,7 @@ exports.tenantPage = onRequest(
 
       response.status(200)
         .set('Content-Type', 'text/html; charset=utf-8')
-        .set('Cache-Control', 'public, max-age=300, s-maxage=600, stale-while-revalidate=86400')
+        .set('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
         .send(renderTenantHtml(template, tenant, request.originalUrl || request.path, marketingOrigin));
     } catch (error) {
       logger.error('No fue posible renderizar el SEO del tenant.', { slug, error });
