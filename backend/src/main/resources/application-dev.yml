@@ -7,6 +7,10 @@ server:
   address: 0.0.0.0
 
 aplicacion:
+  invitaciones:
+    url-aceptacion: ${INVITACIONES_URL_ACEPTACION:http://localhost:4200/invitacion/aceptar}
+  recuperacion-contrasena:
+    url: ${RECUPERACION_CONTRASENA_URL:http://localhost:4200/recuperar-contrasena/confirmar}
   cors:
     origenes-permitidos: ${CORS_ORIGENES:http://localhost:4200,http://127.0.0.1:4200,http://192.168.*:4200,http://10.*:4200,http://172.*:4200,https://refluora.com,https://www.refluora.com,https://app.refluora.com,https://fir-serviciosweb-b2901.web.app,https://fir-serviciosweb-b2901.firebaseapp.com,https://fluora.web.app}
   correo:
