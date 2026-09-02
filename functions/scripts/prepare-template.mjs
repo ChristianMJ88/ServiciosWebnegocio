@@ -4,7 +4,7 @@ import { fileURLToPath } from 'node:url';
 
 const scriptsDirectory = dirname(fileURLToPath(import.meta.url));
 const functionsDirectory = resolve(scriptsDirectory, '..');
-const source = resolve(functionsDirectory, '../dist/ServiciosWebnegocio/browser/index.html');
+const source = resolve(functionsDirectory, '../dist/marketing/browser/index.html');
 const targetDirectory = resolve(functionsDirectory, 'template');
 const target = resolve(targetDirectory, 'index.html');
 

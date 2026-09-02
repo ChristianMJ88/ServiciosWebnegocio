@@ -9,7 +9,7 @@
   "hosting": [
     {
       "target": "marketing",
-      "public": "dist/ServiciosWebnegocio/browser",
+      "public": "dist/marketing/browser",
       "ignore": [
         "firebase.json",
         "**/.*",
@@ -83,7 +83,7 @@
     },
     {
       "target": "app",
-      "public": "dist/ServiciosWebnegocio/browser",
+      "public": "dist/application/browser",
       "ignore": [
         "firebase.json",
         "**/.*",

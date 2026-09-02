@@ -127,11 +127,14 @@ No conectar el backend al contenedor de otro proyecto. Las migraciones Flyway no
 | `marketing` | `fir-serviciosweb-b2901` | `refluora.com`, `www.refluora.com` |
 | `app` | `fluora` | `app.refluora.com` |
 
-Ambos publican `dist/ServiciosWebnegocio/browser`.
+Cada target publica un artefacto independiente desde el mismo workspace Angular:
+
+- `marketing`: `dist/marketing/browser` para landing, legales, minisitios y reservas públicas.
+- `app`: `dist/application/browser` para registro, acceso y paneles privados.
 
 ```bash
 npm run build
-firebase deploy --only hosting --project fir-serviciosweb-b2901
+firebase deploy --only hosting:marketing,hosting:app --project fir-serviciosweb-b2901
 ```
 
 `public/runtime-config.js` publica:

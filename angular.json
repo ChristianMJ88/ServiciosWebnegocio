@@ -71,6 +71,21 @@
               "optimization": false,
               "extractLicenses": false,
               "sourceMap": true
+            },
+            "marketing": {
+              "main": "src/main.marketing.ts",
+              "index": "src/index.html",
+              "tsConfig": "tsconfig.marketing.json",
+              "outputPath": "dist/marketing/browser"
+            },
+            "application": {
+              "main": "src/main.application.ts",
+              "index": {
+                "input": "src/index.app.html",
+                "output": "index.html"
+              },
+              "tsConfig": "tsconfig.application.json",
+              "outputPath": "dist/application/browser"
             }
           },
           "defaultConfiguration": "production"
