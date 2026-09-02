@@ -46,11 +46,13 @@ Usuarios y buscadores
 | --- | --- | --- | --- |
 | `refluora.com` | `199.36.158.100` | Solo DNS | Hosting marketing |
 | `www.refluora.com` | `fir-serviciosweb-b2901.web.app` | Solo DNS | Hosting marketing |
-| `app.refluora.com` | `fir-serviciosweb-b2901.web.app` | Solo DNS | Hosting app |
+| `app.refluora.com` | `fluora.web.app` | Solo DNS | Hosting app |
 | `api.refluora.com` | `ghs.googlehosted.com` | Solo DNS | Cloud Run |
 | `sistemacrud.refluora.com` | túnel `backend-serviciosweb` | Con proxy | Sistema independiente |
 
 `api.refluora.com` antes apuntaba al túnel compartido y consultaba el backend equivocado. Se creó un domain mapping de Cloud Run y se reemplazó únicamente ese registro. `sistemacrud.refluora.com` no fue modificado.
+
+`fluora.web.app` es la URL técnica asignada por Firebase al site interno del target `app`; no es un dominio público de la plataforma. La navegación pública usa exclusivamente `app.refluora.com`.
 
 `refluora.com` quedó verificado en Google Search Console mediante TXT. El registro debe conservarse. El certificado de `api.refluora.com` es administrado por Google.
 

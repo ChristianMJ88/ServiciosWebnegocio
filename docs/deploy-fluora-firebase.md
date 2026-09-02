@@ -15,6 +15,8 @@ La arquitectura propuesta originalmente ya fue implementada. La documentación c
 - Minisitos: `https://refluora.com/e/{slug}`
 - Sitemap: `https://refluora.com/sitemap.xml`
 
+El identificador `fluora` y su URL técnica `fluora.web.app` pertenecen únicamente a Firebase Hosting. No representan un dominio adicional de producto: el acceso público de la aplicación es `app.refluora.com`.
+
 ## Hosting
 
 ```bash
