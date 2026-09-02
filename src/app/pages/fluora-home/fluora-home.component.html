@@ -10,7 +10,7 @@
           </p>
 
           <div class="refluora-hero__actions">
-            <a routerLink="/registro" class="btn btn-primary btn-lg rounded-pill">Probar Fluora gratis <i class="bi bi-arrow-right"></i></a>
+            <a [attr.href]="registrationHref" class="btn btn-primary btn-lg rounded-pill">Probar Fluora gratis <i class="bi bi-arrow-right"></i></a>
             <a [attr.href]="platformHost.appUrl('/acceso')" class="btn btn-outline-light btn-lg rounded-pill hero-secondary-action">Entrar a la app</a>
           </div>
 
@@ -78,7 +78,7 @@
         <strong>Empieza con tu agenda. Crece sin cambiar de sistema.</strong>
         <span>Configura tu negocio, equipo y servicios paso a paso.</span>
       </div>
-      <a routerLink="/registro" class="conversion-button">Activar 3 meses PRO <i class="bi bi-arrow-right"></i></a>
+      <a [attr.href]="registrationHref" class="conversion-button">Activar 3 meses PRO <i class="bi bi-arrow-right"></i></a>
     </div>
   </section>
 
@@ -96,7 +96,7 @@
           <li><i class="bi bi-check2"></i> Reserva en línea y contacto por WhatsApp</li>
         </ul>
         <div class="demo-actions">
-          <a routerLink="/registro" class="btn btn-primary btn-lg rounded-pill">Quiero mi minisitio</a>
+          <a [attr.href]="registrationHref" class="btn btn-primary btn-lg rounded-pill">Quiero mi minisitio</a>
         </div>
       </div>
       <div class="demo-browser" aria-label="Vista de un minisitio creado con Fluora">
@@ -122,7 +122,7 @@
       </div>
       <div class="journey-cta">
         <p><strong>No esperes a tener más citas para organizarte.</strong> Empieza con Fluora y crece sobre una base profesional.</p>
-        <a routerLink="/registro" class="btn btn-primary btn-lg rounded-pill">Comenzar mis 3 meses PRO</a>
+        <a [attr.href]="registrationHref" class="btn btn-primary btn-lg rounded-pill">Comenzar mis 3 meses PRO</a>
         <small>Sin conocimientos técnicos · Configuración guiada</small>
       </div>
     </div>
@@ -203,7 +203,7 @@
           <li><i class="bi bi-check2"></i> Lleva la cita a la agenda correcta</li>
           <li><i class="bi bi-check2"></i> Prepara confirmaciones y recordatorios</li>
         </ul>
-        <a routerLink="/registro" class="btn btn-primary btn-lg rounded-pill">Organizar mis conversaciones</a>
+        <a [attr.href]="registrationHref" class="btn btn-primary btn-lg rounded-pill">Organizar mis conversaciones</a>
         <small class="whatsapp-section__note">Integración opcional de acuerdo con las necesidades de tu negocio.</small>
       </div>
 
@@ -300,7 +300,7 @@
           <h3>Registra tu negocio sin costo y disfruta el plan PRO durante 3 meses.</h3>
           <p>Explora agenda, minisitio, CRM, recepción, caja y automatizaciones. Al finalizar el periodo podrás elegir el plan que mejor se adapte a tu negocio.</p>
         </div>
-        <a routerLink="/registro">Comenzar ahora <i class="bi bi-arrow-right"></i></a>
+        <a [attr.href]="registrationHref">Comenzar ahora <i class="bi bi-arrow-right"></i></a>
       </aside>
       <p class="pricing-swipe-hint"><i class="bi bi-arrow-left-right"></i> Desliza para comparar los planes</p>
       <div class="pricing-grid" aria-label="Planes de suscripción de Fluora" tabindex="0">
@@ -315,7 +315,7 @@
             <ul>
               @for (feature of plan.features; track feature) { <li><i class="bi bi-check2-circle"></i>{{ feature }}</li> }
             </ul>
-            <a routerLink="/registro" class="pricing-card__button">Comenzar con PRO gratis</a>
+            <a [attr.href]="registrationHref" class="pricing-card__button">Comenzar con PRO gratis</a>
           </article>
         }
       </div>
@@ -358,7 +358,7 @@
           Publica tus servicios, recibe reservas y coordina clientes, equipo, recepción y caja desde Fluora.
         </p>
         <div class="final-cta__actions">
-          <a routerLink="/registro" class="btn btn-primary btn-lg rounded-pill">Comenzar prueba gratis <i class="bi bi-arrow-right"></i></a>
+          <a [attr.href]="registrationHref" class="btn btn-primary btn-lg rounded-pill">Comenzar prueba gratis <i class="bi bi-arrow-right"></i></a>
           <a [attr.href]="platformHost.appUrl('/acceso')" class="btn btn-outline-light btn-lg rounded-pill">Entrar a la app</a>
         </div>
       </div>

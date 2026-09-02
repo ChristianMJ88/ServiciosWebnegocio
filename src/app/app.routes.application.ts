@@ -7,14 +7,15 @@ const redirectComponent = () => import('./pages/platform-redirect/platform-redir
   .then((m) => m.PlatformRedirectComponent);
 
 export const privateApplicationRoutes: Routes = [
-  { path: 'acceso', loadComponent: () => import('./pages/fluora-access/fluora-access.component').then((m) => m.FluoraAccessComponent) },
-  { path: 'invitacion/aceptar', loadComponent: () => import('./pages/accept-user-invitation/accept-user-invitation.component').then((m) => m.AcceptUserInvitationComponent) },
-  { path: 'verificar-correo', loadComponent: () => import('./pages/verify-email/verify-email.component').then((m) => m.VerifyEmailComponent) },
-  { path: 'recuperar-contrasena', loadComponent: () => import('./pages/password-recovery/password-recovery.component').then((m) => m.PasswordRecoveryComponent) },
-  { path: 'recuperar-contrasena/confirmar', loadComponent: () => import('./pages/password-recovery/password-recovery.component').then((m) => m.PasswordRecoveryComponent) },
+  { path: 'acceso', loadComponent: () => import('./pages/fluora-access/fluora-access.component').then((m) => m.FluoraAccessComponent), data: { layout: 'auth' } },
+  { path: 'invitacion/aceptar', loadComponent: () => import('./pages/accept-user-invitation/accept-user-invitation.component').then((m) => m.AcceptUserInvitationComponent), data: { layout: 'auth' } },
+  { path: 'verificar-correo', loadComponent: () => import('./pages/verify-email/verify-email.component').then((m) => m.VerifyEmailComponent), data: { layout: 'auth' } },
+  { path: 'recuperar-contrasena', loadComponent: () => import('./pages/password-recovery/password-recovery.component').then((m) => m.PasswordRecoveryComponent), data: { layout: 'auth' } },
+  { path: 'recuperar-contrasena/confirmar', loadComponent: () => import('./pages/password-recovery/password-recovery.component').then((m) => m.PasswordRecoveryComponent), data: { layout: 'auth' } },
   {
     path: 'registro',
-    loadComponent: () => import('./pages/fluora-register-company/fluora-register-company.component').then((m) => m.FluoraRegisterCompanyComponent)
+    loadComponent: () => import('./pages/fluora-register-company/fluora-register-company.component').then((m) => m.FluoraRegisterCompanyComponent),
+    data: { layout: 'auth' }
   },
   { path: 'login', redirectTo: 'acceso', pathMatch: 'full' },
   {

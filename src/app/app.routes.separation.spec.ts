@@ -17,4 +17,9 @@ describe('separación de superficies web', () => {
     expect(tenantRoute).toBeUndefined();
     expect(applicationRoutes.find((route) => route.path === 'admin/:seccion')?.canActivate).toBeDefined();
   });
+
+  it('usa un layout de autenticación sin navegación pública', () => {
+    expect(applicationRoutes.find((route) => route.path === 'acceso')?.data?.['layout']).toBe('auth');
+    expect(applicationRoutes.find((route) => route.path === 'registro')?.data?.['layout']).toBe('auth');
+  });
 });

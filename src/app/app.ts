@@ -23,6 +23,7 @@ export class App {
   private readonly platformHost = inject(PlatformHostService);
   protected readonly title = signal('ServiciosWebnegocio');
   esPanelInterno = signal(this.calcularEsPanelInterno());
+  mostrarChromePublico = signal(this.calcularLayout() === 'public');
   isChatOpen = signal(false);
   chatMsg = signal('');
 
@@ -41,6 +42,7 @@ export class App {
       .subscribe(() => {
         this.sincronizarTenantConRuta(this.router.url);
         this.esPanelInterno.set(this.calcularEsPanelInterno());
+        this.mostrarChromePublico.set(this.calcularLayout() === 'public');
       });
   }
 
@@ -59,13 +61,26 @@ export class App {
   }
 
   private calcularEsPanelInterno(): boolean {
+    return this.calcularLayout() === 'panel';
+  }
+
+  private calcularLayout(): 'public' | 'auth' | 'panel' {
     const rutaActiva = this.obtenerRutaActiva(this.router.routerState.snapshot.root);
     if (rutaActiva?.data?.['layout'] === 'panel') {
-      return true;
+      return 'panel';
+    }
+    if (rutaActiva?.data?.['layout'] === 'auth') {
+      return 'auth';
     }
 
     const urlNormalizada = this.normalizarUrl(this.router.url);
-    return ['/admin', '/staff', '/recepcion', '/caja', '/mi-cuenta'].some(ruta => urlNormalizada.startsWith(ruta));
+    if (['/admin', '/staff', '/recepcion', '/caja', '/mi-cuenta'].some(ruta => urlNormalizada.startsWith(ruta))) {
+      return 'panel';
+    }
+    if (['/acceso', '/registro', '/invitacion/aceptar', '/verificar-correo', '/recuperar-contrasena'].some(ruta => urlNormalizada.startsWith(ruta))) {
+      return 'auth';
+    }
+    return 'public';
   }
 
   private obtenerRutaActiva(snapshot: ActivatedRouteSnapshot): ActivatedRouteSnapshot {

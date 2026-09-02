@@ -49,7 +49,7 @@ export class HeaderComponent {
   readonly companiesHref = computed(() => this.platformHost.marketingUrl('/#beneficios'));
   readonly pricingHref = computed(() => this.platformHost.marketingUrl('/#planes'));
   readonly faqHref = computed(() => this.platformHost.marketingUrl('/#faq'));
-  readonly registerHref = computed(() => this.platformHost.marketingUrl('/registro'));
+  readonly registerHref = computed(() => this.platformHost.appUrl('/registro'));
 
   constructor() {
     this.actualizarEstadoScroll();

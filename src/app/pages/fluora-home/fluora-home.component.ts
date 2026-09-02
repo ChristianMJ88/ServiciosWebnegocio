@@ -1,7 +1,7 @@
 
 import { AfterViewInit, Component, ElementRef, NgZone, OnDestroy, inject } from '@angular/core';
 import { Meta, Title } from '@angular/platform-browser';
-import { Router, RouterLink } from '@angular/router';
+import { Router } from '@angular/router';
 import { gsap } from 'gsap';
 import { PlatformHostService } from '../../core/platform/platform-host.service';
 import { SeoService } from '../../core/seo/seo.service';
@@ -9,7 +9,7 @@ import { SeoService } from '../../core/seo/seo.service';
 @Component({
   selector: 'app-fluora-home',
   standalone: true,
-  imports: [RouterLink],
+  imports: [],
   templateUrl: './fluora-home.component.html',
   styleUrl: './fluora-home.component.css'
 })
@@ -18,6 +18,7 @@ export class FluoraHomeComponent implements AfterViewInit, OnDestroy {
   private readonly elementRef = inject<ElementRef<HTMLElement>>(ElementRef);
   private readonly zone = inject(NgZone);
   readonly platformHost = inject(PlatformHostService);
+  readonly registrationHref = this.platformHost.appUrl('/registro');
   private readonly title = inject(Title);
   private readonly meta = inject(Meta);
   private readonly seo = inject(SeoService);
