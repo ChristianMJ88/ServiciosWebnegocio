@@ -43,7 +43,6 @@ export const privateApplicationRoutes: Routes = [
 export const applicationRoutes: Routes = [
   ...privateApplicationRoutes,
   { path: '', redirectTo: 'acceso', pathMatch: 'full' },
-  { path: 'e/:slug', loadComponent: redirectComponent, data: { destination: 'marketing' } },
   { path: 'privacidad', loadComponent: redirectComponent, data: { destination: 'marketing' } },
   { path: 'terminos', loadComponent: redirectComponent, data: { destination: 'marketing' } },
   { path: 'eliminacion-de-datos', loadComponent: redirectComponent, data: { destination: 'marketing' } },

@@ -14,8 +14,7 @@ describe('separación de superficies web', () => {
   it('mantiene el contenido público fuera del manifiesto de la aplicación', () => {
     const tenantRoute = applicationRoutes.find((route) => route.path === 'e/:slug');
 
-    expect(tenantRoute?.data?.['destination']).toBe('marketing');
-    expect(tenantRoute?.resolve).toBeUndefined();
+    expect(tenantRoute).toBeUndefined();
     expect(applicationRoutes.find((route) => route.path === 'admin/:seccion')?.canActivate).toBeDefined();
   });
 });
