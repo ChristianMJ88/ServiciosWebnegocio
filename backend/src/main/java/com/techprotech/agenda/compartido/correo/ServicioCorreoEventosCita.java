@@ -14,6 +14,7 @@ import com.techprotech.agenda.modulos.sitio.infraestructura.entidad.EmpresaSitio
 import com.techprotech.agenda.modulos.sitio.infraestructura.repositorio.EmpresaSitioConfigRepositorio;
 import com.techprotech.agenda.modulos.sucursales.infraestructura.entidad.SucursalEntidad;
 import com.techprotech.agenda.modulos.sucursales.infraestructura.repositorio.SucursalRepositorio;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -31,8 +32,6 @@ import java.util.Locale;
 @Service
 public class ServicioCorreoEventosCita {
 
-    private static final String ORIGEN_PUBLICO = "https://refluora.com";
-    private static final String LOGO_CANONICO = ORIGEN_PUBLICO + "/fluora-apple-touch-icon.png";
     private static final Locale LOCALE_MX = Locale.forLanguageTag("es-MX");
     private static final DateTimeFormatter FECHA = DateTimeFormatter.ofPattern("EEEE d 'de' MMMM 'de' yyyy", LOCALE_MX);
     private static final DateTimeFormatter HORA = DateTimeFormatter.ofPattern("HH:mm", LOCALE_MX);
@@ -46,6 +45,7 @@ public class ServicioCorreoEventosCita {
     private final EmpresaSitioConfigRepositorio sitioRepositorio;
     private final ServicioConfiguracionCorreoEmpresa configuracionCorreo;
     private final ClienteCorreoSaliente clienteCorreo;
+    private final String origenPublico;
 
     public ServicioCorreoEventosCita(
             CitaRepositorio citaRepositorio,
@@ -56,7 +56,8 @@ public class ServicioCorreoEventosCita {
             SucursalRepositorio sucursalRepositorio,
             EmpresaSitioConfigRepositorio sitioRepositorio,
             ServicioConfiguracionCorreoEmpresa configuracionCorreo,
-            ClienteCorreoSaliente clienteCorreo
+            ClienteCorreoSaliente clienteCorreo,
+            @Value("${aplicacion.correo-bienvenida.origen-publico}") String origenPublico
     ) {
         this.citaRepositorio = citaRepositorio;
         this.clienteRepositorio = clienteRepositorio;
@@ -67,6 +68,7 @@ public class ServicioCorreoEventosCita {
         this.sitioRepositorio = sitioRepositorio;
         this.configuracionCorreo = configuracionCorreo;
         this.clienteCorreo = clienteCorreo;
+        this.origenPublico = normalizarOrigen(origenPublico);
     }
 
     @Transactional(readOnly = true)
@@ -97,13 +99,19 @@ public class ServicioCorreoEventosCita {
         }
 
         EmpresaSitioConfigEntidad sitio = sitioRepositorio.findById(empresaId).orElse(null);
-        DatosEvento datos = datosEvento(evento, empresa.getNombre(), cliente.getNombreCompleto());
         ZoneId zona = ZoneId.of(sucursal.getZonaHoraria());
         String nombreEmpresa = sitio != null && tieneTexto(sitio.getNombreComercial())
                 ? sitio.getNombreComercial() : empresa.getNombre();
         String color = sitio != null && colorValido(sitio.getColorPrimario()) ? sitio.getColorPrimario() : "#173b57";
-        String urlSitio = sitio != null && tieneTexto(sitio.getSlug()) ? ORIGEN_PUBLICO + "/e/" + sitio.getSlug() : null;
+        String urlSitio = sitio != null && tieneTexto(sitio.getSlug()) ? origenPublico + "/e/" + sitio.getSlug() : null;
 
+        if (esNotificacionNegocio(evento)) {
+            enviarAlNegocio(configuracion, cita, servicio, sucursal, sitio, nombreEmpresa,
+                    cliente.getNombreCompleto(), usuario.getCorreo(), zona, color, urlSitio);
+            return;
+        }
+
+        DatosEvento datos = datosEvento(evento, empresa.getNombre(), cliente.getNombreCompleto());
         List<AdjuntoCorreoSaliente> adjuntos = incluyeCalendario(evento)
                 ? List.of(crearCalendario(cita, servicio, sucursal, nombreEmpresa, zona)) : List.of();
         clienteCorreo.enviar(configuracion, new MensajeCorreoSaliente(
@@ -132,6 +140,43 @@ public class ServicioCorreoEventosCita {
         };
     }
 
+    private void enviarAlNegocio(ConfiguracionCorreoResolvida configuracion, CitaEntidad cita,
+                                 ServicioEntidad servicio, SucursalEntidad sucursal,
+                                 EmpresaSitioConfigEntidad sitio, String nombreEmpresa,
+                                 String nombreCliente, String correoCliente, ZoneId zona,
+                                 String color, String urlSitio) {
+        String destinatario = resolverCorreoNegocio(sitio, configuracion);
+        if (!tieneTexto(destinatario)) {
+            throw new IllegalStateException("No hay correo del negocio configurado para la empresa " + cita.getEmpresaId());
+        }
+        DatosEvento datos = new DatosEvento("Nueva cita registrada | %s", "Nueva cita", "Se registró una nueva solicitud de cita.");
+        String texto = textoPlano(datos, cita, servicio, sucursal, nombreEmpresa, nombreCliente, zona, urlSitio)
+                + "\nCorreo del cliente: " + correoCliente;
+        String contenidoHtml = html(datos, cita, servicio, sucursal, sitio, nombreEmpresa,
+                nombreCliente, zona, color, urlSitio)
+                .replace("</table></td></tr></table></body></html>",
+                        "<p style=\"margin:0 38px 30px;color:#607486;font-size:14px\"><strong>Correo del cliente:</strong> "
+                                + esc(correoCliente) + "</p></table></td></tr></table></body></html>");
+        clienteCorreo.enviar(configuracion, new MensajeCorreoSaliente(
+                destinatario,
+                datos.asunto().formatted(nombreEmpresa),
+                texto,
+                contenidoHtml,
+                correoCliente,
+                List.of()
+        ));
+    }
+
+    private String resolverCorreoNegocio(EmpresaSitioConfigEntidad sitio, ConfiguracionCorreoResolvida configuracion) {
+        if (sitio != null && tieneTexto(sitio.getCorreo())) return sitio.getCorreo();
+        if (tieneTexto(configuracion.responderA())) return configuracion.responderA();
+        return configuracion.remitente();
+    }
+
+    private boolean esNotificacionNegocio(String evento) {
+        return "CITA_REGISTRADA_NEGOCIO_EMAIL".equals(evento);
+    }
+
     private String textoPlano(DatosEvento evento, CitaEntidad cita, ServicioEntidad servicio, SucursalEntidad sucursal,
                               String empresa, String cliente, ZoneId zona, String urlSitio) {
         StringBuilder texto = new StringBuilder("Hola ").append(cliente).append(",\n\n")
@@ -152,7 +197,7 @@ public class ServicioCorreoEventosCita {
     private String html(DatosEvento evento, CitaEntidad cita, ServicioEntidad servicio, SucursalEntidad sucursal,
                         EmpresaSitioConfigEntidad sitio, String empresa, String cliente, ZoneId zona, String color, String urlSitio) {
         String logoUrl = sitio != null && tieneTexto(sitio.getLogoUrl())
-                ? urlAbsoluta(sitio.getLogoUrl()) : LOGO_CANONICO;
+                ? urlAbsoluta(sitio.getLogoUrl()) : origenPublico + "/fluora-apple-touch-icon.png";
         String logo = "<img src=\"" + attr(logoUrl) + "\" alt=\"" + attr(empresa)
                 + "\" style=\"max-height:64px;max-width:180px;margin-bottom:18px\">";
         String boton = urlSitio != null
@@ -205,7 +250,8 @@ public class ServicioCorreoEventosCita {
     private boolean tieneTexto(String v) { return v != null && !v.isBlank(); }
     private String esc(String v) { return v == null ? "" : v.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;").replace("\"", "&quot;").replace("'", "&#39;"); }
     private String attr(String v) { return esc(v); }
-    private String urlAbsoluta(String v) { return v.startsWith("http://") || v.startsWith("https://") ? v : ORIGEN_PUBLICO + (v.startsWith("/") ? v : "/" + v); }
+    private String urlAbsoluta(String v) { return v.startsWith("http://") || v.startsWith("https://") ? v : origenPublico + (v.startsWith("/") ? v : "/" + v); }
+    private String normalizarOrigen(String v) { return v != null && v.endsWith("/") ? v.substring(0, v.length() - 1) : v; }
     private String ics(String v) { return v == null ? "" : v.replace("\\", "\\\\").replace(";", "\\;").replace(",", "\\,").replace("\n", "\\n"); }
     private record DatosEvento(String asunto, String titulo, String mensaje) {}
 }

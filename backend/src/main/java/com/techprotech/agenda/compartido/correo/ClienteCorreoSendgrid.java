@@ -2,6 +2,7 @@ package com.techprotech.agenda.compartido.correo;
 
 import org.springframework.http.MediaType;
 import org.springframework.mail.MailSendException;
+import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientException;
@@ -21,7 +22,10 @@ public class ClienteCorreoSendgrid {
     private final PropiedadesCorreoPlataforma propiedades;
 
     public ClienteCorreoSendgrid(RestClient.Builder restClientBuilder, PropiedadesCorreoPlataforma propiedades) {
-        this.restClient = restClientBuilder.build();
+        SimpleClientHttpRequestFactory requestFactory = new SimpleClientHttpRequestFactory();
+        requestFactory.setConnectTimeout(10_000);
+        requestFactory.setReadTimeout(20_000);
+        this.restClient = restClientBuilder.requestFactory(requestFactory).build();
         this.propiedades = propiedades;
     }
 

@@ -43,7 +43,10 @@ public class ServicioOutboxCorreoCitas {
     }
 
     public boolean programarRegistrada(Long empresaId, Long citaId, LocalDateTime inicioEsperado) {
-        return programar(empresaId, citaId, "CITA_REGISTRADA_EMAIL", inicioEsperado, LocalDateTime.now());
+        boolean correoCliente = programar(
+                empresaId, citaId, "CITA_REGISTRADA_EMAIL", inicioEsperado, LocalDateTime.now());
+        programar(empresaId, citaId, "CITA_REGISTRADA_NEGOCIO_EMAIL", inicioEsperado, LocalDateTime.now());
+        return correoCliente;
     }
 
     public boolean programarConfirmada(Long empresaId, Long citaId, LocalDateTime inicioEsperado) {

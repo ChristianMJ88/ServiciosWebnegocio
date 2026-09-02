@@ -77,7 +77,9 @@ class ServicioOutboxCorreoCitasTest {
         boolean programado = servicio.programarRegistrada(1L, 45L, LocalDateTime.parse("2026-03-25T10:00:00"));
 
         assertTrue(programado);
+        assertEquals(2, guardados.size());
         assertEquals("CITA_REGISTRADA_EMAIL", guardados.getFirst().getTipoEvento());
+        assertEquals("CITA_REGISTRADA_NEGOCIO_EMAIL", guardados.get(1).getTipoEvento());
         assertTrue(guardados.getFirst().getPayloadJson().contains("\"citaId\":45"));
     }
 

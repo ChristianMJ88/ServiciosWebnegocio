@@ -391,26 +391,24 @@ public class ServicioCitas {
                 .orElseGet(() -> crearCliente(empresaId, nombreCliente, correo, telefonoCliente));
     }
 
-    private Long actualizarClienteExistente(Long usuarioId, String nombreCliente, String telefonoCliente) {
-        clienteRepositorio.findById(usuarioId).ifPresent(cliente -> {
-            String nombreNormalizado = nombreCliente.trim();
-            String telefonoNormalizado = telefonoCliente.trim();
-            boolean actualizado = false;
-
-            if (!nombreNormalizado.equals(cliente.getNombreCompleto())) {
-                cliente.setNombreCompleto(nombreNormalizado);
-                actualizado = true;
-            }
-
-            if (!telefonoNormalizado.equals(cliente.getTelefono())) {
-                cliente.setTelefono(telefonoNormalizado);
-                actualizado = true;
-            }
-
-            if (actualizado) {
-                clienteRepositorio.save(cliente);
-            }
+    Long actualizarClienteExistente(Long usuarioId, String nombreCliente, String telefonoCliente) {
+        String nombreNormalizado = nombreCliente.trim();
+        String telefonoNormalizado = telefonoCliente.trim();
+        ClienteEntidad cliente = clienteRepositorio.findById(usuarioId).orElseGet(() -> {
+            ClienteEntidad nuevoCliente = new ClienteEntidad();
+            nuevoCliente.setUsuarioId(usuarioId);
+            nuevoCliente.setAceptaWhatsapp(true);
+            return nuevoCliente;
         });
+
+        boolean nuevoPerfil = cliente.getNombreCompleto() == null;
+        boolean nombreCambio = !nombreNormalizado.equals(cliente.getNombreCompleto());
+        boolean telefonoCambio = !telefonoNormalizado.equals(cliente.getTelefono());
+        if (nuevoPerfil || nombreCambio || telefonoCambio) {
+            cliente.setNombreCompleto(nombreNormalizado);
+            cliente.setTelefono(telefonoNormalizado);
+            clienteRepositorio.save(cliente);
+        }
         return usuarioId;
     }
 
