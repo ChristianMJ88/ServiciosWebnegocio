@@ -5,6 +5,8 @@ export const PERMISOS = {
   serviciosGestionar: 'SERVICIOS_GESTIONAR',
   prestadoresGestionar: 'PRESTADORES_GESTIONAR',
   usuariosInternosGestionar: 'USUARIOS_INTERNOS_GESTIONAR',
+  clientesGestionar: 'CLIENTES_GESTIONAR',
+  parametrosSistemaGestionar: 'PARAMETROS_SISTEMA_GESTIONAR',
   whatsappConfigurar: 'WHATSAPP_CONFIGURAR',
   contactosAdminVer: 'CONTACTOS_ADMIN_VER',
   reportesAdminVer: 'REPORTES_ADMIN_VER',

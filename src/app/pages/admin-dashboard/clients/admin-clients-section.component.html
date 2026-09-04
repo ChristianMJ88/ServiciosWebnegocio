@@ -1,0 +1,23 @@
+<section class="section-stack">
+  @if (error()) { <div class="alert alert-danger">{{ error() }}</div> }
+  @if (mensaje()) { <div class="alert alert-success">{{ mensaje() }}</div> }
+  <div class="workspace-grid two-columns">
+    <mat-card class="workspace-card form-card">
+      <div class="section-header"><div><div class="section-eyebrow">Relación con clientes</div><h3>{{ editandoId ? 'Editar cliente' : 'Nuevo cliente' }}</h3></div></div>
+      <form class="admin-form-grid admin-form-shell" (ngSubmit)="guardar()">
+        <mat-form-field appearance="outline" class="full-width"><mat-label>Nombre completo</mat-label><input matInput name="nombre" [(ngModel)]="formulario.nombreCompleto" maxlength="150" required></mat-form-field>
+        <mat-form-field appearance="outline"><mat-label>Correo</mat-label><input matInput type="email" name="correo" [(ngModel)]="formulario.correo" maxlength="150" required></mat-form-field>
+        <mat-form-field appearance="outline"><mat-label>Teléfono</mat-label><input matInput name="telefono" [(ngModel)]="formulario.telefono" maxlength="30" required></mat-form-field>
+        <mat-checkbox class="full-width" name="whatsapp" [(ngModel)]="formulario.aceptaWhatsapp">Acepta comunicaciones por WhatsApp</mat-checkbox>
+        <mat-form-field appearance="outline" class="full-width"><mat-label>Notas internas</mat-label><textarea matInput name="notas" [(ngModel)]="formulario.notas" maxlength="500" rows="3"></textarea></mat-form-field>
+        <div class="form-actions"><button mat-flat-button type="submit" [disabled]="guardando()">{{ editandoId ? 'Guardar cambios' : 'Crear cliente' }}</button>@if(editandoId){<button mat-stroked-button type="button" (click)="cancelar()">Cancelar</button>}</div>
+      </form>
+    </mat-card>
+    <mat-card class="workspace-card list-card">
+      <div class="section-header"><div><div class="section-eyebrow">Directorio</div><h3>Clientes del negocio</h3></div></div>
+      <div class="client-search"><mat-form-field appearance="outline"><mat-label>Buscar</mat-label><input matInput [(ngModel)]="filtro" (keyup.enter)="cargar()"></mat-form-field><button mat-stroked-button type="button" (click)="cargar()">Buscar</button></div>
+      @if (cargando()) { <p class="helper-text">Cargando clientes…</p> }
+      <div class="entity-list">@for (cliente of clientes(); track cliente.id) {<article class="entity-row"><div class="entity-main"><div class="entity-title">{{ cliente.nombreCompleto }}</div><div class="entity-meta">{{ cliente.correo }} · {{ cliente.telefono }}</div><div class="entity-meta">{{ cliente.totalCitas }} cita(s) @if(cliente.ultimaCita){ · Última: {{ cliente.ultimaCita | date:'mediumDate' }} }</div></div><div class="entity-side"><button mat-stroked-button type="button" (click)="editar(cliente)">Editar</button></div></article>} @empty { @if(!cargando()){<p class="helper-text">No hay clientes que coincidan.</p>} }</div>
+    </mat-card>
+  </div>
+</section>

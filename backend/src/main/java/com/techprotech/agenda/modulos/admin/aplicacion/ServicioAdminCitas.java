@@ -71,7 +71,8 @@ import com.techprotech.agenda.modulos.autenticacion.aplicacion.ServicioRolesEmpr
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.techprotech.agenda.modulos.autenticacion.infraestructura.entidad.*;
-import com.techprotech.agenda.modulos.autenticacion.infraestructura.repositorio.ClienteRepositorio;
+import com.techprotech.agenda.modulos.clientes.infraestructura.repositorio.ClienteRepositorio;
+import com.techprotech.agenda.modulos.clientes.infraestructura.entidad.ClienteEntidad;
 import com.techprotech.agenda.modulos.autenticacion.infraestructura.repositorio.EmpresaRepositorio;
 import com.techprotech.agenda.modulos.autenticacion.infraestructura.repositorio.PermisoRepositorio;
 import com.techprotech.agenda.modulos.autenticacion.infraestructura.repositorio.RolEmpresaPermisoRepositorio;

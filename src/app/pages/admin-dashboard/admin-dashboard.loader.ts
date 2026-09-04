@@ -2,6 +2,8 @@ import { Injectable, inject } from '@angular/core';
 import { Observable, catchError, forkJoin, of } from 'rxjs';
 import { AdminService } from '../../core/admin/admin.service';
 import { AuthService } from '../../core/auth/auth.service';
+import { PERMISOS } from '../../core/auth/permissions';
+import { SystemParametersService } from '../../core/admin/system-parameters.service';
 
 export type AdminDashboardLoadErrorHandler = (error: unknown, fallbackMessage: string) => void;
 
@@ -9,6 +11,7 @@ export type AdminDashboardLoadErrorHandler = (error: unknown, fallbackMessage: s
 export class AdminDashboardLoader {
   private readonly adminService = inject(AdminService);
   private readonly authService = inject(AuthService);
+  private readonly systemParameters = inject(SystemParametersService);
 
   cargar(onError: AdminDashboardLoadErrorHandler) {
     const puedeGestionarUsuarios = this.authService.puedeGestionarUsuariosInternos();
@@ -102,7 +105,14 @@ export class AdminDashboardLoader {
       plantillasWhatsapp: this.cargarSi(puedeGestionarWhatsapp, this.adminService.getPlantillasWhatsapp(), [], 'No se pudieron cargar las plantillas de WhatsApp.', onError),
       plantillasWhatsappEmpresa: this.cargarSi(puedeGestionarWhatsapp, this.adminService.getPlantillasWhatsappEmpresa(), [], 'No se pudieron cargar las plantillas configuradas del tenant.', onError),
       logsWhatsapp: this.cargarSi(puedeGestionarWhatsapp, this.adminService.getLogsWhatsapp(), [], 'No se pudieron cargar los logs de WhatsApp.', onError),
-      mensajesWhatsapp: this.cargarSi(puedeGestionarWhatsapp, this.adminService.getMensajesWhatsapp(), [], 'No se pudieron cargar las conversaciones de WhatsApp.', onError)
+      mensajesWhatsapp: this.cargarSi(puedeGestionarWhatsapp, this.adminService.getMensajesWhatsapp(), [], 'No se pudieron cargar las conversaciones de WhatsApp.', onError),
+      parametrosSistema: this.cargarSi(
+        this.authService.tienePermiso(PERMISOS.parametrosSistemaGestionar),
+        this.systemParameters.listar(),
+        [],
+        'No se pudieron cargar los parámetros del negocio.',
+        onError
+      )
     });
   }
 

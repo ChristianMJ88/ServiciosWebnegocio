@@ -9,10 +9,10 @@ import com.techprotech.agenda.modulos.citas.api.dto.CitasMultiplesCreadasRespons
 import com.techprotech.agenda.modulos.citas.api.dto.CrearCitaMultipleItemRequest;
 import com.techprotech.agenda.modulos.citas.api.dto.CrearCitaRequest;
 import com.techprotech.agenda.modulos.citas.api.dto.CrearCitasMultiplesRequest;
-import com.techprotech.agenda.modulos.autenticacion.infraestructura.entidad.ClienteEntidad;
+import com.techprotech.agenda.modulos.clientes.infraestructura.entidad.ClienteEntidad;
 import com.techprotech.agenda.modulos.autenticacion.infraestructura.entidad.EmpresaEntidad;
 import com.techprotech.agenda.modulos.autenticacion.infraestructura.entidad.UsuarioEntidad;
-import com.techprotech.agenda.modulos.autenticacion.infraestructura.repositorio.ClienteRepositorio;
+import com.techprotech.agenda.modulos.clientes.infraestructura.repositorio.ClienteRepositorio;
 import com.techprotech.agenda.modulos.autenticacion.infraestructura.repositorio.EmpresaRepositorio;
 import com.techprotech.agenda.modulos.autenticacion.infraestructura.repositorio.UsuarioRepositorio;
 import com.techprotech.agenda.modulos.citas.infraestructura.entidad.CitaEntidad;

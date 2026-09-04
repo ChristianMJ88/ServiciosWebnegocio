@@ -1,7 +1,7 @@
 package com.techprotech.agenda.modulos.caja.aplicacion;
 
-import com.techprotech.agenda.modulos.autenticacion.infraestructura.entidad.ClienteEntidad;
-import com.techprotech.agenda.modulos.autenticacion.infraestructura.repositorio.ClienteRepositorio;
+import com.techprotech.agenda.modulos.clientes.infraestructura.entidad.ClienteEntidad;
+import com.techprotech.agenda.modulos.clientes.infraestructura.repositorio.ClienteRepositorio;
 import com.techprotech.agenda.modulos.caja.api.dto.AbrirCajaRequest;
 import com.techprotech.agenda.modulos.caja.api.dto.CatalogoCajaResponse;
 import com.techprotech.agenda.modulos.caja.api.dto.CajaSesionResponse;

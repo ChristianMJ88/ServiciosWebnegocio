@@ -80,6 +80,8 @@ import { AdminSiteSectionComponent } from './site/admin-site-section.component';
 import { AdminServicesSectionComponent } from './catalog/admin-services-section.component';
 import { AdminSummarySectionComponent } from './overview/admin-summary-section.component';
 import { AdminOnboardingCardComponent } from './onboarding/admin-onboarding-card.component';
+import { AdminClientsSectionComponent } from './clients/admin-clients-section.component';
+import { AdminSystemParametersSectionComponent } from './parameters/admin-system-parameters-section.component';
 import { AdminSidebarComponent } from './navigation/admin-sidebar.component';
 import { AdminUsersActivitySectionComponent } from './access/admin-users-activity-section.component';
 import { AdminUsersAccessSectionComponent } from './access/admin-users-access-section.component';
@@ -162,7 +164,7 @@ import {
 } from './catalog/admin-catalog.helpers';
 import { buildWhatsappOnboardingChecklist, getWhatsappOnboardingStats } from './whatsapp/whatsapp-onboarding.helpers';
 
-type SubseccionUsuariosAdmin = 'usuarios' | 'roles' | 'actividad';
+type SubseccionUsuariosAdmin = 'usuarios' | 'actividad';
 
 type NotificacionAdmin = {
   id: string;
@@ -200,6 +202,8 @@ type NotificacionAdmin = {
     AdminServicesSectionComponent,
     AdminSummarySectionComponent,
     AdminOnboardingCardComponent,
+    AdminClientsSectionComponent,
+    AdminSystemParametersSectionComponent,
     AdminSidebarComponent,
     AdminUsersActivitySectionComponent,
     AdminUsersAccessSectionComponent,
@@ -990,7 +994,7 @@ export class AdminDashboardComponent implements OnInit {
     this.dashboardLoader.cargar((error, mensaje) => this.marcarErrorCarga(error, mensaje))
       .pipe(finalize(() => this.actualizarVistaEnZona(() => this.loading.set(false))))
       .subscribe({
-        next: ({ resumen, citas, contactos, metadatosContactos, sucursales, gruposServicio, subgruposServicio, catalogosSugeridos, servicios, prestadores, rolesInternos, plantillasRolesInternos, auditoriaRolesInternos, permisos, usuariosInternos, reglas, metadatosDisponibilidad, excepciones, reporteServicios, reportePrestadores, periodosReporte, configuracionSitio, configuracionCorreo, auditoriaConfiguracion, configuracionWhatsapp, plantillasWhatsapp, plantillasWhatsappEmpresa, logsWhatsapp, mensajesWhatsapp }) => {
+        next: ({ resumen, citas, contactos, metadatosContactos, sucursales, gruposServicio, subgruposServicio, catalogosSugeridos, servicios, prestadores, rolesInternos, plantillasRolesInternos, auditoriaRolesInternos, permisos, usuariosInternos, reglas, metadatosDisponibilidad, excepciones, reporteServicios, reportePrestadores, periodosReporte, configuracionSitio, configuracionCorreo, auditoriaConfiguracion, configuracionWhatsapp, plantillasWhatsapp, plantillasWhatsappEmpresa, logsWhatsapp, mensajesWhatsapp, parametrosSistema }) => {
           this.actualizarVistaEnZona(() => {
             this.resumen.set(resumen);
             this.citas.set(citas);
@@ -1041,6 +1045,12 @@ export class AdminDashboardComponent implements OnInit {
             this.mensajesWhatsapp.set(mensajesWhatsapp);
             if (!this.formularioServicio.sucursalId && sucursales.length > 0) {
               this.formularioServicio.sucursalId = sucursales[0].id;
+            }
+            if (!this.servicioEditandoId) {
+              const monedaPredeterminada = parametrosSistema.find(parametro => parametro.clave === 'MONEDA_PREDETERMINADA')?.valor;
+              if (monedaPredeterminada) {
+                this.formularioServicio.moneda = monedaPredeterminada;
+              }
             }
             if (!this.formularioServicio.sucursalIds.length && sucursales.length > 0) {
               this.formularioServicio.sucursalIds = [this.formularioServicio.sucursalId || sucursales[0].id];
@@ -2132,7 +2142,7 @@ export class AdminDashboardComponent implements OnInit {
       return;
     }
     this.editarRolInterno(rol);
-    this.subseccionUsuariosActiva.set('roles');
+    this.seleccionarSeccion('permisos');
   }
 
   etiquetaPermiso(codigo: string): string {

@@ -162,11 +162,13 @@
 
       <main class="admin-body" id="admin-main">
         @if (seccionActiva() === 'resumen' && estadoOnboarding(); as estado) {
-          <app-admin-onboarding-card
-            [estado]="estado"
-            [reenviando]="reenviandoConfirmacion()"
-            (reenviar)="reenviarConfirmacionCorreo()"
-            (abrirPaso)="abrirPasoOnboarding($event)" />
+          @if (estado.pasosCompletados < estado.totalPasos) {
+            <app-admin-onboarding-card
+              [estado]="estado"
+              [reenviando]="reenviandoConfirmacion()"
+              (reenviar)="reenviarConfirmacionCorreo()"
+              (abrirPaso)="abrirPasoOnboarding($event)" />
+          }
         }
         <header class="content-header" [class.is-services-header]="seccionActiva() === 'servicios'">
           <div class="content-header-copy">
@@ -491,18 +493,9 @@
         <button
           type="button"
           class="users-subnav-button"
-          [class.is-active]="subseccionUsuariosActiva() === 'roles'"
-          (click)="seleccionarSubseccionUsuarios('roles')">
-          <span class="users-subnav-step">Paso 2</span>
-          <strong>Roles y permisos</strong>
-          <small>Aquí defines qué puede hacer cada perfil interno.</small>
-        </button>
-        <button
-          type="button"
-          class="users-subnav-button"
           [class.is-active]="subseccionUsuariosActiva() === 'actividad'"
           (click)="seleccionarSubseccionUsuarios('actividad')">
-          <span class="users-subnav-step">Paso 3</span>
+          <span class="users-subnav-step">Paso 2</span>
           <strong>Actividad</strong>
           <small>Revisa cambios recientes de roles y accesos.</small>
         </button>
@@ -550,38 +543,6 @@
       </section>
     }
   }
-  @if (subseccionUsuariosActiva() === 'roles') {
-    @defer {
-    <app-admin-users-roles-section
-      [rolInternoEditandoId]="rolInternoEditandoId"
-      [rolInternoClonandoDesdeId]="rolInternoClonandoDesdeId"
-      [rolInternoClonandoNombreOrigen]="rolInternoClonandoNombreOrigen"
-      [plantillasRolesInternos]="plantillasRolesInternos()"
-      [formularioRolInterno]="formularioRolInterno"
-      [gruposPermisos]="gruposPermisos()"
-      [rolesInternos]="rolesInternos()"
-      [permisoRolSeleccionado]="permisoRolSeleccionado.bind(this)"
-      (clearEdit)="cancelarEdicionRolInterno()"
-      (useTemplate)="usarPlantillaRolInterno($event)"
-      (save)="guardarRolInterno()"
-      (rolePermissionChange)="cambiarPermisoRol($event.codigo, $event.checked)"
-      (cloneRole)="clonarRolInterno($event)"
-      (editRole)="editarRolInterno($event)"
-      (deleteRole)="eliminarRolInterno($event)" />
-    } @placeholder {
-    <section class="section-stack">
-      <div class="workspace-card">
-        <div class="section-header">
-          <div>
-            <div class="section-eyebrow">Roles</div>
-            <h3>Cargando roles y permisos</h3>
-          </div>
-        </div>
-        <p class="helper-text mb-0">Estamos preparando plantillas, permisos y catálogo de roles internos.</p>
-      </div>
-    </section>
-  }
-}
 @if (subseccionUsuariosActiva() === 'actividad') {
   @defer {
   <app-admin-users-activity-section
@@ -602,6 +563,35 @@
 }
 }
 </section>
+}
+
+@if (seccionActiva() === 'clientes') {
+  @defer { <app-admin-clients-section /> }
+}
+
+@if (seccionActiva() === 'permisos') {
+  @defer {
+    <app-admin-users-roles-section
+      [rolInternoEditandoId]="rolInternoEditandoId"
+      [rolInternoClonandoDesdeId]="rolInternoClonandoDesdeId"
+      [rolInternoClonandoNombreOrigen]="rolInternoClonandoNombreOrigen"
+      [plantillasRolesInternos]="plantillasRolesInternos()"
+      [formularioRolInterno]="formularioRolInterno"
+      [gruposPermisos]="gruposPermisos()"
+      [rolesInternos]="rolesInternos()"
+      [permisoRolSeleccionado]="permisoRolSeleccionado.bind(this)"
+      (clearEdit)="cancelarEdicionRolInterno()"
+      (useTemplate)="usarPlantillaRolInterno($event)"
+      (save)="guardarRolInterno()"
+      (rolePermissionChange)="cambiarPermisoRol($event.codigo, $event.checked)"
+      (cloneRole)="clonarRolInterno($event)"
+      (editRole)="editarRolInterno($event)"
+      (deleteRole)="eliminarRolInterno($event)" />
+  }
+}
+
+@if (seccionActiva() === 'parametros') {
+  @defer { <app-admin-system-parameters-section /> }
 }
 
 @if (seccionActiva() === 'prestadores') {

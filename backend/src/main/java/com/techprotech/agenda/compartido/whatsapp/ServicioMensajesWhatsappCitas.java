@@ -1,6 +1,6 @@
 package com.techprotech.agenda.compartido.whatsapp;
 
-import com.techprotech.agenda.modulos.autenticacion.infraestructura.entidad.ClienteEntidad;
+import com.techprotech.agenda.modulos.clientes.infraestructura.entidad.ClienteEntidad;
 import com.techprotech.agenda.modulos.autenticacion.infraestructura.entidad.EmpresaEntidad;
 import com.techprotech.agenda.modulos.autenticacion.infraestructura.repositorio.EmpresaRepositorio;
 import com.techprotech.agenda.modulos.citas.infraestructura.entidad.CitaEntidad;
@@ -9,7 +9,7 @@ import com.techprotech.agenda.modulos.servicios.infraestructura.entidad.Servicio
 import com.techprotech.agenda.modulos.servicios.infraestructura.repositorio.ServicioRepositorio;
 import com.techprotech.agenda.modulos.sucursales.infraestructura.entidad.SucursalEntidad;
 import com.techprotech.agenda.modulos.sucursales.infraestructura.repositorio.SucursalRepositorio;
-import com.techprotech.agenda.modulos.autenticacion.infraestructura.repositorio.ClienteRepositorio;
+import com.techprotech.agenda.modulos.clientes.infraestructura.repositorio.ClienteRepositorio;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;

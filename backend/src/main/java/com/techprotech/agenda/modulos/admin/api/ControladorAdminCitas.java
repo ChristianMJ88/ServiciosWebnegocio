@@ -25,7 +25,6 @@ import com.techprotech.agenda.modulos.admin.api.dto.PlantillaWhatsappEmpresaAdmi
 import com.techprotech.agenda.modulos.admin.api.dto.PlantillaWhatsappEmpresaAdminResponse;
 import com.techprotech.agenda.modulos.admin.api.dto.PrestadorAdminRequest;
 import com.techprotech.agenda.modulos.admin.api.dto.PrestadorAdminResponse;
-import com.techprotech.agenda.modulos.admin.api.dto.PermisoAdminResponse;
 import com.techprotech.agenda.modulos.admin.api.dto.PlantillaRolInternoAdminResponse;
 import com.techprotech.agenda.modulos.admin.api.dto.ProvisionarSubcuentaWhatsappRequest;
 import com.techprotech.agenda.modulos.admin.api.dto.ProvisionarMessagingServiceWhatsappRequest;
@@ -164,12 +163,6 @@ public class ControladorAdminCitas {
     @PreAuthorize("hasAuthority('USUARIOS_INTERNOS_GESTIONAR')")
     public List<RolInternoAdminResponse> rolesInternos(@AuthenticationPrincipal UsuarioAutenticado usuario) {
         return servicioAdminCitas.listarRolesInternos(usuario.empresaId());
-    }
-
-    @GetMapping("/permisos")
-    @PreAuthorize("hasAuthority('USUARIOS_INTERNOS_GESTIONAR')")
-    public List<PermisoAdminResponse> permisos(@AuthenticationPrincipal UsuarioAutenticado usuario) {
-        return servicioAdminCitas.listarPermisos(usuario.empresaId());
     }
 
     @GetMapping("/roles-internos/plantillas")

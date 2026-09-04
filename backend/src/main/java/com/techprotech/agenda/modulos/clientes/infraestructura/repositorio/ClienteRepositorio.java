@@ -1,6 +1,6 @@
-package com.techprotech.agenda.modulos.autenticacion.infraestructura.repositorio;
+package com.techprotech.agenda.modulos.clientes.infraestructura.repositorio;
 
-import com.techprotech.agenda.modulos.autenticacion.infraestructura.entidad.ClienteEntidad;
+import com.techprotech.agenda.modulos.clientes.infraestructura.entidad.ClienteEntidad;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
@@ -9,6 +9,14 @@ import java.util.List;
 public interface ClienteRepositorio extends JpaRepository<ClienteEntidad, Long> {
 
     List<ClienteEntidad> findByAceptaWhatsappTrue();
+
+    @Query("""
+            select c from ClienteEntidad c
+            join UsuarioEntidad u on u.id = c.usuarioId
+            where u.empresaId = :empresaId
+            order by c.nombreCompleto asc
+            """)
+    List<ClienteEntidad> findByEmpresaId(Long empresaId);
 
     @Query("""
             select c from ClienteEntidad c

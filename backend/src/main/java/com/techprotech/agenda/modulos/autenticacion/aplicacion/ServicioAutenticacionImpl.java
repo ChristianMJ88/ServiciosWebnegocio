@@ -8,10 +8,10 @@ import com.techprotech.agenda.modulos.autenticacion.api.dto.RegistrarClienteRequ
 import com.techprotech.agenda.modulos.autenticacion.api.dto.RespuestaAccesoApp;
 import com.techprotech.agenda.modulos.autenticacion.api.dto.RespuestaTokenJwt;
 import com.techprotech.agenda.modulos.autenticacion.infraestructura.entidad.EmpresaEntidad;
-import com.techprotech.agenda.modulos.autenticacion.infraestructura.entidad.ClienteEntidad;
+import com.techprotech.agenda.modulos.clientes.infraestructura.entidad.ClienteEntidad;
 import com.techprotech.agenda.modulos.autenticacion.infraestructura.entidad.TokenActualizacionEntidad;
 import com.techprotech.agenda.modulos.autenticacion.infraestructura.entidad.UsuarioEntidad;
-import com.techprotech.agenda.modulos.autenticacion.infraestructura.repositorio.ClienteRepositorio;
+import com.techprotech.agenda.modulos.clientes.infraestructura.repositorio.ClienteRepositorio;
 import com.techprotech.agenda.modulos.autenticacion.infraestructura.repositorio.EmpresaRepositorio;
 import com.techprotech.agenda.modulos.autenticacion.infraestructura.repositorio.TokenActualizacionRepositorio;
 import com.techprotech.agenda.modulos.autenticacion.infraestructura.repositorio.UsuarioRepositorio;

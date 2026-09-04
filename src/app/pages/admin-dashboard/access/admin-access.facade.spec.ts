@@ -7,7 +7,7 @@ import { crearFormularioRolInterno, crearFormularioUsuarioInterno } from './admi
 
 describe('AdminAccessFacade', () => {
   const adminService = {
-    crearUsuarioInterno: vi.fn(),
+    invitarUsuarioInterno: vi.fn(),
     actualizarUsuarioInterno: vi.fn(),
     crearRolInterno: vi.fn(),
     actualizarRolInterno: vi.fn(),
@@ -30,13 +30,13 @@ describe('AdminAccessFacade', () => {
 
   it('delega la creación y actualización de usuarios', async () => {
     const formulario = crearFormularioUsuarioInterno(null, 3);
-    adminService.crearUsuarioInterno.mockReturnValue(of({ usuarioId: 1 }));
+    adminService.invitarUsuarioInterno.mockReturnValue(of({ invitacionId: 1 }));
     adminService.actualizarUsuarioInterno.mockReturnValue(of({ usuarioId: 7 }));
 
     await firstValueFrom(facade.guardarUsuario(null, formulario));
     await firstValueFrom(facade.guardarUsuario(7, formulario));
 
-    expect(adminService.crearUsuarioInterno).toHaveBeenCalledOnce();
+    expect(adminService.invitarUsuarioInterno).toHaveBeenCalledOnce();
     expect(adminService.actualizarUsuarioInterno).toHaveBeenCalledWith(7, expect.any(Object));
   });
 

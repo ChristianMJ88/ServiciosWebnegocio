@@ -1,4 +1,4 @@
-package com.techprotech.agenda.modulos.autenticacion.infraestructura.entidad;
+package com.techprotech.agenda.modulos.clientes.infraestructura.entidad;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -30,4 +30,3 @@ public class ClienteEntidad {
     private String notas;
 
 }
-
