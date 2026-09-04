@@ -30,6 +30,15 @@ function isLocalHost(hostname: string): boolean {
     || /^172\.(1[6-9]|2\d|3[0-1])\.\d{1,3}\.\d{1,3}$/.test(hostname);
 }
 
+export function isMarketingHostname(currentHostname: string, marketingHostname: string): boolean {
+  if (!currentHostname || !marketingHostname) {
+    return false;
+  }
+
+  return currentHostname === marketingHostname
+    || currentHostname === `www.${marketingHostname}`;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -77,7 +86,7 @@ export class PlatformHostService {
   }
 
   isMarketingHost(): boolean {
-    return !!this.marketingHostnameValue && this.currentHostnameValue === this.marketingHostnameValue;
+    return isMarketingHostname(this.currentHostnameValue, this.marketingHostnameValue);
   }
 
   isKnownPlatformHost(): boolean {
