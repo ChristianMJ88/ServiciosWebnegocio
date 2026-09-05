@@ -44,3 +44,6 @@ Thumbs.db
 
 # Local backend secrets
 backend/.env
+
+# Firebase CLI local deployment cache
+.firebase/
