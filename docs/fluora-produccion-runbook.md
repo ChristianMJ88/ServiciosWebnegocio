@@ -180,11 +180,10 @@ El permiso `roles/run.invoker` para `allUsers` es intencional solo en estas dos 
 
 ```bash
 npm --prefix functions test
-npm --prefix functions run prepare-template
 firebase deploy --only functions --project fir-serviciosweb-b2901
 ```
 
-El script debe llamarse `prepare-template`, no `prepare`: npm ejecuta `prepare` dentro de Cloud Build, donde no existe el build Angular completo.
+`tenantPage` obtiene el `index.html` vigente desde Hosting en cada render. Esto evita que la Function conserve hashes antiguos de bundles Angular después de un despliegue.
 
 ```bash
 curl -I https://refluora.com/e/nail-art

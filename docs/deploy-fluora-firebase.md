@@ -28,7 +28,6 @@ firebase deploy --only hosting --project fir-serviciosweb-b2901
 
 ```bash
 npm --prefix functions test
-npm --prefix functions run prepare-template
 firebase deploy --only functions --project fir-serviciosweb-b2901
 ```
 

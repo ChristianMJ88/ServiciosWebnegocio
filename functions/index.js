@@ -4,6 +4,7 @@ const { onRequest } = require('firebase-functions/v2/https');
 const { logger } = require('firebase-functions');
 const { defineString } = require('firebase-functions/params');
 const { renderNotFound, renderSitemap, renderTenantHtml } = require('./seo-renderer');
+const { copyUpstreamHeaders } = require('./proxy-headers');
 
 const apiBaseUrlParam = defineString('FLUORA_API_BASE_URL');
 const marketingOriginParam = defineString('FLUORA_MARKETING_ORIGIN');
@@ -60,13 +61,7 @@ exports.apiProxy = onRequest(
         signal: AbortSignal.timeout(55000)
       });
 
-      const contentType = upstream.headers.get('content-type');
-      const cacheControl = upstream.headers.get('cache-control');
-      const location = upstream.headers.get('location');
-      if (contentType) response.set('Content-Type', contentType);
-      if (location) response.set('Location', location);
-      if (cacheControl) response.set('Cache-Control', cacheControl);
-      else response.set('Cache-Control', 'no-store');
+      copyUpstreamHeaders(upstream.headers, response);
 
       response.status(upstream.status).send(Buffer.from(await upstream.arrayBuffer()));
     } catch (error) {
