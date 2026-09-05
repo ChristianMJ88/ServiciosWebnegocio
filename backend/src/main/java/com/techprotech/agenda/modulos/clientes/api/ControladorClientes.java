@@ -2,6 +2,7 @@ package com.techprotech.agenda.modulos.clientes.api;
 
 import com.techprotech.agenda.modulos.clientes.api.dto.ClienteResponse;
 import com.techprotech.agenda.modulos.clientes.api.dto.GuardarClienteRequest;
+import com.techprotech.agenda.modulos.clientes.api.dto.PaginaClientesResponse;
 import com.techprotech.agenda.modulos.clientes.aplicacion.ServicioClientes;
 import com.techprotech.agenda.modulos.clientes.dominio.Cliente;
 import com.techprotech.agenda.seguridad.jwt.UsuarioAutenticado;
@@ -11,6 +12,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import org.springframework.data.domain.PageRequest;
 
 @RestController
 @RequestMapping("/api/v1/admin/clientes")
@@ -21,9 +23,26 @@ public class ControladorClientes {
     public ControladorClientes(ServicioClientes servicio) { this.servicio = servicio; }
 
     @GetMapping
-    public List<ClienteResponse> listar(@AuthenticationPrincipal UsuarioAutenticado usuario,
-                                        @RequestParam(required = false) String busqueda) {
-        return servicio.listar(usuario.empresaId(), busqueda).stream().map(this::respuesta).toList();
+    public PaginaClientesResponse listar(
+            @AuthenticationPrincipal UsuarioAutenticado usuario,
+            @RequestParam(required = false) String busqueda,
+            @RequestParam(defaultValue = "0") int pagina,
+            @RequestParam(defaultValue = "25") int tamano
+    ) {
+        int paginaSegura = Math.max(0, pagina);
+        int tamanoSeguro = Math.max(1, Math.min(tamano, 100));
+        var resultado = servicio.listar(
+                usuario.empresaId(),
+                busqueda,
+                PageRequest.of(paginaSegura, tamanoSeguro)
+        );
+        return new PaginaClientesResponse(
+                resultado.getContent().stream().map(this::respuesta).toList(),
+                resultado.getNumber(),
+                resultado.getSize(),
+                resultado.getTotalElements(),
+                resultado.getTotalPages()
+        );
     }
 
     @PostMapping

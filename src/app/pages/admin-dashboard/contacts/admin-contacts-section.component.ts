@@ -17,8 +17,11 @@ export class AdminContactsSectionComponent {
   readonly contactos = input<SolicitudContactoAdmin[]>([]);
   readonly estadosContactoDisponibles = input<EstadoContactoAdmin[]>([]);
   readonly actualizandoContactoId = input<number | null>(null);
+  readonly pagina = input(0);
+  readonly totalPaginas = input(0);
 
   readonly updateStatus = output<{ contacto: SolicitudContactoAdmin; estado: string }>();
+  readonly pageChange = output<number>();
   filtroTexto = '';
   filtroEstado = 'TODOS';
 

@@ -12,6 +12,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 import java.util.List;
 import java.util.Locale;
@@ -39,15 +41,13 @@ public class ServicioClientesJpa implements ServicioClientes {
 
     @Override
     @Transactional(readOnly = true)
-    public List<Cliente> listar(Long empresaId, String busqueda) {
+    public Page<Cliente> listar(Long empresaId, String busqueda, Pageable pageable) {
         String filtro = busqueda == null ? "" : busqueda.trim().toLowerCase(Locale.ROOT);
-        return clientes.findByEmpresaId(empresaId).stream()
-                .map(cliente -> mapear(empresaId, cliente))
-                .filter(cliente -> filtro.isBlank()
-                        || cliente.nombreCompleto().toLowerCase(Locale.ROOT).contains(filtro)
-                        || cliente.correo().toLowerCase(Locale.ROOT).contains(filtro)
-                        || cliente.telefono().contains(filtro))
-                .toList();
+        return clientes.buscarResumenes(empresaId, filtro, pageable)
+                .map(cliente -> new Cliente(
+                        cliente.getId(), cliente.getNombreCompleto(), cliente.getCorreo(), cliente.getTelefono(),
+                        cliente.getAceptaWhatsapp(), cliente.getNotas(), cliente.getTotalCitas(), cliente.getUltimaCita()
+                ));
     }
 
     @Override

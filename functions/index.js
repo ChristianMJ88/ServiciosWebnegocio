@@ -1,7 +1,5 @@
 'use strict';
 
-const { readFileSync } = require('node:fs');
-const { join } = require('node:path');
 const { onRequest } = require('firebase-functions/v2/https');
 const { logger } = require('firebase-functions');
 const { defineString } = require('firebase-functions/params');
@@ -10,7 +8,6 @@ const { renderNotFound, renderSitemap, renderTenantHtml } = require('./seo-rende
 const apiBaseUrlParam = defineString('FLUORA_API_BASE_URL');
 const marketingOriginParam = defineString('FLUORA_MARKETING_ORIGIN');
 const backendOriginParam = defineString('FLUORA_BACKEND_ORIGIN');
-const template = readFileSync(join(__dirname, 'template', 'index.html'), 'utf8');
 
 function runtimeConfig() {
   const apiBaseUrl = apiBaseUrlParam.value().trim().replace(/\/+$/, '');
@@ -19,6 +16,22 @@ function runtimeConfig() {
     throw new Error('Faltan FLUORA_API_BASE_URL o FLUORA_MARKETING_ORIGIN');
   }
   return { apiBaseUrl, marketingOrigin };
+}
+
+async function loadCurrentTemplate(marketingOrigin) {
+  const templateResponse = await fetch(`${marketingOrigin}/index.html`, {
+    headers: { Accept: 'text/html' },
+    signal: AbortSignal.timeout(5000)
+  });
+  if (!templateResponse.ok) {
+    throw new Error(`El index de marketing respondió ${templateResponse.status}`);
+  }
+
+  const template = await templateResponse.text();
+  if (!template.includes('<app-root')) {
+    throw new Error('El index de marketing no contiene la aplicación esperada');
+  }
+  return template;
 }
 
 exports.apiProxy = onRequest(
@@ -75,10 +88,13 @@ exports.tenantPage = onRequest(
     }
 
     try {
-      const apiResponse = await fetch(`${apiBaseUrl}/publico/sitio/${encodeURIComponent(slug)}`, {
-        headers: { Accept: 'application/json' },
-        signal: AbortSignal.timeout(8000)
-      });
+      const [apiResponse, template] = await Promise.all([
+        fetch(`${apiBaseUrl}/publico/sitio/${encodeURIComponent(slug)}`, {
+          headers: { Accept: 'application/json' },
+          signal: AbortSignal.timeout(8000)
+        }),
+        loadCurrentTemplate(marketingOrigin)
+      ]);
 
       if (!apiResponse.ok) {
         response.status(apiResponse.status === 404 ? 404 : 502)

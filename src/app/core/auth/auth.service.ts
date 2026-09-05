@@ -7,7 +7,6 @@ import { TenantContextService } from '../tenant/tenant-context.service';
 
 export interface SesionUsuario {
   tokenAcceso: string;
-  tokenActualizacion: string;
   usuarioId: number;
   empresaId: number;
   empresaSlug?: string;
@@ -35,7 +34,6 @@ interface RegistroRequest {
 
 export interface RespuestaTokenJwt {
   tokenAcceso: string;
-  tokenActualizacion: string;
   tipoToken: string;
   usuarioId: number;
   empresaId: number;
@@ -248,15 +246,14 @@ export class AuthService {
   }
 
   logout() {
-    const tokenActualizacion = this.sesion()?.tokenActualizacion;
-    if (!tokenActualizacion || !environment.apiBaseUrl) {
+    if (!environment.apiBaseUrl) {
       this.limpiarSesion();
       return;
     }
 
     this.http.post<void>(
       `${environment.apiBaseUrl}/auth/cerrar-sesion`,
-      { tokenActualizacion },
+      {},
       { headers: { 'X-Omitir-Refresh': 'true' } }
     ).subscribe({
       next: () => this.limpiarSesion(),
@@ -269,26 +266,20 @@ export class AuthService {
     return this.sesion()?.tokenAcceso ?? this.loadSession()?.tokenAcceso ?? null;
   }
 
-  getTokenActualizacion(): string | null {
-    this.sincronizarSesionPersistida();
-    return this.sesion()?.tokenActualizacion ?? this.loadSession()?.tokenActualizacion ?? null;
-  }
-
   refrescarToken(): Observable<string> {
     if (this.refreshEnCurso$) {
       return this.refreshEnCurso$;
     }
 
-    const tokenActualizacion = this.getTokenActualizacion();
-    if (!tokenActualizacion || !environment.apiBaseUrl) {
+    if (!environment.apiBaseUrl) {
       this.limpiarSesion();
-      return throwError(() => new Error('No hay token de actualización disponible.'));
+      return throwError(() => new Error('La renovación de sesión no está disponible.'));
     }
 
     this.refreshEnCurso$ = this.http
       .post<RespuestaTokenJwt>(
         `${environment.apiBaseUrl}/auth/refrescar-token`,
-        { tokenActualizacion },
+        {},
         { headers: { 'X-Omitir-Refresh': 'true' } }
       )
       .pipe(
@@ -307,6 +298,7 @@ export class AuthService {
 
   limpiarSesion() {
     this.ngZone.run(() => {
+      sessionStorage.removeItem(this.storageKey);
       localStorage.removeItem(this.storageKey);
       this.sesion.set(null);
     });
@@ -318,7 +310,8 @@ export class AuthService {
 
   private saveSession(sesion: SesionUsuario) {
     this.ngZone.run(() => {
-      localStorage.setItem(this.storageKey, JSON.stringify(sesion));
+      sessionStorage.setItem(this.storageKey, JSON.stringify(sesion));
+      localStorage.removeItem(this.storageKey);
       this.sesion.set(sesion);
     });
   }
@@ -327,7 +320,6 @@ export class AuthService {
     const payload = this.decodeJwtPayload(response.tokenAcceso);
     const sesion: SesionUsuario = {
       tokenAcceso: response.tokenAcceso,
-      tokenActualizacion: response.tokenActualizacion,
       usuarioId: response.usuarioId,
       empresaId: response.empresaId,
       empresaSlug: response.empresaSlug,
@@ -342,14 +334,20 @@ export class AuthService {
   }
 
   private loadSession(): SesionUsuario | null {
-    const raw = localStorage.getItem(this.storageKey);
+    const raw = sessionStorage.getItem(this.storageKey) ?? localStorage.getItem(this.storageKey);
     if (!raw) {
       return null;
     }
 
     try {
-      return JSON.parse(raw) as SesionUsuario;
+      const sesion = JSON.parse(raw) as SesionUsuario;
+      if (!sessionStorage.getItem(this.storageKey)) {
+        sessionStorage.setItem(this.storageKey, raw);
+        localStorage.removeItem(this.storageKey);
+      }
+      return sesion;
     } catch {
+      sessionStorage.removeItem(this.storageKey);
       localStorage.removeItem(this.storageKey);
       return null;
     }

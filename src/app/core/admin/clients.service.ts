@@ -14,13 +14,21 @@ export interface ClienteAdmin {
   ultimaCita: string | null;
 }
 export type GuardarCliente = Pick<ClienteAdmin, 'nombreCompleto' | 'correo' | 'telefono' | 'aceptaWhatsapp' | 'notas'>;
+export interface PaginaClientesAdmin {
+  contenido: ClienteAdmin[];
+  pagina: number;
+  tamano: number;
+  totalElementos: number;
+  totalPaginas: number;
+}
 
 @Injectable({ providedIn: 'root' })
 export class ClientsService {
   private readonly http = inject(HttpClient);
-  listar(busqueda = ''): Observable<ClienteAdmin[]> {
-    const params = busqueda.trim() ? new HttpParams().set('busqueda', busqueda.trim()) : undefined;
-    return this.http.get<ClienteAdmin[]>(`${environment.apiBaseUrl}/admin/clientes`, { params });
+  listar(busqueda = '', pagina = 0, tamano = 25): Observable<PaginaClientesAdmin> {
+    let params = new HttpParams().set('pagina', pagina).set('tamano', tamano);
+    if (busqueda.trim()) params = params.set('busqueda', busqueda.trim());
+    return this.http.get<PaginaClientesAdmin>(`${environment.apiBaseUrl}/admin/clientes`, { params });
   }
   crear(payload: GuardarCliente): Observable<ClienteAdmin> {
     return this.http.post<ClienteAdmin>(`${environment.apiBaseUrl}/admin/clientes`, payload);

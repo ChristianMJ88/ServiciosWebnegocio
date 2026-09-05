@@ -294,6 +294,9 @@
       [contactos]="contactos()"
       [estadosContactoDisponibles]="estadosContactoDisponibles()"
       [actualizandoContactoId]="actualizandoContactoId"
+      [pagina]="paginaContactos()"
+      [totalPaginas]="totalPaginasContactos()"
+      (pageChange)="cargarPaginaContactos($event)"
       (updateStatus)="actualizarEstadoContacto($event.contacto, $event.estado)" />
     } @placeholder {
     <section class="section-stack">

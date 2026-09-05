@@ -238,6 +238,24 @@ export class AdminDashboardComponent implements OnInit {
   private readonly inicioAgendaHora = 8;
   private readonly finAgendaHora = 20;
   private readonly alturaHoraAgenda = 86;
+  private rangoCitasCargado: { desde: string; hasta: string } | null = null;
+  private revisionCargaCitas = 0;
+  private whatsappConfiguracionCargada = false;
+  private whatsappConfiguracionCargando = false;
+  private whatsappMensajesCargados = false;
+  private whatsappMensajesCargando = false;
+  private usuariosCargados = false;
+  private usuariosCargando = false;
+  private disponibilidadCargada = false;
+  private disponibilidadCargando = false;
+  private configuracionSitioCargada = false;
+  private configuracionSitioCargando = false;
+  private configuracionCorreoCargada = false;
+  private configuracionCorreoCargando = false;
+  private catalogoServiciosCargado = false;
+  private catalogoServiciosCargando = false;
+  private contactosCargados = false;
+  private contactosCargando = false;
   readonly loading = signal(false);
   readonly estadoOnboarding = signal<EstadoOnboarding | null>(null);
   readonly reenviandoConfirmacion = signal(false);
@@ -260,6 +278,9 @@ export class AdminDashboardComponent implements OnInit {
   readonly resumen = signal<ResumenAdmin | null>(null);
   readonly citas = signal<CitaCliente[]>([]);
   readonly contactos = signal<SolicitudContactoAdmin[]>([]);
+  readonly resumenContactosRemoto = signal<{ total: number; nuevos: number; enProceso: number; atendidos: number; ultimoNuevo: SolicitudContactoAdmin | null } | null>(null);
+  readonly paginaContactos = signal(0);
+  readonly totalPaginasContactos = signal(0);
   readonly metadatosContactos = signal<MetadatosContactosAdmin | null>(null);
   readonly sucursales = signal<SucursalAdmin[]>([]);
   readonly gruposServicio = signal<GrupoServicioAdmin[]>([]);
@@ -371,11 +392,10 @@ export class AdminDashboardComponent implements OnInit {
       .filter(mensaje => mensaje.direccion === 'ENTRANTE')
       .sort((a, b) => new Date(b.creadoEn).getTime() - new Date(a.creadoEn).getTime())
   );
-  readonly contactosNuevos = computed(() =>
-    this.contactos()
-      .filter(contacto => contacto.estado === this.metadatosContactos()?.estadoNuevo)
-      .sort((a, b) => new Date(b.creadaEn).getTime() - new Date(a.creadaEn).getTime())
-  );
+  readonly contactosNuevos = computed(() => {
+    const ultimo = this.resumenContactosRemoto()?.ultimoNuevo;
+    return ultimo ? [ultimo] : [];
+  });
   readonly notificacionesDashboard = computed<NotificacionAdmin[]>(() => {
     const citas = this.citasRegistradasNotificacion();
     const mensajes = this.mensajesWhatsappEntrantes();
@@ -407,7 +427,7 @@ export class AdminDashboardComponent implements OnInit {
         titulo: 'Contactos desde el sitio',
         descripcion: `${contactos[0]?.nombreCompleto ?? 'Nuevo contacto'}: ${contactos[0]?.asunto ?? 'Solicitud recibida'}`,
         meta: 'Contacto',
-        total: contactos.length
+        total: this.resumenContactosRemoto()?.nuevos ?? contactos.length
       } : null
     ].filter((item): item is NotificacionAdmin => !!item);
   });
@@ -420,7 +440,7 @@ export class AdminDashboardComponent implements OnInit {
       .sort((a, b) => b.totalCitas - a.totalCitas || b.finalizadas - a.finalizadas)
       .slice(0, 6)
   );
-  readonly resumenContactos = computed(() => resumirContactos(this.contactos(), this.metadatosContactos()));
+  readonly resumenContactos = computed(() => this.resumenContactosRemoto() ?? resumirContactos(this.contactos(), this.metadatosContactos()));
   readonly estadosContactoDisponibles = computed(() => this.metadatosContactos()?.estados ?? []);
   readonly rolesUsuarioInterno = computed(() => this.rolesInternos());
   readonly rolUsuarioInternoSeleccionado = computed(() => {
@@ -811,6 +831,7 @@ export class AdminDashboardComponent implements OnInit {
       return;
     }
     this.seccionActiva.set(seccion);
+    this.cargarSeccionBajoDemanda(seccion);
     void this.router.navigate(['/admin', seccion]);
     if (seccion === 'usuarios') {
       this.subseccionUsuariosActiva.set('usuarios');
@@ -916,10 +937,12 @@ export class AdminDashboardComponent implements OnInit {
     if (!fecha) {
       this.fechaAgendaSeleccionada.set(this.obtenerFechaAgendaInicial());
       this.citaAgendaSeleccionadaId.set(null);
+      this.asegurarCitasAgendaCargadas(this.fechaAgendaActiva());
       return;
     }
     this.fechaAgendaSeleccionada.set(fecha);
     this.citaAgendaSeleccionadaId.set(null);
+    this.asegurarCitasAgendaCargadas(fecha);
   }
 
   desplazarFechaAgenda(dias: number) {
@@ -929,11 +952,13 @@ export class AdminDashboardComponent implements OnInit {
       : sumarDiasAgenda(this.fechaAgendaActiva(), view === 'week' ? dias * 7 : dias);
     this.fechaAgendaSeleccionada.set(nuevaFecha);
     this.citaAgendaSeleccionadaId.set(null);
+    this.asegurarCitasAgendaCargadas(nuevaFecha);
   }
 
   irAHoyAgenda() {
     this.fechaAgendaSeleccionada.set(obtenerFechaLocalISO());
     this.citaAgendaSeleccionadaId.set(null);
+    this.asegurarCitasAgendaCargadas(this.fechaAgendaActiva());
   }
 
   cambiarVistaAgenda(view: AgendaViewMode) {
@@ -984,6 +1009,7 @@ export class AdminDashboardComponent implements OnInit {
     if (!this.authService.asegurarSesion()) {
       return;
     }
+    this.invalidarSeccionBajoDemanda(this.seccionActiva());
 
     this.actualizarVistaEnZona(() => {
       this.loading.set(true);
@@ -991,41 +1017,21 @@ export class AdminDashboardComponent implements OnInit {
       this.mensajeExito = '';
       this.asegurarSeccionActivaDisponible();
     });
-    this.dashboardLoader.cargar((error, mensaje) => this.marcarErrorCarga(error, mensaje))
+    const rangoAgenda = obtenerRangoMes(this.fechaAgendaActiva());
+    this.dashboardLoader.cargar(rangoAgenda.desde, rangoAgenda.hasta, (error, mensaje) => this.marcarErrorCarga(error, mensaje))
       .pipe(finalize(() => this.actualizarVistaEnZona(() => this.loading.set(false))))
       .subscribe({
-        next: ({ resumen, citas, contactos, metadatosContactos, sucursales, gruposServicio, subgruposServicio, catalogosSugeridos, servicios, prestadores, rolesInternos, plantillasRolesInternos, auditoriaRolesInternos, permisos, usuariosInternos, reglas, metadatosDisponibilidad, excepciones, reporteServicios, reportePrestadores, periodosReporte, configuracionSitio, configuracionCorreo, auditoriaConfiguracion, configuracionWhatsapp, plantillasWhatsapp, plantillasWhatsappEmpresa, logsWhatsapp, mensajesWhatsapp, parametrosSistema }) => {
+        next: ({ resumen, citas, contactos, resumenContactos, metadatosContactos, sucursales, servicios, prestadores, reporteServicios, reportePrestadores, periodosReporte, auditoriaConfiguracion, parametrosSistema }) => {
           this.actualizarVistaEnZona(() => {
             this.resumen.set(resumen);
             this.citas.set(citas);
+            this.rangoCitasCargado = rangoAgenda;
             this.contactos.set(contactos);
+            this.resumenContactosRemoto.set(resumenContactos);
             this.metadatosContactos.set(metadatosContactos);
             this.sucursales.set(sucursales);
-            this.gruposServicio.set(gruposServicio);
-            this.subgruposServicio.set(subgruposServicio);
-            this.catalogosSugeridos.set(catalogosSugeridos);
             this.servicios.set(servicios);
             this.prestadores.set(prestadores);
-            this.rolesInternos.set(rolesInternos);
-            this.plantillasRolesInternos.set(plantillasRolesInternos);
-            this.auditoriaRolesInternos.set(auditoriaRolesInternos);
-            this.permisos.set(permisos);
-            if (
-              this.formularioUsuarioInterno.rolEmpresaId &&
-              !rolesInternos.some(rol => rol.id === this.formularioUsuarioInterno.rolEmpresaId)
-            ) {
-              this.formularioUsuarioInterno.rolEmpresaId = null;
-              this.formularioUsuarioInterno.permisosDirectos = [];
-              this.marcarCambioFormularioUsuarioInterno();
-            }
-            this.usuariosInternos.set(usuariosInternos);
-            this.reglasDisponibilidad.set(reglas);
-            this.metadatosDisponibilidad.set(metadatosDisponibilidad);
-            if (metadatosDisponibilidad) {
-              this.formularioRegla = completarFormularioReglaConMetadatos(this.formularioRegla, metadatosDisponibilidad);
-              this.formularioExcepcion = completarFormularioExcepcionConMetadatos(this.formularioExcepcion, metadatosDisponibilidad);
-            }
-            this.excepcionesDisponibilidad.set(excepciones);
             this.reporteServicios.set(reporteServicios);
             this.reportePrestadores.set(reportePrestadores);
             this.periodosReporte.set(periodosReporte);
@@ -1035,14 +1041,7 @@ export class AdminDashboardComponent implements OnInit {
               ?? periodosReporte[0]
               ?? null;
             this.periodoReporteSeleccionado.set(periodoActivo);
-            this.configuracionSitio.set(configuracionSitio);
-            this.configuracionCorreo.set(configuracionCorreo);
             this.auditoriaConfiguracion.set(auditoriaConfiguracion);
-            this.configuracionWhatsapp.set(configuracionWhatsapp);
-            this.plantillasWhatsapp.set(plantillasWhatsapp);
-            this.plantillasWhatsappEmpresa.set(plantillasWhatsappEmpresa);
-            this.logsWhatsapp.set(logsWhatsapp);
-            this.mensajesWhatsapp.set(mensajesWhatsapp);
             if (!this.formularioServicio.sucursalId && sucursales.length > 0) {
               this.formularioServicio.sucursalId = sucursales[0].id;
             }
@@ -1058,21 +1057,12 @@ export class AdminDashboardComponent implements OnInit {
             if (!this.formularioImportarCatalogo.sucursalId && sucursales.length > 0) {
               this.formularioImportarCatalogo.sucursalId = sucursales[0].id;
             }
-            if (!this.formularioImportarCatalogo.sugerenciaId && catalogosSugeridos.length > 0) {
-              this.formularioImportarCatalogo.sugerenciaId = catalogosSugeridos[0].id;
-            }
-            if (!this.formularioSubgrupoServicio.grupoId && gruposServicio.length > 0) {
-              this.formularioSubgrupoServicio.grupoId = gruposServicio[0].id;
-            }
             if (!this.formularioPrestador.sucursalId && sucursales.length > 0) {
               this.formularioPrestador.sucursalId = sucursales[0].id;
             }
             if (this.formularioUsuarioInterno.sucursalId === null && sucursales.length === 1) {
               this.formularioUsuarioInterno.sucursalId = sucursales[0].id;
             }
-            this.sincronizarFormularioSitio(configuracionSitio);
-            this.sincronizarFormularioCorreo(configuracionCorreo);
-            this.sincronizarFormularioWhatsapp(configuracionWhatsapp);
             this.actualizarServiciosPrestadorDisponibles();
             this.actualizarSujetosRegla();
             this.actualizarSujetosExcepcion();
@@ -1083,6 +1073,7 @@ export class AdminDashboardComponent implements OnInit {
           if (periodoActivo) {
             this.cargarDatosPeriodo(periodoActivo);
           }
+          this.cargarSeccionBajoDemanda(this.seccionActiva());
         },
         error: err => {
           this.actualizarVistaEnZona(() => {
@@ -1090,6 +1081,253 @@ export class AdminDashboardComponent implements OnInit {
           });
         }
       });
+  }
+
+  private asegurarCitasAgendaCargadas(fecha: string): void {
+    const cargado = this.rangoCitasCargado;
+    if (cargado && fecha >= cargado.desde && fecha <= cargado.hasta) {
+      return;
+    }
+
+    const rango = obtenerRangoMes(fecha);
+    const revision = ++this.revisionCargaCitas;
+    this.adminService.getCitas(rango.desde, rango.hasta)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: citas => {
+          if (revision !== this.revisionCargaCitas) return;
+          this.citas.set(citas);
+          this.rangoCitasCargado = rango;
+        },
+        error: error => {
+          if (revision !== this.revisionCargaCitas) return;
+          this.marcarErrorCarga(error, 'No se pudieron cargar las citas del mes seleccionado.');
+        }
+      });
+  }
+
+  private cargarSeccionBajoDemanda(seccion: SeccionAdmin): void {
+    if (seccion === 'whatsapp') {
+      this.cargarConfiguracionWhatsappBajoDemanda();
+    } else if (seccion === 'mensajes') {
+      this.cargarMensajesWhatsappBajoDemanda();
+    } else if (seccion === 'usuarios' || seccion === 'permisos') {
+      this.cargarUsuariosBajoDemanda();
+    } else if (seccion === 'reglas' || seccion === 'excepciones') {
+      this.cargarDisponibilidadBajoDemanda();
+    } else if (seccion === 'sitio') {
+      this.cargarConfiguracionSitioBajoDemanda();
+    } else if (seccion === 'correo') {
+      this.cargarConfiguracionCorreoBajoDemanda();
+    } else if (seccion === 'servicios') {
+      this.cargarCatalogoServiciosBajoDemanda();
+    } else if (seccion === 'contactos') {
+      this.cargarContactosBajoDemanda();
+    }
+  }
+
+  private invalidarSeccionBajoDemanda(seccion: SeccionAdmin): void {
+    if (seccion === 'whatsapp') {
+      this.whatsappConfiguracionCargada = false;
+    } else if (seccion === 'mensajes') {
+      this.whatsappMensajesCargados = false;
+    } else if (seccion === 'usuarios' || seccion === 'permisos') {
+      this.usuariosCargados = false;
+    } else if (seccion === 'reglas' || seccion === 'excepciones') {
+      this.disponibilidadCargada = false;
+    } else if (seccion === 'sitio') {
+      this.configuracionSitioCargada = false;
+    } else if (seccion === 'correo') {
+      this.configuracionCorreoCargada = false;
+    } else if (seccion === 'servicios') {
+      this.catalogoServiciosCargado = false;
+    } else if (seccion === 'contactos') {
+      this.contactosCargados = false;
+    }
+  }
+
+  cargarPaginaContactos(pagina: number): void {
+    this.contactosCargados = false;
+    this.cargarContactosBajoDemanda(Math.max(0, pagina));
+  }
+
+  private cargarContactosBajoDemanda(pagina = this.paginaContactos()): void {
+    if (this.contactosCargados || this.contactosCargando || !this.authService.puedeVerContactosAdmin()) return;
+    this.contactosCargando = true;
+    this.adminService.getContactos(pagina).pipe(
+      finalize(() => this.contactosCargando = false),
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe({
+      next: resultado => {
+        this.contactos.set(resultado.contenido);
+        this.paginaContactos.set(resultado.pagina);
+        this.totalPaginasContactos.set(resultado.totalPaginas);
+        this.contactosCargados = true;
+      },
+      error: error => this.marcarErrorCarga(error, 'No se pudieron cargar los contactos.')
+    });
+  }
+
+  private cargarCatalogoServiciosBajoDemanda(): void {
+    if (this.catalogoServiciosCargado || this.catalogoServiciosCargando || !this.authService.puedeGestionarServicios()) {
+      return;
+    }
+    this.catalogoServiciosCargando = true;
+    forkJoin({
+      grupos: this.adminService.getGruposServicio(),
+      subgrupos: this.adminService.getSubgruposServicio(),
+      sugerencias: this.adminService.getCatalogosSugeridos()
+    }).pipe(
+      finalize(() => this.catalogoServiciosCargando = false),
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe({
+      next: ({ grupos, subgrupos, sugerencias }) => {
+        this.gruposServicio.set(grupos);
+        this.subgruposServicio.set(subgrupos);
+        this.catalogosSugeridos.set(sugerencias);
+        if (!this.formularioImportarCatalogo.sugerenciaId && sugerencias.length > 0) {
+          this.formularioImportarCatalogo.sugerenciaId = sugerencias[0].id;
+        }
+        if (!this.formularioSubgrupoServicio.grupoId && grupos.length > 0) {
+          this.formularioSubgrupoServicio.grupoId = grupos[0].id;
+        }
+        this.catalogoServiciosCargado = true;
+      },
+      error: error => this.marcarErrorCarga(error, 'No se pudo cargar la jerarquía del catálogo de servicios.')
+    });
+  }
+
+  private cargarUsuariosBajoDemanda(): void {
+    if (this.usuariosCargados || this.usuariosCargando || !this.authService.puedeGestionarUsuariosInternos()) {
+      return;
+    }
+    this.usuariosCargando = true;
+    forkJoin({
+      roles: this.adminService.getRolesInternos(),
+      plantillas: this.adminService.getPlantillasRolesInternos(),
+      auditoria: this.adminService.getAuditoriaRolesInternos(),
+      permisos: this.adminService.getPermisos(),
+      usuarios: this.adminService.getUsuariosInternos()
+    }).pipe(
+      finalize(() => this.usuariosCargando = false),
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe({
+      next: ({ roles, plantillas, auditoria, permisos, usuarios }) => {
+        this.rolesInternos.set(roles);
+        this.plantillasRolesInternos.set(plantillas);
+        this.auditoriaRolesInternos.set(auditoria);
+        this.permisos.set(permisos);
+        this.usuariosInternos.set(usuarios);
+        this.usuariosCargados = true;
+      },
+      error: error => this.marcarErrorCarga(error, 'No se pudo cargar la administración de usuarios y permisos.')
+    });
+  }
+
+  private cargarDisponibilidadBajoDemanda(): void {
+    if (this.disponibilidadCargada || this.disponibilidadCargando || !this.authService.puedeGestionarPrestadores()) {
+      return;
+    }
+    this.disponibilidadCargando = true;
+    forkJoin({
+      reglas: this.adminService.getReglasDisponibilidad(),
+      metadatos: this.adminService.getMetadatosDisponibilidad(),
+      excepciones: this.adminService.getExcepcionesDisponibilidad()
+    }).pipe(
+      finalize(() => this.disponibilidadCargando = false),
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe({
+      next: ({ reglas, metadatos, excepciones }) => {
+        this.reglasDisponibilidad.set(reglas);
+        this.metadatosDisponibilidad.set(metadatos);
+        this.excepcionesDisponibilidad.set(excepciones);
+        this.formularioRegla = completarFormularioReglaConMetadatos(this.formularioRegla, metadatos);
+        this.formularioExcepcion = completarFormularioExcepcionConMetadatos(this.formularioExcepcion, metadatos);
+        this.actualizarSujetosRegla();
+        this.actualizarSujetosExcepcion();
+        this.disponibilidadCargada = true;
+      },
+      error: error => this.marcarErrorCarga(error, 'No se pudo cargar la configuración de disponibilidad.')
+    });
+  }
+
+  private cargarConfiguracionSitioBajoDemanda(): void {
+    if (this.configuracionSitioCargada || this.configuracionSitioCargando || !this.authService.puedeGestionarConfiguracionEmpresa()) {
+      return;
+    }
+    this.configuracionSitioCargando = true;
+    this.adminService.getConfiguracionSitio().pipe(
+      finalize(() => this.configuracionSitioCargando = false),
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe({
+      next: configuracion => {
+        this.configuracionSitio.set(configuracion);
+        this.sincronizarFormularioSitio(configuracion);
+        this.configuracionSitioCargada = true;
+      },
+      error: error => this.marcarErrorCarga(error, 'No se pudo cargar la configuración del sitio web.')
+    });
+  }
+
+  private cargarConfiguracionCorreoBajoDemanda(): void {
+    if (this.configuracionCorreoCargada || this.configuracionCorreoCargando || !this.authService.puedeGestionarConfiguracionEmpresa()) {
+      return;
+    }
+    this.configuracionCorreoCargando = true;
+    this.adminService.getConfiguracionCorreo().pipe(
+      finalize(() => this.configuracionCorreoCargando = false),
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe({
+      next: configuracion => {
+        this.configuracionCorreo.set(configuracion);
+        this.sincronizarFormularioCorreo(configuracion);
+        this.configuracionCorreoCargada = true;
+      },
+      error: error => this.marcarErrorCarga(error, 'No se pudo cargar la configuración de correo.')
+    });
+  }
+
+  private cargarConfiguracionWhatsappBajoDemanda(): void {
+    if (this.whatsappConfiguracionCargada || this.whatsappConfiguracionCargando || !this.authService.puedeGestionarWhatsapp()) {
+      return;
+    }
+    this.whatsappConfiguracionCargando = true;
+    forkJoin({
+      configuracion: this.adminService.getConfiguracionWhatsapp(),
+      plantillas: this.adminService.getPlantillasWhatsapp(),
+      plantillasEmpresa: this.adminService.getPlantillasWhatsappEmpresa(),
+      logs: this.adminService.getLogsWhatsapp()
+    }).pipe(
+      finalize(() => this.whatsappConfiguracionCargando = false),
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe({
+      next: ({ configuracion, plantillas, plantillasEmpresa, logs }) => {
+        this.configuracionWhatsapp.set(configuracion);
+        this.plantillasWhatsapp.set(plantillas);
+        this.plantillasWhatsappEmpresa.set(plantillasEmpresa);
+        this.logsWhatsapp.set(logs);
+        this.sincronizarFormularioWhatsapp(configuracion);
+        this.whatsappConfiguracionCargada = true;
+      },
+      error: error => this.marcarErrorCarga(error, 'No se pudo cargar la configuración de WhatsApp.')
+    });
+  }
+
+  private cargarMensajesWhatsappBajoDemanda(): void {
+    if (this.whatsappMensajesCargados || this.whatsappMensajesCargando || !this.authService.puedeGestionarWhatsapp()) {
+      return;
+    }
+    this.whatsappMensajesCargando = true;
+    this.adminService.getMensajesWhatsapp().pipe(
+      finalize(() => this.whatsappMensajesCargando = false),
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe({
+      next: mensajes => {
+        this.mensajesWhatsapp.set(mensajes);
+        this.whatsappMensajesCargados = true;
+      },
+      error: error => this.marcarErrorCarga(error, 'No se pudieron cargar las conversaciones de WhatsApp.')
+    });
   }
 
   cambiarPeriodoReporte(codigo: string) {
@@ -1148,6 +1386,10 @@ export class AdminDashboardComponent implements OnInit {
       .subscribe({
         next: contactoActualizado => {
           this.contactos.update(contactos => reemplazarContacto(contactos, contactoActualizado));
+          this.adminService.getResumenContactos().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+            next: resumen => this.resumenContactosRemoto.set(resumen),
+            error: () => undefined
+          });
           this.mensajeExito = 'El estado del contacto se actualizó correctamente.';
         },
         error: err => {
@@ -1363,8 +1605,11 @@ export class AdminDashboardComponent implements OnInit {
   }
 
   recargarMensajesWhatsapp() {
-    this.whatsappFacade.cargarMensajes().subscribe({
-      next: mensajes => this.mensajesWhatsapp.set(mensajes),
+    this.whatsappFacade.cargarMensajes().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+      next: mensajes => {
+        this.mensajesWhatsapp.set(mensajes);
+        this.whatsappMensajesCargados = true;
+      },
       error: err => {
         this.error = err?.error?.mensaje || err?.message || 'No se pudieron actualizar las conversaciones de WhatsApp.';
       }

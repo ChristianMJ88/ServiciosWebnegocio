@@ -3,6 +3,9 @@ logging:
     root: WARN
 
 aplicacion:
+  cookie-sesion:
+    secure: ${COOKIE_SESION_SECURE:true}
+    same-site: ${COOKIE_SESION_SAME_SITE:None}
   whatsapp:
     validar-firma-webhook: ${TWILIO_VALIDAR_FIRMA_WEBHOOK:true}
 

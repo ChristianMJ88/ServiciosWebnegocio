@@ -17,6 +17,6 @@ public record CrearCitasMultiplesRequest(
         @Email @NotBlank String correoCliente,
         @NotBlank @Pattern(regexp = "^[0-9+ ]{10,15}$") String telefonoCliente,
         @Size(max = 500) String notas,
-        @NotEmpty List<@Valid CrearCitaMultipleItemRequest> items
+        @NotEmpty @Size(max = 20) List<@Valid CrearCitaMultipleItemRequest> items
 ) {
 }

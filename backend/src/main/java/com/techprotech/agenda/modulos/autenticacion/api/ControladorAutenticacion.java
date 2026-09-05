@@ -10,7 +10,9 @@ import com.techprotech.agenda.modulos.autenticacion.api.dto.RespuestaTokenJwt;
 import com.techprotech.agenda.modulos.autenticacion.aplicacion.ServicioAutenticacion;
 import com.techprotech.agenda.modulos.autenticacion.infraestructura.repositorio.UsuarioInternoPerfilRepositorio;
 import com.techprotech.agenda.seguridad.jwt.UsuarioAutenticado;
+import com.techprotech.agenda.seguridad.cookies.ServicioCookieTokenActualizacion;
 import jakarta.validation.Valid;
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -18,6 +20,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.CookieValue;
 import org.springframework.web.server.ResponseStatusException;
 
 import static org.springframework.http.HttpStatus.UNAUTHORIZED;
@@ -28,13 +31,16 @@ public class ControladorAutenticacion {
 
     private final ServicioAutenticacion servicioAutenticacion;
     private final UsuarioInternoPerfilRepositorio usuarioInternoPerfilRepositorio;
+    private final ServicioCookieTokenActualizacion cookies;
 
     public ControladorAutenticacion(
             ServicioAutenticacion servicioAutenticacion,
-            UsuarioInternoPerfilRepositorio usuarioInternoPerfilRepositorio
+            UsuarioInternoPerfilRepositorio usuarioInternoPerfilRepositorio,
+            ServicioCookieTokenActualizacion cookies
     ) {
         this.servicioAutenticacion = servicioAutenticacion;
         this.usuarioInternoPerfilRepositorio = usuarioInternoPerfilRepositorio;
+        this.cookies = cookies;
     }
 
     @GetMapping("/perfil")
@@ -60,13 +66,23 @@ public class ControladorAutenticacion {
     }
 
     @PostMapping("/iniciar-sesion")
-    public ResponseEntity<RespuestaTokenJwt> iniciarSesion(@Valid @RequestBody IniciarSesionRequest request) {
-        return ResponseEntity.ok(servicioAutenticacion.iniciarSesion(request));
+    public ResponseEntity<RespuestaTokenJwt> iniciarSesion(
+            @Valid @RequestBody IniciarSesionRequest request,
+            HttpServletResponse response
+    ) {
+        RespuestaTokenJwt sesion = servicioAutenticacion.iniciarSesion(request);
+        cookies.agregar(response, sesion);
+        return ResponseEntity.ok(sesion);
     }
 
     @PostMapping("/app-login")
-    public ResponseEntity<RespuestaAccesoApp> iniciarSesionApp(@Valid @RequestBody IniciarSesionAppRequest request) {
-        return ResponseEntity.ok(servicioAutenticacion.iniciarSesionApp(request));
+    public ResponseEntity<RespuestaAccesoApp> iniciarSesionApp(
+            @Valid @RequestBody IniciarSesionAppRequest request,
+            HttpServletResponse response
+    ) {
+        RespuestaAccesoApp acceso = servicioAutenticacion.iniciarSesionApp(request);
+        cookies.agregar(response, acceso);
+        return ResponseEntity.ok(acceso);
     }
 
     @PostMapping("/registrar-cliente")
@@ -76,13 +92,26 @@ public class ControladorAutenticacion {
     }
 
     @PostMapping("/refrescar-token")
-    public ResponseEntity<RespuestaTokenJwt> refrescarToken(@Valid @RequestBody RefrescarTokenRequest request) {
-        return ResponseEntity.ok(servicioAutenticacion.refrescarToken(request));
+    public ResponseEntity<RespuestaTokenJwt> refrescarToken(
+            @CookieValue(name = ServicioCookieTokenActualizacion.NOMBRE_COOKIE, required = false) String tokenCookie,
+            HttpServletResponse response
+    ) {
+        RespuestaTokenJwt sesion = servicioAutenticacion.refrescarToken(cookies.resolver(tokenCookie));
+        cookies.agregar(response, sesion);
+        return ResponseEntity.ok(sesion);
     }
 
     @PostMapping("/cerrar-sesion")
-    public ResponseEntity<Void> cerrarSesion(@Valid @RequestBody RefrescarTokenRequest request) {
-        servicioAutenticacion.cerrarSesion(request);
+    public ResponseEntity<Void> cerrarSesion(
+            @CookieValue(name = ServicioCookieTokenActualizacion.NOMBRE_COOKIE, required = false) String tokenCookie,
+            HttpServletResponse response
+    ) {
+        try {
+            servicioAutenticacion.cerrarSesion(cookies.resolver(tokenCookie));
+        } catch (ResponseStatusException ignored) {
+            // Cerrar sesión es idempotente incluso si la cookie ya expiró.
+        }
+        cookies.eliminar(response);
         return ResponseEntity.noContent().build();
     }
 }

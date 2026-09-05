@@ -13,6 +13,9 @@ import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.util.List;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import com.techprotech.agenda.modulos.contactos.api.dto.ResumenContactosResponse;
 
 import static org.springframework.http.HttpStatus.BAD_REQUEST;
 import static org.springframework.http.HttpStatus.NOT_FOUND;
@@ -39,6 +42,28 @@ public class ServicioGestionSolicitudesContacto {
         return solicitudContactoRepositorio.findByEmpresaIdOrderByCreadaEnDesc(empresaId).stream()
                 .map(solicitud -> mapear(solicitud, zona))
                 .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public Page<SolicitudContactoAdminResponse> listarPorEmpresa(Long empresaId, Pageable pageable) {
+        EmpresaEntidad empresa = obtenerEmpresa(empresaId);
+        ZoneId zona = ZoneId.of(empresa.getZonaHoraria());
+        return solicitudContactoRepositorio.findByEmpresaIdOrderByCreadaEnDesc(empresaId, pageable)
+                .map(solicitud -> mapear(solicitud, zona));
+    }
+
+    @Transactional(readOnly = true)
+    public ResumenContactosResponse resumen(Long empresaId) {
+        EmpresaEntidad empresa = obtenerEmpresa(empresaId);
+        ZoneId zona = ZoneId.of(empresa.getZonaHoraria());
+        return new ResumenContactosResponse(
+                solicitudContactoRepositorio.countByEmpresaId(empresaId),
+                solicitudContactoRepositorio.countByEmpresaIdAndEstado(empresaId, EstadoSolicitudContacto.NUEVO.name()),
+                solicitudContactoRepositorio.countByEmpresaIdAndEstado(empresaId, EstadoSolicitudContacto.EN_PROCESO.name()),
+                solicitudContactoRepositorio.countByEmpresaIdAndEstado(empresaId, EstadoSolicitudContacto.ATENDIDO.name()),
+                solicitudContactoRepositorio.findFirstByEmpresaIdAndEstadoOrderByCreadaEnDesc(empresaId, EstadoSolicitudContacto.NUEVO.name())
+                        .map(solicitud -> mapear(solicitud, zona)).orElse(null)
+        );
     }
 
     @Transactional

@@ -1,5 +1,7 @@
 package com.techprotech.agenda.modulos.autenticacion.social;
 
+import com.techprotech.agenda.modulos.autenticacion.api.dto.RespuestaAccesoApp;
+import com.techprotech.agenda.seguridad.cookies.ServicioCookieTokenActualizacion;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -19,14 +21,16 @@ public class ControladorAutenticacionSocial {
     private final ServicioAutenticacionSocialMicrosoft microsoft;
     private final ServicioTokenRegistroSocial tokens;
     private final ServicioAccesoSocial accesoSocial;
+    private final ServicioCookieTokenActualizacion cookies;
 
     public ControladorAutenticacionSocial(ServicioAutenticacionSocialGoogle google,
             ServicioAutenticacionSocialMicrosoft microsoft, ServicioTokenRegistroSocial tokens,
-            ServicioAccesoSocial accesoSocial) {
+            ServicioAccesoSocial accesoSocial, ServicioCookieTokenActualizacion cookies) {
         this.google = google;
         this.microsoft = microsoft;
         this.tokens = tokens;
         this.accesoSocial = accesoSocial;
+        this.cookies = cookies;
     }
 
     @GetMapping("/configuracion")
@@ -87,8 +91,11 @@ public class ControladorAutenticacionSocial {
     }
 
     @PostMapping("/intercambiar-acceso")
-    public ResponseEntity<com.techprotech.agenda.modulos.autenticacion.api.dto.RespuestaAccesoApp> intercambiarAcceso(
-            @Valid @RequestBody IntercambiarAccesoSocialRequest request) {
-        return ResponseEntity.ok(accesoSocial.intercambiar(request.codigo(), request.empresaId()));
+    public ResponseEntity<RespuestaAccesoApp> intercambiarAcceso(
+            @Valid @RequestBody IntercambiarAccesoSocialRequest request,
+            HttpServletResponse response) {
+        RespuestaAccesoApp acceso = accesoSocial.intercambiar(request.codigo(), request.empresaId());
+        cookies.agregar(response, acceso);
+        return ResponseEntity.ok(acceso);
     }
 }

@@ -89,8 +89,12 @@ public class ControladorAdminCitas {
 
     @GetMapping("/citas")
     @PreAuthorize("hasAuthority('CITAS_ADMIN_GESTIONAR')")
-    public List<CitaClienteResponse> citas(@AuthenticationPrincipal UsuarioAutenticado usuario) {
-        return servicioAdminCitas.listar(usuario.empresaId());
+    public List<CitaClienteResponse> citas(
+            @AuthenticationPrincipal UsuarioAutenticado usuario,
+            @RequestParam LocalDate desde,
+            @RequestParam LocalDate hasta
+    ) {
+        return servicioAdminCitas.listar(usuario.empresaId(), desde, hasta);
     }
 
     @PatchMapping("/citas/{citaId}/confirmar")

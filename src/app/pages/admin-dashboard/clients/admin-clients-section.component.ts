@@ -18,9 +18,13 @@ export class AdminClientsSectionComponent implements OnInit {
   private readonly service = inject(ClientsService);
   readonly clientes = signal<ClienteAdmin[]>([]); readonly cargando = signal(false); readonly guardando = signal(false);
   readonly error = signal(''); readonly mensaje = signal(''); filtro = ''; editandoId: number | null = null;
+  readonly pagina = signal(0); readonly totalPaginas = signal(0); readonly totalElementos = signal(0);
   formulario: GuardarCliente = this.vacio();
   ngOnInit(): void { this.cargar(); }
-  cargar(): void { this.cargando.set(true); this.error.set(''); this.service.listar(this.filtro).pipe(finalize(() => this.cargando.set(false))).subscribe({ next: v => this.clientes.set(v), error: e => this.error.set(e?.error?.message || 'No se pudieron cargar los clientes.') }); }
+  cargar(pagina = this.pagina()): void { this.cargando.set(true); this.error.set(''); this.service.listar(this.filtro, pagina).pipe(finalize(() => this.cargando.set(false))).subscribe({ next: v => { this.clientes.set(v.contenido); this.pagina.set(v.pagina); this.totalPaginas.set(v.totalPaginas); this.totalElementos.set(v.totalElementos); }, error: e => this.error.set(e?.error?.message || 'No se pudieron cargar los clientes.') }); }
+  buscar(): void { this.cargar(0); }
+  paginaAnterior(): void { if (this.pagina() > 0) this.cargar(this.pagina() - 1); }
+  paginaSiguiente(): void { if (this.pagina() + 1 < this.totalPaginas()) this.cargar(this.pagina() + 1); }
   editar(c: ClienteAdmin): void { this.editandoId = c.id; this.formulario = { nombreCompleto: c.nombreCompleto, correo: c.correo, telefono: c.telefono, aceptaWhatsapp: c.aceptaWhatsapp, notas: c.notas }; }
   cancelar(): void { this.editandoId = null; this.formulario = this.vacio(); }
   guardar(): void {

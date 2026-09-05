@@ -1,5 +1,6 @@
 package com.techprotech.agenda.modulos.autenticacion.api.dto;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import java.util.List;
 
 public record RespuestaTokenJwt(
@@ -15,4 +16,9 @@ public record RespuestaTokenJwt(
         List<String> permisos,
         List<Long> sucursalesPermitidas
 ) {
+    @Override
+    @JsonIgnore
+    public String tokenActualizacion() {
+        return tokenActualizacion;
+    }
 }

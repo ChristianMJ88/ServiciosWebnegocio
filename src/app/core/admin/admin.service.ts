@@ -707,6 +707,14 @@ export interface MetadatosContactosAdmin {
   estadoAtendido: string;
 }
 
+export interface PaginaContactosAdmin {
+  contenido: SolicitudContactoAdmin[]; pagina: number; tamano: number; totalElementos: number; totalPaginas: number;
+}
+
+export interface ResumenContactosAdmin {
+  total: number; nuevos: number; enProceso: number; atendidos: number; ultimoNuevo: SolicitudContactoAdmin | null;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -717,8 +725,10 @@ export class AdminService {
     return this.http.get<ResumenAdmin>(`${environment.apiBaseUrl}/admin/resumen`, { params: this.paramsPeriodo(periodo) });
   }
 
-  getCitas(): Observable<CitaCliente[]> {
-    return this.http.get<CitaCliente[]>(`${environment.apiBaseUrl}/admin/citas`);
+  getCitas(desde: string, hasta: string): Observable<CitaCliente[]> {
+    return this.http.get<CitaCliente[]>(`${environment.apiBaseUrl}/admin/citas`, {
+      params: { desde, hasta }
+    });
   }
 
   confirmarCita(citaId: number): Observable<void> {
@@ -1013,8 +1023,12 @@ export class AdminService {
     return this.http.post<OnboardingWhatsappResponse>(`${environment.apiBaseUrl}/admin/whatsapp/onboarding/reintentar`, {});
   }
 
-  getContactos(): Observable<SolicitudContactoAdmin[]> {
-    return this.http.get<SolicitudContactoAdmin[]>(`${environment.apiBaseUrl}/admin/contactos`);
+  getContactos(pagina = 0, tamano = 25): Observable<PaginaContactosAdmin> {
+    return this.http.get<PaginaContactosAdmin>(`${environment.apiBaseUrl}/admin/contactos`, { params: { pagina, tamano } });
+  }
+
+  getResumenContactos(): Observable<ResumenContactosAdmin> {
+    return this.http.get<ResumenContactosAdmin>(`${environment.apiBaseUrl}/admin/contactos/resumen`);
   }
 
   getMetadatosContactos(): Observable<MetadatosContactosAdmin> {

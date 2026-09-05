@@ -15,9 +15,10 @@
     </mat-card>
     <mat-card class="workspace-card list-card">
       <div class="section-header"><div><div class="section-eyebrow">Directorio</div><h3>Clientes del negocio</h3></div></div>
-      <div class="client-search"><mat-form-field appearance="outline"><mat-label>Buscar</mat-label><input matInput [(ngModel)]="filtro" (keyup.enter)="cargar()"></mat-form-field><button mat-stroked-button type="button" (click)="cargar()">Buscar</button></div>
+      <div class="client-search"><mat-form-field appearance="outline"><mat-label>Buscar</mat-label><input matInput [(ngModel)]="filtro" (keyup.enter)="buscar()"></mat-form-field><button mat-stroked-button type="button" (click)="buscar()">Buscar</button></div>
       @if (cargando()) { <p class="helper-text">Cargando clientes…</p> }
       <div class="entity-list">@for (cliente of clientes(); track cliente.id) {<article class="entity-row"><div class="entity-main"><div class="entity-title">{{ cliente.nombreCompleto }}</div><div class="entity-meta">{{ cliente.correo }} · {{ cliente.telefono }}</div><div class="entity-meta">{{ cliente.totalCitas }} cita(s) @if(cliente.ultimaCita){ · Última: {{ cliente.ultimaCita | date:'mediumDate' }} }</div></div><div class="entity-side"><button mat-stroked-button type="button" (click)="editar(cliente)">Editar</button></div></article>} @empty { @if(!cargando()){<p class="helper-text">No hay clientes que coincidan.</p>} }</div>
+      @if (totalPaginas() > 1) {<div class="form-actions"><button mat-stroked-button type="button" (click)="paginaAnterior()" [disabled]="pagina() === 0 || cargando()">Anterior</button><span class="helper-text">Página {{ pagina() + 1 }} de {{ totalPaginas() }} · {{ totalElementos() }} clientes</span><button mat-stroked-button type="button" (click)="paginaSiguiente()" [disabled]="pagina() + 1 >= totalPaginas() || cargando()">Siguiente</button></div>}
     </mat-card>
   </div>
 </section>

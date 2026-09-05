@@ -96,5 +96,12 @@
         }
       </div>
     }
+    @if (totalPaginas() > 1) {
+      <div class="form-actions">
+        <button mat-stroked-button type="button" (click)="pageChange.emit(pagina() - 1)" [disabled]="pagina() === 0">Anterior</button>
+        <span class="helper-text">Página {{ pagina() + 1 }} de {{ totalPaginas() }}</span>
+        <button mat-stroked-button type="button" (click)="pageChange.emit(pagina() + 1)" [disabled]="pagina() + 1 >= totalPaginas()">Siguiente</button>
+      </div>
+    }
   </mat-card>
 </section>

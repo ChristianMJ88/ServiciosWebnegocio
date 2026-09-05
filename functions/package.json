@@ -7,7 +7,6 @@
   },
   "main": "index.js",
   "scripts": {
-    "prepare-template": "node scripts/prepare-template.mjs",
     "test": "node --test"
   },
   "dependencies": {

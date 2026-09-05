@@ -17,23 +17,24 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
     return next(req);
   }
 
+  const requestConCredenciales = req.clone({ withCredentials: true });
   const requestConToken = token && !esRutaAuth
-    ? req.clone({
+    ? requestConCredenciales.clone({
       setHeaders: {
         Authorization: `Bearer ${token}`
       }
     })
-    : req;
+    : requestConCredenciales;
 
   return next(requestConToken).pipe(
     catchError(error => {
-      if (error.status !== 401 || esRutaAuth || omitirRefresh || !authService.getTokenActualizacion()) {
+      if (error.status !== 401 || esRutaAuth || omitirRefresh || !authService.autenticado()) {
         return throwError(() => error);
       }
 
       return authService.refrescarToken().pipe(
         switchMap(nuevoToken => next(
-          req.clone({
+          requestConCredenciales.clone({
             setHeaders: {
               Authorization: `Bearer ${nuevoToken}`
             }

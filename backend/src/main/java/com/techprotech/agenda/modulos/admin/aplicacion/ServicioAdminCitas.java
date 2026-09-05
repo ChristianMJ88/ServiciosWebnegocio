@@ -1249,29 +1249,95 @@ public class ServicioAdminCitas {
     }
 
     @Transactional(readOnly = true)
-    public List<CitaClienteResponse> listar(Long empresaId) {
-        return citaRepositorio.findByEmpresaIdOrderByInicioDesc(empresaId)
-                .stream()
+    public List<CitaClienteResponse> listar(Long empresaId, LocalDate desde, LocalDate hasta) {
+        if (desde == null || hasta == null || desde.isAfter(hasta)) {
+            throw new ResponseStatusException(BAD_REQUEST, "El rango de citas no es válido");
+        }
+        if (desde.plusYears(1).isBefore(hasta)) {
+            throw new ResponseStatusException(BAD_REQUEST, "El rango de citas no puede exceder un año");
+        }
+
+        List<CitaEntidad> citas = citaRepositorio.findByEmpresaIdAndInicioBetweenOrderByInicioAsc(
+                empresaId,
+                desde.atStartOfDay(),
+                hasta.plusDays(1).atStartOfDay()
+        );
+        if (citas.isEmpty()) {
+            return List.of();
+        }
+
+        Set<Long> sucursalIds = citas.stream().map(CitaEntidad::getSucursalId).collect(Collectors.toSet());
+        Set<Long> servicioIds = citas.stream().map(CitaEntidad::getServicioId).collect(Collectors.toSet());
+        Set<Long> prestadorIds = citas.stream().map(CitaEntidad::getPrestadorId).collect(Collectors.toSet());
+        Set<Long> clienteIds = citas.stream().map(CitaEntidad::getClienteId).collect(Collectors.toSet());
+
+        Map<Long, SucursalEntidad> sucursales = mapearSucursalesPorId(sucursalIds);
+        Map<Long, ServicioEntidad> servicios = servicioRepositorio.findAllById(servicioIds).stream()
+                .collect(Collectors.toMap(ServicioEntidad::getId, servicio -> servicio));
+        Map<Long, PrestadorServicioEntidad> prestadores = prestadorServicioRepositorio.findAllById(prestadorIds).stream()
+                .collect(Collectors.toMap(PrestadorServicioEntidad::getUsuarioId, prestador -> prestador));
+        Map<Long, ClienteEntidad> clientes = clienteRepositorio.findAllById(clienteIds).stream()
+                .collect(Collectors.toMap(ClienteEntidad::getUsuarioId, cliente -> cliente));
+        Map<Long, UsuarioEntidad> usuarios = usuarioRepositorio.findAllById(clienteIds).stream()
+                .collect(Collectors.toMap(UsuarioEntidad::getId, usuario -> usuario));
+
+        return citas.stream()
                 .map(cita -> new CitaClienteResponse(
                         cita.getId(),
                         cita.getEstado(),
                         cita.getSucursalId(),
                         cita.getServicioId(),
                         cita.getPrestadorId(),
-                        sucursalRepositorio.findById(cita.getSucursalId()).map(SucursalEntidad::getNombre).orElse("Sucursal"),
-                        servicioRepositorio.findById(cita.getServicioId()).map(ServicioEntidad::getNombre).orElse("Servicio"),
-                        prestadorServicioRepositorio.findById(cita.getPrestadorId()).map(PrestadorServicioEntidad::getNombreMostrar).orElse("Prestador"),
-                        cita.getInicio().atZone(ZoneId.of(sucursalRepositorio.findById(cita.getSucursalId()).map(SucursalEntidad::getZonaHoraria).orElse("America/Mexico_City"))).toOffsetDateTime(),
-                        cita.getFin().atZone(ZoneId.of(sucursalRepositorio.findById(cita.getSucursalId()).map(SucursalEntidad::getZonaHoraria).orElse("America/Mexico_City"))).toOffsetDateTime(),
+                        nombreSucursal(sucursales, cita.getSucursalId()),
+                        nombreServicio(servicios, cita.getServicioId()),
+                        nombrePrestador(prestadores, cita.getPrestadorId()),
+                        cita.getInicio().atZone(zonaHorariaSucursal(sucursales, cita.getSucursalId())).toOffsetDateTime(),
+                        cita.getFin().atZone(zonaHorariaSucursal(sucursales, cita.getSucursalId())).toOffsetDateTime(),
                         cita.getPrecio(),
                         cita.getMoneda(),
                         cita.getNotas(),
                         false,
-                        clienteRepositorio.findById(cita.getClienteId()).map(ClienteEntidad::getNombreCompleto).orElse("Cliente"),
-                        usuarioRepositorio.findById(cita.getClienteId()).map(UsuarioEntidad::getCorreo).orElse(""),
-                        clienteRepositorio.findById(cita.getClienteId()).map(ClienteEntidad::getTelefono).orElse("")
+                        nombreCliente(clientes, cita.getClienteId()),
+                        correoCliente(usuarios, cita.getClienteId()),
+                        telefonoCliente(clientes, cita.getClienteId())
                 ))
                 .toList();
+    }
+
+    private Map<Long, SucursalEntidad> mapearSucursalesPorId(Collection<Long> ids) {
+        return sucursalRepositorio.findAllById(ids).stream()
+                .collect(Collectors.toMap(SucursalEntidad::getId, sucursal -> sucursal));
+    }
+
+    private String nombreSucursal(Map<Long, SucursalEntidad> sucursales, Long id) {
+        return java.util.Optional.ofNullable(sucursales.get(id)).map(SucursalEntidad::getNombre).orElse("Sucursal");
+    }
+
+    private ZoneId zonaHorariaSucursal(Map<Long, SucursalEntidad> sucursales, Long id) {
+        String zona = java.util.Optional.ofNullable(sucursales.get(id))
+                .map(SucursalEntidad::getZonaHoraria)
+                .orElse("America/Mexico_City");
+        return ZoneId.of(zona);
+    }
+
+    private String nombreServicio(Map<Long, ServicioEntidad> servicios, Long id) {
+        return java.util.Optional.ofNullable(servicios.get(id)).map(ServicioEntidad::getNombre).orElse("Servicio");
+    }
+
+    private String nombrePrestador(Map<Long, PrestadorServicioEntidad> prestadores, Long id) {
+        return java.util.Optional.ofNullable(prestadores.get(id)).map(PrestadorServicioEntidad::getNombreMostrar).orElse("Prestador");
+    }
+
+    private String nombreCliente(Map<Long, ClienteEntidad> clientes, Long id) {
+        return java.util.Optional.ofNullable(clientes.get(id)).map(ClienteEntidad::getNombreCompleto).orElse("Cliente");
+    }
+
+    private String telefonoCliente(Map<Long, ClienteEntidad> clientes, Long id) {
+        return java.util.Optional.ofNullable(clientes.get(id)).map(ClienteEntidad::getTelefono).orElse("");
+    }
+
+    private String correoCliente(Map<Long, UsuarioEntidad> usuarios, Long id) {
+        return java.util.Optional.ofNullable(usuarios.get(id)).map(UsuarioEntidad::getCorreo).orElse("");
     }
 
     @Transactional
@@ -1709,8 +1775,13 @@ public class ServicioAdminCitas {
         Map<Long, List<String>> permisosPorRol = servicioRolesEmpresa.obtenerPermisosPorRolEmpresa(
                 roles.stream().map(RolEmpresaEntidad::getId).toList()
         );
-        Map<Long, Long> usuariosAsignadosPorRol = roles.stream()
-                .collect(Collectors.toMap(RolEmpresaEntidad::getId, rol -> usuarioRolEmpresaRepositorio.countByRolEmpresa_Id(rol.getId())));
+        Map<Long, Long> usuariosAsignadosPorRol = usuarioRolEmpresaRepositorio.contarUsuariosPorRol(
+                        roles.stream().map(RolEmpresaEntidad::getId).toList()
+                ).stream()
+                .collect(Collectors.toMap(
+                        UsuarioRolEmpresaRepositorio.ConteoUsuariosPorRol::getRolEmpresaId,
+                        UsuarioRolEmpresaRepositorio.ConteoUsuariosPorRol::getTotal
+                ));
 
         return roles.stream()
                 .map(rol -> mapearRolInterno(rol, permisosPorRol, usuariosAsignadosPorRol))
