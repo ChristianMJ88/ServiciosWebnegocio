@@ -513,3 +513,292 @@
 @media (max-width: 575.98px) {
   .site-header--fluora-home .header-toggler { width: 42px; height: 42px; border-radius: 11px; }
 }
+
+/* Menú público del negocio: la identidad y los colores salen del contexto multitenant. */
+.site-header--tenant {
+  --tenant-header-height: 78px;
+  padding-block: .45rem;
+  background: color-mix(in srgb, var(--tenant-primary) 3%, rgba(248, 250, 252, .96));
+  border-bottom: 0;
+  backdrop-filter: blur(18px);
+}
+
+.site-header--tenant.site-header--over-hero,
+.site-header--tenant.site-header--detached {
+  background: transparent;
+  backdrop-filter: none;
+}
+
+.site-header--tenant .header-shell {
+  width: min(100% - 2rem, 1200px);
+  min-height: 64px;
+  border-color: color-mix(in srgb, var(--tenant-primary) 14%, #dfe6eb);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, .96);
+  box-shadow: 0 14px 34px rgba(15, 23, 42, .09);
+}
+
+.site-header--tenant .brand-lockup {
+  min-width: 0;
+  max-width: min(28vw, 280px);
+}
+
+.brand-initials {
+  display: grid;
+  flex: 0 0 42px;
+  width: 42px;
+  height: 42px;
+  place-items: center;
+  border-radius: 13px;
+  color: #fff;
+  background: linear-gradient(145deg, var(--tenant-primary), color-mix(in srgb, var(--tenant-secondary) 78%, var(--tenant-primary)));
+  box-shadow: 0 9px 20px color-mix(in srgb, var(--tenant-primary) 22%, transparent);
+  font-size: .82rem;
+  font-weight: 850;
+  letter-spacing: .04em;
+}
+
+.site-header--tenant .brand-logo {
+  flex: 0 0 auto;
+  width: 52px;
+  height: 44px;
+  border-radius: 12px;
+  box-shadow: none;
+}
+
+.brand-copy--tenant {
+  min-width: 0;
+  gap: .18rem;
+}
+
+.brand-copy--tenant strong,
+.brand-copy--tenant small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.brand-copy--tenant strong {
+  color: #17212b;
+  font-size: .94rem;
+}
+
+.brand-copy--tenant small {
+  max-width: 210px;
+  margin: 0;
+  color: #697683;
+  font-size: .62rem;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.site-header--tenant .header-nav {
+  gap: .2rem;
+}
+
+.header-link > i {
+  display: none;
+  font-size: 1rem;
+  line-height: 1;
+}
+
+.site-header--tenant .header-link {
+  gap: .42rem;
+  padding: .58rem .72rem !important;
+  color: #52606d !important;
+  font-size: .82rem;
+  font-weight: 700;
+}
+
+.site-header--tenant .header-link::after {
+  left: .72rem;
+  right: .72rem;
+  background: var(--tenant-primary);
+}
+
+.site-header--tenant .header-link:hover,
+.site-header--tenant .header-link:focus-visible {
+  color: var(--tenant-primary) !important;
+  background: color-mix(in srgb, var(--tenant-primary) 7%, #fff);
+}
+
+.site-header--tenant .active-link {
+  color: var(--tenant-primary) !important;
+  background: color-mix(in srgb, var(--tenant-primary) 9%, #fff);
+}
+
+.header-nav-divider {
+  width: 1px;
+  height: 24px;
+  margin-inline: .3rem;
+  background: #e2e8f0;
+}
+
+.site-header--tenant .header-button {
+  min-width: 8.8rem;
+  gap: .48rem;
+  border: 1px solid color-mix(in srgb, var(--tenant-primary) 86%, #000);
+  border-radius: 12px;
+  background: linear-gradient(135deg, var(--tenant-primary), color-mix(in srgb, var(--tenant-primary) 74%, var(--tenant-secondary)));
+  box-shadow: 0 10px 22px color-mix(in srgb, var(--tenant-primary) 24%, transparent);
+  font-size: .84rem;
+  transition: transform .2s ease, box-shadow .2s ease, filter .2s ease;
+}
+
+.site-header--tenant .header-button:hover,
+.site-header--tenant .header-button:focus-visible {
+  transform: translateY(-2px);
+  filter: saturate(1.05);
+  box-shadow: 0 14px 28px color-mix(in srgb, var(--tenant-primary) 30%, transparent);
+}
+
+.header-toggler__label {
+  width: auto !important;
+  height: auto !important;
+  margin: 0 !important;
+  background: transparent !important;
+}
+
+.header-toggler__icon {
+  display: grid !important;
+  width: 20px !important;
+  height: 16px !important;
+  margin: 0 !important;
+  align-content: space-between;
+  background: transparent !important;
+}
+
+.header-toggler__icon i {
+  display: block;
+  width: 20px;
+  height: 2px;
+  border-radius: 999px;
+  background: currentColor;
+  transition: transform .2s ease, opacity .2s ease;
+}
+
+.header-toggler.is-open .header-toggler__icon i:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+.header-toggler.is-open .header-toggler__icon i:nth-child(2) { opacity: 0; }
+.header-toggler.is-open .header-toggler__icon i:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+
+@media (max-width: 1199.98px) and (min-width: 992px) {
+  .site-header--tenant .brand-lockup { max-width: 180px; }
+  .site-header--tenant .brand-copy--tenant small { display: none; }
+  .site-header--tenant .header-link { padding-inline: .55rem !important; }
+  .site-header--tenant .header-cta { margin-left: .35rem; }
+  .site-header--tenant .header-button { min-width: 7.6rem; }
+}
+
+@media (max-width: 991.98px) {
+  .site-header--tenant {
+    --tenant-header-height: 72px;
+    padding-block: .35rem;
+  }
+
+  .site-header--tenant .header-shell {
+    min-height: 58px;
+    padding: .45rem .55rem .45rem .65rem;
+    border-radius: 16px;
+  }
+
+  .site-header--tenant .brand-lockup { max-width: calc(100% - 104px); }
+  .site-header--tenant .brand-copy--tenant small { max-width: min(48vw, 250px); }
+
+  .site-header--tenant .header-toggler {
+    display: inline-flex;
+    align-items: center;
+    gap: .55rem;
+    min-height: 44px;
+    padding: .55rem .7rem;
+    border: 1px solid color-mix(in srgb, var(--tenant-primary) 18%, #dce3e8);
+    border-radius: 12px;
+    color: #344351;
+    background: color-mix(in srgb, var(--tenant-primary) 4%, #fff);
+    font-size: .76rem;
+    font-weight: 800;
+    cursor: pointer;
+  }
+
+  .site-header--tenant .header-toggler:hover,
+  .site-header--tenant .header-toggler:focus-visible,
+  .site-header--tenant .header-toggler.is-open {
+    color: var(--tenant-primary);
+    border-color: color-mix(in srgb, var(--tenant-primary) 38%, #dce3e8);
+    background: color-mix(in srgb, var(--tenant-primary) 8%, #fff);
+  }
+
+  .site-header--tenant .header-collapse {
+    top: calc(100% + .55rem);
+    max-height: calc(100dvh - var(--tenant-header-height) - 1.5rem);
+    padding: .7rem;
+    overflow-x: hidden;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    border-color: color-mix(in srgb, var(--tenant-primary) 14%, #dce3e8);
+    border-radius: 18px;
+    background: rgba(255, 255, 255, .98);
+    box-shadow: 0 24px 54px rgba(15, 23, 42, .18);
+  }
+
+  .site-header--tenant .header-nav { gap: .35rem; }
+  .site-header--tenant .header-nav-item { display: block; }
+
+  .site-header--tenant .header-link {
+    display: grid;
+    grid-template-columns: 38px minmax(0, 1fr);
+    width: 100%;
+    min-height: 50px;
+    align-items: center;
+    gap: .75rem;
+    padding: .38rem .55rem !important;
+    text-align: left;
+    background: transparent;
+  }
+
+  .site-header--tenant .header-link > i {
+    display: grid;
+    width: 38px;
+    height: 38px;
+    place-items: center;
+    border: 1px solid #e5eaee;
+    border-radius: 11px;
+    color: #64748b;
+    background: #f7f9fa;
+  }
+
+  .site-header--tenant .active-link > i {
+    color: #fff;
+    border-color: var(--tenant-primary);
+    background: var(--tenant-primary);
+    box-shadow: 0 7px 14px color-mix(in srgb, var(--tenant-primary) 24%, transparent);
+  }
+
+  .site-header--tenant .header-nav-divider {
+    width: 100%;
+    height: 1px;
+    margin: .3rem 0;
+    background: #edf1f4;
+  }
+
+  .site-header--tenant .header-link-soft { color: #667481 !important; }
+  .site-header--tenant .header-cta { margin-top: .4rem; }
+
+  .site-header--tenant .header-button {
+    width: 100%;
+    min-height: 50px;
+    border-radius: 13px;
+  }
+
+  .site-header--fluora-home .header-toggler__label { display: none !important; }
+}
+
+@media (max-width: 575.98px) {
+  .site-header--tenant { --tenant-header-height: 72px; }
+  .site-header--tenant .header-shell { width: min(100% - 1rem, 1200px); }
+  .site-header--tenant .brand-logo { width: 44px; height: 40px; }
+  .site-header--tenant .brand-initials { flex-basis: 40px; width: 40px; height: 40px; }
+  .site-header--tenant .brand-copy--tenant small { display: none; }
+  .site-header--tenant .brand-copy--tenant strong { font-size: .88rem; }
+  .site-header--tenant .header-toggler__label { display: none !important; }
+  .site-header--tenant .header-toggler { min-width: 44px; justify-content: center; padding-inline: .65rem; }
+}

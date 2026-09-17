@@ -7,7 +7,9 @@
 
     <div class="container home-hero__container">
       <div class="home-hero__content">
-        <span class="hero-eyebrow" appScrollReveal="up">Reserva online</span>
+        @if (tenantContext.heroEtiqueta()) {
+          <span class="hero-eyebrow" appScrollReveal="up">{{ tenantContext.heroEtiqueta() }}</span>
+        }
         <h1 appScrollReveal="up" [revealDelay]="90">{{ tenantContext.heroTitulo() }}</h1>
         <p class="home-hero__copy" appScrollReveal="up" [revealDelay]="180">{{ tenantContext.heroSubtitulo() }}</p>
 
@@ -35,9 +37,9 @@
     <div class="container">
       <div class="quick-reserve__band">
         <div class="quick-reserve__intro" appScrollReveal="up">
-          <span class="section-kicker">Reserva rápida</span>
-          <h2>Agenda o escribe por WhatsApp.</h2>
-          <p>Todo lo importante del negocio está a la vista desde el primer scroll.</p>
+          <span class="section-kicker">Contacto</span>
+          <h2>{{ tenantContext.inicioTituloContacto() || tenantContext.nombreComercial() }}</h2>
+          <p>{{ tenantContext.inicioDescripcionContacto() || tenantContext.descripcionCorta() }}</p>
         </div>
 
         <div class="quick-reserve__actions" appScrollReveal="up" [revealDelay]="120">
@@ -84,27 +86,31 @@
   <section class="home-services">
     <div class="container">
       <div class="section-header" appScrollReveal="up">
-        <span class="section-kicker">Servicios principales</span>
-        <h2>Lo más buscado en {{ tenantContext.nombreComercial() }}.</h2>
-        <p>Una selección corta para que el cliente entienda rápido qué puede reservar.</p>
+        <span class="section-kicker">Servicios</span>
+        <h2>{{ tenantContext.inicioTituloServicios() || tenantContext.nombreComercial() }}</h2>
+        @if (tenantContext.inicioDescripcionServicios()) {
+          <p>{{ tenantContext.inicioDescripcionServicios() }}</p>
+        }
       </div>
 
       @if (gruposDestacados().length) {
         <div class="services-feature-grid">
-          @for (grupo of gruposDestacados(); track grupo; let i = $index) {
+          @for (grupo of gruposDestacados(); track grupo.id; let i = $index) {
             <article class="service-feature">
               <div class="service-feature__media">
-                <img [src]="imagenGrupo(grupo, i)" [alt]="grupo.nombre">
+                <img [src]="imagenGrupo(grupo)" [alt]="grupo.nombre">
               </div>
               <div class="service-feature__body" appScrollReveal="up" [revealDelay]="80 * (i + 1)">
                 <div class="service-feature__eyebrow">{{ grupo.nombre }}</div>
                 <h3>{{ grupo.nombre }}</h3>
-                <p>{{ grupo.descripcion || 'Explora servicios destacados de este negocio y encuentra la mejor opción para tu próxima cita.' }}</p>
+                @if (grupo.descripcion) {
+                  <p>{{ grupo.descripcion }}</p>
+                }
                 <div class="service-feature__meta">
                   <span>{{ totalServiciosGrupo(grupo) }} servicios</span>
                   @if (precioDesdeGrupo(grupo) !== null) {
                     <span>
-                      Desde {{ precioDesdeGrupo(grupo)! | currency:monedaGrupo(grupo):'symbol':'1.0-0':'es-MX' }}
+                      Desde {{ precioDesdeGrupo(grupo)! | appMoney:monedaGrupo(grupo):0:2 }}
                     </span>
                   }
                 </div>
@@ -129,7 +135,7 @@
           </div>
         } @else {
           <div class="services-state">
-            Aún no hay servicios publicados para este tenant.
+            Aún no hay servicios publicados.
           </div>
         }
       }

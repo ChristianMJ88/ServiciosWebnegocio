@@ -28,7 +28,7 @@ export class HeaderComponent {
   readonly brandName = computed(() => this.tenantActivo() ? this.tenantContext.nombreComercial() : 'Fluora');
   readonly brandSubtitle = computed(() =>
     this.tenantActivo()
-      ? (this.tenantContext.descripcionCorta() || 'Experiencia digital para tus clientes.')
+      ? this.tenantContext.descripcionCorta()
       : 'Agenda para tu negocio'
   );
   readonly fluoraHomeActiva = computed(() => !this.tenantActivo() && this.rutaActual() === '/');

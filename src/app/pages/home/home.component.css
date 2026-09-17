@@ -427,8 +427,9 @@
 
   .home-hero__container {
     min-height: 100svh;
-    padding-top: 6rem;
-    padding-bottom: 4.5rem;
+    align-items: center;
+    padding-top: 5.5rem;
+    padding-bottom: 2rem;
   }
 
   .home-hero h1 {

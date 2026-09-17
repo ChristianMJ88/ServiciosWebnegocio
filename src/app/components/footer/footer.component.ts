@@ -12,6 +12,7 @@ import { PlatformHostService } from '../../core/platform/platform-host.service';
   styleUrl: './footer.component.css'
 })
 export class FooterComponent {
+  readonly currentYear = new Date().getFullYear();
   readonly tenantContext = inject(TenantContextService);
   readonly platformHost = inject(PlatformHostService);
   readonly tenantActivo = computed(() => this.tenantContext.activo());

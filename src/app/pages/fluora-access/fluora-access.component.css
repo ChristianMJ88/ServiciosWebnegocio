@@ -1,252 +1,71 @@
-.fluora-access {
-  padding: 2rem 0;
-  background: linear-gradient(180deg, #f8fbff 0%, #eef4fb 100%);
-  color: #0f172a;
-}
-
-.fluora-access__container {
-  max-width: 560px;
-}
-
-.fluora-access__card {
-  padding: clamp(1.5rem, 3vw, 2.5rem);
-  border: 1px solid rgba(203, 213, 225, 0.92);
-  border-radius: 8px;
-  background: rgba(255, 255, 255, 0.98);
-  box-shadow: 0 24px 54px rgba(15, 23, 42, 0.1);
-}
-
-.fluora-access__brand {
-  display: flex;
-  justify-content: center;
-  margin-bottom: 1.5rem;
-  padding: 0.9rem 1rem;
-  border: 1px solid rgba(226, 232, 240, 0.9);
-  border-radius: 8px;
-  background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
-}
-
-.fluora-access__logo {
-  width: min(200px, 100%);
-}
-
-.fluora-access__header {
-  text-align: center;
-}
-
-.fluora-access__eyebrow {
-  display: inline-flex;
-  margin-bottom: 0.75rem;
-  color: #2563eb;
-  font-size: 0.8rem;
-  font-weight: 700;
-  text-transform: uppercase;
-}
-
-.fluora-access h1 {
-  margin: 0 0 0.5rem;
-  font-size: clamp(1.9rem, 1.5rem + 1vw, 2.4rem);
-  line-height: 1.08;
-}
-
-.fluora-access p {
-  margin: 0;
-  color: #64748b;
-}
-
-.fluora-access__social {
-  display: grid;
-  gap: 0.75rem;
-  margin-top: 0;
-}
-
-.fluora-access__social-button {
-  position: relative;
-  display: grid;
-  grid-template-columns: 24px 1fr 24px;
-  align-items: center;
-  width: 100%;
-  min-height: 52px;
-  padding: 0.7rem 1rem;
-  border: 1px solid #cbd5e1;
-  border-radius: 8px;
-  background: #fff;
-  color: #1d1c1d;
-  font: inherit;
-  font-weight: 700;
-  transition: border-color .18s ease, box-shadow .18s ease, background-color .18s ease;
-}
-
-.fluora-access__social-button span { grid-column: 2; }
-.fluora-access__provider-icon { grid-column: 1; font-size: 1.2rem; }
+/* Component-scoped controls intentionally avoid Bootstrap and Material control classes. */
+:host { display: block; }
+.fluora-access { min-height: 100svh; padding: 28px; color: #172b35; background: #f4f7f7; font-family: var(--tenant-body-font); }
+.fluora-access__container { display: grid; grid-template-columns: 1fr 1fr; max-width: 1380px; min-height: calc(100svh - 56px); margin: auto; overflow: hidden; border: 1px solid #e0e8e7; border-radius: 24px; background: #fff; }
+.fluora-access__intro { display: flex; flex-direction: column; justify-content: space-between; gap: 48px; padding: clamp(32px, 4vw, 64px); background: radial-gradient(ellipse at 0 100%, #cce6dd 0, transparent 65%), #edf5f1; }
+.fluora-access__brand { display: inline-flex; align-self: flex-start; }
+.fluora-access__logo { width: 155px; height: auto; }
+.fluora-access__eyebrow { display: block; margin-bottom: 20px; color: #43665c; font-size: 11px; font-weight: 700; letter-spacing: .13em; }
+.fluora-access__story h2 { margin: 0 0 22px; font-size: clamp(32px, 3.2vw, 48px); line-height: 1.15; letter-spacing: -.045em; font-weight: 650; color: #193d36; }
+.fluora-access__story h2 em { color: #367664; font-style: normal; }
+.fluora-access__story > p { max-width: 370px; margin: 0; color: #526c64; font-size: 16px; line-height: 1.8; }
+.fluora-access__illustration { max-width: 390px; margin-top: 36px; padding: 22px; border: 1px solid #fff; border-radius: 18px; background: #ffffffd9; box-shadow: 0 16px 40px #254c3610; }
+.fluora-access__preview-head { display: flex; justify-content: space-between; padding-bottom: 18px; color: #395c52; font-size: 13px; font-weight: 650; }
+.fluora-access__preview-row { display: flex; align-items: center; gap: 12px; padding: 16px 0; border-top: 1px solid #e8eeeb; }
+.fluora-access__preview-icon { display: grid; place-items: center; width: 42px; height: 42px; border-radius: 12px; background: #eaf3ee; color: #367664; }
+.fluora-access__preview-row div { flex: 1; }
+.fluora-access__preview-row strong, .fluora-access__preview-row div span { display: block; font-size: 13px; }
+.fluora-access__preview-row strong { color: #294b41; font-weight: 650; }
+.fluora-access__preview-row div span { color: #61766e; font-size: 12px; margin-top: 3px; }
+.fluora-access__preview-row > i { color: #367664; }
+.fluora-access__preview-note { display: flex; align-items: center; gap: 8px; margin-top: 10px; color: #526c64; font-size: 11px; }
+.fluora-access__preview-note > span { width: 6px; height: 6px; flex-shrink: 0; border-radius: 50%; background: #438269; }
+.fluora-access__signature { color: #526c64; font-size: 10px; letter-spacing: .16em; }
+.fluora-access__panel { display: flex; flex-direction: column; justify-content: center; padding: 60px clamp(28px, 4.5vw, 72px) 24px; }
+.fluora-access__card { width: 100%; max-width: 400px; margin: auto; padding-block: 24px; }
+.fluora-access__header .fluora-access__eyebrow { color: #637580; margin-bottom: 12px; }
+.fluora-access__header h1 { margin: 0 0 10px; color: #172b35; font-size: clamp(28px, 2.6vw, 36px); letter-spacing: -.035em; line-height: 1.2; font-weight: 650; }
+.fluora-access__header p { margin: 0; color: #65757e; font-size: 14px; }
+.fluora-access__form { display: grid; gap: 22px; margin-top: 32px; }
+.fluora-access__field > label { display: block; margin-bottom: 8px; color: #334951; font-size: 13px; font-weight: 650; }
+.fluora-access__input-group { display: flex; align-items: center; gap: 12px; min-height: 52px; padding-left: 15px; border: 1px solid #cbd6d8; border-radius: 10px; background: #fff; transition: border-color .15s, box-shadow .15s; }
+.fluora-access__input-group > i { color: #70838a; font-size: 17px; }
+.fluora-access__input-group:focus-within { border-color: #347761; box-shadow: 0 0 0 3px #34776120; }
+.fluora-access__input-group input { width: 100%; min-width: 0; height: 50px; padding: 12px 12px 12px 0; border: 0; border-radius: 10px; outline: none; background: transparent; color: #172b35; font: inherit; font-size: 16px; box-shadow: none; }
+.fluora-access__input-group input::placeholder { color: #78868d; font-size: 14px; }
+.fluora-access__reveal { display: grid; place-items: center; flex-shrink: 0; width: 44px; height: 44px; margin-right: 3px; border: 0; border-radius: 8px; background: transparent; color: #61767f; cursor: pointer; }
+.fluora-access__reveal:hover { background: #edf5f1; }
+.fluora-access a { color: #296a55; text-decoration: none; }
+.fluora-access a:hover { text-decoration: underline; }
+.fluora-access__recovery { display: block; width: fit-content; margin: 12px 0 0 auto; font-size: 12px; font-weight: 600; }
+.fluora-access__submit { display: flex; align-items: center; justify-content: center; gap: 14px; width: 100%; min-height: 52px; padding: 12px 20px; border: 1px solid #245b49; border-radius: 10px; background: #245b49; color: #fff; font: inherit; font-size: 14px; font-weight: 650; cursor: pointer; transition: background .15s; }
+.fluora-access__submit:hover:not(:disabled) { background: #194b3a; }
+.fluora-access button:disabled { opacity: .6; cursor: wait; }
+.fluora-access button:focus-visible, .fluora-access a:focus-visible { outline: 3px solid #418a73; outline-offset: 3px; }
+.fluora-access__divider { display: flex; align-items: center; gap: 14px; margin: 26px 0 20px; color: #6b7a82; font-size: 12px; }
+.fluora-access__divider::before, .fluora-access__divider::after { content: ''; flex: 1; height: 1px; background: #e3e9eb; }
+.fluora-access__social { display: grid; gap: 10px; }
+.fluora-access__social-button { display: grid; grid-template-columns: 24px 1fr 24px; align-items: center; width: 100%; min-height: 48px; padding: 10px 16px; border: 1px solid #d2dcde; border-radius: 10px; color: #334951; background: #fff; font: inherit; font-size: 13px; font-weight: 550; cursor: pointer; }
+.fluora-access__social-button:hover:not(:disabled) { background: #f5f8f7; border-color: #8aaba0; }
 .fluora-access__provider-icon--google { color: #4285f4; }
-.fluora-access__provider-icon--microsoft { color: #f25022; }
-
-.fluora-access__social-button:not(:disabled):hover {
-  border-color: #64748b;
-  background: #f8fafc;
-  box-shadow: 0 3px 10px rgba(15, 23, 42, .08);
-}
-
-.fluora-access__social-button:focus-visible {
-  outline: 3px solid rgba(37, 99, 235, .22);
-  outline-offset: 2px;
-}
-
-.fluora-access__social-button:disabled { cursor: wait; opacity: .6; }
-
-.fluora-access__social-skeleton {
-  min-height: 52px;
-  border: 1px solid #e2e8f0;
-  border-radius: 8px;
-  background: linear-gradient(100deg, #f1f5f9 25%, #fff 45%, #f1f5f9 65%);
-  background-size: 220% 100%;
-  animation: fluora-social-loading 1.2s ease-in-out infinite;
-}
-
-@keyframes fluora-social-loading { to { background-position-x: -220%; } }
-
-.fluora-access__divider {
-  display: flex;
-  align-items: center;
-  gap: .8rem;
-  margin: 1.5rem 0 1rem;
-  color: #64748b;
-  font-size: .8rem;
-  text-align: center;
-}
-
-.fluora-access__divider::before,
-.fluora-access__divider::after {
-  content: '';
-  flex: 1;
-  height: 1px;
-  background: #e2e8f0;
-}
-
-.fluora-access__form {
-  display: grid;
-  gap: 1rem;
-  margin-top: 1.35rem;
-}
-
-.fluora-access__field {
-  min-width: 0;
-}
-.fluora-access__password-head{display:flex;justify-content:space-between;gap:1rem;align-items:center}.fluora-access__password-head a{font-size:.88rem;color:#2563eb;text-decoration:none}
-
-.fluora-access__input-group {
-  overflow: hidden;
-  border: 1px solid rgba(203, 213, 225, 0.9);
-  border-radius: 8px;
-  background: #ffffff;
-}
-
-.fluora-access__input-group .input-group-text,
-.fluora-access__input-group .form-control {
-  min-height: 52px;
-  border: 0 !important;
-  background: transparent !important;
-  color: #0f172a;
-  box-shadow: none;
-}
-
-.fluora-access__input-group .input-group-text {
-  padding-inline: 1rem 0.75rem;
-  color: #64748b;
-}
-
-.fluora-access__input-group .form-control {
-  padding-inline: 0.25rem 1rem;
-}
-
-.fluora-access__input-group .form-control::placeholder {
-  color: #94a3b8;
-}
-
-.fluora-access__validation {
-  margin-top: -0.25rem;
-}
-
-.fluora-access__alert {
-  margin: 0;
-  border-radius: 8px;
-}
-
-.fluora-access__submit {
-  width: 100%;
-  min-height: 52px;
-  border-radius: 8px;
-  font-weight: 700;
-}
-
-.fluora-access__companies {
-  display: grid;
-  gap: 0.75rem;
-  margin-top: 1.5rem;
-  padding-top: 1.5rem;
-  border-top: 1px solid rgba(226, 232, 240, 0.9);
-}
-
-.fluora-access__companies-head {
-  display: grid;
-  gap: 0.2rem;
-}
-
-.fluora-access__companies-head strong {
-  font-size: 1rem;
-}
-
-.fluora-access__companies-head span {
-  color: #64748b;
-  font-size: 0.92rem;
-}
-
-.fluora-access__company {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-  width: 100%;
-  padding: 1rem;
-  border: 1px solid rgba(203, 213, 225, 0.9);
-  border-radius: 8px;
-  background: #ffffff;
-  color: inherit;
-  text-align: left;
-  transition: background-color 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
-}
-
-.fluora-access__company:hover,
-.fluora-access__company:focus {
-  background: #f8fbff;
-  border-color: rgba(37, 99, 235, 0.32);
-  transform: translateY(-1px);
-}
-
-.fluora-access__company strong,
-.fluora-access__company span,
-.fluora-access__company small {
-  display: block;
-}
-
-.fluora-access__company span,
-.fluora-access__company small {
-  color: #64748b;
-}
-
-@media (max-width: 767.98px) {
-  .fluora-access {
-    padding: 1rem 0;
-    align-items: start !important;
-  }
-
-  .fluora-access__card {
-    padding: 1.25rem;
-  }
-
-  .fluora-access__company {
-    flex-direction: column;
-    align-items: start;
-  }
-}
+.fluora-access__provider-icon--microsoft { color: #c84113; }
+.fluora-access__social-skeleton { height: 48px; border-radius: 10px; background: #f0f4f3; }
+.fluora-access__register { margin: 28px 0 0; text-align: center; color: #65757e; font-size: 12px; }
+.fluora-access__register a { font-weight: 650; margin-left: 3px; }
+.fluora-access__footer { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 16px; width: 100%; max-width: 400px; margin: 24px auto 0; color: #718088; font-size: 11px; }
+.fluora-access__footer nav { display: flex; gap: 20px; }
+.fluora-access__footer a { color: #65757e; }
+.fluora-access__validation { margin: 8px 0 0; color: #a52d38; font-size: 12px; }
+.fluora-access__input-group--invalid { border-color: #b8424e; }
+.fluora-access__alert { padding: 12px 14px; border: 1px solid #f0c9cf; border-radius: 10px; color: #932b38; background: #fff3f4; font-size: 13px; overflow-wrap: anywhere; }
+.fluora-access__companies { display: grid; gap: 10px; border-top: 1px solid #e3e9eb; padding-top: 24px; margin-top: 24px; }
+.fluora-access__companies-head { display: grid; gap: 4px; font-size: 14px; }
+.fluora-access__companies-head span { font-size: 12px; color: #65757e; }
+.fluora-access__company { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 14px; border: 1px solid #cbd6d8; border-radius: 10px; background: #fff; color: #334951; font: inherit; font-size: 13px; text-align: left; overflow-wrap: anywhere; cursor: pointer; }
+.fluora-access__company:hover:not(:disabled) { background: #edf5f1; }
+.fluora-access__company strong, .fluora-access__company span { display: block; }
+.fluora-access__company small, .fluora-access__company span { color: #65757e; }
+@media (min-width: 1600px) { .fluora-access__container { min-height: 860px; } }
+@media (max-width: 900px) { .fluora-access { padding: 16px; } .fluora-access__container { grid-template-columns: .9fr 1fr; min-height: calc(100svh - 32px); } .fluora-access__intro { padding: 28px; } .fluora-access__panel { padding: 32px 28px 24px; } .fluora-access__illustration { padding: 16px; } }
+@media (max-width: 700px) { .fluora-access { padding: 0; background: #fff; } .fluora-access__container { display: flex; flex-direction: column; min-height: 100svh; border: 0; border-radius: 0; } .fluora-access__intro { padding: 24px; gap: 0; background: #edf5f1; } .fluora-access__logo { width: 128px; } .fluora-access__story, .fluora-access__signature { display: none; } .fluora-access__panel { flex: 1; padding: 16px 24px 24px; } .fluora-access__card { padding-block: 20px; } .fluora-access__form { margin-top: 28px; } .fluora-access__footer { margin-top: 24px; } .fluora-access__company { flex-wrap: wrap; } }
+@media (prefers-reduced-motion: reduce) { .fluora-access *, .fluora-access *::before, .fluora-access *::after { transition: none; } }

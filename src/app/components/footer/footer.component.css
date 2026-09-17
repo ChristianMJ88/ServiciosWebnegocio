@@ -146,6 +146,8 @@
   border-color: rgba(197, 155, 168, 0.34);
   background: rgba(250, 234, 239, 0.96);
 }
+.social-icon.is-disabled { opacity: .38; cursor: default; filter: grayscale(1); }
+.social-icon.is-disabled:hover { transform: none; border-color: rgba(224, 205, 198, 0.88); background: rgba(255, 250, 248, 0.98); }
 
 .footer-bottom {
   display: flex;
@@ -283,3 +285,26 @@
   .site-footer--marketing .footer-brand-panel { grid-column: auto; }
   .site-footer--marketing .footer-bottom { align-items: flex-start; }
 }
+
+/* Tenant footer uses a single surface and only configured business information. */
+.site-footer:not(.site-footer--marketing) { background: #fff; border-top: 1px solid #e2e7eb; padding: 2.5rem 0; }
+.site-footer:not(.site-footer--marketing) .footer-grid { grid-template-columns: minmax(0, 1.4fr) minmax(0, .75fr) minmax(0, 1fr); gap: 3rem; }
+.site-footer:not(.site-footer--marketing) .footer-brand-panel,
+.site-footer:not(.site-footer--marketing) .footer-links-panel { min-width: 0; border: 0; padding: 0; border-radius: 0; background: transparent; box-shadow: none; }
+.site-footer:not(.site-footer--marketing) .footer-brand-row { align-items: start; }
+.site-footer:not(.site-footer--marketing) .footer-logo { width: 56px; height: 56px; box-shadow: none; border-radius: 12px; }
+.site-footer:not(.site-footer--marketing) .footer-brand-title { color: #202b35; font-size: 1rem; }
+.site-footer:not(.site-footer--marketing) .footer-brand-copy { font-size: .85rem; line-height: 1.7; }
+.site-footer:not(.site-footer--marketing) .footer-title { color: #202b35; font-size: .8rem; }
+.site-footer:not(.site-footer--marketing) .footer-link,
+.site-footer:not(.site-footer--marketing) .footer-bottom-link { display: inline-flex; align-items: center; min-height: 44px; overflow-wrap: anywhere; font-size: .85rem; }
+.site-footer:not(.site-footer--marketing) .footer-links-list { gap: 0; }
+.site-footer:not(.site-footer--marketing) .footer-contact-list { font-size: .85rem; }
+.site-footer:not(.site-footer--marketing) .footer-contact-list li { align-items: baseline; overflow-wrap: anywhere; }
+.site-footer:not(.site-footer--marketing) .footer-contact-list i,
+.site-footer:not(.site-footer--marketing) .social-icon i { color: var(--tenant-primary); }
+.site-footer:not(.site-footer--marketing) .social-icon { box-shadow: none; background: #f6f8fa; border: 0; min-width: 44px; min-height: 44px; }
+.site-footer:not(.site-footer--marketing) .footer-bottom { margin-top: 2rem; border-top: 1px solid #e2e7eb; padding-top: 1rem; }
+@media (max-width: 991.98px) { .site-footer:not(.site-footer--marketing) { padding-bottom: calc(7rem + env(safe-area-inset-bottom)); } .site-footer:not(.site-footer--marketing) .footer-grid { gap: 1.5rem; } }
+@media (max-width: 767.98px) { .site-footer:not(.site-footer--marketing) .footer-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } .site-footer:not(.site-footer--marketing) .footer-brand-panel { grid-column: 1 / -1; } }
+@media (max-width: 399.98px) { .site-footer:not(.site-footer--marketing) .footer-grid { grid-template-columns: minmax(0, 1fr); } .site-footer:not(.site-footer--marketing) .footer-links-list { display: flex; flex-wrap: wrap; gap: 0 1.25rem; } }

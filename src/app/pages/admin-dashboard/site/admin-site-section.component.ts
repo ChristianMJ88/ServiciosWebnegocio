@@ -27,7 +27,8 @@ import { PlatformHostService } from '../../../core/platform/platform-host.servic
     MatSelectModule,
     MatSlideToggleModule
   ],
-  templateUrl: './admin-site-section.component.html'
+  templateUrl: './admin-site-section.component.html',
+  styleUrl: './admin-site-section.component.css'
 })
 export class AdminSiteSectionComponent {
   private readonly platformHost = inject(PlatformHostService);

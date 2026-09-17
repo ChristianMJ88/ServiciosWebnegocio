@@ -12,54 +12,43 @@
 
             <div class="contact-page__chips mb-4">
               <span class="contact-page__chip">Respuesta rápida</span>
-              <span class="contact-page__chip">WhatsApp disponible</span>
+              @if (tenantContext.whatsapp()) { <span class="contact-page__chip">WhatsApp disponible</span> }
               <span class="contact-page__chip">Atención personalizada</span>
             </div>
 
             <div class="contact-info-grid">
-              <article class="contact-info-card">
+              @if (tenantContext.direccion()) { <article class="contact-info-card">
                 <div class="contact-info-card__icon">
                   <i class="bi bi-geo-alt"></i>
                 </div>
                 <div>
                   <h2 class="h5 fw-bold contact-page__heading mb-1">Ubicación</h2>
-                  <p class="contact-page__copy mb-2">{{ tenantContext.direccion() || 'Dirección por definir' }}</p>
+                  <p class="contact-page__copy mb-2">{{ tenantContext.direccion() }}</p>
                   <span class="contact-info-card__meta">Fácil de ubicar y con atención en cita.</span>
                 </div>
-              </article>
+              </article> }
 
-              <article class="contact-info-card">
+              @if (tenantContext.telefono()) { <article class="contact-info-card">
                 <div class="contact-info-card__icon">
                   <i class="bi bi-telephone"></i>
                 </div>
                 <div>
                   <h2 class="h5 fw-bold contact-page__heading mb-1">Teléfono y WhatsApp</h2>
-                  <p class="contact-page__copy mb-2">{{ tenantContext.telefono() || 'Por definir' }}</p>
+                  <p class="contact-page__copy mb-2">{{ tenantContext.telefono() }}</p>
                   <a [href]="tenantContext.telefonoHref()" class="contact-info-card__link">Llamar ahora</a>
                 </div>
-              </article>
+              </article> }
 
-              <article class="contact-info-card">
+              @if (tenantContext.correo()) { <article class="contact-info-card">
                 <div class="contact-info-card__icon">
                   <i class="bi bi-envelope"></i>
                 </div>
                 <div>
                   <h2 class="h5 fw-bold contact-page__heading mb-1">Correo</h2>
-                  <p class="contact-page__copy mb-2">{{ tenantContext.correo() || 'Por definir' }}</p>
+                  <p class="contact-page__copy mb-2">{{ tenantContext.correo() }}</p>
                   <a [href]="tenantContext.correoHref()" class="contact-info-card__link">Enviar correo</a>
                 </div>
-              </article>
-
-              <article class="contact-info-card">
-                <div class="contact-info-card__icon">
-                  <i class="bi bi-clock"></i>
-                </div>
-                <div>
-                  <h2 class="h5 fw-bold contact-page__heading mb-1">Horario</h2>
-                  <p class="contact-page__copy mb-2">Lunes a sábado de 10:00 a 19:00</p>
-                  <span class="contact-info-card__meta">Agenda con anticipación para tu horario favorito.</span>
-                </div>
-              </article>
+              </article> }
             </div>
 
             <div class="contact-actions card card-custom border-0 mt-4">
@@ -70,12 +59,12 @@
                   <p class="contact-page__copy mb-0">Ideal para confirmar disponibilidad, resolver dudas rápidas o ayudarte a elegir el servicio adecuado.</p>
                 </div>
                 <div class="contact-actions__buttons">
-                  <a [href]="tenantContext.whatsappHref()" target="_blank" rel="noreferrer" class="btn btn-primary rounded-pill">
+                  @if (tenantContext.whatsapp()) { <a [href]="tenantContext.whatsappHref()" target="_blank" rel="noreferrer" class="btn btn-primary rounded-pill">
                     <i class="bi bi-whatsapp me-2"></i>WhatsApp
-                  </a>
-                  <a [href]="tenantContext.correoHref()" class="btn btn-outline-light rounded-pill">
+                  </a> }
+                  @if (tenantContext.correo()) { <a [href]="tenantContext.correoHref()" class="btn btn-outline-light rounded-pill">
                     <i class="bi bi-envelope me-2"></i>Correo
-                  </a>
+                  </a> }
                 </div>
               </div>
             </div>
@@ -84,15 +73,13 @@
               <div class="card-body p-4">
                 <h3 class="h5 fw-bold contact-page__heading mb-3">Síguenos en redes</h3>
                 <div class="contact-social__list">
-                  <a href="#" class="contact-social__link" title="Instagram" aria-label="Instagram">
-                    <i class="bi bi-instagram"></i>
-                  </a>
-                  <a href="#" class="contact-social__link" title="Facebook" aria-label="Facebook">
-                    <i class="bi bi-facebook"></i>
-                  </a>
-                  <a href="#" class="contact-social__link" title="TikTok" aria-label="TikTok">
-                    <i class="bi bi-tiktok"></i>
-                  </a>
+                  @for (social of tenantContext.socialLinks(); track social.id) {
+                    @if (social.enabled) {
+                      <a [href]="social.href" target="_blank" rel="noreferrer" class="contact-social__link" [title]="social.label" [attr.aria-label]="social.label"><i class="bi" [class]="social.icon"></i></a>
+                    } @else {
+                      <span class="contact-social__link is-disabled" [title]="social.label + ' no disponible'" [attr.aria-label]="social.label + ' no disponible'" aria-disabled="true"><i class="bi" [class]="social.icon"></i></span>
+                    }
+                  }
                 </div>
               </div>
             </div>
@@ -189,29 +176,6 @@
                 </div>
               </div>
             </form>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div class="contact-map-section mt-5">
-      <div class="card card-custom contact-map-card border-0 overflow-hidden">
-        <div class="card-body p-4 p-xl-5">
-          <div class="contact-map-card__header">
-            <div>
-              <span class="contact-page__mini-kicker">Ubicación</span>
-              <h2 class="h3 fw-bold contact-page__heading mb-2">Encuéntranos fácilmente</h2>
-              <p class="contact-page__copy mb-0">Consulta el mapa y llega a tu cita con más tranquilidad.</p>
-            </div>
-            <a href="https://maps.google.com/?q=19.045331519278296,-98.2346486331955" target="_blank" rel="noreferrer" class="btn btn-outline-light rounded-pill">
-              Ver en Google Maps
-            </a>
-          </div>
-
-          <div class="map-container rounded-4 shadow-sm overflow-hidden mt-4">
-            <iframe src="https://www.google.com/maps/embed?pb=!1m17!1m12!1m3!1d2270.503921553064!2d-98.23603752533727!3d19.045331519278296!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m2!1m1!2zMTnCsDAyJzQzLjIiTiA5OMKwMTQnMDUuMSJX!5e1!3m2!1ses!2smx!4v1767065822511!5m2!1ses!2smx"
-              width="100%" height="430" style="border:0;" allowfullscreen=""
-            loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
           </div>
         </div>
       </div>

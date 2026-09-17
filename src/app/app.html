@@ -11,14 +11,14 @@
 }
 
 <!-- Botón de WhatsApp Flotante -->
-@if (mostrarChromePublico() && tenantContext.activo()) {
+@if (mostrarChromePublico() && tenantContext.activo() && tenantContext.whatsapp() && !publicReservationPage()) {
   <a [href]="tenantContext.whatsappHref()" class="whatsapp-float shadow-lg" target="_blank" rel="noreferrer" title="Contáctanos por WhatsApp">
     <img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg" alt="WhatsApp" width="35" height="35" />
   </a>
 }
 
 <!-- Chatbot Flotante -->
-@if (mostrarChromePublico() && tenantContext.activo()) {
+@if (mostrarChromePublico() && tenantContext.activo() && !publicReservationPage()) {
   <div class="chatbot-wrapper shadow-lg" [class.open]="isChatOpen()">
     <div class="chat-header d-flex justify-content-between align-items-center px-3 py-2" (click)="toggleChat()">
       <span class="fw-bold">¿Dudas? Chat con nosotros</span>

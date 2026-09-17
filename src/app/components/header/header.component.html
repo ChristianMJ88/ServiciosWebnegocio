@@ -1,5 +1,6 @@
 <nav
   class="site-header"
+  [class.site-header--tenant]="tenantActivo()"
   [class.site-header--fluora-home]="fluoraHomeActiva()"
   [class.site-header--over-hero]="headerSobreHero()"
   [class.site-header--hero-integrated]="navbarIntegradoHero()"
@@ -7,13 +8,20 @@
   [class.site-header--menu-detached]="menuDesprendido()">
   <div class="header-shell">
     <a class="brand-lockup" [routerLink]="homeLink()">
-      @if (tenantActivo() && tenantContext.logoUrl()) {
-        <img
-          [src]="tenantContext.logoUrl()"
-          [alt]="'Logo ' + brandName()"
-          class="brand-logo">
-        <span class="brand-copy">
+      @if (tenantActivo()) {
+        @if (tenantContext.logoUrl()) {
+          <img
+            [src]="tenantContext.logoUrl()"
+            [alt]="'Logo ' + brandName()"
+            class="brand-logo">
+        } @else {
+          <span class="brand-initials" aria-hidden="true">{{ tenantContext.initials() }}</span>
+        }
+        <span class="brand-copy brand-copy--tenant">
           <strong>{{ brandName() }}</strong>
+          @if (brandSubtitle()) {
+            <small>{{ brandSubtitle() }}</small>
+          }
         </span>
       } @else {
         <img src="/fluora-mark.svg" alt="Logo de Fluora Agenda" class="brand-mark">
@@ -30,25 +38,29 @@
       (click)="alternarMenuMovil()"
       aria-controls="navbarNav"
       [attr.aria-expanded]="mobileMenuOpen()"
-      aria-label="Mostrar navegación"
+      [attr.aria-label]="mobileMenuOpen() ? 'Cerrar navegación' : 'Abrir navegación'"
+      [class.is-open]="mobileMenuOpen()"
       >
-      <span></span>
-      <span></span>
-      <span></span>
+      <span class="header-toggler__label">{{ mobileMenuOpen() ? 'Cerrar' : 'Menú' }}</span>
+      <span class="header-toggler__icon" aria-hidden="true">
+        <i></i><i></i><i></i>
+      </span>
     </button>
 
     <div class="header-collapse" [class.header-collapse--open]="mobileMenuOpen()" id="navbarNav">
       <ul class="header-nav">
         @if (tenantActivo()) {
-          <li class="header-nav-item">
+          <li class="header-nav-item header-nav-item--primary">
             <a
               class="header-link"
               [routerLink]="homeLink()"
               routerLinkActive="active-link"
               [routerLinkActiveOptions]="{ exact: true }"
+              ariaCurrentWhenActive="page"
               (click)="onNavAction()"
               >
-              Inicio
+              <i class="bi bi-house" aria-hidden="true"></i>
+              <span>Inicio</span>
             </a>
           </li>
         } @else {
@@ -69,31 +81,39 @@
           </li>
         }
         @if (tenantActivo()) {
-          <li class="header-nav-item">
-            <a class="header-link" [routerLink]="servicesLink()" routerLinkActive="active-link" (click)="onNavAction()">
-              Servicios
+          <li class="header-nav-item header-nav-item--primary">
+            <a class="header-link" [routerLink]="servicesLink()" routerLinkActive="active-link" ariaCurrentWhenActive="page" (click)="onNavAction()">
+              <i class="bi bi-grid" aria-hidden="true"></i>
+              <span>Servicios</span>
             </a>
           </li>
         }
         @if (tenantActivo()) {
-          <li class="header-nav-item">
-            <a class="header-link" [routerLink]="contactLink()" routerLinkActive="active-link" (click)="onNavAction()">
-              Contacto
+          <li class="header-nav-item header-nav-item--primary">
+            <a class="header-link" [routerLink]="contactLink()" routerLinkActive="active-link" ariaCurrentWhenActive="page" (click)="onNavAction()">
+              <i class="bi bi-chat-dots" aria-hidden="true"></i>
+              <span>Contacto</span>
             </a>
           </li>
         }
 
+        @if (tenantActivo()) {
+          <li class="header-nav-divider" aria-hidden="true"></li>
+        }
+
         @if (!autenticadoVisible()) {
-          <li class="header-nav-item">
+          <li class="header-nav-item header-nav-item--account">
             <a class="header-link header-link-soft" [attr.href]="accessHref()" (click)="onNavAction()">
-              Iniciar sesión
+              <i class="bi bi-person" aria-hidden="true"></i>
+              <span>Iniciar sesión</span>
             </a>
           </li>
         }
         @if (!autenticadoVisible() && tenantActivo()) {
-          <li class="header-nav-item">
-            <a class="header-link header-link-soft" [routerLink]="registerLink()" routerLinkActive="active-link" (click)="onNavAction()">
-              Registro
+          <li class="header-nav-item header-nav-item--account">
+            <a class="header-link header-link-soft" [routerLink]="registerLink()" routerLinkActive="active-link" ariaCurrentWhenActive="page" (click)="onNavAction()">
+              <i class="bi bi-person-plus" aria-hidden="true"></i>
+              <span>Registro</span>
             </a>
           </li>
         }
@@ -115,7 +135,10 @@
         @if (!autenticadoVisible()) {
           <li class="header-nav-item header-cta">
             @if (tenantActivo()) {
-              <a [routerLink]="ctaLink()" class="header-button" (click)="onNavAction()">Reservar</a>
+              <a [routerLink]="ctaLink()" class="header-button" (click)="onNavAction()">
+                <i class="bi bi-calendar2-check" aria-hidden="true"></i>
+                <span>Reservar</span>
+              </a>
             } @else {
               <a [attr.href]="registerHref()" class="header-button" (click)="onNavAction()">Probar Fluora gratis</a>
             }

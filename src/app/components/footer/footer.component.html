@@ -8,7 +8,7 @@
               [src]="tenantContext.logoUrl()"
               [alt]="'Logo ' + tenantContext.nombreComercial()"
               class="footer-logo">
-          } @else {
+          } @else if (!tenantActivo()) {
             <img src="/fluora-logo-dark.svg" alt="Fluora" class="footer-wordmark">
           }
           <div>
@@ -17,23 +17,25 @@
           </div>
         </div>
 
+        @if (!tenantActivo()) {
         <p class="footer-copy">
-          {{ tenantActivo()
-          ? 'Diseño, técnica y una atención cercana para que cada cita se sienta bien cuidada desde el primer momento.'
-          : 'Reúne tus citas, clientes y operación diaria en un solo lugar. Menos pendientes dispersos y más tiempo para atender y hacer crecer tu negocio.' }}
+          Reúne tus citas, clientes y operación diaria en un solo lugar. Menos pendientes dispersos y más tiempo para atender y hacer crecer tu negocio.
         </p>
+        }
 
         @if (tenantActivo()) {
-        <div class="footer-socials">
-          <a [href]="tenantContext.instagramUrl() || '#'" class="social-icon" aria-label="Instagram">
-            <i class="bi bi-instagram"></i>
-          </a>
-          <a [href]="tenantContext.facebookUrl() || '#'" class="social-icon" aria-label="Facebook">
-            <i class="bi bi-facebook"></i>
-          </a>
-          <a [href]="tenantContext.whatsappHref()" target="_blank" rel="noreferrer" class="social-icon" aria-label="WhatsApp">
-            <i class="bi bi-whatsapp"></i>
-          </a>
+        <div class="footer-socials" aria-label="Redes sociales">
+          @for (social of tenantContext.socialLinks(); track social.id) {
+            @if (social.enabled) {
+              <a [href]="social.href" target="_blank" rel="noreferrer" class="social-icon" [attr.aria-label]="social.label">
+                <i class="bi" [class]="social.icon" aria-hidden="true"></i>
+              </a>
+            } @else {
+              <span class="social-icon is-disabled" [attr.aria-label]="social.label + ' no disponible'" aria-disabled="true" [title]="social.label + ' no disponible'">
+                <i class="bi" [class]="social.icon" aria-hidden="true"></i>
+              </span>
+            }
+          }
         </div>
         }
       </div>
@@ -68,39 +70,17 @@
         </ul>
       </div>
 
-      <div class="footer-links-panel">
-        <h4 class="footer-title">{{ tenantActivo() ? 'Servicios' : 'Fluora' }}</h4>
-        <ul class="footer-links-list">
-          <li>
-            @if (tenantActivo()) {
-              <a [routerLink]="homeLink()" class="footer-link">Inicio</a>
-            } @else {
-              <a [attr.href]="featuresHref()" class="footer-link">Agenda y reservas</a>
-            }
-          </li>
-          <li>
-            @if (tenantActivo()) {
-              <a [routerLink]="servicesLink()" class="footer-link">Servicios</a>
-            } @else {
-              <a [attr.href]="featuresHref()" class="footer-link">Paneles por rol</a>
-            }
-          </li>
-          <li>
-            @if (tenantActivo()) {
-              <a [routerLink]="bookingLink()" class="footer-link">Reservar cita</a>
-            } @else {
-              <a [attr.href]="showcaseHref()" class="footer-link">Web pública por empresa</a>
-            }
-          </li>
-          <li>
-            @if (tenantActivo()) {
-              <a [routerLink]="contactLink()" class="footer-link">Contacto</a>
-            } @else {
-              <a [attr.href]="reviewsHref()" class="footer-link">Reseñas y referencias</a>
-            }
-          </li>
-        </ul>
-      </div>
+      @if (!tenantActivo()) {
+        <div class="footer-links-panel">
+          <h4 class="footer-title">Fluora</h4>
+          <ul class="footer-links-list">
+            <li><a [attr.href]="featuresHref()" class="footer-link">Agenda y reservas</a></li>
+            <li><a [attr.href]="featuresHref()" class="footer-link">Paneles por rol</a></li>
+            <li><a [attr.href]="showcaseHref()" class="footer-link">Web pública por empresa</a></li>
+            <li><a [attr.href]="reviewsHref()" class="footer-link">Reseñas y referencias</a></li>
+          </ul>
+        </div>
+      }
 
       <div class="footer-links-panel">
         <h4 class="footer-title">Contacto</h4>
@@ -108,22 +88,22 @@
           @if (tenantActivo() && tenantContext.direccion()) {
             <li><i class="bi bi-geo-alt"></i><span>{{ tenantContext.direccion() }}</span></li>
           }
+          @if (!tenantActivo() || tenantContext.correo()) {
           <li>
             <i class="bi bi-envelope"></i>
             <a class="footer-link" [href]="'mailto:' + (tenantActivo() && tenantContext.correo() ? tenantContext.correo() : 'contacto@refluora.com')">{{ tenantActivo() && tenantContext.correo() ? tenantContext.correo() : 'contacto@refluora.com' }}</a>
           </li>
+          }
           @if (tenantActivo() && tenantContext.telefono()) {
-            <li><i class="bi bi-telephone"></i><span>{{ tenantContext.telefono() }}</span></li>
+            <li><i class="bi bi-telephone"></i><a class="footer-link" [href]="tenantContext.telefonoHref()">{{ tenantContext.telefono() }}</a></li>
           }
-          @if (tenantActivo()) {
-            <li><i class="bi bi-clock"></i><span>Lun a sáb, 9:00 AM a 7:00 PM</span></li>
-          }
+
         </ul>
       </div>
     </div>
 
     <div class="footer-bottom">
-      <p>© 2026 {{ tenantActivo() ? tenantContext.nombreComercial() : 'Fluora' }}. Todos los derechos reservados.</p>
+      <p>© {{ currentYear }} {{ tenantActivo() ? tenantContext.nombreComercial() : 'Fluora' }}. Todos los derechos reservados.</p>
       <div class="footer-legal-links">
         @if (tenantActivo()) {
           <a [routerLink]="contactLink()" class="footer-bottom-link">Soporte</a>

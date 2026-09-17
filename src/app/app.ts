@@ -24,6 +24,7 @@ export class App {
   protected readonly title = signal('ServiciosWebnegocio');
   esPanelInterno = signal(this.calcularEsPanelInterno());
   mostrarChromePublico = signal(this.calcularLayout() === 'public');
+  publicReservationPage = signal(false);
   isChatOpen = signal(false);
   chatMsg = signal('');
 
@@ -41,6 +42,7 @@ export class App {
       )
       .subscribe(() => {
         this.sincronizarTenantConRuta(this.router.url);
+        this.publicReservationPage.set(/\/(agendar|servicios)$/.test(this.normalizarUrl(this.router.url)));
         this.esPanelInterno.set(this.calcularEsPanelInterno());
         this.mostrarChromePublico.set(this.calcularLayout() === 'public');
       });

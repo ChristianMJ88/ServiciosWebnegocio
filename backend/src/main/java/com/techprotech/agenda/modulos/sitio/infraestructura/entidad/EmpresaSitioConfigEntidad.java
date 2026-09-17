@@ -53,6 +53,21 @@ public class EmpresaSitioConfigEntidad {
   @Column(name = "hero_imagen_url", length = 500)
   private String heroImagenUrl;
 
+  @Column(name = "hero_etiqueta", length = 80)
+  private String heroEtiqueta;
+
+  @Column(name = "inicio_titulo_servicios", length = 180)
+  private String inicioTituloServicios;
+
+  @Column(name = "inicio_descripcion_servicios", length = 500)
+  private String inicioDescripcionServicios;
+
+  @Column(name = "inicio_titulo_contacto", length = 180)
+  private String inicioTituloContacto;
+
+  @Column(name = "inicio_descripcion_contacto", length = 500)
+  private String inicioDescripcionContacto;
+
   @Column(name = "whatsapp", length = 30)
   private String whatsapp;
 
@@ -70,6 +85,27 @@ public class EmpresaSitioConfigEntidad {
 
   @Column(name = "facebook_url")
   private String facebookUrl;
+
+  @Column(name = "x_url")
+  private String xUrl;
+
+  @Column(name = "tiktok_url")
+  private String tiktokUrl;
+
+  @Column(name = "whatsapp_habilitado", nullable = false)
+  private boolean whatsappHabilitado = true;
+
+  @Column(name = "instagram_habilitado", nullable = false)
+  private boolean instagramHabilitado = true;
+
+  @Column(name = "facebook_habilitado", nullable = false)
+  private boolean facebookHabilitado = true;
+
+  @Column(name = "x_habilitado", nullable = false)
+  private boolean xHabilitado = true;
+
+  @Column(name = "tiktok_habilitado", nullable = false)
+  private boolean tiktokHabilitado = true;
 
   @Column(nullable = false, length = 50)
   private String tema;

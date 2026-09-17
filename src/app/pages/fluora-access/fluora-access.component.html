@@ -1,65 +1,60 @@
-<section class="fluora-access min-vh-100 d-flex align-items-center justify-content-center">
-  <div class="container fluora-access__container">
+<section class="fluora-access" aria-labelledby="access-title">
+  <div class="fluora-access__container">
+    <aside class="fluora-access__intro">
+      <a class="fluora-access__brand" [href]="platformHost.marketingUrl('/')" aria-label="Ir al inicio de Fluora">
+        <img src="/fluora-logo.svg" alt="Fluora" class="fluora-access__logo">
+      </a>
+      <div class="fluora-access__story">
+        <span class="fluora-access__eyebrow">MENOS PENDIENTES. MÁS POSIBILIDADES.</span>
+        <h2>Tu negocio en orden.<br><em>Tu día, más ligero.</em></h2>
+        <p>Tu agenda, tus clientes y tu equipo, en un mismo lugar. Continúa donde lo dejaste.</p>
+        <div class="fluora-access__illustration" aria-hidden="true">
+          <div class="fluora-access__preview-head"><span>Tu día en Fluora</span><i class="bi bi-calendar2-week"></i></div>
+          <div class="fluora-access__preview-row"><span class="fluora-access__preview-icon"><i class="bi bi-calendar-check"></i></span><div><strong>Una agenda clara</strong><span>Cada cita en su lugar</span></div><i class="bi bi-check2"></i></div>
+          <div class="fluora-access__preview-row"><span class="fluora-access__preview-icon"><i class="bi bi-people"></i></span><div><strong>Un equipo conectado</strong><span>Todo listo para atender</span></div><i class="bi bi-check2"></i></div>
+          <div class="fluora-access__preview-note"><span></span>Más espacio para hacer crecer tu negocio</div>
+        </div>
+      </div>
+      <span class="fluora-access__signature">AGENDA FÁCIL, CRECE CON ORDEN</span>
+    </aside>
+    <div class="fluora-access__panel">
     <div class="fluora-access__card">
-      <div class="fluora-access__brand">
-        <img src="/fluora-logo.svg" alt="Logo Fluora" class="fluora-access__logo">
-      </div>
-
       <div class="fluora-access__header">
-        <span class="fluora-access__eyebrow">Acceso</span>
-        <h1>Iniciar sesión</h1>
-        <p>Ingresa con tu usuario y contraseña.</p>
+        <span class="fluora-access__eyebrow">TU ESPACIO DE TRABAJO</span>
+        <h1 id="access-title">Qué gusto verte</h1>
+        <p>Inicia sesión para continuar con tu día.</p>
       </div>
-
-      <form [formGroup]="form" (ngSubmit)="iniciarSesion()" class="fluora-access__form">
+      <form [formGroup]="form" (ngSubmit)="iniciarSesion()" class="fluora-access__form" novalidate [attr.aria-busy]="loading()">
         <div class="fluora-access__field">
-          <label for="correo" class="form-label">Usuario</label>
-          <div class="input-group fluora-access__input-group">
-            <span class="input-group-text"><i class="bi bi-person"></i></span>
-            <input
-              id="correo"
-              type="email"
-              class="form-control"
-              formControlName="correo"
-              placeholder="tu@empresa.com">
+          <label for="correo">Correo electrónico</label>
+          <div class="fluora-access__input-group" [class.fluora-access__input-group--invalid]="(touched() || form.controls.correo.touched) && form.controls.correo.invalid">
+            <i class="bi bi-envelope" aria-hidden="true"></i>
+            <input id="correo" type="email" formControlName="correo" placeholder="tu@empresa.com" autocomplete="username" inputmode="email" autocapitalize="none" spellcheck="false" [attr.aria-invalid]="(touched() || form.controls.correo.touched) && form.controls.correo.invalid" [attr.aria-describedby]="(touched() || form.controls.correo.touched) && form.controls.correo.invalid ? 'correo-error' : null">
           </div>
+          @if ((touched() || form.controls.correo.touched) && form.controls.correo.invalid) {
+            <p id="correo-error" class="fluora-access__validation" role="status">Escribe un correo electrónico válido.</p>
+          }
         </div>
-
         <div class="fluora-access__field">
-          <div class="fluora-access__password-head"><label for="contrasena" class="form-label">Contraseña</label><a routerLink="/recuperar-contrasena">¿Olvidaste tu contraseña?</a></div>
-          <div class="input-group fluora-access__input-group">
-            <span class="input-group-text"><i class="bi bi-lock"></i></span>
-            <input
-              id="contrasena"
-              type="password"
-              class="form-control"
-              formControlName="contrasena"
-              placeholder="Mínimo 8 caracteres">
+          <label for="contrasena">Contraseña</label>
+          <div class="fluora-access__input-group" [class.fluora-access__input-group--invalid]="(touched() || form.controls.contrasena.touched) && form.controls.contrasena.invalid">
+            <i class="bi bi-lock" aria-hidden="true"></i>
+            <input id="contrasena" [type]="mostrarContrasena() ? 'text' : 'password'" formControlName="contrasena" placeholder="Escribe tu contraseña" autocomplete="current-password" [attr.aria-invalid]="(touched() || form.controls.contrasena.touched) && form.controls.contrasena.invalid" [attr.aria-describedby]="(touched() || form.controls.contrasena.touched) && form.controls.contrasena.invalid ? 'contrasena-error' : null">
+            <button class="fluora-access__reveal" type="button" (click)="mostrarContrasena.set(!mostrarContrasena())" [attr.aria-label]="mostrarContrasena() ? 'Ocultar contraseña' : 'Mostrar contraseña'" [attr.aria-pressed]="mostrarContrasena()"><i class="bi" [class.bi-eye]="!mostrarContrasena()" [class.bi-eye-slash]="mostrarContrasena()" aria-hidden="true"></i></button>
           </div>
+          @if ((touched() || form.controls.contrasena.touched) && form.controls.contrasena.invalid) {
+            <p id="contrasena-error" class="fluora-access__validation" role="status">La contraseña debe tener al menos 8 caracteres.</p>
+          }
+          <a class="fluora-access__recovery" routerLink="/recuperar-contrasena">¿Olvidaste tu contraseña?</a>
         </div>
-
-        @if (touched() && form.invalid) {
-          <div class="fluora-access__validation text-danger small">
-            Captura un correo válido y una contraseña de al menos 8 caracteres.
-          </div>
-        }
-
         @if (error) {
-          <div class="alert alert-danger fluora-access__alert">
-            {{ error }}
-          </div>
+          <div class="fluora-access__alert" role="alert">{{ error }}</div>
         }
-
-        <button type="submit" class="btn btn-primary fluora-access__submit" [disabled]="loading()">
-          @if (!loading()) {
-            <span>Entrar</span>
-          }
-          @if (loading()) {
-            <span class="spinner-border spinner-border-sm"></span>
-          }
+        <button type="submit" class="fluora-access__submit" [disabled]="loading()">
+          <span>{{ loading() ? 'Iniciando sesión…' : 'Iniciar sesión' }}</span>
+          <i class="bi" [class.bi-arrow-right]="!loading()" [class.bi-hourglass-split]="loading()" aria-hidden="true"></i>
         </button>
       </form>
-
       @if (!socialConfigReady() || googleHabilitado() || microsoftHabilitado()) {
         <div class="fluora-access__divider"><span>O continúa con</span></div>
         <div class="fluora-access__social" aria-label="Opciones de acceso social">
@@ -91,6 +86,7 @@
             <button
               type="button"
               class="fluora-access__company"
+              [disabled]="loading()"
               (click)="seleccionarEmpresa(empresa.empresaId)">
               <div>
                 <strong>{{ empresa.empresaNombre }}</strong>
@@ -101,6 +97,9 @@
           }
         </div>
       }
+      <p class="fluora-access__register">¿Es tu primera vez aquí? <a routerLink="/registro">Crea tu cuenta</a></p>
+    </div>
+    <footer class="fluora-access__footer"><span>© Fluora</span><nav aria-label="Información legal"><a routerLink="/privacidad">Privacidad</a><a routerLink="/terminos">Términos</a></nav></footer>
     </div>
   </div>
 </section>

@@ -21,6 +21,9 @@ import type { CalendarOptions, DateSelectArg } from '@fullcalendar/core';
 import { forkJoin } from 'rxjs';
 import { finalize } from 'rxjs/operators';
 import { TenantContextService } from '../../core/tenant/tenant-context.service';
+import { ReservationCartService } from '../../services/reservation-cart.service';
+import { ReservationCartComponent } from '../../shared/components/reservation-cart/reservation-cart.component';
+import { MoneyDisplayPipe } from '../../shared/pipes/money-display.pipe';
 import { BookingCalendarComponent } from './booking-calendar.component';
 
 interface ItinerarioReservaItem {
@@ -54,7 +57,7 @@ interface OpcionHorarioServicio {
 @Component({
   selector: 'app-booking',
   standalone: true,
-  imports: [CommonModule, FormsModule, ReactiveFormsModule, BookingCalendarComponent],
+  imports: [CommonModule, FormsModule, ReactiveFormsModule, BookingCalendarComponent, ReservationCartComponent, MoneyDisplayPipe],
   templateUrl: './booking.component.html',
   styleUrls: ['./booking.component.css']
 })
@@ -66,6 +69,12 @@ export class BookingComponent implements OnInit {
   private breakpointObserver = inject(BreakpointObserver);
   private destroyRef = inject(DestroyRef);
   private route = inject(ActivatedRoute);
+  private readonly cart = inject(ReservationCartService);
+  private queryHydrated = false;
+  private availabilityVersion = 0;
+  readonly serviceSearch = signal('');
+  selectionNotice = '';
+  @ViewChild('dateSection') dateSection?: ElementRef<HTMLElement>;
   readonly tenantContext = inject(TenantContextService);
   private readonly hoy = this.normalizarFecha(new Date());
   private readonly fechaMaximaReserva = this.sumarDias(this.hoy, 30);
@@ -105,10 +114,11 @@ export class BookingComponent implements OnInit {
   services = signal<ServicioCatalogo[]>([]);
   errorMessage = '';
   readonly availableGroups = computed(() => {
-    const groups = new Map<number, { id: number; nombre: string }>();
+    const groups = new Map<number, { id: number; nombre: string; total: number }>();
     for (const service of this.services()) {
       if (service.grupoId && service.grupoNombre) {
-        groups.set(service.grupoId, { id: service.grupoId, nombre: service.grupoNombre });
+        const current = groups.get(service.grupoId);
+        groups.set(service.grupoId, { id: service.grupoId, nombre: service.grupoNombre, total: (current?.total ?? 0) + 1 });
       }
     }
     return Array.from(groups.values()).sort((a, b) => a.nombre.localeCompare(b.nombre));
@@ -124,7 +134,17 @@ export class BookingComponent implements OnInit {
     return Array.from(subgroups.values()).sort((a, b) => a.nombre.localeCompare(b.nombre));
   });
   readonly filteredServices = computed(() => {
-    return this.services();
+    const search = this.serviceSearch().trim().toLocaleLowerCase('es-MX');
+    return this.services().filter(service =>
+      (search || !this.selectedGroupId() || service.grupoId === this.selectedGroupId()) &&
+      (search || !this.selectedSubgroupId() || service.subgrupoId === this.selectedSubgroupId()) &&
+      (!search || (service.nombre + ' ' + service.descripcion).toLocaleLowerCase('es-MX').includes(search)));
+  });
+  readonly catalogContext = computed(() => {
+    if (this.serviceSearch().trim()) return 'Resultados de búsqueda';
+    const group = this.availableGroups().find(item => item.id === this.selectedGroupId())?.nombre;
+    const subgroup = this.availableSubgroups().find(item => item.id === this.selectedSubgroupId())?.nombre;
+    return [group, subgroup].filter(Boolean).join(' · ') || 'Todos los servicios';
   });
   readonly selectedItinerary = computed(() => {
     if (this.schedulingMode() === 'separated') {
@@ -311,8 +331,12 @@ export class BookingComponent implements OnInit {
     this.bookingForm.patchValue({ branchId, groupId: null, subgroupId: null, serviceId: null });
     this.selectedGroupId.set(null);
     this.selectedSubgroupId.set(null);
+    this.selectionNotice = this.selectedServices().length ? 'Cambiaste de sucursal. Elige los servicios disponibles en esta sede.' : '';
     this.services.set([]);
     this.selectedServices.set([]);
+    this.saveCart();
+    this.queryHydrated = true;
+    this.serviceSearch.set('');
     this.staffByService.set({});
     this.resetAvailabilityFlow();
 
@@ -336,10 +360,60 @@ export class BookingComponent implements OnInit {
     this.resetAvailabilityFlow();
   }
 
+  selectCatalogGroup(groupId: number | null): void {
+    this.selectedGroupId.set(groupId);
+    this.selectedSubgroupId.set(null);
+    this.bookingForm.patchValue({ groupId, subgroupId: null });
+  }
+
+  selectCatalogSubgroup(subgroupId: number | null): void {
+    this.selectedSubgroupId.set(subgroupId);
+    this.bookingForm.patchValue({ subgroupId });
+  }
+
+  updateServiceSearch(value: string): void {
+    this.serviceSearch.set(value);
+    if (value.trim()) {
+      this.selectedGroupId.set(null);
+      this.selectedSubgroupId.set(null);
+    }
+  }
+
+  serviceCategoryLabel(service: ServicioCatalogo): string {
+    return [service.grupoNombre, service.subgrupoNombre].filter(Boolean).join(' · ');
+  }
+
   onServiceChange(rawServiceId: string) {
     const serviceId = rawServiceId ? Number(rawServiceId) : null;
     this.bookingForm.patchValue({ serviceId });
     this.resetAvailabilityFlow();
+  }
+
+  toggleService(service: ServicioCatalogo) {
+    if (this.isServiceSelected(service.id)) {
+      this.removeSelectedService(service.id);
+      return;
+    }
+    this.bookingForm.patchValue({ serviceId: service.id });
+    this.addSelectedService();
+  }
+
+  isServiceSelected(id: number): boolean {
+    return this.selectedServices().some(service => service.id === id);
+  }
+
+  private saveCart(): void {
+    this.cart.save(this.tenantContext.empresaId(), Number(this.bookingForm.value.branchId) || null, this.selectedServices());
+  }
+
+  continueBooking(): void {
+    const target = this.selectedItinerary() ? this.dataSection : this.selectedDate() ? this.hoursSection : this.dateSection;
+    target?.nativeElement.scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' });
+    target?.nativeElement.focus({ preventScroll: true });
+  }
+
+  cartActionLabel(): string {
+    return this.selectedItinerary() ? 'Completar datos' : this.selectedDate() ? 'Elegir horario' : 'Elegir fecha';
   }
 
   addSelectedService() {
@@ -354,7 +428,12 @@ export class BookingComponent implements OnInit {
       return;
     }
 
+    if (this.selectedServices().some(item => (item.moneda || 'MXN') !== (service.moneda || 'MXN'))) {
+      this.errorMessage = 'Los servicios de una misma reserva deben tener la misma moneda.';
+      return;
+    }
     this.selectedServices.update(actuales => [...actuales, service]);
+    this.saveCart();
     this.cargarStaffServicio(service);
     this.resetAvailabilityFlow();
     this.errorMessage = '';
@@ -362,6 +441,8 @@ export class BookingComponent implements OnInit {
 
   removeSelectedService(serviceId: number) {
     this.selectedServices.update(actuales => actuales.filter(service => service.id !== serviceId));
+    this.bookingForm.patchValue({ serviceId: this.selectedServices()[0]?.id ?? null });
+    this.saveCart();
     this.staffByService.update(actual => {
       const copia = { ...actual };
       delete copia[serviceId];
@@ -371,11 +452,13 @@ export class BookingComponent implements OnInit {
   }
 
   onDateSelect(date: string) {
-    if (!this.hasCatalogSelection()) {
+    const empresaId = this.tenantContext.empresaId();
+    if (!empresaId || !this.hasCatalogSelection()) {
       this.errorMessage = 'Selecciona primero una sucursal y un servicio.';
       return;
     }
 
+    const version = ++this.availabilityVersion;
     this.selectedDate.set(date);
     this.sincronizarSemanaMovil(date);
     this.selectedHour.set(null);
@@ -386,7 +469,7 @@ export class BookingComponent implements OnInit {
 
     const requests = this.selectedServices().map(service => {
       const request: ConsultaFranjasRequest = {
-        empresaId: this.tenantContext.empresaId() ?? 1,
+        empresaId,
         sucursalId: Number(this.bookingForm.value.branchId),
         servicioId: service.id,
         fecha: date
@@ -396,13 +479,16 @@ export class BookingComponent implements OnInit {
 
     forkJoin(requests)
       .pipe(
+        takeUntilDestroyed(this.destroyRef),
         finalize(() => {
+          if (version !== this.availabilityVersion) return;
           this.loadingSlots.set(false);
-          setTimeout(() => this.scrollToHours(), 100);
+          setTimeout(() => { if (version === this.availabilityVersion) this.scrollToHours(); }, 100);
         })
       )
       .subscribe({
         next: (slotsByService) => {
+          if (version !== this.availabilityVersion) return;
           const itineraries = this.buildItineraries(this.selectedServices(), slotsByService, 15);
           const slotMap = this.selectedServices().reduce<Record<number, FranjaDisponible[]>>((acc, service, index) => {
             acc[service.id] = slotsByService[index] ?? [];
@@ -422,6 +508,7 @@ export class BookingComponent implements OnInit {
           }
         },
         error: (err) => {
+          if (version !== this.availabilityVersion) return;
           console.error('ERROR en la petición:', err);
           this.errorMessage = err?.message || 'No se pudieron cargar los horarios disponibles.';
           this.availableSlots.set([]);
@@ -576,6 +663,8 @@ export class BookingComponent implements OnInit {
 
   onSubmit() {
     const itinerary = this.selectedItinerary();
+    const empresaId = this.tenantContext.empresaId();
+    if (!empresaId) { this.errorMessage = 'No se pudo identificar el negocio. Recarga la página para continuar.'; return; }
     if (this.bookingForm.invalid || !this.selectedDate() || !itinerary || !this.selectedSlot) {
       this.bookingForm.markAllAsTouched();
       return;
@@ -590,7 +679,7 @@ export class BookingComponent implements OnInit {
     const singleItem = itinerary.items.length === 1 ? itinerary.items[0] : null;
     const request$ = singleItem
       ? this.appointmentService.bookAppointment({
-          empresaId: this.tenantContext.empresaId() ?? 1,
+          empresaId,
           sucursalId: Number(this.bookingForm.value.branchId),
           servicioId: singleItem.servicio.id,
           prestadorId: singleItem.slot.prestadorId,
@@ -601,7 +690,7 @@ export class BookingComponent implements OnInit {
           notas: this.selectedServices().map(service => service.nombre).join(', ') || singleItem.servicio.nombre
         } as CrearCitaBackendRequest)
       : this.appointmentService.bookMultipleAppointments({
-          empresaId: this.tenantContext.empresaId() ?? 1,
+          empresaId,
           sucursalId: Number(this.bookingForm.value.branchId),
           nombreCliente: this.bookingForm.value.name.trim(),
           telefonoCliente: phone,
@@ -666,6 +755,8 @@ export class BookingComponent implements OnInit {
 
   private handleSuccess(message = 'Tu cita fue registrada correctamente.') {
     this.submitted.set(true);
+    this.cart.clear(this.tenantContext.empresaId());
+    this.queryHydrated = true;
     this.isSubmitting.set(false);
     this.bookingForm.reset();
     this.selectedGroupId.set(null);
@@ -699,18 +790,22 @@ export class BookingComponent implements OnInit {
   private loadBranches() {
     this.loadingCatalog.set(true);
     this.bookingDataService.getBranches()
-      .pipe(finalize(() => this.loadingCatalog.set(false)))
+      .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (branches) => {
+          this.loadingCatalog.set(false);
           this.branches.set(branches);
-          if (branches.length === 1) {
-            this.bookingForm.patchValue({ branchId: branches[0].id });
+          const requestedBranch = Number(this.route.snapshot.queryParamMap.get('sucursal')) || this.cart.read(this.tenantContext.empresaId())?.branchId;
+          const branch = branches.find(item => item.id === requestedBranch) ?? (branches.length === 1 ? branches[0] : null);
+          if (branch) {
+            this.bookingForm.patchValue({ branchId: branch.id });
             this.selectedGroupId.set(null);
             this.selectedSubgroupId.set(null);
-            this.loadServices(branches[0].id);
+            this.loadServices(branch.id);
           }
         },
         error: (err) => {
+          this.loadingCatalog.set(false);
           console.error('Error cargando sucursales:', err);
           this.errorMessage = 'No se pudo cargar el catálogo de sucursales.';
         }
@@ -720,9 +815,10 @@ export class BookingComponent implements OnInit {
   private loadServices(branchId: number) {
     this.loadingCatalog.set(true);
     this.bookingDataService.getServices(branchId)
-      .pipe(finalize(() => this.loadingCatalog.set(false)))
+      .pipe(takeUntilDestroyed(this.destroyRef), finalize(() => { if (Number(this.bookingForm.value.branchId) === branchId) this.loadingCatalog.set(false); }))
       .subscribe({
         next: (services) => {
+          if (Number(this.bookingForm.value.branchId) !== branchId) return;
           this.services.set(services);
           this.selectedGroupId.set(null);
           this.selectedSubgroupId.set(null);
@@ -732,8 +828,12 @@ export class BookingComponent implements OnInit {
             this.bookingForm.patchValue({ groupId: null, subgroupId: null, serviceId: null });
           }
           this.hidratarServiciosDesdeQuery();
+          const initialService = this.selectedServices()[0];
+          const initialGroupId = initialService?.grupoId ?? this.availableGroups()[0]?.id ?? null;
+          this.selectCatalogGroup(initialGroupId);
         },
         error: (err) => {
+          if (Number(this.bookingForm.value.branchId) !== branchId) return;
           console.error('Error cargando servicios:', err);
           this.errorMessage = 'No se pudo cargar el catálogo de servicios.';
         }
@@ -741,6 +841,8 @@ export class BookingComponent implements OnInit {
   }
 
   private resetAvailabilityFlow() {
+    this.availabilityVersion++;
+    this.loadingSlots.set(false);
     this.selectedDate.set(null);
     this.selectedHour.set(null);
     this.slotsByService.set({});
@@ -823,8 +925,10 @@ export class BookingComponent implements OnInit {
   }
 
   private cargarStaffServicio(service: ServicioCatalogo) {
+    const empresaId = this.tenantContext.empresaId();
+    if (!empresaId) return;
     this.appointmentService.getPublicStaff(
-      this.tenantContext.empresaId() ?? 1,
+      empresaId,
       Number(this.bookingForm.value.branchId),
       service.id
     ).subscribe({
@@ -903,27 +1007,23 @@ export class BookingComponent implements OnInit {
   }
 
   private hidratarServiciosDesdeQuery() {
-    const serviceParams = this.route.snapshot.queryParamMap.get('servicios') ?? this.route.snapshot.queryParamMap.get('servicio');
-    if (!serviceParams) {
-      return;
-    }
-
-    const tokens = serviceParams.split(',').map(token => token.trim().toLowerCase()).filter(Boolean);
-    if (!tokens.length) {
-      return;
-    }
-
-    const encontrados = this.services().filter(service => {
-      return tokens.includes(String(service.id).toLowerCase()) || (service.slug ? tokens.includes(service.slug.toLowerCase()) : false);
-    });
-
-    if (!encontrados.length) {
-      return;
-    }
-
-    this.selectedServices.set(encontrados);
-    this.bookingForm.patchValue({ serviceId: encontrados[0].id });
-    encontrados.forEach(service => this.cargarStaffServicio(service));
+    if (this.queryHydrated) return;
+    this.queryHydrated = true;
+    const query = this.route.snapshot.queryParamMap;
+    const params = query.get('servicios') ?? query.get('servicio');
+    const draft = this.cart.read(this.tenantContext.empresaId());
+    const tokens = params !== null
+      ? params.split(',').map(token => token.trim().toLowerCase()).filter(Boolean)
+      : (draft?.serviceIds ?? []).map(String);
+    const found = tokens.map(token => this.services().find(service =>
+      String(service.id) === token || service.slug?.toLowerCase() === token)).filter((service): service is ServicioCatalogo => !!service);
+    const unique = found.filter((service, index) => found.findIndex(item => item.id === service.id) === index);
+    const services = unique.filter(service => (service.moneda || 'MXN') === (unique[0]?.moneda || 'MXN'));
+    this.selectedServices.set(services);
+    this.bookingForm.patchValue({ serviceId: services[0]?.id ?? null });
+    if (services.length < tokens.length) this.selectionNotice = 'Algunos servicios ya no están disponibles para esta sucursal o moneda. Revisa tu selección.';
+    services.forEach(service => this.cargarStaffServicio(service));
+    this.saveCart();
   }
 
   private esFechaReservable(fecha: Date): boolean {

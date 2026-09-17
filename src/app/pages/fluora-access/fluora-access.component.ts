@@ -23,6 +23,7 @@ export class FluoraAccessComponent implements OnInit {
   readonly platformHost = inject(PlatformHostService);
 
   readonly touched = signal(false);
+  readonly mostrarContrasena = signal(false);
   readonly loading = signal(false);
   readonly microsoftHabilitado = signal(false);
   readonly microsoftAccesoUrl = signal<string | null>(null);

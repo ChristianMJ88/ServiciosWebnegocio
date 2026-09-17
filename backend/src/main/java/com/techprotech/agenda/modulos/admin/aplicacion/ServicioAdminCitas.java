@@ -533,12 +533,24 @@ public class ServicioAdminCitas {
         configuracion.setHeroTitulo(normalizarOpcional(request.heroTitulo()));
         configuracion.setHeroSubtitulo(normalizarOpcional(request.heroSubtitulo()));
         configuracion.setHeroImagenUrl(normalizarOpcional(request.heroImagenUrl()));
+        configuracion.setHeroEtiqueta(normalizarOpcional(request.heroEtiqueta()));
+        configuracion.setInicioTituloServicios(normalizarOpcional(request.inicioTituloServicios()));
+        configuracion.setInicioDescripcionServicios(normalizarOpcional(request.inicioDescripcionServicios()));
+        configuracion.setInicioTituloContacto(normalizarOpcional(request.inicioTituloContacto()));
+        configuracion.setInicioDescripcionContacto(normalizarOpcional(request.inicioDescripcionContacto()));
         configuracion.setWhatsapp(normalizarOpcional(request.whatsapp()));
         configuracion.setTelefono(normalizarOpcional(request.telefono()));
         configuracion.setCorreo(normalizarOpcional(request.correo()));
         configuracion.setDireccion(normalizarOpcional(request.direccion()));
         configuracion.setInstagramUrl(normalizarOpcional(request.instagramUrl()));
         configuracion.setFacebookUrl(normalizarOpcional(request.facebookUrl()));
+        configuracion.setXUrl(normalizarOpcional(request.xUrl()));
+        configuracion.setTiktokUrl(normalizarOpcional(request.tiktokUrl()));
+        configuracion.setWhatsappHabilitado(request.whatsappHabilitado() == null || request.whatsappHabilitado());
+        configuracion.setInstagramHabilitado(request.instagramHabilitado() == null || request.instagramHabilitado());
+        configuracion.setFacebookHabilitado(request.facebookHabilitado() == null || request.facebookHabilitado());
+        configuracion.setXHabilitado(request.xHabilitado() == null || request.xHabilitado());
+        configuracion.setTiktokHabilitado(request.tiktokHabilitado() == null || request.tiktokHabilitado());
         configuracion.setTema(normalizarTema(request.tema()));
         configuracion.setPublicado(request.publicado());
 
@@ -2294,12 +2306,24 @@ public class ServicioAdminCitas {
                 configuracion.getHeroTitulo(),
                 configuracion.getHeroSubtitulo(),
                 configuracion.getHeroImagenUrl(),
+                configuracion.getHeroEtiqueta(),
+                configuracion.getInicioTituloServicios(),
+                configuracion.getInicioDescripcionServicios(),
+                configuracion.getInicioTituloContacto(),
+                configuracion.getInicioDescripcionContacto(),
                 configuracion.getWhatsapp(),
                 configuracion.getTelefono(),
                 configuracion.getCorreo(),
                 configuracion.getDireccion(),
                 configuracion.getInstagramUrl(),
                 configuracion.getFacebookUrl(),
+                configuracion.getXUrl(),
+                configuracion.getTiktokUrl(),
+                configuracion.isWhatsappHabilitado(),
+                configuracion.isInstagramHabilitado(),
+                configuracion.isFacebookHabilitado(),
+                configuracion.isXHabilitado(),
+                configuracion.isTiktokHabilitado(),
                 configuracion.getTema(),
                 configuracion.isPublicado()
         );
@@ -3226,12 +3250,24 @@ public class ServicioAdminCitas {
         snapshot.put("heroTitulo", configuracion.getHeroTitulo());
         snapshot.put("heroSubtitulo", configuracion.getHeroSubtitulo());
         snapshot.put("heroImagenUrl", configuracion.getHeroImagenUrl());
+        snapshot.put("heroEtiqueta", configuracion.getHeroEtiqueta());
+        snapshot.put("inicioTituloServicios", configuracion.getInicioTituloServicios());
+        snapshot.put("inicioDescripcionServicios", configuracion.getInicioDescripcionServicios());
+        snapshot.put("inicioTituloContacto", configuracion.getInicioTituloContacto());
+        snapshot.put("inicioDescripcionContacto", configuracion.getInicioDescripcionContacto());
         snapshot.put("whatsapp", configuracion.getWhatsapp());
         snapshot.put("telefono", configuracion.getTelefono());
         snapshot.put("correo", configuracion.getCorreo());
         snapshot.put("direccion", configuracion.getDireccion());
         snapshot.put("instagramUrl", configuracion.getInstagramUrl());
         snapshot.put("facebookUrl", configuracion.getFacebookUrl());
+        snapshot.put("xUrl", configuracion.getXUrl());
+        snapshot.put("tiktokUrl", configuracion.getTiktokUrl());
+        snapshot.put("whatsappHabilitado", configuracion.isWhatsappHabilitado());
+        snapshot.put("instagramHabilitado", configuracion.isInstagramHabilitado());
+        snapshot.put("facebookHabilitado", configuracion.isFacebookHabilitado());
+        snapshot.put("xHabilitado", configuracion.isXHabilitado());
+        snapshot.put("tiktokHabilitado", configuracion.isTiktokHabilitado());
         snapshot.put("tema", configuracion.getTema());
         snapshot.put("publicado", configuracion.isPublicado());
         return serializarAuditoria(snapshot);

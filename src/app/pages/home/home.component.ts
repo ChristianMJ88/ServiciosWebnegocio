@@ -4,11 +4,12 @@ import { RouterLink } from '@angular/router';
 import { TenantContextService } from '../../core/tenant/tenant-context.service';
 import { BookingDataService, CatalogoServiciosPublico, GrupoCatalogoPublico } from '../../services/booking-data.service';
 import { ScrollRevealDirective } from '../../shared/directives/scroll-reveal.directive';
+import { MoneyDisplayPipe } from '../../shared/pipes/money-display.pipe';
 
 @Component({
   selector: 'app-home',
   standalone: true,
-  imports: [RouterLink, CommonModule, ScrollRevealDirective],
+  imports: [RouterLink, CommonModule, ScrollRevealDirective, MoneyDisplayPipe],
   templateUrl: './home.component.html',
   styleUrls: ['./home.component.css']
 })
@@ -19,11 +20,6 @@ export class HomeComponent implements OnInit {
   readonly cargandoServicios = signal(false);
   readonly tieneWhatsapp = computed(() => !!this.tenantContext.whatsapp());
   readonly gruposDestacados = computed(() => this.catalogo()?.grupos.slice(0, 3) ?? []);
-  readonly imagenesServicioFallback = [
-    'https://images.unsplash.com/photo-1562322140-8baeececf3df?auto=format&fit=crop&w=1200&q=80',
-    'https://images.unsplash.com/photo-1521590832167-7bcbfaa6381f?auto=format&fit=crop&w=1200&q=80',
-    'https://images.unsplash.com/photo-1487412947147-5cebf100ffc2?auto=format&fit=crop&w=1200&q=80'
-  ];
 
   ngOnInit(): void {
     const slug = this.tenantContext.slug();
@@ -44,9 +40,9 @@ export class HomeComponent implements OnInit {
     });
   }
 
-  imagenGrupo(grupo: GrupoCatalogoPublico, index: number): string {
+  imagenGrupo(grupo: GrupoCatalogoPublico): string {
     const imagenServicio = grupo.subgrupos.flatMap(subgrupo => subgrupo.servicios).find(servicio => !!servicio.imagenUrl)?.imagenUrl;
-    return grupo.imagenUrl || imagenServicio || this.imagenesServicioFallback[index % this.imagenesServicioFallback.length];
+    return grupo.imagenUrl || imagenServicio || this.tenantContext.logoUrl() || '/fluora-mark.svg';
   }
 
   totalServiciosGrupo(grupo: GrupoCatalogoPublico): number {

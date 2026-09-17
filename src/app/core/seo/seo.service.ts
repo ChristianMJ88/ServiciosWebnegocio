@@ -100,7 +100,12 @@ export class SeoService {
       schema['address'] = { '@type': 'PostalAddress', streetAddress: config.direccion };
     }
 
-    const sameAs = [config.instagramUrl, config.facebookUrl].filter((value): value is string => Boolean(value));
+    const sameAs = [
+      config.instagramHabilitado !== false ? config.instagramUrl : null,
+      config.facebookHabilitado !== false ? config.facebookUrl : null,
+      config.xHabilitado !== false ? config.xUrl : null,
+      config.tiktokHabilitado !== false ? config.tiktokUrl : null
+    ].filter((value): value is string => Boolean(value));
     if (sameAs.length) schema['sameAs'] = sameAs;
     return schema;
   }

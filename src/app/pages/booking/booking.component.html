@@ -7,9 +7,9 @@
             <div class="booking-hero__intro">
               <span class="badge rounded-pill booking-hero__badge mb-3">Agenda en línea</span>
               <span class="booking-hero__brand d-block mb-2">{{ tenantContext.nombreComercial() }}</span>
-              <h1 class="display-5 fw-bold booking-hero__title mb-3">Agenda tu cita con claridad y sin vueltas.</h1>
+              <h1 class="display-5 fw-bold booking-hero__title mb-3">Reserva tu cita.</h1>
               <p class="booking-hero__lead mb-0">
-                Elige el servicio, la fecha y el horario que mejor te acomoden. El proceso está pensado para sentirse ligero, claro y confiable.
+                Agrega tus servicios y elige cuándo venir. Tu cita, a tu manera.
               </p>
             </div>
           </div>
@@ -19,7 +19,7 @@
 
     <div class="row justify-content-center">
       <div class="col-lg-11 col-xl-10">
-        <div class="card card-custom booking-shell overflow-hidden">
+        <div class="card booking-shell">
           <div class="row g-0">
             <div class="col-lg-8 col-xl-8">
               <div class="booking-main">
@@ -36,7 +36,7 @@
                     </div>
                     <div>
                       <span>Servicios</span>
-                      <strong>{{ selectedServices().length ? (selectedServices().length + ' seleccionados') : 'Por elegir' }}</strong>
+                      <strong>{{ selectedServices().length ? (selectedServices().length + (selectedServices().length === 1 ? ' seleccionado' : ' seleccionados')) : 'Por elegir' }}</strong>
                     </div>
                     <div>
                       <span>Fecha</span>
@@ -71,8 +71,8 @@
                         <h2 class="booking-step-title">{{ branches().length === 1 ? 'Servicio' : 'Servicio y sede' }}</h2>
                         <p class="booking-step-description mb-0">
                           {{ branches().length === 1
-                          ? 'Elige el servicio que deseas reservar.'
-                          : 'Elige primero la sede y el servicio que deseas reservar.' }}
+                          ? 'Agrega uno o varios servicios a tu cita.'
+                          : 'Elige tu sucursal y agrega los servicios que deseas.' }}
                         </p>
                       </div>
                     </div>
@@ -81,8 +81,8 @@
                       <div class="booking-catalog-grid booking-catalog-grid--compact">
                         @if (branches().length !== 1) {
                           <div class="booking-field">
-                            <label class="form-label fw-semibold small booking-field-label">Sucursal</label>
-                            <select
+                            <label for="booking-branch" class="form-label fw-semibold small booking-field-label">Sucursal</label>
+                            <select id="booking-branch"
                               class="form-select booking-control"
                               [value]="bookingForm.value.branchId ?? ''"
                               [disabled]="loadingCatalog()"
@@ -95,92 +95,53 @@
                               }
                             </select>
                           </div>
-                        } @else {
-                          <div class="booking-field">
-                            <label class="form-label fw-semibold small booking-field-label">Sucursal</label>
-                            <div class="booking-static-selection">
-                              <strong>{{ branches()[0]?.nombre }}</strong>
-                              <span>Tu cita se atenderá en esta sede.</span>
-                            </div>
-                          </div>
-                        }
-
-                        <div class="booking-field booking-field--wide">
-                          <label class="form-label fw-semibold small booking-field-label">Servicio</label>
-                          <select
-                            class="form-select booking-control"
-                            [value]="bookingForm.value.serviceId ?? ''"
-                            [disabled]="!bookingForm.value.branchId || loadingCatalog()"
-                            (change)="onServiceChange($any($event.target).value)">
-                            <option value="">Selecciona un servicio</option>
-                            @for (service of filteredServices(); track service) {
-                              <option [value]="service.id">
-                                {{ service.nombre }} - {{ service.precio | currency:(service.moneda || 'MXN'):'symbol-narrow':'1.0-0':'es-MX' }}
-                              </option>
-                            }
-                          </select>
-                        </div>
-                      </div>
-
-                      <div class="d-flex flex-wrap gap-2 mt-3">
-                        <button type="button" class="btn btn-primary" [disabled]="!selectedService" (click)="addSelectedService()">
-                          Agregar servicio
-                        </button>
-                        @if (selectedServices().length) {
-                          <span class="booking-inline-note m-0">
-                            {{ selectedServices().length }} servicio{{ selectedServices().length === 1 ? '' : 's' }} listo{{ selectedServices().length === 1 ? '' : 's' }} para combinar
-                          </span>
                         }
                       </div>
-
+                      @if (selectionNotice) { <p class="booking-inline-note" role="status">{{ selectionNotice }}</p> }
                       @if (loadingCatalog()) {
-                        <div class="booking-inline-note">
-                          <i class="bi bi-arrow-repeat"></i>
-                          <span>Cargando opciones disponibles...</span>
-                        </div>
-                      }
-
-                      @if (selectedBranch || selectedServices().length) {
-                        <div class="booking-selection-board">
-                          @if (selectedBranch) {
-                            <div class="booking-selection-branch">
-                              <span class="booking-selection-chip__label">Sucursal seleccionada</span>
-                              <strong>{{ selectedBranch.nombre }}</strong>
-                              <span>Todos tus servicios se reservarán en esta sede.</span>
+                        <p class="booking-inline-note" role="status">Cargando servicios disponibles…</p>
+                      } @else if (bookingForm.value.branchId) {
+                        <div class="booking-catalog-tools">
+                          <label class="booking-search"><i class="bi bi-search" aria-hidden="true"></i><input type="search" placeholder="Buscar por nombre" aria-label="Buscar un servicio" [ngModel]="serviceSearch()" (ngModelChange)="updateServiceSearch($event)"></label>
+                          @if (availableGroups().length > 1) {
+                            <div class="booking-categories" aria-label="Categorías de servicios">
+                              <button type="button" [class.is-active]="!selectedGroupId()" [attr.aria-pressed]="!selectedGroupId()" (click)="selectCatalogGroup(null)">Todos <span>{{ services().length }}</span></button>
+                              @for (group of availableGroups(); track group.id) {
+                                <button type="button" [class.is-active]="selectedGroupId() === group.id" [attr.aria-pressed]="selectedGroupId() === group.id" (click)="selectCatalogGroup(group.id)">{{ group.nombre }} <span>{{ group.total }}</span></button>
+                              }
                             </div>
                           }
-                          @if (selectedServices().length) {
-                            <div class="booking-selection-services">
-                              <div class="booking-selection-services__header">
-                                <div>
-                                  <span class="booking-selection-chip__label">Servicios seleccionados</span>
-                                  <strong>{{ selectedServices().length }} en tu itinerario</strong>
-                                </div>
-                                <span class="booking-selection-services__price">
-                                  {{ selectedServicesPriceTotal() | currency:'MXN':'symbol-narrow':'1.0-0':'es-MX' }}
-                                </span>
-                              </div>
-                              <div class="booking-selection-services__grid">
-                                @for (service of selectedServices(); track service) {
-                                  <article class="booking-selection-chip booking-selection-chip--service">
-                                    <strong>{{ service.nombre }}</strong>
-                                    <span>{{ service.duracionMinutos }} min</span>
-                                    <div class="booking-selection-chip__footer">
-                                      <span>{{ service.precio | currency:(service.moneda || 'MXN'):'symbol-narrow':'1.0-0':'es-MX' }}</span>
-                                      <button type="button" class="booking-chip-remove" (click)="removeSelectedService(service.id)">Quitar</button>
-                                    </div>
-                                  </article>
-                                }
-                              </div>
+                          @if (availableSubgroups().length > 1 && selectedGroupId()) {
+                            <div class="booking-categories booking-categories--secondary" aria-label="Subcategorías de servicios">
+                              <button type="button" [class.is-active]="!selectedSubgroupId()" [attr.aria-pressed]="!selectedSubgroupId()" (click)="selectCatalogSubgroup(null)">Todo el grupo</button>
+                              @for (subgroup of availableSubgroups(); track subgroup.id) {
+                                <button type="button" [class.is-active]="selectedSubgroupId() === subgroup.id" [attr.aria-pressed]="selectedSubgroupId() === subgroup.id" (click)="selectCatalogSubgroup(subgroup.id)">{{ subgroup.nombre }}</button>
+                              }
                             </div>
                           }
                         </div>
+                        <section class="booking-service-browser" [attr.aria-label]="catalogContext()">
+                          <header class="booking-service-browser__header">
+                            <div><span>Explorar</span><h3>{{ catalogContext() }}</h3></div>
+                            <strong>{{ filteredServices().length }} {{ filteredServices().length === 1 ? 'opción' : 'opciones' }}</strong>
+                          </header>
+                          <div class="booking-service-list">
+                            @for (service of filteredServices(); track service.id) {
+                              <article class="booking-service" [class.is-selected]="isServiceSelected(service.id)">
+                                <div class="booking-service__copy">@if (serviceCategoryLabel(service)) { <small>{{ serviceCategoryLabel(service) }}</small> }<h3>{{ service.nombre }}</h3>@if (service.descripcion) { <p>{{ service.descripcion }}</p> }<span>{{ service.duracionMinutos }} min</span></div>
+                                <div class="booking-service__action"><strong>{{ service.precio | appMoney:service.moneda:0:2 }}</strong><button type="button" [attr.aria-pressed]="isServiceSelected(service.id)" [attr.aria-label]="(isServiceSelected(service.id) ? 'Quitar ' : 'Agregar ') + service.nombre" (click)="toggleService(service)"><i class="bi" [class.bi-plus-lg]="!isServiceSelected(service.id)" [class.bi-check2]="isServiceSelected(service.id)" aria-hidden="true"></i>{{ isServiceSelected(service.id) ? 'Agregado' : 'Agregar' }}</button></div>
+                              </article>
+                            } @empty {
+                              <p class="booking-inline-note" role="status">{{ serviceSearch() ? 'No encontramos servicios con ese nombre. Prueba otra búsqueda.' : 'No hay servicios disponibles en esta selección.' }}</p>
+                            }
+                          </div>
+                        </section>
                       }
                     </div>
                   </section>
 
                   @if (hasCatalogSelection()) {
-                    <section class="booking-step-panel">
+                    <section #dateSection tabindex="-1" class="booking-step-panel">
                       <div class="booking-step-header">
                         <div class="step-badge shadow-lg">2</div>
                         <div>
@@ -272,7 +233,7 @@
                       </div>
                     </div>
                     <div class="booking-step-content">
-                      <div #hoursSection class="animate__animated animate__fadeIn">
+                      <div #hoursSection tabindex="-1" class="animate__animated animate__fadeIn">
                         @if (hasMultipleServices()) {
                           <div class="booking-mode-switch">
                             <button
@@ -462,7 +423,7 @@
                                       }
                                     </div>
                                     <div class="itinerary-card__footer">
-                                      <span>{{ itinerary.totalPrecio | currency:'MXN':'symbol-narrow':'1.0-0':'es-MX' }}</span>
+                                      <span>{{ itinerary.totalPrecio | appMoney:(selectedServices()[0]?.moneda || 'MXN'):0:2 }}</span>
                                       @if (itinerary.usaMultiplesStaff) {
                                         <small>Atención combinada</small>
                                       }
@@ -493,7 +454,7 @@
                       </div>
                     </div>
                     <div class="booking-step-content">
-                      <form [formGroup]="bookingForm" (ngSubmit)="onSubmit()" class="needs-validation animate__animated animate__fadeInUp" #dataSection>
+                      <form [formGroup]="bookingForm" (ngSubmit)="onSubmit()" class="needs-validation animate__animated animate__fadeInUp" #dataSection tabindex="-1">
                         <div class="booking-summary p-3 rounded-4 mb-3">
                           <div class="booking-summary-grid">
                             <div class="booking-summary-grid__item">
@@ -506,7 +467,7 @@
                             </div>
                             <div class="booking-summary-grid__item">
                               <div class="small booking-meta-label">Fecha</div>
-                              <div class="booking-meta-value fw-semibold">{{ selectedDate() | date:'fullDate':'':'es' }}</div>
+                              <div class="booking-meta-value fw-semibold">{{ selectedDate() | date:'EEE d MMM yyyy':'':'es' }}</div>
                             </div>
                             <div class="booking-summary-grid__item">
                               <div class="small booking-meta-label">Inicio</div>
@@ -518,7 +479,7 @@
                             </div>
                             <div class="booking-summary-grid__item">
                               <div class="small booking-meta-label">Total</div>
-                              <div class="booking-meta-value fw-semibold">{{ selectedItinerary()?.totalPrecio | currency:'MXN':'symbol-narrow':'1.0-0':'es-MX' }}</div>
+                              <div class="booking-meta-value fw-semibold">{{ selectedItinerary()?.totalPrecio | appMoney:(selectedServices()[0]?.moneda || 'MXN'):0:2 }}</div>
                             </div>
                           </div>
                         </div>
@@ -532,7 +493,7 @@
                                 </div>
                                 <div class="booking-itinerary-summary__side text-end">
                                   <strong>{{ item.slot.hora }}</strong>
-                                  <span>{{ item.servicio.precio | currency:(item.servicio.moneda || 'MXN'):'symbol-narrow':'1.0-0':'es-MX' }}</span>
+                                  <span>{{ item.servicio.precio | appMoney:item.servicio.moneda:0:2 }}</span>
                                 </div>
                               </article>
                             }
@@ -540,10 +501,10 @@
                         }
                         <div class="booking-form-grid">
                           <div class="booking-field">
-                            <label class="form-label fw-semibold small booking-field-label">Nombre Completo</label>
+                            <label for="booking-name" class="form-label fw-semibold small booking-field-label">Nombre Completo</label>
                             <div class="input-group">
                               <span class="input-group-text booking-input-addon"><i class="bi bi-person"></i></span>
-                              <input type="text" formControlName="name" class="form-control booking-control booking-control--input" placeholder="Ej. Ana García" [class.is-invalid]="f['name'].touched && f['name'].invalid">
+                              <input type="text" id="booking-name" autocomplete="name" inputmode="text" formControlName="name" class="form-control booking-control booking-control--input" placeholder="Ej. Ana García" [class.is-invalid]="f['name'].touched && f['name'].invalid">
                               @if (f['name'].touched && f['name'].invalid) {
                                 <div class="invalid-feedback">
                                   @if (f['name'].errors?.['required']) {
@@ -557,10 +518,10 @@
                             </div>
                           </div>
                           <div class="booking-field">
-                            <label class="form-label fw-semibold small booking-field-label">Teléfono</label>
+                            <label for="booking-phone" class="form-label fw-semibold small booking-field-label">Teléfono</label>
                             <div class="input-group">
                               <span class="input-group-text booking-input-addon"><i class="bi bi-whatsapp"></i></span>
-                              <input type="tel" formControlName="phone" class="form-control booking-control booking-control--input" placeholder="10 dígitos" [class.is-invalid]="f['phone'].touched && f['phone'].invalid">
+                              <input type="tel" id="booking-phone" autocomplete="tel" inputmode="tel" formControlName="phone" class="form-control booking-control booking-control--input" placeholder="10 dígitos" [class.is-invalid]="f['phone'].touched && f['phone'].invalid">
                               @if (f['phone'].touched && f['phone'].invalid) {
                                 <div class="invalid-feedback">
                                   @if (f['phone'].errors?.['required']) {
@@ -574,10 +535,10 @@
                             </div>
                           </div>
                           <div class="booking-field booking-field--full">
-                            <label class="form-label fw-semibold small booking-field-label">Correo</label>
+                            <label for="booking-email" class="form-label fw-semibold small booking-field-label">Correo</label>
                             <div class="input-group">
                               <span class="input-group-text booking-input-addon"><i class="bi bi-envelope"></i></span>
-                              <input type="email" formControlName="email" class="form-control booking-control booking-control--input" placeholder="ana@mail.com" [class.is-invalid]="f['email'].touched && f['email'].invalid">
+                              <input type="email" id="booking-email" autocomplete="email" inputmode="email" formControlName="email" class="form-control booking-control booking-control--input" placeholder="ana@mail.com" [class.is-invalid]="f['email'].touched && f['email'].invalid">
                               @if (f['email'].touched && f['email'].invalid) {
                                 <div class="invalid-feedback">
                                   @if (f['email'].errors?.['required']) {
@@ -633,38 +594,10 @@
             </div>
           </div>
 
-          <div class="col-lg-4 col-xl-4 d-none d-lg-block">
+          <div class="col-lg-4 col-xl-4 booking-cart-column">
             <aside class="booking-aside">
-              <div class="booking-aside__card">
-                <span class="booking-aside__label">Resumen de tu cita</span>
-                <h2 class="h4 booking-section-title mb-3">Resumen de tu cita</h2>
-
-                <div class="booking-aside__summary">
-                  <div class="booking-aside__item">
-                    <span>Sucursal</span>
-                    <strong>{{ selectedBranch?.nombre || 'Selecciona una sucursal' }}</strong>
-                  </div>
-                  <div class="booking-aside__item">
-                    <span>Servicios</span>
-                    <strong>{{ selectedServices().length ? selectedServices().length + ' seleccionados' : 'Selecciona un servicio' }}</strong>
-                  </div>
-                  <div class="booking-aside__item">
-                    <span>Fecha</span>
-                    <strong>{{ selectedDate() ? (selectedDate() | date:'fullDate':'':'es') : 'Elige una fecha' }}</strong>
-                  </div>
-                  <div class="booking-aside__item">
-                    <span>Itinerario</span>
-                    <strong>{{ selectedSlot?.hora ? (selectedSlot?.hora + ' a ' + itineraryEndHour(selectedItinerary())) : 'Elige una opción' }}</strong>
-                  </div>
-                  @if (selectedItinerary()) {
-                    <div class="booking-aside__item">
-                      <span>Total</span>
-                      <strong>{{ selectedItinerary()?.totalPrecio | currency:'MXN':'symbol-narrow':'1.0-0':'es-MX' }}</strong>
-                    </div>
-                  }
-                </div>
-              </div>
-
+              <app-reservation-cart [services]="selectedServices()" [branch]="selectedBranch?.nombre || ''" [date]="selectedDate() ? (selectedDate() | date:'dd MMM':'':'es') || '' : ''" [time]="selectedSlot?.hora ? selectedSlot!.hora + ' – ' + itineraryEndHour(selectedItinerary()) : ''" [actionLabel]="cartActionLabel()" [disabled]="isSubmitting() || loadingCatalog()" (remove)="removeSelectedService($event)" (proceed)="continueBooking()" />
+              @if (tenantContext.whatsapp()) {
               <div class="booking-aside__card booking-aside__contact">
                 <span class="booking-aside__label">Ayuda rápida</span>
                 <h3 class="h5 booking-section-title mb-2">¿Necesitas ayuda para decidir?</h3>
@@ -673,6 +606,7 @@
                   Escribir por WhatsApp
                 </a>
               </div>
+              }
             </aside>
           </div>
         </div>

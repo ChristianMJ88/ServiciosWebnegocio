@@ -17,7 +17,7 @@
           </div>
         </div>
         <div class="services-intro__actions" appScrollReveal="up" [revealDelay]="120">
-          <a [routerLink]="tenantContext.routeFor('agendar')" class="btn services-action services-action--primary">
+          <a [routerLink]="tenantContext.routeFor('agendar')" [queryParams]="bookingQueryParams()" class="btn services-action services-action--primary">
             <i class="bi bi-calendar2-check"></i>
             <span>Agendar ahora</span>
           </a>
@@ -34,36 +34,46 @@
         </div>
         <div class="services-meta" appScrollReveal="up" [revealDelay]="220">
           @if (tenantContext.direccion()) {
-            <span>{{ tenantContext.direccion() }}</span>
+            <span class="services-address">{{ tenantContext.direccion() }}</span>
           }
           <span>{{ totalServicios() }} servicios</span>
           <span>{{ catalogo.grupos.length }} categorías</span>
-          @if (precioDesde() !== null) {
+          @if (precioDesde() !== null && sameCurrency(serviciosCatalogo())) {
             <span>
-              Desde {{ precioDesde()! | currency:'MXN':'symbol-narrow':'1.0-0':'es-MX' }}
+              Desde {{ precioDesde()! | appMoney:catalogCurrency(serviciosCatalogo()):0:2 }}
             </span>
           }
         </div>
       </div>
     </section>
-    @if (catalogo.grupos.length) {
-      <section class="services-filters">
-        <div class="container">
+    <div class="services-navigation">
+      <div class="container">
+        <div class="services-toolbar">
+          @if (branches().length > 1) {
+            <label class="services-branch">Sucursal<select class="form-select" [value]="branchId() || ''" (change)="changeBranch($any($event.target).value)"><option value="">Elige una sucursal</option>@for (branch of branches(); track branch.id) { <option [value]="branch.id">{{ branch.nombre }}</option> }</select></label>
+          } @else if (selectedBranch()) {
+            <p class="services-location"><i class="bi bi-geo-alt" aria-hidden="true"></i> {{ selectedBranch()?.nombre }}</p>
+          }
+          <label class="services-search"><i class="bi bi-search" aria-hidden="true"></i><input type="search" aria-label="Buscar servicios" placeholder="¿Qué servicio buscas?" [ngModel]="search()" (ngModelChange)="search.set($event); grupoActivoId.set(null); subgrupoActivoId.set(null)"></label>
+          @if (notice()) { <p class="services-notice" role="status">{{ notice() }}</p> }
+        </div>
+        @if (grupos().length) {
+          <section class="services-filters" aria-label="Filtrar catálogo">
           <div class="services-chip-row">
             <button
               type="button"
               class="services-chip"
               [class.is-active]="grupoActivoId() === null"
               (click)="seleccionarGrupo(null)">
-              Todo
+                Todo <span>{{ totalServicios() }}</span>
             </button>
-            @for (grupo of catalogo.grupos; track grupo) {
+            @for (grupo of grupos(); track grupo) {
               <button
                 type="button"
                 class="services-chip"
                 [class.is-active]="grupoActivoId() === grupo.id"
                 (click)="seleccionarGrupo(grupo.id)">
-                {{ grupo.nombre }}
+                {{ grupo.nombre }} <span>{{ totalServiciosGrupo(grupo) }}</span>
               </button>
             }
           </div>
@@ -74,7 +84,7 @@
                 class="services-chip services-chip--secondary"
                 [class.is-active]="subgrupoActivoId() === null"
                 (click)="seleccionarSubgrupo(null)">
-                Todos
+                Todos <span>{{ totalServiciosGrupo(gruposVisibles()[0]) }}</span>
               </button>
               @for (subgrupo of subgruposDisponibles(); track subgrupo) {
                 <button
@@ -82,14 +92,15 @@
                   class="services-chip services-chip--secondary"
                   [class.is-active]="subgrupoActivoId() === subgrupo.id"
                   (click)="seleccionarSubgrupo(subgrupo.id)">
-                  {{ subgrupo.nombre }}
+                  {{ subgrupo.nombre }} <span>{{ subgrupo.servicios.length }}</span>
                 </button>
               }
             </div>
           }
-        </div>
-      </section>
-    }
+          </section>
+        }
+      </div>
+    </div>
     <section class="section-padding">
       <div class="container services-layout">
         <div class="services-content">
@@ -100,15 +111,16 @@
                   <img [src]="grupo.imagenUrl || tenantContext.logoUrl() || '/fluora-mark.svg'" [alt]="grupo.nombre">
                 </div>
                 <div class="group-section__copy" appScrollReveal="up">
+                  <span class="hierarchy-label"><i class="bi bi-collection" aria-hidden="true"></i> Grupo</span>
+                  <h2>{{ grupo.nombre }}</h2>
                   <div class="group-section__topline">
                     <span class="group-pill">{{ totalServiciosGrupo(grupo) }} servicios</span>
-                    @if (precioDesdeGrupo(grupo) !== null) {
+                    @if (precioDesdeGrupo(grupo) !== null && sameCurrency(groupServices(grupo))) {
                       <span class="group-pill">
-                        Desde {{ precioDesdeGrupo(grupo)! | currency:'MXN':'symbol-narrow':'1.0-0':'es-MX' }}
+                        Desde {{ precioDesdeGrupo(grupo)! | appMoney:catalogCurrency(groupServices(grupo)):0:2 }}
                       </span>
                     }
                   </div>
-                  <h2>{{ grupo.nombre }}</h2>
                   @if (grupo.descripcion) {
                     <p>{{ grupo.descripcion }}</p>
                   }
@@ -118,59 +130,61 @@
                 <section class="subgroup-section">
                   <div class="subgroup-section__header" appScrollReveal="up">
                     <div>
+                      <span class="hierarchy-label hierarchy-label--subgroup"><i class="bi bi-folder2-open" aria-hidden="true"></i> Subgrupo</span>
                       <h3>{{ subgrupo.nombre }}</h3>
                       @if (subgrupo.descripcion) {
                         <p>{{ subgrupo.descripcion }}</p>
                       }
                     </div>
-                    <span>{{ subgrupo.servicios.length }} opciones</span>
+                    <span class="subgroup-count">{{ subgrupo.servicios.length }} opciones</span>
                   </div>
                   <div class="service-grid">
                     @for (servicio of subgrupo.servicios; track servicio) {
                       <article
                         class="service-card"
-                        [class.is-selected]="servicioSeleccionadoId() === servicio.id">
-                        <button type="button" class="service-card__button" (click)="seleccionarServicio(servicio)">
+                        [class.is-selected]="servicioEstaSeleccionado(servicio.id)">
+                        @if (servicioEstaSeleccionado(servicio.id)) {
+                          <span class="service-card__selected"><i class="bi bi-check2" aria-hidden="true"></i> En tu cita</span>
+                        }
+                        <div class="service-card__button">
                           <div class="service-card__media">
                             <img [src]="imagenServicio(grupo, servicio)" [alt]="servicio.nombre">
                           </div>
                           <div class="service-card__topline">
                             <span class="service-card__name">{{ servicio.nombre }}</span>
                             <span class="service-card__price">
-                              {{ servicio.precio | currency:(servicio.moneda || 'MXN'):'symbol-narrow':'1.0-0':'es-MX' }}
+                              {{ servicio.precio | appMoney:servicio.moneda:0:2 }}
                             </span>
                           </div>
                           @if (servicio.descripcion) {
                             <p class="service-card__description">{{ servicio.descripcion }}</p>
                           }
                           <div class="service-card__meta">
-                            <span>{{ servicio.duracionMinutos }} min</span>
+                            <span><i class="bi bi-clock" aria-hidden="true"></i>{{ servicio.duracionMinutos }} min</span>
                             @if (servicio.requiereAnticipo) {
-                              <span>
-                                Anticipo {{ servicio.anticipoValor ? (servicio.anticipoValor | currency:(servicio.moneda || 'MXN'):'symbol-narrow':'1.0-0':'es-MX') : (servicio.anticipoTipo || 'requerido') }}
+                              <span><i class="bi bi-shield-check" aria-hidden="true"></i>
+                                Requiere anticipo
                               </span>
                             }
                           </div>
-                        </button>
+                        </div>
                         <div class="service-card__actions">
+                          <button type="button" class="service-details-link" [attr.aria-label]="'Ver detalles de ' + servicio.nombre" (click)="openDetails(servicio)">Ver detalles</button>
                           <button
                             type="button"
-                            class="btn service-card__action-btn service-card__action-btn--secondary"
+                            class="btn service-card__action-btn service-card__action-btn--primary"
+                            [disabled]="!branchId()"
+                            [attr.aria-pressed]="servicioEstaSeleccionado(servicio.id)"
+                            [attr.aria-label]="(servicioEstaSeleccionado(servicio.id) ? 'Quitar ' : 'Agregar ') + servicio.nombre"
                             [class.service-card__select--active]="servicioEstaSeleccionado(servicio.id)"
                             (click)="agregarServicio(servicio)">
                             <i
                               class="bi"
                               [class.bi-check2-circle]="servicioEstaSeleccionado(servicio.id)"
                             [class.bi-plus-circle]="!servicioEstaSeleccionado(servicio.id)"></i>
-                            <span>{{ servicioEstaSeleccionado(servicio.id) ? 'Agregado' : 'Agregar' }}</span>
+                            <span>{{ servicioEstaSeleccionado(servicio.id) ? 'Quitar de mi cita' : 'Agregar a mi cita' }}</span>
                           </button>
-                          <a
-                            [routerLink]="tenantContext.routeFor('agendar')"
-                            [queryParams]="{ servicio: servicio.slug || servicio.id }"
-                            class="btn service-card__action-btn service-card__action-btn--primary">
-                            <i class="bi bi-calendar2-check"></i>
-                            <span>Agendar</span>
-                          </a>
+
                         </div>
                       </article>
                     }
@@ -178,137 +192,41 @@
                 </section>
               }
             </article>
+          } @empty {
+            <p class="services-empty" role="status">{{ search() ? 'No encontramos servicios. Prueba con otro nombre.' : 'No hay servicios disponibles en esta selección.' }}</p>
           }
         </div>
         <aside class="services-aside">
-          <div class="booking-panel" appScrollReveal="right" [revealDelay]="100">
-            <span class="services-kicker">Reserva</span>
-            <h2>{{ serviciosSeleccionados().length ? 'Servicios seleccionados' : (servicioSeleccionado()?.nombre || 'Elige un servicio') }}</h2>
-            <p>
-              {{ serviciosSeleccionados().length
-              ? 'Arma tu combinación antes de entrar a agenda. La reserva propondrá itinerarios sin choques entre servicios y staff.'
-              : (servicioSeleccionado()?.descripcion || 'Selecciona una tarjeta para ver el resumen y avanzar más rápido a la reserva.') }}
-            </p>
-            @if (serviciosSeleccionados().length) {
-              <div class="booking-panel__selected-list">
-                @for (servicio of serviciosSeleccionados(); track servicio) {
-                  <article class="booking-panel__selected-item">
-                    <div>
-                      <strong>{{ servicio.nombre }}</strong>
-                      <span>{{ servicio.duracionMinutos }} min</span>
-                    </div>
-                    <div class="booking-panel__selected-actions">
-                      <span>{{ servicio.precio | currency:(servicio.moneda || 'MXN'):'symbol-narrow':'1.0-0':'es-MX' }}</span>
-                      <button type="button" (click)="quitarServicio(servicio.id)">Quitar</button>
-                    </div>
-                  </article>
-                }
-              </div>
-            }
-            @if (!serviciosSeleccionados().length && servicioSeleccionado(); as servicio) {
-              <dl class="booking-panel__details">
-                <div>
-                  <dt>Duración</dt>
-                  <dd>{{ servicio.duracionMinutos }} min</dd>
-                </div>
-                <div>
-                  <dt>Precio</dt>
-                  <dd>{{ servicio.precio | currency:(servicio.moneda || 'MXN'):'symbol-narrow':'1.0-0':'es-MX' }}</dd>
-                </div>
-                @if (servicio.requiereAnticipo) {
-                  <div>
-                    <dt>Reserva</dt>
-                    <dd>Requiere anticipo</dd>
-                  </div>
-                }
-              </dl>
-            }
-            @if (serviciosSeleccionados().length) {
-              <dl class="booking-panel__details">
-                <div>
-                  <dt>Servicios</dt>
-                  <dd>{{ serviciosSeleccionados().length }}</dd>
-                </div>
-                <div>
-                  <dt>Tiempo estimado</dt>
-                  <dd>{{ duracionSeleccionada() }} min</dd>
-                </div>
-                <div>
-                  <dt>Total estimado</dt>
-                  <dd>{{ totalSeleccionado() | currency:'MXN':'symbol-narrow':'1.0-0':'es-MX' }}</dd>
-                </div>
-              </dl>
-            }
-            <div class="booking-panel__actions">
-              <a
-                [routerLink]="tenantContext.routeFor('agendar')"
-                [queryParams]="bookingQueryParams()"
-                class="btn services-action services-action--primary">
-                <i class="bi bi-calendar2-check"></i>
-                <span>
-                  {{ serviciosSeleccionados().length ? 'Agendar selección' : (servicioSeleccionado() ? 'Agendar ' + servicioSeleccionado()!.nombre : 'Ir a reservar') }}
-                </span>
-              </a>
-              @if (tenantContext.whatsapp()) {
-                <a
-                  [href]="whatsappServicioHref()"
-                  target="_blank"
-                  rel="noreferrer"
-                  class="btn services-action services-action--whatsapp">
-                  <i class="bi bi-whatsapp"></i>
-                  <span>Preguntar por WhatsApp</span>
-                </a>
-              }
-            </div>
-          </div>
-          <div class="contact-panel" appScrollReveal="right" [revealDelay]="180">
-            <h3>Equipo disponible</h3>
-            @if (staffServicio().length) {
-              <div class="staff-grid">
-                @for (staff of staffServicio(); track staff) {
-                  <article class="staff-card">
-                    <div class="staff-card__avatar" [style.background]="staff.colorAgenda || 'linear-gradient(135deg, var(--tenant-primary), var(--tenant-secondary))'">
-                      {{ staff.nombreMostrar.slice(0, 1) }}
-                    </div>
-                    <div>
-                      <strong>{{ staff.nombreMostrar }}</strong>
-                      <p>{{ staff.biografia || 'Disponible para atender este servicio.' }}</p>
-                    </div>
-                  </article>
-                }
-              </div>
-            } @else {
-              <p class="contact-panel__empty">
-                {{ cargandoStaff() ? 'Cargando equipo...' : 'Selecciona un servicio para ver al equipo disponible.' }}
-              </p>
-            }
-          </div>
-          <div class="contact-panel" appScrollReveal="right" [revealDelay]="260">
-            <h3>Información esencial</h3>
-            <ul>
-              @if (tenantContext.telefono()) {
-                <li>
-                  <strong>Teléfono</strong>
-                  <a [href]="tenantContext.telefonoHref()">{{ tenantContext.telefono() }}</a>
-                </li>
-              }
-              @if (tenantContext.correo()) {
-                <li>
-                  <strong>Correo</strong>
-                  <a [href]="tenantContext.correoHref()">{{ tenantContext.correo() }}</a>
-                </li>
-              }
-              @if (tenantContext.direccion()) {
-                <li>
-                  <strong>Ubicación</strong>
-                  <span>{{ tenantContext.direccion() }}</span>
-                </li>
-              }
-            </ul>
-          </div>
+          <app-reservation-cart [services]="serviciosSeleccionados()" [branch]="selectedBranch()?.nombre || ''" actionLabel="Elegir fecha" (remove)="quitarServicio($event)" (proceed)="continueBooking()" />
+          @if (tenantContext.whatsapp()) {
+            <a class="services-help" [href]="whatsappServicioHref()" target="_blank" rel="noreferrer"><i class="bi bi-whatsapp" aria-hidden="true"></i> ¿Necesitas ayuda para elegir?</a>
+          }
         </aside>
       </div>
     </section>
+    <dialog #serviceDetails class="service-details" aria-label="Detalles del servicio" (click)="$event.target === serviceDetails && closeDetails()">
+      <div class="service-details__body">
+        <button type="button" class="service-details__close" aria-label="Cerrar detalles" autofocus (click)="closeDetails()"><i class="bi bi-x-lg" aria-hidden="true"></i></button>
+        @if (servicioSeleccionado(); as servicio) {
+          <span class="services-kicker">Conoce tu servicio</span>
+          <h2>{{ servicio.nombre }}</h2>
+          <p>{{ servicio.descripcion }}</p>
+          <p><strong>{{ servicio.precio | appMoney:servicio.moneda:0:2 }}</strong> · {{ servicio.duracionMinutos }} min</p>
+          @if (servicio.requiereAnticipo) {
+            <p class="services-notice">Anticipo {{ servicio.anticipoValor != null ? (servicio.anticipoTipo === 'PORCENTAJE' ? servicio.anticipoValor + '%' : (servicio.anticipoValor | appMoney:servicio.moneda:0:2)) : 'requerido' }}</p>
+          }
+          <h3>Equipo disponible</h3>
+          @if (cargandoStaff()) { <p role="status">Cargando equipo…</p> }
+          @else {
+            @for (staff of staffServicio(); track staff.usuarioId) {
+              <div class="service-details__staff"><strong>{{ staff.nombreMostrar }}</strong>@if (staff.biografia) { <p>{{ staff.biografia }}</p> }</div>
+            } @empty { <p>El equipo se asignará según el horario disponible.</p> }
+          }
+          @if (!branchId()) { <p>Elige una sucursal para agregar este servicio.</p> }
+          <button type="button" class="btn service-card__action-btn" [disabled]="!branchId()" (click)="agregarServicio(servicio); closeDetails()">{{ servicioEstaSeleccionado(servicio.id) ? 'Quitar de mi cita' : 'Agregar a mi cita' }}</button>
+        }
+      </div>
+    </dialog>
   </main>
 } @else {
   <section class="section-padding services-loading">
