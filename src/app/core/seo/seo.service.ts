@@ -14,8 +14,8 @@ export class SeoService {
   applyTenant(config: TenantSiteConfig, path = `/e/${config.slug}`): void {
     const canonicalPath = path.split('?')[0].split('#')[0] || `/e/${config.slug}`;
     const canonical = this.platformHost.marketingUrl(canonicalPath);
-    const description = this.tenantDescription(config);
-    const pageTitle = `${config.nombreComercial} | Reserva tu cita en línea`;
+    const description = config.seoDescripcion?.trim() || this.tenantDescription(config);
+    const pageTitle = config.seoTitulo?.trim() || `${config.nombreComercial} | Reserva tu cita en línea`;
     const image = config.heroImagenUrl || config.logoUrl;
 
     this.title.setTitle(pageTitle);

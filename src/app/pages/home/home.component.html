@@ -1,5 +1,9 @@
 <main class="home-page">
-  <section class="home-hero">
+  <section
+    class="home-hero"
+    [class.home-hero--centered]="tenantContext.heroAlineacion() === 'CENTRO'"
+    [class.home-hero--overlay-soft]="tenantContext.heroOverlay() === 'SUAVE'"
+    [class.home-hero--overlay-strong]="tenantContext.heroOverlay() === 'ALTO'">
     <div class="home-hero__media">
       <img [src]="tenantContext.heroImagenUrl()" [alt]="tenantContext.nombreComercial()">
     </div>
@@ -14,13 +18,24 @@
         <p class="home-hero__copy" appScrollReveal="up" [revealDelay]="180">{{ tenantContext.heroSubtitulo() }}</p>
 
         <div class="home-hero__actions" appScrollReveal="up" [revealDelay]="260">
-          <a [routerLink]="tenantContext.routeFor('agendar')" class="btn home-hero__button home-hero__button--primary">
-            <i class="bi bi-calendar2-check"></i>
-            <span>Agenda</span>
-          </a>
-          @if (tieneWhatsapp()) {
+          @if (heroCtaWhatsapp()) {
             <a
-              [href]="tenantContext.whatsappHref(mensajeWhatsappHero())"
+              [href]="tenantContext.whatsappHref()"
+              target="_blank"
+              rel="noreferrer"
+              class="btn home-hero__button home-hero__button--primary">
+              <i class="bi bi-whatsapp"></i>
+              <span>{{ tenantContext.heroTextoCta() }}</span>
+            </a>
+          } @else {
+            <a [routerLink]="tenantContext.actionRoute(tenantContext.heroAccionCta())" class="btn home-hero__button home-hero__button--primary">
+              <i class="bi bi-calendar2-check"></i>
+              <span>{{ tenantContext.heroTextoCta() }}</span>
+            </a>
+          }
+          @if (tieneWhatsapp() && tenantContext.heroMostrarWhatsapp() && !heroCtaWhatsapp()) {
+            <a
+              [href]="tenantContext.whatsappHref()"
               target="_blank"
               rel="noreferrer"
               class="btn home-hero__button home-hero__button--whatsapp">
@@ -33,11 +48,12 @@
     </div>
   </section>
 
-  <section class="quick-reserve">
+  @if (tenantContext.inicioMostrarContacto()) {
+  <section class="quick-reserve" [class.quick-reserve--after-hero]="ordenSeccion('CONTACTO') === 1" [style.order]="ordenSeccion('CONTACTO')">
     <div class="container">
       <div class="quick-reserve__band">
         <div class="quick-reserve__intro" appScrollReveal="up">
-          <span class="section-kicker">Contacto</span>
+          <span class="section-kicker">{{ tenantContext.inicioEtiquetaContacto() }}</span>
           <h2>{{ tenantContext.inicioTituloContacto() || tenantContext.nombreComercial() }}</h2>
           <p>{{ tenantContext.inicioDescripcionContacto() || tenantContext.descripcionCorta() }}</p>
         </div>
@@ -45,16 +61,16 @@
         <div class="quick-reserve__actions" appScrollReveal="up" [revealDelay]="120">
           <a [routerLink]="tenantContext.routeFor('agendar')" class="btn quick-reserve__button quick-reserve__button--primary">
             <i class="bi bi-calendar2-check"></i>
-            <span>Ir a agenda</span>
+            <span>{{ tenantContext.inicioTextoAgenda() }}</span>
           </a>
           @if (tieneWhatsapp()) {
             <a
-              [href]="tenantContext.whatsappHref(mensajeWhatsappHero())"
+              [href]="tenantContext.whatsappHref()"
               target="_blank"
               rel="noreferrer"
               class="btn quick-reserve__button quick-reserve__button--whatsapp">
               <i class="bi bi-whatsapp"></i>
-              <span>Abrir WhatsApp</span>
+              <span>{{ tenantContext.inicioTextoWhatsapp() }}</span>
             </a>
           }
         </div>
@@ -82,11 +98,13 @@
       </div>
     </div>
   </section>
+  }
 
-  <section class="home-services">
+  @if (tenantContext.inicioMostrarServicios()) {
+  <section class="home-services" [style.order]="ordenSeccion('SERVICIOS')">
     <div class="container">
       <div class="section-header" appScrollReveal="up">
-        <span class="section-kicker">Servicios</span>
+        <span class="section-kicker">{{ tenantContext.inicioEtiquetaServicios() }}</span>
         <h2>{{ tenantContext.inicioTituloServicios() || tenantContext.nombreComercial() }}</h2>
         @if (tenantContext.inicioDescripcionServicios()) {
           <p>{{ tenantContext.inicioDescripcionServicios() }}</p>
@@ -110,18 +128,18 @@
                   <span>{{ totalServiciosGrupo(grupo) }} servicios</span>
                   @if (precioDesdeGrupo(grupo) !== null) {
                     <span>
-                      Desde {{ precioDesdeGrupo(grupo)! | appMoney:monedaGrupo(grupo):0:2 }}
+                      Desde {{ precioDesdeGrupo(grupo)! | appMoney:monedaGrupo(grupo):2:2 }}
                     </span>
                   }
                 </div>
                 <div class="service-feature__actions">
                   <a [routerLink]="tenantContext.routeFor('servicios')" class="btn service-feature__button service-feature__button--secondary">
                     <i class="bi bi-grid"></i>
-                    <span>Ver servicios</span>
+                    <span>{{ tenantContext.inicioTextoVerServicios() }}</span>
                   </a>
                   <a [routerLink]="tenantContext.routeFor('agendar')" class="btn service-feature__button service-feature__button--primary">
                     <i class="bi bi-calendar2-plus"></i>
-                    <span>Reservar</span>
+                    <span>{{ tenantContext.inicioTextoReservar() }}</span>
                   </a>
                 </div>
               </div>
@@ -143,4 +161,5 @@
 
     </div>
   </section>
+  }
 </main>

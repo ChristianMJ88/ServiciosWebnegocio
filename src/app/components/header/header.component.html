@@ -5,7 +5,17 @@
   [class.site-header--over-hero]="headerSobreHero()"
   [class.site-header--hero-integrated]="navbarIntegradoHero()"
   [class.site-header--detached]="navbarDesprendido()"
+  [class.site-header--solid]="menuSolido()"
   [class.site-header--menu-detached]="menuDesprendido()">
+  @if (mobileMenuOpen()) {
+    <button
+      type="button"
+      class="header-menu-backdrop"
+      aria-label="Cerrar navegación"
+      (click)="onNavAction()">
+    </button>
+  }
+
   <div class="header-shell">
     <a class="brand-lockup" [routerLink]="homeLink()">
       @if (tenantActivo()) {
@@ -19,7 +29,7 @@
         }
         <span class="brand-copy brand-copy--tenant">
           <strong>{{ brandName() }}</strong>
-          @if (brandSubtitle()) {
+          @if (brandSubtitle() && tenantContext.menuMostrarDescripcion()) {
             <small>{{ brandSubtitle() }}</small>
           }
         </span>
@@ -50,19 +60,21 @@
     <div class="header-collapse" [class.header-collapse--open]="mobileMenuOpen()" id="navbarNav">
       <ul class="header-nav">
         @if (tenantActivo()) {
-          <li class="header-nav-item header-nav-item--primary">
-            <a
-              class="header-link"
-              [routerLink]="homeLink()"
-              routerLinkActive="active-link"
-              [routerLinkActiveOptions]="{ exact: true }"
-              ariaCurrentWhenActive="page"
-              (click)="onNavAction()"
-              >
-              <i class="bi bi-house" aria-hidden="true"></i>
-              <span>Inicio</span>
-            </a>
-          </li>
+          @if (tenantContext.menuMostrarInicio()) {
+            <li class="header-nav-item header-nav-item--primary">
+              <a
+                class="header-link"
+                [routerLink]="homeLink()"
+                routerLinkActive="active-link"
+                [routerLinkActiveOptions]="{ exact: true }"
+                ariaCurrentWhenActive="page"
+                (click)="onNavAction()"
+                >
+                <i class="bi bi-house" aria-hidden="true"></i>
+                <span>Inicio</span>
+              </a>
+            </li>
+          }
         } @else {
           <li class="header-nav-item">
             <a class="header-link" [attr.href]="marketingHomeHref()" (click)="onNavAction()">Inicio</a>
@@ -80,7 +92,7 @@
             <a class="header-link" [attr.href]="faqHref()" (click)="onNavAction()">Preguntas</a>
           </li>
         }
-        @if (tenantActivo()) {
+        @if (tenantActivo() && tenantContext.menuMostrarServicios()) {
           <li class="header-nav-item header-nav-item--primary">
             <a class="header-link" [routerLink]="servicesLink()" routerLinkActive="active-link" ariaCurrentWhenActive="page" (click)="onNavAction()">
               <i class="bi bi-grid" aria-hidden="true"></i>
@@ -88,7 +100,7 @@
             </a>
           </li>
         }
-        @if (tenantActivo()) {
+        @if (tenantActivo() && tenantContext.menuMostrarContacto()) {
           <li class="header-nav-item header-nav-item--primary">
             <a class="header-link" [routerLink]="contactLink()" routerLinkActive="active-link" ariaCurrentWhenActive="page" (click)="onNavAction()">
               <i class="bi bi-chat-dots" aria-hidden="true"></i>
@@ -109,7 +121,7 @@
             </a>
           </li>
         }
-        @if (!autenticadoVisible() && tenantActivo()) {
+        @if (!autenticadoVisible() && tenantActivo() && tenantContext.menuMostrarRegistro()) {
           <li class="header-nav-item header-nav-item--account">
             <a class="header-link header-link-soft" [routerLink]="registerLink()" routerLinkActive="active-link" ariaCurrentWhenActive="page" (click)="onNavAction()">
               <i class="bi bi-person-plus" aria-hidden="true"></i>
@@ -135,10 +147,17 @@
         @if (!autenticadoVisible()) {
           <li class="header-nav-item header-cta">
             @if (tenantActivo()) {
-              <a [routerLink]="ctaLink()" class="header-button" (click)="onNavAction()">
-                <i class="bi bi-calendar2-check" aria-hidden="true"></i>
-                <span>Reservar</span>
-              </a>
+              @if (ctaWhatsapp()) {
+                <a [href]="tenantContext.whatsappHref()" target="_blank" rel="noreferrer" class="header-button" (click)="onNavAction()">
+                  <i class="bi bi-whatsapp" aria-hidden="true"></i>
+                  <span>{{ tenantContext.menuTextoCta() }}</span>
+                </a>
+              } @else {
+                <a [routerLink]="ctaLink()" class="header-button" (click)="onNavAction()">
+                  <i class="bi bi-calendar2-check" aria-hidden="true"></i>
+                  <span>{{ tenantContext.menuTextoCta() }}</span>
+                </a>
+              }
             } @else {
               <a [attr.href]="registerHref()" class="header-button" (click)="onNavAction()">Probar Fluora gratis</a>
             }

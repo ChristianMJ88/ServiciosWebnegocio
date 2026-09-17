@@ -1,6 +1,6 @@
 <footer class="site-footer" [class.site-footer--marketing]="!tenantActivo()">
   <div class="footer-shell">
-    <div class="footer-grid">
+    <div class="footer-grid" [class.footer-grid--one]="tenantActivo() && tenantFooterColumnas() === 1" [class.footer-grid--two]="tenantActivo() && tenantFooterColumnas() === 2">
       <div class="footer-brand-panel">
         <div class="footer-brand-row">
           @if (tenantActivo() && tenantContext.logoUrl()) {
@@ -13,7 +13,7 @@
           }
           <div>
             <h3 class="footer-brand-title">{{ tenantActivo() ? tenantContext.nombreComercial() : 'Fluora' }}</h3>
-            <p class="footer-brand-copy">{{ tenantActivo() ? tenantContext.descripcionCorta() : 'Tu negocio, mejor organizado.' }}</p>
+            <p class="footer-brand-copy">{{ tenantActivo() ? tenantContext.footerTexto() : 'Tu negocio, mejor organizado.' }}</p>
           </div>
         </div>
 
@@ -40,6 +40,7 @@
         }
       </div>
 
+      @if (!tenantActivo() || tenantContext.footerMostrarNavegacion()) {
       <div class="footer-links-panel">
         <h4 class="footer-title">Navegación</h4>
         <ul class="footer-links-list">
@@ -69,6 +70,7 @@
           </li>
         </ul>
       </div>
+      }
 
       @if (!tenantActivo()) {
         <div class="footer-links-panel">
@@ -82,6 +84,7 @@
         </div>
       }
 
+      @if (!tenantActivo() || tenantContext.footerMostrarContacto()) {
       <div class="footer-links-panel">
         <h4 class="footer-title">Contacto</h4>
         <ul class="footer-contact-list">
@@ -100,6 +103,7 @@
 
         </ul>
       </div>
+      }
     </div>
 
     <div class="footer-bottom">

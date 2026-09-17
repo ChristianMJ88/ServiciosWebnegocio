@@ -534,11 +534,32 @@ public class ServicioAdminCitas {
         configuracion.setHeroSubtitulo(normalizarOpcional(request.heroSubtitulo()));
         configuracion.setHeroImagenUrl(normalizarOpcional(request.heroImagenUrl()));
         configuracion.setHeroEtiqueta(normalizarOpcional(request.heroEtiqueta()));
+        configuracion.setHeroAlineacion(normalizarOpcion(request.heroAlineacion(), "IZQUIERDA", Set.of("IZQUIERDA", "CENTRO")));
+        configuracion.setHeroOverlay(normalizarOpcion(request.heroOverlay(), "MEDIO", Set.of("SUAVE", "MEDIO", "ALTO")));
+        configuracion.setHeroTextoCta(valorOpcionalConFallback(request.heroTextoCta(), "Agenda"));
+        configuracion.setHeroAccionCta(normalizarAccionSitio(request.heroAccionCta(), "AGENDAR"));
+        configuracion.setHeroMostrarWhatsapp(request.heroMostrarWhatsapp() == null || request.heroMostrarWhatsapp());
         configuracion.setInicioTituloServicios(normalizarOpcional(request.inicioTituloServicios()));
         configuracion.setInicioDescripcionServicios(normalizarOpcional(request.inicioDescripcionServicios()));
+        configuracion.setInicioEtiquetaServicios(valorOpcionalConFallback(request.inicioEtiquetaServicios(), "Servicios"));
+        configuracion.setInicioTextoVerServicios(valorOpcionalConFallback(request.inicioTextoVerServicios(), "Ver servicios"));
+        configuracion.setInicioTextoReservar(valorOpcionalConFallback(request.inicioTextoReservar(), "Reservar"));
         configuracion.setInicioTituloContacto(normalizarOpcional(request.inicioTituloContacto()));
         configuracion.setInicioDescripcionContacto(normalizarOpcional(request.inicioDescripcionContacto()));
+        configuracion.setInicioEtiquetaContacto(valorOpcionalConFallback(request.inicioEtiquetaContacto(), "Contacto"));
+        configuracion.setInicioTextoAgenda(valorOpcionalConFallback(request.inicioTextoAgenda(), "Ir a agenda"));
+        configuracion.setInicioTextoWhatsapp(valorOpcionalConFallback(request.inicioTextoWhatsapp(), "Abrir WhatsApp"));
+        configuracion.setInicioMostrarContacto(request.inicioMostrarContacto() == null || request.inicioMostrarContacto());
+        configuracion.setInicioMostrarServicios(request.inicioMostrarServicios() == null || request.inicioMostrarServicios());
+        configuracion.setInicioOrdenSecciones(normalizarOpcion(
+                request.inicioOrdenSecciones(),
+                "CONTACTO_SERVICIOS",
+                Set.of("CONTACTO_SERVICIOS", "SERVICIOS_CONTACTO")
+        ));
+        configuracion.setSeoTitulo(normalizarOpcional(request.seoTitulo()));
+        configuracion.setSeoDescripcion(normalizarOpcional(request.seoDescripcion()));
         configuracion.setWhatsapp(normalizarOpcional(request.whatsapp()));
+        configuracion.setWhatsappMensaje(normalizarOpcional(request.whatsappMensaje()));
         configuracion.setTelefono(normalizarOpcional(request.telefono()));
         configuracion.setCorreo(normalizarOpcional(request.correo()));
         configuracion.setDireccion(normalizarOpcional(request.direccion()));
@@ -551,7 +572,21 @@ public class ServicioAdminCitas {
         configuracion.setFacebookHabilitado(request.facebookHabilitado() == null || request.facebookHabilitado());
         configuracion.setXHabilitado(request.xHabilitado() == null || request.xHabilitado());
         configuracion.setTiktokHabilitado(request.tiktokHabilitado() == null || request.tiktokHabilitado());
+        configuracion.setChatHabilitado(request.chatHabilitado() == null || request.chatHabilitado());
+        configuracion.setChatTitulo(valorOpcionalConFallback(request.chatTitulo(), "¿Dudas? Chat con nosotros"));
+        configuracion.setChatSaludo(valorOpcionalConFallback(request.chatSaludo(), "Hola, ¿en qué podemos ayudarte?"));
         configuracion.setTema(normalizarTema(request.tema()));
+        configuracion.setMenuEstilo(normalizarOpcion(request.menuEstilo(), "FLOTANTE", Set.of("FLOTANTE", "SOLIDO")));
+        configuracion.setMenuMostrarInicio(request.menuMostrarInicio() == null || request.menuMostrarInicio());
+        configuracion.setMenuMostrarServicios(request.menuMostrarServicios() == null || request.menuMostrarServicios());
+        configuracion.setMenuMostrarContacto(request.menuMostrarContacto() == null || request.menuMostrarContacto());
+        configuracion.setMenuMostrarRegistro(request.menuMostrarRegistro() == null || request.menuMostrarRegistro());
+        configuracion.setMenuMostrarDescripcion(request.menuMostrarDescripcion() == null || request.menuMostrarDescripcion());
+        configuracion.setMenuTextoCta(valorOpcionalConFallback(request.menuTextoCta(), "Reservar"));
+        configuracion.setMenuAccionCta(normalizarAccionSitio(request.menuAccionCta(), "AGENDAR"));
+        configuracion.setFooterTexto(normalizarOpcional(request.footerTexto()));
+        configuracion.setFooterMostrarNavegacion(request.footerMostrarNavegacion() == null || request.footerMostrarNavegacion());
+        configuracion.setFooterMostrarContacto(request.footerMostrarContacto() == null || request.footerMostrarContacto());
         configuracion.setPublicado(request.publicado());
 
         EmpresaSitioConfigEntidad guardada = empresaSitioConfigRepositorio.save(configuracion);
@@ -2307,11 +2342,28 @@ public class ServicioAdminCitas {
                 configuracion.getHeroSubtitulo(),
                 configuracion.getHeroImagenUrl(),
                 configuracion.getHeroEtiqueta(),
+                configuracion.getHeroAlineacion(),
+                configuracion.getHeroOverlay(),
+                configuracion.getHeroTextoCta(),
+                configuracion.getHeroAccionCta(),
+                configuracion.isHeroMostrarWhatsapp(),
                 configuracion.getInicioTituloServicios(),
                 configuracion.getInicioDescripcionServicios(),
+                configuracion.getInicioEtiquetaServicios(),
+                configuracion.getInicioTextoVerServicios(),
+                configuracion.getInicioTextoReservar(),
                 configuracion.getInicioTituloContacto(),
                 configuracion.getInicioDescripcionContacto(),
+                configuracion.getInicioEtiquetaContacto(),
+                configuracion.getInicioTextoAgenda(),
+                configuracion.getInicioTextoWhatsapp(),
+                configuracion.isInicioMostrarContacto(),
+                configuracion.isInicioMostrarServicios(),
+                configuracion.getInicioOrdenSecciones(),
+                configuracion.getSeoTitulo(),
+                configuracion.getSeoDescripcion(),
                 configuracion.getWhatsapp(),
+                configuracion.getWhatsappMensaje(),
                 configuracion.getTelefono(),
                 configuracion.getCorreo(),
                 configuracion.getDireccion(),
@@ -2324,7 +2376,21 @@ public class ServicioAdminCitas {
                 configuracion.isFacebookHabilitado(),
                 configuracion.isXHabilitado(),
                 configuracion.isTiktokHabilitado(),
+                configuracion.isChatHabilitado(),
+                configuracion.getChatTitulo(),
+                configuracion.getChatSaludo(),
                 configuracion.getTema(),
+                configuracion.getMenuEstilo(),
+                configuracion.isMenuMostrarInicio(),
+                configuracion.isMenuMostrarServicios(),
+                configuracion.isMenuMostrarContacto(),
+                configuracion.isMenuMostrarRegistro(),
+                configuracion.isMenuMostrarDescripcion(),
+                configuracion.getMenuTextoCta(),
+                configuracion.getMenuAccionCta(),
+                configuracion.getFooterTexto(),
+                configuracion.isFooterMostrarNavegacion(),
+                configuracion.isFooterMostrarContacto(),
                 configuracion.isPublicado()
         );
     }
@@ -2446,11 +2512,25 @@ public class ServicioAdminCitas {
                         ? empresa.getNombre().trim()
                         : "Mi negocio"
         );
-        configuracion.setColorPrimario("#D14F7D");
-        configuracion.setColorSecundario("#F6D9E3");
+        configuracion.setColorPrimario("#2563EB");
+        configuracion.setColorSecundario("#0F766E");
         configuracion.setFuenteTitulos("JAKARTA");
         configuracion.setFuenteCuerpo("INTER");
-        configuracion.setTema("fluora-base");
+        configuracion.setTema("BASE");
+        configuracion.setMenuEstilo("FLOTANTE");
+        configuracion.setMenuTextoCta("Reservar");
+        configuracion.setMenuAccionCta("AGENDAR");
+        configuracion.setHeroAlineacion("IZQUIERDA");
+        configuracion.setHeroOverlay("MEDIO");
+        configuracion.setHeroTextoCta("Agenda");
+        configuracion.setHeroAccionCta("AGENDAR");
+        configuracion.setInicioOrdenSecciones("CONTACTO_SERVICIOS");
+        configuracion.setInicioEtiquetaServicios("Servicios");
+        configuracion.setInicioTextoVerServicios("Ver servicios");
+        configuracion.setInicioTextoReservar("Reservar");
+        configuracion.setInicioEtiquetaContacto("Contacto");
+        configuracion.setInicioTextoAgenda("Ir a agenda");
+        configuracion.setInicioTextoWhatsapp("Abrir WhatsApp");
         configuracion.setPublicado(false);
         return configuracion;
     }
@@ -2526,8 +2606,25 @@ public class ServicioAdminCitas {
     }
 
     private String normalizarTema(String valor) {
+        return normalizarOpcion(valor, "BASE", Set.of("BASE", "MINIMAL", "ELEGANTE", "VIBRANTE"));
+    }
+
+    private String normalizarAccionSitio(String valor, String fallback) {
+        return normalizarOpcion(valor, fallback, Set.of("AGENDAR", "SERVICIOS", "CONTACTO", "WHATSAPP"));
+    }
+
+    private String normalizarOpcion(String valor, String fallback, Set<String> permitidas) {
         String limpio = normalizarOpcional(valor);
-        return limpio != null ? limpio : "fluora-base";
+        if (limpio == null) {
+            return fallback;
+        }
+        String opcion = limpio.toUpperCase(Locale.ROOT);
+        return permitidas.contains(opcion) ? opcion : fallback;
+    }
+
+    private String valorOpcionalConFallback(String valor, String fallback) {
+        String limpio = normalizarOpcional(valor);
+        return limpio != null ? limpio : fallback;
     }
 
     private String normalizarFuente(String valor, String fallback) {
@@ -3251,11 +3348,28 @@ public class ServicioAdminCitas {
         snapshot.put("heroSubtitulo", configuracion.getHeroSubtitulo());
         snapshot.put("heroImagenUrl", configuracion.getHeroImagenUrl());
         snapshot.put("heroEtiqueta", configuracion.getHeroEtiqueta());
+        snapshot.put("heroAlineacion", configuracion.getHeroAlineacion());
+        snapshot.put("heroOverlay", configuracion.getHeroOverlay());
+        snapshot.put("heroTextoCta", configuracion.getHeroTextoCta());
+        snapshot.put("heroAccionCta", configuracion.getHeroAccionCta());
+        snapshot.put("heroMostrarWhatsapp", configuracion.isHeroMostrarWhatsapp());
         snapshot.put("inicioTituloServicios", configuracion.getInicioTituloServicios());
         snapshot.put("inicioDescripcionServicios", configuracion.getInicioDescripcionServicios());
+        snapshot.put("inicioEtiquetaServicios", configuracion.getInicioEtiquetaServicios());
+        snapshot.put("inicioTextoVerServicios", configuracion.getInicioTextoVerServicios());
+        snapshot.put("inicioTextoReservar", configuracion.getInicioTextoReservar());
         snapshot.put("inicioTituloContacto", configuracion.getInicioTituloContacto());
         snapshot.put("inicioDescripcionContacto", configuracion.getInicioDescripcionContacto());
+        snapshot.put("inicioEtiquetaContacto", configuracion.getInicioEtiquetaContacto());
+        snapshot.put("inicioTextoAgenda", configuracion.getInicioTextoAgenda());
+        snapshot.put("inicioTextoWhatsapp", configuracion.getInicioTextoWhatsapp());
+        snapshot.put("inicioMostrarContacto", configuracion.isInicioMostrarContacto());
+        snapshot.put("inicioMostrarServicios", configuracion.isInicioMostrarServicios());
+        snapshot.put("inicioOrdenSecciones", configuracion.getInicioOrdenSecciones());
+        snapshot.put("seoTitulo", configuracion.getSeoTitulo());
+        snapshot.put("seoDescripcion", configuracion.getSeoDescripcion());
         snapshot.put("whatsapp", configuracion.getWhatsapp());
+        snapshot.put("whatsappMensaje", configuracion.getWhatsappMensaje());
         snapshot.put("telefono", configuracion.getTelefono());
         snapshot.put("correo", configuracion.getCorreo());
         snapshot.put("direccion", configuracion.getDireccion());
@@ -3268,7 +3382,21 @@ public class ServicioAdminCitas {
         snapshot.put("facebookHabilitado", configuracion.isFacebookHabilitado());
         snapshot.put("xHabilitado", configuracion.isXHabilitado());
         snapshot.put("tiktokHabilitado", configuracion.isTiktokHabilitado());
+        snapshot.put("chatHabilitado", configuracion.isChatHabilitado());
+        snapshot.put("chatTitulo", configuracion.getChatTitulo());
+        snapshot.put("chatSaludo", configuracion.getChatSaludo());
         snapshot.put("tema", configuracion.getTema());
+        snapshot.put("menuEstilo", configuracion.getMenuEstilo());
+        snapshot.put("menuMostrarInicio", configuracion.isMenuMostrarInicio());
+        snapshot.put("menuMostrarServicios", configuracion.isMenuMostrarServicios());
+        snapshot.put("menuMostrarContacto", configuracion.isMenuMostrarContacto());
+        snapshot.put("menuMostrarRegistro", configuracion.isMenuMostrarRegistro());
+        snapshot.put("menuMostrarDescripcion", configuracion.isMenuMostrarDescripcion());
+        snapshot.put("menuTextoCta", configuracion.getMenuTextoCta());
+        snapshot.put("menuAccionCta", configuracion.getMenuAccionCta());
+        snapshot.put("footerTexto", configuracion.getFooterTexto());
+        snapshot.put("footerMostrarNavegacion", configuracion.isFooterMostrarNavegacion());
+        snapshot.put("footerMostrarContacto", configuracion.isFooterMostrarContacto());
         snapshot.put("publicado", configuracion.isPublicado());
         return serializarAuditoria(snapshot);
     }

@@ -34,6 +34,7 @@
             <label class="color-control"><span>Color secundario</span><div><input type="color" name="sitioColorSecundarioPicker" [(ngModel)]="formularioSitio().colorSecundario"><input name="sitioColorSecundario" [(ngModel)]="formularioSitio().colorSecundario" maxlength="20" aria-label="Código hexadecimal del color secundario"></div></label>
           </div>
           <div class="editor-fields">
+            <mat-form-field appearance="outline" class="full-width"><mat-label>Estilo visual</mat-label><mat-select name="sitioTema" [(ngModel)]="formularioSitio().tema">@for (tema of temasDisponibles; track tema.value) {<mat-option [value]="tema.value">{{ tema.label }} · {{ tema.description }}</mat-option>}</mat-select><mat-hint>Define bordes, sombras y ritmo visual; conserva tus colores.</mat-hint></mat-form-field>
             <mat-form-field appearance="outline"><mat-label>Fuente para títulos</mat-label><mat-select name="sitioFuenteTitulos" [(ngModel)]="formularioSitio().fuenteTitulos">@for (fuente of fuentesDisponibles; track fuente.value) {<mat-option [value]="fuente.value">{{ fuente.label }}</mat-option>}</mat-select></mat-form-field>
             <mat-form-field appearance="outline"><mat-label>Fuente para textos</mat-label><mat-select name="sitioFuenteCuerpo" [(ngModel)]="formularioSitio().fuenteCuerpo">@for (fuente of fuentesDisponibles; track fuente.value) {<mat-option [value]="fuente.value">{{ fuente.label }}</mat-option>}</mat-select></mat-form-field>
           </div>
@@ -41,20 +42,55 @@
         </section>
       }
 
+      @if (seccionActiva() === 'navegacion') {
+        <section class="editor-panel">
+          <div class="editor-panel__heading"><span class="editor-panel__icon"><i class="bi bi-menu-button-wide"></i></span><div><h3>Menú del sitio</h3><p>Prioriza los accesos que necesitan tus clientes.</p></div></div>
+          <div class="editor-fields">
+            <mat-form-field appearance="outline"><mat-label>Estilo del menú</mat-label><mat-select name="sitioMenuEstilo" [(ngModel)]="formularioSitio().menuEstilo"><mat-option value="FLOTANTE">Flotante</mat-option><mat-option value="SOLIDO">Sólido</mat-option></mat-select></mat-form-field>
+            <mat-form-field appearance="outline"><mat-label>Texto del botón principal</mat-label><input matInput name="sitioMenuTextoCta" [(ngModel)]="formularioSitio().menuTextoCta" maxlength="40"></mat-form-field>
+            <mat-form-field appearance="outline" class="full-width"><mat-label>Acción del botón principal</mat-label><mat-select name="sitioMenuAccionCta" [(ngModel)]="formularioSitio().menuAccionCta">@for (accion of accionesDisponibles; track accion.value) {<mat-option [value]="accion.value">{{ accion.label }}</mat-option>}</mat-select></mat-form-field>
+          </div>
+          <div class="visibility-grid">
+            <label class="visibility-control"><span><i class="bi bi-house"></i><strong>Inicio</strong></span><mat-slide-toggle name="sitioMenuMostrarInicio" [(ngModel)]="formularioSitio().menuMostrarInicio" aria-label="Mostrar Inicio"></mat-slide-toggle></label>
+            <label class="visibility-control"><span><i class="bi bi-grid"></i><strong>Servicios</strong></span><mat-slide-toggle name="sitioMenuMostrarServicios" [(ngModel)]="formularioSitio().menuMostrarServicios" aria-label="Mostrar Servicios"></mat-slide-toggle></label>
+            <label class="visibility-control"><span><i class="bi bi-chat-dots"></i><strong>Contacto</strong></span><mat-slide-toggle name="sitioMenuMostrarContacto" [(ngModel)]="formularioSitio().menuMostrarContacto" aria-label="Mostrar Contacto"></mat-slide-toggle></label>
+            <label class="visibility-control"><span><i class="bi bi-person-plus"></i><strong>Registro</strong></span><mat-slide-toggle name="sitioMenuMostrarRegistro" [(ngModel)]="formularioSitio().menuMostrarRegistro" aria-label="Mostrar Registro"></mat-slide-toggle></label>
+            <label class="visibility-control full-width"><span><i class="bi bi-card-text"></i><strong>Descripción junto a la marca</strong></span><mat-slide-toggle name="sitioMenuMostrarDescripcion" [(ngModel)]="formularioSitio().menuMostrarDescripcion" aria-label="Mostrar descripción de marca"></mat-slide-toggle></label>
+          </div>
+        </section>
+      }
+
       @if (seccionActiva() === 'portada') {
         <section class="editor-panel">
           <div class="editor-panel__heading"><span class="editor-panel__icon"><i class="bi bi-image"></i></span><div><h3>Portada principal</h3><p>El primer mensaje que recibirán tus visitantes.</p></div></div>
           <div class="editor-fields">
-            <mat-form-field appearance="outline" class="full-width"><mat-label>Etiqueta superior</mat-label><input matInput name="sitioHeroEtiqueta" [(ngModel)]="formularioSitio().heroEtiqueta" maxlength="80" placeholder="Ej. Reserva en línea"><mat-hint align="end">{{ formularioSitio().heroEtiqueta?.length || 0 }}/80</mat-hint></mat-form-field>
+            <mat-form-field appearance="outline" class="full-width"><mat-label>Etiqueta o promoción</mat-label><input matInput name="sitioHeroEtiqueta" [(ngModel)]="formularioSitio().heroEtiqueta" maxlength="80" placeholder="Ej. 20% en primera visita"><mat-hint align="end">{{ formularioSitio().heroEtiqueta?.length || 0 }}/80</mat-hint></mat-form-field>
             <mat-form-field appearance="outline" class="full-width"><mat-label>Título principal</mat-label><input matInput name="sitioHeroTitulo" [(ngModel)]="formularioSitio().heroTitulo" maxlength="180"><mat-hint align="end">{{ formularioSitio().heroTitulo?.length || 0 }}/180</mat-hint></mat-form-field>
             <mat-form-field appearance="outline" class="full-width"><mat-label>Subtítulo principal</mat-label><textarea matInput rows="4" name="sitioHeroSubtitulo" [(ngModel)]="formularioSitio().heroSubtitulo" maxlength="500"></textarea><mat-hint align="end">{{ formularioSitio().heroSubtitulo?.length || 0 }}/500</mat-hint></mat-form-field>
             <mat-form-field appearance="outline" class="full-width"><mat-label>URL de la imagen principal</mat-label><input matInput name="sitioHeroImagenUrl" [(ngModel)]="formularioSitio().heroImagenUrl" maxlength="500" placeholder="https://... o /fluora-showcase-sites.svg"><mat-hint>Usa una imagen horizontal de alta calidad.</mat-hint></mat-form-field>
+            <mat-form-field appearance="outline"><mat-label>Alineación</mat-label><mat-select name="sitioHeroAlineacion" [(ngModel)]="formularioSitio().heroAlineacion"><mat-option value="IZQUIERDA">Izquierda</mat-option><mat-option value="CENTRO">Centrada</mat-option></mat-select></mat-form-field>
+            <mat-form-field appearance="outline"><mat-label>Contraste de imagen</mat-label><mat-select name="sitioHeroOverlay" [(ngModel)]="formularioSitio().heroOverlay"><mat-option value="SUAVE">Suave</mat-option><mat-option value="MEDIO">Medio</mat-option><mat-option value="ALTO">Alto</mat-option></mat-select></mat-form-field>
+            <mat-form-field appearance="outline"><mat-label>Texto del botón</mat-label><input matInput name="sitioHeroTextoCta" [(ngModel)]="formularioSitio().heroTextoCta" maxlength="40"></mat-form-field>
+            <mat-form-field appearance="outline"><mat-label>Acción del botón</mat-label><mat-select name="sitioHeroAccionCta" [(ngModel)]="formularioSitio().heroAccionCta">@for (accion of accionesDisponibles; track accion.value) {<mat-option [value]="accion.value">{{ accion.label }}</mat-option>}</mat-select></mat-form-field>
+            <label class="visibility-control full-width"><span><i class="bi bi-whatsapp"></i><strong>Mostrar WhatsApp como segunda acción</strong></span><mat-slide-toggle name="sitioHeroMostrarWhatsapp" [(ngModel)]="formularioSitio().heroMostrarWhatsapp" [disabled]="formularioSitio().heroAccionCta === 'WHATSAPP'" aria-label="Mostrar WhatsApp en portada"></mat-slide-toggle></label>
             <div class="editor-fields__divider full-width"><strong>Sección de servicios</strong><span>Texto que acompaña al catálogo destacado.</span></div>
+            <mat-form-field appearance="outline"><mat-label>Etiqueta de servicios</mat-label><input matInput name="sitioInicioEtiquetaServicios" [(ngModel)]="formularioSitio().inicioEtiquetaServicios" maxlength="40"></mat-form-field>
+            <mat-form-field appearance="outline"><mat-label>Botón para explorar</mat-label><input matInput name="sitioInicioTextoVerServicios" [(ngModel)]="formularioSitio().inicioTextoVerServicios" maxlength="40"></mat-form-field>
+            <mat-form-field appearance="outline"><mat-label>Botón para reservar</mat-label><input matInput name="sitioInicioTextoReservar" [(ngModel)]="formularioSitio().inicioTextoReservar" maxlength="40"></mat-form-field>
             <mat-form-field appearance="outline" class="full-width"><mat-label>Título de servicios</mat-label><input matInput name="sitioInicioTituloServicios" [(ngModel)]="formularioSitio().inicioTituloServicios" maxlength="180"></mat-form-field>
             <mat-form-field appearance="outline" class="full-width"><mat-label>Descripción de servicios</mat-label><textarea matInput rows="3" name="sitioInicioDescripcionServicios" [(ngModel)]="formularioSitio().inicioDescripcionServicios" maxlength="500"></textarea></mat-form-field>
             <div class="editor-fields__divider full-width"><strong>Bloque de contacto</strong><span>Invitación para agendar o comunicarse.</span></div>
+            <mat-form-field appearance="outline"><mat-label>Etiqueta de contacto</mat-label><input matInput name="sitioInicioEtiquetaContacto" [(ngModel)]="formularioSitio().inicioEtiquetaContacto" maxlength="40"></mat-form-field>
+            <mat-form-field appearance="outline"><mat-label>Botón de agenda</mat-label><input matInput name="sitioInicioTextoAgenda" [(ngModel)]="formularioSitio().inicioTextoAgenda" maxlength="40"></mat-form-field>
+            <mat-form-field appearance="outline"><mat-label>Botón de WhatsApp</mat-label><input matInput name="sitioInicioTextoWhatsapp" [(ngModel)]="formularioSitio().inicioTextoWhatsapp" maxlength="40"></mat-form-field>
             <mat-form-field appearance="outline" class="full-width"><mat-label>Título de contacto</mat-label><input matInput name="sitioInicioTituloContacto" [(ngModel)]="formularioSitio().inicioTituloContacto" maxlength="180"></mat-form-field>
             <mat-form-field appearance="outline" class="full-width"><mat-label>Descripción de contacto</mat-label><textarea matInput rows="3" name="sitioInicioDescripcionContacto" [(ngModel)]="formularioSitio().inicioDescripcionContacto" maxlength="500"></textarea></mat-form-field>
+            <div class="editor-fields__divider full-width"><strong>Organización de Inicio</strong><span>Controla qué bloques aparecen y en qué orden.</span></div>
+            <div class="visibility-grid full-width">
+              <label class="visibility-control"><span><i class="bi bi-grid"></i><strong>Mostrar servicios</strong></span><mat-slide-toggle name="sitioInicioMostrarServicios" [(ngModel)]="formularioSitio().inicioMostrarServicios" aria-label="Mostrar servicios en Inicio"></mat-slide-toggle></label>
+              <label class="visibility-control"><span><i class="bi bi-chat-dots"></i><strong>Mostrar contacto</strong></span><mat-slide-toggle name="sitioInicioMostrarContacto" [(ngModel)]="formularioSitio().inicioMostrarContacto" aria-label="Mostrar contacto en Inicio"></mat-slide-toggle></label>
+            </div>
+            <mat-form-field appearance="outline" class="full-width"><mat-label>Orden de las secciones</mat-label><mat-select name="sitioInicioOrdenSecciones" [(ngModel)]="formularioSitio().inicioOrdenSecciones"><mat-option value="CONTACTO_SERVICIOS">Contacto y después servicios</mat-option><mat-option value="SERVICIOS_CONTACTO">Servicios y después contacto</mat-option></mat-select></mat-form-field>
           </div>
         </section>
       }
@@ -67,11 +103,38 @@
             <mat-form-field appearance="outline" class="full-width"><mat-label>Correo</mat-label><input matInput type="email" name="sitioCorreo" [(ngModel)]="formularioSitio().correo" maxlength="150"></mat-form-field>
             <mat-form-field appearance="outline" class="full-width"><mat-label>Dirección</mat-label><textarea matInput rows="3" name="sitioDireccion" [(ngModel)]="formularioSitio().direccion" maxlength="255"></textarea></mat-form-field>
             <div class="social-config full-width">
-              <div class="social-config__card"><label class="social-config__item"><i class="bi bi-whatsapp"></i><span><strong>WhatsApp</strong><small>Número con código de país</small></span><mat-slide-toggle name="sitioWhatsappHabilitado" [(ngModel)]="formularioSitio().whatsappHabilitado" [disabled]="!formularioSitio().whatsapp" aria-label="Habilitar WhatsApp"></mat-slide-toggle></label><mat-form-field appearance="outline"><mat-label>Número de WhatsApp</mat-label><input matInput name="sitioWhatsapp" [(ngModel)]="formularioSitio().whatsapp" maxlength="30" placeholder="5215512345678"></mat-form-field></div>
+              <div class="social-config__card social-config__card--wide">
+                <label class="social-config__item"><i class="bi bi-whatsapp"></i><span><strong>WhatsApp</strong><small>Número con código de país</small></span><mat-slide-toggle name="sitioWhatsappHabilitado" [(ngModel)]="formularioSitio().whatsappHabilitado" [disabled]="!formularioSitio().whatsapp" aria-label="Habilitar WhatsApp"></mat-slide-toggle></label>
+                <mat-form-field appearance="outline"><mat-label>Número de WhatsApp</mat-label><input matInput name="sitioWhatsapp" [(ngModel)]="formularioSitio().whatsapp" maxlength="30" placeholder="5215512345678"></mat-form-field>
+                <mat-form-field appearance="outline"><mat-label>Mensaje inicial de WhatsApp</mat-label><input matInput name="sitioWhatsappMensaje" [(ngModel)]="formularioSitio().whatsappMensaje" maxlength="255" placeholder="Hola, quiero agendar una cita"></mat-form-field>
+              </div>
               <div class="social-config__card"><label class="social-config__item"><i class="bi bi-facebook"></i><span><strong>Facebook</strong><small>Dirección del perfil o página</small></span><mat-slide-toggle name="sitioFacebookHabilitado" [(ngModel)]="formularioSitio().facebookHabilitado" [disabled]="!formularioSitio().facebookUrl" aria-label="Habilitar Facebook"></mat-slide-toggle></label><mat-form-field appearance="outline"><mat-label>URL de Facebook</mat-label><input matInput type="url" name="sitioFacebookUrl" [(ngModel)]="formularioSitio().facebookUrl" maxlength="255" placeholder="https://facebook.com/..."></mat-form-field></div>
               <div class="social-config__card"><label class="social-config__item"><i class="bi bi-instagram"></i><span><strong>Instagram</strong><small>Dirección del perfil</small></span><mat-slide-toggle name="sitioInstagramHabilitado" [(ngModel)]="formularioSitio().instagramHabilitado" [disabled]="!formularioSitio().instagramUrl" aria-label="Habilitar Instagram"></mat-slide-toggle></label><mat-form-field appearance="outline"><mat-label>URL de Instagram</mat-label><input matInput type="url" name="sitioInstagramUrl" [(ngModel)]="formularioSitio().instagramUrl" maxlength="255" placeholder="https://instagram.com/..."></mat-form-field></div>
               <div class="social-config__card"><label class="social-config__item"><i class="bi bi-twitter-x"></i><span><strong>X</strong><small>Dirección del perfil</small></span><mat-slide-toggle name="sitioXHabilitado" [(ngModel)]="formularioSitio().xHabilitado" [disabled]="!formularioSitio().xUrl" aria-label="Habilitar X"></mat-slide-toggle></label><mat-form-field appearance="outline"><mat-label>URL de X</mat-label><input matInput type="url" name="sitioXUrl" [(ngModel)]="formularioSitio().xUrl" maxlength="255" placeholder="https://x.com/..."></mat-form-field></div>
               <div class="social-config__card"><label class="social-config__item"><i class="bi bi-tiktok"></i><span><strong>TikTok</strong><small>Dirección del perfil</small></span><mat-slide-toggle name="sitioTiktokHabilitado" [(ngModel)]="formularioSitio().tiktokHabilitado" [disabled]="!formularioSitio().tiktokUrl" aria-label="Habilitar TikTok"></mat-slide-toggle></label><mat-form-field appearance="outline"><mat-label>URL de TikTok</mat-label><input matInput type="url" name="sitioTiktokUrl" [(ngModel)]="formularioSitio().tiktokUrl" maxlength="255" placeholder="https://tiktok.com/@..."></mat-form-field></div>
+            </div>
+            <div class="assistant-config full-width">
+              <label class="visibility-control"><span><i class="bi bi-chat-square-heart"></i><strong>Mostrar asistente rápido</strong></span><mat-slide-toggle name="sitioChatHabilitado" [(ngModel)]="formularioSitio().chatHabilitado" aria-label="Mostrar asistente rápido"></mat-slide-toggle></label>
+              <div class="editor-fields">
+                <mat-form-field appearance="outline"><mat-label>Título del asistente</mat-label><input matInput name="sitioChatTitulo" [(ngModel)]="formularioSitio().chatTitulo" maxlength="80"></mat-form-field>
+                <mat-form-field appearance="outline"><mat-label>Mensaje de bienvenida</mat-label><input matInput name="sitioChatSaludo" [(ngModel)]="formularioSitio().chatSaludo" maxlength="255"></mat-form-field>
+              </div>
+            </div>
+          </div>
+        </section>
+      }
+
+      @if (seccionActiva() === 'seo_footer') {
+        <section class="editor-panel">
+          <div class="editor-panel__heading"><span class="editor-panel__icon"><i class="bi bi-search"></i></span><div><h3>SEO y footer</h3><p>Define cómo se presenta tu negocio en buscadores y al final de cada página.</p></div></div>
+          <div class="editor-fields">
+            <mat-form-field appearance="outline" class="full-width"><mat-label>Título para buscadores</mat-label><input matInput name="sitioSeoTitulo" [(ngModel)]="formularioSitio().seoTitulo" maxlength="70" placeholder="Nombre del negocio | Servicio principal"><mat-hint align="end">{{ formularioSitio().seoTitulo?.length || 0 }}/70</mat-hint></mat-form-field>
+            <mat-form-field appearance="outline" class="full-width"><mat-label>Descripción para buscadores</mat-label><textarea matInput rows="3" name="sitioSeoDescripcion" [(ngModel)]="formularioSitio().seoDescripcion" maxlength="170"></textarea><mat-hint align="end">{{ formularioSitio().seoDescripcion?.length || 0 }}/170</mat-hint></mat-form-field>
+            <div class="editor-fields__divider full-width"><strong>Pie de página</strong><span>Mantén sólo la información útil para tus clientes.</span></div>
+            <mat-form-field appearance="outline" class="full-width"><mat-label>Descripción del footer</mat-label><textarea matInput rows="3" name="sitioFooterTexto" [(ngModel)]="formularioSitio().footerTexto" maxlength="300"></textarea><mat-hint align="end">{{ formularioSitio().footerTexto?.length || 0 }}/300</mat-hint></mat-form-field>
+            <div class="visibility-grid full-width">
+              <label class="visibility-control"><span><i class="bi bi-signpost-split"></i><strong>Mostrar navegación</strong></span><mat-slide-toggle name="sitioFooterMostrarNavegacion" [(ngModel)]="formularioSitio().footerMostrarNavegacion" aria-label="Mostrar navegación en footer"></mat-slide-toggle></label>
+              <label class="visibility-control"><span><i class="bi bi-geo-alt"></i><strong>Mostrar contacto</strong></span><mat-slide-toggle name="sitioFooterMostrarContacto" [(ngModel)]="formularioSitio().footerMostrarContacto" aria-label="Mostrar contacto en footer"></mat-slide-toggle></label>
             </div>
           </div>
         </section>
@@ -82,7 +145,6 @@
           <div class="editor-panel__heading"><span class="editor-panel__icon"><i class="bi bi-globe2"></i></span><div><h3>Dominio y publicación</h3><p>Controla dónde está disponible tu sitio y cuándo hacerlo visible.</p></div></div>
           <div class="editor-fields">
             <mat-form-field appearance="outline" class="full-width"><mat-label>Dominio principal</mat-label><input matInput name="sitioDominioPrincipal" [(ngModel)]="formularioSitio().dominioPrincipal" maxlength="255" placeholder="reservas.tumarca.com"><mat-hint>{{ dominioPrincipalPreview() || 'Aún no configurado' }}</mat-hint></mat-form-field>
-            <mat-form-field appearance="outline" class="full-width"><mat-label>Tema interno</mat-label><input matInput name="sitioTema" [(ngModel)]="formularioSitio().tema" maxlength="50"></mat-form-field>
           </div>
           <label class="publish-control"><span class="publish-control__icon"><i class="bi bi-broadcast"></i></span><span><strong>Publicar sitio web</strong><small>Al activarlo, tus clientes podrán visitar la página pública.</small></span><mat-slide-toggle name="sitioPublicado" [(ngModel)]="formularioSitio().publicado" aria-label="Publicar sitio web"></mat-slide-toggle></label>
           <div class="publication-url"><i class="bi bi-link-45deg"></i><span><small>URL pública de Fluora</small><strong>{{ rutaPublicaPreview() }}</strong></span></div>
@@ -93,10 +155,12 @@
     </form>
 
     <aside class="site-editor__preview">
-      <div class="preview-toolbar"><div><span></span><span></span><span></span></div><strong>Vista previa</strong><i class="bi bi-display"></i></div>
-      <div class="site-preview">
+      <div class="preview-toolbar"><div class="preview-toolbar__label"><strong>Vista previa</strong><small>{{ previewDimensions() }}</small></div><div class="preview-devices" aria-label="Tamaño de vista previa"><button type="button" [class.is-active]="previewDevice() === 'movil'" (click)="previewDevice.set('movil')" aria-label="Vista móvil de 390 por 844 píxeles"><i class="bi bi-phone"></i></button><button type="button" [class.is-active]="previewDevice() === 'tablet'" (click)="previewDevice.set('tablet')" aria-label="Vista tableta de 820 por 1180 píxeles"><i class="bi bi-tablet"></i></button><button type="button" [class.is-active]="previewDevice() === 'escritorio'" (click)="previewDevice.set('escritorio')" aria-label="Vista escritorio de 1440 por 900 píxeles"><i class="bi bi-display"></i></button></div></div>
+      <div class="site-preview-frame" [class.is-mobile]="previewDevice() === 'movil'" [class.is-tablet]="previewDevice() === 'tablet'">
+      <div class="site-preview" [class.is-centered]="formularioSitio().heroAlineacion === 'CENTRO'" [class.is-overlay-soft]="formularioSitio().heroOverlay === 'SUAVE'" [class.is-overlay-strong]="formularioSitio().heroOverlay === 'ALTO'" [class.is-theme-minimal]="formularioSitio().tema === 'MINIMAL'" [class.is-theme-elegant]="formularioSitio().tema === 'ELEGANTE'" [class.is-theme-vibrant]="formularioSitio().tema === 'VIBRANTE'" [style.--preview-primary]="formularioSitio().colorPrimario || '#2563eb'" [style.--preview-secondary]="formularioSitio().colorSecundario || '#0f766e'">
         <img [src]="heroPreviewImage()" alt="Vista previa de la portada" class="site-preview__image"><div class="site-preview__overlay"></div>
-        <div class="site-preview__content" [style.font-family]="fuenteCss(formularioSitio().fuenteCuerpo)"><div class="site-preview__brand">{{ formularioSitio().nombreComercial || 'Tu marca' }}</div><div class="site-preview__body"><div class="site-preview__eyebrow">Una experiencia hecha para ti</div><div class="site-preview__title" [style.font-family]="fuenteCss(formularioSitio().fuenteTitulos)">{{ formularioSitio().heroTitulo || formularioSitio().nombreComercial || 'Tu página pública' }}</div><div class="site-preview__copy">{{ formularioSitio().heroSubtitulo || formularioSitio().descripcionCorta || 'Presenta tu negocio, servicios y disponibilidad con una experiencia clara y memorable.' }}</div><div class="site-preview__actions"><span [style.background]="formularioSitio().colorPrimario || '#2563eb'">Reservar ahora</span><span>Contactar</span></div></div></div>
+        <div class="site-preview__content" [style.font-family]="fuenteCss(formularioSitio().fuenteCuerpo)"><div class="site-preview__brand">{{ formularioSitio().nombreComercial || 'Tu marca' }}</div><div class="site-preview__body">@if (formularioSitio().heroEtiqueta) {<div class="site-preview__eyebrow">{{ formularioSitio().heroEtiqueta }}</div>}<div class="site-preview__title" [style.font-family]="fuenteCss(formularioSitio().fuenteTitulos)">{{ formularioSitio().heroTitulo || formularioSitio().nombreComercial || 'Tu página pública' }}</div><div class="site-preview__copy">{{ formularioSitio().heroSubtitulo || formularioSitio().descripcionCorta || 'Presenta tu negocio, servicios y disponibilidad con una experiencia clara y memorable.' }}</div><div class="site-preview__actions"><span [style.background]="formularioSitio().colorPrimario || '#2563eb'">{{ formularioSitio().heroTextoCta || 'Agenda' }}</span>@if (formularioSitio().heroMostrarWhatsapp && formularioSitio().heroAccionCta !== 'WHATSAPP') {<span>WhatsApp</span>}</div></div></div>
+      </div>
       </div>
       <div class="preview-meta"><span><i class="bi bi-phone"></i> Responsive</span><span><i class="bi bi-lightning-charge"></i> Actualización en vivo</span></div>
     </aside>

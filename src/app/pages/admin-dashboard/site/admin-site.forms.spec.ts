@@ -2,14 +2,19 @@ import { describe, expect, it } from 'vitest';
 import { construirPayloadSitio, crearFormularioSitio } from './admin-site.forms';
 
 describe('admin site forms', () => {
-  it('crea un formulario neutral sin imponer tema visual', () => {
+  it('crea un formulario con valores compatibles para la personalizacion', () => {
     expect(crearFormularioSitio(null, 'Empresa', 'empresa')).toEqual(expect.objectContaining({
       slug: 'empresa',
       nombreComercial: 'Empresa',
       colorPrimario: null,
       fuenteTitulos: null,
       heroImagenUrl: null,
-      tema: null
+      tema: 'BASE',
+      menuEstilo: 'FLOTANTE',
+      heroAlineacion: 'IZQUIERDA',
+      inicioOrdenSecciones: 'CONTACTO_SERVICIOS',
+      inicioTextoReservar: 'Reservar',
+      footerMostrarContacto: true
     }));
   });
 
@@ -19,13 +24,17 @@ describe('admin site forms', () => {
       slug: ' negocio ',
       nombreComercial: ' Mi negocio ',
       dominioPrincipal: ' negocio.mx ',
-      descripcionCorta: '  '
+      descripcionCorta: '  ',
+      seoTitulo: '  Agenda en Puebla  ',
+      footerTexto: '  Atención personalizada  '
     });
     expect(payload).toEqual(expect.objectContaining({
       slug: 'negocio',
       nombreComercial: 'Mi negocio',
       dominioPrincipal: 'negocio.mx',
-      descripcionCorta: null
+      descripcionCorta: null,
+      seoTitulo: 'Agenda en Puebla',
+      footerTexto: 'Atención personalizada'
     }));
   });
 });

@@ -20,6 +20,11 @@
   text-decoration: none;
 }
 
+.whatsapp-float i {
+  font-size: 2rem;
+  line-height: 1;
+}
+
 .whatsapp-float:hover {
   transform: scale(1.1);
   background-color: #128c7e;
@@ -71,10 +76,7 @@
     padding: 10px;
   }
 
-  .whatsapp-float img {
-    width: 30px;
-    height: 30px;
-  }
+  .whatsapp-float i { font-size: 1.75rem; }
 
   .chatbot-wrapper {
     width: calc(100vw - 1.5rem);

@@ -289,6 +289,8 @@
 /* Tenant footer uses a single surface and only configured business information. */
 .site-footer:not(.site-footer--marketing) { background: #fff; border-top: 1px solid #e2e7eb; padding: 2.5rem 0; }
 .site-footer:not(.site-footer--marketing) .footer-grid { grid-template-columns: minmax(0, 1.4fr) minmax(0, .75fr) minmax(0, 1fr); gap: 3rem; }
+.site-footer:not(.site-footer--marketing) .footer-grid.footer-grid--one { grid-template-columns: minmax(0, 1fr); }
+.site-footer:not(.site-footer--marketing) .footer-grid.footer-grid--two { grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); }
 .site-footer:not(.site-footer--marketing) .footer-brand-panel,
 .site-footer:not(.site-footer--marketing) .footer-links-panel { min-width: 0; border: 0; padding: 0; border-radius: 0; background: transparent; box-shadow: none; }
 .site-footer:not(.site-footer--marketing) .footer-brand-row { align-items: start; }
@@ -307,4 +309,4 @@
 .site-footer:not(.site-footer--marketing) .footer-bottom { margin-top: 2rem; border-top: 1px solid #e2e7eb; padding-top: 1rem; }
 @media (max-width: 991.98px) { .site-footer:not(.site-footer--marketing) { padding-bottom: calc(7rem + env(safe-area-inset-bottom)); } .site-footer:not(.site-footer--marketing) .footer-grid { gap: 1.5rem; } }
 @media (max-width: 767.98px) { .site-footer:not(.site-footer--marketing) .footer-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } .site-footer:not(.site-footer--marketing) .footer-brand-panel { grid-column: 1 / -1; } }
-@media (max-width: 399.98px) { .site-footer:not(.site-footer--marketing) .footer-grid { grid-template-columns: minmax(0, 1fr); } .site-footer:not(.site-footer--marketing) .footer-links-list { display: flex; flex-wrap: wrap; gap: 0 1.25rem; } }
+@media (max-width: 399.98px) { .site-footer:not(.site-footer--marketing) .footer-grid, .site-footer:not(.site-footer--marketing) .footer-grid.footer-grid--two { grid-template-columns: minmax(0, 1fr); } .site-footer:not(.site-footer--marketing) .footer-links-list { display: flex; flex-wrap: wrap; gap: 0 1.25rem; } }

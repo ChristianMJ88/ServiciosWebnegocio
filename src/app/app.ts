@@ -129,6 +129,12 @@ export class App {
     root.style.setProperty('--primary-shadow', `${primario}26`);
     root.style.setProperty('--tenant-heading-font', this.resolverFuenteCss(tenant?.fuenteTitulos || 'JAKARTA'));
     root.style.setProperty('--tenant-body-font', this.resolverFuenteCss(tenant?.fuenteCuerpo || 'INTER'));
+    root.dataset['tenantTheme'] = this.normalizarTema(tenant?.tema);
+  }
+
+  private normalizarTema(valor?: string | null): string {
+    const tema = (valor || '').trim().toUpperCase();
+    return ['BASE', 'MINIMAL', 'ELEGANTE', 'VIBRANTE'].includes(tema) ? tema : 'BASE';
   }
 
   private resolverFuenteCss(fuente: string): string {

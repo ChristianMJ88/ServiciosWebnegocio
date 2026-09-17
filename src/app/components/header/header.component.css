@@ -184,6 +184,10 @@
   flex: 1 1 auto;
 }
 
+.header-menu-backdrop {
+  display: none;
+}
+
 .header-link::after {
   content: '';
   position: absolute;
@@ -295,6 +299,7 @@
   }
 
   .header-shell {
+    z-index: 2;
     border-radius: 14px;
     padding: 0.55rem 0.8rem;
   }
@@ -302,6 +307,7 @@
   .header-collapse {
     display: none;
     position: absolute;
+    z-index: 2;
     top: calc(100% + 0.7rem);
     left: 0;
     right: 0;
@@ -317,6 +323,26 @@
 
   .header-collapse--open {
     display: block;
+  }
+
+  .header-menu-backdrop {
+    position: fixed;
+    inset: var(--tenant-header-height, 72px) 0 0;
+    z-index: 1;
+    display: block;
+    width: 100%;
+    padding: 0;
+    border: 0;
+    background: rgba(15, 23, 42, .42);
+    backdrop-filter: blur(3px);
+    touch-action: none;
+    animation: headerBackdropIn 180ms ease;
+  }
+
+  .brand-lockup,
+  .header-toggler {
+    position: relative;
+    z-index: 3;
   }
 
   .header-toggler {
@@ -409,6 +435,11 @@
     opacity: 1;
     transform: translateY(0);
   }
+}
+
+@keyframes headerBackdropIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
 /* Navegación móvil de la landing oscura de Fluora. */
@@ -527,6 +558,22 @@
 .site-header--tenant.site-header--detached {
   background: transparent;
   backdrop-filter: none;
+}
+
+.site-header--tenant.site-header--solid,
+.site-header--tenant.site-header--solid.site-header--over-hero,
+.site-header--tenant.site-header--solid.site-header--detached {
+  background: color-mix(in srgb, var(--tenant-primary) 3%, rgba(248, 250, 252, .98));
+  border-bottom: 1px solid color-mix(in srgb, var(--tenant-primary) 10%, #e2e8f0);
+  backdrop-filter: blur(18px);
+}
+
+.site-header--tenant.site-header--solid .header-shell {
+  width: min(100% - 1rem, 1200px);
+  border-color: transparent;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
 }
 
 .site-header--tenant .header-shell {

@@ -12,7 +12,7 @@
 
             <div class="contact-page__chips mb-4">
               <span class="contact-page__chip">Respuesta rápida</span>
-              @if (tenantContext.whatsapp()) { <span class="contact-page__chip">WhatsApp disponible</span> }
+              @if (tenantContext.whatsappHabilitado()) { <span class="contact-page__chip">WhatsApp disponible</span> }
               <span class="contact-page__chip">Atención personalizada</span>
             </div>
 
@@ -33,7 +33,7 @@
                   <i class="bi bi-telephone"></i>
                 </div>
                 <div>
-                  <h2 class="h5 fw-bold contact-page__heading mb-1">Teléfono y WhatsApp</h2>
+                  <h2 class="h5 fw-bold contact-page__heading mb-1">{{ tenantContext.whatsappHabilitado() ? 'Teléfono y WhatsApp' : 'Teléfono' }}</h2>
                   <p class="contact-page__copy mb-2">{{ tenantContext.telefono() }}</p>
                   <a [href]="tenantContext.telefonoHref()" class="contact-info-card__link">Llamar ahora</a>
                 </div>
@@ -59,7 +59,7 @@
                   <p class="contact-page__copy mb-0">Ideal para confirmar disponibilidad, resolver dudas rápidas o ayudarte a elegir el servicio adecuado.</p>
                 </div>
                 <div class="contact-actions__buttons">
-                  @if (tenantContext.whatsapp()) { <a [href]="tenantContext.whatsappHref()" target="_blank" rel="noreferrer" class="btn btn-primary rounded-pill">
+                  @if (tenantContext.whatsappHabilitado()) { <a [href]="tenantContext.whatsappHref()" target="_blank" rel="noreferrer" class="btn btn-primary rounded-pill">
                     <i class="bi bi-whatsapp me-2"></i>WhatsApp
                   </a> }
                   @if (tenantContext.correo()) { <a [href]="tenantContext.correoHref()" class="btn btn-outline-light rounded-pill">

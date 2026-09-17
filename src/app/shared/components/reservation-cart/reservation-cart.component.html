@@ -5,7 +5,7 @@
     <ul class="cart-items">
       @for (service of services(); track service.id) {
         <li>
-          <div><strong>{{ service.nombre }}</strong><span>{{ service.duracionMinutos }} min · {{ service.precio | appMoney:service.moneda:0:2 }}</span></div>
+          <div><strong>{{ service.nombre }}</strong><span>{{ service.duracionMinutos }} min · {{ service.precio | appMoney:service.moneda:2:2 }}</span></div>
           <button type="button" class="cart-remove" [attr.aria-label]="'Quitar ' + service.nombre" (click)="remove.emit(service.id)"><i class="bi bi-x-lg" aria-hidden="true"></i></button>
         </li>
       }
@@ -15,7 +15,7 @@
       @if (date()) { <div><dt>Fecha</dt><dd>{{ date() }}</dd></div> }
       @if (time()) { <div><dt>Horario</dt><dd>{{ time() }}</dd></div> }
       @for (total of totals(); track total.currency) {
-        <div class="cart-total"><dt>Total {{ total.currency }}</dt><dd>{{ total.amount | appMoney:total.currency:0:2 }}</dd></div>
+        <div class="cart-total"><dt>Total {{ total.currency }}</dt><dd>{{ total.amount | appMoney:total.currency:2:2 }}</dd></div>
       }
     </dl>
     <p class="cart-note">El horario se confirma al completar la reserva.</p>
@@ -29,7 +29,7 @@
 <div class="cart-dock">
   <button type="button" class="cart-dock-summary" aria-haspopup="dialog" (click)="open()">
     <span>Tu cita · {{ services().length }} servicio{{ services().length === 1 ? '' : 's' }} <i class="bi bi-chevron-up" aria-hidden="true"></i></span>
-    <strong aria-live="polite">@for (total of totals(); track total.currency) { <span>{{ total.amount | appMoney:total.currency:0:2 }}</span> } @empty { Elige tus servicios }</strong>
+    <strong aria-live="polite">@for (total of totals(); track total.currency) { <span>{{ total.amount | appMoney:total.currency:2:2 }}</span> } @empty { Elige tus servicios }</strong>
   </button>
   <button type="button" class="cart-continue" [disabled]="disabled() || !services().length" (click)="continue()">{{ actionLabel() }} <i class="bi bi-arrow-right" aria-hidden="true"></i></button>
 </div>

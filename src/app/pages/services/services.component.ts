@@ -244,14 +244,20 @@ export class ServicesComponent implements OnInit {
   }
 
   whatsappServicioHref(): string {
-    const negocio = this.catalogo()?.nombreComercial || this.tenantContext.nombreComercial();
     const servicios = this.serviciosSeleccionados();
-    const mensaje = servicios.length
-      ? `Hola, quiero reservar ${servicios.map(servicio => servicio.nombre).join(', ')} en ${negocio}.`
+    const seleccion = servicios.length
+      ? servicios.map(servicio => servicio.nombre)
       : this.servicioSeleccionado()
-        ? `Hola, quiero reservar ${this.servicioSeleccionado()!.nombre} en ${negocio}.`
-      : `Hola, quiero reservar una cita en ${negocio}.`;
-    return this.tenantContext.whatsappHref(mensaje);
+        ? [this.servicioSeleccionado()!.nombre]
+        : [];
+
+    if (!seleccion.length) {
+      return this.tenantContext.whatsappHref();
+    }
+
+    return this.tenantContext.whatsappHref(
+      `${this.tenantContext.whatsappMensaje()}\nServicios seleccionados: ${seleccion.join(', ')}.`
+    );
   }
 
   private sincronizarServicioSeleccionado() {

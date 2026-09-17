@@ -38,6 +38,56 @@
   --tenant-secondary: #0f766e;
   --tenant-heading-font: Inter, "SF Pro Display", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   --tenant-body-font: Inter, "SF Pro Text", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --tenant-card-radius: 22px;
+  --tenant-control-radius: 12px;
+  --tenant-card-shadow: 0 18px 45px rgba(30, 41, 59, 0.07);
+}
+
+html[data-tenant-theme='MINIMAL'] {
+  --tenant-card-radius: 10px;
+  --tenant-control-radius: 7px;
+  --tenant-card-shadow: 0 1px 0 rgba(15, 23, 42, .08);
+}
+
+html[data-tenant-theme='ELEGANTE'] {
+  --tenant-card-radius: 30px;
+  --tenant-control-radius: 999px;
+  --tenant-card-shadow: 0 24px 60px color-mix(in srgb, var(--tenant-primary) 10%, rgba(15, 23, 42, .08));
+}
+
+html[data-tenant-theme='VIBRANTE'] {
+  --tenant-card-radius: 24px;
+  --tenant-control-radius: 14px;
+  --tenant-card-shadow: 0 20px 48px color-mix(in srgb, var(--tenant-primary) 18%, transparent);
+}
+
+html[data-tenant-theme] .site-header--tenant .header-shell,
+html[data-tenant-theme] .group-section,
+html[data-tenant-theme] .quick-reserve__band,
+html[data-tenant-theme] .service-feature,
+html[data-tenant-theme] .booking-card {
+  border-radius: var(--tenant-card-radius);
+  box-shadow: var(--tenant-card-shadow);
+}
+
+html[data-tenant-theme] .header-button,
+html[data-tenant-theme] .home-hero__button,
+html[data-tenant-theme] .quick-reserve__button,
+html[data-tenant-theme] .service-card__action-btn {
+  border-radius: var(--tenant-control-radius);
+}
+
+html[data-tenant-theme='MINIMAL'] .service-card,
+html[data-tenant-theme='MINIMAL'] .subgroup-section,
+html[data-tenant-theme='MINIMAL'] .service-feature {
+  border-radius: 10px;
+  box-shadow: none;
+}
+
+html[data-tenant-theme='VIBRANTE'] .home-hero__button--primary,
+html[data-tenant-theme='VIBRANTE'] .quick-reserve__button--primary,
+html[data-tenant-theme='VIBRANTE'] .header-button {
+  background: linear-gradient(135deg, var(--tenant-primary), var(--tenant-secondary));
 }
 
 *,

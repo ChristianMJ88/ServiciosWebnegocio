@@ -41,13 +41,21 @@ export class AdminSiteSectionComponent {
   readonly etiquetaAccionAuditoriaConfiguracion = input.required<(accion: string) => string>();
 
   readonly save = output<void>();
-  readonly seccionActiva = signal<'identidad' | 'apariencia' | 'portada' | 'contacto' | 'publicacion'>('identidad');
+  readonly seccionActiva = signal<'identidad' | 'apariencia' | 'navegacion' | 'portada' | 'contacto' | 'seo_footer' | 'publicacion'>('identidad');
+  readonly previewDevice = signal<'movil' | 'tablet' | 'escritorio'>('escritorio');
+  readonly previewDimensions = computed(() => ({
+    movil: '390 × 844 px',
+    tablet: '820 × 1180 px',
+    escritorio: '1440 × 900 px'
+  })[this.previewDevice()]);
 
   readonly secciones = [
     { id: 'identidad' as const, label: 'Identidad', icon: 'bi bi-shop' },
     { id: 'apariencia' as const, label: 'Colores y tipografía', icon: 'bi bi-palette2' },
+    { id: 'navegacion' as const, label: 'Menú', icon: 'bi bi-menu-button-wide' },
     { id: 'portada' as const, label: 'Portada', icon: 'bi bi-image' },
     { id: 'contacto' as const, label: 'Contacto y redes', icon: 'bi bi-chat-dots' },
+    { id: 'seo_footer' as const, label: 'SEO y footer', icon: 'bi bi-search' },
     { id: 'publicacion' as const, label: 'Dominio y publicación', icon: 'bi bi-globe2' }
   ];
 
@@ -70,6 +78,20 @@ export class AdminSiteSectionComponent {
     { value: 'PLAYFAIR', label: 'Playfair Display' },
     { value: 'MANROPE', label: 'Manrope' },
     { value: 'SYSTEM', label: 'Sistema' }
+  ];
+
+  readonly temasDisponibles = [
+    { value: 'BASE', label: 'Base', description: 'Equilibrado y versátil' },
+    { value: 'MINIMAL', label: 'Minimalista', description: 'Limpio y directo' },
+    { value: 'ELEGANTE', label: 'Elegante', description: 'Suave y editorial' },
+    { value: 'VIBRANTE', label: 'Vibrante', description: 'Color y energía' }
+  ];
+
+  readonly accionesDisponibles = [
+    { value: 'AGENDAR', label: 'Abrir agenda' },
+    { value: 'SERVICIOS', label: 'Ver servicios' },
+    { value: 'CONTACTO', label: 'Ir a contacto' },
+    { value: 'WHATSAPP', label: 'Abrir WhatsApp' }
   ];
 
   fuenteCss(valor?: string | null): string {

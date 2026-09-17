@@ -1,5 +1,6 @@
 .contact-page {
   position: relative;
+  overflow: clip;
   background:
     radial-gradient(circle at top left, rgba(214, 170, 183, 0.14), transparent 26%),
     radial-gradient(circle at bottom right, rgba(156, 182, 170, 0.12), transparent 24%),

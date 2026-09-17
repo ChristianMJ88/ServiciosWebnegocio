@@ -11,22 +11,23 @@
 }
 
 <!-- Botón de WhatsApp Flotante -->
-@if (mostrarChromePublico() && tenantContext.activo() && tenantContext.whatsapp() && !publicReservationPage()) {
+@if (mostrarChromePublico() && tenantContext.activo() && tenantContext.whatsappHabilitado() && !publicReservationPage()) {
   <a [href]="tenantContext.whatsappHref()" class="whatsapp-float shadow-lg" target="_blank" rel="noreferrer" title="Contáctanos por WhatsApp">
-    <img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg" alt="WhatsApp" width="35" height="35" />
+    <i class="bi bi-whatsapp" aria-hidden="true"></i>
+    <span class="visually-hidden">WhatsApp</span>
   </a>
 }
 
 <!-- Chatbot Flotante -->
-@if (mostrarChromePublico() && tenantContext.activo() && !publicReservationPage()) {
+@if (mostrarChromePublico() && tenantContext.activo() && tenantContext.chatHabilitado() && !publicReservationPage()) {
   <div class="chatbot-wrapper shadow-lg" [class.open]="isChatOpen()">
     <div class="chat-header d-flex justify-content-between align-items-center px-3 py-2" (click)="toggleChat()">
-      <span class="fw-bold">¿Dudas? Chat con nosotros</span>
+      <span class="fw-bold">{{ tenantContext.chatTitulo() }}</span>
       <span class="chat-toggle-icon">{{ isChatOpen() ? '−' : '+' }}</span>
     </div>
     @if (isChatOpen()) {
       <div class="chat-body p-3 bg-white">
-        <p class="mb-3">Hola 👋 ¿En qué podemos ayudarte?</p>
+        <p class="mb-3">{{ tenantContext.chatSaludo() }}</p>
         <div class="d-grid gap-2 mb-3">
           <button class="btn btn-outline-primary btn-sm" (click)="clickChatOption('precios')">Ver Precios</button>
           <button class="btn btn-outline-primary btn-sm" (click)="clickChatOption('citas')">¿Cómo agendar?</button>

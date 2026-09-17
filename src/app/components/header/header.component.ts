@@ -37,11 +37,17 @@ export class HeaderComponent {
   readonly navbarIntegradoHero = computed(() => this.fluoraHomeActiva() && !this.navbarCondensed());
   readonly navbarDesprendido = computed(() => this.tenantHomeActiva() || (this.fluoraHomeActiva() && this.navbarCondensed()));
   readonly menuDesprendido = computed(() => this.mobileMenuOpen() && this.navbarDesprendido());
+  readonly menuSolido = computed(() => this.tenantActivo() && this.tenantContext.menuEstilo() === 'SOLIDO');
   readonly homeLink = computed(() => this.tenantActivo() ? this.tenantContext.routeFor() : '/');
   readonly servicesLink = computed(() => this.tenantActivo() ? this.tenantContext.routeFor('servicios') : '/#funcionalidades');
   readonly contactLink = computed(() => this.tenantActivo() ? this.tenantContext.routeFor('contacto') : '/#experiencias');
   readonly registerLink = computed(() => this.tenantActivo() ? this.tenantContext.routeFor('registro') : '/registro');
-  readonly ctaLink = computed(() => this.tenantActivo() ? this.tenantContext.routeFor('agendar') : '/registro');
+  readonly ctaLink = computed(() => this.tenantActivo()
+    ? this.tenantContext.actionRoute(this.tenantContext.menuAccionCta())
+    : '/registro');
+  readonly ctaWhatsapp = computed(() => this.tenantActivo()
+    && this.tenantContext.menuAccionCta() === 'WHATSAPP'
+    && this.tenantContext.whatsappHabilitado());
   readonly accessHref = computed(() => this.platformHost.appUrl('/acceso'));
   readonly marketingHomeHref = computed(() => this.platformHost.marketingUrl('/'));
   readonly featuresHref = computed(() => this.platformHost.marketingUrl('/#producto'));
@@ -75,6 +81,11 @@ export class HeaderComponent {
     if (typeof window !== 'undefined' && window.innerWidth >= 992) {
       this.cerrarMenuMovil();
     }
+  }
+
+  @HostListener('document:keydown.escape')
+  onEscape() {
+    this.cerrarMenuMovil();
   }
 
   logout() {

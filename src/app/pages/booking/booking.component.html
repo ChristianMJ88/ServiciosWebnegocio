@@ -129,7 +129,7 @@
                             @for (service of filteredServices(); track service.id) {
                               <article class="booking-service" [class.is-selected]="isServiceSelected(service.id)">
                                 <div class="booking-service__copy">@if (serviceCategoryLabel(service)) { <small>{{ serviceCategoryLabel(service) }}</small> }<h3>{{ service.nombre }}</h3>@if (service.descripcion) { <p>{{ service.descripcion }}</p> }<span>{{ service.duracionMinutos }} min</span></div>
-                                <div class="booking-service__action"><strong>{{ service.precio | appMoney:service.moneda:0:2 }}</strong><button type="button" [attr.aria-pressed]="isServiceSelected(service.id)" [attr.aria-label]="(isServiceSelected(service.id) ? 'Quitar ' : 'Agregar ') + service.nombre" (click)="toggleService(service)"><i class="bi" [class.bi-plus-lg]="!isServiceSelected(service.id)" [class.bi-check2]="isServiceSelected(service.id)" aria-hidden="true"></i>{{ isServiceSelected(service.id) ? 'Agregado' : 'Agregar' }}</button></div>
+                                <div class="booking-service__action"><strong>{{ service.precio | appMoney:service.moneda:2:2 }}</strong><button type="button" [attr.aria-pressed]="isServiceSelected(service.id)" [attr.aria-label]="(isServiceSelected(service.id) ? 'Quitar ' : 'Agregar ') + service.nombre" (click)="toggleService(service)"><i class="bi" [class.bi-plus-lg]="!isServiceSelected(service.id)" [class.bi-check2]="isServiceSelected(service.id)" aria-hidden="true"></i>{{ isServiceSelected(service.id) ? 'Agregado' : 'Agregar' }}</button></div>
                               </article>
                             } @empty {
                               <p class="booking-inline-note" role="status">{{ serviceSearch() ? 'No encontramos servicios con ese nombre. Prueba otra búsqueda.' : 'No hay servicios disponibles en esta selección.' }}</p>
@@ -423,7 +423,7 @@
                                       }
                                     </div>
                                     <div class="itinerary-card__footer">
-                                      <span>{{ itinerary.totalPrecio | appMoney:(selectedServices()[0]?.moneda || 'MXN'):0:2 }}</span>
+                                      <span>{{ itinerary.totalPrecio | appMoney:(selectedServices()[0]?.moneda || 'MXN'):2:2 }}</span>
                                       @if (itinerary.usaMultiplesStaff) {
                                         <small>Atención combinada</small>
                                       }
@@ -479,7 +479,7 @@
                             </div>
                             <div class="booking-summary-grid__item">
                               <div class="small booking-meta-label">Total</div>
-                              <div class="booking-meta-value fw-semibold">{{ selectedItinerary()?.totalPrecio | appMoney:(selectedServices()[0]?.moneda || 'MXN'):0:2 }}</div>
+                              <div class="booking-meta-value fw-semibold">{{ selectedItinerary()?.totalPrecio | appMoney:(selectedServices()[0]?.moneda || 'MXN'):2:2 }}</div>
                             </div>
                           </div>
                         </div>
@@ -493,7 +493,7 @@
                                 </div>
                                 <div class="booking-itinerary-summary__side text-end">
                                   <strong>{{ item.slot.hora }}</strong>
-                                  <span>{{ item.servicio.precio | appMoney:item.servicio.moneda:0:2 }}</span>
+                                  <span>{{ item.servicio.precio | appMoney:item.servicio.moneda:2:2 }}</span>
                                 </div>
                               </article>
                             }
@@ -597,7 +597,7 @@
           <div class="col-lg-4 col-xl-4 booking-cart-column">
             <aside class="booking-aside">
               <app-reservation-cart [services]="selectedServices()" [branch]="selectedBranch?.nombre || ''" [date]="selectedDate() ? (selectedDate() | date:'dd MMM':'':'es') || '' : ''" [time]="selectedSlot?.hora ? selectedSlot!.hora + ' – ' + itineraryEndHour(selectedItinerary()) : ''" [actionLabel]="cartActionLabel()" [disabled]="isSubmitting() || loadingCatalog()" (remove)="removeSelectedService($event)" (proceed)="continueBooking()" />
-              @if (tenantContext.whatsapp()) {
+              @if (tenantContext.whatsappHabilitado()) {
               <div class="booking-aside__card booking-aside__contact">
                 <span class="booking-aside__label">Ayuda rápida</span>
                 <h3 class="h5 booking-section-title mb-2">¿Necesitas ayuda para decidir?</h3>

@@ -8,7 +8,7 @@ export class MoneyDisplayPipe implements PipeTransform {
   transform(
     value: number | string | null | undefined,
     currency = 'MXN',
-    minimumFractionDigits = 0,
+    minimumFractionDigits = 2,
     maximumFractionDigits = minimumFractionDigits
   ): string {
     const numericValue = typeof value === 'string' ? Number(value) : value;

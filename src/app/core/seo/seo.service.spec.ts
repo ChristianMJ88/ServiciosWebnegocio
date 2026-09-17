@@ -71,4 +71,17 @@ describe('SeoService', () => {
     expect(document.querySelector<HTMLMetaElement>('meta[name="robots"]')?.content)
       .toBe('noindex, nofollow');
   });
+
+  it('usa el titulo y la descripcion SEO configurados por el tenant', () => {
+    const service = TestBed.inject(SeoService);
+    service.applyTenant({
+      ...tenant,
+      seoTitulo: 'Manicure profesional en Puebla',
+      seoDescripcion: 'Reserva manicure, gel y diseño de uñas en línea.'
+    }, '/e/nail-art');
+
+    expect(document.title).toBe('Manicure profesional en Puebla');
+    expect(document.querySelector<HTMLMetaElement>('meta[name="description"]')?.content)
+      .toBe('Reserva manicure, gel y diseño de uñas en línea.');
+  });
 });

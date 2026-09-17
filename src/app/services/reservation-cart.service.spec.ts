@@ -29,11 +29,11 @@ describe('Reservation draft boundaries', () => {
 });
 
 describe('Mexican reservation prices', () => {
-  it('puts the currency symbol before the amount and preserves cents', () => {
+  it('puts the currency symbol before the amount and always shows cents', () => {
     const pipe = new MoneyDisplayPipe();
-    expect(pipe.transform(1234.5, 'MXN', 0, 2)).toBe('$1,234.5');
-    expect(pipe.transform(250, 'MXN', 0, 2)).toBe('$250');
-    expect(pipe.transform(250.75, 'MXN', 0, 2)).toBe('$250.75');
-    expect(pipe.transform(250, 'USD', 0, 2)).toContain('USD');
+    expect(pipe.transform(1234.5, 'MXN')).toBe('$1,234.50');
+    expect(pipe.transform(250, 'MXN')).toBe('$250.00');
+    expect(pipe.transform(250.75, 'MXN')).toBe('$250.75');
+    expect(pipe.transform(250, 'USD')).toContain('USD');
   });
 });

@@ -16,6 +16,9 @@ export class FooterComponent {
   readonly tenantContext = inject(TenantContextService);
   readonly platformHost = inject(PlatformHostService);
   readonly tenantActivo = computed(() => this.tenantContext.activo());
+  readonly tenantFooterColumnas = computed(() => 1
+    + (this.tenantContext.footerMostrarNavegacion() ? 1 : 0)
+    + (this.tenantContext.footerMostrarContacto() ? 1 : 0));
   readonly homeLink = computed(() => this.tenantActivo() ? this.tenantContext.routeFor() : '/');
   readonly servicesLink = computed(() => this.tenantActivo() ? this.tenantContext.routeFor('servicios') : '/');
   readonly bookingLink = computed(() => this.tenantActivo() ? this.tenantContext.routeFor('agendar') : '/');

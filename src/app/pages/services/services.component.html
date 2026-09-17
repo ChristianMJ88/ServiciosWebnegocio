@@ -21,7 +21,7 @@
             <i class="bi bi-calendar2-check"></i>
             <span>Agendar ahora</span>
           </a>
-          @if (tenantContext.whatsapp()) {
+          @if (tenantContext.whatsappHabilitado()) {
             <a
               [href]="tenantContext.whatsappHref()"
               target="_blank"
@@ -40,7 +40,7 @@
           <span>{{ catalogo.grupos.length }} categorías</span>
           @if (precioDesde() !== null && sameCurrency(serviciosCatalogo())) {
             <span>
-              Desde {{ precioDesde()! | appMoney:catalogCurrency(serviciosCatalogo()):0:2 }}
+              Desde {{ precioDesde()! | appMoney:catalogCurrency(serviciosCatalogo()):2:2 }}
             </span>
           }
         </div>
@@ -117,7 +117,7 @@
                     <span class="group-pill">{{ totalServiciosGrupo(grupo) }} servicios</span>
                     @if (precioDesdeGrupo(grupo) !== null && sameCurrency(groupServices(grupo))) {
                       <span class="group-pill">
-                        Desde {{ precioDesdeGrupo(grupo)! | appMoney:catalogCurrency(groupServices(grupo)):0:2 }}
+                        Desde {{ precioDesdeGrupo(grupo)! | appMoney:catalogCurrency(groupServices(grupo)):2:2 }}
                       </span>
                     }
                   </div>
@@ -153,7 +153,7 @@
                           <div class="service-card__topline">
                             <span class="service-card__name">{{ servicio.nombre }}</span>
                             <span class="service-card__price">
-                              {{ servicio.precio | appMoney:servicio.moneda:0:2 }}
+                              {{ servicio.precio | appMoney:servicio.moneda:2:2 }}
                             </span>
                           </div>
                           @if (servicio.descripcion) {
@@ -198,7 +198,7 @@
         </div>
         <aside class="services-aside">
           <app-reservation-cart [services]="serviciosSeleccionados()" [branch]="selectedBranch()?.nombre || ''" actionLabel="Elegir fecha" (remove)="quitarServicio($event)" (proceed)="continueBooking()" />
-          @if (tenantContext.whatsapp()) {
+          @if (tenantContext.whatsappHabilitado()) {
             <a class="services-help" [href]="whatsappServicioHref()" target="_blank" rel="noreferrer"><i class="bi bi-whatsapp" aria-hidden="true"></i> ¿Necesitas ayuda para elegir?</a>
           }
         </aside>
@@ -211,9 +211,9 @@
           <span class="services-kicker">Conoce tu servicio</span>
           <h2>{{ servicio.nombre }}</h2>
           <p>{{ servicio.descripcion }}</p>
-          <p><strong>{{ servicio.precio | appMoney:servicio.moneda:0:2 }}</strong> · {{ servicio.duracionMinutos }} min</p>
+          <p><strong>{{ servicio.precio | appMoney:servicio.moneda:2:2 }}</strong> · {{ servicio.duracionMinutos }} min</p>
           @if (servicio.requiereAnticipo) {
-            <p class="services-notice">Anticipo {{ servicio.anticipoValor != null ? (servicio.anticipoTipo === 'PORCENTAJE' ? servicio.anticipoValor + '%' : (servicio.anticipoValor | appMoney:servicio.moneda:0:2)) : 'requerido' }}</p>
+            <p class="services-notice">Anticipo {{ servicio.anticipoValor != null ? (servicio.anticipoTipo === 'PORCENTAJE' ? servicio.anticipoValor + '%' : (servicio.anticipoValor | appMoney:servicio.moneda:2:2)) : 'requerido' }}</p>
           }
           <h3>Equipo disponible</h3>
           @if (cargandoStaff()) { <p role="status">Cargando equipo…</p> }

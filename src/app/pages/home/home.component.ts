@@ -18,7 +18,10 @@ export class HomeComponent implements OnInit {
   private readonly bookingDataService = inject(BookingDataService);
   readonly catalogo = signal<CatalogoServiciosPublico | null>(null);
   readonly cargandoServicios = signal(false);
-  readonly tieneWhatsapp = computed(() => !!this.tenantContext.whatsapp());
+  readonly tieneWhatsapp = computed(() => this.tenantContext.whatsappHabilitado());
+  readonly heroCtaWhatsapp = computed(() =>
+    this.tenantContext.heroAccionCta() === 'WHATSAPP' && this.tieneWhatsapp()
+  );
   readonly gruposDestacados = computed(() => this.catalogo()?.grupos.slice(0, 3) ?? []);
 
   ngOnInit(): void {
@@ -58,7 +61,10 @@ export class HomeComponent implements OnInit {
     return grupo.subgrupos.flatMap(subgrupo => subgrupo.servicios).find(servicio => !!servicio.moneda)?.moneda || 'MXN';
   }
 
-  mensajeWhatsappHero(): string {
-    return `Hola, quiero reservar una cita en ${this.tenantContext.nombreComercial()}.`;
+  ordenSeccion(seccion: 'CONTACTO' | 'SERVICIOS'): number {
+    const serviciosPrimero = this.tenantContext.inicioOrdenSecciones() === 'SERVICIOS_CONTACTO';
+    return seccion === 'SERVICIOS'
+      ? (serviciosPrimero ? 1 : 2)
+      : (serviciosPrimero ? 2 : 1);
   }
 }

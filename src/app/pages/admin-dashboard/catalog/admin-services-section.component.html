@@ -553,7 +553,7 @@
                               }
                               <div class="service-metrics">
                                 <span>{{ servicio.duracionMinutos }} min</span>
-                                <span>{{ servicio.precio | appMoney:(servicio.moneda || 'MXN'):0:0 }}</span>
+                                <span>{{ servicio.precio | appMoney:(servicio.moneda || 'MXN'):2:2 }}</span>
                                 <span>{{ descripcionSucursales(servicio) }}</span>
                                 @if (servicio.requiereAnticipo) {
                                   <span>Anticipo {{ servicio.anticipoTipo || 'FIJO' }}</span>
@@ -606,7 +606,7 @@
                         </div>
                         <div class="service-metrics">
                           <span>{{ servicio.duracionMinutos }} min</span>
-                          <span>{{ servicio.precio | appMoney:(servicio.moneda || 'MXN'):0:0 }}</span>
+                          <span>{{ servicio.precio | appMoney:(servicio.moneda || 'MXN'):2:2 }}</span>
                           <span>{{ descripcionSucursales(servicio) }}</span>
                         </div>
                       </div>
@@ -643,7 +643,7 @@
                 <h6>{{ servicio.nombre }}</h6>
                 <div class="service-metrics">
                   <span>{{ servicio.duracionMinutos }} min</span>
-                  <span>{{ servicio.precio | appMoney:(servicio.moneda || 'MXN'):0:0 }}</span>
+                  <span>{{ servicio.precio | appMoney:(servicio.moneda || 'MXN'):2:2 }}</span>
                 </div>
               </div>
               <div class="services-actions service-item-actions">
