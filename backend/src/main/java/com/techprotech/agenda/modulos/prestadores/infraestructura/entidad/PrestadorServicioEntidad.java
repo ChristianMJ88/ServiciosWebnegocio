@@ -26,6 +26,9 @@ public class PrestadorServicioEntidad {
     @Column(length = 500)
     private String biografia;
 
+    @Column(name = "foto_url", length = 500)
+    private String fotoUrl;
+
     @Column(nullable = false)
     private boolean activo;
 

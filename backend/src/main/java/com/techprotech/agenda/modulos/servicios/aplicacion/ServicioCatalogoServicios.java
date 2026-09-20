@@ -215,6 +215,7 @@ public class ServicioCatalogoServicios {
                         prestador.getSucursalId(),
                         prestador.getNombreMostrar(),
                         prestador.getBiografia(),
+                        prestador.getFotoUrl(),
                         prestador.getColorAgenda()
                 ))
                 .toList();

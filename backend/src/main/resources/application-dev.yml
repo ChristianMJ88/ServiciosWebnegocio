@@ -1,3 +1,7 @@
+spring:
+  config:
+    import: optional:file:.env[.properties]
+
 management:
   health:
     mail:
@@ -7,6 +11,8 @@ server:
   address: 0.0.0.0
 
 aplicacion:
+  autenticacion-social:
+    mostrar-proveedores-no-configurados: ${AUTH_SOCIAL_MOSTRAR_NO_CONFIGURADOS:true}
   invitaciones:
     url-aceptacion: ${INVITACIONES_URL_ACEPTACION:http://localhost:4200/invitacion/aceptar}
   recuperacion-contrasena:

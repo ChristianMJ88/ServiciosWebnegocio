@@ -34,6 +34,10 @@ spring:
           connectiontimeout: ${MAIL_SMTP_CONNECTION_TIMEOUT:5000}
           timeout: ${MAIL_SMTP_TIMEOUT:5000}
           writetimeout: ${MAIL_SMTP_WRITE_TIMEOUT:5000}
+  servlet:
+    multipart:
+      max-file-size: ${CLOUDINARY_MAX_TAMANO_IMAGEN:10MB}
+      max-request-size: ${CLOUDINARY_MAX_TAMANO_REQUEST:12MB}
 
 management:
   endpoints:
@@ -76,6 +80,14 @@ aplicacion:
     microsoft-redirect-uri: ${AUTH_SOCIAL_MICROSOFT_REDIRECT_URI:}
     frontend-registro-url: ${AUTH_SOCIAL_FRONTEND_REGISTRO_URL:}
     frontend-acceso-url: ${AUTH_SOCIAL_FRONTEND_ACCESO_URL:}
+    mostrar-proveedores-no-configurados: ${AUTH_SOCIAL_MOSTRAR_NO_CONFIGURADOS:false}
+  cloudinary:
+    habilitado: ${CLOUDINARY_HABILITADO:true}
+    cloud-name: ${CLOUDINARY_CLOUD_NAME:${CLOUD_NAME:}}
+    api-key: ${CLOUDINARY_API_KEY:}
+    api-secret: ${CLOUDINARY_API_SECRET:}
+    carpeta-raiz: ${CLOUDINARY_CARPETA_RAIZ:Fluora}
+    max-tamano-imagen: ${CLOUDINARY_MAX_TAMANO_IMAGEN:10MB}
   correo-bienvenida:
     soporte: ${CORREO_BIENVENIDA_SOPORTE:contacto@refluora.com}
     url-acceso: ${CORREO_BIENVENIDA_URL_ACCESO:https://app.refluora.com/acceso}

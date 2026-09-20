@@ -5,6 +5,7 @@ public record PerfilStaffResponse(
         Long sucursalId,
         String nombreMostrar,
         String biografia,
+        String fotoUrl,
         String colorAgenda,
         boolean activo
 ) {

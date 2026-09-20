@@ -6,6 +6,14 @@ import { construirPayloadPrestador } from './admin-providers.forms';
 export class AdminProvidersFacade {
   private readonly adminService = inject(AdminService);
 
+  cargarConfiguracionMedia() {
+    return this.adminService.getConfiguracionMediaPrestadores();
+  }
+
+  subirFoto(archivo: File) {
+    return this.adminService.subirImagenPrestador(archivo);
+  }
+
   guardar(id: number | null, formulario: GuardarPrestadorPayload) {
     const payload = construirPayloadPrestador(formulario);
     return id

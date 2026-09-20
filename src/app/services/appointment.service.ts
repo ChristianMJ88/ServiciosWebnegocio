@@ -16,6 +16,7 @@ export interface PrestadorPublico {
   sucursalId: number;
   nombreMostrar: string;
   biografia: string | null;
+  fotoUrl: string | null;
   colorAgenda: string | null;
 }
 

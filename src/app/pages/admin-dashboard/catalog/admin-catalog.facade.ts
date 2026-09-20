@@ -21,6 +21,14 @@ import {
 export class AdminCatalogFacade {
   private readonly adminService = inject(AdminService);
 
+  cargarConfiguracionMedia() {
+    return this.adminService.getConfiguracionMediaCatalogo();
+  }
+
+  subirImagen(archivo: File) {
+    return this.adminService.subirImagenCatalogo(archivo);
+  }
+
   guardarSucursal(id: number | null, formulario: GuardarSucursalPayload) {
     const payload = construirPayloadSucursal(formulario);
     return id

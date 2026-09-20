@@ -533,11 +533,19 @@ public class ServicioAdminCitas {
         configuracion.setHeroTitulo(normalizarOpcional(request.heroTitulo()));
         configuracion.setHeroSubtitulo(normalizarOpcional(request.heroSubtitulo()));
         configuracion.setHeroImagenUrl(normalizarOpcional(request.heroImagenUrl()));
+        configuracion.setHeroTipoMedio(normalizarOpcion(request.heroTipoMedio(), "IMAGEN", Set.of("IMAGEN", "VIDEO")));
+        configuracion.setHeroVideoUrl(normalizarOpcional(request.heroVideoUrl()));
+        configuracion.setHeroAltura(normalizarOpcion(request.heroAltura(), "PANTALLA", Set.of("COMPACTA", "MEDIA", "PANTALLA")));
         configuracion.setHeroEtiqueta(normalizarOpcional(request.heroEtiqueta()));
         configuracion.setHeroAlineacion(normalizarOpcion(request.heroAlineacion(), "IZQUIERDA", Set.of("IZQUIERDA", "CENTRO")));
         configuracion.setHeroOverlay(normalizarOpcion(request.heroOverlay(), "MEDIO", Set.of("SUAVE", "MEDIO", "ALTO")));
         configuracion.setHeroTextoCta(valorOpcionalConFallback(request.heroTextoCta(), "Agenda"));
         configuracion.setHeroAccionCta(normalizarAccionSitio(request.heroAccionCta(), "AGENDAR"));
+        configuracion.setHeroEnlaceCta(normalizarOpcional(request.heroEnlaceCta()));
+        configuracion.setHeroTextoSecundario(valorOpcionalConFallback(request.heroTextoSecundario(), "WhatsApp"));
+        configuracion.setHeroAccionSecundaria(normalizarAccionSitio(request.heroAccionSecundaria(), "WHATSAPP"));
+        configuracion.setHeroEnlaceSecundario(normalizarOpcional(request.heroEnlaceSecundario()));
+        configuracion.setHeroMostrarSecundario(request.heroMostrarSecundario() == null || request.heroMostrarSecundario());
         configuracion.setHeroMostrarWhatsapp(request.heroMostrarWhatsapp() == null || request.heroMostrarWhatsapp());
         configuracion.setInicioTituloServicios(normalizarOpcional(request.inicioTituloServicios()));
         configuracion.setInicioDescripcionServicios(normalizarOpcional(request.inicioDescripcionServicios()));
@@ -2341,11 +2349,19 @@ public class ServicioAdminCitas {
                 configuracion.getHeroTitulo(),
                 configuracion.getHeroSubtitulo(),
                 configuracion.getHeroImagenUrl(),
+                configuracion.getHeroTipoMedio(),
+                configuracion.getHeroVideoUrl(),
+                configuracion.getHeroAltura(),
                 configuracion.getHeroEtiqueta(),
                 configuracion.getHeroAlineacion(),
                 configuracion.getHeroOverlay(),
                 configuracion.getHeroTextoCta(),
                 configuracion.getHeroAccionCta(),
+                configuracion.getHeroEnlaceCta(),
+                configuracion.getHeroTextoSecundario(),
+                configuracion.getHeroAccionSecundaria(),
+                configuracion.getHeroEnlaceSecundario(),
+                configuracion.isHeroMostrarSecundario(),
                 configuracion.isHeroMostrarWhatsapp(),
                 configuracion.getInicioTituloServicios(),
                 configuracion.getInicioDescripcionServicios(),
@@ -2524,6 +2540,10 @@ public class ServicioAdminCitas {
         configuracion.setHeroOverlay("MEDIO");
         configuracion.setHeroTextoCta("Agenda");
         configuracion.setHeroAccionCta("AGENDAR");
+        configuracion.setHeroTipoMedio("IMAGEN");
+        configuracion.setHeroAltura("PANTALLA");
+        configuracion.setHeroTextoSecundario("WhatsApp");
+        configuracion.setHeroAccionSecundaria("WHATSAPP");
         configuracion.setInicioOrdenSecciones("CONTACTO_SERVICIOS");
         configuracion.setInicioEtiquetaServicios("Servicios");
         configuracion.setInicioTextoVerServicios("Ver servicios");
@@ -2610,7 +2630,7 @@ public class ServicioAdminCitas {
     }
 
     private String normalizarAccionSitio(String valor, String fallback) {
-        return normalizarOpcion(valor, fallback, Set.of("AGENDAR", "SERVICIOS", "CONTACTO", "WHATSAPP"));
+        return normalizarOpcion(valor, fallback, Set.of("AGENDAR", "SERVICIOS", "CONTACTO", "WHATSAPP", "EXTERNO"));
     }
 
     private String normalizarOpcion(String valor, String fallback, Set<String> permitidas) {
@@ -3098,6 +3118,7 @@ public class ServicioAdminCitas {
         prestador.setSucursalId(request.sucursalId());
         prestador.setNombreMostrar(request.nombreMostrar().trim());
         prestador.setBiografia(request.biografia() != null ? request.biografia().trim() : null);
+        prestador.setFotoUrl(normalizarOpcional(request.fotoUrl()));
         prestador.setColorAgenda(request.colorAgenda() != null && !request.colorAgenda().isBlank() ? request.colorAgenda().trim() : "#2563eb");
         prestador.setActivo(request.activo());
     }
@@ -3347,11 +3368,19 @@ public class ServicioAdminCitas {
         snapshot.put("heroTitulo", configuracion.getHeroTitulo());
         snapshot.put("heroSubtitulo", configuracion.getHeroSubtitulo());
         snapshot.put("heroImagenUrl", configuracion.getHeroImagenUrl());
+        snapshot.put("heroTipoMedio", configuracion.getHeroTipoMedio());
+        snapshot.put("heroVideoUrl", configuracion.getHeroVideoUrl());
+        snapshot.put("heroAltura", configuracion.getHeroAltura());
         snapshot.put("heroEtiqueta", configuracion.getHeroEtiqueta());
         snapshot.put("heroAlineacion", configuracion.getHeroAlineacion());
         snapshot.put("heroOverlay", configuracion.getHeroOverlay());
         snapshot.put("heroTextoCta", configuracion.getHeroTextoCta());
         snapshot.put("heroAccionCta", configuracion.getHeroAccionCta());
+        snapshot.put("heroEnlaceCta", configuracion.getHeroEnlaceCta());
+        snapshot.put("heroTextoSecundario", configuracion.getHeroTextoSecundario());
+        snapshot.put("heroAccionSecundaria", configuracion.getHeroAccionSecundaria());
+        snapshot.put("heroEnlaceSecundario", configuracion.getHeroEnlaceSecundario());
+        snapshot.put("heroMostrarSecundario", configuracion.isHeroMostrarSecundario());
         snapshot.put("heroMostrarWhatsapp", configuracion.isHeroMostrarWhatsapp());
         snapshot.put("inicioTituloServicios", configuracion.getInicioTituloServicios());
         snapshot.put("inicioDescripcionServicios", configuracion.getInicioDescripcionServicios());
@@ -3716,6 +3745,7 @@ public class ServicioAdminCitas {
                 usuario.getCorreo(),
                 prestador.getNombreMostrar(),
                 prestador.getBiografia(),
+                prestador.getFotoUrl(),
                 prestador.getColorAgenda(),
                 prestador.isActivo(),
                 serviciosAsignados.stream().map(ServicioEntidad::getId).toList(),

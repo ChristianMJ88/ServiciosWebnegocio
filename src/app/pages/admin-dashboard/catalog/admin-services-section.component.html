@@ -182,10 +182,37 @@
               <mat-label>Descripción</mat-label>
               <textarea matInput rows="2" name="grupoDescripcion" [(ngModel)]="formularioGrupoServicio.descripcion" maxlength="300"></textarea>
             </mat-form-field>
-            <mat-form-field appearance="outline">
-              <mat-label>Imagen</mat-label>
-              <input matInput name="grupoImagenUrl" [(ngModel)]="formularioGrupoServicio.imagenUrl" maxlength="255">
-            </mat-form-field>
+            <div class="catalog-media-field full-width">
+              <div class="catalog-media-preview" [class.is-empty]="!formularioGrupoServicio.imagenUrl">
+                @if (formularioGrupoServicio.imagenUrl) {
+                  <img [src]="formularioGrupoServicio.imagenUrl" alt="Vista previa del grupo">
+                } @else {
+                  <i class="bi bi-image" aria-hidden="true"></i>
+                }
+              </div>
+              <div class="catalog-media-controls">
+                <strong>Imagen del grupo</strong>
+                <span>Representa la categoría en el catálogo público.</span>
+                <div class="catalog-media-actions">
+                  <label class="catalog-upload-button" [class.is-disabled]="subiendoImagen() !== null">
+                    <input type="file" accept="image/jpeg,image/png,image/webp,image/avif" (change)="seleccionarImagen($event, 'grupo')" [disabled]="subiendoImagen() !== null">
+                    <i class="bi bi-cloud-arrow-up" aria-hidden="true"></i>
+                    {{ subiendoImagen() === 'grupo' ? 'Subiendo…' : 'Subir imagen' }}
+                  </label>
+                  <small>{{ configuracionMedia()?.cargaHabilitada ? 'JPG, PNG, WebP o AVIF · máximo ' + megabytes(configuracionMedia()!.maxBytesImagen) + ' MB' : 'Carga pendiente de configurar · la URL sigue disponible' }}</small>
+                </div>
+                <mat-form-field appearance="outline" class="catalog-url-field">
+                  <mat-label>O pega una URL pública</mat-label>
+                  <input matInput name="grupoImagenUrl" [(ngModel)]="formularioGrupoServicio.imagenUrl" maxlength="500">
+                </mat-form-field>
+              </div>
+            </div>
+            @if (mensajeImagen()) {
+              <div class="catalog-media-feedback is-success full-width" role="status">{{ mensajeImagen() }}</div>
+            }
+            @if (errorImagen()) {
+              <div class="catalog-media-feedback is-error full-width" role="alert">{{ errorImagen() }}</div>
+            }
             <mat-form-field appearance="outline">
               <mat-label>Icono</mat-label>
               <input matInput name="grupoIcono" [(ngModel)]="formularioGrupoServicio.icono" maxlength="50">
@@ -357,10 +384,37 @@
               <mat-label>Descripción</mat-label>
               <textarea matInput rows="3" name="servicioDescripcion" [(ngModel)]="formularioServicio.descripcion" maxlength="500"></textarea>
             </mat-form-field>
-            <mat-form-field appearance="outline" class="full-width">
-              <mat-label>Imagen</mat-label>
-              <input matInput name="servicioImagenUrl" [(ngModel)]="formularioServicio.imagenUrl" maxlength="255">
-            </mat-form-field>
+            <div class="catalog-media-field full-width">
+              <div class="catalog-media-preview" [class.is-empty]="!formularioServicio.imagenUrl">
+                @if (formularioServicio.imagenUrl) {
+                  <img [src]="formularioServicio.imagenUrl" alt="Vista previa del servicio">
+                } @else {
+                  <i class="bi bi-image" aria-hidden="true"></i>
+                }
+              </div>
+              <div class="catalog-media-controls">
+                <strong>Imagen del servicio</strong>
+                <span>Ayuda al cliente a identificarlo antes de reservar.</span>
+                <div class="catalog-media-actions">
+                  <label class="catalog-upload-button" [class.is-disabled]="subiendoImagen() !== null">
+                    <input type="file" accept="image/jpeg,image/png,image/webp,image/avif" (change)="seleccionarImagen($event, 'servicio')" [disabled]="subiendoImagen() !== null">
+                    <i class="bi bi-cloud-arrow-up" aria-hidden="true"></i>
+                    {{ subiendoImagen() === 'servicio' ? 'Subiendo…' : 'Subir imagen' }}
+                  </label>
+                  <small>{{ configuracionMedia()?.cargaHabilitada ? 'JPG, PNG, WebP o AVIF · máximo ' + megabytes(configuracionMedia()!.maxBytesImagen) + ' MB' : 'Carga pendiente de configurar · la URL sigue disponible' }}</small>
+                </div>
+                <mat-form-field appearance="outline" class="catalog-url-field">
+                  <mat-label>O pega una URL pública</mat-label>
+                  <input matInput name="servicioImagenUrl" [(ngModel)]="formularioServicio.imagenUrl" maxlength="500">
+                </mat-form-field>
+              </div>
+            </div>
+            @if (mensajeImagen()) {
+              <div class="catalog-media-feedback is-success full-width" role="status">{{ mensajeImagen() }}</div>
+            }
+            @if (errorImagen()) {
+              <div class="catalog-media-feedback is-error full-width" role="alert">{{ errorImagen() }}</div>
+            }
             <div class="form-block-title full-width">Configuración operativa</div>
             <mat-form-field appearance="outline">
               <mat-label>Duración (min)</mat-label>

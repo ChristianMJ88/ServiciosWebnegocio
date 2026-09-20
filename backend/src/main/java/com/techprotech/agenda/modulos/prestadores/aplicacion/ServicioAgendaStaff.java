@@ -73,6 +73,7 @@ public class ServicioAgendaStaff {
                 prestador.getSucursalId(),
                 prestador.getNombreMostrar(),
                 prestador.getBiografia(),
+                prestador.getFotoUrl(),
                 prestador.getColorAgenda(),
                 prestador.isActivo()
         );

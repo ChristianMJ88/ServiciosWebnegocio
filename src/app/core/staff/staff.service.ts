@@ -21,6 +21,7 @@ export interface PerfilStaff {
   sucursalId: number;
   nombreMostrar: string;
   biografia: string | null;
+  fotoUrl: string | null;
   colorAgenda: string | null;
   activo: boolean;
 }

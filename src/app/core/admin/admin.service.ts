@@ -179,6 +179,7 @@ export interface PrestadorAdmin {
   correo: string;
   nombreMostrar: string;
   biografia: string | null;
+  fotoUrl: string | null;
   colorAgenda: string | null;
   activo: boolean;
   servicioIds: number[];
@@ -191,6 +192,7 @@ export interface GuardarPrestadorPayload {
   contrasenaTemporal: string | null;
   nombreMostrar: string;
   biografia: string | null;
+  fotoUrl: string | null;
   colorAgenda: string | null;
   activo: boolean;
   servicioIds: number[];
@@ -363,6 +365,155 @@ export interface ReportePrestadorAdmin {
   ticketPromedio: number;
 }
 
+export interface BloqueSitioAdmin {
+  tipo: string;
+  nombre: string;
+  descripcion: string;
+  icono: string;
+  habilitado: boolean;
+  orden: number;
+  disponible: boolean;
+  superficie: 'BASE' | 'SUAVE' | 'MARCA' | 'CONTRASTE';
+  presentacion: 'ABIERTA' | 'PANEL' | 'BANDA';
+  anchoContenido: 'COMPACTO' | 'NORMAL' | 'AMPLIO';
+  alineacion: 'IZQUIERDA' | 'CENTRO';
+  separador: 'NINGUNO' | 'LINEA' | 'DEGRADADO';
+  espaciado: 'COMPACTO' | 'NORMAL' | 'AMPLIO';
+  etiqueta: string | null;
+  titulo: string | null;
+  descripcionVisual: string | null;
+}
+
+export interface ActualizarBloquesSitioPayload {
+  bloques: Array<Pick<BloqueSitioAdmin,
+    'tipo' | 'habilitado' | 'orden' | 'superficie' | 'presentacion' | 'anchoContenido' |
+    'alineacion' | 'separador' | 'espaciado' | 'etiqueta' | 'titulo' | 'descripcionVisual'>>;
+}
+
+export interface VistaServiciosDestacadosAdmin {
+  codigo: 'TARJETAS' | 'CARRUSEL' | 'LISTA';
+  nombre: string;
+  descripcion: string;
+}
+
+export interface ServicioDestacadoSeleccionAdmin {
+  tipo: 'GRUPO' | 'SUBGRUPO' | 'SERVICIO';
+  referenciaId: number;
+  nombre: string | null;
+  rutaCatalogo: string | null;
+  etiqueta: string | null;
+  orden: number;
+  disponible: boolean;
+}
+
+export interface ServiciosDestacadosAdmin {
+  vista: 'TARJETAS' | 'CARRUSEL' | 'LISTA';
+  mostrarPrecio: boolean;
+  mostrarDuracion: boolean;
+  mostrarDescripcion: boolean;
+  limite: number;
+  seleccionAutomatica: boolean;
+  vistasDisponibles: VistaServiciosDestacadosAdmin[];
+  elementos: ServicioDestacadoSeleccionAdmin[];
+}
+
+export interface ActualizarServiciosDestacadosPayload {
+  vista: string;
+  mostrarPrecio: boolean;
+  mostrarDuracion: boolean;
+  mostrarDescripcion: boolean;
+  limite: number;
+  elementos: Array<Pick<ServicioDestacadoSeleccionAdmin, 'tipo' | 'referenciaId' | 'etiqueta' | 'orden'>>;
+}
+
+export interface PromocionSitioAdmin {
+  id: number | null;
+  titulo: string;
+  descripcion: string | null;
+  imagenUrl: string | null;
+  fechaInicio: string | null;
+  fechaFin: string | null;
+  tipoDescuento: 'PORCENTAJE' | 'PRECIO' | string;
+  valorDescuento: number;
+  moneda: string;
+  textoBoton: string;
+  activa: boolean;
+  vigente: boolean;
+  orden: number;
+  servicioIds: number[];
+  sucursalIds: number[];
+}
+
+export interface ActualizarPromocionesSitioPayload {
+  promociones: Array<Omit<PromocionSitioAdmin, 'id' | 'vigente'>>;
+}
+
+export interface GaleriaImagenSitioAdmin {
+  id: number | null;
+  mediaId: number | null;
+  imagenUrl: string;
+  textoAlternativo: string;
+  titulo: string | null;
+  descripcion: string | null;
+  servicioId: number | null;
+  servicioNombre: string | null;
+  sucursalId: number | null;
+  sucursalNombre: string | null;
+  activa: boolean;
+  orden: number;
+}
+
+export interface GaleriaSitioAdmin {
+  titulo: string;
+  descripcion: string | null;
+  vista: 'CUADRICULA' | 'MOSAICO' | 'CARRUSEL';
+  ampliacionHabilitada: boolean;
+  imagenes: GaleriaImagenSitioAdmin[];
+}
+
+export interface ActualizarGaleriaSitioPayload {
+  titulo: string;
+  descripcion: string | null;
+  vista: string;
+  ampliacionHabilitada: boolean;
+  imagenes: Array<Pick<GaleriaImagenSitioAdmin, 'mediaId' | 'imagenUrl' | 'textoAlternativo' | 'titulo' | 'descripcion' | 'servicioId' | 'sucursalId' | 'activa' | 'orden'>>;
+}
+
+export type IconoBeneficioSitio = 'ESTRELLA' | 'CORAZON' | 'ESCUDO' | 'DESTELLO' | 'RELOJ' | 'PERSONA' | 'HOJA' | 'PREMIO';
+
+export interface BeneficioSitioAdmin {
+  id: number | null;
+  titulo: string;
+  descripcion: string;
+  icono: IconoBeneficioSitio;
+  activo: boolean;
+  orden: number;
+}
+
+export interface ActualizarBeneficiosSitioPayload {
+  beneficios: Array<Pick<BeneficioSitioAdmin, 'titulo' | 'descripcion' | 'icono' | 'activo' | 'orden'>>;
+}
+
+export type CategoriaMediaAdmin = 'GALERIA' | 'COLABORADORES' | 'SERVICIOS' | 'BRANDING';
+
+export interface ConfiguracionMediaAdmin {
+  cargaHabilitada: boolean;
+  maxBytesImagen: number;
+  tiposImagenPermitidos: string[];
+  estructuraCarpetas: string;
+}
+
+export interface ArchivoMediaAdmin {
+  id: number;
+  categoria: CategoriaMediaAdmin;
+  secureUrl: string;
+  formato: string | null;
+  ancho: number | null;
+  alto: number | null;
+  bytes: number;
+  nombreOriginal: string | null;
+}
+
 export interface ConfiguracionSitioAdmin {
   empresaId: number;
   slug: string;
@@ -377,11 +528,19 @@ export interface ConfiguracionSitioAdmin {
   heroTitulo: string | null;
   heroSubtitulo: string | null;
   heroImagenUrl: string | null;
+  heroTipoMedio: string;
+  heroVideoUrl: string | null;
+  heroAltura: string;
   heroEtiqueta: string | null;
   heroAlineacion: string;
   heroOverlay: string;
   heroTextoCta: string | null;
   heroAccionCta: string;
+  heroEnlaceCta: string | null;
+  heroTextoSecundario: string | null;
+  heroAccionSecundaria: string;
+  heroEnlaceSecundario: string | null;
+  heroMostrarSecundario: boolean;
   heroMostrarWhatsapp: boolean;
   inicioTituloServicios: string | null;
   inicioDescripcionServicios: string | null;
@@ -443,11 +602,19 @@ export interface GuardarConfiguracionSitioPayload {
   heroTitulo: string | null;
   heroSubtitulo: string | null;
   heroImagenUrl: string | null;
+  heroTipoMedio: string;
+  heroVideoUrl: string | null;
+  heroAltura: string;
   heroEtiqueta: string | null;
   heroAlineacion: string;
   heroOverlay: string;
   heroTextoCta: string | null;
   heroAccionCta: string;
+  heroEnlaceCta: string | null;
+  heroTextoSecundario: string | null;
+  heroAccionSecundaria: string;
+  heroEnlaceSecundario: string | null;
+  heroMostrarSecundario: boolean;
   heroMostrarWhatsapp: boolean;
   inicioTituloServicios: string | null;
   inicioDescripcionServicios: string | null;
@@ -999,6 +1166,82 @@ export class AdminService {
 
   actualizarConfiguracionSitio(payload: GuardarConfiguracionSitioPayload): Observable<ConfiguracionSitioAdmin> {
     return this.http.patch<ConfiguracionSitioAdmin>(`${environment.apiBaseUrl}/admin/configuracion-sitio`, payload);
+  }
+
+  getBloquesSitio(): Observable<BloqueSitioAdmin[]> {
+    return this.http.get<BloqueSitioAdmin[]>(`${environment.apiBaseUrl}/admin/configuracion-sitio/bloques`);
+  }
+
+  actualizarBloquesSitio(payload: ActualizarBloquesSitioPayload): Observable<BloqueSitioAdmin[]> {
+    return this.http.patch<BloqueSitioAdmin[]>(`${environment.apiBaseUrl}/admin/configuracion-sitio/bloques`, payload);
+  }
+
+  getServiciosDestacadosSitio(): Observable<ServiciosDestacadosAdmin> {
+    return this.http.get<ServiciosDestacadosAdmin>(`${environment.apiBaseUrl}/admin/configuracion-sitio/servicios-destacados`);
+  }
+
+  actualizarServiciosDestacadosSitio(payload: ActualizarServiciosDestacadosPayload): Observable<ServiciosDestacadosAdmin> {
+    return this.http.patch<ServiciosDestacadosAdmin>(`${environment.apiBaseUrl}/admin/configuracion-sitio/servicios-destacados`, payload);
+  }
+
+  getPromocionesSitio(): Observable<PromocionSitioAdmin[]> {
+    return this.http.get<PromocionSitioAdmin[]>(`${environment.apiBaseUrl}/admin/configuracion-sitio/promociones`);
+  }
+
+  actualizarPromocionesSitio(payload: ActualizarPromocionesSitioPayload): Observable<PromocionSitioAdmin[]> {
+    return this.http.patch<PromocionSitioAdmin[]>(`${environment.apiBaseUrl}/admin/configuracion-sitio/promociones`, payload);
+  }
+
+  getGaleriaSitio(): Observable<GaleriaSitioAdmin> {
+    return this.http.get<GaleriaSitioAdmin>(`${environment.apiBaseUrl}/admin/configuracion-sitio/galeria`);
+  }
+
+  actualizarGaleriaSitio(payload: ActualizarGaleriaSitioPayload): Observable<GaleriaSitioAdmin> {
+    return this.http.patch<GaleriaSitioAdmin>(`${environment.apiBaseUrl}/admin/configuracion-sitio/galeria`, payload);
+  }
+
+  getBeneficiosSitio(): Observable<BeneficioSitioAdmin[]> {
+    return this.http.get<BeneficioSitioAdmin[]>(`${environment.apiBaseUrl}/admin/configuracion-sitio/beneficios`);
+  }
+
+  actualizarBeneficiosSitio(payload: ActualizarBeneficiosSitioPayload): Observable<BeneficioSitioAdmin[]> {
+    return this.http.patch<BeneficioSitioAdmin[]>(`${environment.apiBaseUrl}/admin/configuracion-sitio/beneficios`, payload);
+  }
+
+  getConfiguracionMediaSitio(): Observable<ConfiguracionMediaAdmin> {
+    return this.http.get<ConfiguracionMediaAdmin>(`${environment.apiBaseUrl}/admin/configuracion-sitio/media/configuracion`);
+  }
+
+  subirImagenGaleriaSitio(archivo: File): Observable<ArchivoMediaAdmin> {
+    const formulario = new FormData();
+    formulario.append('archivo', archivo, archivo.name);
+    return this.http.post<ArchivoMediaAdmin>(`${environment.apiBaseUrl}/admin/configuracion-sitio/media/imagenes/galeria`, formulario);
+  }
+
+  subirImagenBrandingSitio(archivo: File): Observable<ArchivoMediaAdmin> {
+    const formulario = new FormData();
+    formulario.append('archivo', archivo, archivo.name);
+    return this.http.post<ArchivoMediaAdmin>(`${environment.apiBaseUrl}/admin/configuracion-sitio/media/imagenes/branding`, formulario);
+  }
+
+  getConfiguracionMediaCatalogo(): Observable<ConfiguracionMediaAdmin> {
+    return this.http.get<ConfiguracionMediaAdmin>(`${environment.apiBaseUrl}/admin/catalogo/media/configuracion`);
+  }
+
+  subirImagenCatalogo(archivo: File): Observable<ArchivoMediaAdmin> {
+    const formulario = new FormData();
+    formulario.append('archivo', archivo, archivo.name);
+    return this.http.post<ArchivoMediaAdmin>(`${environment.apiBaseUrl}/admin/catalogo/media/imagenes`, formulario);
+  }
+
+  getConfiguracionMediaPrestadores(): Observable<ConfiguracionMediaAdmin> {
+    return this.http.get<ConfiguracionMediaAdmin>(`${environment.apiBaseUrl}/admin/prestadores/media/configuracion`);
+  }
+
+  subirImagenPrestador(archivo: File): Observable<ArchivoMediaAdmin> {
+    const formulario = new FormData();
+    formulario.append('archivo', archivo, archivo.name);
+    return this.http.post<ArchivoMediaAdmin>(`${environment.apiBaseUrl}/admin/prestadores/media/imagenes`, formulario);
   }
 
   private paramsPeriodo(periodo?: PeriodoReporteAdmin | null): HttpParams {

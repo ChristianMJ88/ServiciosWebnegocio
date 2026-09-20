@@ -1,5 +1,5 @@
 
-import { Component, EventEmitter, Input, Output } from '@angular/core';
+import { Component, EventEmitter, Input, OnInit, Output, inject, signal } from '@angular/core';
 import { CdkDragDrop, DragDropModule, moveItemInArray, transferArrayItem } from '@angular/cdk/drag-drop';
 import { FormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
@@ -11,6 +11,7 @@ import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import {
   CatalogoSugeridoAdmin,
+  ConfiguracionMediaAdmin,
   GrupoServicioAdmin,
   GuardarGrupoServicioPayload,
   ImportarCatalogoSugeridoPayload,
@@ -21,6 +22,8 @@ import {
   SucursalAdmin
 } from '../../../core/admin/admin.service';
 import { MoneyDisplayPipe } from '../../../shared/pipes/money-display.pipe';
+import { AdminCatalogFacade } from './admin-catalog.facade';
+import { finalize } from 'rxjs';
 
 type SubgrupoServicioVista = SubgrupoServicioAdmin & {
   servicios: ServicioAdmin[];
@@ -49,7 +52,8 @@ type GrupoServicioVista = GrupoServicioAdmin & {
   templateUrl: './admin-services-section.component.html',
   styleUrl: './admin-services-section.component.css'
 })
-export class AdminServicesSectionComponent {
+export class AdminServicesSectionComponent implements OnInit {
+  private readonly facade = inject(AdminCatalogFacade);
   @Input({ required: true }) catalogosSugeridos!: CatalogoSugeridoAdmin[];
   @Input({ required: true }) formularioImportarCatalogo!: ImportarCatalogoSugeridoPayload;
   @Input({ required: true }) importandoCatalogoSugerido!: boolean;
@@ -88,6 +92,54 @@ export class AdminServicesSectionComponent {
   activeForm: 'sugerencias' | 'grupo' | 'subgrupo' | 'servicio' = 'servicio';
   collapsedGroupIds = new Set<number>();
   collapsedSubgroupIds = new Set<number>();
+  readonly configuracionMedia = signal<ConfiguracionMediaAdmin | null>(null);
+  readonly subiendoImagen = signal<'grupo' | 'servicio' | null>(null);
+  readonly mensajeImagen = signal<string | null>(null);
+  readonly errorImagen = signal<string | null>(null);
+
+  ngOnInit(): void {
+    this.facade.cargarConfiguracionMedia().subscribe({
+      next: configuracion => this.configuracionMedia.set(configuracion),
+      error: () => this.configuracionMedia.set(null)
+    });
+  }
+
+  seleccionarImagen(evento: Event, destino: 'grupo' | 'servicio'): void {
+    const inputArchivo = evento.target as HTMLInputElement;
+    const archivo = inputArchivo.files?.[0];
+    inputArchivo.value = '';
+    if (!archivo || this.subiendoImagen() !== null) return;
+
+    const configuracion = this.configuracionMedia();
+    this.mensajeImagen.set(null);
+    this.errorImagen.set(null);
+    if (!configuracion?.cargaHabilitada) {
+      this.errorImagen.set('Cloudinary todavía no está configurado. Puedes continuar usando una URL pública.');
+      return;
+    }
+    if (!configuracion.tiposImagenPermitidos.includes(archivo.type)) {
+      this.errorImagen.set('Usa una imagen JPG, PNG, WebP o AVIF.');
+      return;
+    }
+    if (archivo.size > configuracion.maxBytesImagen) {
+      this.errorImagen.set(`La imagen supera el máximo de ${this.megabytes(configuracion.maxBytesImagen)} MB.`);
+      return;
+    }
+
+    this.subiendoImagen.set(destino);
+    this.facade.subirImagen(archivo).pipe(finalize(() => this.subiendoImagen.set(null))).subscribe({
+      next: media => {
+        if (destino === 'grupo') this.formularioGrupoServicio.imagenUrl = media.secureUrl;
+        else this.formularioServicio.imagenUrl = media.secureUrl;
+        this.mensajeImagen.set('Imagen cargada. Guarda el formulario para publicarla.');
+      },
+      error: err => this.errorImagen.set(err?.error?.mensaje || err?.error?.detail || 'No fue posible cargar la imagen.')
+    });
+  }
+
+  megabytes(bytes: number): string {
+    return (bytes / 1024 / 1024).toFixed(bytes % (1024 * 1024) === 0 ? 0 : 1);
+  }
 
   get subgruposFiltradosFormulario(): SubgrupoServicioAdmin[] {
     const grupoId = this.formularioServicio.grupoId;

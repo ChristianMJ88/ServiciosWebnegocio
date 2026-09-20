@@ -31,7 +31,7 @@ public class GrupoServicioEntidad {
     @Column(length = 300)
     private String descripcion;
 
-    @Column(name = "imagen_url", length = 255)
+    @Column(name = "imagen_url", length = 500)
     private String imagenUrl;
 
     @Column(length = 50)

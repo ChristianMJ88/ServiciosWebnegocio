@@ -5,6 +5,7 @@ public record PrestadorPublicoResponse(
         Long sucursalId,
         String nombreMostrar,
         String biografia,
+        String fotoUrl,
         String colorAgenda
 ) {
 }

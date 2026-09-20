@@ -9,6 +9,7 @@ public record PrestadorAdminResponse(
         String correo,
         String nombreMostrar,
         String biografia,
+        String fotoUrl,
         String colorAgenda,
         boolean activo,
         List<Long> servicioIds,

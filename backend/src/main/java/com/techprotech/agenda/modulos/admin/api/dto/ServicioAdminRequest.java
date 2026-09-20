@@ -17,7 +17,7 @@ public record ServicioAdminRequest(
         @NotBlank @Size(max = 150) String nombre,
         @Size(max = 140) String slug,
         @Size(max = 500) String descripcion,
-        @Size(max = 255) String imagenUrl,
+        @Size(max = 500) String imagenUrl,
         @Min(5) int duracionMinutos,
         @Min(0) int bufferAntesMinutos,
         @Min(0) int bufferDespuesMinutos,

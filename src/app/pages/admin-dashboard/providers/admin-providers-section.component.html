@@ -16,6 +16,36 @@
       <form class="admin-form-grid admin-form-shell" (ngSubmit)="save.emit()">
         <div class="form-block-title full-width">Identidad</div>
 
+        <div class="provider-media-field full-width">
+          <div class="provider-photo" [class.is-empty]="!formularioPrestador.fotoUrl">
+            @if (formularioPrestador.fotoUrl) {
+              <img [src]="formularioPrestador.fotoUrl" alt="Vista previa del colaborador">
+            } @else {
+              <i class="bi bi-person" aria-hidden="true"></i>
+            }
+          </div>
+          <div class="provider-media-controls">
+            <strong>Foto del colaborador</strong>
+            <span>Se mostrará al cliente al elegir quién realizará el servicio.</span>
+            <label class="provider-upload-button" [class.is-disabled]="subiendoFoto()">
+              <input type="file" accept="image/jpeg,image/png,image/webp,image/avif" (change)="seleccionarFoto($event)" [disabled]="subiendoFoto()">
+              <i class="bi bi-cloud-arrow-up" aria-hidden="true"></i>
+              {{ subiendoFoto() ? 'Subiendo…' : 'Subir foto' }}
+            </label>
+            <small>{{ configuracionMedia()?.cargaHabilitada ? 'JPG, PNG, WebP o AVIF · máximo ' + megabytes(configuracionMedia()!.maxBytesImagen) + ' MB' : 'Carga pendiente de configurar · la URL sigue disponible' }}</small>
+            <mat-form-field appearance="outline" class="provider-url-field">
+              <mat-label>O pega una URL pública</mat-label>
+              <input matInput name="prestadorFotoUrl" [(ngModel)]="formularioPrestador.fotoUrl" maxlength="500">
+            </mat-form-field>
+          </div>
+        </div>
+        @if (mensajeFoto()) {
+          <div class="provider-media-feedback is-success full-width" role="status">{{ mensajeFoto() }}</div>
+        }
+        @if (errorFoto()) {
+          <div class="provider-media-feedback is-error full-width" role="alert">{{ errorFoto() }}</div>
+        }
+
         <mat-form-field appearance="outline">
           <mat-label>Sucursal</mat-label>
           <mat-select
@@ -106,6 +136,13 @@
       <div class="entity-list">
         @for (prestador of prestadores; track prestador) {
           <article class="entity-row">
+            <div class="provider-list-photo" [style.--provider-color]="prestador.colorAgenda || '#315dcc'">
+              @if (prestador.fotoUrl) {
+                <img [src]="prestador.fotoUrl" [alt]="'Foto de ' + prestador.nombreMostrar">
+              } @else {
+                <span>{{ prestador.nombreMostrar.charAt(0).toUpperCase() }}</span>
+              }
+            </div>
             <div class="entity-main">
               <div class="entity-meta">{{ prestador.sucursalNombre }}</div>
               <div class="entity-title">{{ prestador.nombreMostrar }}</div>

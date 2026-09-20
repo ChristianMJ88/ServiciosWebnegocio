@@ -8,7 +8,7 @@ public record GrupoServicioAdminRequest(
         @NotBlank @Size(max = 120) String nombre,
         @Size(max = 140) String slug,
         @Size(max = 300) String descripcion,
-        @Size(max = 255) String imagenUrl,
+        @Size(max = 500) String imagenUrl,
         @Size(max = 50) String icono,
         @Min(0) int ordenPublico,
         boolean activo

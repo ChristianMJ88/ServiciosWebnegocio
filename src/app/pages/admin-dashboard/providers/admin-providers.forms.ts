@@ -15,6 +15,7 @@ export function crearFormularioPrestador(
     contrasenaTemporal: '',
     nombreMostrar: prestador?.nombreMostrar ?? '',
     biografia: prestador?.biografia ?? '',
+    fotoUrl: prestador?.fotoUrl ?? null,
     colorAgenda: prestador?.colorAgenda ?? null,
     activo: prestador?.activo ?? true,
     servicioIds: [...(prestador?.servicioIds ?? [])]
@@ -27,6 +28,7 @@ export function construirPayloadPrestador(formulario: GuardarPrestadorPayload): 
     correo: formulario.correo.trim().toLowerCase(),
     contrasenaTemporal: normalizarTextoOpcional(formulario.contrasenaTemporal),
     biografia: normalizarTextoOpcional(formulario.biografia),
+    fotoUrl: normalizarTextoOpcional(formulario.fotoUrl),
     colorAgenda: normalizarTextoOpcional(formulario.colorAgenda)
   };
 }

@@ -13,6 +13,7 @@ public record PrestadorAdminRequest(
         @Size(min = 8, max = 100) String contrasenaTemporal,
         @NotBlank @Size(max = 150) String nombreMostrar,
         @Size(max = 500) String biografia,
+        @Size(max = 500) String fotoUrl,
         @Size(max = 20) String colorAgenda,
         boolean activo,
         List<Long> servicioIds

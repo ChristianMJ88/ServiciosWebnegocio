@@ -219,7 +219,19 @@
           @if (cargandoStaff()) { <p role="status">Cargando equipo…</p> }
           @else {
             @for (staff of staffServicio(); track staff.usuarioId) {
-              <div class="service-details__staff"><strong>{{ staff.nombreMostrar }}</strong>@if (staff.biografia) { <p>{{ staff.biografia }}</p> }</div>
+              <div class="service-details__staff">
+                <div class="service-details__staff-photo" [style.--staff-color]="staff.colorAgenda || 'var(--tenant-primary)'">
+                  @if (staff.fotoUrl) {
+                    <img [src]="staff.fotoUrl" [alt]="'Foto de ' + staff.nombreMostrar">
+                  } @else {
+                    <span>{{ staff.nombreMostrar.charAt(0).toUpperCase() }}</span>
+                  }
+                </div>
+                <div>
+                  <strong>{{ staff.nombreMostrar }}</strong>
+                  @if (staff.biografia) { <p>{{ staff.biografia }}</p> }
+                </div>
+              </div>
             } @empty { <p>El equipo se asignará según el horario disponible.</p> }
           }
           @if (!branchId()) { <p>Elige una sucursal para agregar este servicio.</p> }
