@@ -1,7 +1,7 @@
 <article class="team-card">
   <div class="team-card__portrait">
     @if (member.fotoUrl) {
-      <img [src]="member.fotoUrl" [alt]="member.nombre" loading="lazy">
+      <img [src]="portraitUrl()" [alt]="member.nombre" loading="lazy">
     } @else {
       <span aria-hidden="true">{{ initials() }}</span>
     }

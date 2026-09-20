@@ -21,4 +21,16 @@ export class PublicTeamCardComponent {
       .map(fragment => fragment.charAt(0).toUpperCase())
       .join('');
   }
+
+  portraitUrl(): string {
+    const photoUrl = this.member.fotoUrl?.trim();
+    if (!photoUrl || !photoUrl.includes('res.cloudinary.com') || !photoUrl.includes('/upload/')) {
+      return photoUrl ?? '';
+    }
+
+    return photoUrl.replace(
+      '/upload/',
+      '/upload/c_fill,g_face,w_360,h_360,q_auto,f_auto/'
+    );
+  }
 }
