@@ -38,7 +38,7 @@ export function resolveApiBaseUrl(defaultValue = ''): string {
 
   const hostname = globalThis.location?.hostname ?? '';
   if (esHostLocal(hostname)) {
-    return `http://${hostname}:8080/api/v1`;
+    return '/api/v1';
   }
 
   return limpiarUrl(defaultValue);
