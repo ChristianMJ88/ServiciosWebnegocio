@@ -12,9 +12,26 @@ import java.util.List;
 public class ServicioSitioPublico {
 
     private final EmpresaSitioConfigRepositorio empresaSitioConfigRepositorio;
+    private final ServicioConstructorSitio servicioConstructorSitio;
+    private final ServicioServiciosDestacadosSitio servicioServiciosDestacadosSitio;
+    private final ServicioPromocionesSitio servicioPromocionesSitio;
+    private final ServicioGaleriaSitio servicioGaleriaSitio;
+    private final ServicioBeneficiosSitio servicioBeneficiosSitio;
 
-    public ServicioSitioPublico(EmpresaSitioConfigRepositorio empresaSitioConfigRepositorio) {
+    public ServicioSitioPublico(
+            EmpresaSitioConfigRepositorio empresaSitioConfigRepositorio,
+            ServicioConstructorSitio servicioConstructorSitio,
+            ServicioServiciosDestacadosSitio servicioServiciosDestacadosSitio,
+            ServicioPromocionesSitio servicioPromocionesSitio,
+            ServicioGaleriaSitio servicioGaleriaSitio,
+            ServicioBeneficiosSitio servicioBeneficiosSitio
+    ) {
         this.empresaSitioConfigRepositorio = empresaSitioConfigRepositorio;
+        this.servicioConstructorSitio = servicioConstructorSitio;
+        this.servicioServiciosDestacadosSitio = servicioServiciosDestacadosSitio;
+        this.servicioPromocionesSitio = servicioPromocionesSitio;
+        this.servicioGaleriaSitio = servicioGaleriaSitio;
+        this.servicioBeneficiosSitio = servicioBeneficiosSitio;
     }
 
     public SitioPublicoResponse obtenerPorSlug(String slug) {
@@ -52,11 +69,19 @@ public class ServicioSitioPublico {
                 sitio.getHeroTitulo(),
                 sitio.getHeroSubtitulo(),
                 sitio.getHeroImagenUrl(),
+                sitio.getHeroTipoMedio(),
+                sitio.getHeroVideoUrl(),
+                sitio.getHeroAltura(),
                 sitio.getHeroEtiqueta(),
                 sitio.getHeroAlineacion(),
                 sitio.getHeroOverlay(),
                 sitio.getHeroTextoCta(),
                 sitio.getHeroAccionCta(),
+                sitio.getHeroEnlaceCta(),
+                sitio.getHeroTextoSecundario(),
+                sitio.getHeroAccionSecundaria(),
+                sitio.getHeroEnlaceSecundario(),
+                sitio.isHeroMostrarSecundario(),
                 sitio.isHeroMostrarWhatsapp(),
                 sitio.getInicioTituloServicios(),
                 sitio.getInicioDescripcionServicios(),
@@ -102,6 +127,11 @@ public class ServicioSitioPublico {
                 sitio.getFooterTexto(),
                 sitio.isFooterMostrarNavegacion(),
                 sitio.isFooterMostrarContacto(),
+                servicioConstructorSitio.obtenerParaSitioPublico(sitio.getEmpresaId(), sitio),
+                servicioServiciosDestacadosSitio.obtenerParaSitioPublico(sitio.getEmpresaId()),
+                servicioGaleriaSitio.obtenerParaSitioPublico(sitio.getEmpresaId()),
+                servicioPromocionesSitio.obtenerParaSitioPublico(sitio.getEmpresaId()),
+                servicioBeneficiosSitio.obtenerParaSitioPublico(sitio.getEmpresaId()),
                 sitio.isPublicado()
         );
     }

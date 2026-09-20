@@ -22,7 +22,7 @@ class ServicioSitioPublicoTest {
                     throw new UnsupportedOperationException(method.getName());
                 }
         );
-        ServicioSitioPublico servicio = new ServicioSitioPublico(repositorio);
+        ServicioSitioPublico servicio = new ServicioSitioPublico(repositorio, null, null, null, null, null);
 
         IndiceSitiosPublicosResponse response = servicio.obtenerIndicePublicado();
 

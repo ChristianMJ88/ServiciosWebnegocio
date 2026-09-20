@@ -1,5 +1,7 @@
 package com.techprotech.agenda.modulos.sitio.aplicacion;
 
+import java.util.List;
+
 public record SitioPublicoResponse(
         Long empresaId,
         String slug,
@@ -14,11 +16,19 @@ public record SitioPublicoResponse(
         String heroTitulo,
         String heroSubtitulo,
         String heroImagenUrl,
+        String heroTipoMedio,
+        String heroVideoUrl,
+        String heroAltura,
         String heroEtiqueta,
         String heroAlineacion,
         String heroOverlay,
         String heroTextoCta,
         String heroAccionCta,
+        String heroEnlaceCta,
+        String heroTextoSecundario,
+        String heroAccionSecundaria,
+        String heroEnlaceSecundario,
+        boolean heroMostrarSecundario,
         boolean heroMostrarWhatsapp,
         String inicioTituloServicios,
         String inicioDescripcionServicios,
@@ -64,6 +74,11 @@ public record SitioPublicoResponse(
         String footerTexto,
         boolean footerMostrarNavegacion,
         boolean footerMostrarContacto,
+        List<BloqueSitioPublicoResponse> bloques,
+        ServiciosDestacadosPublicoResponse serviciosDestacados,
+        GaleriaSitioPublicaResponse galeria,
+        List<PromocionSitioPublicaResponse> promociones,
+        List<BeneficioSitioPublicoResponse> beneficios,
         boolean publicado
 ) {
 }

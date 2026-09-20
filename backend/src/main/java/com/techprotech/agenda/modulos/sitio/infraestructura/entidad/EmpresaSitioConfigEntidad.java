@@ -26,7 +26,7 @@ public class EmpresaSitioConfigEntidad {
   @Column(name = "dominio_principal")
   private String dominioPrincipal;
 
-  @Column(name = "logo_url")
+  @Column(name = "logo_url", length = 500)
   private String logoUrl;
 
   @Column(name = "descripcion_corta")
@@ -53,6 +53,15 @@ public class EmpresaSitioConfigEntidad {
   @Column(name = "hero_imagen_url", length = 500)
   private String heroImagenUrl;
 
+  @Column(name = "hero_tipo_medio", nullable = false, length = 20)
+  private String heroTipoMedio = "IMAGEN";
+
+  @Column(name = "hero_video_url", length = 500)
+  private String heroVideoUrl;
+
+  @Column(name = "hero_altura", nullable = false, length = 20)
+  private String heroAltura = "PANTALLA";
+
   @Column(name = "hero_etiqueta", length = 80)
   private String heroEtiqueta;
 
@@ -67,6 +76,21 @@ public class EmpresaSitioConfigEntidad {
 
   @Column(name = "hero_accion_cta", nullable = false, length = 20)
   private String heroAccionCta = "AGENDAR";
+
+  @Column(name = "hero_enlace_cta", length = 500)
+  private String heroEnlaceCta;
+
+  @Column(name = "hero_texto_secundario", length = 40)
+  private String heroTextoSecundario;
+
+  @Column(name = "hero_accion_secundaria", nullable = false, length = 20)
+  private String heroAccionSecundaria = "WHATSAPP";
+
+  @Column(name = "hero_enlace_secundario", length = 500)
+  private String heroEnlaceSecundario;
+
+  @Column(name = "hero_mostrar_secundario", nullable = false)
+  private boolean heroMostrarSecundario = true;
 
   @Column(name = "hero_mostrar_whatsapp", nullable = false)
   private boolean heroMostrarWhatsapp = true;
