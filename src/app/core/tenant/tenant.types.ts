@@ -82,6 +82,14 @@ export interface TenantBenefit {
   icono: 'ESTRELLA' | 'CORAZON' | 'ESCUDO' | 'DESTELLO' | 'RELOJ' | 'PERSONA' | 'HOJA' | 'PREMIO';
 }
 
+export interface TenantTeamMember {
+  id: number;
+  nombre: string;
+  biografia: string | null;
+  fotoUrl: string | null;
+  sucursalNombre: string;
+}
+
 export interface TenantSiteConfig {
   empresaId: number;
   slug: string;
@@ -159,6 +167,7 @@ export interface TenantSiteConfig {
   galeria?: TenantGallery | null;
   promociones?: TenantPromotion[];
   beneficios?: TenantBenefit[];
+  equipo?: TenantTeamMember[];
   publicado: boolean;
 }
 

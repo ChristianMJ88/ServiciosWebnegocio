@@ -753,6 +753,15 @@
   gap: 1rem;
 }
 
+.team-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1.15rem;
+}
+
+.team-grid--single { grid-template-columns: minmax(0, 390px); justify-content: center; }
+.team-grid--pair { grid-template-columns: repeat(2, minmax(0, 390px)); justify-content: center; }
+
 .benefits-grid--single { grid-template-columns: minmax(0, 720px); justify-content: center; }
 .benefits-grid--pair { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 
@@ -820,5 +829,7 @@
   .gallery-public--single .gallery-public__media { min-height: 0; aspect-ratio: 4 / 3; }
   .gallery-public--pair { grid-template-columns: minmax(0, 1fr); }
   .benefits-grid, .benefits-grid--pair { grid-template-columns: minmax(0, 1fr); }
+  .team-grid, .team-grid--pair { grid-auto-flow: column; grid-auto-columns: minmax(270px, 86%); grid-template-columns: none; justify-content: initial; overflow-x: auto; padding: .2rem 0 1rem; scroll-snap-type: inline mandatory; }
+  .team-grid app-public-team-card { scroll-snap-align: start; }
   .benefit-public-card { min-height: 0; border-radius: 20px; }
 }

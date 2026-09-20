@@ -1,0 +1,21 @@
+<article class="team-card">
+  <div class="team-card__portrait">
+    @if (member.fotoUrl) {
+      <img [src]="member.fotoUrl" [alt]="member.nombre" loading="lazy">
+    } @else {
+      <span aria-hidden="true">{{ initials() }}</span>
+    }
+    <span class="team-card__availability"><i class="bi bi-check2"></i></span>
+  </div>
+
+  <div class="team-card__content">
+    <span class="team-card__branch"><i class="bi bi-geo-alt"></i>{{ member.sucursalNombre }}</span>
+    <h3>{{ member.nombre }}</h3>
+    @if (member.biografia) {
+      <p>{{ member.biografia }}</p>
+    }
+    <a [routerLink]="bookingLink" class="team-card__action">
+      <span>Reservar cita</span><i class="bi bi-arrow-up-right"></i>
+    </a>
+  </div>
+</article>

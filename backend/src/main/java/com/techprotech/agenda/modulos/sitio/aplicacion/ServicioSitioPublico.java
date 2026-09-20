@@ -17,6 +17,7 @@ public class ServicioSitioPublico {
     private final ServicioPromocionesSitio servicioPromocionesSitio;
     private final ServicioGaleriaSitio servicioGaleriaSitio;
     private final ServicioBeneficiosSitio servicioBeneficiosSitio;
+    private final ServicioEquipoSitio servicioEquipoSitio;
 
     public ServicioSitioPublico(
             EmpresaSitioConfigRepositorio empresaSitioConfigRepositorio,
@@ -24,7 +25,8 @@ public class ServicioSitioPublico {
             ServicioServiciosDestacadosSitio servicioServiciosDestacadosSitio,
             ServicioPromocionesSitio servicioPromocionesSitio,
             ServicioGaleriaSitio servicioGaleriaSitio,
-            ServicioBeneficiosSitio servicioBeneficiosSitio
+            ServicioBeneficiosSitio servicioBeneficiosSitio,
+            ServicioEquipoSitio servicioEquipoSitio
     ) {
         this.empresaSitioConfigRepositorio = empresaSitioConfigRepositorio;
         this.servicioConstructorSitio = servicioConstructorSitio;
@@ -32,6 +34,7 @@ public class ServicioSitioPublico {
         this.servicioPromocionesSitio = servicioPromocionesSitio;
         this.servicioGaleriaSitio = servicioGaleriaSitio;
         this.servicioBeneficiosSitio = servicioBeneficiosSitio;
+        this.servicioEquipoSitio = servicioEquipoSitio;
     }
 
     public SitioPublicoResponse obtenerPorSlug(String slug) {
@@ -132,6 +135,7 @@ public class ServicioSitioPublico {
                 servicioGaleriaSitio.obtenerParaSitioPublico(sitio.getEmpresaId()),
                 servicioPromocionesSitio.obtenerParaSitioPublico(sitio.getEmpresaId()),
                 servicioBeneficiosSitio.obtenerParaSitioPublico(sitio.getEmpresaId()),
+                servicioEquipoSitio.obtenerParaSitioPublico(sitio.getEmpresaId()),
                 sitio.isPublicado()
         );
     }

@@ -18,6 +18,12 @@ public record ConfiguracionVisualBloquePredeterminada(
                     AlineacionBloqueSitio.CENTRO, SeparadorBloqueSitio.DEGRADADO, EspaciadoBloqueSitio.NORMAL,
                     "Por qué elegirnos", "Una experiencia pensada para ti", null
             );
+            case EQUIPO -> new ConfiguracionVisualBloquePredeterminada(
+                    SuperficieBloqueSitio.BASE, PresentacionBloqueSitio.PANEL, AnchoBloqueSitio.AMPLIO,
+                    AlineacionBloqueSitio.CENTRO, SeparadorBloqueSitio.LINEA, EspaciadoBloqueSitio.NORMAL,
+                    "Nuestro equipo", "Conoce a quienes te atienden",
+                    "Profesionales del negocio disponibles para acompañarte en tu próxima cita."
+            );
             case SERVICIOS_DESTACADOS -> new ConfiguracionVisualBloquePredeterminada(
                     SuperficieBloqueSitio.SUAVE, PresentacionBloqueSitio.PANEL, AnchoBloqueSitio.AMPLIO,
                     AlineacionBloqueSitio.IZQUIERDA, SeparadorBloqueSitio.DEGRADADO, EspaciadoBloqueSitio.NORMAL,

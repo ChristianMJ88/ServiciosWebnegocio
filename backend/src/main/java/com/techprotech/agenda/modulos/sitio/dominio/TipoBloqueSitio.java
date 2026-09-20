@@ -4,7 +4,7 @@ public enum TipoBloqueSitio {
     PORTADA("Portada", "Primer mensaje y acciones principales", "bi bi-image", true),
     SERVICIOS_DESTACADOS("Servicios destacados", "Selección principal del catálogo", "bi bi-grid", true),
     BENEFICIOS("Beneficios", "Razones para elegir el negocio", "bi bi-stars", true),
-    EQUIPO("Equipo", "Personas que atienden a los clientes", "bi bi-people", false),
+    EQUIPO("Equipo", "Personas que atienden a los clientes", "bi bi-people", true),
     GALERIA("Galería", "Imágenes del trabajo y las instalaciones", "bi bi-images", true),
     PROMOCIONES("Promociones", "Ofertas con vigencia y servicios asociados", "bi bi-tag", true),
     RESENAS("Reseñas", "Opiniones y señales de confianza", "bi bi-chat-quote", false),

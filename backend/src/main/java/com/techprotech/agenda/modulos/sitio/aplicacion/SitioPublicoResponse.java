@@ -79,6 +79,7 @@ public record SitioPublicoResponse(
         GaleriaSitioPublicaResponse galeria,
         List<PromocionSitioPublicaResponse> promociones,
         List<BeneficioSitioPublicoResponse> beneficios,
+        List<IntegranteEquipoSitioPublicoResponse> equipo,
         boolean publicado
 ) {
 }

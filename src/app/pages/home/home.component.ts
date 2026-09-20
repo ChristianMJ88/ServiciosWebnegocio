@@ -7,11 +7,12 @@ import { BookingDataService, CatalogoServiciosPublico, GrupoCatalogoPublico } fr
 import { ScrollRevealDirective } from '../../shared/directives/scroll-reveal.directive';
 import { MoneyDisplayPipe } from '../../shared/pipes/money-display.pipe';
 import { PublicSectionHeadingComponent } from '../../shared/ui/public-section-heading/public-section-heading.component';
+import { PublicTeamCardComponent } from '../../shared/ui/public-team-card/public-team-card.component';
 
 @Component({
   selector: 'app-home',
   standalone: true,
-  imports: [RouterLink, CommonModule, ScrollRevealDirective, MoneyDisplayPipe, PublicSectionHeadingComponent],
+  imports: [RouterLink, CommonModule, ScrollRevealDirective, MoneyDisplayPipe, PublicSectionHeadingComponent, PublicTeamCardComponent],
   templateUrl: './home.component.html',
   styleUrls: ['./home.component.css']
 })

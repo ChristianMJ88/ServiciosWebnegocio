@@ -174,6 +174,27 @@
   </section>
   }
 
+  @if (tenantContext.bloqueInicioHabilitado('EQUIPO') && tenantContext.equipo().length) {
+  <section class="home-section home-team" [ngClass]="tenantContext.clasesBloqueInicio('EQUIPO')" [style.order]="tenantContext.ordenBloqueInicio('EQUIPO')">
+    <div class="container">
+      <app-public-section-heading
+        appScrollReveal="up"
+        [eyebrow]="tenantContext.bloqueInicio('EQUIPO')?.etiqueta"
+        [title]="tenantContext.bloqueInicio('EQUIPO')?.titulo || tenantContext.nombreComercial()"
+        [description]="tenantContext.bloqueInicio('EQUIPO')?.descripcion" />
+      <div class="team-grid" [class.team-grid--single]="tenantContext.equipo().length === 1" [class.team-grid--pair]="tenantContext.equipo().length === 2">
+        @for (member of tenantContext.equipo(); track member.id; let i = $index) {
+          <app-public-team-card
+            appScrollReveal="up"
+            [revealDelay]="70 * (i + 1)"
+            [member]="member"
+            [bookingLink]="tenantContext.routeFor('agendar')" />
+        }
+      </div>
+    </div>
+  </section>
+  }
+
   @if (tenantContext.bloqueInicioHabilitado('BENEFICIOS') && tenantContext.beneficios().length) {
   <section class="home-section home-benefits" [ngClass]="tenantContext.clasesBloqueInicio('BENEFICIOS')" [style.order]="tenantContext.ordenBloqueInicio('BENEFICIOS')">
     <div class="container">
