@@ -1,0 +1,75 @@
+<section class="gallery-editor" aria-labelledby="gallery-editor-title">
+  <header class="gallery-editor__header">
+    <div><span>Contenido visual</span><h3 id="gallery-editor-title">Galería del negocio</h3><p>Presenta resultados, instalaciones o experiencias y relaciónalos con el catálogo real.</p></div>
+    <span class="gallery-editor__count">{{ galeria().imagenes.length }} {{ galeria().imagenes.length === 1 ? 'imagen' : 'imágenes' }}</span>
+  </header>
+
+  @if (cargando()) {
+    <div class="gallery-editor__state"><span class="gallery-editor__spinner"></span>Cargando galería…</div>
+  } @else {
+    <div class="gallery-settings">
+      <mat-form-field appearance="outline"><mat-label>Título</mat-label><input matInput [(ngModel)]="galeria().titulo" maxlength="120"></mat-form-field>
+      <mat-form-field appearance="outline"><mat-label>Presentación</mat-label><mat-select [(ngModel)]="galeria().vista"><mat-option value="CUADRICULA">Cuadrícula</mat-option><mat-option value="MOSAICO">Mosaico editorial</mat-option><mat-option value="CARRUSEL">Carrusel</mat-option></mat-select></mat-form-field>
+      <mat-form-field appearance="outline" class="gallery-settings__description"><mat-label>Descripción</mat-label><textarea matInput rows="2" [(ngModel)]="galeria().descripcion" maxlength="500"></textarea></mat-form-field>
+      <label class="gallery-settings__toggle"><span><strong>Ampliar imágenes</strong><small>Permite abrir cada imagen en pantalla completa.</small></span><mat-slide-toggle [(ngModel)]="galeria().ampliacionHabilitada" aria-label="Permitir ampliar imágenes"></mat-slide-toggle></label>
+    </div>
+
+    <div class="gallery-editor__toolbar">
+      <div><strong>Imágenes</strong><small>El orden de esta lista será el orden público.</small></div>
+      <button type="button" mat-stroked-button (click)="agregar()"><i class="bi bi-plus-lg"></i>Añadir imagen</button>
+    </div>
+
+    @if (configuracionMedia(); as media) {
+      <aside class="media-status" [class.media-status--disabled]="!media.cargaHabilitada">
+        <i class="bi" [class.bi-cloud-check]="media.cargaHabilitada" [class.bi-cloud-slash]="!media.cargaHabilitada"></i>
+        <div><strong>{{ media.cargaHabilitada ? 'Carga segura disponible' : 'Cloudinary pendiente de configuración' }}</strong><small>{{ media.cargaHabilitada ? 'Las imágenes se organizan automáticamente por empresa y galería.' : 'Puedes seguir usando una URL pública mientras se agregan las credenciales en el servidor.' }}</small></div>
+        @if (media.cargaHabilitada) {<span>Máx. {{ megabytes(media.maxBytesImagen) }} MB</span>}
+      </aside>
+    }
+
+    @if (!galeria().imagenes.length) {
+      <div class="gallery-editor__empty"><span><i class="bi bi-images"></i></span><strong>Tu galería está lista para comenzar</strong><p>Añade imágenes mediante su URL pública. Puedes asociarlas a un servicio o sucursal.</p><button type="button" mat-flat-button color="primary" (click)="agregar()">Añadir primera imagen</button></div>
+    } @else {
+      <div class="gallery-list">
+        @for (item of galeria().imagenes; track item.id || $index; let i = $index) {
+          <article class="gallery-card" [class.gallery-card--hidden]="!item.activa">
+            <div class="gallery-card__preview">
+              @if (item.imagenUrl) {<img [src]="item.imagenUrl" [alt]="item.textoAlternativo || 'Vista previa de galería'">} @else {<span><i class="bi bi-image"></i>Vista previa</span>}
+              <span class="gallery-card__order">{{ i + 1 }}</span>
+              @if (item.mediaId) {<span class="gallery-card__managed"><i class="bi bi-cloud-check"></i>Cloudinary</span>}
+            </div>
+            <div class="gallery-card__body">
+              <div class="gallery-card__topline"><strong>{{ item.titulo || 'Nueva imagen' }}</strong><mat-slide-toggle [(ngModel)]="item.activa" [attr.aria-label]="'Mostrar ' + (item.titulo || 'imagen')"></mat-slide-toggle></div>
+              <div class="gallery-card__fields">
+                <div class="gallery-card__source full">
+                  <label class="gallery-card__upload" [class.gallery-card__upload--disabled]="!configuracionMedia()?.cargaHabilitada || subiendoIndice() !== null">
+                    <input type="file" accept="image/jpeg,image/png,image/webp,image/avif" [disabled]="!configuracionMedia()?.cargaHabilitada || subiendoIndice() !== null" (change)="seleccionarArchivo($event, i)">
+                    <i class="bi" [class.bi-cloud-arrow-up]="subiendoIndice() !== i" [class.bi-arrow-repeat]="subiendoIndice() === i"></i>
+                    <span><strong>{{ subiendoIndice() === i ? 'Cargando imagen…' : (item.mediaId ? 'Reemplazar imagen' : 'Cargar desde tu dispositivo') }}</strong><small>JPG, PNG, WebP o AVIF</small></span>
+                  </label>
+                  <span class="gallery-card__or">o</span>
+                  <mat-form-field appearance="outline"><mat-label>URL pública</mat-label><input matInput [ngModel]="item.imagenUrl" (ngModelChange)="actualizarUrlManual(item, $event)" maxlength="500" placeholder="https://..."></mat-form-field>
+                </div>
+                <mat-form-field appearance="outline"><mat-label>Texto alternativo</mat-label><input matInput [(ngModel)]="item.textoAlternativo" maxlength="180" placeholder="Describe lo que aparece"></mat-form-field>
+                <mat-form-field appearance="outline"><mat-label>Título opcional</mat-label><input matInput [(ngModel)]="item.titulo" maxlength="120"></mat-form-field>
+                <mat-form-field appearance="outline" class="full"><mat-label>Descripción opcional</mat-label><textarea matInput rows="2" [(ngModel)]="item.descripcion" maxlength="500"></textarea></mat-form-field>
+                <mat-form-field appearance="outline"><mat-label>Servicio relacionado</mat-label><mat-select [(ngModel)]="item.servicioId"><mat-option [value]="null">Sin servicio</mat-option>@for (servicio of servicios(); track servicio.id) {<mat-option [value]="servicio.id">{{ servicio.nombre }}</mat-option>}</mat-select></mat-form-field>
+                <mat-form-field appearance="outline"><mat-label>Sucursal relacionada</mat-label><mat-select [(ngModel)]="item.sucursalId"><mat-option [value]="null">Todas / sin sucursal</mat-option>@for (sucursal of sucursales(); track sucursal.id) {<mat-option [value]="sucursal.id">{{ sucursal.nombre }}</mat-option>}</mat-select></mat-form-field>
+              </div>
+            </div>
+            <div class="gallery-card__actions">
+              <button type="button" (click)="mover(i, -1)" [disabled]="i === 0" [attr.aria-label]="'Subir imagen ' + (i + 1)"><i class="bi bi-arrow-up"></i></button>
+              <button type="button" (click)="mover(i, 1)" [disabled]="i === galeria().imagenes.length - 1" [attr.aria-label]="'Bajar imagen ' + (i + 1)"><i class="bi bi-arrow-down"></i></button>
+              <button type="button" class="gallery-card__delete" (click)="quitar(i)" [attr.aria-label]="'Eliminar imagen ' + (i + 1)"><i class="bi bi-trash3"></i></button>
+            </div>
+          </article>
+        }
+      </div>
+    }
+
+    <footer class="gallery-editor__footer">
+      <div aria-live="polite">@if (mensaje()) {<span class="gallery-editor__message"><i class="bi bi-check-circle"></i>{{ mensaje() }}</span>} @if (error()) {<span class="gallery-editor__message gallery-editor__message--error"><i class="bi bi-exclamation-circle"></i>{{ error() }}</span>}</div>
+      <button type="button" mat-flat-button color="primary" [disabled]="guardando()" (click)="guardar()"><i class="bi bi-check2"></i>{{ guardando() ? 'Guardando…' : 'Guardar galería' }}</button>
+    </footer>
+  }
+</section>

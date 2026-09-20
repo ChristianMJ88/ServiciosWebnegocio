@@ -1,0 +1,45 @@
+<section class="benefits-editor" aria-labelledby="benefits-editor-title">
+  <header class="benefits-editor__header">
+    <div><span>Propuesta de valor</span><h3 id="benefits-editor-title">Beneficios del negocio</h3><p>Explica con claridad por qué un cliente debería elegirte. Recomendamos entre tres y seis beneficios.</p></div>
+    <span class="benefits-editor__count">{{ beneficios().length }}/8</span>
+  </header>
+
+  @if (cargando()) {
+    <div class="benefits-editor__state"><span></span>Cargando beneficios…</div>
+  } @else {
+    <div class="benefits-editor__toolbar">
+      <div><strong>Tarjetas de confianza</strong><small>El orden se respeta en la página pública.</small></div>
+      <button type="button" mat-stroked-button (click)="agregar()" [disabled]="beneficios().length >= 8"><i class="bi bi-plus-lg"></i>Añadir beneficio</button>
+    </div>
+
+    @if (!beneficios().length) {
+      <div class="benefits-editor__empty"><span><i class="bi bi-stars"></i></span><strong>Cuenta lo que hace especial a tu negocio</strong><p>Añade beneficios concretos y comprobables para ayudar al cliente a decidir.</p><button type="button" mat-flat-button color="primary" (click)="agregar()">Crear primer beneficio</button></div>
+    } @else {
+      <div class="benefits-list">
+        @for (item of beneficios(); track item.id || $index; let i = $index) {
+          <article class="benefit-card" [class.benefit-card--hidden]="!item.activo">
+            <div class="benefit-card__icon"><i [class]="iconoClase(item.icono)"></i></div>
+            <div class="benefit-card__body">
+              <div class="benefit-card__topline"><strong>Beneficio {{ i + 1 }}</strong><mat-slide-toggle [(ngModel)]="item.activo" [attr.aria-label]="'Mostrar beneficio ' + (i + 1)"></mat-slide-toggle></div>
+              <div class="benefit-card__fields">
+                <mat-form-field appearance="outline"><mat-label>Icono</mat-label><mat-select [(ngModel)]="item.icono">@for (icono of iconos; track icono.valor) {<mat-option [value]="icono.valor"><i [class]="icono.clase"></i> {{ icono.etiqueta }}</mat-option>}</mat-select></mat-form-field>
+                <mat-form-field appearance="outline"><mat-label>Título</mat-label><input matInput [(ngModel)]="item.titulo" maxlength="120" placeholder="Ej. Atención personalizada"></mat-form-field>
+                <mat-form-field appearance="outline" class="benefit-card__description"><mat-label>Descripción</mat-label><textarea matInput rows="2" [(ngModel)]="item.descripcion" maxlength="400" placeholder="Explica el valor para tus clientes"></textarea></mat-form-field>
+              </div>
+            </div>
+            <div class="benefit-card__actions">
+              <button type="button" (click)="mover(i, -1)" [disabled]="i === 0" [attr.aria-label]="'Subir beneficio ' + (i + 1)"><i class="bi bi-arrow-up"></i></button>
+              <button type="button" (click)="mover(i, 1)" [disabled]="i === beneficios().length - 1" [attr.aria-label]="'Bajar beneficio ' + (i + 1)"><i class="bi bi-arrow-down"></i></button>
+              <button type="button" class="benefit-card__delete" (click)="quitar(i)" [attr.aria-label]="'Eliminar beneficio ' + (i + 1)"><i class="bi bi-trash3"></i></button>
+            </div>
+          </article>
+        }
+      </div>
+    }
+
+    <footer class="benefits-editor__footer">
+      <div aria-live="polite">@if (mensaje()) {<span class="benefits-editor__message"><i class="bi bi-check-circle"></i>{{ mensaje() }}</span>} @if (error()) {<span class="benefits-editor__message benefits-editor__message--error"><i class="bi bi-exclamation-circle"></i>{{ error() }}</span>}</div>
+      <button type="button" mat-flat-button color="primary" [disabled]="guardando()" (click)="guardar()"><i class="bi bi-check2"></i>{{ guardando() ? 'Guardando…' : 'Guardar beneficios' }}</button>
+    </footer>
+  }
+</section>

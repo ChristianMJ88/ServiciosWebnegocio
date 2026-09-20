@@ -15,4 +15,12 @@ export class AdminSiteFacade {
       ))
     );
   }
+
+  cargarConfiguracionMedia() {
+    return this.adminService.getConfiguracionMediaSitio();
+  }
+
+  subirImagenBranding(archivo: File) {
+    return this.adminService.subirImagenBrandingSitio(archivo);
+  }
 }

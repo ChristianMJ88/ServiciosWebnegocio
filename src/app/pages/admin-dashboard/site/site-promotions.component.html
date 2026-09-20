@@ -1,0 +1,44 @@
+<section class="promotions-editor">
+  <header class="promotions-editor__header">
+    <div><span class="section-eyebrow">Promociones</span><h3>Campañas con vigencia automática</h3><p>Relaciona cada oferta con servicios y sucursales reales del catálogo.</p></div>
+    <button type="button" mat-flat-button color="primary" (click)="agregar()"><i class="bi bi-plus-lg"></i> Nueva promoción</button>
+  </header>
+
+  @if (cargando()) {
+    <div class="promotions-state">Cargando promociones…</div>
+  } @else {
+    <div class="promotions-list">
+      @for (item of promociones(); track item.id || $index; let i = $index) {
+        <article class="promotion-card">
+          <header>
+            <div><span class="promotion-card__number">{{ i + 1 }}</span><div><strong>{{ item.titulo || 'Nueva promoción' }}</strong><small [class.is-visible]="estado(item) === 'Visible'">{{ estado(item) }}</small></div></div>
+            <div class="promotion-card__tools">
+              <button type="button" mat-icon-button [disabled]="i === 0" (click)="mover(i, -1)" aria-label="Subir promoción"><i class="bi bi-arrow-up"></i></button>
+              <button type="button" mat-icon-button [disabled]="i === promociones().length - 1" (click)="mover(i, 1)" aria-label="Bajar promoción"><i class="bi bi-arrow-down"></i></button>
+              <button type="button" mat-icon-button (click)="quitar(i)" aria-label="Quitar promoción"><i class="bi bi-trash3"></i></button>
+            </div>
+          </header>
+          <div class="promotion-card__fields">
+            <mat-form-field appearance="outline" class="full-width"><mat-label>Título</mat-label><input matInput [(ngModel)]="item.titulo" [name]="'promoTitulo' + i" maxlength="120" required></mat-form-field>
+            <mat-form-field appearance="outline" class="full-width"><mat-label>Descripción</mat-label><textarea matInput rows="2" [(ngModel)]="item.descripcion" [name]="'promoDescripcion' + i" maxlength="500"></textarea></mat-form-field>
+            <mat-form-field appearance="outline" class="full-width"><mat-label>URL de imagen</mat-label><input matInput [(ngModel)]="item.imagenUrl" [name]="'promoImagen' + i" maxlength="500" placeholder="https://..."></mat-form-field>
+            <mat-form-field appearance="outline"><mat-label>Inicio</mat-label><input matInput type="date" [(ngModel)]="item.fechaInicio" [name]="'promoInicio' + i"></mat-form-field>
+            <mat-form-field appearance="outline"><mat-label>Fin</mat-label><input matInput type="date" [(ngModel)]="item.fechaFin" [name]="'promoFin' + i"></mat-form-field>
+            <mat-form-field appearance="outline"><mat-label>Tipo de oferta</mat-label><mat-select [(ngModel)]="item.tipoDescuento" [name]="'promoTipo' + i"><mat-option value="PORCENTAJE">Porcentaje</mat-option><mat-option value="PRECIO">Precio promocional</mat-option></mat-select></mat-form-field>
+            <mat-form-field appearance="outline"><mat-label>{{ item.tipoDescuento === 'PORCENTAJE' ? 'Descuento (%)' : 'Precio promocional' }}</mat-label><input matInput type="number" min="0.01" [max]="item.tipoDescuento === 'PORCENTAJE' ? 100 : null" step="0.01" [(ngModel)]="item.valorDescuento" [name]="'promoValor' + i"></mat-form-field>
+            <mat-form-field appearance="outline"><mat-label>Moneda</mat-label><input matInput [(ngModel)]="item.moneda" [name]="'promoMoneda' + i" maxlength="10"></mat-form-field>
+            <mat-form-field appearance="outline"><mat-label>Texto del botón</mat-label><input matInput [(ngModel)]="item.textoBoton" [name]="'promoBoton' + i" maxlength="40"></mat-form-field>
+            <mat-form-field appearance="outline" class="full-width"><mat-label>Servicios incluidos</mat-label><mat-select multiple [(ngModel)]="item.servicioIds" [name]="'promoServicios' + i">@for (servicio of servicios(); track servicio.id) {<mat-option [value]="servicio.id">{{ servicio.grupoNombre ? servicio.grupoNombre + ' / ' : '' }}{{ servicio.subgrupoNombre ? servicio.subgrupoNombre + ' / ' : '' }}{{ servicio.nombre }}</mat-option>}</mat-select><mat-hint>Sin selección: aplica de forma general.</mat-hint></mat-form-field>
+            <mat-form-field appearance="outline" class="full-width"><mat-label>Sucursales donde aplica</mat-label><mat-select multiple [(ngModel)]="item.sucursalIds" [name]="'promoSucursales' + i">@for (sucursal of sucursales(); track sucursal.id) {<mat-option [value]="sucursal.id">{{ sucursal.nombre }}</mat-option>}</mat-select><mat-hint>Sin selección: aplica en todas las sucursales.</mat-hint></mat-form-field>
+            <label class="promotion-card__toggle full-width"><span><strong>Promoción activa</strong><small>La vigencia también controla su aparición pública.</small></span><mat-slide-toggle [(ngModel)]="item.activa" [name]="'promoActiva' + i"></mat-slide-toggle></label>
+          </div>
+        </article>
+      } @empty {
+        <div class="promotions-state"><i class="bi bi-tags"></i><strong>Aún no hay promociones</strong><span>Crea una campaña cuando tengas una oferta lista para publicar.</span></div>
+      }
+    </div>
+    @if (mensaje()) {<div class="promotions-message is-success">{{ mensaje() }}</div>}
+    @if (error()) {<div class="promotions-message is-error">{{ error() }}</div>}
+    <footer class="promotions-editor__actions"><span>{{ promociones().length }} promociones configuradas</span><button type="button" mat-flat-button color="primary" [disabled]="guardando()" (click)="guardar()"><i class="bi bi-check2"></i> {{ guardando() ? 'Guardando…' : 'Guardar promociones' }}</button></footer>
+  }
+</section>

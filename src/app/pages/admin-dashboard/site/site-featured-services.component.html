@@ -1,0 +1,78 @@
+<section class="featured-editor">
+  <header class="featured-editor__heading">
+    <span class="featured-editor__icon"><i class="bi bi-stars"></i></span>
+    <div><h3>Servicios destacados</h3><p>Elige qué grupos, subgrupos o servicios aparecen en Inicio y en qué orden.</p></div>
+  </header>
+
+  @if (cargando()) {
+    <div class="featured-state"><span class="spinner-border spinner-border-sm"></span> Cargando catálogo...</div>
+  } @else if (configuracion(); as config) {
+    <div class="featured-settings">
+      <div class="featured-layouts" role="radiogroup" aria-label="Presentación de servicios destacados">
+        @for (vista of config.vistasDisponibles; track vista.codigo) {
+          <button type="button" [class.is-active]="config.vista === vista.codigo" (click)="actualizar('vista', vista.codigo)" [attr.aria-pressed]="config.vista === vista.codigo">
+            <i [class]="vista.codigo === 'CARRUSEL' ? 'bi bi-layout-sidebar-inset' : vista.codigo === 'LISTA' ? 'bi bi-view-list' : 'bi bi-grid-3x2-gap'"></i>
+            <span><strong>{{ vista.nombre }}</strong><small>{{ vista.descripcion }}</small></span>
+          </button>
+        }
+      </div>
+
+      <div class="featured-options">
+        <mat-form-field appearance="outline"><mat-label>Máximo visible</mat-label><mat-select [ngModel]="config.limite" [ngModelOptions]="{standalone: true}" (ngModelChange)="actualizar('limite', $event)">@for (limite of [1,2,3,4,6,8,10,12]; track limite) {<mat-option [value]="limite">{{ limite }} elementos</mat-option>}</mat-select></mat-form-field>
+        <label><span><strong>Precio</strong><small>Muestra el precio o “Desde”.</small></span><mat-slide-toggle [ngModel]="config.mostrarPrecio" [ngModelOptions]="{standalone: true}" (ngModelChange)="actualizar('mostrarPrecio', $event)" aria-label="Mostrar precio"></mat-slide-toggle></label>
+        <label><span><strong>Duración</strong><small>Disponible para servicios individuales.</small></span><mat-slide-toggle [ngModel]="config.mostrarDuracion" [ngModelOptions]="{standalone: true}" (ngModelChange)="actualizar('mostrarDuracion', $event)" aria-label="Mostrar duración"></mat-slide-toggle></label>
+        <label><span><strong>Descripción</strong><small>Incluye el texto del catálogo.</small></span><mat-slide-toggle [ngModel]="config.mostrarDescripcion" [ngModelOptions]="{standalone: true}" (ngModelChange)="actualizar('mostrarDescripcion', $event)" aria-label="Mostrar descripción"></mat-slide-toggle></label>
+      </div>
+    </div>
+
+    <div class="featured-workspace">
+      <section class="catalog-picker">
+        <div class="catalog-picker__heading"><div><span>Paso 1</span><h4>Busca en tu catálogo</h4></div><small>{{ opciones().length }} opciones disponibles</small></div>
+        <label class="catalog-search"><i class="bi bi-search"></i><input type="search" [value]="busqueda()" (input)="busqueda.set($any($event.target).value)" placeholder="Buscar grupo, subgrupo o servicio" aria-label="Buscar en el catálogo"></label>
+        <div class="catalog-results">
+          @for (opcion of opcionesFiltradas(); track opcion.tipo + '-' + opcion.referenciaId) {
+            <button type="button" (click)="agregar(opcion)">
+              <span class="catalog-results__type">{{ etiquetaTipo(opcion.tipo) }}</span>
+              <span><strong>{{ opcion.nombre }}</strong><small>{{ opcion.ruta }}</small></span>
+              <i class="bi bi-plus-lg"></i>
+            </button>
+          } @empty {
+            <div class="catalog-results__empty"><i class="bi bi-search"></i><span>No hay más coincidencias para agregar.</span></div>
+          }
+        </div>
+      </section>
+
+      <section class="featured-selection">
+        <div class="featured-selection__heading"><div><span>Paso 2</span><h4>Ordena lo que verá tu cliente</h4></div><small>{{ config.elementos.length }}/24 seleccionados</small></div>
+        @if (config.elementos.length) {
+          <div class="selected-list">
+            @for (item of config.elementos; track item.tipo + '-' + item.referenciaId; let indice = $index) {
+              <article [class.is-unavailable]="!item.disponible">
+                <span class="selected-list__position">{{ indice + 1 }}</span>
+                <div class="selected-list__content">
+                  <span class="selected-list__type">{{ etiquetaTipo(item.tipo) }}</span>
+                  <strong>{{ item.nombre || 'Elemento no disponible' }}</strong>
+                  <small>{{ item.rutaCatalogo }}</small>
+                  <input type="text" maxlength="40" [value]="item.etiqueta || ''" (input)="cambiarEtiqueta(indice, $any($event.target).value)" placeholder="Etiqueta opcional: Popular, Nuevo..." [attr.aria-label]="'Etiqueta para ' + (item.nombre || 'elemento')">
+                </div>
+                <div class="selected-list__actions">
+                  <button type="button" (click)="mover(indice, -1)" [disabled]="indice === 0" aria-label="Mover arriba"><i class="bi bi-arrow-up"></i></button>
+                  <button type="button" (click)="mover(indice, 1)" [disabled]="indice === config.elementos.length - 1" aria-label="Mover abajo"><i class="bi bi-arrow-down"></i></button>
+                  <button type="button" class="is-danger" (click)="quitar(indice)" aria-label="Quitar"><i class="bi bi-trash3"></i></button>
+                </div>
+              </article>
+            }
+          </div>
+        } @else {
+          <div class="automatic-selection"><i class="bi bi-magic"></i><div><strong>Selección automática activa</strong><p>La portada mostrará los primeros grupos públicos de tu catálogo. Agrega cualquier opción para tomar el control del contenido y el orden.</p></div></div>
+        }
+      </section>
+    </div>
+
+    @if (mensaje()) {<div class="featured-message is-success"><i class="bi bi-check-circle"></i>{{ mensaje() }}</div>}
+    @if (error()) {<div class="featured-message is-error"><i class="bi bi-exclamation-circle"></i>{{ error() }}</div>}
+    <footer class="featured-editor__actions"><span><i class="bi bi-info-circle"></i> Sólo se publican elementos activos y visibles del catálogo.</span><button type="button" mat-flat-button color="primary" (click)="guardar()" [disabled]="guardando()"><i class="bi bi-check2 me-2"></i>{{ guardando() ? 'Guardando...' : 'Guardar destacados' }}</button></footer>
+  } @else {
+    <div class="featured-state is-error">{{ error() || 'No fue posible abrir esta configuración.' }}</div>
+  }
+</section>

@@ -1,3 +1,87 @@
+export interface TenantSiteBlock {
+  tipo: string;
+  habilitado: boolean;
+  orden: number;
+  superficie: 'BASE' | 'SUAVE' | 'MARCA' | 'CONTRASTE';
+  presentacion: 'ABIERTA' | 'PANEL' | 'BANDA';
+  anchoContenido: 'COMPACTO' | 'NORMAL' | 'AMPLIO';
+  alineacion: 'IZQUIERDA' | 'CENTRO';
+  separador: 'NINGUNO' | 'LINEA' | 'DEGRADADO';
+  espaciado: 'COMPACTO' | 'NORMAL' | 'AMPLIO';
+  etiqueta: string | null;
+  titulo: string | null;
+  descripcion: string | null;
+}
+
+export interface TenantFeaturedServiceItem {
+  tipo: 'GRUPO' | 'SUBGRUPO' | 'SERVICIO';
+  referenciaId: number;
+  grupoId: number | null;
+  subgrupoId: number | null;
+  servicioId: number | null;
+  titulo: string;
+  descripcion: string | null;
+  imagenUrl: string | null;
+  precioDesde: number | null;
+  moneda: string | null;
+  duracionMinutos: number | null;
+  cantidadServicios: number;
+  etiqueta: string | null;
+}
+
+export interface TenantFeaturedServices {
+  vista: 'TARJETAS' | 'CARRUSEL' | 'LISTA';
+  mostrarPrecio: boolean;
+  mostrarDuracion: boolean;
+  mostrarDescripcion: boolean;
+  limite: number;
+  seleccionAutomatica: boolean;
+  elementos: TenantFeaturedServiceItem[];
+}
+
+export interface TenantPromotion {
+  id: number;
+  titulo: string;
+  descripcion: string | null;
+  imagenUrl: string | null;
+  fechaInicio: string | null;
+  fechaFin: string | null;
+  tipoDescuento: 'PORCENTAJE' | 'PRECIO';
+  valorDescuento: number;
+  moneda: string;
+  textoBoton: string;
+  servicioIds: number[];
+  servicios: string[];
+  sucursales: string[];
+}
+
+export interface TenantGalleryImage {
+  id: number;
+  imagenUrl: string;
+  textoAlternativo: string;
+  titulo: string | null;
+  descripcion: string | null;
+  servicioId: number | null;
+  servicioNombre: string | null;
+  sucursalId: number | null;
+  sucursalNombre: string | null;
+}
+
+export interface TenantGallery {
+  titulo: string;
+  descripcion: string | null;
+  vista: 'CUADRICULA' | 'MOSAICO' | 'CARRUSEL';
+  ampliacionHabilitada: boolean;
+  imagenes: TenantGalleryImage[];
+}
+
+export interface TenantBenefit {
+  id: number;
+  titulo: string;
+  descripcion: string;
+  icono: 'ESTRELLA' | 'CORAZON' | 'ESCUDO' | 'DESTELLO' | 'RELOJ' | 'PERSONA' | 'HOJA' | 'PREMIO';
+}
+
 export interface TenantSiteConfig {
   empresaId: number;
   slug: string;
@@ -12,11 +96,19 @@ export interface TenantSiteConfig {
   heroTitulo: string | null;
   heroSubtitulo: string | null;
   heroImagenUrl: string | null;
+  heroTipoMedio?: string | null;
+  heroVideoUrl?: string | null;
+  heroAltura?: string | null;
   heroEtiqueta?: string | null;
   heroAlineacion?: string | null;
   heroOverlay?: string | null;
   heroTextoCta?: string | null;
   heroAccionCta?: string | null;
+  heroEnlaceCta?: string | null;
+  heroTextoSecundario?: string | null;
+  heroAccionSecundaria?: string | null;
+  heroEnlaceSecundario?: string | null;
+  heroMostrarSecundario?: boolean;
   heroMostrarWhatsapp?: boolean;
   inicioTituloServicios?: string | null;
   inicioDescripcionServicios?: string | null;
@@ -62,6 +154,11 @@ export interface TenantSiteConfig {
   footerTexto?: string | null;
   footerMostrarNavegacion?: boolean;
   footerMostrarContacto?: boolean;
+  bloques?: TenantSiteBlock[];
+  serviciosDestacados?: TenantFeaturedServices | null;
+  galeria?: TenantGallery | null;
+  promociones?: TenantPromotion[];
+  beneficios?: TenantBenefit[];
   publicado: boolean;
 }
 

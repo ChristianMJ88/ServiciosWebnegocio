@@ -1,0 +1,40 @@
+:host { display: block; }
+.benefits-editor { border: 1px solid #e5e7eb; border-radius: 22px; background: #fff; overflow: hidden; box-shadow: 0 20px 50px rgb(15 23 42 / 5%); }
+.benefits-editor__header, .benefits-editor__toolbar, .benefits-editor__footer { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: 1.25rem 1.5rem; }
+.benefits-editor__header { background: linear-gradient(135deg, #f8fafc, color-mix(in srgb, var(--tenant-primary, #4f46e5) 7%, #fff)); border-bottom: 1px solid #e5e7eb; }
+.benefits-editor__header span:first-child { color: #6366f1; font-size: .72rem; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; }
+.benefits-editor__header h3 { margin: .25rem 0; font-size: 1.35rem; }
+.benefits-editor__header p, .benefits-editor__toolbar small { margin: 0; color: #64748b; line-height: 1.55; }
+.benefits-editor__count { min-width: 52px; padding: .55rem .75rem; border-radius: 999px; background: #fff; text-align: center; font-weight: 800; box-shadow: 0 8px 24px rgb(15 23 42 / 7%); }
+.benefits-editor__toolbar { border-bottom: 1px solid #eef2f7; }
+.benefits-editor__toolbar div { display: grid; gap: .2rem; }
+.benefits-editor__toolbar button, .benefits-editor__footer button { border-radius: 12px; }
+.benefits-list { display: grid; gap: .8rem; padding: 1.25rem; }
+.benefit-card { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 1rem; padding: 1rem; border: 1px solid #e5e7eb; border-radius: 18px; background: #fff; transition: border-color .2s ease, box-shadow .2s ease, transform .2s ease; }
+.benefit-card:hover { transform: translateY(-1px); border-color: color-mix(in srgb, var(--tenant-primary, #4f46e5) 28%, #e5e7eb); box-shadow: 0 14px 30px rgb(15 23 42 / 7%); }
+.benefit-card--hidden { opacity: .62; background: #f8fafc; }
+.benefit-card__icon { display: grid; place-items: center; width: 46px; height: 46px; border-radius: 14px; color: var(--tenant-primary, #4f46e5); background: color-mix(in srgb, var(--tenant-primary, #4f46e5) 10%, #fff); font-size: 1.15rem; }
+.benefit-card__body { min-width: 0; }
+.benefit-card__topline { display: flex; align-items: center; justify-content: space-between; margin-bottom: .85rem; }
+.benefit-card__fields { display: grid; grid-template-columns: minmax(150px, .45fr) minmax(220px, 1fr); gap: .75rem; }
+.benefit-card__description { grid-column: 1 / -1; }
+.benefit-card__actions { display: flex; gap: .35rem; align-items: flex-start; }
+.benefit-card__actions button { width: 34px; height: 34px; border: 1px solid #e2e8f0; border-radius: 10px; background: #fff; color: #475569; }
+.benefit-card__actions button:disabled { opacity: .35; }
+.benefit-card__actions .benefit-card__delete { color: #dc2626; }
+.benefits-editor__empty, .benefits-editor__state { display: grid; place-items: center; gap: .75rem; padding: 3.5rem 1.5rem; text-align: center; color: #64748b; }
+.benefits-editor__empty > span { display: grid; place-items: center; width: 58px; height: 58px; border-radius: 18px; background: #eef2ff; color: #4f46e5; font-size: 1.35rem; }
+.benefits-editor__empty p { max-width: 460px; margin: 0; }
+.benefits-editor__footer { position: sticky; bottom: 0; z-index: 2; border-top: 1px solid #e5e7eb; background: rgb(255 255 255 / 94%); backdrop-filter: blur(12px); }
+.benefits-editor__message { display: inline-flex; gap: .45rem; color: #047857; font-weight: 700; }
+.benefits-editor__message--error { color: #b91c1c; }
+@media (max-width: 720px) {
+  .benefits-editor { border-radius: 18px; }
+  .benefits-editor__header, .benefits-editor__toolbar, .benefits-editor__footer { align-items: stretch; flex-direction: column; padding: 1rem; }
+  .benefits-editor__count { align-self: flex-start; }
+  .benefit-card { grid-template-columns: auto minmax(0, 1fr); padding: .85rem; }
+  .benefit-card__actions { grid-column: 1 / -1; justify-content: flex-end; }
+  .benefit-card__fields { grid-template-columns: minmax(0, 1fr); }
+  .benefit-card__description { grid-column: auto; }
+  .benefits-editor__footer button { width: 100%; }
+}

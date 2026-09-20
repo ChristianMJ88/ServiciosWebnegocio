@@ -1,0 +1,31 @@
+:host { display: block; }
+.promotions-editor { display: grid; gap: 1rem; }
+.promotions-editor__header, .promotions-editor__actions, .promotion-card > header, .promotion-card > header > div, .promotion-card__tools { display: flex; align-items: center; }
+.promotions-editor__header, .promotions-editor__actions, .promotion-card > header { justify-content: space-between; gap: 1rem; }
+.promotions-editor__header { padding: 1.15rem 1.25rem; border: 1px solid #e2e8f0; border-radius: 14px; background: #fff; }
+.promotions-editor__header h3 { margin: .2rem 0; font-size: 1.25rem; }
+.promotions-editor__header p { margin: 0; color: #64748b; }
+.promotions-list { display: grid; gap: 1rem; }
+.promotion-card { padding: 1.1rem; border: 1px solid #dfe6ef; border-radius: 14px; background: #fff; box-shadow: 0 12px 30px rgb(15 23 42 / 4%); }
+.promotion-card > header { margin-bottom: 1rem; }
+.promotion-card > header > div { gap: .7rem; }
+.promotion-card__number { display: grid; place-items: center; width: 34px; height: 34px; border-radius: 10px; background: color-mix(in srgb, #2563eb 10%, white); color: #2563eb; font-weight: 800; }
+.promotion-card small { display: block; margin-top: .15rem; color: #64748b; font-size: .75rem; }
+.promotion-card small.is-visible { color: #15803d; }
+.promotion-card__tools button:last-child { color: #b91c1c; }
+.promotion-card__fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .15rem .8rem; }
+.full-width { grid-column: 1 / -1; }
+.promotion-card__toggle { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: .9rem 1rem; border: 1px solid #e2e8f0; border-radius: 10px; }
+.promotions-state { display: grid; justify-items: center; gap: .35rem; padding: 2.5rem 1rem; border: 1px dashed #cbd5e1; border-radius: 14px; color: #64748b; background: #fff; text-align: center; }
+.promotions-state i { font-size: 1.8rem; color: #2563eb; }
+.promotions-message { padding: .8rem 1rem; border-radius: 10px; }
+.promotions-message.is-success { background: #ecfdf5; color: #166534; }
+.promotions-message.is-error { background: #fef2f2; color: #991b1b; }
+.promotions-editor__actions { position: sticky; bottom: .75rem; z-index: 2; padding: .8rem 1rem; border: 1px solid #dbe4ef; border-radius: 12px; background: rgb(255 255 255 / 94%); box-shadow: 0 16px 35px rgb(15 23 42 / 10%); backdrop-filter: blur(12px); }
+@media (max-width: 700px) {
+  .promotions-editor__header, .promotions-editor__actions { align-items: stretch; flex-direction: column; }
+  .promotions-editor__header button, .promotions-editor__actions button { width: 100%; }
+  .promotion-card__fields { grid-template-columns: 1fr; }
+  .full-width { grid-column: auto; }
+  .promotion-card { padding: .9rem; }
+}

@@ -4,7 +4,7 @@
     <span class="site-editor__state" [class.is-live]="formularioSitio().publicado"><span></span>{{ formularioSitio().publicado ? 'Sitio publicado' : 'Borrador' }}</span>
   </header>
 
-  <div class="site-editor__layout">
+  <div class="site-editor__layout" [class.site-editor__layout--wide]="seccionActiva() === 'estructura' || seccionActiva() === 'servicios_destacados' || seccionActiva() === 'beneficios' || seccionActiva() === 'promociones' || seccionActiva() === 'galeria'">
     <aside class="site-editor__nav" aria-label="Secciones de personalización">
       @for (seccion of secciones; track seccion.id) {
         <button type="button" [class.is-active]="seccionActiva() === seccion.id" [attr.aria-current]="seccionActiva() === seccion.id ? 'step' : null" (click)="seccionActiva.set(seccion.id)">
@@ -14,6 +14,26 @@
     </aside>
 
     <form class="site-editor__form" (ngSubmit)="save.emit()">
+      @if (seccionActiva() === 'estructura') {
+        <app-site-block-builder />
+      }
+
+      @if (seccionActiva() === 'servicios_destacados') {
+        <app-site-featured-services />
+      }
+
+      @if (seccionActiva() === 'beneficios') {
+        <app-site-benefits />
+      }
+
+      @if (seccionActiva() === 'promociones') {
+        <app-site-promotions />
+      }
+
+      @if (seccionActiva() === 'galeria') {
+        <app-site-gallery />
+      }
+
       @if (seccionActiva() === 'identidad') {
         <section class="editor-panel">
           <div class="editor-panel__heading"><span class="editor-panel__icon"><i class="bi bi-shop"></i></span><div><h3>Identidad del negocio</h3><p>Los datos con los que tus clientes reconocerán tu marca.</p></div></div>
@@ -21,7 +41,12 @@
             <mat-form-field appearance="outline"><mat-label>Nombre comercial</mat-label><input matInput name="sitioNombreComercial" [(ngModel)]="formularioSitio().nombreComercial" maxlength="150" required></mat-form-field>
             <mat-form-field appearance="outline"><mat-label>Slug público</mat-label><input matInput name="sitioSlug" [(ngModel)]="formularioSitio().slug" maxlength="100" required><mat-hint>{{ rutaPublicaPreview() }}</mat-hint></mat-form-field>
             <mat-form-field appearance="outline" class="full-width"><mat-label>Descripción corta</mat-label><textarea matInput rows="3" name="sitioDescripcionCorta" [(ngModel)]="formularioSitio().descripcionCorta" maxlength="255"></textarea><mat-hint align="end">{{ formularioSitio().descripcionCorta?.length || 0 }}/255</mat-hint></mat-form-field>
-            <mat-form-field appearance="outline" class="full-width"><mat-label>URL del logo</mat-label><input matInput name="sitioLogoUrl" [(ngModel)]="formularioSitio().logoUrl" maxlength="255" placeholder="https://..."></mat-form-field>
+            <div class="media-field full-width">
+              <div class="media-field__preview media-field__preview--logo">@if (formularioSitio().logoUrl) {<img [src]="formularioSitio().logoUrl" alt="Vista previa del logo">} @else {<i class="bi bi-shop"></i>}</div>
+              <div class="media-field__content"><strong>Logo de la marca</strong><small>Recomendado: PNG o WebP con fondo transparente.</small><label class="media-upload" [class.is-disabled]="!configuracionMedia()?.cargaHabilitada || subiendoBranding() !== null"><input type="file" accept="image/jpeg,image/png,image/webp,image/avif" [disabled]="!configuracionMedia()?.cargaHabilitada || subiendoBranding() !== null" (change)="seleccionarBranding($event, 'logo')"><i class="bi bi-cloud-arrow-up"></i>{{ subiendoBranding() === 'logo' ? 'Cargando…' : 'Cargar logo' }}</label></div>
+            </div>
+            <mat-form-field appearance="outline" class="full-width"><mat-label>URL del logo</mat-label><input matInput name="sitioLogoUrl" [(ngModel)]="formularioSitio().logoUrl" maxlength="500" placeholder="https://..."><mat-hint>También puedes conservar una URL pública externa.</mat-hint></mat-form-field>
+            @if (mensajeMedia()) {<p class="media-feedback"><i class="bi bi-check-circle"></i>{{ mensajeMedia() }}</p>} @if (errorMedia()) {<p class="media-feedback media-feedback--error"><i class="bi bi-exclamation-circle"></i>{{ errorMedia() }}</p>}
           </div>
         </section>
       }
@@ -67,12 +92,33 @@
             <mat-form-field appearance="outline" class="full-width"><mat-label>Etiqueta o promoción</mat-label><input matInput name="sitioHeroEtiqueta" [(ngModel)]="formularioSitio().heroEtiqueta" maxlength="80" placeholder="Ej. 20% en primera visita"><mat-hint align="end">{{ formularioSitio().heroEtiqueta?.length || 0 }}/80</mat-hint></mat-form-field>
             <mat-form-field appearance="outline" class="full-width"><mat-label>Título principal</mat-label><input matInput name="sitioHeroTitulo" [(ngModel)]="formularioSitio().heroTitulo" maxlength="180"><mat-hint align="end">{{ formularioSitio().heroTitulo?.length || 0 }}/180</mat-hint></mat-form-field>
             <mat-form-field appearance="outline" class="full-width"><mat-label>Subtítulo principal</mat-label><textarea matInput rows="4" name="sitioHeroSubtitulo" [(ngModel)]="formularioSitio().heroSubtitulo" maxlength="500"></textarea><mat-hint align="end">{{ formularioSitio().heroSubtitulo?.length || 0 }}/500</mat-hint></mat-form-field>
-            <mat-form-field appearance="outline" class="full-width"><mat-label>URL de la imagen principal</mat-label><input matInput name="sitioHeroImagenUrl" [(ngModel)]="formularioSitio().heroImagenUrl" maxlength="500" placeholder="https://... o /fluora-showcase-sites.svg"><mat-hint>Usa una imagen horizontal de alta calidad.</mat-hint></mat-form-field>
+            <mat-form-field appearance="outline"><mat-label>Medio de portada</mat-label><mat-select name="sitioHeroTipoMedio" [(ngModel)]="formularioSitio().heroTipoMedio"><mat-option value="IMAGEN">Imagen</mat-option><mat-option value="VIDEO">Video</mat-option></mat-select></mat-form-field>
+            <mat-form-field appearance="outline"><mat-label>Altura de portada</mat-label><mat-select name="sitioHeroAltura" [(ngModel)]="formularioSitio().heroAltura"><mat-option value="COMPACTA">Compacta</mat-option><mat-option value="MEDIA">Media</mat-option><mat-option value="PANTALLA">Pantalla completa</mat-option></mat-select></mat-form-field>
+            @if (formularioSitio().heroTipoMedio === 'VIDEO') {
+              <mat-form-field appearance="outline" class="full-width"><mat-label>URL del video principal</mat-label><input matInput name="sitioHeroVideoUrl" [(ngModel)]="formularioSitio().heroVideoUrl" maxlength="500" placeholder="https://.../portada.mp4"><mat-hint>Usa MP4 o WebM optimizado y sin audio. La imagen funciona como respaldo.</mat-hint></mat-form-field>
+            }
+            <div class="media-field media-field--hero full-width">
+              <div class="media-field__preview">@if (formularioSitio().heroImagenUrl) {<img [src]="formularioSitio().heroImagenUrl" alt="Vista previa de portada">} @else {<i class="bi bi-image"></i>}</div>
+              <div class="media-field__content"><strong>{{ formularioSitio().heroTipoMedio === 'VIDEO' ? 'Imagen de respaldo' : 'Imagen principal' }}</strong><small>Recomendado: formato horizontal y al menos 1600 px de ancho.</small><label class="media-upload" [class.is-disabled]="!configuracionMedia()?.cargaHabilitada || subiendoBranding() !== null"><input type="file" accept="image/jpeg,image/png,image/webp,image/avif" [disabled]="!configuracionMedia()?.cargaHabilitada || subiendoBranding() !== null" (change)="seleccionarBranding($event, 'portada')"><i class="bi bi-cloud-arrow-up"></i>{{ subiendoBranding() === 'portada' ? 'Cargando…' : 'Cargar imagen' }}</label></div>
+            </div>
+            <mat-form-field appearance="outline" class="full-width"><mat-label>{{ formularioSitio().heroTipoMedio === 'VIDEO' ? 'URL de imagen de respaldo' : 'URL de la imagen principal' }}</mat-label><input matInput name="sitioHeroImagenUrl" [(ngModel)]="formularioSitio().heroImagenUrl" maxlength="500" placeholder="https://... o /fluora-showcase-sites.svg"><mat-hint>También puedes usar una URL pública externa.</mat-hint></mat-form-field>
+            @if (mensajeMedia()) {<p class="media-feedback"><i class="bi bi-check-circle"></i>{{ mensajeMedia() }}</p>} @if (errorMedia()) {<p class="media-feedback media-feedback--error"><i class="bi bi-exclamation-circle"></i>{{ errorMedia() }}</p>}
             <mat-form-field appearance="outline"><mat-label>Alineación</mat-label><mat-select name="sitioHeroAlineacion" [(ngModel)]="formularioSitio().heroAlineacion"><mat-option value="IZQUIERDA">Izquierda</mat-option><mat-option value="CENTRO">Centrada</mat-option></mat-select></mat-form-field>
             <mat-form-field appearance="outline"><mat-label>Contraste de imagen</mat-label><mat-select name="sitioHeroOverlay" [(ngModel)]="formularioSitio().heroOverlay"><mat-option value="SUAVE">Suave</mat-option><mat-option value="MEDIO">Medio</mat-option><mat-option value="ALTO">Alto</mat-option></mat-select></mat-form-field>
             <mat-form-field appearance="outline"><mat-label>Texto del botón</mat-label><input matInput name="sitioHeroTextoCta" [(ngModel)]="formularioSitio().heroTextoCta" maxlength="40"></mat-form-field>
-            <mat-form-field appearance="outline"><mat-label>Acción del botón</mat-label><mat-select name="sitioHeroAccionCta" [(ngModel)]="formularioSitio().heroAccionCta">@for (accion of accionesDisponibles; track accion.value) {<mat-option [value]="accion.value">{{ accion.label }}</mat-option>}</mat-select></mat-form-field>
-            <label class="visibility-control full-width"><span><i class="bi bi-whatsapp"></i><strong>Mostrar WhatsApp como segunda acción</strong></span><mat-slide-toggle name="sitioHeroMostrarWhatsapp" [(ngModel)]="formularioSitio().heroMostrarWhatsapp" [disabled]="formularioSitio().heroAccionCta === 'WHATSAPP'" aria-label="Mostrar WhatsApp en portada"></mat-slide-toggle></label>
+            <mat-form-field appearance="outline"><mat-label>Acción del botón</mat-label><mat-select name="sitioHeroAccionCta" [(ngModel)]="formularioSitio().heroAccionCta">@for (accion of accionesPortada; track accion.value) {<mat-option [value]="accion.value">{{ accion.label }}</mat-option>}</mat-select></mat-form-field>
+            @if (formularioSitio().heroAccionCta === 'EXTERNO') {
+              <mat-form-field appearance="outline" class="full-width"><mat-label>Enlace del botón principal</mat-label><input matInput type="url" name="sitioHeroEnlaceCta" [(ngModel)]="formularioSitio().heroEnlaceCta" maxlength="500" placeholder="https://..."></mat-form-field>
+            }
+            <div class="editor-fields__divider full-width"><strong>Segunda acción</strong><span>Agrega una alternativa clara sin sobrecargar la portada.</span></div>
+            <label class="visibility-control full-width"><span><i class="bi bi-ui-checks"></i><strong>Mostrar segundo botón</strong></span><mat-slide-toggle name="sitioHeroMostrarSecundario" [(ngModel)]="formularioSitio().heroMostrarSecundario" aria-label="Mostrar segundo botón en portada"></mat-slide-toggle></label>
+            @if (formularioSitio().heroMostrarSecundario) {
+              <mat-form-field appearance="outline"><mat-label>Texto del segundo botón</mat-label><input matInput name="sitioHeroTextoSecundario" [(ngModel)]="formularioSitio().heroTextoSecundario" maxlength="40"></mat-form-field>
+              <mat-form-field appearance="outline"><mat-label>Acción del segundo botón</mat-label><mat-select name="sitioHeroAccionSecundaria" [(ngModel)]="formularioSitio().heroAccionSecundaria">@for (accion of accionesPortada; track accion.value) {<mat-option [value]="accion.value">{{ accion.label }}</mat-option>}</mat-select></mat-form-field>
+              @if (formularioSitio().heroAccionSecundaria === 'EXTERNO') {
+                <mat-form-field appearance="outline" class="full-width"><mat-label>Enlace del segundo botón</mat-label><input matInput type="url" name="sitioHeroEnlaceSecundario" [(ngModel)]="formularioSitio().heroEnlaceSecundario" maxlength="500" placeholder="https://..."></mat-form-field>
+              }
+            }
             <div class="editor-fields__divider full-width"><strong>Sección de servicios</strong><span>Texto que acompaña al catálogo destacado.</span></div>
             <mat-form-field appearance="outline"><mat-label>Etiqueta de servicios</mat-label><input matInput name="sitioInicioEtiquetaServicios" [(ngModel)]="formularioSitio().inicioEtiquetaServicios" maxlength="40"></mat-form-field>
             <mat-form-field appearance="outline"><mat-label>Botón para explorar</mat-label><input matInput name="sitioInicioTextoVerServicios" [(ngModel)]="formularioSitio().inicioTextoVerServicios" maxlength="40"></mat-form-field>
@@ -85,12 +131,11 @@
             <mat-form-field appearance="outline"><mat-label>Botón de WhatsApp</mat-label><input matInput name="sitioInicioTextoWhatsapp" [(ngModel)]="formularioSitio().inicioTextoWhatsapp" maxlength="40"></mat-form-field>
             <mat-form-field appearance="outline" class="full-width"><mat-label>Título de contacto</mat-label><input matInput name="sitioInicioTituloContacto" [(ngModel)]="formularioSitio().inicioTituloContacto" maxlength="180"></mat-form-field>
             <mat-form-field appearance="outline" class="full-width"><mat-label>Descripción de contacto</mat-label><textarea matInput rows="3" name="sitioInicioDescripcionContacto" [(ngModel)]="formularioSitio().inicioDescripcionContacto" maxlength="500"></textarea></mat-form-field>
-            <div class="editor-fields__divider full-width"><strong>Organización de Inicio</strong><span>Controla qué bloques aparecen y en qué orden.</span></div>
-            <div class="visibility-grid full-width">
-              <label class="visibility-control"><span><i class="bi bi-grid"></i><strong>Mostrar servicios</strong></span><mat-slide-toggle name="sitioInicioMostrarServicios" [(ngModel)]="formularioSitio().inicioMostrarServicios" aria-label="Mostrar servicios en Inicio"></mat-slide-toggle></label>
-              <label class="visibility-control"><span><i class="bi bi-chat-dots"></i><strong>Mostrar contacto</strong></span><mat-slide-toggle name="sitioInicioMostrarContacto" [(ngModel)]="formularioSitio().inicioMostrarContacto" aria-label="Mostrar contacto en Inicio"></mat-slide-toggle></label>
+            <div class="structure-shortcut full-width">
+              <span><i class="bi bi-layout-text-window-reverse"></i></span>
+              <div><strong>Orden y visibilidad</strong><p>Administra los bloques de Inicio desde la sección Estructura.</p></div>
+              <button type="button" mat-stroked-button (click)="seccionActiva.set('estructura')">Abrir estructura</button>
             </div>
-            <mat-form-field appearance="outline" class="full-width"><mat-label>Orden de las secciones</mat-label><mat-select name="sitioInicioOrdenSecciones" [(ngModel)]="formularioSitio().inicioOrdenSecciones"><mat-option value="CONTACTO_SERVICIOS">Contacto y después servicios</mat-option><mat-option value="SERVICIOS_CONTACTO">Servicios y después contacto</mat-option></mat-select></mat-form-field>
           </div>
         </section>
       }
@@ -151,15 +196,17 @@
         </section>
       }
 
-      <footer class="site-editor__actions"><span><i class="bi bi-shield-check"></i> Tus cambios permanecen protegidos hasta que decidas publicar.</span><button mat-flat-button color="primary" type="submit" [disabled]="guardandoSitio()"><i class="bi bi-check2 me-2"></i>{{ guardandoSitio() ? 'Guardando...' : 'Guardar cambios' }}</button></footer>
+      @if (seccionActiva() !== 'estructura' && seccionActiva() !== 'servicios_destacados' && seccionActiva() !== 'beneficios' && seccionActiva() !== 'promociones' && seccionActiva() !== 'galeria') {
+        <footer class="site-editor__actions"><span><i class="bi bi-shield-check"></i> Tus cambios permanecen protegidos hasta que decidas publicar.</span><button mat-flat-button color="primary" type="submit" [disabled]="guardandoSitio()"><i class="bi bi-check2 me-2"></i>{{ guardandoSitio() ? 'Guardando...' : 'Guardar cambios' }}</button></footer>
+      }
     </form>
 
     <aside class="site-editor__preview">
       <div class="preview-toolbar"><div class="preview-toolbar__label"><strong>Vista previa</strong><small>{{ previewDimensions() }}</small></div><div class="preview-devices" aria-label="Tamaño de vista previa"><button type="button" [class.is-active]="previewDevice() === 'movil'" (click)="previewDevice.set('movil')" aria-label="Vista móvil de 390 por 844 píxeles"><i class="bi bi-phone"></i></button><button type="button" [class.is-active]="previewDevice() === 'tablet'" (click)="previewDevice.set('tablet')" aria-label="Vista tableta de 820 por 1180 píxeles"><i class="bi bi-tablet"></i></button><button type="button" [class.is-active]="previewDevice() === 'escritorio'" (click)="previewDevice.set('escritorio')" aria-label="Vista escritorio de 1440 por 900 píxeles"><i class="bi bi-display"></i></button></div></div>
       <div class="site-preview-frame" [class.is-mobile]="previewDevice() === 'movil'" [class.is-tablet]="previewDevice() === 'tablet'">
       <div class="site-preview" [class.is-centered]="formularioSitio().heroAlineacion === 'CENTRO'" [class.is-overlay-soft]="formularioSitio().heroOverlay === 'SUAVE'" [class.is-overlay-strong]="formularioSitio().heroOverlay === 'ALTO'" [class.is-theme-minimal]="formularioSitio().tema === 'MINIMAL'" [class.is-theme-elegant]="formularioSitio().tema === 'ELEGANTE'" [class.is-theme-vibrant]="formularioSitio().tema === 'VIBRANTE'" [style.--preview-primary]="formularioSitio().colorPrimario || '#2563eb'" [style.--preview-secondary]="formularioSitio().colorSecundario || '#0f766e'">
-        <img [src]="heroPreviewImage()" alt="Vista previa de la portada" class="site-preview__image"><div class="site-preview__overlay"></div>
-        <div class="site-preview__content" [style.font-family]="fuenteCss(formularioSitio().fuenteCuerpo)"><div class="site-preview__brand">{{ formularioSitio().nombreComercial || 'Tu marca' }}</div><div class="site-preview__body">@if (formularioSitio().heroEtiqueta) {<div class="site-preview__eyebrow">{{ formularioSitio().heroEtiqueta }}</div>}<div class="site-preview__title" [style.font-family]="fuenteCss(formularioSitio().fuenteTitulos)">{{ formularioSitio().heroTitulo || formularioSitio().nombreComercial || 'Tu página pública' }}</div><div class="site-preview__copy">{{ formularioSitio().heroSubtitulo || formularioSitio().descripcionCorta || 'Presenta tu negocio, servicios y disponibilidad con una experiencia clara y memorable.' }}</div><div class="site-preview__actions"><span [style.background]="formularioSitio().colorPrimario || '#2563eb'">{{ formularioSitio().heroTextoCta || 'Agenda' }}</span>@if (formularioSitio().heroMostrarWhatsapp && formularioSitio().heroAccionCta !== 'WHATSAPP') {<span>WhatsApp</span>}</div></div></div>
+        @if (formularioSitio().heroTipoMedio === 'VIDEO' && heroPreviewVideo()) {<video [src]="heroPreviewVideo()!" [poster]="heroPreviewImage()" muted autoplay loop playsinline class="site-preview__image"></video>} @else {<img [src]="heroPreviewImage()" alt="Vista previa de la portada" class="site-preview__image">}<div class="site-preview__overlay"></div>
+        <div class="site-preview__content" [style.font-family]="fuenteCss(formularioSitio().fuenteCuerpo)"><div class="site-preview__brand">{{ formularioSitio().nombreComercial || 'Tu marca' }}</div><div class="site-preview__body">@if (formularioSitio().heroEtiqueta) {<div class="site-preview__eyebrow">{{ formularioSitio().heroEtiqueta }}</div>}<div class="site-preview__title" [style.font-family]="fuenteCss(formularioSitio().fuenteTitulos)">{{ formularioSitio().heroTitulo || formularioSitio().nombreComercial || 'Tu página pública' }}</div><div class="site-preview__copy">{{ formularioSitio().heroSubtitulo || formularioSitio().descripcionCorta || 'Presenta tu negocio, servicios y disponibilidad con una experiencia clara y memorable.' }}</div><div class="site-preview__actions"><span [style.background]="formularioSitio().colorPrimario || '#2563eb'">{{ formularioSitio().heroTextoCta || 'Agenda' }}</span>@if (formularioSitio().heroMostrarSecundario) {<span>{{ formularioSitio().heroTextoSecundario || 'Más información' }}</span>}</div></div></div>
       </div>
       </div>
       <div class="preview-meta"><span><i class="bi bi-phone"></i> Responsive</span><span><i class="bi bi-lightning-charge"></i> Actualización en vivo</span></div>

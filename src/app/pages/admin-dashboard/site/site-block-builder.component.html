@@ -1,0 +1,123 @@
+<section class="block-builder" aria-labelledby="block-builder-title">
+  <header class="block-builder__header">
+    <div>
+      <span class="block-builder__eyebrow">Página principal</span>
+      <h3 id="block-builder-title">Organiza la experiencia de tus clientes</h3>
+      <p>Arrastra los bloques o usa las flechas. El orden y la visibilidad se aplican a este negocio.</p>
+    </div>
+    <span class="block-builder__count">{{ totalConfigurables() }} secciones configurables</span>
+  </header>
+
+  @if (cargando()) {
+    <div class="block-builder__state"><span class="block-builder__spinner"></span>Cargando estructura…</div>
+  } @else if (error() && !bloques().length) {
+    <div class="block-builder__state block-builder__state--error">
+      <i class="bi bi-exclamation-circle"></i><span>{{ error() }}</span>
+      <button type="button" mat-stroked-button (click)="cargar()">Reintentar</button>
+    </div>
+  } @else {
+    <div
+      class="block-list"
+      cdkDropList
+      [cdkDropListData]="bloques()"
+      (cdkDropListDropped)="soltar($event)">
+      @for (bloque of bloques(); track bloque.tipo; let i = $index) {
+        @if (i === totalConfigurables()) { <div class="block-list__pending-label"><span>Próximamente</span><small>Se activarán aquí conforme estén disponibles.</small></div> }
+        <article class="block-card" [class.block-card--disabled]="!bloque.habilitado" [class.block-card--pending]="!bloque.disponible" cdkDrag [cdkDragData]="bloque" [cdkDragDisabled]="!bloque.disponible">
+          <button type="button" class="block-card__drag" cdkDragHandle [disabled]="!bloque.disponible" [attr.aria-label]="bloque.disponible ? 'Arrastrar ' + bloque.nombre : bloque.nombre + ' todavía no admite configuración'">
+            <i class="bi bi-grip-vertical"></i>
+          </button>
+          <span class="block-card__position">{{ bloque.disponible ? (i + 1) : '—' }}</span>
+          <span class="block-card__icon"><i [class]="bloque.icono"></i></span>
+          <div class="block-card__content">
+            <div class="block-card__title">
+              <strong>{{ bloque.nombre }}</strong>
+              @if (!bloque.disponible) { <span>Próximamente</span> }
+            </div>
+            <p>{{ bloque.descripcion }}</p>
+          </div>
+          <div class="block-card__controls">
+            <div class="block-card__arrows" aria-label="Cambiar posición">
+              <button type="button" (click)="mover(i, -1)" [disabled]="!bloque.disponible || i === 0" [attr.aria-label]="'Subir ' + bloque.nombre"><i class="bi bi-arrow-up"></i></button>
+              <button type="button" (click)="mover(i, 1)" [disabled]="!bloque.disponible || i === totalConfigurables() - 1" [attr.aria-label]="'Bajar ' + bloque.nombre"><i class="bi bi-arrow-down"></i></button>
+            </div>
+            <mat-slide-toggle
+              [checked]="bloque.habilitado"
+              [disabled]="!bloque.disponible"
+              (change)="cambiarVisibilidad(bloque.tipo, $event.checked)"
+              [attr.aria-label]="(bloque.habilitado ? 'Ocultar ' : 'Mostrar ') + bloque.nombre">
+            </mat-slide-toggle>
+            @if (bloque.disponible && bloque.tipo !== 'PORTADA') {
+              <button type="button" class="block-card__design-button" (click)="alternarPersonalizacion(bloque.tipo)" [attr.aria-expanded]="personalizando() === bloque.tipo">
+                <i class="bi bi-palette2"></i><span>Diseño</span>
+              </button>
+            }
+          </div>
+          @if (bloque.disponible && bloque.tipo !== 'PORTADA' && personalizando() === bloque.tipo) {
+            <div class="block-card__designer">
+              <div class="block-card__designer-heading">
+                <div><strong>Presentación de {{ bloque.nombre }}</strong><span>Opciones seguras que se adaptan a todos los dispositivos.</span></div>
+                <div class="block-card__visual-summary"><span>{{ bloque.superficie }}</span><span>{{ bloque.presentacion }}</span></div>
+              </div>
+              <div class="block-card__designer-grid">
+                <mat-form-field appearance="outline">
+                  <mat-label>Superficie</mat-label>
+                  <mat-select [ngModel]="bloque.superficie" (ngModelChange)="actualizarCampo(bloque.tipo, 'superficie', $event)">
+                    <mat-option value="BASE">Blanca</mat-option><mat-option value="SUAVE">Suave</mat-option><mat-option value="MARCA">Color de marca</mat-option><mat-option value="CONTRASTE">Contraste</mat-option>
+                  </mat-select>
+                </mat-form-field>
+                <mat-form-field appearance="outline">
+                  <mat-label>Presentación</mat-label>
+                  <mat-select [ngModel]="bloque.presentacion" (ngModelChange)="actualizarCampo(bloque.tipo, 'presentacion', $event)">
+                    <mat-option value="ABIERTA">Abierta</mat-option><mat-option value="PANEL">Panel</mat-option><mat-option value="BANDA">Banda completa</mat-option>
+                  </mat-select>
+                </mat-form-field>
+                <mat-form-field appearance="outline">
+                  <mat-label>Ancho</mat-label>
+                  <mat-select [ngModel]="bloque.anchoContenido" (ngModelChange)="actualizarCampo(bloque.tipo, 'anchoContenido', $event)">
+                    <mat-option value="COMPACTO">Compacto</mat-option><mat-option value="NORMAL">Normal</mat-option><mat-option value="AMPLIO">Amplio</mat-option>
+                  </mat-select>
+                </mat-form-field>
+                <mat-form-field appearance="outline">
+                  <mat-label>Alineación</mat-label>
+                  <mat-select [ngModel]="bloque.alineacion" (ngModelChange)="actualizarCampo(bloque.tipo, 'alineacion', $event)">
+                    <mat-option value="IZQUIERDA">Izquierda</mat-option><mat-option value="CENTRO">Centro</mat-option>
+                  </mat-select>
+                </mat-form-field>
+                <mat-form-field appearance="outline">
+                  <mat-label>Separador</mat-label>
+                  <mat-select [ngModel]="bloque.separador" (ngModelChange)="actualizarCampo(bloque.tipo, 'separador', $event)">
+                    <mat-option value="NINGUNO">Ninguno</mat-option><mat-option value="LINEA">Línea</mat-option><mat-option value="DEGRADADO">Degradado</mat-option>
+                  </mat-select>
+                </mat-form-field>
+                <mat-form-field appearance="outline">
+                  <mat-label>Espaciado</mat-label>
+                  <mat-select [ngModel]="bloque.espaciado" (ngModelChange)="actualizarCampo(bloque.tipo, 'espaciado', $event)">
+                    <mat-option value="COMPACTO">Compacto</mat-option><mat-option value="NORMAL">Normal</mat-option><mat-option value="AMPLIO">Amplio</mat-option>
+                  </mat-select>
+                </mat-form-field>
+              </div>
+              @if (bloque.tipo !== 'PORTADA') {
+                <div class="block-card__copy-grid">
+                  <mat-form-field appearance="outline"><mat-label>Etiqueta</mat-label><input matInput [ngModel]="bloque.etiqueta" (ngModelChange)="actualizarCampo(bloque.tipo, 'etiqueta', $event)" maxlength="80"></mat-form-field>
+                  <mat-form-field appearance="outline"><mat-label>Título</mat-label><input matInput [ngModel]="bloque.titulo" (ngModelChange)="actualizarCampo(bloque.tipo, 'titulo', $event)" maxlength="160"></mat-form-field>
+                  <mat-form-field appearance="outline" class="block-card__description-field"><mat-label>Descripción</mat-label><textarea matInput rows="2" [ngModel]="bloque.descripcionVisual" (ngModelChange)="actualizarCampo(bloque.tipo, 'descripcionVisual', $event)" maxlength="400"></textarea></mat-form-field>
+                </div>
+              }
+            </div>
+          }
+        </article>
+      }
+    </div>
+
+    <footer class="block-builder__footer">
+      <div aria-live="polite">
+        @if (mensaje()) { <span class="block-builder__message"><i class="bi bi-check-circle"></i>{{ mensaje() }}</span> }
+        @if (error()) { <span class="block-builder__message block-builder__message--error"><i class="bi bi-exclamation-circle"></i>{{ error() }}</span> }
+      </div>
+      <button type="button" mat-flat-button color="primary" [disabled]="guardando()" (click)="guardar()">
+        <i class="bi bi-check2 me-2"></i>{{ guardando() ? 'Guardando…' : 'Guardar estructura' }}
+      </button>
+    </footer>
+  }
+</section>

@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, computed, inject, input, output, signal } from '@angular/core';
+import { Component, OnInit, computed, inject, input, output, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
@@ -9,10 +9,18 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import {
   AuditoriaConfiguracionAdmin,
+  ConfiguracionMediaAdmin,
   ConfiguracionSitioAdmin,
   GuardarConfiguracionSitioPayload
 } from '../../../core/admin/admin.service';
 import { PlatformHostService } from '../../../core/platform/platform-host.service';
+import { SiteBlockBuilderComponent } from './site-block-builder.component';
+import { SiteFeaturedServicesComponent } from './site-featured-services.component';
+import { SitePromotionsComponent } from './site-promotions.component';
+import { SiteGalleryComponent } from './site-gallery.component';
+import { SiteBenefitsComponent } from './site-benefits.component';
+import { AdminSiteFacade } from './admin-site.facade';
+import { finalize } from 'rxjs';
 
 @Component({
   selector: 'app-admin-site-section',
@@ -25,13 +33,19 @@ import { PlatformHostService } from '../../../core/platform/platform-host.servic
     MatFormFieldModule,
     MatInputModule,
     MatSelectModule,
-    MatSlideToggleModule
+    MatSlideToggleModule,
+    SiteBlockBuilderComponent,
+    SiteFeaturedServicesComponent,
+    SitePromotionsComponent,
+    SiteGalleryComponent,
+    SiteBenefitsComponent
   ],
   templateUrl: './admin-site-section.component.html',
   styleUrl: './admin-site-section.component.css'
 })
-export class AdminSiteSectionComponent {
+export class AdminSiteSectionComponent implements OnInit {
   private readonly platformHost = inject(PlatformHostService);
+  private readonly facade = inject(AdminSiteFacade);
   readonly defaultHeroImage = '/fluora-showcase-sites.svg';
 
   readonly formularioSitio = input.required<GuardarConfiguracionSitioPayload>();
@@ -41,8 +55,12 @@ export class AdminSiteSectionComponent {
   readonly etiquetaAccionAuditoriaConfiguracion = input.required<(accion: string) => string>();
 
   readonly save = output<void>();
-  readonly seccionActiva = signal<'identidad' | 'apariencia' | 'navegacion' | 'portada' | 'contacto' | 'seo_footer' | 'publicacion'>('identidad');
+  readonly seccionActiva = signal<'estructura' | 'servicios_destacados' | 'beneficios' | 'promociones' | 'galeria' | 'identidad' | 'apariencia' | 'navegacion' | 'portada' | 'contacto' | 'seo_footer' | 'publicacion'>('estructura');
   readonly previewDevice = signal<'movil' | 'tablet' | 'escritorio'>('escritorio');
+  readonly configuracionMedia = signal<ConfiguracionMediaAdmin | null>(null);
+  readonly subiendoBranding = signal<'logo' | 'portada' | null>(null);
+  readonly mensajeMedia = signal<string | null>(null);
+  readonly errorMedia = signal<string | null>(null);
   readonly previewDimensions = computed(() => ({
     movil: '390 × 844 px',
     tablet: '820 × 1180 px',
@@ -50,6 +68,11 @@ export class AdminSiteSectionComponent {
   })[this.previewDevice()]);
 
   readonly secciones = [
+    { id: 'estructura' as const, label: 'Estructura', icon: 'bi bi-layout-text-window-reverse' },
+    { id: 'servicios_destacados' as const, label: 'Servicios destacados', icon: 'bi bi-stars' },
+    { id: 'beneficios' as const, label: 'Beneficios', icon: 'bi bi-patch-check' },
+    { id: 'promociones' as const, label: 'Promociones', icon: 'bi bi-tags' },
+    { id: 'galeria' as const, label: 'Galería', icon: 'bi bi-images' },
     { id: 'identidad' as const, label: 'Identidad', icon: 'bi bi-shop' },
     { id: 'apariencia' as const, label: 'Colores y tipografía', icon: 'bi bi-palette2' },
     { id: 'navegacion' as const, label: 'Menú', icon: 'bi bi-menu-button-wide' },
@@ -71,6 +94,7 @@ export class AdminSiteSectionComponent {
   });
 
   readonly heroPreviewImage = computed(() => this.formularioSitio().heroImagenUrl || this.defaultHeroImage);
+  readonly heroPreviewVideo = computed(() => this.formularioSitio().heroVideoUrl?.trim() || null);
 
   readonly fuentesDisponibles = [
     { value: 'JAKARTA', label: 'Plus Jakarta Sans' },
@@ -93,6 +117,53 @@ export class AdminSiteSectionComponent {
     { value: 'CONTACTO', label: 'Ir a contacto' },
     { value: 'WHATSAPP', label: 'Abrir WhatsApp' }
   ];
+
+  readonly accionesPortada = [
+    ...this.accionesDisponibles,
+    { value: 'EXTERNO', label: 'Abrir enlace externo' }
+  ];
+
+  ngOnInit(): void {
+    this.facade.cargarConfiguracionMedia().subscribe({
+      next: configuracion => this.configuracionMedia.set(configuracion),
+      error: () => this.configuracionMedia.set(null)
+    });
+  }
+
+  seleccionarBranding(evento: Event, destino: 'logo' | 'portada'): void {
+    const inputArchivo = evento.target as HTMLInputElement;
+    const archivo = inputArchivo.files?.[0];
+    inputArchivo.value = '';
+    if (!archivo || this.subiendoBranding() !== null) return;
+    const configuracion = this.configuracionMedia();
+    this.mensajeMedia.set(null);
+    this.errorMedia.set(null);
+    if (!configuracion?.cargaHabilitada) {
+      this.errorMedia.set('Cloudinary todavía no está configurado. Puedes continuar usando una URL pública.');
+      return;
+    }
+    if (!configuracion.tiposImagenPermitidos.includes(archivo.type)) {
+      this.errorMedia.set('Usa una imagen JPG, PNG, WebP o AVIF.');
+      return;
+    }
+    if (archivo.size > configuracion.maxBytesImagen) {
+      this.errorMedia.set(`La imagen supera el máximo de ${this.megabytes(configuracion.maxBytesImagen)} MB.`);
+      return;
+    }
+    this.subiendoBranding.set(destino);
+    this.facade.subirImagenBranding(archivo).pipe(finalize(() => this.subiendoBranding.set(null))).subscribe({
+      next: media => {
+        if (destino === 'logo') this.formularioSitio().logoUrl = media.secureUrl;
+        else this.formularioSitio().heroImagenUrl = media.secureUrl;
+        this.mensajeMedia.set(`${destino === 'logo' ? 'Logo' : 'Imagen de portada'} cargado. Guarda los cambios para publicarlo.`);
+      },
+      error: err => this.errorMedia.set(err?.error?.message || err?.error?.detail || 'No fue posible cargar la imagen.')
+    });
+  }
+
+  megabytes(bytes: number): string {
+    return (bytes / 1024 / 1024).toFixed(bytes % (1024 * 1024) === 0 ? 0 : 1);
+  }
 
   fuenteCss(valor?: string | null): string {
     const fuentes: Record<string, string> = {

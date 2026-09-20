@@ -1,11 +1,20 @@
 <main class="home-page">
+  @if (tenantContext.bloqueInicioHabilitado('PORTADA')) {
   <section
     class="home-hero"
+    [ngClass]="tenantContext.clasesBloqueInicio('PORTADA')"
+    [style.order]="tenantContext.ordenBloqueInicio('PORTADA')"
     [class.home-hero--centered]="tenantContext.heroAlineacion() === 'CENTRO'"
+    [class.home-hero--compact]="tenantContext.heroAltura() === 'COMPACTA'"
+    [class.home-hero--medium]="tenantContext.heroAltura() === 'MEDIA'"
     [class.home-hero--overlay-soft]="tenantContext.heroOverlay() === 'SUAVE'"
     [class.home-hero--overlay-strong]="tenantContext.heroOverlay() === 'ALTO'">
     <div class="home-hero__media">
-      <img [src]="tenantContext.heroImagenUrl()" [alt]="tenantContext.nombreComercial()">
+      @if (tenantContext.heroTipoMedio() === 'VIDEO' && tenantContext.heroVideoUrl()) {
+        <video [src]="tenantContext.heroVideoUrl()" [poster]="tenantContext.heroImagenUrl()" muted autoplay loop playsinline></video>
+      } @else {
+        <img [src]="tenantContext.heroImagenUrl()" [alt]="tenantContext.nombreComercial()">
+      }
     </div>
     <div class="home-hero__scrim"></div>
 
@@ -18,38 +27,42 @@
         <p class="home-hero__copy" appScrollReveal="up" [revealDelay]="180">{{ tenantContext.heroSubtitulo() }}</p>
 
         <div class="home-hero__actions" appScrollReveal="up" [revealDelay]="260">
-          @if (heroCtaWhatsapp()) {
+          @if (tenantContext.actionIsExternal(tenantContext.heroAccionCta())) {
             <a
-              [href]="tenantContext.whatsappHref()"
+              [href]="tenantContext.actionHref(tenantContext.heroAccionCta(), tenantContext.heroEnlaceCta())"
               target="_blank"
               rel="noreferrer"
               class="btn home-hero__button home-hero__button--primary">
-              <i class="bi bi-whatsapp"></i>
+              <i [class]="tenantContext.actionIcon(tenantContext.heroAccionCta())"></i>
               <span>{{ tenantContext.heroTextoCta() }}</span>
             </a>
           } @else {
             <a [routerLink]="tenantContext.actionRoute(tenantContext.heroAccionCta())" class="btn home-hero__button home-hero__button--primary">
-              <i class="bi bi-calendar2-check"></i>
+              <i [class]="tenantContext.actionIcon(tenantContext.heroAccionCta())"></i>
               <span>{{ tenantContext.heroTextoCta() }}</span>
             </a>
           }
-          @if (tieneWhatsapp() && tenantContext.heroMostrarWhatsapp() && !heroCtaWhatsapp()) {
-            <a
-              [href]="tenantContext.whatsappHref()"
-              target="_blank"
-              rel="noreferrer"
-              class="btn home-hero__button home-hero__button--whatsapp">
-              <i class="bi bi-whatsapp"></i>
-              <span>WhatsApp</span>
-            </a>
+          @if (tenantContext.heroMostrarSecundario() && tenantContext.actionAvailable(tenantContext.heroAccionSecundaria(), tenantContext.heroEnlaceSecundario())) {
+            @if (tenantContext.actionIsExternal(tenantContext.heroAccionSecundaria())) {
+              <a [href]="tenantContext.actionHref(tenantContext.heroAccionSecundaria(), tenantContext.heroEnlaceSecundario())" target="_blank" rel="noreferrer" class="btn home-hero__button home-hero__button--secondary">
+                <i [class]="tenantContext.actionIcon(tenantContext.heroAccionSecundaria())"></i>
+                <span>{{ tenantContext.heroTextoSecundario() }}</span>
+              </a>
+            } @else {
+              <a [routerLink]="tenantContext.actionRoute(tenantContext.heroAccionSecundaria())" class="btn home-hero__button home-hero__button--secondary">
+                <i [class]="tenantContext.actionIcon(tenantContext.heroAccionSecundaria())"></i>
+                <span>{{ tenantContext.heroTextoSecundario() }}</span>
+              </a>
+            }
           }
         </div>
       </div>
     </div>
   </section>
+  }
 
-  @if (tenantContext.inicioMostrarContacto()) {
-  <section class="quick-reserve" [class.quick-reserve--after-hero]="ordenSeccion('CONTACTO') === 1" [style.order]="ordenSeccion('CONTACTO')">
+  @if (tenantContext.bloqueInicioHabilitado('CONTACTO')) {
+  <section class="home-section quick-reserve" [ngClass]="tenantContext.clasesBloqueInicio('CONTACTO')" [class.quick-reserve--after-hero]="tenantContext.ordenBloqueInicio('CONTACTO') === 1" [style.order]="tenantContext.ordenBloqueInicio('CONTACTO')">
     <div class="container">
       <div class="quick-reserve__band">
         <div class="quick-reserve__intro" appScrollReveal="up">
@@ -100,36 +113,34 @@
   </section>
   }
 
-  @if (tenantContext.inicioMostrarServicios()) {
-  <section class="home-services" [style.order]="ordenSeccion('SERVICIOS')">
+  @if (tenantContext.bloqueInicioHabilitado('SERVICIOS_DESTACADOS')) {
+  <section class="home-section home-services" [ngClass]="tenantContext.clasesBloqueInicio('SERVICIOS_DESTACADOS')" [style.order]="tenantContext.ordenBloqueInicio('SERVICIOS_DESTACADOS')">
     <div class="container">
-      <div class="section-header" appScrollReveal="up">
-        <span class="section-kicker">{{ tenantContext.inicioEtiquetaServicios() }}</span>
-        <h2>{{ tenantContext.inicioTituloServicios() || tenantContext.nombreComercial() }}</h2>
-        @if (tenantContext.inicioDescripcionServicios()) {
-          <p>{{ tenantContext.inicioDescripcionServicios() }}</p>
-        }
-      </div>
+      <app-public-section-heading
+        appScrollReveal="up"
+        [eyebrow]="tenantContext.bloqueInicio('SERVICIOS_DESTACADOS')?.etiqueta || tenantContext.inicioEtiquetaServicios()"
+        [title]="tenantContext.bloqueInicio('SERVICIOS_DESTACADOS')?.titulo || tenantContext.inicioTituloServicios() || tenantContext.nombreComercial()"
+        [description]="tenantContext.bloqueInicio('SERVICIOS_DESTACADOS')?.descripcion || tenantContext.inicioDescripcionServicios()" />
 
-      @if (gruposDestacados().length) {
-        <div class="services-feature-grid">
-          @for (grupo of gruposDestacados(); track grupo.id; let i = $index) {
+      @if (destacados().length) {
+        <div class="services-feature-grid" [class.services-feature-grid--carousel]="vistaDestacados() === 'CARRUSEL'" [class.services-feature-grid--list]="vistaDestacados() === 'LISTA'" [class.services-feature-grid--single]="destacados().length === 1" [class.services-feature-grid--pair]="destacados().length === 2">
+          @for (item of destacados(); track item.tipo + '-' + item.referenciaId; let i = $index) {
             <article class="service-feature">
               <div class="service-feature__media">
-                <img [src]="imagenGrupo(grupo)" [alt]="grupo.nombre">
+                <img [src]="imagenDestacado(item)" [alt]="item.titulo">
+                @if (item.etiqueta) {<span class="service-feature__badge">{{ item.etiqueta }}</span>}
               </div>
               <div class="service-feature__body" appScrollReveal="up" [revealDelay]="80 * (i + 1)">
-                <div class="service-feature__eyebrow">{{ grupo.nombre }}</div>
-                <h3>{{ grupo.nombre }}</h3>
-                @if (grupo.descripcion) {
-                  <p>{{ grupo.descripcion }}</p>
+                <div class="service-feature__eyebrow">{{ item.tipo === 'SERVICIO' ? 'Servicio' : item.tipo === 'SUBGRUPO' ? 'Colección' : 'Categoría' }}</div>
+                <h3>{{ item.titulo }}</h3>
+                @if (mostrarDescripcionDestacados() && item.descripcion) {
+                  <p>{{ item.descripcion }}</p>
                 }
                 <div class="service-feature__meta">
-                  <span>{{ totalServiciosGrupo(grupo) }} servicios</span>
-                  @if (precioDesdeGrupo(grupo) !== null) {
-                    <span>
-                      Desde {{ precioDesdeGrupo(grupo)! | appMoney:monedaGrupo(grupo):2:2 }}
-                    </span>
+                  @if (item.tipo !== 'SERVICIO') {<span>{{ item.cantidadServicios }} {{ item.cantidadServicios === 1 ? 'servicio' : 'servicios' }}</span>}
+                  @if (mostrarDuracionDestacados() && item.duracionMinutos) {<span><i class="bi bi-clock"></i> {{ item.duracionMinutos }} min</span>}
+                  @if (mostrarPrecioDestacados() && item.precioDesde !== null) {
+                    <span>{{ item.tipo === 'SERVICIO' ? '' : 'Desde ' }}{{ item.precioDesde | appMoney:(item.moneda || 'MXN'):2:2 }}</span>
                   }
                 </div>
                 <div class="service-feature__actions">
@@ -137,7 +148,7 @@
                     <i class="bi bi-grid"></i>
                     <span>{{ tenantContext.inicioTextoVerServicios() }}</span>
                   </a>
-                  <a [routerLink]="tenantContext.routeFor('agendar')" class="btn service-feature__button service-feature__button--primary">
+                  <a [routerLink]="tenantContext.routeFor('agendar')" [queryParams]="item.servicioId ? { servicios: item.servicioId } : null" class="btn service-feature__button service-feature__button--primary">
                     <i class="bi bi-calendar2-plus"></i>
                     <span>{{ tenantContext.inicioTextoReservar() }}</span>
                   </a>
@@ -162,4 +173,106 @@
     </div>
   </section>
   }
+
+  @if (tenantContext.bloqueInicioHabilitado('BENEFICIOS') && tenantContext.beneficios().length) {
+  <section class="home-section home-benefits" [ngClass]="tenantContext.clasesBloqueInicio('BENEFICIOS')" [style.order]="tenantContext.ordenBloqueInicio('BENEFICIOS')">
+    <div class="container">
+      <app-public-section-heading
+        appScrollReveal="up"
+        [eyebrow]="tenantContext.bloqueInicio('BENEFICIOS')?.etiqueta"
+        [title]="tenantContext.bloqueInicio('BENEFICIOS')?.titulo || tenantContext.nombreComercial()"
+        [description]="tenantContext.bloqueInicio('BENEFICIOS')?.descripcion" />
+      <div class="benefits-grid" [class.benefits-grid--single]="tenantContext.beneficios().length === 1" [class.benefits-grid--pair]="tenantContext.beneficios().length === 2">
+        @for (item of tenantContext.beneficios(); track item.id; let i = $index) {
+          <article class="benefit-public-card" appScrollReveal="up" [revealDelay]="70 * (i + 1)">
+            <span class="benefit-public-card__number">{{ numeroBeneficio(i) }}</span>
+            <span class="benefit-public-card__icon"><i [class]="iconoBeneficio(item.icono)"></i></span>
+            <div><h3>{{ item.titulo }}</h3><p>{{ item.descripcion }}</p></div>
+          </article>
+        }
+      </div>
+    </div>
+  </section>
+  }
+
+  @if (tenantContext.bloqueInicioHabilitado('GALERIA') && tenantContext.galeria()?.imagenes?.length) {
+  <section class="home-section home-gallery" [ngClass]="tenantContext.clasesBloqueInicio('GALERIA')" [style.order]="tenantContext.ordenBloqueInicio('GALERIA')">
+    <div class="container">
+      <app-public-section-heading
+        appScrollReveal="up"
+        [eyebrow]="tenantContext.bloqueInicio('GALERIA')?.etiqueta"
+        [title]="tenantContext.bloqueInicio('GALERIA')?.titulo || tenantContext.galeria()?.titulo || tenantContext.nombreComercial()"
+        [description]="tenantContext.bloqueInicio('GALERIA')?.descripcion || tenantContext.galeria()?.descripcion" />
+      <div
+        class="gallery-public"
+        [class.gallery-public--single]="tenantContext.galeria()!.imagenes.length === 1"
+        [class.gallery-public--pair]="tenantContext.galeria()!.imagenes.length === 2"
+        [class.gallery-public--mosaic]="tenantContext.galeria()?.vista === 'MOSAICO'"
+        [class.gallery-public--carousel]="tenantContext.galeria()?.vista === 'CARRUSEL'">
+        @for (item of tenantContext.galeria()?.imagenes; track item.id; let i = $index) {
+          <article class="gallery-public__item" appScrollReveal="up" [revealDelay]="55 * (i + 1)">
+            <button type="button" class="gallery-public__media" [class.gallery-public__media--zoom]="tenantContext.galeria()?.ampliacionHabilitada" (click)="abrirImagenGaleria(item)" [attr.aria-label]="tenantContext.galeria()?.ampliacionHabilitada ? 'Ampliar ' + item.textoAlternativo : item.textoAlternativo">
+              <img [src]="item.imagenUrl" [alt]="item.textoAlternativo" loading="lazy">
+              @if (tenantContext.galeria()?.ampliacionHabilitada) {<span class="gallery-public__zoom"><i class="bi bi-arrows-fullscreen"></i></span>}
+            </button>
+            @if (item.titulo || item.servicioNombre || item.sucursalNombre) {
+              <div class="gallery-public__caption">
+                @if (item.titulo) {<strong>{{ item.titulo }}</strong>}
+                @if (item.descripcion) {<p>{{ item.descripcion }}</p>}
+                <div>@if (item.servicioNombre) {<span><i class="bi bi-stars"></i>{{ item.servicioNombre }}</span>} @if (item.sucursalNombre) {<span><i class="bi bi-geo-alt"></i>{{ item.sucursalNombre }}</span>}</div>
+              </div>
+            }
+          </article>
+        }
+      </div>
+    </div>
+  </section>
+  }
+
+  @if (tenantContext.bloqueInicioHabilitado('PROMOCIONES') && tenantContext.promociones().length) {
+  <section class="home-section home-promotions" [ngClass]="tenantContext.clasesBloqueInicio('PROMOCIONES')" [style.order]="tenantContext.ordenBloqueInicio('PROMOCIONES')">
+    <div class="container">
+      <app-public-section-heading
+        appScrollReveal="up"
+        [eyebrow]="tenantContext.bloqueInicio('PROMOCIONES')?.etiqueta"
+        [title]="tenantContext.bloqueInicio('PROMOCIONES')?.titulo || tenantContext.nombreComercial()"
+        [description]="tenantContext.bloqueInicio('PROMOCIONES')?.descripcion" />
+      <div class="promotions-grid" [class.promotions-grid--single]="tenantContext.promociones().length === 1">
+        @for (item of tenantContext.promociones(); track item.id; let i = $index) {
+          <article class="promotion-public-card" appScrollReveal="up" [revealDelay]="70 * (i + 1)">
+            <div class="promotion-public-card__media">
+              <img [src]="imagenPromocion(item)" [alt]="item.titulo">
+              <span class="promotion-public-card__discount">
+                @if (item.tipoDescuento === 'PORCENTAJE') {-{{ item.valorDescuento }}%} @else { {{ item.valorDescuento | appMoney:item.moneda:2:2 }} }
+              </span>
+            </div>
+            <div class="promotion-public-card__body">
+              <div class="promotion-public-card__eyebrow"><i class="bi bi-stars"></i> Oferta vigente</div>
+              <h3>{{ item.titulo }}</h3>
+              @if (item.descripcion) {<p>{{ item.descripcion }}</p>}
+              @if (item.servicios.length || item.sucursales.length) {
+                <div class="promotion-public-card__scope">
+                  @for (servicio of item.servicios.slice(0, 3); track servicio) {<span>{{ servicio }}</span>}
+                  @for (sucursal of item.sucursales.slice(0, 2); track sucursal) {<span><i class="bi bi-geo-alt"></i>{{ sucursal }}</span>}
+                </div>
+              }
+              @if (item.fechaFin) {<small class="promotion-public-card__validity">Disponible hasta {{ item.fechaFin | date:'d MMM y' }}</small>}
+              <a [routerLink]="tenantContext.routeFor('agendar')" [queryParams]="parametrosPromocion(item)" class="btn promotion-public-card__button"><span>{{ item.textoBoton }}</span><i class="bi bi-arrow-right"></i></a>
+            </div>
+          </article>
+        }
+      </div>
+    </div>
+  </section>
+  }
 </main>
+
+@if (imagenGaleriaActiva(); as imagen) {
+  <div class="gallery-lightbox" role="dialog" aria-modal="true" [attr.aria-label]="imagen.textoAlternativo" (click)="cerrarImagenGaleria()">
+    <button type="button" class="gallery-lightbox__close" (click)="cerrarImagenGaleria()" aria-label="Cerrar imagen"><i class="bi bi-x-lg"></i></button>
+    <figure (click)="$event.stopPropagation()">
+      <img [src]="imagen.imagenUrl" [alt]="imagen.textoAlternativo">
+      @if (imagen.titulo || imagen.descripcion) {<figcaption>@if (imagen.titulo) {<strong>{{ imagen.titulo }}</strong>} @if (imagen.descripcion) {<p>{{ imagen.descripcion }}</p>}</figcaption>}
+    </figure>
+  </div>
+}

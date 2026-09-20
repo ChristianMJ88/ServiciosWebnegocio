@@ -1,15 +1,17 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { Component, HostListener, OnInit, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { TenantContextService } from '../../core/tenant/tenant-context.service';
+import { TenantFeaturedServiceItem, TenantGalleryImage, TenantPromotion } from '../../core/tenant/tenant.types';
 import { BookingDataService, CatalogoServiciosPublico, GrupoCatalogoPublico } from '../../services/booking-data.service';
 import { ScrollRevealDirective } from '../../shared/directives/scroll-reveal.directive';
 import { MoneyDisplayPipe } from '../../shared/pipes/money-display.pipe';
+import { PublicSectionHeadingComponent } from '../../shared/ui/public-section-heading/public-section-heading.component';
 
 @Component({
   selector: 'app-home',
   standalone: true,
-  imports: [RouterLink, CommonModule, ScrollRevealDirective, MoneyDisplayPipe],
+  imports: [RouterLink, CommonModule, ScrollRevealDirective, MoneyDisplayPipe, PublicSectionHeadingComponent],
   templateUrl: './home.component.html',
   styleUrls: ['./home.component.css']
 })
@@ -18,17 +20,44 @@ export class HomeComponent implements OnInit {
   private readonly bookingDataService = inject(BookingDataService);
   readonly catalogo = signal<CatalogoServiciosPublico | null>(null);
   readonly cargandoServicios = signal(false);
+  readonly imagenGaleriaActiva = signal<TenantGalleryImage | null>(null);
   readonly tieneWhatsapp = computed(() => this.tenantContext.whatsappHabilitado());
-  readonly heroCtaWhatsapp = computed(() =>
-    this.tenantContext.heroAccionCta() === 'WHATSAPP' && this.tieneWhatsapp()
-  );
-  readonly gruposDestacados = computed(() => this.catalogo()?.grupos.slice(0, 3) ?? []);
+  readonly destacados = computed<TenantFeaturedServiceItem[]>(() => {
+    const configuracion = this.tenantContext.serviciosDestacados();
+    if (configuracion) return configuracion.elementos;
+
+    return (this.catalogo()?.grupos.slice(0, 3) ?? []).map(grupo => ({
+      tipo: 'GRUPO',
+      referenciaId: grupo.id,
+      grupoId: grupo.id,
+      subgrupoId: null,
+      servicioId: null,
+      titulo: grupo.nombre,
+      descripcion: grupo.descripcion,
+      imagenUrl: this.imagenGrupo(grupo),
+      precioDesde: this.precioDesdeGrupo(grupo),
+      moneda: this.monedaGrupo(grupo),
+      duracionMinutos: null,
+      cantidadServicios: this.totalServiciosGrupo(grupo),
+      etiqueta: null
+    }));
+  });
+  readonly vistaDestacados = computed(() => this.tenantContext.serviciosDestacados()?.vista ?? 'TARJETAS');
+  readonly mostrarPrecioDestacados = computed(() => this.tenantContext.serviciosDestacados()?.mostrarPrecio ?? true);
+  readonly mostrarDuracionDestacados = computed(() => this.tenantContext.serviciosDestacados()?.mostrarDuracion ?? true);
+  readonly mostrarDescripcionDestacados = computed(() => this.tenantContext.serviciosDestacados()?.mostrarDescripcion ?? true);
+  private readonly iconosBeneficios: Record<string, string> = {
+    ESTRELLA: 'bi bi-star', CORAZON: 'bi bi-heart', ESCUDO: 'bi bi-shield-check', DESTELLO: 'bi bi-stars',
+    RELOJ: 'bi bi-clock', PERSONA: 'bi bi-person-heart', HOJA: 'bi bi-flower1', PREMIO: 'bi bi-award'
+  };
 
   ngOnInit(): void {
     const slug = this.tenantContext.slug();
     if (!slug) {
       return;
     }
+
+    if (this.tenantContext.serviciosDestacados()) return;
 
     this.cargandoServicios.set(true);
     this.bookingDataService.getPublicCatalogBySlug(slug).subscribe({
@@ -61,10 +90,37 @@ export class HomeComponent implements OnInit {
     return grupo.subgrupos.flatMap(subgrupo => subgrupo.servicios).find(servicio => !!servicio.moneda)?.moneda || 'MXN';
   }
 
-  ordenSeccion(seccion: 'CONTACTO' | 'SERVICIOS'): number {
-    const serviciosPrimero = this.tenantContext.inicioOrdenSecciones() === 'SERVICIOS_CONTACTO';
-    return seccion === 'SERVICIOS'
-      ? (serviciosPrimero ? 1 : 2)
-      : (serviciosPrimero ? 2 : 1);
+  imagenDestacado(item: TenantFeaturedServiceItem): string {
+    return item.imagenUrl || this.tenantContext.logoUrl() || '/fluora-mark.svg';
   }
+
+  imagenPromocion(item: TenantPromotion): string {
+    return item.imagenUrl || this.tenantContext.heroImagenUrl();
+  }
+
+  parametrosPromocion(item: TenantPromotion): { servicios: string } | null {
+    return item.servicioIds.length ? { servicios: item.servicioIds.join(',') } : null;
+  }
+
+  iconoBeneficio(icono: string): string {
+    return this.iconosBeneficios[icono] ?? 'bi bi-stars';
+  }
+
+  numeroBeneficio(indice: number): string {
+    return String(indice + 1).padStart(2, '0');
+  }
+
+  abrirImagenGaleria(item: TenantGalleryImage): void {
+    if (this.tenantContext.galeria()?.ampliacionHabilitada) this.imagenGaleriaActiva.set(item);
+  }
+
+  cerrarImagenGaleria(): void {
+    this.imagenGaleriaActiva.set(null);
+  }
+
+  @HostListener('document:keydown.escape')
+  cerrarGaleriaConEscape(): void {
+    this.cerrarImagenGaleria();
+  }
+
 }

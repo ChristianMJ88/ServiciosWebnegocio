@@ -9,6 +9,10 @@ describe('admin site forms', () => {
       colorPrimario: null,
       fuenteTitulos: null,
       heroImagenUrl: null,
+      heroTipoMedio: 'IMAGEN',
+      heroAltura: 'PANTALLA',
+      heroAccionSecundaria: 'WHATSAPP',
+      heroMostrarSecundario: true,
       tema: 'BASE',
       menuEstilo: 'FLOTANTE',
       heroAlineacion: 'IZQUIERDA',
@@ -26,6 +30,8 @@ describe('admin site forms', () => {
       dominioPrincipal: ' negocio.mx ',
       descripcionCorta: '  ',
       seoTitulo: '  Agenda en Puebla  ',
+      heroVideoUrl: '  https://cdn.negocio.mx/portada.mp4  ',
+      heroEnlaceCta: '  https://negocio.mx/promocion  ',
       footerTexto: '  Atención personalizada  '
     });
     expect(payload).toEqual(expect.objectContaining({
@@ -34,6 +40,8 @@ describe('admin site forms', () => {
       dominioPrincipal: 'negocio.mx',
       descripcionCorta: null,
       seoTitulo: 'Agenda en Puebla',
+      heroVideoUrl: 'https://cdn.negocio.mx/portada.mp4',
+      heroEnlaceCta: 'https://negocio.mx/promocion',
       footerTexto: 'Atención personalizada'
     }));
   });
