@@ -7,6 +7,7 @@ public record ConfiguracionSocialResponse(
         String googleInicioUrl,
         String googleAccesoUrl,
         String microsoftInicioUrl,
-        String microsoftAccesoUrl
+        String microsoftAccesoUrl,
+        boolean mostrarProveedoresNoConfigurados
 ) {
 }

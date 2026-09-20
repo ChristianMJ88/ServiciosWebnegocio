@@ -14,6 +14,7 @@ public record PropiedadesAutenticacionSocial(
         String microsoftPrivateKeyPem,
         String microsoftRedirectUri,
         String frontendRegistroUrl,
-        String frontendAccesoUrl
+        String frontendAccesoUrl,
+        boolean mostrarProveedoresNoConfigurados
 ) {
 }

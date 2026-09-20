@@ -26,7 +26,7 @@ export class FluoraRegisterCompanyComponent implements OnInit {
   readonly socialLoading = signal(false);
   readonly socialToken = signal<string | null>(null);
   readonly socialProvider = signal<string | null>(null);
-  readonly socialConfig = signal({google: false, microsoft: false, apple: false, googleInicioUrl: null as string | null, googleAccesoUrl: null as string | null, microsoftInicioUrl: null as string | null, microsoftAccesoUrl: null as string | null});
+  readonly socialConfig = signal({google: false, microsoft: false, apple: false, googleInicioUrl: null as string | null, googleAccesoUrl: null as string | null, microsoftInicioUrl: null as string | null, microsoftAccesoUrl: null as string | null, mostrarProveedoresNoConfigurados: false});
   readonly socialConfigReady = signal(false);
   readonly paso = signal<1 | 2 | 3>(1);
   readonly slugPreview = computed(() => this.slugify(this.form.value.slug || this.form.value.nombreEmpresa || 'tu-negocio'));
@@ -51,7 +51,7 @@ export class FluoraRegisterCompanyComponent implements OnInit {
         this.socialConfigReady.set(true);
       },
       error: () => {
-        this.socialConfig.set({google: false, microsoft: false, apple: false, googleInicioUrl: null, googleAccesoUrl: null, microsoftInicioUrl: null, microsoftAccesoUrl: null});
+        this.socialConfig.set({google: false, microsoft: false, apple: false, googleInicioUrl: null, googleAccesoUrl: null, microsoftInicioUrl: null, microsoftAccesoUrl: null, mostrarProveedoresNoConfigurados: false});
         this.socialConfigReady.set(true);
       }
     });

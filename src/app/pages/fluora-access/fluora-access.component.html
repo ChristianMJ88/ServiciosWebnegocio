@@ -55,22 +55,22 @@
           <i class="bi" [class.bi-arrow-right]="!loading()" [class.bi-hourglass-split]="loading()" aria-hidden="true"></i>
         </button>
       </form>
-      @if (!socialConfigReady() || googleHabilitado() || microsoftHabilitado()) {
+      @if (!socialConfigReady() || googleHabilitado() || microsoftHabilitado() || mostrarProveedoresNoConfigurados()) {
         <div class="fluora-access__divider"><span>O continúa con</span></div>
         <div class="fluora-access__social" aria-label="Opciones de acceso social">
           @if (!socialConfigReady()) {
             <span class="fluora-access__social-skeleton" aria-hidden="true"></span>
             <span class="fluora-access__social-skeleton" aria-hidden="true"></span>
-          } @else if (googleHabilitado()) {
-            <button type="button" class="fluora-access__social-button" (click)="continuarConGoogle()" [disabled]="loading()">
+          } @else if (googleHabilitado() || mostrarProveedoresNoConfigurados()) {
+            <button type="button" class="fluora-access__social-button" (click)="continuarConGoogle()" [disabled]="loading() || !googleHabilitado()" [attr.title]="googleHabilitado() ? null : 'Google no está configurado en este entorno'">
               <i class="bi bi-google fluora-access__provider-icon fluora-access__provider-icon--google" aria-hidden="true"></i>
-              <span>Continuar con Google</span>
+              <span>{{ googleHabilitado() ? 'Continuar con Google' : 'Google · pendiente de configurar' }}</span>
             </button>
           }
-          @if (microsoftHabilitado()) {
-            <button type="button" class="fluora-access__social-button" (click)="continuarConMicrosoft()" [disabled]="loading()">
+          @if (microsoftHabilitado() || (socialConfigReady() && mostrarProveedoresNoConfigurados())) {
+            <button type="button" class="fluora-access__social-button" (click)="continuarConMicrosoft()" [disabled]="loading() || !microsoftHabilitado()" [attr.title]="microsoftHabilitado() ? null : 'Microsoft no está configurado en este entorno'">
               <i class="bi bi-microsoft fluora-access__provider-icon fluora-access__provider-icon--microsoft" aria-hidden="true"></i>
-              <span>Continuar con Microsoft</span>
+              <span>{{ microsoftHabilitado() ? 'Continuar con Microsoft' : 'Microsoft · pendiente de configurar' }}</span>
             </button>
           }
         </div>

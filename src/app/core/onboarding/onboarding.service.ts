@@ -25,6 +25,7 @@ export interface ConfiguracionRegistroSocial {
   googleAccesoUrl: string | null;
   microsoftInicioUrl: string | null;
   microsoftAccesoUrl: string | null;
+  mostrarProveedoresNoConfigurados: boolean;
 }
 
 export interface PerfilRegistroSocial {

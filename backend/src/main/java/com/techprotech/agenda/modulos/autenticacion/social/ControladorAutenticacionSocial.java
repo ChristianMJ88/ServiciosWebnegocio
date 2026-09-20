@@ -22,15 +22,18 @@ public class ControladorAutenticacionSocial {
     private final ServicioTokenRegistroSocial tokens;
     private final ServicioAccesoSocial accesoSocial;
     private final ServicioCookieTokenActualizacion cookies;
+    private final PropiedadesAutenticacionSocial propiedades;
 
     public ControladorAutenticacionSocial(ServicioAutenticacionSocialGoogle google,
             ServicioAutenticacionSocialMicrosoft microsoft, ServicioTokenRegistroSocial tokens,
-            ServicioAccesoSocial accesoSocial, ServicioCookieTokenActualizacion cookies) {
+            ServicioAccesoSocial accesoSocial, ServicioCookieTokenActualizacion cookies,
+            PropiedadesAutenticacionSocial propiedades) {
         this.google = google;
         this.microsoft = microsoft;
         this.tokens = tokens;
         this.accesoSocial = accesoSocial;
         this.cookies = cookies;
+        this.propiedades = propiedades;
     }
 
     @GetMapping("/configuracion")
@@ -40,7 +43,8 @@ public class ControladorAutenticacionSocial {
                 google.estaHabilitado() ? "/auth/social/google/iniciar" : null,
                 google.estaHabilitado() ? "/auth/social/google/iniciar-acceso" : null,
                 microsoft.estaHabilitado() ? "/auth/social/microsoft/iniciar" : null,
-                microsoft.estaHabilitado() ? "/auth/social/microsoft/iniciar-acceso" : null
+                microsoft.estaHabilitado() ? "/auth/social/microsoft/iniciar-acceso" : null,
+                propiedades.mostrarProveedoresNoConfigurados()
         ));
     }
 

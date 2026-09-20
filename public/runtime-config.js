@@ -8,5 +8,10 @@ const esHostLocal = ['localhost', '127.0.0.1', '::1'].includes(window.location.h
 if (!window.__AGENDA_API_BASE_URL__ && !esHostLocal) {
   window.__AGENDA_API_BASE_URL__ = '/api/v1';
 }
-window.__FLUORA_MARKETING_ORIGIN__ = window.__FLUORA_MARKETING_ORIGIN__ || 'https://refluora.com';
-window.__FLUORA_APP_ORIGIN__ = window.__FLUORA_APP_ORIGIN__ || 'https://app.refluora.com';
+const origenLocalIntegrado = esHostLocal ? window.location.origin : null;
+window.__FLUORA_MARKETING_ORIGIN__ = window.__FLUORA_MARKETING_ORIGIN__
+  || origenLocalIntegrado
+  || 'https://refluora.com';
+window.__FLUORA_APP_ORIGIN__ = window.__FLUORA_APP_ORIGIN__
+  || origenLocalIntegrado
+  || 'https://app.refluora.com';

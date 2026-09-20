@@ -30,6 +30,7 @@ export class FluoraAccessComponent implements OnInit {
   readonly googleHabilitado = signal(false);
   readonly googleAccesoUrl = signal<string | null>(null);
   readonly socialConfigReady = signal(false);
+  readonly mostrarProveedoresNoConfigurados = signal(false);
   readonly codigoAccesoSocial = signal<string | null>(null);
   empresas = signal<EmpresaAccesoApp[]>([]);
   error = '';
@@ -51,6 +52,7 @@ export class FluoraAccessComponent implements OnInit {
         this.microsoftAccesoUrl.set(config.microsoftAccesoUrl);
         this.googleHabilitado.set(config.google);
         this.googleAccesoUrl.set(config.googleAccesoUrl);
+        this.mostrarProveedoresNoConfigurados.set(config.mostrarProveedoresNoConfigurados ?? false);
         this.socialConfigReady.set(true);
       },
       error: () => this.socialConfigReady.set(true)
