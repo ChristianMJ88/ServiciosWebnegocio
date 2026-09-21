@@ -69,6 +69,10 @@
   line-height: 1;
 }
 
+.chat-launcher-icon {
+  display: none;
+}
+
 @media (max-width: 576px) {
   .whatsapp-float {
     right: 14px;
@@ -84,6 +88,29 @@
     bottom: 66px;
     right: 12px;
     border-radius: 18px;
+  }
+
+  .chatbot-wrapper:not(.open) {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+  }
+
+  .chatbot-wrapper:not(.open) .chat-header {
+    justify-content: center !important;
+    width: 48px;
+    height: 48px;
+    padding: 0 !important;
+  }
+
+  .chatbot-wrapper:not(.open) .chat-header .fw-bold,
+  .chatbot-wrapper:not(.open) .chat-toggle-icon {
+    display: none;
+  }
+
+  .chatbot-wrapper:not(.open) .chat-launcher-icon {
+    display: block;
+    font-size: 1.25rem;
   }
 
   .chat-header {

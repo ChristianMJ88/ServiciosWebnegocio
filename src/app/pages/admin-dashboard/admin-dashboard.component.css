@@ -2459,7 +2459,7 @@
 
   .admin-toolbar {
     min-height: 66px;
-    padding: 0.8rem 1rem;
+    padding: 0.8rem 1rem 0.8rem 4rem;
   }
 
   .admin-content mat-progress-bar {

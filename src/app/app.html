@@ -22,6 +22,7 @@
 @if (mostrarChromePublico() && tenantContext.activo() && tenantContext.chatHabilitado() && !publicReservationPage()) {
   <div class="chatbot-wrapper shadow-lg" [class.open]="isChatOpen()">
     <div class="chat-header d-flex justify-content-between align-items-center px-3 py-2" (click)="toggleChat()">
+      <i class="bi bi-chat-dots chat-launcher-icon" aria-hidden="true"></i>
       <span class="fw-bold">{{ tenantContext.chatTitulo() }}</span>
       <span class="chat-toggle-icon">{{ isChatOpen() ? '−' : '+' }}</span>
     </div>
