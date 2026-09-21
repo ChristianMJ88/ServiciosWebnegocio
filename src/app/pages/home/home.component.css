@@ -1,4 +1,9 @@
 .home-page {
+  --public-card-radius: 24px;
+  --public-media-radius: 18px;
+  --public-card-border: color-mix(in srgb, var(--tenant-primary) 12%, #dce3eb);
+  --public-card-shadow: 0 18px 48px rgb(15 23 42 / 7%);
+  --public-card-shadow-hover: 0 28px 68px rgb(15 23 42 / 12%);
   display: flex;
   flex-direction: column;
   background: linear-gradient(180deg, #fbf7f2 0%, #ffffff 22%, #f5efe8 100%);
@@ -273,10 +278,11 @@
   gap: 1.5rem;
   align-items: center;
   padding: 1.5rem;
-  border: 1px solid rgba(222, 213, 204, 0.88);
-  border-radius: 8px;
-  background: rgba(255, 255, 255, 0.98);
-  box-shadow: 0 20px 44px rgba(15, 23, 42, 0.08);
+  border: 1px solid var(--public-card-border);
+  border-radius: var(--public-card-radius);
+  background:
+    linear-gradient(135deg, color-mix(in srgb, var(--tenant-primary) 4%, #fff), #fff 58%);
+  box-shadow: var(--public-card-shadow);
   transition: transform 0.28s ease, box-shadow 0.28s ease;
 }
 
@@ -371,23 +377,25 @@
   gap: 1.5rem;
   align-items: center;
   padding: 1.25rem;
-  border: 1px solid rgba(229, 231, 235, 0.96);
-  border-radius: 8px;
-  background: rgba(255, 255, 255, 0.92);
-  box-shadow: 0 16px 34px rgba(15, 23, 42, 0.04);
+  overflow: hidden;
+  border: 1px solid var(--public-card-border);
+  border-radius: var(--public-card-radius);
+  background:
+    linear-gradient(145deg, color-mix(in srgb, var(--tenant-primary) 3%, #fff), #fff 52%);
+  box-shadow: var(--public-card-shadow);
   transition: transform 0.28s ease, box-shadow 0.28s ease, border-color 0.28s ease;
 }
 
 .service-feature:hover {
   transform: translateY(-4px);
-  box-shadow: 0 24px 48px rgba(15, 23, 42, 0.08);
-  border-color: rgba(37, 99, 235, 0.16);
+  box-shadow: var(--public-card-shadow-hover);
+  border-color: color-mix(in srgb, var(--tenant-primary) 30%, #dce3eb);
 }
 
 .service-feature__media {
   position: relative;
   overflow: hidden;
-  border-radius: 8px;
+  border-radius: var(--public-media-radius);
   aspect-ratio: 4 / 3;
 }
 
@@ -483,23 +491,36 @@
 .home-promotions { padding: clamp(4.5rem, 8vw, 7rem) 0; background: linear-gradient(145deg, color-mix(in srgb, var(--tenant-primary) 7%, #fff), #fff 48%, color-mix(in srgb, var(--tenant-secondary) 7%, #fff)); }
 .home-gallery { padding: clamp(4.5rem, 8vw, 7rem) 0; background: #fff; }
 .home-reviews { padding: clamp(4.5rem, 8vw, 7rem) 0; background: linear-gradient(180deg, #f8fafc, #fff); }
+.home-faq { padding: clamp(4.5rem, 8vw, 7rem) 0; background: linear-gradient(155deg, #fff, color-mix(in srgb, var(--tenant-primary) 4%, #f8fafc)); }
+.faq-public-layout { max-width: 980px; }
+.faq-public-list { display: grid; gap: .7rem; }
+.faq-public-item { overflow: hidden; border: 1px solid #e2e8f0; border-radius: 18px; background: rgb(255 255 255 / 92%); box-shadow: 0 12px 32px rgb(15 23 42 / 5%); transition: border-color .22s, box-shadow .22s; }
+.faq-public-item[open] { border-color: color-mix(in srgb, var(--tenant-primary) 28%, #dfe6ee); box-shadow: 0 18px 42px rgb(15 23 42 / 8%); }
+.faq-public-item summary { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: 1.05rem 1.2rem; color: #172033; font-size: .86rem; font-weight: 800; cursor: pointer; list-style: none; }
+.faq-public-item summary::-webkit-details-marker { display: none; }
+.faq-public-item summary i { width: 32px; height: 32px; flex: 0 0 auto; display: grid; place-items: center; border-radius: 10px; color: var(--tenant-primary); background: color-mix(in srgb, var(--tenant-primary) 9%, #fff); transition: transform .22s; }
+.faq-public-item[open] summary i { transform: rotate(45deg); }
+.faq-public-item > div { padding: 0 1.2rem 1.15rem; }
+.faq-public-item p { margin: 0; padding-top: .8rem; border-top: 1px solid #eef2f6; color: #526071; font-size: .78rem; line-height: 1.75; white-space: pre-line; }
 .trust-public-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: .85rem; margin-bottom: 1.15rem; }
 .trust-public-grid--single { max-width: 420px; margin-inline: auto; }
-.trust-public-card { display: flex; align-items: center; gap: .85rem; min-height: 92px; padding: 1rem 1.1rem; border: 1px solid color-mix(in srgb, var(--tenant-primary) 14%, #dfe6ee); border-radius: 18px; background: rgb(255 255 255 / 88%); box-shadow: 0 14px 34px rgb(15 23 42 / 6%); }
+.trust-public-card { display: flex; align-items: center; gap: .85rem; min-height: 92px; padding: 1rem 1.1rem; border: 1px solid var(--public-card-border); border-radius: 18px; background: rgb(255 255 255 / 92%); box-shadow: 0 14px 34px rgb(15 23 42 / 6%); transition: transform .25s ease, border-color .25s ease, box-shadow .25s ease; }
+.trust-public-card:hover { transform: translateY(-3px); border-color: color-mix(in srgb, var(--tenant-primary) 28%, #dfe6ee); box-shadow: 0 20px 44px rgb(15 23 42 / 9%); }
 .trust-public-card > span { width: 42px; height: 42px; flex: 0 0 auto; display: grid; place-items: center; border-radius: 13px; color: var(--tenant-primary); background: color-mix(in srgb, var(--tenant-primary) 11%, #fff); font-size: 1.05rem; }
 .trust-public-card > div { display: grid; gap: .08rem; }.trust-public-card strong { color: #0f172a; font-size: 1.12rem; letter-spacing: -.02em; }.trust-public-card small { color: #64748b; font-size: .72rem; }
 .reviews-public-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1rem; }
 .reviews-public-grid--single { max-width: 720px; margin-inline: auto; grid-template-columns: minmax(0, 1fr); }.reviews-public-grid--pair { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-.review-public-card { position: relative; min-width: 0; display: flex; flex-direction: column; min-height: 300px; padding: 1.35rem; overflow: hidden; border: 1px solid #e2e8f0; border-radius: 22px; background: #fff; box-shadow: 0 18px 44px rgb(15 23 42 / 7%); transition: transform .28s ease, border-color .28s ease, box-shadow .28s ease; }
+.review-public-card { position: relative; min-width: 0; display: flex; flex-direction: column; min-height: 300px; padding: 1.35rem; overflow: hidden; border: 1px solid var(--public-card-border); border-radius: var(--public-card-radius); background: #fff; box-shadow: var(--public-card-shadow); transition: transform .28s ease, border-color .28s ease, box-shadow .28s ease; }
 .review-public-card:hover { transform: translateY(-5px); border-color: color-mix(in srgb, var(--tenant-primary) 28%, #dfe6ee); box-shadow: 0 28px 60px rgb(15 23 42 / 11%); }
 .review-public-card--featured { border-color: color-mix(in srgb, var(--tenant-primary) 35%, #dfe6ee); background: linear-gradient(145deg, color-mix(in srgb, var(--tenant-primary) 5%, #fff), #fff 58%); }
 .review-public-card__quote { position: absolute; top: .8rem; right: 1rem; color: color-mix(in srgb, var(--tenant-primary) 10%, #e2e8f0); font-size: 3.5rem; line-height: 1; }
 .review-public-card__stars { position: relative; display: flex; gap: .22rem; color: #f59e0b; font-size: .86rem; }
 .review-public-card blockquote { position: relative; flex: 1; margin: 1rem 0 1.3rem; color: #334155; font-size: .94rem; line-height: 1.75; }
-.review-public-card footer { display: flex; align-items: center; gap: .7rem; padding-top: 1rem; border-top: 1px solid #edf1f5; }.review-public-card footer > span { width: 42px; height: 42px; display: grid; place-items: center; border-radius: 50%; color: #fff; background: linear-gradient(145deg, var(--tenant-primary), var(--tenant-secondary)); font-weight: 800; }.review-public-card footer > div { display: grid; gap: .08rem; }.review-public-card footer strong { color: #0f172a; font-size: .8rem; }.review-public-card footer small { color: #64748b; font-size: .62rem; }
+.review-public-card footer { display: flex; align-items: center; gap: .7rem; padding-top: 1rem; border-top: 1px solid #edf1f5; }.review-public-card footer > span { width: 46px; height: 46px; display: grid; place-items: center; overflow: hidden; border: 3px solid #fff; border-radius: 50%; color: #fff; background: linear-gradient(145deg, var(--tenant-primary), var(--tenant-secondary)); box-shadow: 0 8px 20px rgb(15 23 42 / 14%); font-weight: 800; }.review-public-card footer > span img { width: 100%; height: 100%; object-fit: cover; object-position: center 25%; }.review-public-card footer > div { display: grid; gap: .08rem; }.review-public-card footer strong { color: #0f172a; font-size: .8rem; }.review-public-card footer small { color: #64748b; font-size: .62rem; }
 .reviews-public__external { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-top: 1rem; padding: .9rem 1rem; border: 1px solid #e2e8f0; border-radius: 16px; background: #fff; }.reviews-public__external > span { display: flex; align-items: center; gap: .7rem; }.reviews-public__external > span > i { width: 38px; height: 38px; display: grid; place-items: center; border-radius: 11px; color: #fff; background: linear-gradient(145deg, #4285f4, #34a853); }.reviews-public__external > span > span { display: grid; }.reviews-public__external strong { color: #0f172a; font-size: .78rem; }.reviews-public__external small { color: #64748b; font-size: .66rem; }.reviews-public__external a { display: inline-flex; align-items: center; gap: .45rem; color: var(--tenant-primary); font-size: .72rem; font-weight: 800; text-decoration: none; white-space: nowrap; }
 .gallery-public { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1rem; }
-.gallery-public__item { min-width: 0; overflow: hidden; border-radius: 14px; background: #fff; box-shadow: 0 14px 36px rgb(15 23 42 / 7%); }
+.gallery-public__item { min-width: 0; overflow: hidden; border: 1px solid var(--public-card-border); border-radius: var(--public-card-radius); background: #fff; box-shadow: var(--public-card-shadow); transition: transform .28s ease, border-color .28s ease, box-shadow .28s ease; }
+.gallery-public__item:hover { transform: translateY(-4px); border-color: color-mix(in srgb, var(--tenant-primary) 28%, #dce3eb); box-shadow: var(--public-card-shadow-hover); }
 .gallery-public__media { position: relative; width: 100%; display: block; overflow: hidden; padding: 0; border: 0; aspect-ratio: 4 / 3; background: #eef2f7; text-align: left; }
 .gallery-public__media--zoom { cursor: zoom-in; }
 .gallery-public__media img { width: 100%; height: 100%; object-fit: cover; transition: transform .5s ease; }
@@ -523,8 +544,8 @@
 .gallery-lightbox figcaption p { margin: .3rem 0 0; color: #64748b; }
 .gallery-lightbox__close { position: fixed; top: max(1rem, env(safe-area-inset-top)); right: 1rem; width: 44px; height: 44px; border: 1px solid rgb(255 255 255 / 25%); border-radius: 50%; color: #fff; background: rgb(15 23 42 / 70%); font-size: 1.1rem; }
 .promotions-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.25rem; margin-top: 2rem; }
-.promotion-public-card { display: grid; grid-template-columns: minmax(180px, .8fr) minmax(0, 1.2fr); overflow: hidden; border: 1px solid rgb(214 222 233 / 90%); border-radius: 16px; background: #fff; box-shadow: 0 22px 55px rgb(15 23 42 / 8%); transition: transform .28s ease, box-shadow .28s ease; }
-.promotion-public-card:hover { transform: translateY(-4px); box-shadow: 0 28px 65px rgb(15 23 42 / 12%); }
+.promotion-public-card { display: grid; grid-template-columns: minmax(180px, .8fr) minmax(0, 1.2fr); overflow: hidden; border: 1px solid var(--public-card-border); border-radius: var(--public-card-radius); background: #fff; box-shadow: var(--public-card-shadow); transition: transform .28s ease, border-color .28s ease, box-shadow .28s ease; }
+.promotion-public-card:hover { transform: translateY(-4px); border-color: color-mix(in srgb, var(--tenant-primary) 28%, #dce3eb); box-shadow: var(--public-card-shadow-hover); }
 .promotion-public-card__media { position: relative; min-height: 280px; overflow: hidden; }
 .promotion-public-card__media img { width: 100%; height: 100%; object-fit: cover; transition: transform .5s ease; }
 .promotion-public-card:hover .promotion-public-card__media img { transform: scale(1.035); }
@@ -555,6 +576,7 @@
 }
 
 @media (max-width: 767.98px) {
+  .faq-public-item summary { padding: .95rem 1rem; font-size: .8rem; }.faq-public-item > div { padding: 0 1rem 1rem; }
   .reviews-public-grid, .reviews-public-grid--pair { grid-auto-flow: column; grid-auto-columns: minmax(270px, 88%); grid-template-columns: none; overflow-x: auto; padding: .2rem .1rem 1rem; scroll-snap-type: inline mandatory; scrollbar-width: thin; }
   .review-public-card { min-height: 280px; scroll-snap-align: start; }
   .reviews-public__external { align-items: stretch; flex-direction: column; }.reviews-public__external a { justify-content: center; padding: .7rem; border-radius: 10px; background: color-mix(in srgb, var(--tenant-primary) 8%, #fff); }
@@ -643,6 +665,7 @@
   position: relative;
   isolation: isolate;
   padding-block: var(--section-space);
+  overflow: clip;
 }
 
 .home-section.home-services,
@@ -681,7 +704,7 @@
   border: 1px solid color-mix(in srgb, var(--tenant-primary) 10%, #dfe6ee);
   border-radius: clamp(20px, 2.4vw, 30px);
   background: rgb(255 255 255 / 86%);
-  box-shadow: 0 28px 70px rgb(15 23 42 / 8%);
+  box-shadow: 0 28px 70px rgb(15 23 42 / 8%), inset 0 1px rgb(255 255 255 / 72%);
   backdrop-filter: blur(14px);
 }
 
@@ -838,6 +861,12 @@
 .home-section--surface-contraste .benefit-public-card p { color: rgb(226 232 240 / 76%); }
 
 @media (max-width: 767.98px) {
+  .home-page {
+    --public-card-radius: 20px;
+    --public-media-radius: 15px;
+    --public-card-shadow: 0 12px 32px rgb(15 23 42 / 7%);
+    --public-card-shadow-hover: 0 18px 42px rgb(15 23 42 / 10%);
+  }
   .home-section { --section-space: 3.5rem; }
   .home-section--space-compacto { --section-space: 2.5rem; }
   .home-section--space-amplio { --section-space: 4.5rem; }
@@ -851,4 +880,26 @@
   .team-grid, .team-grid--pair { grid-auto-flow: column; grid-auto-columns: minmax(270px, 86%); grid-template-columns: none; justify-content: initial; overflow-x: auto; padding: .2rem 0 1rem; scroll-snap-type: inline mandatory; }
   .team-grid app-public-team-card { scroll-snap-align: start; }
   .benefit-public-card { min-height: 0; border-radius: 20px; }
+}
+
+@media (hover: none) {
+  .service-feature:active,
+  .gallery-public__item:active,
+  .promotion-public-card:active,
+  .review-public-card:active,
+  .benefit-public-card:active,
+  .trust-public-card:active {
+    transform: scale(.992);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .home-page *,
+  .home-page *::before,
+  .home-page *::after {
+    scroll-behavior: auto !important;
+    transition-duration: .01ms !important;
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+  }
 }

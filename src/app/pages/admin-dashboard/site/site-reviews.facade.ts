@@ -12,4 +12,6 @@ export class SiteReviewsFacade {
   guardar(payload: ActualizarResenasSitioPayload) {
     return this.admin.actualizarResenasSitio(payload);
   }
+
+  subirFoto(archivo: File) { return this.admin.subirImagenResenaSitio(archivo); }
 }

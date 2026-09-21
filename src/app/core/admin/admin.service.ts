@@ -507,6 +507,8 @@ export interface ResenaSitioAdmin {
   nombre: string;
   calificacion: number;
   comentario: string;
+  mediaId: number | null;
+  fotoUrl: string | null;
   destacada: boolean;
   activa: boolean;
   orden: number;
@@ -533,7 +535,19 @@ export interface ActualizarResenasSitioPayload {
   indicadores: Array<Omit<IndicadorConfianzaSitioAdmin, 'id'>>;
 }
 
-export type CategoriaMediaAdmin = 'GALERIA' | 'COLABORADORES' | 'SERVICIOS' | 'BRANDING';
+export interface PreguntaFrecuenteSitioAdmin {
+  id: number | null;
+  pregunta: string;
+  respuesta: string;
+  activa: boolean;
+  orden: number;
+}
+
+export interface ActualizarPreguntasFrecuentesSitioPayload {
+  preguntas: Array<Omit<PreguntaFrecuenteSitioAdmin, 'id'>>;
+}
+
+export type CategoriaMediaAdmin = 'GALERIA' | 'COLABORADORES' | 'SERVICIOS' | 'BRANDING' | 'RESENAS';
 
 export interface ConfiguracionMediaAdmin {
   cargaHabilitada: boolean;
@@ -1255,6 +1269,14 @@ export class AdminService {
     return this.http.patch<ResenasSitioAdmin>(`${environment.apiBaseUrl}/admin/configuracion-sitio/resenas`, payload);
   }
 
+  getPreguntasFrecuentesSitio(): Observable<PreguntaFrecuenteSitioAdmin[]> {
+    return this.http.get<PreguntaFrecuenteSitioAdmin[]>(`${environment.apiBaseUrl}/admin/configuracion-sitio/preguntas-frecuentes`);
+  }
+
+  actualizarPreguntasFrecuentesSitio(payload: ActualizarPreguntasFrecuentesSitioPayload): Observable<PreguntaFrecuenteSitioAdmin[]> {
+    return this.http.patch<PreguntaFrecuenteSitioAdmin[]>(`${environment.apiBaseUrl}/admin/configuracion-sitio/preguntas-frecuentes`, payload);
+  }
+
   getConfiguracionMediaSitio(): Observable<ConfiguracionMediaAdmin> {
     return this.http.get<ConfiguracionMediaAdmin>(`${environment.apiBaseUrl}/admin/configuracion-sitio/media/configuracion`);
   }
@@ -1269,6 +1291,12 @@ export class AdminService {
     const formulario = new FormData();
     formulario.append('archivo', archivo, archivo.name);
     return this.http.post<ArchivoMediaAdmin>(`${environment.apiBaseUrl}/admin/configuracion-sitio/media/imagenes/branding`, formulario);
+  }
+
+  subirImagenResenaSitio(archivo: File): Observable<ArchivoMediaAdmin> {
+    const formulario = new FormData();
+    formulario.append('archivo', archivo, archivo.name);
+    return this.http.post<ArchivoMediaAdmin>(`${environment.apiBaseUrl}/admin/configuracion-sitio/media/imagenes/resenas`, formulario);
   }
 
   getConfiguracionMediaCatalogo(): Observable<ConfiguracionMediaAdmin> {

@@ -1,0 +1,18 @@
+<section class="faq-editor" aria-labelledby="faq-editor-title">
+  <header class="faq-editor__header"><div><span>Información útil</span><h3 id="faq-editor-title">Preguntas frecuentes</h3><p>Resuelve dudas antes de la reserva con respuestas propias de este negocio.</p></div><span class="faq-editor__count">{{ preguntas().length }}/{{ limite }}</span></header>
+  @if (cargando()) {<div class="faq-editor__state">Cargando preguntas…</div>} @else {
+    <div class="faq-editor__toolbar"><div><strong>Contenido público</strong><small>Arrastra para ordenar. Los elementos ocultos se conservan en el editor.</small></div><button type="button" mat-stroked-button (click)="agregar()" [disabled]="preguntas().length >= limite"><i class="bi bi-plus-lg"></i>Añadir pregunta</button></div>
+    @if (!preguntas().length) {<div class="faq-editor__empty"><span><i class="bi bi-patch-question"></i></span><strong>Anticipa las dudas de tus clientes</strong><p>Agrega respuestas sobre preparación, pagos, cancelaciones o cuidados.</p><button type="button" mat-flat-button color="primary" (click)="agregar()">Crear primera pregunta</button></div>}
+    @else {<div class="faq-list" cdkDropList [cdkDropListData]="preguntas()" (cdkDropListDropped)="soltar($event)">
+      @for (item of preguntas(); track item.id || $index; let i = $index) {
+        <article class="faq-card" cdkDrag [cdkDragData]="item" [class.is-hidden]="!item.activa">
+          <button type="button" class="faq-card__drag" cdkDragHandle [attr.aria-label]="'Arrastrar pregunta ' + (i + 1)"><i class="bi bi-grip-vertical"></i></button>
+          <span class="faq-card__number">{{ i + 1 }}</span>
+          <div class="faq-card__fields"><mat-form-field appearance="outline"><mat-label>Pregunta</mat-label><input matInput [(ngModel)]="item.pregunta" maxlength="180"></mat-form-field><mat-form-field appearance="outline"><mat-label>Respuesta</mat-label><textarea matInput rows="3" [(ngModel)]="item.respuesta" maxlength="1200"></textarea><mat-hint align="end">{{ item.respuesta.length }}/1200</mat-hint></mat-form-field></div>
+          <div class="faq-card__actions"><mat-slide-toggle [(ngModel)]="item.activa" [attr.aria-label]="'Mostrar pregunta ' + (i + 1)"></mat-slide-toggle><button type="button" (click)="mover(i,-1)" [disabled]="i === 0" aria-label="Subir"><i class="bi bi-arrow-up"></i></button><button type="button" (click)="mover(i,1)" [disabled]="i === preguntas().length - 1" aria-label="Bajar"><i class="bi bi-arrow-down"></i></button><button type="button" class="is-danger" (click)="quitar(i)" aria-label="Eliminar"><i class="bi bi-trash3"></i></button></div>
+        </article>
+      }
+    </div>}
+    <footer class="faq-editor__footer"><div aria-live="polite">@if (mensaje()) {<span><i class="bi bi-check-circle"></i>{{ mensaje() }}</span>} @if (error()) {<span class="is-error"><i class="bi bi-exclamation-circle"></i>{{ error() }}</span>}</div><button type="button" mat-flat-button color="primary" [disabled]="guardando()" (click)="guardar()">{{ guardando() ? 'Guardando…' : 'Guardar preguntas' }}</button></footer>
+  }
+</section>

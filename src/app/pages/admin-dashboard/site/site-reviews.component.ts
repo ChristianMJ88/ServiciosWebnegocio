@@ -31,6 +31,7 @@ export class SiteReviewsComponent implements OnInit {
   readonly configuracion = signal<ResenasSitioAdmin>({ googleMapsUrl: null, resenas: [], indicadores: [] });
   readonly cargando = signal(true);
   readonly guardando = signal(false);
+  readonly subiendoFoto = signal<number | null>(null);
   readonly mensaje = signal<string | null>(null);
   readonly error = signal<string | null>(null);
   readonly iconos: Array<{ valor: IconoIndicadorConfianza; etiqueta: string; clase: string }> = [
@@ -52,7 +53,7 @@ export class SiteReviewsComponent implements OnInit {
   agregarResena(): void {
     if (this.configuracion().resenas.length >= this.limiteResenas) return;
     this.configuracion.update(config => ({ ...config, resenas: [...config.resenas, {
-      id: null, nombre: '', calificacion: 5, comentario: '', destacada: false, activa: true, orden: config.resenas.length
+      id: null, nombre: '', calificacion: 5, comentario: '', mediaId: null, fotoUrl: null, destacada: false, activa: true, orden: config.resenas.length
     }] }));
     this.limpiarEstado();
   }
@@ -102,6 +103,29 @@ export class SiteReviewsComponent implements OnInit {
     this.limpiarEstado();
   }
 
+  seleccionarFoto(evento: Event, item: ResenaSitioAdmin, indice: number): void {
+    const input = evento.target as HTMLInputElement;
+    const archivo = input.files?.[0];
+    input.value = '';
+    if (!archivo || this.subiendoFoto() !== null) return;
+    this.subiendoFoto.set(indice);
+    this.limpiarEstado();
+    this.facade.subirFoto(archivo).pipe(finalize(() => this.subiendoFoto.set(null))).subscribe({
+      next: media => {
+        item.mediaId = media.id;
+        item.fotoUrl = media.secureUrl;
+        this.mensaje.set('Foto cargada. Guarda las reseñas para aplicar el cambio.');
+      },
+      error: err => this.error.set(err?.error?.message || err?.error?.detail || 'No fue posible cargar la foto.')
+    });
+  }
+
+  quitarFoto(item: ResenaSitioAdmin): void {
+    item.mediaId = null;
+    item.fotoUrl = null;
+    this.limpiarEstado();
+  }
+
   iconoClase(icono: IconoIndicadorConfianza): string {
     return this.iconos.find(item => item.valor === icono)?.clase ?? 'bi bi-star';
   }
@@ -123,6 +147,7 @@ export class SiteReviewsComponent implements OnInit {
       googleMapsUrl: config.googleMapsUrl?.trim() || null,
       resenas: config.resenas.map((item, orden) => ({
         nombre: item.nombre.trim(), calificacion: item.calificacion, comentario: item.comentario.trim(),
+        mediaId: item.mediaId, fotoUrl: item.fotoUrl,
         destacada: item.destacada, activa: item.activa, orden
       })),
       indicadores: config.indicadores.map((item, orden) => ({

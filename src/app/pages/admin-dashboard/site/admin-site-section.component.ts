@@ -20,6 +20,7 @@ import { SitePromotionsComponent } from './site-promotions.component';
 import { SiteGalleryComponent } from './site-gallery.component';
 import { SiteBenefitsComponent } from './site-benefits.component';
 import { SiteReviewsComponent } from './site-reviews.component';
+import { SiteFaqComponent } from './site-faq.component';
 import { AdminSiteFacade } from './admin-site.facade';
 import { finalize } from 'rxjs';
 
@@ -40,7 +41,8 @@ import { finalize } from 'rxjs';
     SitePromotionsComponent,
     SiteGalleryComponent,
     SiteBenefitsComponent,
-    SiteReviewsComponent
+    SiteReviewsComponent,
+    SiteFaqComponent
   ],
   templateUrl: './admin-site-section.component.html',
   styleUrl: './admin-site-section.component.css'
@@ -57,7 +59,7 @@ export class AdminSiteSectionComponent implements OnInit {
   readonly etiquetaAccionAuditoriaConfiguracion = input.required<(accion: string) => string>();
 
   readonly save = output<void>();
-  readonly seccionActiva = signal<'estructura' | 'servicios_destacados' | 'beneficios' | 'promociones' | 'galeria' | 'resenas' | 'identidad' | 'apariencia' | 'navegacion' | 'portada' | 'contacto' | 'seo_footer' | 'publicacion'>('estructura');
+  readonly seccionActiva = signal<'estructura' | 'servicios_destacados' | 'beneficios' | 'promociones' | 'galeria' | 'resenas' | 'preguntas_frecuentes' | 'identidad' | 'apariencia' | 'navegacion' | 'portada' | 'contacto' | 'seo_footer' | 'publicacion'>('estructura');
   readonly previewDevice = signal<'movil' | 'tablet' | 'escritorio'>('escritorio');
   readonly configuracionMedia = signal<ConfiguracionMediaAdmin | null>(null);
   readonly subiendoBranding = signal<'logo' | 'portada' | null>(null);
@@ -76,6 +78,7 @@ export class AdminSiteSectionComponent implements OnInit {
     { id: 'promociones' as const, label: 'Promociones', icon: 'bi bi-tags' },
     { id: 'galeria' as const, label: 'Galería', icon: 'bi bi-images' },
     { id: 'resenas' as const, label: 'Reseñas', icon: 'bi bi-chat-quote' },
+    { id: 'preguntas_frecuentes' as const, label: 'Preguntas frecuentes', icon: 'bi bi-question-circle' },
     { id: 'identidad' as const, label: 'Identidad', icon: 'bi bi-shop' },
     { id: 'apariencia' as const, label: 'Colores y tipografía', icon: 'bi bi-palette2' },
     { id: 'navegacion' as const, label: 'Menú', icon: 'bi bi-menu-button-wide' },

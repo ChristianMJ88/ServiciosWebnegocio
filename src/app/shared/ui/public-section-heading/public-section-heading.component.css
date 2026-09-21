@@ -1,11 +1,13 @@
 :host { display: block; margin-bottom: clamp(1.5rem, 3vw, 2.5rem); }
 .section-heading { max-width: 46rem; }
-.section-heading__eyebrow { display: inline-flex; align-items: center; min-height: 30px; padding: .42rem .75rem; border-radius: 999px; background: color-mix(in srgb, var(--tenant-primary) 8%, #f8fafc); color: color-mix(in srgb, var(--tenant-primary) 72%, #1e293b); font-size: .72rem; font-weight: 850; letter-spacing: .12em; text-transform: uppercase; }
+.section-heading__eyebrow { display: inline-flex; align-items: center; gap: .5rem; min-height: 30px; padding: .42rem .75rem; border: 1px solid color-mix(in srgb, var(--tenant-primary) 14%, #e2e8f0); border-radius: 999px; background: color-mix(in srgb, var(--tenant-primary) 8%, #f8fafc); color: color-mix(in srgb, var(--tenant-primary) 72%, #1e293b); box-shadow: 0 8px 22px rgb(15 23 42 / 4%); font-size: .72rem; font-weight: 850; letter-spacing: .12em; text-transform: uppercase; }
+.section-heading__eyebrow::before { content: ''; width: 7px; height: 7px; flex: 0 0 auto; border-radius: 50%; background: var(--tenant-primary); box-shadow: 0 0 0 4px color-mix(in srgb, var(--tenant-primary) 12%, transparent); }
 h2 { margin: .85rem 0 0; color: #111827; font-size: clamp(2rem, 4vw, 3.35rem); line-height: 1.02; letter-spacing: -.045em; text-wrap: balance; }
 p { max-width: 42rem; margin: .85rem 0 0; color: #64748b; font-size: clamp(.98rem, 1.4vw, 1.08rem); line-height: 1.7; text-wrap: pretty; }
 :host-context(.home-section--align-centro) .section-heading { margin-inline: auto; text-align: center; }
 :host-context(.home-section--align-centro) p { margin-inline: auto; }
 :host-context(.home-section--surface-contraste) h2 { color: #fff; }
 :host-context(.home-section--surface-contraste) p { color: rgb(226 232 240 / 78%); }
-:host-context(.home-section--surface-contraste) .section-heading__eyebrow { color: #fff; background: rgb(255 255 255 / 10%); }
+:host-context(.home-section--surface-contraste) .section-heading__eyebrow { color: #fff; border-color: rgb(255 255 255 / 14%); background: rgb(255 255 255 / 10%); }
+:host-context(.home-section--surface-contraste) .section-heading__eyebrow::before { background: #fff; box-shadow: 0 0 0 4px rgb(255 255 255 / 12%); }
 @media (max-width: 767.98px) { :host { margin-bottom: 1.5rem; } h2 { font-size: clamp(1.85rem, 9vw, 2.55rem); } }

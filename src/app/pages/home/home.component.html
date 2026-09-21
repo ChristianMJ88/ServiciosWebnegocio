@@ -240,7 +240,7 @@
               <div class="review-public-card__quote"><i class="bi bi-quote"></i></div>
               <div class="review-public-card__stars" [attr.aria-label]="item.calificacion + ' de 5 estrellas'">@for (estrella of [1,2,3,4,5]; track estrella) {<i class="bi" [class.bi-star-fill]="estrella <= item.calificacion" [class.bi-star]="estrella > item.calificacion"></i>}</div>
               <blockquote>{{ item.comentario }}</blockquote>
-              <footer><span>{{ inicialResena(item.nombre) }}</span><div><strong>{{ item.nombre }}</strong><small>Testimonio compartido por el negocio</small></div></footer>
+              <footer><span>@if (item.fotoUrl) {<img [src]="item.fotoUrl" [alt]="'Foto de ' + item.nombre" loading="lazy">} @else {<b>{{ inicialResena(item.nombre) }}</b>}</span><div><strong>{{ item.nombre }}</strong><small>Testimonio compartido por el negocio</small></div></footer>
             </article>
           }
         </div>
@@ -248,6 +248,25 @@
       @if (tenantContext.resenas()!.googleMapsUrl) {
         <div class="reviews-public__external" appScrollReveal="up"><span><i class="bi bi-google"></i><span><strong>Consulta más opiniones</strong><small>Revisa referencias adicionales en Google Maps.</small></span></span><a [href]="tenantContext.resenas()!.googleMapsUrl!" target="_blank" rel="noopener noreferrer">Ver en Google Maps <i class="bi bi-arrow-up-right"></i></a></div>
       }
+    </div>
+  </section>
+  }
+
+  @if (tenantContext.bloqueInicioHabilitado('PREGUNTAS_FRECUENTES') && tenantContext.preguntasFrecuentes().length) {
+  <section class="home-section home-faq" [ngClass]="tenantContext.clasesBloqueInicio('PREGUNTAS_FRECUENTES')" [style.order]="tenantContext.ordenBloqueInicio('PREGUNTAS_FRECUENTES')">
+    <div class="container faq-public-layout">
+      <app-public-section-heading appScrollReveal="up"
+        [eyebrow]="tenantContext.bloqueInicio('PREGUNTAS_FRECUENTES')?.etiqueta"
+        [title]="tenantContext.bloqueInicio('PREGUNTAS_FRECUENTES')?.titulo || 'Preguntas frecuentes'"
+        [description]="tenantContext.bloqueInicio('PREGUNTAS_FRECUENTES')?.descripcion" />
+      <div class="faq-public-list">
+        @for (item of tenantContext.preguntasFrecuentes(); track item.id; let i = $index) {
+          <details class="faq-public-item" appScrollReveal="up" [revealDelay]="45 * (i + 1)" [attr.open]="i === 0 ? '' : null">
+            <summary><span>{{ item.pregunta }}</span><i class="bi bi-plus-lg"></i></summary>
+            <div><p>{{ item.respuesta }}</p></div>
+          </details>
+        }
+      </div>
     </div>
   </section>
   }

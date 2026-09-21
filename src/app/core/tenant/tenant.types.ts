@@ -99,6 +99,7 @@ export interface TenantReview {
   nombre: string;
   calificacion: number;
   comentario: string;
+  fotoUrl: string | null;
   destacada: boolean;
 }
 
@@ -113,6 +114,12 @@ export interface TenantReviews {
   googleMapsUrl: string | null;
   resenas: TenantReview[];
   indicadores: TenantTrustIndicator[];
+}
+
+export interface TenantFrequentlyAskedQuestion {
+  id: number;
+  pregunta: string;
+  respuesta: string;
 }
 
 export interface TenantSiteConfig {
@@ -194,6 +201,7 @@ export interface TenantSiteConfig {
   beneficios?: TenantBenefit[];
   equipo?: TenantTeamMember[];
   resenas?: TenantReviews | null;
+  preguntasFrecuentes?: TenantFrequentlyAskedQuestion[];
   publicado: boolean;
 }
 
