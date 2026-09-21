@@ -5,6 +5,8 @@ public record ResenaSitioAdminResponse(
         String nombre,
         int calificacion,
         String comentario,
+        Long mediaId,
+        String fotoUrl,
         boolean destacada,
         boolean activa,
         int orden

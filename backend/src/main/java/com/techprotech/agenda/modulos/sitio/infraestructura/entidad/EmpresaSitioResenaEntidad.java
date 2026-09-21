@@ -25,6 +25,12 @@ public class EmpresaSitioResenaEntidad {
     @Column(nullable = false, length = 600)
     private String comentario;
 
+    @Column(name = "media_id")
+    private Long mediaId;
+
+    @Column(name = "foto_url", length = 1000)
+    private String fotoUrl;
+
     @Column(nullable = false)
     private boolean destacada;
 

@@ -45,4 +45,13 @@ public class ControladorMediaSitioAdmin {
     ) {
         return servicio.subirImagen(usuario.empresaId(), usuario.usuarioId(), CategoriaMedia.BRANDING, archivo);
     }
+
+    @PostMapping(value = "/imagenes/resenas", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PreAuthorize(PermisosSitio.EXPRESION_GESTIONAR)
+    public ArchivoMediaAdminResponse subirImagenResena(
+            @AuthenticationPrincipal UsuarioAutenticado usuario,
+            @RequestPart("archivo") MultipartFile archivo
+    ) {
+        return servicio.subirImagen(usuario.empresaId(), usuario.usuarioId(), CategoriaMedia.RESENAS, archivo);
+    }
 }

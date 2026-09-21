@@ -49,7 +49,7 @@ class ServicioResenasSitioTest {
         ServicioResenasSitio servicio = new ServicioResenasSitio(
                 configRepositorio, resenaRepositorio, indicadorRepositorio,
                 repositorio(EmpresaSitioConfigRepositorio.class, Map.of()),
-                null, new ObjectMapper()
+                null, new ObjectMapper(), null
         );
 
         ResenasSitioPublicoResponse respuesta = servicio.obtenerParaSitioPublico(7L);
@@ -77,7 +77,7 @@ class ServicioResenasSitioTest {
         );
 
         ServicioResenasSitio servicio = new ServicioResenasSitio(
-                configRepositorio, resenaRepositorio, indicadorRepositorio, sitioRepositorio, null, new ObjectMapper()
+                configRepositorio, resenaRepositorio, indicadorRepositorio, sitioRepositorio, null, new ObjectMapper(), null
         );
         ActualizarResenasSitioRequest request = new ActualizarResenasSitioRequest("javascript:alert(1)", List.of(), List.of());
 

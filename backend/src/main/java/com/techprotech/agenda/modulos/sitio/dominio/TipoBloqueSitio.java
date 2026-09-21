@@ -8,7 +8,7 @@ public enum TipoBloqueSitio {
     GALERIA("Galería", "Imágenes del trabajo y las instalaciones", "bi bi-images", true),
     PROMOCIONES("Promociones", "Ofertas con vigencia y servicios asociados", "bi bi-tag", true),
     RESENAS("Reseñas", "Opiniones y señales de confianza", "bi bi-chat-quote", true),
-    PREGUNTAS_FRECUENTES("Preguntas frecuentes", "Respuestas para reducir dudas", "bi bi-question-circle", false),
+    PREGUNTAS_FRECUENTES("Preguntas frecuentes", "Respuestas para reducir dudas", "bi bi-question-circle", true),
     CONTACTO("Contacto", "Acciones y datos para comunicarse", "bi bi-chat-dots", true),
     MAPA("Mapa", "Ubicación de sucursales", "bi bi-map", false);
 

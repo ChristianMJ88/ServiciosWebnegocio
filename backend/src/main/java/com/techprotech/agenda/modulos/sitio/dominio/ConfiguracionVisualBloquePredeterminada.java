@@ -42,6 +42,11 @@ public record ConfiguracionVisualBloquePredeterminada(
                     AlineacionBloqueSitio.CENTRO, SeparadorBloqueSitio.LINEA, EspaciadoBloqueSitio.AMPLIO,
                     "Experiencias reales", "Lo que dicen nuestros clientes",
                     "Opiniones que ayudan a reservar con confianza");
+            case PREGUNTAS_FRECUENTES -> new ConfiguracionVisualBloquePredeterminada(
+                    SuperficieBloqueSitio.BASE, PresentacionBloqueSitio.PANEL, AnchoBloqueSitio.NORMAL,
+                    AlineacionBloqueSitio.IZQUIERDA, SeparadorBloqueSitio.LINEA, EspaciadoBloqueSitio.AMPLIO,
+                    "Antes de reservar", "Preguntas frecuentes",
+                    "Respuestas claras para ayudarte a preparar tu visita");
             case CONTACTO -> new ConfiguracionVisualBloquePredeterminada(
                     SuperficieBloqueSitio.SUAVE, PresentacionBloqueSitio.PANEL, AnchoBloqueSitio.NORMAL,
                     AlineacionBloqueSitio.IZQUIERDA, SeparadorBloqueSitio.LINEA, EspaciadoBloqueSitio.NORMAL,

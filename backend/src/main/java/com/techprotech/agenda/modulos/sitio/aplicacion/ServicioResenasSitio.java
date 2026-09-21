@@ -4,6 +4,9 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.techprotech.agenda.modulos.admin.infraestructura.entidad.AuditoriaConfiguracionEmpresaEntidad;
 import com.techprotech.agenda.modulos.admin.infraestructura.repositorio.AuditoriaConfiguracionEmpresaRepositorio;
+import com.techprotech.agenda.compartido.media.aplicacion.ServicioMediaEmpresa;
+import com.techprotech.agenda.compartido.media.dominio.CategoriaMedia;
+import com.techprotech.agenda.compartido.media.infraestructura.EmpresaArchivoMediaEntidad;
 import com.techprotech.agenda.modulos.sitio.api.dto.*;
 import com.techprotech.agenda.modulos.sitio.dominio.IconoIndicadorConfianza;
 import com.techprotech.agenda.modulos.sitio.infraestructura.entidad.EmpresaSitioIndicadorConfianzaEntidad;
@@ -31,6 +34,7 @@ public class ServicioResenasSitio {
     private final EmpresaSitioConfigRepositorio sitioRepositorio;
     private final AuditoriaConfiguracionEmpresaRepositorio auditoriaRepositorio;
     private final ObjectMapper objectMapper;
+    private final ServicioMediaEmpresa servicioMedia;
 
     public ServicioResenasSitio(
             EmpresaSitioResenaConfigRepositorio configRepositorio,
@@ -38,7 +42,8 @@ public class ServicioResenasSitio {
             EmpresaSitioIndicadorConfianzaRepositorio indicadorRepositorio,
             EmpresaSitioConfigRepositorio sitioRepositorio,
             AuditoriaConfiguracionEmpresaRepositorio auditoriaRepositorio,
-            ObjectMapper objectMapper
+            ObjectMapper objectMapper,
+            ServicioMediaEmpresa servicioMedia
     ) {
         this.configRepositorio = configRepositorio;
         this.resenaRepositorio = resenaRepositorio;
@@ -46,6 +51,7 @@ public class ServicioResenasSitio {
         this.sitioRepositorio = sitioRepositorio;
         this.auditoriaRepositorio = auditoriaRepositorio;
         this.objectMapper = objectMapper;
+        this.servicioMedia = servicioMedia;
     }
 
     @Transactional
@@ -66,6 +72,7 @@ public class ServicioResenasSitio {
 
         List<ResenaSitioRequest> resenas = request.resenas().stream()
                 .sorted(Comparator.comparingInt(ResenaSitioRequest::orden)).toList();
+        resenas.forEach(item -> validarFoto(empresaId, item));
         resenaRepositorio.deleteByEmpresaId(empresaId);
         resenaRepositorio.flush();
         for (int orden = 0; orden < resenas.size(); orden++) {
@@ -75,6 +82,8 @@ public class ServicioResenasSitio {
             entidad.setNombre(item.nombre().trim());
             entidad.setCalificacion(item.calificacion());
             entidad.setComentario(item.comentario().trim());
+            entidad.setMediaId(item.mediaId());
+            entidad.setFotoUrl(resolverFoto(empresaId, item));
             entidad.setDestacada(item.destacada());
             entidad.setActiva(item.activa());
             entidad.setOrden(orden);
@@ -108,7 +117,7 @@ public class ServicioResenasSitio {
         List<ResenaSitioPublicaResponse> resenas = resenaRepositorio.findByEmpresaIdOrderByOrdenAsc(empresaId).stream()
                 .filter(EmpresaSitioResenaEntidad::isActiva)
                 .map(item -> new ResenaSitioPublicaResponse(
-                        item.getId(), item.getNombre(), item.getCalificacion(), item.getComentario(), item.isDestacada()
+                        item.getId(), item.getNombre(), item.getCalificacion(), item.getComentario(), item.getFotoUrl(), item.isDestacada()
                 )).toList();
         List<IndicadorConfianzaSitioPublicoResponse> indicadores = indicadorRepositorio.findByEmpresaIdOrderByOrdenAsc(empresaId).stream()
                 .filter(EmpresaSitioIndicadorConfianzaEntidad::isActivo)
@@ -123,7 +132,7 @@ public class ServicioResenasSitio {
                 .map(EmpresaSitioResenaConfigEntidad::getGoogleMapsUrl).orElse(null);
         List<ResenaSitioAdminResponse> resenas = resenaRepositorio.findByEmpresaIdOrderByOrdenAsc(empresaId).stream()
                 .map(item -> new ResenaSitioAdminResponse(
-                        item.getId(), item.getNombre(), item.getCalificacion(), item.getComentario(),
+                        item.getId(), item.getNombre(), item.getCalificacion(), item.getComentario(), item.getMediaId(), item.getFotoUrl(),
                         item.isDestacada(), item.isActiva(), item.getOrden()
                 )).toList();
         List<IndicadorConfianzaSitioAdminResponse> indicadores = indicadorRepositorio.findByEmpresaIdOrderByOrdenAsc(empresaId).stream()
@@ -138,6 +147,22 @@ public class ServicioResenasSitio {
         EmpresaSitioResenaConfigEntidad entidad = new EmpresaSitioResenaConfigEntidad();
         entidad.setEmpresaId(empresaId);
         return entidad;
+    }
+
+    private void validarFoto(Long empresaId, ResenaSitioRequest item) {
+        if (item.mediaId() == null) {
+            if (item.fotoUrl() != null && !item.fotoUrl().isBlank())
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Carga la foto del cliente desde el administrador");
+            return;
+        }
+        EmpresaArchivoMediaEntidad media = servicioMedia.validarPropiedad(empresaId, item.mediaId(), CategoriaMedia.RESENAS);
+        if (item.fotoUrl() == null || !media.getSecureUrl().equals(item.fotoUrl().trim()))
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "La foto no corresponde al tenant");
+    }
+
+    private String resolverFoto(Long empresaId, ResenaSitioRequest item) {
+        if (item.mediaId() == null) return null;
+        return servicioMedia.validarPropiedad(empresaId, item.mediaId(), CategoriaMedia.RESENAS).getSecureUrl();
     }
 
     private IconoIndicadorConfianza parsearIcono(String valor) {

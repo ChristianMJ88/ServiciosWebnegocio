@@ -5,6 +5,7 @@ public record ResenaSitioPublicaResponse(
         String nombre,
         int calificacion,
         String comentario,
+        String fotoUrl,
         boolean destacada
 ) {
 }
