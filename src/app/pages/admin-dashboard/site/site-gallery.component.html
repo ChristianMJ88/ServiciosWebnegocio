@@ -16,7 +16,7 @@
 
     <div class="gallery-editor__toolbar">
       <div><strong>Imágenes</strong><small>El orden de esta lista será el orden público.</small></div>
-      <button type="button" mat-stroked-button (click)="agregar()"><i class="bi bi-plus-lg"></i>Añadir imagen</button>
+      <button type="button" mat-stroked-button (click)="agregar()" [disabled]="galeria().imagenes.length >= limiteImagenes"><i class="bi bi-plus-lg"></i>Añadir imagen</button>
     </div>
 
     @if (configuracionMedia(); as media) {
@@ -30,9 +30,14 @@
     @if (!galeria().imagenes.length) {
       <div class="gallery-editor__empty"><span><i class="bi bi-images"></i></span><strong>Tu galería está lista para comenzar</strong><p>Añade imágenes mediante su URL pública. Puedes asociarlas a un servicio o sucursal.</p><button type="button" mat-flat-button color="primary" (click)="agregar()">Añadir primera imagen</button></div>
     } @else {
-      <div class="gallery-list">
+      <div class="gallery-list" cdkDropList [cdkDropListData]="galeria().imagenes" (cdkDropListDropped)="soltar($event)">
         @for (item of galeria().imagenes; track item.id || $index; let i = $index) {
-          <article class="gallery-card" [class.gallery-card--hidden]="!item.activa">
+          <article class="gallery-card" [class.gallery-card--hidden]="!item.activa" cdkDrag [cdkDragData]="item">
+            <div class="gallery-card__drag-preview" *cdkDragPreview>
+              @if (item.imagenUrl) {<img [src]="item.imagenUrl" alt="">}
+              <div><strong>{{ item.titulo || item.textoAlternativo || 'Imagen' }}</strong><small>Suelta en la posición deseada</small></div>
+            </div>
+            <div class="gallery-card__placeholder" *cdkDragPlaceholder></div>
             <div class="gallery-card__preview">
               @if (item.imagenUrl) {<img [src]="item.imagenUrl" [alt]="item.textoAlternativo || 'Vista previa de galería'">} @else {<span><i class="bi bi-image"></i>Vista previa</span>}
               <span class="gallery-card__order">{{ i + 1 }}</span>
@@ -58,6 +63,7 @@
               </div>
             </div>
             <div class="gallery-card__actions">
+              <button type="button" class="gallery-card__drag" cdkDragHandle [attr.aria-label]="'Arrastrar imagen ' + (i + 1)" title="Arrastrar para ordenar"><i class="bi bi-grip-vertical"></i></button>
               <button type="button" (click)="mover(i, -1)" [disabled]="i === 0" [attr.aria-label]="'Subir imagen ' + (i + 1)"><i class="bi bi-arrow-up"></i></button>
               <button type="button" (click)="mover(i, 1)" [disabled]="i === galeria().imagenes.length - 1" [attr.aria-label]="'Bajar imagen ' + (i + 1)"><i class="bi bi-arrow-down"></i></button>
               <button type="button" class="gallery-card__delete" (click)="quitar(i)" [attr.aria-label]="'Eliminar imagen ' + (i + 1)"><i class="bi bi-trash3"></i></button>

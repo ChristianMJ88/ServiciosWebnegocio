@@ -1,4 +1,5 @@
 import { CommonModule } from '@angular/common';
+import { CdkDrag, CdkDragDrop, CdkDragHandle, CdkDragPlaceholder, CdkDragPreview, CdkDropList, moveItemInArray } from '@angular/cdk/drag-drop';
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
@@ -13,12 +14,13 @@ import { SiteGalleryFacade } from './site-gallery.facade';
 @Component({
   selector: 'app-site-gallery',
   standalone: true,
-  imports: [CommonModule, FormsModule, MatButtonModule, MatFormFieldModule, MatInputModule, MatSelectModule, MatSlideToggleModule],
+  imports: [CommonModule, FormsModule, CdkDropList, CdkDrag, CdkDragHandle, CdkDragPreview, CdkDragPlaceholder, MatButtonModule, MatFormFieldModule, MatInputModule, MatSelectModule, MatSlideToggleModule],
   providers: [SiteGalleryFacade],
   templateUrl: './site-gallery.component.html',
   styleUrl: './site-gallery.component.css'
 })
 export class SiteGalleryComponent implements OnInit {
+  readonly limiteImagenes = 60;
   private readonly facade = inject(SiteGalleryFacade);
   readonly galeria = signal<GaleriaSitioAdmin>({
     titulo: 'Nuestro trabajo', descripcion: null, vista: 'CUADRICULA', ampliacionHabilitada: true, imagenes: []
@@ -45,6 +47,10 @@ export class SiteGalleryComponent implements OnInit {
   }
 
   agregar(): void {
+    if (this.galeria().imagenes.length >= this.limiteImagenes) {
+      this.error.set(`La galería admite hasta ${this.limiteImagenes} imágenes.`);
+      return;
+    }
     const imagen: GaleriaImagenSitioAdmin = {
       id: null, mediaId: null, imagenUrl: '', textoAlternativo: '', titulo: null, descripcion: null,
       servicioId: null, servicioNombre: null, sucursalId: null, sucursalNombre: null,
@@ -118,9 +124,28 @@ export class SiteGalleryComponent implements OnInit {
     this.limpiarEstado();
   }
 
+  soltar(evento: CdkDragDrop<GaleriaImagenSitioAdmin[]>): void {
+    if (evento.previousIndex === evento.currentIndex) return;
+    const imagenes = [...this.galeria().imagenes];
+    moveItemInArray(imagenes, evento.previousIndex, evento.currentIndex);
+    this.galeria.update(galeria => ({
+      ...galeria,
+      imagenes: imagenes.map((item, orden) => ({ ...item, orden }))
+    }));
+    this.limpiarEstado();
+  }
+
   guardar(): void {
     const galeria = this.galeria();
-    if (this.guardando() || !galeria.titulo.trim() || galeria.imagenes.some(item => !item.imagenUrl.trim() || !item.textoAlternativo.trim())) return;
+    if (this.guardando()) return;
+    if (!galeria.titulo.trim()) {
+      this.error.set('Escribe un título para la galería.');
+      return;
+    }
+    if (galeria.imagenes.some(item => !item.imagenUrl.trim() || !item.textoAlternativo.trim())) {
+      this.error.set('Cada imagen necesita un archivo o URL y un texto alternativo.');
+      return;
+    }
     this.guardando.set(true);
     this.limpiarEstado();
     this.facade.guardar({
