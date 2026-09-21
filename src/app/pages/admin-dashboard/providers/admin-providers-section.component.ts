@@ -9,8 +9,9 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
-import { ConfiguracionMediaAdmin, GuardarPrestadorPayload, PrestadorAdmin, ServicioAdmin, SucursalAdmin } from '../../../core/admin/admin.service';
+import { ConfiguracionMediaAdmin, EncuadreFotoColaborador, GuardarPrestadorPayload, PrestadorAdmin, ServicioAdmin, SucursalAdmin } from '../../../core/admin/admin.service';
 import { AdminProvidersFacade } from './admin-providers.facade';
+import { construirUrlRetrato } from './admin-providers.forms';
 import { finalize } from 'rxjs';
 
 @Component({
@@ -49,6 +50,12 @@ export class AdminProvidersSectionComponent implements OnInit {
   readonly subiendoFoto = signal(false);
   readonly mensajeFoto = signal<string | null>(null);
   readonly errorFoto = signal<string | null>(null);
+  readonly encuadres: ReadonlyArray<{ valor: EncuadreFotoColaborador; etiqueta: string; icono: string }> = [
+    { valor: 'ROSTRO', etiqueta: 'Rostro', icono: 'bi-person-bounding-box' },
+    { valor: 'AUTOMATICO', etiqueta: 'Inteligente', icono: 'bi-stars' },
+    { valor: 'CENTRO', etiqueta: 'Centro', icono: 'bi-bullseye' },
+    { valor: 'SUPERIOR', etiqueta: 'Superior', icono: 'bi-arrow-up' }
+  ];
 
   ngOnInit(): void {
     this.facade.cargarConfiguracionMedia().subscribe({
@@ -91,5 +98,17 @@ export class AdminProvidersSectionComponent implements OnInit {
 
   megabytes(bytes: number): string {
     return (bytes / 1024 / 1024).toFixed(bytes % (1024 * 1024) === 0 ? 0 : 1);
+  }
+
+  vistaPreviaFoto(): string | null {
+    return construirUrlRetrato(
+      this.formularioPrestador.fotoUrl,
+      this.formularioPrestador.fotoEncuadre,
+      this.formularioPrestador.fotoZoom
+    );
+  }
+
+  vistaPreviaPrestador(prestador: PrestadorAdmin): string | null {
+    return construirUrlRetrato(prestador.fotoUrl, prestador.fotoEncuadre, prestador.fotoZoom, 160);
   }
 }

@@ -1,5 +1,6 @@
 package com.techprotech.agenda.modulos.sitio.aplicacion;
 
+import com.techprotech.agenda.compartido.media.aplicacion.TransformadorImagenCloudinary;
 import com.techprotech.agenda.modulos.prestadores.infraestructura.entidad.PrestadorServicioEntidad;
 import com.techprotech.agenda.modulos.prestadores.infraestructura.repositorio.PrestadorServicioRepositorio;
 import com.techprotech.agenda.modulos.sucursales.infraestructura.entidad.SucursalEntidad;
@@ -17,13 +18,16 @@ public class ServicioEquipoSitio {
 
     private final SucursalRepositorio sucursalRepositorio;
     private final PrestadorServicioRepositorio prestadorServicioRepositorio;
+    private final TransformadorImagenCloudinary transformadorImagen;
 
     public ServicioEquipoSitio(
             SucursalRepositorio sucursalRepositorio,
-            PrestadorServicioRepositorio prestadorServicioRepositorio
+            PrestadorServicioRepositorio prestadorServicioRepositorio,
+            TransformadorImagenCloudinary transformadorImagen
     ) {
         this.sucursalRepositorio = sucursalRepositorio;
         this.prestadorServicioRepositorio = prestadorServicioRepositorio;
+        this.transformadorImagen = transformadorImagen;
     }
 
     @Transactional(readOnly = true)
@@ -40,7 +44,7 @@ public class ServicioEquipoSitio {
                         prestador.getUsuarioId(),
                         prestador.getNombreMostrar(),
                         prestador.getBiografia(),
-                        prestador.getFotoUrl(),
+                        transformadorImagen.retrato(prestador.getFotoUrl(), prestador.getFotoEncuadre(), prestador.getFotoZoom(), 480),
                         sucursalesPorId.get(prestador.getSucursalId()).getNombre()
                 ))
                 .toList();

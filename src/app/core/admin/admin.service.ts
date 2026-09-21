@@ -180,6 +180,8 @@ export interface PrestadorAdmin {
   nombreMostrar: string;
   biografia: string | null;
   fotoUrl: string | null;
+  fotoEncuadre: EncuadreFotoColaborador;
+  fotoZoom: number;
   colorAgenda: string | null;
   activo: boolean;
   servicioIds: number[];
@@ -193,10 +195,14 @@ export interface GuardarPrestadorPayload {
   nombreMostrar: string;
   biografia: string | null;
   fotoUrl: string | null;
+  fotoEncuadre: EncuadreFotoColaborador;
+  fotoZoom: number;
   colorAgenda: string | null;
   activo: boolean;
   servicioIds: number[];
 }
+
+export type EncuadreFotoColaborador = 'ROSTRO' | 'AUTOMATICO' | 'CENTRO' | 'SUPERIOR';
 
 export interface UsuarioInternoAdmin {
   usuarioId: number;

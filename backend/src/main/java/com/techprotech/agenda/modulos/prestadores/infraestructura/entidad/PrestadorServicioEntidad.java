@@ -7,6 +7,8 @@ import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.math.BigDecimal;
+
 @Setter
 @Getter
 @Entity
@@ -28,6 +30,12 @@ public class PrestadorServicioEntidad {
 
     @Column(name = "foto_url", length = 500)
     private String fotoUrl;
+
+    @Column(name = "foto_encuadre", nullable = false, length = 20)
+    private String fotoEncuadre = "ROSTRO";
+
+    @Column(name = "foto_zoom", nullable = false, precision = 3, scale = 2)
+    private BigDecimal fotoZoom = BigDecimal.ONE;
 
     @Column(nullable = false)
     private boolean activo;

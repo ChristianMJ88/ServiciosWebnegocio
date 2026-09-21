@@ -1,4 +1,5 @@
 import {
+  EncuadreFotoColaborador,
   GuardarPrestadorPayload,
   PrestadorAdmin,
   ServicioAdmin
@@ -16,6 +17,8 @@ export function crearFormularioPrestador(
     nombreMostrar: prestador?.nombreMostrar ?? '',
     biografia: prestador?.biografia ?? '',
     fotoUrl: prestador?.fotoUrl ?? null,
+    fotoEncuadre: prestador?.fotoEncuadre ?? 'ROSTRO',
+    fotoZoom: prestador?.fotoZoom ?? 1,
     colorAgenda: prestador?.colorAgenda ?? null,
     activo: prestador?.activo ?? true,
     servicioIds: [...(prestador?.servicioIds ?? [])]
@@ -29,8 +32,33 @@ export function construirPayloadPrestador(formulario: GuardarPrestadorPayload): 
     contrasenaTemporal: normalizarTextoOpcional(formulario.contrasenaTemporal),
     biografia: normalizarTextoOpcional(formulario.biografia),
     fotoUrl: normalizarTextoOpcional(formulario.fotoUrl),
+    fotoEncuadre: formulario.fotoEncuadre,
+    fotoZoom: Math.min(2, Math.max(1, Number(formulario.fotoZoom) || 1)),
     colorAgenda: normalizarTextoOpcional(formulario.colorAgenda)
   };
+}
+
+const GRAVEDAD_CLOUDINARY: Record<EncuadreFotoColaborador, string> = {
+  ROSTRO: 'face',
+  AUTOMATICO: 'auto',
+  CENTRO: 'center',
+  SUPERIOR: 'north'
+};
+
+export function construirUrlRetrato(
+  fotoUrl: string | null,
+  encuadre: EncuadreFotoColaborador,
+  zoom: number,
+  tamano = 360
+): string | null {
+  const url = fotoUrl?.trim();
+  if (!url || !url.includes('res.cloudinary.com') || !url.includes('/upload/')) return url || null;
+
+  const zoomSeguro = Math.min(2, Math.max(1, Number(zoom) || 1)).toFixed(2);
+  const gravedad = GRAVEDAD_CLOUDINARY[encuadre];
+  const modoRecorte = encuadre === 'ROSTRO' ? 'thumb' : 'fill';
+  const transformacion = `c_${modoRecorte},g_${gravedad},w_${tamano},h_${tamano},z_${zoomSeguro},q_auto,f_auto`;
+  return url.replace('/upload/', `/upload/${transformacion}/`);
 }
 
 export function filtrarServiciosPrestador(servicios: ServicioAdmin[], sucursalId: number): ServicioAdmin[] {

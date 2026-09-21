@@ -1,6 +1,7 @@
 package com.techprotech.agenda.modulos.sitio.aplicacion;
 
 import com.techprotech.agenda.modulos.prestadores.infraestructura.entidad.PrestadorServicioEntidad;
+import com.techprotech.agenda.compartido.media.aplicacion.TransformadorImagenCloudinary;
 import com.techprotech.agenda.modulos.prestadores.infraestructura.repositorio.PrestadorServicioRepositorio;
 import com.techprotech.agenda.modulos.sucursales.infraestructura.entidad.SucursalEntidad;
 import com.techprotech.agenda.modulos.sucursales.infraestructura.repositorio.SucursalRepositorio;
@@ -33,7 +34,7 @@ class ServicioEquipoSitioTest {
                 List.of(activo, inactivo)
         );
 
-        List<IntegranteEquipoSitioPublicoResponse> equipo = new ServicioEquipoSitio(sucursales, prestadores)
+        List<IntegranteEquipoSitioPublicoResponse> equipo = new ServicioEquipoSitio(sucursales, prestadores, new TransformadorImagenCloudinary())
                 .obtenerParaSitioPublico(7L);
 
         assertEquals(1, equipo.size());

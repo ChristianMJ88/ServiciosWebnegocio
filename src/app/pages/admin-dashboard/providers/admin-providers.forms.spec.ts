@@ -3,6 +3,7 @@ import { PrestadorAdmin, ServicioAdmin } from '../../../core/admin/admin.service
 import {
   alternarServicioPrestador,
   construirPayloadPrestador,
+  construirUrlRetrato,
   crearFormularioPrestador,
   filtrarServiciosPrestador,
   sincronizarServiciosPrestador
@@ -32,15 +33,29 @@ describe('admin providers forms', () => {
       correo: ' ANA@EXAMPLE.COM ',
       contrasenaTemporal: '  ',
       biografia: ' Perfil ',
-      colorAgenda: ''
+      colorAgenda: '',
+      fotoZoom: 5
     });
 
     expect(payload).toEqual(expect.objectContaining({
       correo: 'ana@example.com',
       contrasenaTemporal: null,
       biografia: 'Perfil',
-      colorAgenda: null
+      colorAgenda: null,
+      fotoZoom: 2
     }));
+  });
+
+  it('construye una vista previa Cloudinary sin modificar URLs externas', () => {
+    const cloudinary = construirUrlRetrato(
+      'https://res.cloudinary.com/demo/image/upload/v1/Fluora/persona.jpg',
+      'SUPERIOR',
+      1.25,
+      160
+    );
+
+    expect(cloudinary).toContain('/upload/c_fill,g_north,w_160,h_160,z_1.25,q_auto,f_auto/');
+    expect(construirUrlRetrato('https://cdn.example/persona.jpg', 'CENTRO', 1)).toBe('https://cdn.example/persona.jpg');
   });
 
   it('filtra y sincroniza servicios por sucursal', () => {

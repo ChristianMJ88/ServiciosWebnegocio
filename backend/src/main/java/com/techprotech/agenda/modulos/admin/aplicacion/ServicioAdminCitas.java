@@ -3119,8 +3119,23 @@ public class ServicioAdminCitas {
         prestador.setNombreMostrar(request.nombreMostrar().trim());
         prestador.setBiografia(request.biografia() != null ? request.biografia().trim() : null);
         prestador.setFotoUrl(normalizarOpcional(request.fotoUrl()));
+        prestador.setFotoEncuadre(normalizarEncuadreFoto(request.fotoEncuadre()));
+        prestador.setFotoZoom(normalizarZoomFoto(request.fotoZoom()));
         prestador.setColorAgenda(request.colorAgenda() != null && !request.colorAgenda().isBlank() ? request.colorAgenda().trim() : "#2563eb");
         prestador.setActivo(request.activo());
+    }
+
+    private String normalizarEncuadreFoto(String valor) {
+        String encuadre = valor == null ? "ROSTRO" : valor.trim().toUpperCase(Locale.ROOT);
+        return Set.of("ROSTRO", "AUTOMATICO", "CENTRO", "SUPERIOR").contains(encuadre) ? encuadre : "ROSTRO";
+    }
+
+    private BigDecimal normalizarZoomFoto(BigDecimal valor) {
+        if (valor == null) return BigDecimal.ONE;
+        if (valor.compareTo(BigDecimal.ONE) < 0 || valor.compareTo(new BigDecimal("2.00")) > 0) {
+            throw new ResponseStatusException(BAD_REQUEST, "El zoom de la fotografía debe estar entre 1.00 y 2.00");
+        }
+        return valor.setScale(2, java.math.RoundingMode.HALF_UP);
     }
 
     private void asignarRolStaff(UsuarioEntidad usuario, Long empresaId) {
@@ -3746,6 +3761,8 @@ public class ServicioAdminCitas {
                 prestador.getNombreMostrar(),
                 prestador.getBiografia(),
                 prestador.getFotoUrl(),
+                prestador.getFotoEncuadre(),
+                prestador.getFotoZoom(),
                 prestador.getColorAgenda(),
                 prestador.isActivo(),
                 serviciosAsignados.stream().map(ServicioEntidad::getId).toList(),

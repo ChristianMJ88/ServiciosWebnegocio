@@ -1,6 +1,7 @@
 package com.techprotech.agenda.modulos.admin.api.dto;
 
 import java.util.List;
+import java.math.BigDecimal;
 
 public record PrestadorAdminResponse(
         Long usuarioId,
@@ -10,6 +11,8 @@ public record PrestadorAdminResponse(
         String nombreMostrar,
         String biografia,
         String fotoUrl,
+        String fotoEncuadre,
+        BigDecimal fotoZoom,
         String colorAgenda,
         boolean activo,
         List<Long> servicioIds,

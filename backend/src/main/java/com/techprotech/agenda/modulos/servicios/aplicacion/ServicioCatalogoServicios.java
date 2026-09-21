@@ -1,5 +1,6 @@
 package com.techprotech.agenda.modulos.servicios.aplicacion;
 
+import com.techprotech.agenda.compartido.media.aplicacion.TransformadorImagenCloudinary;
 import com.techprotech.agenda.modulos.prestadores.infraestructura.entidad.PrestadorServicioEntidad;
 import com.techprotech.agenda.modulos.prestadores.infraestructura.repositorio.PrestadorServicioRepositorio;
 import com.techprotech.agenda.modulos.servicios.infraestructura.entidad.AsignacionServicioPrestadorEntidad;
@@ -37,6 +38,7 @@ public class ServicioCatalogoServicios {
     private final PrestadorServicioRepositorio prestadorServicioRepositorio;
     private final AsignacionServicioPrestadorRepositorio asignacionServicioPrestadorRepositorio;
     private final EmpresaSitioConfigRepositorio empresaSitioConfigRepositorio;
+    private final TransformadorImagenCloudinary transformadorImagen;
 
     public ServicioCatalogoServicios(
             ServicioRepositorio servicioRepositorio,
@@ -45,7 +47,8 @@ public class ServicioCatalogoServicios {
             SubgrupoServicioRepositorio subgrupoServicioRepositorio,
             PrestadorServicioRepositorio prestadorServicioRepositorio,
             AsignacionServicioPrestadorRepositorio asignacionServicioPrestadorRepositorio,
-            EmpresaSitioConfigRepositorio empresaSitioConfigRepositorio
+            EmpresaSitioConfigRepositorio empresaSitioConfigRepositorio,
+            TransformadorImagenCloudinary transformadorImagen
     ) {
         this.servicioRepositorio = servicioRepositorio;
         this.servicioSucursalRepositorio = servicioSucursalRepositorio;
@@ -54,6 +57,7 @@ public class ServicioCatalogoServicios {
         this.prestadorServicioRepositorio = prestadorServicioRepositorio;
         this.asignacionServicioPrestadorRepositorio = asignacionServicioPrestadorRepositorio;
         this.empresaSitioConfigRepositorio = empresaSitioConfigRepositorio;
+        this.transformadorImagen = transformadorImagen;
     }
 
     public List<ServicioPublicoResponse> listarPorSucursal(Long sucursalId) {
@@ -215,7 +219,7 @@ public class ServicioCatalogoServicios {
                         prestador.getSucursalId(),
                         prestador.getNombreMostrar(),
                         prestador.getBiografia(),
-                        prestador.getFotoUrl(),
+                        transformadorImagen.retrato(prestador.getFotoUrl(), prestador.getFotoEncuadre(), prestador.getFotoZoom(), 320),
                         prestador.getColorAgenda()
                 ))
                 .toList();
