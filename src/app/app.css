@@ -43,7 +43,7 @@
 }
 
 .chat-header {
-  background: linear-gradient(45deg, var(--primary-pink), var(--accent-blue));
+  background: linear-gradient(135deg, var(--tenant-primary), var(--tenant-secondary));
   color: white;
   cursor: pointer;
   padding: 12px 15px !important;
@@ -73,7 +73,7 @@
   display: none;
 }
 
-@media (max-width: 576px) {
+@media (max-width: 991.98px) {
   .whatsapp-float {
     right: 14px;
     bottom: 14px;
