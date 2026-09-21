@@ -37,4 +37,15 @@ class TransformadorImagenCloudinaryTest {
         assertEquals(new BigDecimal("2.00"), transformador.normalizarZoom(new BigDecimal("3.00")));
         assertEquals("ROSTRO", transformador.normalizarEncuadre("desconocido"));
     }
+
+    @Test
+    void generaVariantesResponsivasParaGaleria() {
+        String original = "https://res.cloudinary.com/demo/image/upload/v1/Fluora/galeria/trabajo.jpg";
+
+        assertEquals(
+                "https://res.cloudinary.com/demo/image/upload/c_limit,w_960,q_auto,f_auto/v1/Fluora/galeria/trabajo.jpg",
+                transformador.galeria(original, 960)
+        );
+        assertEquals("https://cdn.example/trabajo.jpg", transformador.galeria("https://cdn.example/trabajo.jpg", 960));
+    }
 }

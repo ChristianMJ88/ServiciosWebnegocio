@@ -115,6 +115,15 @@ export class HomeComponent implements OnInit {
     if (this.tenantContext.galeria()?.ampliacionHabilitada) this.imagenGaleriaActiva.set(item);
   }
 
+  srcsetGaleria(item: TenantGalleryImage): string | null {
+    const variantes = [
+      item.imagenUrlPequena ? `${item.imagenUrlPequena} 480w` : null,
+      item.imagenUrlMediana ? `${item.imagenUrlMediana} 960w` : null,
+      item.imagenUrlGrande ? `${item.imagenUrlGrande} 1440w` : null
+    ].filter((url): url is string => !!url);
+    return variantes.length ? variantes.join(', ') : null;
+  }
+
   cerrarImagenGaleria(): void {
     this.imagenGaleriaActiva.set(null);
   }

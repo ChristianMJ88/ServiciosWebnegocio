@@ -58,6 +58,10 @@ export interface TenantPromotion {
 export interface TenantGalleryImage {
   id: number;
   imagenUrl: string;
+  imagenUrlPequena?: string;
+  imagenUrlMediana?: string;
+  imagenUrlGrande?: string;
+  imagenUrlAmpliada?: string;
   textoAlternativo: string;
   titulo: string | null;
   descripcion: string | null;

@@ -9,6 +9,8 @@ import java.util.Map;
 
 @Component
 public class TransformadorImagenCloudinary {
+    private static final int ANCHO_MINIMO = 160;
+    private static final int ANCHO_MAXIMO = 2400;
     private static final Map<String, String> GRAVEDADES = Map.of(
             "ROSTRO", "face",
             "AUTOMATICO", "auto",
@@ -17,7 +19,7 @@ public class TransformadorImagenCloudinary {
     );
 
     public String retrato(String url, String encuadre, BigDecimal zoom, int tamano) {
-        if (url == null || url.isBlank() || !url.contains("res.cloudinary.com") || !url.contains("/upload/")) {
+        if (!esCloudinary(url)) {
             return url;
         }
         String gravedad = GRAVEDADES.getOrDefault(normalizarEncuadre(encuadre), "face");
@@ -26,6 +28,12 @@ public class TransformadorImagenCloudinary {
         String transformacion = "c_" + modoRecorte + ",g_" + gravedad + ",w_" + tamano + ",h_" + tamano
                 + ",z_" + zoomSeguro + ",q_auto,f_auto";
         return url.replace("/upload/", "/upload/" + transformacion + "/");
+    }
+
+    public String galeria(String url, int ancho) {
+        if (!esCloudinary(url)) return url;
+        int anchoSeguro = Math.max(ANCHO_MINIMO, Math.min(ANCHO_MAXIMO, ancho));
+        return url.replace("/upload/", "/upload/c_limit,w_" + anchoSeguro + ",q_auto,f_auto/");
     }
 
     public String normalizarEncuadre(String encuadre) {
@@ -38,5 +46,9 @@ public class TransformadorImagenCloudinary {
         if (zoom.compareTo(BigDecimal.ONE) < 0) return BigDecimal.ONE;
         if (zoom.compareTo(new BigDecimal("2.00")) > 0) return new BigDecimal("2.00");
         return zoom;
+    }
+
+    private boolean esCloudinary(String url) {
+        return url != null && !url.isBlank() && url.contains("res.cloudinary.com") && url.contains("/upload/");
     }
 }

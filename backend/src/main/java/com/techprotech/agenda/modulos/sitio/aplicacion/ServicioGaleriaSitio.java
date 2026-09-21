@@ -6,6 +6,7 @@ import com.techprotech.agenda.modulos.admin.infraestructura.entidad.AuditoriaCon
 import com.techprotech.agenda.compartido.media.dominio.CategoriaMedia;
 import com.techprotech.agenda.compartido.media.infraestructura.EmpresaArchivoMediaEntidad;
 import com.techprotech.agenda.compartido.media.aplicacion.ServicioMediaEmpresa;
+import com.techprotech.agenda.compartido.media.aplicacion.TransformadorImagenCloudinary;
 import com.techprotech.agenda.modulos.admin.infraestructura.repositorio.AuditoriaConfiguracionEmpresaRepositorio;
 import com.techprotech.agenda.modulos.servicios.infraestructura.entidad.ServicioEntidad;
 import com.techprotech.agenda.modulos.servicios.infraestructura.repositorio.ServicioRepositorio;
@@ -36,6 +37,7 @@ public class ServicioGaleriaSitio {
     private final AuditoriaConfiguracionEmpresaRepositorio auditoriaRepositorio;
     private final ObjectMapper objectMapper;
     private final ServicioMediaEmpresa servicioMedia;
+    private final TransformadorImagenCloudinary transformadorImagen;
 
     public ServicioGaleriaSitio(
             EmpresaSitioGaleriaConfigRepositorio configRepositorio,
@@ -45,7 +47,8 @@ public class ServicioGaleriaSitio {
             SucursalRepositorio sucursalRepositorio,
             AuditoriaConfiguracionEmpresaRepositorio auditoriaRepositorio,
             ObjectMapper objectMapper,
-            ServicioMediaEmpresa servicioMedia
+            ServicioMediaEmpresa servicioMedia,
+            TransformadorImagenCloudinary transformadorImagen
     ) {
         this.configRepositorio = configRepositorio;
         this.imagenRepositorio = imagenRepositorio;
@@ -55,6 +58,7 @@ public class ServicioGaleriaSitio {
         this.auditoriaRepositorio = auditoriaRepositorio;
         this.objectMapper = objectMapper;
         this.servicioMedia = servicioMedia;
+        this.transformadorImagen = transformadorImagen;
     }
 
     @Transactional
@@ -112,7 +116,12 @@ public class ServicioGaleriaSitio {
         List<GaleriaImagenSitioPublicaResponse> imagenes = imagenRepositorio.findByEmpresaIdOrderByOrdenAsc(empresaId).stream()
                 .filter(EmpresaSitioGaleriaImagenEntidad::isActiva)
                 .map(item -> new GaleriaImagenSitioPublicaResponse(
-                        item.getId(), item.getImagenUrl(), item.getTextoAlternativo(), item.getTitulo(), item.getDescripcion(),
+                        item.getId(), item.getImagenUrl(),
+                        varianteGaleria(item.getImagenUrl(), 480),
+                        varianteGaleria(item.getImagenUrl(), 960),
+                        varianteGaleria(item.getImagenUrl(), 1440),
+                        varianteGaleria(item.getImagenUrl(), 1920),
+                        item.getTextoAlternativo(), item.getTitulo(), item.getDescripcion(),
                         item.getServicioId(), nombreServicio(servicios, item.getServicioId()),
                         item.getSucursalId(), nombreSucursal(sucursales, item.getSucursalId())
                 )).toList();
@@ -157,6 +166,11 @@ public class ServicioGaleriaSitio {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "La URL no corresponde a la imagen cargada");
         }
         return media.getSecureUrl();
+    }
+
+    private String varianteGaleria(String url, int ancho) {
+        String variante = transformadorImagen.galeria(url, ancho);
+        return Objects.equals(url, variante) ? null : variante;
     }
 
     private Map<Long, ServicioEntidad> serviciosPorId(Long empresaId) {

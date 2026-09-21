@@ -233,7 +233,13 @@
         @for (item of tenantContext.galeria()?.imagenes; track item.id; let i = $index) {
           <article class="gallery-public__item" appScrollReveal="up" [revealDelay]="55 * (i + 1)">
             <button type="button" class="gallery-public__media" [class.gallery-public__media--zoom]="tenantContext.galeria()?.ampliacionHabilitada" (click)="abrirImagenGaleria(item)" [attr.aria-label]="tenantContext.galeria()?.ampliacionHabilitada ? 'Ampliar ' + item.textoAlternativo : item.textoAlternativo">
-              <img [src]="item.imagenUrl" [alt]="item.textoAlternativo" loading="lazy">
+              <img
+                [src]="item.imagenUrlMediana || item.imagenUrl"
+                [attr.srcset]="srcsetGaleria(item)"
+                sizes="(max-width: 576px) 88vw, (max-width: 992px) 50vw, 33vw"
+                [alt]="item.textoAlternativo"
+                loading="lazy"
+                decoding="async">
               @if (tenantContext.galeria()?.ampliacionHabilitada) {<span class="gallery-public__zoom"><i class="bi bi-arrows-fullscreen"></i></span>}
             </button>
             @if (item.titulo || item.servicioNombre || item.sucursalNombre) {
@@ -292,7 +298,7 @@
   <div class="gallery-lightbox" role="dialog" aria-modal="true" [attr.aria-label]="imagen.textoAlternativo" (click)="cerrarImagenGaleria()">
     <button type="button" class="gallery-lightbox__close" (click)="cerrarImagenGaleria()" aria-label="Cerrar imagen"><i class="bi bi-x-lg"></i></button>
     <figure (click)="$event.stopPropagation()">
-      <img [src]="imagen.imagenUrl" [alt]="imagen.textoAlternativo">
+      <img [src]="imagen.imagenUrlAmpliada || imagen.imagenUrl" [alt]="imagen.textoAlternativo">
       @if (imagen.titulo || imagen.descripcion) {<figcaption>@if (imagen.titulo) {<strong>{{ imagen.titulo }}</strong>} @if (imagen.descripcion) {<p>{{ imagen.descripcion }}</p>}</figcaption>}
     </figure>
   </div>
