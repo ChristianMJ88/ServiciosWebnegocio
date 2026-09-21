@@ -216,6 +216,42 @@
   </section>
   }
 
+  @if (tenantContext.bloqueInicioHabilitado('RESENAS') && ((tenantContext.resenas()?.resenas?.length || 0) + (tenantContext.resenas()?.indicadores?.length || 0) > 0)) {
+  <section class="home-section home-reviews" [ngClass]="tenantContext.clasesBloqueInicio('RESENAS')" [style.order]="tenantContext.ordenBloqueInicio('RESENAS')">
+    <div class="container">
+      <app-public-section-heading
+        appScrollReveal="up"
+        [eyebrow]="tenantContext.bloqueInicio('RESENAS')?.etiqueta"
+        [title]="tenantContext.bloqueInicio('RESENAS')?.titulo || tenantContext.nombreComercial()"
+        [description]="tenantContext.bloqueInicio('RESENAS')?.descripcion" />
+      @if (tenantContext.resenas()!.indicadores.length) {
+        <div class="trust-public-grid" [class.trust-public-grid--single]="tenantContext.resenas()!.indicadores.length === 1">
+          @for (item of tenantContext.resenas()!.indicadores; track item.id; let i = $index) {
+            <article class="trust-public-card" appScrollReveal="up" [revealDelay]="45 * (i + 1)">
+              <span><i [class]="iconoConfianza(item.icono)"></i></span><div><strong>{{ item.valor }}</strong><small>{{ item.etiqueta }}</small></div>
+            </article>
+          }
+        </div>
+      }
+      @if (tenantContext.resenas()!.resenas.length) {
+        <div class="reviews-public-grid" [class.reviews-public-grid--single]="tenantContext.resenas()!.resenas.length === 1" [class.reviews-public-grid--pair]="tenantContext.resenas()!.resenas.length === 2">
+          @for (item of tenantContext.resenas()!.resenas; track item.id; let i = $index) {
+            <article class="review-public-card" [class.review-public-card--featured]="item.destacada" appScrollReveal="up" [revealDelay]="60 * (i + 1)">
+              <div class="review-public-card__quote"><i class="bi bi-quote"></i></div>
+              <div class="review-public-card__stars" [attr.aria-label]="item.calificacion + ' de 5 estrellas'">@for (estrella of [1,2,3,4,5]; track estrella) {<i class="bi" [class.bi-star-fill]="estrella <= item.calificacion" [class.bi-star]="estrella > item.calificacion"></i>}</div>
+              <blockquote>{{ item.comentario }}</blockquote>
+              <footer><span>{{ inicialResena(item.nombre) }}</span><div><strong>{{ item.nombre }}</strong><small>Testimonio compartido por el negocio</small></div></footer>
+            </article>
+          }
+        </div>
+      }
+      @if (tenantContext.resenas()!.googleMapsUrl) {
+        <div class="reviews-public__external" appScrollReveal="up"><span><i class="bi bi-google"></i><span><strong>Consulta más opiniones</strong><small>Revisa referencias adicionales en Google Maps.</small></span></span><a [href]="tenantContext.resenas()!.googleMapsUrl!" target="_blank" rel="noopener noreferrer">Ver en Google Maps <i class="bi bi-arrow-up-right"></i></a></div>
+      }
+    </div>
+  </section>
+  }
+
   @if (tenantContext.bloqueInicioHabilitado('GALERIA') && tenantContext.galeria()?.imagenes?.length) {
   <section class="home-section home-gallery" [ngClass]="tenantContext.clasesBloqueInicio('GALERIA')" [style.order]="tenantContext.ordenBloqueInicio('GALERIA')">
     <div class="container">

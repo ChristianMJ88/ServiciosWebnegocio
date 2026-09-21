@@ -94,6 +94,27 @@ export interface TenantTeamMember {
   sucursalNombre: string;
 }
 
+export interface TenantReview {
+  id: number;
+  nombre: string;
+  calificacion: number;
+  comentario: string;
+  destacada: boolean;
+}
+
+export interface TenantTrustIndicator {
+  id: number;
+  valor: string;
+  etiqueta: string;
+  icono: 'ESTRELLA' | 'PERSONAS' | 'EXPERIENCIA' | 'PREMIO' | 'CORAZON' | 'ESCUDO';
+}
+
+export interface TenantReviews {
+  googleMapsUrl: string | null;
+  resenas: TenantReview[];
+  indicadores: TenantTrustIndicator[];
+}
+
 export interface TenantSiteConfig {
   empresaId: number;
   slug: string;
@@ -172,6 +193,7 @@ export interface TenantSiteConfig {
   promociones?: TenantPromotion[];
   beneficios?: TenantBenefit[];
   equipo?: TenantTeamMember[];
+  resenas?: TenantReviews | null;
   publicado: boolean;
 }
 

@@ -117,6 +117,7 @@ export class TenantContextService {
   readonly footerMostrarContacto = computed(() => this.tenant()?.footerMostrarContacto ?? true);
   readonly beneficios = computed(() => this.tenant()?.beneficios ?? []);
   readonly equipo = computed(() => this.tenant()?.equipo ?? []);
+  readonly resenas = computed(() => this.tenant()?.resenas ?? null);
   readonly socialLinks = computed(() => {
     const tenant = this.tenant();
     if (!tenant) return [];

@@ -4,7 +4,7 @@
     <span class="site-editor__state" [class.is-live]="formularioSitio().publicado"><span></span>{{ formularioSitio().publicado ? 'Sitio publicado' : 'Borrador' }}</span>
   </header>
 
-  <div class="site-editor__layout" [class.site-editor__layout--wide]="seccionActiva() === 'estructura' || seccionActiva() === 'servicios_destacados' || seccionActiva() === 'beneficios' || seccionActiva() === 'promociones' || seccionActiva() === 'galeria'">
+  <div class="site-editor__layout" [class.site-editor__layout--wide]="seccionActiva() === 'estructura' || seccionActiva() === 'servicios_destacados' || seccionActiva() === 'beneficios' || seccionActiva() === 'promociones' || seccionActiva() === 'galeria' || seccionActiva() === 'resenas'">
     <aside class="site-editor__nav" aria-label="Secciones de personalización">
       @for (seccion of secciones; track seccion.id) {
         <button type="button" [class.is-active]="seccionActiva() === seccion.id" [attr.aria-current]="seccionActiva() === seccion.id ? 'step' : null" (click)="seccionActiva.set(seccion.id)">
@@ -32,6 +32,9 @@
 
       @if (seccionActiva() === 'galeria') {
         <app-site-gallery />
+      }
+      @if (seccionActiva() === 'resenas') {
+        <app-site-reviews />
       }
 
       @if (seccionActiva() === 'identidad') {
@@ -196,7 +199,7 @@
         </section>
       }
 
-      @if (seccionActiva() !== 'estructura' && seccionActiva() !== 'servicios_destacados' && seccionActiva() !== 'beneficios' && seccionActiva() !== 'promociones' && seccionActiva() !== 'galeria') {
+      @if (seccionActiva() !== 'estructura' && seccionActiva() !== 'servicios_destacados' && seccionActiva() !== 'beneficios' && seccionActiva() !== 'promociones' && seccionActiva() !== 'galeria' && seccionActiva() !== 'resenas') {
         <footer class="site-editor__actions"><span><i class="bi bi-shield-check"></i> Tus cambios permanecen protegidos hasta que decidas publicar.</span><button mat-flat-button color="primary" type="submit" [disabled]="guardandoSitio()"><i class="bi bi-check2 me-2"></i>{{ guardandoSitio() ? 'Guardando...' : 'Guardar cambios' }}</button></footer>
       }
     </form>

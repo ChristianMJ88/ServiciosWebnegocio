@@ -1,0 +1,62 @@
+<section class="reviews-editor" aria-labelledby="reviews-editor-title">
+  <header class="reviews-editor__header">
+    <div><span>Prueba social</span><h3 id="reviews-editor-title">Reseñas y confianza</h3><p>Publica opiniones reales y datos comprobables que ayuden a tus clientes a decidir.</p></div>
+    <span class="reviews-editor__count">{{ configuracion().resenas.length }} {{ configuracion().resenas.length === 1 ? 'reseña' : 'reseñas' }}</span>
+  </header>
+
+  @if (cargando()) {
+    <div class="reviews-editor__state"><span></span>Cargando reseñas…</div>
+  } @else {
+    <section class="reviews-source" aria-labelledby="reviews-source-title">
+      <span class="reviews-source__icon"><i class="bi bi-google"></i></span>
+      <div><strong id="reviews-source-title">Opiniones externas</strong><small>Permite que el cliente consulte más referencias fuera de tu sitio.</small></div>
+      <mat-form-field appearance="outline"><mat-label>Enlace de Google Maps</mat-label><input matInput type="url" [(ngModel)]="configuracion().googleMapsUrl" maxlength="500" placeholder="https://maps.app.goo.gl/..."></mat-form-field>
+    </section>
+
+    <section class="trust-editor" aria-labelledby="trust-editor-title">
+      <div class="reviews-editor__toolbar"><div><strong id="trust-editor-title">Señales de confianza</strong><small>Experiencia, clientes atendidos, certificaciones u otros datos reales.</small></div><button type="button" mat-stroked-button (click)="agregarIndicador()" [disabled]="configuracion().indicadores.length >= limiteIndicadores"><i class="bi bi-plus-lg"></i>Añadir indicador</button></div>
+      @if (!configuracion().indicadores.length) {
+        <div class="trust-editor__empty"><i class="bi bi-shield-check"></i><span><strong>Agrega datos que puedas respaldar</strong><small>Usa cifras, años de experiencia o distintivos propios del negocio.</small></span><button type="button" mat-button (click)="agregarIndicador()">Crear indicador</button></div>
+      } @else {
+        <div class="trust-list" cdkDropList cdkDropListOrientation="horizontal" [cdkDropListData]="configuracion().indicadores" (cdkDropListDropped)="soltarIndicador($event)">
+          @for (item of configuracion().indicadores; track item.id || $index; let i = $index) {
+            <article class="trust-card" cdkDrag [cdkDragData]="item" [class.is-hidden]="!item.activo">
+              <header><button type="button" cdkDragHandle [attr.aria-label]="'Arrastrar indicador ' + (i + 1)"><i class="bi bi-grip-vertical"></i></button><span><i [class]="iconoClase(item.icono)"></i></span><mat-slide-toggle [(ngModel)]="item.activo" [attr.aria-label]="'Mostrar indicador ' + (i + 1)"></mat-slide-toggle></header>
+              <mat-form-field appearance="outline"><mat-label>Valor</mat-label><input matInput [(ngModel)]="item.valor" maxlength="40" placeholder="Ej. 8 años"></mat-form-field>
+              <mat-form-field appearance="outline"><mat-label>Etiqueta</mat-label><input matInput [(ngModel)]="item.etiqueta" maxlength="80" placeholder="Ej. de experiencia"></mat-form-field>
+              <mat-form-field appearance="outline"><mat-label>Icono</mat-label><mat-select [(ngModel)]="item.icono">@for (icono of iconos; track icono.valor) {<mat-option [value]="icono.valor"><i [class]="icono.clase"></i> {{ icono.etiqueta }}</mat-option>}</mat-select></mat-form-field>
+              <footer><button type="button" (click)="moverIndicador(i, -1)" [disabled]="i === 0" [attr.aria-label]="'Mover indicador a la izquierda ' + (i + 1)"><i class="bi bi-arrow-left"></i></button><button type="button" (click)="moverIndicador(i, 1)" [disabled]="i === configuracion().indicadores.length - 1" [attr.aria-label]="'Mover indicador a la derecha ' + (i + 1)"><i class="bi bi-arrow-right"></i></button><button type="button" class="is-danger" (click)="quitarIndicador(i)" [attr.aria-label]="'Eliminar indicador ' + (i + 1)"><i class="bi bi-trash3"></i></button></footer>
+            </article>
+          }
+        </div>
+      }
+    </section>
+
+    <section class="testimonials-editor" aria-labelledby="testimonials-editor-title">
+      <div class="reviews-editor__toolbar"><div><strong id="testimonials-editor-title">Testimonios</strong><small>Arrastra para ordenar y destaca las opiniones más útiles.</small></div><button type="button" mat-stroked-button (click)="agregarResena()" [disabled]="configuracion().resenas.length >= limiteResenas"><i class="bi bi-plus-lg"></i>Añadir reseña</button></div>
+      @if (!configuracion().resenas.length) {
+        <div class="reviews-editor__empty"><span><i class="bi bi-chat-heart"></i></span><strong>Convierte experiencias reales en confianza</strong><p>Agrega únicamente comentarios autorizados por tus clientes.</p><button type="button" mat-flat-button color="primary" (click)="agregarResena()">Crear primera reseña</button></div>
+      } @else {
+        <div class="testimonial-list" cdkDropList [cdkDropListData]="configuracion().resenas" (cdkDropListDropped)="soltarResena($event)">
+          @for (item of configuracion().resenas; track item.id || $index; let i = $index) {
+            <article class="testimonial-card" cdkDrag [cdkDragData]="item" [class.is-hidden]="!item.activa" [class.is-featured]="item.destacada">
+              <button type="button" class="testimonial-card__drag" cdkDragHandle [attr.aria-label]="'Arrastrar reseña ' + (i + 1)"><i class="bi bi-grip-vertical"></i></button>
+              <div class="testimonial-card__avatar">{{ item.nombre.trim().charAt(0) || '?' }}</div>
+              <div class="testimonial-card__body">
+                <div class="testimonial-card__top"><strong>Reseña {{ i + 1 }}</strong><div><label><input type="checkbox" [(ngModel)]="item.destacada"><i class="bi bi-pin-angle"></i>Destacada</label><mat-slide-toggle [(ngModel)]="item.activa" [attr.aria-label]="'Mostrar reseña ' + (i + 1)"></mat-slide-toggle></div></div>
+                <div class="testimonial-card__fields">
+                  <mat-form-field appearance="outline"><mat-label>Nombre del cliente</mat-label><input matInput [(ngModel)]="item.nombre" maxlength="120"></mat-form-field>
+                  <div class="rating-field"><span>Calificación</span><div role="group" [attr.aria-label]="'Calificación de ' + (item.nombre || 'la reseña')">@for (estrella of [1,2,3,4,5]; track estrella) {<button type="button" (click)="calificar(item, estrella)" [class.is-active]="estrella <= item.calificacion" [attr.aria-label]="estrella + ' estrellas'"><i class="bi" [class.bi-star-fill]="estrella <= item.calificacion" [class.bi-star]="estrella > item.calificacion"></i></button>}</div></div>
+                  <mat-form-field appearance="outline" class="full"><mat-label>Comentario</mat-label><textarea matInput rows="3" [(ngModel)]="item.comentario" maxlength="600"></textarea><mat-hint align="end">{{ item.comentario.length }}/600</mat-hint></mat-form-field>
+                </div>
+              </div>
+              <div class="testimonial-card__actions"><button type="button" (click)="moverResena(i, -1)" [disabled]="i === 0" [attr.aria-label]="'Subir reseña ' + (i + 1)"><i class="bi bi-arrow-up"></i></button><button type="button" (click)="moverResena(i, 1)" [disabled]="i === configuracion().resenas.length - 1" [attr.aria-label]="'Bajar reseña ' + (i + 1)"><i class="bi bi-arrow-down"></i></button><button type="button" class="is-danger" (click)="quitarResena(i)" [attr.aria-label]="'Eliminar reseña ' + (i + 1)"><i class="bi bi-trash3"></i></button></div>
+            </article>
+          }
+        </div>
+      }
+    </section>
+
+    <footer class="reviews-editor__footer"><div aria-live="polite">@if (mensaje()) {<span class="reviews-editor__message"><i class="bi bi-check-circle"></i>{{ mensaje() }}</span>} @if (error()) {<span class="reviews-editor__message is-error"><i class="bi bi-exclamation-circle"></i>{{ error() }}</span>}</div><button type="button" mat-flat-button color="primary" [disabled]="guardando()" (click)="guardar()"><i class="bi bi-check2"></i>{{ guardando() ? 'Guardando…' : 'Guardar reseñas' }}</button></footer>
+  }
+</section>

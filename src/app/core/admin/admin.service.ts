@@ -500,6 +500,39 @@ export interface ActualizarBeneficiosSitioPayload {
   beneficios: Array<Pick<BeneficioSitioAdmin, 'titulo' | 'descripcion' | 'icono' | 'activo' | 'orden'>>;
 }
 
+export type IconoIndicadorConfianza = 'ESTRELLA' | 'PERSONAS' | 'EXPERIENCIA' | 'PREMIO' | 'CORAZON' | 'ESCUDO';
+
+export interface ResenaSitioAdmin {
+  id: number | null;
+  nombre: string;
+  calificacion: number;
+  comentario: string;
+  destacada: boolean;
+  activa: boolean;
+  orden: number;
+}
+
+export interface IndicadorConfianzaSitioAdmin {
+  id: number | null;
+  valor: string;
+  etiqueta: string;
+  icono: IconoIndicadorConfianza;
+  activo: boolean;
+  orden: number;
+}
+
+export interface ResenasSitioAdmin {
+  googleMapsUrl: string | null;
+  resenas: ResenaSitioAdmin[];
+  indicadores: IndicadorConfianzaSitioAdmin[];
+}
+
+export interface ActualizarResenasSitioPayload {
+  googleMapsUrl: string | null;
+  resenas: Array<Omit<ResenaSitioAdmin, 'id'>>;
+  indicadores: Array<Omit<IndicadorConfianzaSitioAdmin, 'id'>>;
+}
+
 export type CategoriaMediaAdmin = 'GALERIA' | 'COLABORADORES' | 'SERVICIOS' | 'BRANDING';
 
 export interface ConfiguracionMediaAdmin {
@@ -1212,6 +1245,14 @@ export class AdminService {
 
   actualizarBeneficiosSitio(payload: ActualizarBeneficiosSitioPayload): Observable<BeneficioSitioAdmin[]> {
     return this.http.patch<BeneficioSitioAdmin[]>(`${environment.apiBaseUrl}/admin/configuracion-sitio/beneficios`, payload);
+  }
+
+  getResenasSitio(): Observable<ResenasSitioAdmin> {
+    return this.http.get<ResenasSitioAdmin>(`${environment.apiBaseUrl}/admin/configuracion-sitio/resenas`);
+  }
+
+  actualizarResenasSitio(payload: ActualizarResenasSitioPayload): Observable<ResenasSitioAdmin> {
+    return this.http.patch<ResenasSitioAdmin>(`${environment.apiBaseUrl}/admin/configuracion-sitio/resenas`, payload);
   }
 
   getConfiguracionMediaSitio(): Observable<ConfiguracionMediaAdmin> {

@@ -51,6 +51,10 @@ export class HomeComponent implements OnInit {
     ESTRELLA: 'bi bi-star', CORAZON: 'bi bi-heart', ESCUDO: 'bi bi-shield-check', DESTELLO: 'bi bi-stars',
     RELOJ: 'bi bi-clock', PERSONA: 'bi bi-person-heart', HOJA: 'bi bi-flower1', PREMIO: 'bi bi-award'
   };
+  private readonly iconosConfianza: Record<string, string> = {
+    ESTRELLA: 'bi bi-star', PERSONAS: 'bi bi-people', EXPERIENCIA: 'bi bi-calendar2-check',
+    PREMIO: 'bi bi-award', CORAZON: 'bi bi-heart', ESCUDO: 'bi bi-shield-check'
+  };
 
   ngOnInit(): void {
     const slug = this.tenantContext.slug();
@@ -109,6 +113,14 @@ export class HomeComponent implements OnInit {
 
   numeroBeneficio(indice: number): string {
     return String(indice + 1).padStart(2, '0');
+  }
+
+  iconoConfianza(icono: string): string {
+    return this.iconosConfianza[icono] ?? 'bi bi-star';
+  }
+
+  inicialResena(nombre: string): string {
+    return nombre.trim().charAt(0).toUpperCase() || '•';
   }
 
   abrirImagenGaleria(item: TenantGalleryImage): void {
