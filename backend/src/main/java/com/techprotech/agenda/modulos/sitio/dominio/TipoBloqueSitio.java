@@ -7,7 +7,7 @@ public enum TipoBloqueSitio {
     EQUIPO("Equipo", "Personas que atienden a los clientes", "bi bi-people", true),
     GALERIA("Galería", "Imágenes del trabajo y las instalaciones", "bi bi-images", true),
     PROMOCIONES("Promociones", "Ofertas con vigencia y servicios asociados", "bi bi-tag", true),
-    RESENAS("Reseñas", "Opiniones y señales de confianza", "bi bi-chat-quote", false),
+    RESENAS("Reseñas", "Opiniones y señales de confianza", "bi bi-chat-quote", true),
     PREGUNTAS_FRECUENTES("Preguntas frecuentes", "Respuestas para reducir dudas", "bi bi-question-circle", false),
     CONTACTO("Contacto", "Acciones y datos para comunicarse", "bi bi-chat-dots", true),
     MAPA("Mapa", "Ubicación de sucursales", "bi bi-map", false);

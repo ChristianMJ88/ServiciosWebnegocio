@@ -80,6 +80,7 @@ public record SitioPublicoResponse(
         List<PromocionSitioPublicaResponse> promociones,
         List<BeneficioSitioPublicoResponse> beneficios,
         List<IntegranteEquipoSitioPublicoResponse> equipo,
+        ResenasSitioPublicoResponse resenas,
         boolean publicado
 ) {
 }

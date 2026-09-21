@@ -37,6 +37,11 @@ public record ConfiguracionVisualBloquePredeterminada(
                     AlineacionBloqueSitio.IZQUIERDA, SeparadorBloqueSitio.DEGRADADO, EspaciadoBloqueSitio.NORMAL,
                     "Promociones", "Una oportunidad especial para reservar",
                     "Ofertas vigentes seleccionadas para nuestros clientes.");
+            case RESENAS -> new ConfiguracionVisualBloquePredeterminada(
+                    SuperficieBloqueSitio.SUAVE, PresentacionBloqueSitio.PANEL, AnchoBloqueSitio.NORMAL,
+                    AlineacionBloqueSitio.CENTRO, SeparadorBloqueSitio.LINEA, EspaciadoBloqueSitio.AMPLIO,
+                    "Experiencias reales", "Lo que dicen nuestros clientes",
+                    "Opiniones que ayudan a reservar con confianza");
             case CONTACTO -> new ConfiguracionVisualBloquePredeterminada(
                     SuperficieBloqueSitio.SUAVE, PresentacionBloqueSitio.PANEL, AnchoBloqueSitio.NORMAL,
                     AlineacionBloqueSitio.IZQUIERDA, SeparadorBloqueSitio.LINEA, EspaciadoBloqueSitio.NORMAL,
