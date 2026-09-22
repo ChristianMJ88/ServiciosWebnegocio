@@ -82,6 +82,7 @@ public record SitioPublicoResponse(
         List<IntegranteEquipoSitioPublicoResponse> equipo,
         ResenasSitioPublicoResponse resenas,
         List<PreguntaFrecuenteSitioPublicaResponse> preguntasFrecuentes,
+        List<UbicacionMapaSitioPublicaResponse> ubicacionesMapa,
         boolean publicado
 ) {
 }

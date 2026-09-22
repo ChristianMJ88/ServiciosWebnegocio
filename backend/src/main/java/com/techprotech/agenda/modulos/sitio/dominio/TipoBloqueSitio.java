@@ -10,7 +10,7 @@ public enum TipoBloqueSitio {
     RESENAS("Reseñas", "Opiniones y señales de confianza", "bi bi-chat-quote", true),
     PREGUNTAS_FRECUENTES("Preguntas frecuentes", "Respuestas para reducir dudas", "bi bi-question-circle", true),
     CONTACTO("Contacto", "Acciones y datos para comunicarse", "bi bi-chat-dots", true),
-    MAPA("Mapa", "Ubicación de sucursales", "bi bi-map", false);
+    MAPA("Mapa", "Ubicación de sucursales", "bi bi-map", true);
 
     private final String nombre;
     private final String descripcion;

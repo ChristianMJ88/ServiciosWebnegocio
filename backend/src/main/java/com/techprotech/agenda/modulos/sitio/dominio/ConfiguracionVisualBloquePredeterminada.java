@@ -51,6 +51,11 @@ public record ConfiguracionVisualBloquePredeterminada(
                     SuperficieBloqueSitio.SUAVE, PresentacionBloqueSitio.PANEL, AnchoBloqueSitio.NORMAL,
                     AlineacionBloqueSitio.IZQUIERDA, SeparadorBloqueSitio.LINEA, EspaciadoBloqueSitio.NORMAL,
                     null, null, null);
+            case MAPA -> new ConfiguracionVisualBloquePredeterminada(
+                    SuperficieBloqueSitio.BASE, PresentacionBloqueSitio.PANEL, AnchoBloqueSitio.AMPLIO,
+                    AlineacionBloqueSitio.IZQUIERDA, SeparadorBloqueSitio.DEGRADADO, EspaciadoBloqueSitio.NORMAL,
+                    "Visítanos", "Encuentra la sucursal más cercana",
+                    "Consulta la ubicación y abre la ruta desde tu dispositivo.");
             default -> new ConfiguracionVisualBloquePredeterminada(
                     SuperficieBloqueSitio.BASE, PresentacionBloqueSitio.ABIERTA, AnchoBloqueSitio.NORMAL,
                     AlineacionBloqueSitio.IZQUIERDA, SeparadorBloqueSitio.NINGUNO, EspaciadoBloqueSitio.NORMAL,
