@@ -122,6 +122,15 @@ export interface TenantFrequentlyAskedQuestion {
   respuesta: string;
 }
 
+export interface TenantMapLocation {
+  sucursalId: number;
+  nombre: string;
+  direccion: string;
+  telefono: string | null;
+  mapaEmbedUrl: string;
+  indicacionesUrl: string;
+}
+
 export interface TenantSiteConfig {
   empresaId: number;
   slug: string;
@@ -202,6 +211,7 @@ export interface TenantSiteConfig {
   equipo?: TenantTeamMember[];
   resenas?: TenantReviews | null;
   preguntasFrecuentes?: TenantFrequentlyAskedQuestion[];
+  ubicacionesMapa?: TenantMapLocation[];
   publicado: boolean;
 }
 

@@ -271,6 +271,45 @@
   </section>
   }
 
+  @if (tenantContext.bloqueInicioHabilitado('MAPA') && tenantContext.ubicacionesMapa().length && ubicacionMapaActiva()) {
+  <section class="home-section home-map" [ngClass]="tenantContext.clasesBloqueInicio('MAPA')" [style.order]="tenantContext.ordenBloqueInicio('MAPA')">
+    <div class="container">
+      <app-public-section-heading
+        appScrollReveal="up"
+        [eyebrow]="tenantContext.bloqueInicio('MAPA')?.etiqueta"
+        [title]="tenantContext.bloqueInicio('MAPA')?.titulo || tenantContext.nombreComercial()"
+        [description]="tenantContext.bloqueInicio('MAPA')?.descripcion" />
+      <div class="map-public-layout" appScrollReveal="up">
+        <div class="map-public-canvas">
+          @if (mapaEmbedSeguro()) {
+            <iframe
+              [src]="mapaEmbedSeguro()"
+              [title]="'Mapa de ' + ubicacionMapaActiva()!.nombre"
+              loading="lazy"
+              referrerpolicy="no-referrer-when-downgrade"
+              allowfullscreen></iframe>
+          }
+        </div>
+        <div class="map-public-locations" role="list" aria-label="Sucursales">
+          @for (item of tenantContext.ubicacionesMapa(); track item.sucursalId) {
+            <article class="map-public-location" role="listitem" [class.is-active]="ubicacionMapaActiva()?.sucursalId === item.sucursalId">
+              <button type="button" class="map-public-location__select" (click)="seleccionarUbicacionMapa(item)" [attr.aria-pressed]="ubicacionMapaActiva()?.sucursalId === item.sucursalId">
+                <span><i class="bi bi-geo-alt"></i></span>
+                <span><strong>{{ item.nombre }}</strong><small>{{ item.direccion }}</small></span>
+                <i class="bi bi-chevron-right"></i>
+              </button>
+              <div class="map-public-location__actions">
+                @if (item.telefono) {<a [href]="telefonoHrefMapa(item)"><i class="bi bi-telephone"></i> Llamar</a>}
+                <a [href]="item.indicacionesUrl" target="_blank" rel="noopener noreferrer"><i class="bi bi-sign-turn-right"></i> Cómo llegar</a>
+              </div>
+            </article>
+          }
+        </div>
+      </div>
+    </div>
+  </section>
+  }
+
   @if (tenantContext.bloqueInicioHabilitado('GALERIA') && tenantContext.galeria()?.imagenes?.length) {
   <section class="home-section home-gallery" [ngClass]="tenantContext.clasesBloqueInicio('GALERIA')" [style.order]="tenantContext.ordenBloqueInicio('GALERIA')">
     <div class="container">

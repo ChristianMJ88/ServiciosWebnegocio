@@ -1,8 +1,9 @@
 import { CommonModule } from '@angular/common';
 import { Component, HostListener, OnInit, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { TenantContextService } from '../../core/tenant/tenant-context.service';
-import { TenantFeaturedServiceItem, TenantGalleryImage, TenantPromotion } from '../../core/tenant/tenant.types';
+import { TenantFeaturedServiceItem, TenantGalleryImage, TenantMapLocation, TenantPromotion } from '../../core/tenant/tenant.types';
 import { BookingDataService, CatalogoServiciosPublico, GrupoCatalogoPublico } from '../../services/booking-data.service';
 import { ScrollRevealDirective } from '../../shared/directives/scroll-reveal.directive';
 import { MoneyDisplayPipe } from '../../shared/pipes/money-display.pipe';
@@ -19,10 +20,20 @@ import { PublicTeamCardComponent } from '../../shared/ui/public-team-card/public
 export class HomeComponent implements OnInit {
   readonly tenantContext = inject(TenantContextService);
   private readonly bookingDataService = inject(BookingDataService);
+  private readonly sanitizer = inject(DomSanitizer);
   readonly catalogo = signal<CatalogoServiciosPublico | null>(null);
   readonly cargandoServicios = signal(false);
   readonly imagenGaleriaActiva = signal<TenantGalleryImage | null>(null);
+  readonly ubicacionMapaActivaId = signal<number | null>(null);
   readonly tieneWhatsapp = computed(() => this.tenantContext.whatsappHabilitado());
+  readonly ubicacionMapaActiva = computed<TenantMapLocation | null>(() => {
+    const ubicaciones = this.tenantContext.ubicacionesMapa();
+    return ubicaciones.find(item => item.sucursalId === this.ubicacionMapaActivaId()) ?? ubicaciones[0] ?? null;
+  });
+  readonly mapaEmbedSeguro = computed<SafeResourceUrl | null>(() => {
+    const url = this.ubicacionMapaActiva()?.mapaEmbedUrl;
+    return url ? this.sanitizer.bypassSecurityTrustResourceUrl(url) : null;
+  });
   readonly destacados = computed<TenantFeaturedServiceItem[]>(() => {
     const configuracion = this.tenantContext.serviciosDestacados();
     if (configuracion) return configuracion.elementos;
@@ -121,6 +132,15 @@ export class HomeComponent implements OnInit {
 
   inicialResena(nombre: string): string {
     return nombre.trim().charAt(0).toUpperCase() || '•';
+  }
+
+  seleccionarUbicacionMapa(item: TenantMapLocation): void {
+    this.ubicacionMapaActivaId.set(item.sucursalId);
+  }
+
+  telefonoHrefMapa(item: TenantMapLocation): string {
+    const telefono = item.telefono?.replace(/[^0-9+]/g, '') ?? '';
+    return telefono ? `tel:${telefono}` : '#';
   }
 
   abrirImagenGaleria(item: TenantGalleryImage): void {

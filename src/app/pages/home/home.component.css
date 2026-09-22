@@ -492,6 +492,21 @@
 .home-gallery { padding: clamp(4.5rem, 8vw, 7rem) 0; background: #fff; }
 .home-reviews { padding: clamp(4.5rem, 8vw, 7rem) 0; background: linear-gradient(180deg, #f8fafc, #fff); }
 .home-faq { padding: clamp(4.5rem, 8vw, 7rem) 0; background: linear-gradient(155deg, #fff, color-mix(in srgb, var(--tenant-primary) 4%, #f8fafc)); }
+.home-map { background: linear-gradient(155deg, color-mix(in srgb, var(--tenant-secondary) 4%, #f8fafc), #fff); }
+.map-public-layout { display: grid; grid-template-columns: minmax(0, 1.45fr) minmax(290px, .55fr); gap: 1rem; min-height: 520px; }
+.map-public-canvas { min-height: 520px; overflow: hidden; border: 1px solid var(--public-card-border); border-radius: var(--public-card-radius); background: #e8edf3; box-shadow: var(--public-card-shadow); }
+.map-public-canvas iframe { width: 100%; height: 100%; min-height: 520px; display: block; border: 0; }
+.map-public-locations { display: grid; align-content: start; gap: .75rem; }
+.map-public-location { overflow: hidden; border: 1px solid var(--public-card-border); border-radius: 18px; background: rgb(255 255 255 / 94%); box-shadow: 0 12px 30px rgb(15 23 42 / 5%); transition: border-color .22s ease, box-shadow .22s ease, transform .22s ease; }
+.map-public-location.is-active { border-color: color-mix(in srgb, var(--tenant-primary) 40%, #dce3eb); box-shadow: 0 18px 42px color-mix(in srgb, var(--tenant-primary) 10%, transparent); transform: translateX(-3px); }
+.map-public-location__select { width: 100%; display: grid; grid-template-columns: 42px minmax(0, 1fr) auto; gap: .75rem; align-items: center; padding: .9rem; border: 0; background: transparent; text-align: left; }
+.map-public-location__select > span:first-child { width: 42px; height: 42px; display: grid; place-items: center; border-radius: 13px; color: var(--tenant-primary); background: color-mix(in srgb, var(--tenant-primary) 10%, #fff); }
+.map-public-location__select > span:nth-child(2) { min-width: 0; display: grid; gap: .2rem; }
+.map-public-location__select strong { color: #172033; font-size: .84rem; }
+.map-public-location__select small { overflow: hidden; color: #64748b; font-size: .68rem; line-height: 1.45; text-overflow: ellipsis; }
+.map-public-location__select > i { color: #94a3b8; }
+.map-public-location__actions { display: flex; gap: .45rem; padding: 0 .9rem .9rem 3.75rem; }
+.map-public-location__actions a { display: inline-flex; align-items: center; gap: .35rem; padding: .42rem .6rem; border-radius: 9px; color: var(--tenant-primary); background: color-mix(in srgb, var(--tenant-primary) 7%, #fff); font-size: .65rem; font-weight: 800; text-decoration: none; }
 .faq-public-layout { max-width: 980px; }
 .faq-public-list { display: grid; gap: .7rem; }
 .faq-public-item { overflow: hidden; border: 1px solid #e2e8f0; border-radius: 18px; background: rgb(255 255 255 / 92%); box-shadow: 0 12px 32px rgb(15 23 42 / 5%); transition: border-color .22s, box-shadow .22s; }
@@ -582,6 +597,9 @@
   .promotions-grid { grid-template-columns: minmax(0, 1fr); }
   .gallery-public { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .gallery-public--carousel { grid-template-columns: none; grid-auto-columns: minmax(280px, 68%); }
+  .map-public-layout { grid-template-columns: minmax(0, 1fr); min-height: 0; }
+  .map-public-canvas, .map-public-canvas iframe { min-height: 400px; }
+  .map-public-locations { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 
 @media (max-width: 767.98px) {
@@ -594,6 +612,12 @@
   .gallery-public--mosaic .gallery-public__item:nth-child(5n + 1) .gallery-public__media { min-height: 0; aspect-ratio: 4 / 3; }
   .gallery-public--carousel { grid-template-columns: none; grid-auto-columns: minmax(265px, 88%); }
   .gallery-public__zoom { opacity: 1; transform: none; }
+  .map-public-layout { display: flex; flex-direction: column; }
+  .map-public-canvas, .map-public-canvas iframe { min-height: 330px; }
+  .map-public-canvas { order: 2; }
+  .map-public-locations { order: 1; display: flex; overflow-x: auto; padding: .1rem 0 .65rem; scroll-snap-type: inline mandatory; }
+  .map-public-location { min-width: min(290px, 86vw); scroll-snap-align: start; }
+  .map-public-location.is-active { transform: none; }
   .home-hero {
     min-height: 100svh;
   }
