@@ -2,6 +2,9 @@ package com.techprotech.agenda.modulos.sitio.aplicacion;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.techprotech.agenda.compartido.media.aplicacion.ServicioMediaEmpresa;
+import com.techprotech.agenda.compartido.media.dominio.CategoriaMedia;
+import com.techprotech.agenda.compartido.media.infraestructura.EmpresaArchivoMediaEntidad;
 import com.techprotech.agenda.modulos.admin.infraestructura.entidad.AuditoriaConfiguracionEmpresaEntidad;
 import com.techprotech.agenda.modulos.admin.infraestructura.repositorio.AuditoriaConfiguracionEmpresaRepositorio;
 import com.techprotech.agenda.modulos.servicios.infraestructura.entidad.ServicioEntidad;
@@ -35,6 +38,7 @@ public class ServicioPromocionesSitio {
     private final SucursalRepositorio sucursalRepositorio;
     private final AuditoriaConfiguracionEmpresaRepositorio auditoriaRepositorio;
     private final ObjectMapper objectMapper;
+    private final ServicioMediaEmpresa servicioMedia;
 
     public ServicioPromocionesSitio(
             EmpresaSitioPromocionRepositorio promocionRepositorio,
@@ -44,7 +48,8 @@ public class ServicioPromocionesSitio {
             ServicioRepositorio servicioRepositorio,
             SucursalRepositorio sucursalRepositorio,
             AuditoriaConfiguracionEmpresaRepositorio auditoriaRepositorio,
-            ObjectMapper objectMapper
+            ObjectMapper objectMapper,
+            ServicioMediaEmpresa servicioMedia
     ) {
         this.promocionRepositorio = promocionRepositorio;
         this.promocionServicioRepositorio = promocionServicioRepositorio;
@@ -54,6 +59,7 @@ public class ServicioPromocionesSitio {
         this.sucursalRepositorio = sucursalRepositorio;
         this.auditoriaRepositorio = auditoriaRepositorio;
         this.objectMapper = objectMapper;
+        this.servicioMedia = servicioMedia;
     }
 
     @Transactional
@@ -86,7 +92,8 @@ public class ServicioPromocionesSitio {
             promocion.setEmpresaId(empresaId);
             promocion.setTitulo(requestItem.titulo().trim());
             promocion.setDescripcion(normalizar(requestItem.descripcion()));
-            promocion.setImagenUrl(normalizar(requestItem.imagenUrl()));
+            promocion.setMediaId(requestItem.mediaId());
+            promocion.setImagenUrl(resolverUrlImagen(empresaId, requestItem));
             promocion.setFechaInicio(requestItem.fechaInicio());
             promocion.setFechaFin(requestItem.fechaFin());
             promocion.setTipoDescuento(parsearTipo(requestItem.tipoDescuento()));
@@ -151,7 +158,20 @@ public class ServicioPromocionesSitio {
                     || !sucursalesValidas.containsAll(ids(promocion.sucursalIds()))) {
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "La promoción contiene servicios o sucursales de otro tenant");
             }
+            if (promocion.mediaId() != null) {
+                servicioMedia.validarPropiedad(empresaId, promocion.mediaId(), CategoriaMedia.PROMOCIONES);
+            }
         }
+    }
+
+    private String resolverUrlImagen(Long empresaId, PromocionSitioRequest item) {
+        String url = normalizar(item.imagenUrl());
+        if (item.mediaId() == null) return url;
+        EmpresaArchivoMediaEntidad media = servicioMedia.validarPropiedad(empresaId, item.mediaId(), CategoriaMedia.PROMOCIONES);
+        if (!Objects.equals(media.getSecureUrl(), url)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "La URL no corresponde a la imagen cargada");
+        }
+        return media.getSecureUrl();
     }
 
     private void guardarRelaciones(Long empresaId, Long promocionId, PromocionSitioRequest request) {
@@ -173,7 +193,7 @@ public class ServicioPromocionesSitio {
         Map<Long, List<Long>> sucursales = agruparSucursales(empresaId);
         return promocionRepositorio.findByEmpresaIdOrderByOrdenAsc(empresaId).stream()
                 .map(promocion -> new PromocionSitioAdminResponse(
-                        promocion.getId(), promocion.getTitulo(), promocion.getDescripcion(), promocion.getImagenUrl(),
+                        promocion.getId(), promocion.getTitulo(), promocion.getDescripcion(), promocion.getMediaId(), promocion.getImagenUrl(),
                         promocion.getFechaInicio(), promocion.getFechaFin(), promocion.getTipoDescuento().name(),
                         promocion.getValorDescuento(), promocion.getMoneda(), promocion.getTextoBoton(), promocion.isActiva(),
                         vigente(promocion, hoy), promocion.getOrden(),

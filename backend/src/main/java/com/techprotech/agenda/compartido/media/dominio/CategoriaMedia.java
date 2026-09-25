@@ -5,7 +5,8 @@ public enum CategoriaMedia {
     COLABORADORES("colaboradores"),
     SERVICIOS("servicios"),
     BRANDING("branding"),
-    RESENAS("resenas");
+    RESENAS("resenas"),
+    PROMOCIONES("promociones");
 
     private final String carpeta;
 

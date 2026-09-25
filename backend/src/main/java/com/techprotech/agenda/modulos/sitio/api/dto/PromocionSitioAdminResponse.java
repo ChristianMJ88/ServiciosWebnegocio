@@ -8,6 +8,7 @@ public record PromocionSitioAdminResponse(
         Long id,
         String titulo,
         String descripcion,
+        Long mediaId,
         String imagenUrl,
         LocalDate fechaInicio,
         LocalDate fechaFin,

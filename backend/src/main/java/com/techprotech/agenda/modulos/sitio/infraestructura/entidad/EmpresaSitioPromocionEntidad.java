@@ -21,6 +21,8 @@ public class EmpresaSitioPromocionEntidad {
     private String titulo;
     @Column(length = 500)
     private String descripcion;
+    @Column(name = "media_id")
+    private Long mediaId;
     @Column(name = "imagen_url", length = 500)
     private String imagenUrl;
     @Column(name = "fecha_inicio")

@@ -9,6 +9,7 @@ import java.util.List;
 public record PromocionSitioRequest(
         @NotBlank @Size(max = 120) String titulo,
         @Size(max = 500) String descripcion,
+        Long mediaId,
         @Size(max = 500) String imagenUrl,
         LocalDate fechaInicio,
         LocalDate fechaFin,
