@@ -473,6 +473,19 @@
   }
 }
 
+@if (seccionActiva() === 'inventario') {
+  @defer {
+    <app-admin-inventory-section />
+  } @placeholder {
+    <section class="section-stack">
+      <div class="workspace-card">
+        <div class="section-header"><div><div class="section-eyebrow">Inventario</div><h3>Preparando existencias</h3></div></div>
+        <p class="helper-text mb-0">Estamos cargando productos, sucursales y movimientos recientes.</p>
+      </div>
+    </section>
+  }
+}
+
 @if (seccionActiva() === 'usuarios') {
   <section class="section-stack">
     <mat-card class="workspace-card users-hub-card">

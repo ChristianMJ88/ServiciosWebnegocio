@@ -1,0 +1,94 @@
+<section class="inventory-shell">
+  <header class="inventory-hero">
+    <div>
+      <span class="inventory-kicker">Control operativo</span>
+      <h2>Inventario por sucursal</h2>
+      <p>Consulta existencias, registra movimientos y transfiere productos con trazabilidad.</p>
+    </div>
+    <div class="hero-actions">
+      <button class="action-button secondary" type="button" (click)="abrirPanel('transferencia')" [disabled]="(catalogo()?.sucursales?.length ?? 0) < 2">
+        <i class="bi bi-arrow-left-right"></i><span>Transferir</span>
+      </button>
+      <button class="action-button primary" type="button" (click)="abrirPanel('ajuste')" [disabled]="!(catalogo()?.productos?.length) || !(catalogo()?.sucursales?.length)">
+        <i class="bi bi-plus-lg"></i><span>Registrar movimiento</span>
+      </button>
+    </div>
+  </header>
+
+  @if (error()) { <div class="inventory-alert error"><i class="bi bi-exclamation-circle"></i>{{ error() }}</div> }
+  @if (mensaje()) { <div class="inventory-alert success"><i class="bi bi-check-circle"></i>{{ mensaje() }}</div> }
+
+  @if (panel() === 'ajuste') {
+    <form class="movement-panel" (ngSubmit)="guardarAjuste()">
+      <div class="panel-heading"><div><span>Nuevo movimiento</span><h3>Actualiza una existencia</h3></div><button type="button" class="icon-button" (click)="panel.set(null)" aria-label="Cerrar"><i class="bi bi-x-lg"></i></button></div>
+      <div class="form-grid">
+        <label>Producto<select name="ajusteProducto" [(ngModel)]="ajuste.productoId" required><option [ngValue]="null" disabled>Selecciona un producto</option>@for (item of catalogo()?.productos ?? []; track item.id) { <option [ngValue]="item.id">{{ item.nombre }} · {{ item.sku }}</option> }</select></label>
+        <label>Sucursal<select name="ajusteSucursal" [(ngModel)]="ajuste.sucursalId" required><option [ngValue]="null" disabled>Selecciona una sucursal</option>@for (item of catalogo()?.sucursales ?? []; track item.id) { <option [ngValue]="item.id">{{ item.nombre }}</option> }</select></label>
+        <label>Tipo de movimiento<select name="ajusteTipo" [(ngModel)]="ajuste.tipo" required>@for (item of catalogo()?.tiposMovimiento ?? []; track item.codigo) { <option [value]="item.codigo">{{ item.nombre }}</option> }</select><small>{{ ajuste.tipo === 'AJUSTE' ? 'Captura el total contado.' : 'Captura las unidades del movimiento.' }}</small></label>
+        <label>Cantidad<input name="ajusteCantidad" [(ngModel)]="ajuste.cantidad" type="number" [min]="ajuste.tipo === 'AJUSTE' ? 0 : 0.001" step="0.001" required></label>
+        <label>Referencia <span>(opcional)</span><input name="ajusteReferencia" [(ngModel)]="ajuste.referencia" maxlength="120" placeholder="Factura, compra o folio"></label>
+        <label class="wide">Notas <span>(opcional)</span><textarea name="ajusteNotas" [(ngModel)]="ajuste.notas" maxlength="500" rows="2" placeholder="Motivo o detalle para auditoría"></textarea></label>
+      </div>
+      <div class="panel-actions"><button type="button" class="text-button" (click)="panel.set(null)">Cancelar</button><button class="action-button primary" type="submit" [disabled]="guardando()">{{ guardando() ? 'Guardando…' : 'Registrar movimiento' }}</button></div>
+    </form>
+  }
+
+  @if (panel() === 'transferencia') {
+    <form class="movement-panel transfer" (ngSubmit)="guardarTransferencia()">
+      <div class="panel-heading"><div><span>Movimiento entre sedes</span><h3>Transferir existencia</h3></div><button type="button" class="icon-button" (click)="panel.set(null)" aria-label="Cerrar"><i class="bi bi-x-lg"></i></button></div>
+      <div class="form-grid">
+        <label>Producto<select name="transferProducto" [(ngModel)]="transferencia.productoId" required><option [ngValue]="null" disabled>Selecciona un producto</option>@for (item of catalogo()?.productos ?? []; track item.id) { <option [ngValue]="item.id">{{ item.nombre }} · {{ item.sku }}</option> }</select></label>
+        <label>Cantidad<input name="transferCantidad" [(ngModel)]="transferencia.cantidad" type="number" min="0.001" step="0.001" required></label>
+        <label>Sucursal de origen<select name="transferOrigen" [(ngModel)]="transferencia.sucursalOrigenId" required><option [ngValue]="null" disabled>Selecciona origen</option>@for (item of catalogo()?.sucursales ?? []; track item.id) { <option [ngValue]="item.id">{{ item.nombre }}</option> }</select></label>
+        <label>Sucursal de destino<select name="transferDestino" [(ngModel)]="transferencia.sucursalDestinoId" required><option [ngValue]="null" disabled>Selecciona destino</option>@for (item of catalogo()?.sucursales ?? []; track item.id) { <option [ngValue]="item.id" [disabled]="item.id === transferencia.sucursalOrigenId">{{ item.nombre }}</option> }</select></label>
+        <label>Referencia <span>(opcional)</span><input name="transferReferencia" [(ngModel)]="transferencia.referencia" maxlength="120" placeholder="Se generará si la dejas vacía"></label>
+        <label>Notas <span>(opcional)</span><input name="transferNotas" [(ngModel)]="transferencia.notas" maxlength="500" placeholder="Motivo de la transferencia"></label>
+      </div>
+      <div class="panel-actions"><button type="button" class="text-button" (click)="panel.set(null)">Cancelar</button><button class="action-button primary" type="submit" [disabled]="guardando()">{{ guardando() ? 'Transfiriendo…' : 'Confirmar transferencia' }}</button></div>
+    </form>
+  }
+
+  @if (cargando()) {
+    <div class="inventory-loading"><span></span><p>Preparando existencias…</p></div>
+  } @else if (!catalogo()?.productos?.length) {
+    <div class="empty-state"><i class="bi bi-box-seam"></i><h3>Aún no hay productos con inventario</h3><p>Activa el control de inventario en tus productos para administrarlos aquí.</p></div>
+  } @else {
+    <div class="metric-grid">
+      <article><div class="metric-icon violet"><i class="bi bi-boxes"></i></div><div><strong>{{ existenciasFiltradas().length }}</strong><span>registros visibles</span></div></article>
+      <article><div class="metric-icon blue"><i class="bi bi-stack"></i></div><div><strong>{{ totalUnidades() | number:'1.0-3' }}</strong><span>unidades disponibles</span></div></article>
+      <article><div class="metric-icon amber"><i class="bi bi-exclamation-triangle"></i></div><div><strong>{{ bajoStock() }}</strong><span>con stock bajo</span></div></article>
+      <article><div class="metric-icon rose"><i class="bi bi-slash-circle"></i></div><div><strong>{{ agotados() }}</strong><span>agotados</span></div></article>
+    </div>
+
+    <div class="inventory-toolbar">
+      <label class="search-control"><i class="bi bi-search"></i><input type="search" [ngModel]="busqueda()" (ngModelChange)="busqueda.set($event)" [ngModelOptions]="{standalone: true}" placeholder="Buscar producto o SKU"></label>
+      <label class="branch-control"><i class="bi bi-geo-alt"></i><select [ngModel]="sucursalFiltro()" (ngModelChange)="sucursalFiltro.set($event)" [ngModelOptions]="{standalone: true}"><option [ngValue]="null">Todas las sucursales</option>@for (item of catalogo()?.sucursales ?? []; track item.id) { <option [ngValue]="item.id">{{ item.nombre }}</option> }</select></label>
+    </div>
+
+    <div class="inventory-layout">
+      <div class="stock-panel">
+        <div class="section-title"><div><span>Existencias actuales</span><h3>Productos por sucursal</h3></div><small>{{ existenciasFiltradas().length }} resultados</small></div>
+        <div class="stock-list">
+          @for (item of existenciasFiltradas(); track item.productoId + '-' + item.sucursalId) {
+            <article class="stock-card" [class.low]="item.estado === 'BAJO'" [class.empty]="item.estado === 'AGOTADO'">
+              <div class="product-mark">{{ item.productoNombre.charAt(0) }}</div>
+              <div class="stock-main"><div class="product-heading"><div><h4>{{ item.productoNombre }}</h4><p>{{ item.sku }} <span>·</span> {{ item.sucursalNombre }}</p></div><span class="status-pill" [attr.data-status]="item.estado">{{ item.estado === 'DISPONIBLE' ? 'Disponible' : item.estado === 'BAJO' ? 'Stock bajo' : 'Agotado' }}</span></div>
+                <div class="stock-values"><div><strong>{{ item.disponible | number:'1.0-3' }}</strong><span>disponible</span></div><div><strong>{{ item.existencia | number:'1.0-3' }}</strong><span>existencia</span></div><div><strong>{{ item.reservado | number:'1.0-3' }}</strong><span>reservado</span></div><div><strong>{{ item.stockMinimo | number:'1.0-3' }}</strong><span>mínimo</span></div></div>
+              </div>
+              <button type="button" class="quick-action" (click)="abrirPanel('ajuste', item)" aria-label="Registrar movimiento"><i class="bi bi-plus-lg"></i></button>
+            </article>
+          } @empty { <div class="inline-empty"><i class="bi bi-search"></i><p>No encontramos existencias con esos filtros.</p></div> }
+        </div>
+      </div>
+
+      <aside class="movement-history">
+        <div class="section-title"><div><span>Trazabilidad</span><h3>Movimientos recientes</h3></div></div>
+        <div class="timeline">
+          @for (item of movimientosVisibles(); track item.id) {
+            <article class="movement-item"><div class="movement-icon" [class.negative]="!esIncremento(item)"><i class="bi" [class.bi-arrow-down-left]="esIncremento(item)" [class.bi-arrow-up-right]="!esIncremento(item)"></i></div><div><div class="movement-heading"><strong>{{ item.productoNombre }}</strong><b [class.negative]="!esIncremento(item)">{{ esIncremento(item) ? '+' : '' }}{{ item.cantidad | number:'1.0-3' }}</b></div><p>{{ etiquetaMovimiento(item.tipo) }} · {{ item.sucursalNombre }}</p><small>{{ item.creadoEn | date:'d MMM, HH:mm' }}@if (item.referencia) { · {{ item.referencia }} }</small></div></article>
+          } @empty { <div class="inline-empty compact"><i class="bi bi-clock-history"></i><p>Los movimientos aparecerán aquí.</p></div> }
+        </div>
+      </aside>
+    </div>
+  }
+</section>
