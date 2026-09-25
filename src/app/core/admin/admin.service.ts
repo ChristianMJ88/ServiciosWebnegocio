@@ -436,6 +436,7 @@ export interface PromocionSitioAdmin {
   id: number | null;
   titulo: string;
   descripcion: string | null;
+  mediaId: number | null;
   imagenUrl: string | null;
   fechaInicio: string | null;
   fechaFin: string | null;
@@ -547,7 +548,7 @@ export interface ActualizarPreguntasFrecuentesSitioPayload {
   preguntas: Array<Omit<PreguntaFrecuenteSitioAdmin, 'id'>>;
 }
 
-export type CategoriaMediaAdmin = 'GALERIA' | 'COLABORADORES' | 'SERVICIOS' | 'BRANDING' | 'RESENAS';
+export type CategoriaMediaAdmin = 'GALERIA' | 'COLABORADORES' | 'SERVICIOS' | 'BRANDING' | 'RESENAS' | 'PROMOCIONES';
 
 export interface ConfiguracionMediaAdmin {
   cargaHabilitada: boolean;
@@ -1297,6 +1298,12 @@ export class AdminService {
     const formulario = new FormData();
     formulario.append('archivo', archivo, archivo.name);
     return this.http.post<ArchivoMediaAdmin>(`${environment.apiBaseUrl}/admin/configuracion-sitio/media/imagenes/resenas`, formulario);
+  }
+
+  subirImagenPromocionSitio(archivo: File): Observable<ArchivoMediaAdmin> {
+    const formulario = new FormData();
+    formulario.append('archivo', archivo, archivo.name);
+    return this.http.post<ArchivoMediaAdmin>(`${environment.apiBaseUrl}/admin/configuracion-sitio/media/imagenes/promociones`, formulario);
   }
 
   getConfiguracionMediaCatalogo(): Observable<ConfiguracionMediaAdmin> {

@@ -10,11 +10,16 @@ export class SitePromotionsFacade {
     return forkJoin({
       promociones: this.admin.getPromocionesSitio(),
       servicios: this.admin.getServicios(),
-      sucursales: this.admin.getSucursales()
+      sucursales: this.admin.getSucursales(),
+      media: this.admin.getConfiguracionMediaSitio()
     });
   }
 
   guardar(payload: ActualizarPromocionesSitioPayload) {
     return this.admin.actualizarPromocionesSitio(payload);
+  }
+
+  subirImagen(archivo: File) {
+    return this.admin.subirImagenPromocionSitio(archivo);
   }
 }

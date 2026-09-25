@@ -1,44 +1,86 @@
-<section class="promotions-editor">
+<section class="promotions-editor" aria-labelledby="promotions-title">
   <header class="promotions-editor__header">
-    <div><span class="section-eyebrow">Promociones</span><h3>Campañas con vigencia automática</h3><p>Relaciona cada oferta con servicios y sucursales reales del catálogo.</p></div>
+    <div>
+      <span class="section-eyebrow">Promociones</span>
+      <h3 id="promotions-title">Campañas con vigencia automática</h3>
+      <p>Crea ofertas visuales, programa su publicación y relaciónalas con tu catálogo.</p>
+    </div>
     <button type="button" mat-flat-button color="primary" (click)="agregar()"><i class="bi bi-plus-lg"></i> Nueva promoción</button>
   </header>
 
   @if (cargando()) {
-    <div class="promotions-state">Cargando promociones…</div>
+    <div class="promotions-state"><span class="promotions-state__spinner"></span>Cargando promociones…</div>
   } @else {
     <div class="promotions-list">
       @for (item of promociones(); track item.id || $index; let i = $index) {
-        <article class="promotion-card">
-          <header>
-            <div><span class="promotion-card__number">{{ i + 1 }}</span><div><strong>{{ item.titulo || 'Nueva promoción' }}</strong><small [class.is-visible]="estado(item) === 'Visible'">{{ estado(item) }}</small></div></div>
-            <div class="promotion-card__tools">
+        <article class="promotion-card" [class.is-open]="estaAbierta(item)" [class.is-hidden]="!item.activa">
+          <header class="promotion-card__header">
+            <button type="button" class="promotion-card__summary" (click)="alternar(item)" [attr.aria-expanded]="estaAbierta(item)" [attr.aria-controls]="'promotion-content-' + i">
+              <span class="promotion-card__number">{{ i + 1 }}</span>
+              <span class="promotion-card__identity"><strong>{{ item.titulo || 'Nueva promoción' }}</strong><small [class.is-visible]="estado(item) === 'Visible'" [class.is-programmed]="estado(item) === 'Programada'">{{ estado(item) }}</small></span>
+              <i class="bi bi-chevron-down promotion-card__chevron" aria-hidden="true"></i>
+            </button>
+            <div class="promotion-card__tools" aria-label="Acciones de la promoción">
               <button type="button" mat-icon-button [disabled]="i === 0" (click)="mover(i, -1)" aria-label="Subir promoción"><i class="bi bi-arrow-up"></i></button>
               <button type="button" mat-icon-button [disabled]="i === promociones().length - 1" (click)="mover(i, 1)" aria-label="Bajar promoción"><i class="bi bi-arrow-down"></i></button>
-              <button type="button" mat-icon-button (click)="quitar(i)" aria-label="Quitar promoción"><i class="bi bi-trash3"></i></button>
+              <button type="button" mat-icon-button class="is-danger" (click)="quitar(i)" aria-label="Quitar promoción"><i class="bi bi-trash3"></i></button>
             </div>
           </header>
-          <div class="promotion-card__fields">
-            <mat-form-field appearance="outline" class="full-width"><mat-label>Título</mat-label><input matInput [(ngModel)]="item.titulo" [name]="'promoTitulo' + i" maxlength="120" required></mat-form-field>
-            <mat-form-field appearance="outline" class="full-width"><mat-label>Descripción</mat-label><textarea matInput rows="2" [(ngModel)]="item.descripcion" [name]="'promoDescripcion' + i" maxlength="500"></textarea></mat-form-field>
-            <mat-form-field appearance="outline" class="full-width"><mat-label>URL de imagen</mat-label><input matInput [(ngModel)]="item.imagenUrl" [name]="'promoImagen' + i" maxlength="500" placeholder="https://..."></mat-form-field>
-            <mat-form-field appearance="outline"><mat-label>Inicio</mat-label><input matInput type="date" [(ngModel)]="item.fechaInicio" [name]="'promoInicio' + i"></mat-form-field>
-            <mat-form-field appearance="outline"><mat-label>Fin</mat-label><input matInput type="date" [(ngModel)]="item.fechaFin" [name]="'promoFin' + i"></mat-form-field>
-            <mat-form-field appearance="outline"><mat-label>Tipo de oferta</mat-label><mat-select [(ngModel)]="item.tipoDescuento" [name]="'promoTipo' + i"><mat-option value="PORCENTAJE">Porcentaje</mat-option><mat-option value="PRECIO">Precio promocional</mat-option></mat-select></mat-form-field>
-            <mat-form-field appearance="outline"><mat-label>{{ item.tipoDescuento === 'PORCENTAJE' ? 'Descuento (%)' : 'Precio promocional' }}</mat-label><input matInput type="number" min="0.01" [max]="item.tipoDescuento === 'PORCENTAJE' ? 100 : null" step="0.01" [(ngModel)]="item.valorDescuento" [name]="'promoValor' + i"></mat-form-field>
-            <mat-form-field appearance="outline"><mat-label>Moneda</mat-label><input matInput [(ngModel)]="item.moneda" [name]="'promoMoneda' + i" maxlength="10"></mat-form-field>
-            <mat-form-field appearance="outline"><mat-label>Texto del botón</mat-label><input matInput [(ngModel)]="item.textoBoton" [name]="'promoBoton' + i" maxlength="40"></mat-form-field>
-            <mat-form-field appearance="outline" class="full-width"><mat-label>Servicios incluidos</mat-label><mat-select multiple [(ngModel)]="item.servicioIds" [name]="'promoServicios' + i">@for (servicio of servicios(); track servicio.id) {<mat-option [value]="servicio.id">{{ servicio.grupoNombre ? servicio.grupoNombre + ' / ' : '' }}{{ servicio.subgrupoNombre ? servicio.subgrupoNombre + ' / ' : '' }}{{ servicio.nombre }}</mat-option>}</mat-select><mat-hint>Sin selección: aplica de forma general.</mat-hint></mat-form-field>
-            <mat-form-field appearance="outline" class="full-width"><mat-label>Sucursales donde aplica</mat-label><mat-select multiple [(ngModel)]="item.sucursalIds" [name]="'promoSucursales' + i">@for (sucursal of sucursales(); track sucursal.id) {<mat-option [value]="sucursal.id">{{ sucursal.nombre }}</mat-option>}</mat-select><mat-hint>Sin selección: aplica en todas las sucursales.</mat-hint></mat-form-field>
-            <label class="promotion-card__toggle full-width"><span><strong>Promoción activa</strong><small>La vigencia también controla su aparición pública.</small></span><mat-slide-toggle [(ngModel)]="item.activa" [name]="'promoActiva' + i"></mat-slide-toggle></label>
-          </div>
+
+          @if (estaAbierta(item)) {
+            <div class="promotion-card__content" [id]="'promotion-content-' + i">
+              <section class="promotion-media" aria-label="Imagen de la promoción">
+                <div class="promotion-media__preview">
+                  @if (item.imagenUrl) {
+                    <img [src]="item.imagenUrl" [alt]="item.titulo || 'Vista previa de la promoción'">
+                    <span class="promotion-media__badge"><i class="bi bi-image"></i> Vista previa</span>
+                  } @else {
+                    <span class="promotion-media__empty"><i class="bi bi-image"></i><strong>Agrega una imagen</strong><small>Se mostrará como portada de la promoción.</small></span>
+                  }
+                </div>
+                <div class="promotion-media__actions">
+                  <label class="promotion-media__upload" [class.is-disabled]="!configuracionMedia()?.cargaHabilitada || subiendoImagen() !== null">
+                    <input type="file" accept="image/jpeg,image/png,image/webp,image/avif" [disabled]="!configuracionMedia()?.cargaHabilitada || subiendoImagen() !== null" (change)="seleccionarImagen($event, item)">
+                    <i class="bi" [class.bi-cloud-arrow-up]="subiendoImagen() !== item" [class.bi-arrow-repeat]="subiendoImagen() === item"></i>
+                    <span><strong>{{ subiendoImagen() === item ? 'Cargando imagen…' : (item.imagenUrl ? 'Reemplazar imagen' : 'Cargar imagen') }}</strong><small>JPG, PNG, WebP o AVIF@if (configuracionMedia(); as media) { · hasta {{ megabytes(media.maxBytesImagen) }} MB}</small></span>
+                  </label>
+                  @if (item.imagenUrl) {
+                    <button type="button" class="promotion-media__remove" (click)="quitarImagen(item)"><i class="bi bi-trash3"></i> Quitar</button>
+                  }
+                </div>
+                <details class="promotion-media__external">
+                  <summary>Usar una URL externa</summary>
+                  <mat-form-field appearance="outline"><mat-label>URL pública de imagen</mat-label><input matInput type="url" [ngModel]="item.imagenUrl" (ngModelChange)="actualizarUrlManual(item, $event)" [name]="'promoImagen' + i" maxlength="500" placeholder="https://..."></mat-form-field>
+                </details>
+              </section>
+
+              <div class="promotion-card__fields">
+                <mat-form-field appearance="outline" class="full-width"><mat-label>Título</mat-label><input matInput [(ngModel)]="item.titulo" [name]="'promoTitulo' + i" maxlength="120" required><mat-hint align="end">{{ item.titulo.length }}/120</mat-hint></mat-form-field>
+                <mat-form-field appearance="outline" class="full-width"><mat-label>Descripción</mat-label><textarea matInput rows="3" [(ngModel)]="item.descripcion" [name]="'promoDescripcion' + i" maxlength="500"></textarea></mat-form-field>
+
+                <div class="promotion-dates full-width">
+                  <div class="promotion-dates__intro"><span><i class="bi bi-calendar3"></i></span><div><strong>Vigencia</strong><small>Elige las fechas desde el calendario. Puedes dejar un extremo abierto.</small></div></div>
+                  <mat-form-field appearance="outline"><mat-label>Fecha de inicio</mat-label><input matInput readonly [matDatepicker]="inicio" [ngModel]="fechaComoDate(item.fechaInicio)" (ngModelChange)="actualizarFecha(item, 'fechaInicio', $event)" [name]="'promoInicio' + i"><mat-datepicker-toggle matIconSuffix [for]="inicio"></mat-datepicker-toggle><mat-datepicker #inicio></mat-datepicker></mat-form-field>
+                  <mat-form-field appearance="outline"><mat-label>Fecha final</mat-label><input matInput readonly [matDatepicker]="fin" [min]="fechaComoDate(item.fechaInicio)" [ngModel]="fechaComoDate(item.fechaFin)" (ngModelChange)="actualizarFecha(item, 'fechaFin', $event)" [name]="'promoFin' + i"><mat-datepicker-toggle matIconSuffix [for]="fin"></mat-datepicker-toggle><mat-datepicker #fin></mat-datepicker></mat-form-field>
+                </div>
+
+                <mat-form-field appearance="outline"><mat-label>Tipo de oferta</mat-label><mat-select [(ngModel)]="item.tipoDescuento" [name]="'promoTipo' + i"><mat-option value="PORCENTAJE">Porcentaje</mat-option><mat-option value="PRECIO">Precio promocional</mat-option></mat-select></mat-form-field>
+                <mat-form-field appearance="outline"><mat-label>{{ item.tipoDescuento === 'PORCENTAJE' ? 'Descuento (%)' : 'Precio promocional' }}</mat-label><input matInput type="number" min="0.01" [max]="item.tipoDescuento === 'PORCENTAJE' ? 100 : null" step="0.01" [(ngModel)]="item.valorDescuento" [name]="'promoValor' + i"></mat-form-field>
+                <mat-form-field appearance="outline"><mat-label>Moneda</mat-label><input matInput [(ngModel)]="item.moneda" [name]="'promoMoneda' + i" maxlength="10"></mat-form-field>
+                <mat-form-field appearance="outline"><mat-label>Texto del botón</mat-label><input matInput [(ngModel)]="item.textoBoton" [name]="'promoBoton' + i" maxlength="40"></mat-form-field>
+                <mat-form-field appearance="outline" class="full-width"><mat-label>Servicios incluidos</mat-label><mat-select multiple [(ngModel)]="item.servicioIds" [name]="'promoServicios' + i">@for (servicio of servicios(); track servicio.id) {<mat-option [value]="servicio.id">{{ servicio.grupoNombre ? servicio.grupoNombre + ' / ' : '' }}{{ servicio.subgrupoNombre ? servicio.subgrupoNombre + ' / ' : '' }}{{ servicio.nombre }}</mat-option>}</mat-select><mat-hint>Sin selección: aplica de forma general.</mat-hint></mat-form-field>
+                <mat-form-field appearance="outline" class="full-width"><mat-label>Sucursales donde aplica</mat-label><mat-select multiple [(ngModel)]="item.sucursalIds" [name]="'promoSucursales' + i">@for (sucursal of sucursales(); track sucursal.id) {<mat-option [value]="sucursal.id">{{ sucursal.nombre }}</mat-option>}</mat-select><mat-hint>Sin selección: aplica en todas las sucursales.</mat-hint></mat-form-field>
+                <label class="promotion-card__toggle full-width"><span><strong>Promoción activa</strong><small>La vigencia también controla su aparición pública.</small></span><mat-slide-toggle [(ngModel)]="item.activa" [name]="'promoActiva' + i"></mat-slide-toggle></label>
+              </div>
+            </div>
+          }
         </article>
       } @empty {
-        <div class="promotions-state"><i class="bi bi-tags"></i><strong>Aún no hay promociones</strong><span>Crea una campaña cuando tengas una oferta lista para publicar.</span></div>
+        <div class="promotions-state"><i class="bi bi-tags"></i><strong>Aún no hay promociones</strong><span>Crea una campaña cuando tengas una oferta lista para publicar.</span><button type="button" mat-flat-button color="primary" (click)="agregar()">Crear primera promoción</button></div>
       }
     </div>
-    @if (mensaje()) {<div class="promotions-message is-success">{{ mensaje() }}</div>}
-    @if (error()) {<div class="promotions-message is-error">{{ error() }}</div>}
-    <footer class="promotions-editor__actions"><span>{{ promociones().length }} promociones configuradas</span><button type="button" mat-flat-button color="primary" [disabled]="guardando()" (click)="guardar()"><i class="bi bi-check2"></i> {{ guardando() ? 'Guardando…' : 'Guardar promociones' }}</button></footer>
+    @if (mensaje()) {<div class="promotions-message is-success" role="status"><i class="bi bi-check-circle"></i>{{ mensaje() }}</div>}
+    @if (error()) {<div class="promotions-message is-error" role="alert"><i class="bi bi-exclamation-circle"></i>{{ error() }}</div>}
+    <footer class="promotions-editor__actions"><span><strong>{{ promociones().length }}</strong> {{ promociones().length === 1 ? 'promoción configurada' : 'promociones configuradas' }}</span><button type="button" mat-flat-button color="primary" [disabled]="guardando() || subiendoImagen() !== null" (click)="guardar()"><i class="bi bi-check2"></i> {{ guardando() ? 'Guardando…' : 'Guardar promociones' }}</button></footer>
   }
 </section>
