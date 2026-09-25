@@ -3,6 +3,8 @@ export const PERMISOS = {
   configuracionEmpresaGestionar: 'CONFIGURACION_EMPRESA_GESTIONAR',
   sucursalesGestionar: 'SUCURSALES_GESTIONAR',
   serviciosGestionar: 'SERVICIOS_GESTIONAR',
+  productosGestionar: 'PRODUCTOS_GESTIONAR',
+  inventarioGestionar: 'INVENTARIO_GESTIONAR',
   prestadoresGestionar: 'PRESTADORES_GESTIONAR',
   usuariosInternosGestionar: 'USUARIOS_INTERNOS_GESTIONAR',
   clientesGestionar: 'CLIENTES_GESTIONAR',

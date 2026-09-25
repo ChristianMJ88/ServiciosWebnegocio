@@ -460,6 +460,19 @@
 }
 }
 
+@if (seccionActiva() === 'productos') {
+  @defer {
+    <app-admin-products-section />
+  } @placeholder {
+    <section class="section-stack">
+      <div class="workspace-card">
+        <div class="section-header"><div><div class="section-eyebrow">Productos</div><h3>Preparando catálogo comercial</h3></div></div>
+        <p class="helper-text mb-0">Estamos cargando productos, categorías, proveedores y zonas de precio.</p>
+      </div>
+    </section>
+  }
+}
+
 @if (seccionActiva() === 'usuarios') {
   <section class="section-stack">
     <mat-card class="workspace-card users-hub-card">
