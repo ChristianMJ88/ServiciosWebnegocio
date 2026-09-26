@@ -486,6 +486,11 @@
   }
 }
 
+@if (seccionActiva() === 'comisiones') {
+  @defer { <app-admin-commissions-section /> }
+  @placeholder { <section class="section-stack"><div class="workspace-card"><div class="section-header"><div><div class="section-eyebrow">Comercial</div><h3>Preparando comisiones</h3></div></div></div></section> }
+}
+
 @if (seccionActiva() === 'usuarios') {
   <section class="section-stack">
     <mat-card class="workspace-card users-hub-card">

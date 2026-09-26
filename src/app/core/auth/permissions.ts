@@ -5,6 +5,7 @@ export const PERMISOS = {
   serviciosGestionar: 'SERVICIOS_GESTIONAR',
   productosGestionar: 'PRODUCTOS_GESTIONAR',
   inventarioGestionar: 'INVENTARIO_GESTIONAR',
+  comisionesGestionar: 'COMISIONES_GESTIONAR',
   prestadoresGestionar: 'PRESTADORES_GESTIONAR',
   usuariosInternosGestionar: 'USUARIOS_INTERNOS_GESTIONAR',
   clientesGestionar: 'CLIENTES_GESTIONAR',
