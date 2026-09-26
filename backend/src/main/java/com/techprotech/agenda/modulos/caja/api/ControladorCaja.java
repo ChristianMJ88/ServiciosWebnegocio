@@ -10,7 +10,11 @@ import com.techprotech.agenda.modulos.caja.api.dto.PagoCitaResponse;
 import com.techprotech.agenda.modulos.caja.api.dto.RegistrarMovimientoCajaRequest;
 import com.techprotech.agenda.modulos.caja.api.dto.RegistrarPagoRequest;
 import com.techprotech.agenda.modulos.caja.api.dto.ResumenCajaResponse;
+import com.techprotech.agenda.modulos.caja.api.dto.CatalogoVentaResponse;
+import com.techprotech.agenda.modulos.caja.api.dto.RegistrarVentaRequest;
+import com.techprotech.agenda.modulos.caja.api.dto.VentaResponse;
 import com.techprotech.agenda.modulos.caja.aplicacion.ServicioCaja;
+import com.techprotech.agenda.modulos.caja.aplicacion.ServicioVentasCaja;
 import com.techprotech.agenda.seguridad.jwt.UsuarioAutenticado;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
@@ -33,9 +37,32 @@ import java.util.List;
 public class ControladorCaja {
 
     private final ServicioCaja servicioCaja;
+    private final ServicioVentasCaja servicioVentas;
 
-    public ControladorCaja(ServicioCaja servicioCaja) {
+    public ControladorCaja(ServicioCaja servicioCaja, ServicioVentasCaja servicioVentas) {
         this.servicioCaja = servicioCaja;
+        this.servicioVentas = servicioVentas;
+    }
+
+    @GetMapping("/ventas/catalogo")
+    @PreAuthorize("hasAuthority('CAJA_COBRAR')")
+    public CatalogoVentaResponse catalogoVenta(@AuthenticationPrincipal UsuarioAutenticado usuario,
+                                               @RequestParam Long sucursalId) {
+        return servicioVentas.catalogo(usuario.empresaId(), usuario.sucursalesPermitidas(), sucursalId);
+    }
+
+    @PostMapping("/ventas")
+    @PreAuthorize("hasAuthority('CAJA_COBRAR')")
+    public VentaResponse registrarVenta(@AuthenticationPrincipal UsuarioAutenticado usuario,
+                                        @Valid @RequestBody RegistrarVentaRequest request) {
+        return servicioVentas.registrar(usuario.empresaId(), usuario.usuarioId(), usuario.sucursalesPermitidas(), request);
+    }
+
+    @GetMapping("/ventas")
+    @PreAuthorize("hasAuthority('CAJA_ACCESO')")
+    public List<VentaResponse> listarVentas(@AuthenticationPrincipal UsuarioAutenticado usuario,
+                                            @RequestParam Long sucursalId) {
+        return servicioVentas.listar(usuario.empresaId(), usuario.sucursalesPermitidas(), sucursalId);
     }
 
     @GetMapping("/catalogo")

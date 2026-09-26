@@ -16,9 +16,12 @@ import com.techprotech.agenda.modulos.caja.api.dto.SucursalCajaCatalogoResponse;
 import com.techprotech.agenda.modulos.caja.infraestructura.entidad.CajaSesionEntidad;
 import com.techprotech.agenda.modulos.caja.infraestructura.entidad.MovimientoCajaEntidad;
 import com.techprotech.agenda.modulos.caja.infraestructura.entidad.PagoCitaEntidad;
+import com.techprotech.agenda.modulos.caja.infraestructura.entidad.PagoVentaEntidad;
 import com.techprotech.agenda.modulos.caja.infraestructura.repositorio.CajaSesionRepositorio;
 import com.techprotech.agenda.modulos.caja.infraestructura.repositorio.MovimientoCajaRepositorio;
 import com.techprotech.agenda.modulos.caja.infraestructura.repositorio.PagoCitaRepositorio;
+import com.techprotech.agenda.modulos.caja.infraestructura.repositorio.PagoVentaRepositorio;
+import com.techprotech.agenda.modulos.caja.infraestructura.repositorio.VentaDetalleRepositorio;
 import com.techprotech.agenda.modulos.citas.infraestructura.entidad.CitaEntidad;
 import com.techprotech.agenda.modulos.citas.infraestructura.repositorio.CitaRepositorio;
 import com.techprotech.agenda.modulos.servicios.infraestructura.entidad.ServicioEntidad;
@@ -48,6 +51,8 @@ public class ServicioCaja {
 
     private final CajaSesionRepositorio cajaSesionRepositorio;
     private final PagoCitaRepositorio pagoCitaRepositorio;
+    private final PagoVentaRepositorio pagoVentaRepositorio;
+    private final VentaDetalleRepositorio ventaDetalleRepositorio;
     private final MovimientoCajaRepositorio movimientoCajaRepositorio;
     private final CitaRepositorio citaRepositorio;
     private final ClienteRepositorio clienteRepositorio;
@@ -57,6 +62,8 @@ public class ServicioCaja {
     public ServicioCaja(
             CajaSesionRepositorio cajaSesionRepositorio,
             PagoCitaRepositorio pagoCitaRepositorio,
+            PagoVentaRepositorio pagoVentaRepositorio,
+            VentaDetalleRepositorio ventaDetalleRepositorio,
             MovimientoCajaRepositorio movimientoCajaRepositorio,
             CitaRepositorio citaRepositorio,
             ClienteRepositorio clienteRepositorio,
@@ -65,6 +72,8 @@ public class ServicioCaja {
     ) {
         this.cajaSesionRepositorio = cajaSesionRepositorio;
         this.pagoCitaRepositorio = pagoCitaRepositorio;
+        this.pagoVentaRepositorio = pagoVentaRepositorio;
+        this.ventaDetalleRepositorio = ventaDetalleRepositorio;
         this.movimientoCajaRepositorio = movimientoCajaRepositorio;
         this.citaRepositorio = citaRepositorio;
         this.clienteRepositorio = clienteRepositorio;
@@ -194,7 +203,7 @@ public class ServicioCaja {
             throw new ResponseStatusException(CONFLICT, "La cita solo se puede cobrar después del check-in o cuando haya sido finalizada");
         }
 
-        BigDecimal pagado = montoSeguro(pagoCitaRepositorio.sumarPagadoPorCita(empresaId, citaId));
+        BigDecimal pagado = totalPagadoCita(empresaId, citaId);
         BigDecimal pendiente = cita.getPrecio().subtract(pagado);
         if (pendiente.compareTo(BigDecimal.ZERO) <= 0) {
             throw new ResponseStatusException(CONFLICT, "La cita ya está pagada");
@@ -293,12 +302,17 @@ public class ServicioCaja {
         }
 
         List<PagoCitaEntidad> pagos = pagoCitaRepositorio.findByEmpresaIdAndCajaSesionIdOrderByRegistradoEnDesc(empresaId, sesion.getId());
+        List<PagoVentaEntidad> pagosVenta = pagoVentaRepositorio.findByEmpresaIdAndCajaSesionIdOrderByRegistradoEnDesc(empresaId, sesion.getId());
         List<MovimientoCajaEntidad> movimientos = movimientoCajaRepositorio.findByEmpresaIdAndCajaSesionIdOrderByRegistradoEnDesc(empresaId, sesion.getId());
 
-        BigDecimal totalCobrado = pagos.stream().map(PagoCitaEntidad::getMonto).reduce(BigDecimal.ZERO, BigDecimal::add);
-        BigDecimal totalEfectivo = pagos.stream().filter(p -> "EFECTIVO".equals(p.getMetodoPago())).map(PagoCitaEntidad::getMonto).reduce(BigDecimal.ZERO, BigDecimal::add);
-        BigDecimal totalTarjeta = pagos.stream().filter(p -> "TARJETA".equals(p.getMetodoPago())).map(PagoCitaEntidad::getMonto).reduce(BigDecimal.ZERO, BigDecimal::add);
-        BigDecimal totalTransferencia = pagos.stream().filter(p -> "TRANSFERENCIA".equals(p.getMetodoPago())).map(PagoCitaEntidad::getMonto).reduce(BigDecimal.ZERO, BigDecimal::add);
+        BigDecimal totalCobrado = pagos.stream().map(PagoCitaEntidad::getMonto).reduce(BigDecimal.ZERO, BigDecimal::add)
+                .add(pagosVenta.stream().map(PagoVentaEntidad::getMonto).reduce(BigDecimal.ZERO, BigDecimal::add));
+        BigDecimal totalEfectivo = pagos.stream().filter(p -> "EFECTIVO".equals(p.getMetodoPago())).map(PagoCitaEntidad::getMonto).reduce(BigDecimal.ZERO, BigDecimal::add)
+                .add(pagosVenta.stream().filter(p -> "EFECTIVO".equals(p.getMetodoPago())).map(PagoVentaEntidad::getMonto).reduce(BigDecimal.ZERO, BigDecimal::add));
+        BigDecimal totalTarjeta = pagos.stream().filter(p -> "TARJETA".equals(p.getMetodoPago())).map(PagoCitaEntidad::getMonto).reduce(BigDecimal.ZERO, BigDecimal::add)
+                .add(pagosVenta.stream().filter(p -> "TARJETA".equals(p.getMetodoPago())).map(PagoVentaEntidad::getMonto).reduce(BigDecimal.ZERO, BigDecimal::add));
+        BigDecimal totalTransferencia = pagos.stream().filter(p -> "TRANSFERENCIA".equals(p.getMetodoPago())).map(PagoCitaEntidad::getMonto).reduce(BigDecimal.ZERO, BigDecimal::add)
+                .add(pagosVenta.stream().filter(p -> "TRANSFERENCIA".equals(p.getMetodoPago())).map(PagoVentaEntidad::getMonto).reduce(BigDecimal.ZERO, BigDecimal::add));
         BigDecimal totalGastos = movimientos.stream()
                 .filter(m -> List.of("GASTO_MENOR", "AJUSTE_NEGATIVO").contains(m.getTipoMovimiento()))
                 .map(MovimientoCajaEntidad::getMonto)
@@ -386,7 +400,7 @@ public class ServicioCaja {
         BigDecimal saldo = montoSeguro(sesion.getMontoInicial());
         for (MovimientoCajaEntidad movimiento : movimientos) {
             switch (movimiento.getTipoMovimiento()) {
-                case "INGRESO_CITA", "INGRESO_EXTRA", "AJUSTE_POSITIVO" -> saldo = saldo.add(movimiento.getMonto());
+                case "INGRESO_CITA", "INGRESO_VENTA", "INGRESO_EXTRA", "AJUSTE_POSITIVO" -> saldo = saldo.add(movimiento.getMonto());
                 case "GASTO_MENOR", "RETIRO", "AJUSTE_NEGATIVO" -> saldo = saldo.subtract(movimiento.getMonto());
                 default -> {
                 }
@@ -416,7 +430,7 @@ public class ServicioCaja {
 
     private CitaPorCobrarResponse mapearCitaPorCobrar(CitaEntidad cita) {
         ClienteEntidad cliente = clienteRepositorio.findById(cita.getClienteId()).orElse(null);
-        BigDecimal pagado = montoSeguro(pagoCitaRepositorio.sumarPagadoPorCita(cita.getEmpresaId(), cita.getId()));
+        BigDecimal pagado = totalPagadoCita(cita.getEmpresaId(), cita.getId());
         BigDecimal pendiente = cita.getPrecio().subtract(pagado);
         return new CitaPorCobrarResponse(
                 cita.getId(),
@@ -469,6 +483,11 @@ public class ServicioCaja {
                 pago.getRegistradoPorUsuarioId(),
                 pago.getRegistradoEn()
         );
+    }
+
+    private BigDecimal totalPagadoCita(Long empresaId, Long citaId) {
+        return montoSeguro(pagoCitaRepositorio.sumarPagadoPorCita(empresaId, citaId))
+                .add(montoSeguro(ventaDetalleRepositorio.sumarServiciosPagadosPorCita(empresaId, citaId)));
     }
 
     private MovimientoCajaResponse mapearMovimiento(MovimientoCajaEntidad movimiento) {

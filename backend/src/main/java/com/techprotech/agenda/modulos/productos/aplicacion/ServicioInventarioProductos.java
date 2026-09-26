@@ -128,6 +128,31 @@ public class ServicioInventarioProductos {
         return List.of(mapearExistencia(producto, origen, existenciaOrigen), mapearExistencia(producto, destino, existenciaDestino));
     }
 
+    @Transactional
+    public void descontarVenta(Long empresaId, Long usuarioId, List<Long> sucursalesPermitidas,
+                               Long sucursalId, Map<Long, BigDecimal> cantidades, String referencia) {
+        validarSucursal(empresaId, sucursalesPermitidas, sucursalId);
+        cantidades.entrySet().stream().sorted(Map.Entry.comparingByKey()).forEach(item -> {
+            ProductoEntidad producto = productos.findByIdAndEmpresaId(item.getKey(), empresaId)
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Producto no encontrado"));
+            if (!producto.isActivo()) throw error("El producto ya no está activo");
+            if (!producto.isControlaInventario()) return;
+            BigDecimal cantidad = item.getValue();
+            if (cantidad == null || cantidad.signum() <= 0) throw error("La cantidad vendida debe ser mayor que cero");
+            ProductoExistenciaEntidad existencia = bloquearExistencia(empresaId, producto.getId(), sucursalId);
+            BigDecimal anterior = existencia.getExistencia();
+            BigDecimal nueva = anterior.subtract(cantidad);
+            if (nueva.compareTo(existencia.getReservado()) < 0) {
+                throw new ResponseStatusException(HttpStatus.CONFLICT,
+                        "No hay existencia disponible de " + producto.getNombre() + " en la sucursal");
+            }
+            existencia.setExistencia(nueva);
+            existencias.save(existencia);
+            guardarMovimiento(empresaId, usuarioId, producto.getId(), sucursalId, "VENTA",
+                    cantidad.negate(), anterior, nueva, referencia, "Salida automática por venta en caja");
+        });
+    }
+
     private ProductoExistenciaEntidad bloquearExistencia(Long empresaId, Long productoId, Long sucursalId) {
         existencias.asegurarFila(empresaId, productoId, sucursalId);
         return existencias.bloquear(empresaId, productoId, sucursalId)
