@@ -41,12 +41,31 @@ test('escapa contenido proporcionado por el tenant', () => {
 });
 
 test('genera sitemap con páginas base y slugs válidos sin duplicados', () => {
-  const xml = renderSitemap(['nail-art', 'barberia-centro', 'nail-art', '../privado'], marketingOrigin);
+  const xml = renderSitemap(['nail-art', 'barberia-centro', 'nail-art', '../privado'], marketingOrigin, [
+    { sitioSlug: 'nail-art', productoSlug: 'aceite-cuticula' },
+    { sitioSlug: '../privado', productoSlug: 'oculto' }
+  ]);
 
   assert.match(xml, /https:\/\/example\.test\/<\/loc>/);
   assert.match(xml, /https:\/\/example\.test\/registro<\/loc>/);
   assert.match(xml, /https:\/\/example\.test\/e\/nail-art<\/loc>/);
   assert.match(xml, /https:\/\/example\.test\/e\/barberia-centro<\/loc>/);
-  assert.equal((xml.match(/\/e\/nail-art/g) || []).length, 1);
+  assert.equal((xml.match(/\/e\/nail-art<\/loc>/g) || []).length, 1);
+  assert.match(xml, /\/e\/nail-art\/productos<\/loc>/);
+  assert.match(xml, /\/e\/nail-art\/productos\/aceite-cuticula<\/loc>/);
   assert.doesNotMatch(xml, /privado/);
+});
+
+test('inyecta SEO de una ficha de producto con oferta estructurada', () => {
+  const html = renderTenantHtml(template, {
+    slug: 'nail-art', nombreComercial: 'Nail Air', publicado: true
+  }, '/e/nail-art/productos/aceite-cuticula', marketingOrigin, {
+    tienda: { seoTitulo: 'Productos Nail Air' },
+    productos: [{ nombre: 'Aceite para cutícula', slug: 'aceite-cuticula', descripcion: 'Nutrición diaria.', imagenUrl: '/aceite.png', precio: 80, moneda: 'MXN', disponible: true }]
+  });
+
+  assert.match(html, /<title>Aceite para cutícula \| Nail Air<\/title>/);
+  assert.match(html, /"@type":"Product"/);
+  assert.match(html, /"price":"80.00"/);
+  assert.match(html, /schema.org\/InStock/);
 });

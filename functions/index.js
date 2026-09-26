@@ -104,10 +104,27 @@ exports.tenantPage = onRequest(
         return;
       }
 
+      let productCatalog = null;
+      const productMatch = request.path.match(/^\/e\/[^/]+\/productos(?:\/([a-z0-9]+(?:-[a-z0-9]+)*))?\/?$/i);
+      if (productMatch) {
+        const productPath = productMatch[1] ? `/${encodeURIComponent(productMatch[1].toLowerCase())}` : '';
+        const productResponse = await fetch(`${apiBaseUrl}/publico/productos/sitio/${encodeURIComponent(slug)}${productPath}`, {
+          headers: { Accept: 'application/json' },
+          signal: AbortSignal.timeout(8000)
+        });
+        if (!productResponse.ok) {
+          response.status(productResponse.status === 404 ? 404 : 502)
+            .set('Cache-Control', 'public, max-age=60')
+            .send(renderNotFound(productMatch[1] || 'productos', marketingOrigin));
+          return;
+        }
+        productCatalog = await productResponse.json();
+      }
+
       response.status(200)
         .set('Content-Type', 'text/html; charset=utf-8')
         .set('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
-        .send(renderTenantHtml(template, tenant, request.originalUrl || request.path, marketingOrigin));
+        .send(renderTenantHtml(template, tenant, request.originalUrl || request.path, marketingOrigin, productCatalog));
     } catch (error) {
       logger.error('No fue posible renderizar el SEO del tenant.', { slug, error });
       response.status(503)
@@ -123,18 +140,24 @@ exports.sitemap = onRequest(
   async (_request, response) => {
     const { apiBaseUrl, marketingOrigin } = runtimeConfig();
     try {
-      const apiResponse = await fetch(`${apiBaseUrl}/publico/sitio/indice`, {
-        headers: { Accept: 'application/json' },
-        signal: AbortSignal.timeout(8000)
-      });
+      const [apiResponse, productsResponse] = await Promise.all([
+        fetch(`${apiBaseUrl}/publico/sitio/indice`, {
+          headers: { Accept: 'application/json' }, signal: AbortSignal.timeout(8000)
+        }),
+        fetch(`${apiBaseUrl}/publico/productos/sitio/indice`, {
+          headers: { Accept: 'application/json' }, signal: AbortSignal.timeout(8000)
+        })
+      ]);
       if (!apiResponse.ok) throw new Error(`El índice público respondió ${apiResponse.status}`);
+      if (!productsResponse.ok) throw new Error(`El índice de productos respondió ${productsResponse.status}`);
 
       const index = await apiResponse.json();
+      const productIndex = await productsResponse.json();
       const slugs = Array.isArray(index?.slugs) ? index.slugs : [];
       response.status(200)
         .set('Content-Type', 'application/xml; charset=utf-8')
         .set('Cache-Control', 'public, max-age=300, s-maxage=3600, stale-while-revalidate=86400')
-        .send(renderSitemap(slugs, marketingOrigin));
+        .send(renderSitemap(slugs, marketingOrigin, Array.isArray(productIndex?.productos) ? productIndex.productos : []));
     } catch (error) {
       logger.error('No fue posible generar el sitemap dinámico.', { error });
       response.status(503).set('Retry-After', '60').set('Cache-Control', 'no-store').send('');
