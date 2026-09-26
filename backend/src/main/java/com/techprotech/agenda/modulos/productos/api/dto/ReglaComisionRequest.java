@@ -1,0 +1,3 @@
+package com.techprotech.agenda.modulos.productos.api.dto;
+import jakarta.validation.constraints.*; import java.math.BigDecimal; import java.time.LocalDate;
+public record ReglaComisionRequest(@NotBlank @Size(max=160)String nombre,@Size(max=500)String descripcion,@NotBlank String concepto,@NotBlank String alcance,Long servicioId,Long productoId,Long categoriaProductoId,@NotBlank String beneficiario,Long prestadorId,@NotBlank String tipoCalculo,@NotBlank String baseCalculo,@NotNull @DecimalMin("0.0001")BigDecimal valor,@Size(max=10)String moneda,LocalDate fechaInicio,LocalDate fechaFin,int prioridad,boolean activa){}
