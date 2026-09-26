@@ -1,0 +1,106 @@
+package com.techprotech.agenda.modulos.pagos.infraestructura.mercadopago;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.techprotech.agenda.modulos.pagos.aplicacion.ServicioOAuthMercadoPago;
+import com.techprotech.agenda.modulos.pagos.dominio.EstadoPago;
+import com.techprotech.agenda.modulos.pagos.dominio.ResultadoCobro;
+import com.techprotech.agenda.modulos.pagos.dominio.ResultadoReembolso;
+import com.techprotech.agenda.modulos.pagos.dominio.SolicitudCobro;
+import com.techprotech.agenda.modulos.pagos.dominio.SolicitudReembolso;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.MediaType;
+import org.springframework.test.web.client.MockRestServiceServer;
+import org.springframework.web.client.RestClient;
+
+import java.math.BigDecimal;
+import java.util.Map;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+import static org.springframework.test.web.client.ExpectedCount.once;
+import static org.springframework.test.web.client.match.MockRestRequestMatchers.*;
+import static org.springframework.test.web.client.response.MockRestResponseCreators.withSuccess;
+
+class AdaptadorMercadoPagoOrdersTest {
+    private MockRestServiceServer servidor;
+    private AdaptadorMercadoPagoOrders adaptador;
+
+    @BeforeEach
+    void preparar() {
+        RestClient.Builder builder = RestClient.builder();
+        servidor = MockRestServiceServer.bindTo(builder).build();
+        ServicioOAuthMercadoPago oauth = mock(ServicioOAuthMercadoPago.class);
+        when(oauth.obtenerAccessToken(12L)).thenReturn("token-de-prueba");
+        ObjectMapper objectMapper = new ObjectMapper();
+        adaptador = new AdaptadorMercadoPagoOrders(oauth, builder, objectMapper,
+                new MapeadorRespuestaMercadoPago(), new ValidadorFirmaWebhookMercadoPago(),
+                new PropiedadesMercadoPago(true, "cliente", "secreto", "redirect", "frontend", "webhook"));
+    }
+
+    @Test
+    void creaOrdenAutomaticaConIdempotenciaYTokenDelTenant() {
+        servidor.expect(once(), requestTo("https://api.mercadopago.com/v1/orders"))
+                .andExpect(method(HttpMethod.POST))
+                .andExpect(header("Authorization", "Bearer token-de-prueba"))
+                .andExpect(header("X-Idempotency-Key", "idem-venta-42"))
+                .andExpect(content().json("""
+                        {
+                          "type":"online",
+                          "processing_mode":"automatic",
+                          "capture_mode":"automatic",
+                          "total_amount":"80.00",
+                          "external_reference":"VENTA-42",
+                          "payer":{"email":"cliente@example.com"},
+                          "transactions":{"payments":[{"amount":"80.00","payment_method":{
+                            "id":"visa","type":"credit_card","token":"card-token","installments":1
+                          }}]}
+                        }
+                        """, false))
+                .andRespond(withSuccess("""
+                        {
+                          "id":"ORD-42",
+                          "status":"processed",
+                          "status_detail":"accredited",
+                          "last_updated_date":"2026-09-26T15:30:00Z"
+                        }
+                        """, MediaType.APPLICATION_JSON));
+
+        ResultadoCobro resultado = adaptador.crearCobro(new SolicitudCobro(
+                12L, "VENTA-42", "idem-venta-42", new BigDecimal("80"), "MXN", BigDecimal.ZERO,
+                "card-token", "cliente@example.com",
+                Map.of("payment_method_id", "visa", "payment_type_id", "credit_card", "installments", "1")));
+
+        assertThat(resultado.referenciaExterna()).isEqualTo("ORD-42");
+        assertThat(resultado.estado()).isEqualTo(EstadoPago.APROBADO);
+        servidor.verify();
+    }
+
+    @Test
+    void reembolsaUnaTransaccionParcialSinConfundirOrdenYPago() {
+        servidor.expect(once(), requestTo("https://api.mercadopago.com/v1/orders/ORD-42/refund"))
+                .andExpect(method(HttpMethod.POST))
+                .andExpect(header("X-Idempotency-Key", "idem-refund-42"))
+                .andExpect(content().json("""
+                        {"transactions":[{"id":"PAY-42","amount":"25.00"}]}
+                        """, true))
+                .andRespond(withSuccess("""
+                        {
+                          "id":"ORD-42",
+                          "status":"processed",
+                          "status_detail":"partially_refunded",
+                          "transactions":{"refunds":[{"id":"REF-42","amount":"25.00","status":"processed"}]}
+                        }
+                        """, MediaType.APPLICATION_JSON));
+
+        ResultadoReembolso resultado = adaptador.reembolsar(new SolicitudReembolso(
+                12L, "ORD-42", "PAY-42", "idem-refund-42", new BigDecimal("25"), "Solicitud del cliente"));
+
+        assertThat(resultado.referenciaExterna()).isEqualTo("REF-42");
+        assertThat(resultado.estado()).isEqualTo(EstadoPago.REEMBOLSADO);
+        assertThat(resultado.importe()).isEqualByComparingTo("25.00");
+        servidor.verify();
+    }
+}

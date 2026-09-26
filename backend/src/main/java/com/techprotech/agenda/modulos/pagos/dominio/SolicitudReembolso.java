@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 
 public record SolicitudReembolso(
         Long empresaId,
+        String referenciaOrdenExterna,
         String referenciaPagoExterna,
         String idempotencia,
         BigDecimal importe,
