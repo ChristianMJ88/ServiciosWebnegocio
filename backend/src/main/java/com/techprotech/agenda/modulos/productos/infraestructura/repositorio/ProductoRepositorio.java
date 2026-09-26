@@ -5,6 +5,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
 import java.util.List;
+import java.util.Collection;
 import java.util.Optional;
 
 public interface ProductoRepositorio extends JpaRepository<ProductoEntidad, Long> {
@@ -15,6 +16,7 @@ public interface ProductoRepositorio extends JpaRepository<ProductoEntidad, Long
     List<ProductoEntidad> findByEmpresaIdOrderByNombreAsc(Long empresaId);
     List<ProductoEntidad> findByEmpresaIdAndActivoTrueAndVisiblePublicoTrueOrderByNombreAsc(Long empresaId);
     Optional<ProductoEntidad> findByIdAndEmpresaId(Long id, Long empresaId);
+    List<ProductoEntidad> findByEmpresaIdAndIdIn(Long empresaId, Collection<Long> ids);
     Optional<ProductoEntidad> findByEmpresaIdAndSlugAndActivoTrueAndVisiblePublicoTrue(Long empresaId, String slug);
     boolean existsByEmpresaIdAndSku(Long empresaId, String sku);
     boolean existsByEmpresaIdAndSkuAndIdNot(Long empresaId, String sku, Long id);

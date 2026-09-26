@@ -90,6 +90,8 @@ aplicacion:
     max-tamano-imagen: ${CLOUDINARY_MAX_TAMANO_IMAGEN:10MB}
   pagos:
     llave-cifrado-secretos: ${PAGOS_LLAVE_CIFRADO_SECRETOS:${CORREO_LLAVE_CIFRADO_SECRETOS:}}
+    checkout:
+      minutos-vigencia-orden: ${CHECKOUT_MINUTOS_VIGENCIA_ORDEN:15}
     mercado-pago:
       habilitado: ${MERCADO_PAGO_HABILITADO:false}
       ambiente: ${MERCADO_PAGO_AMBIENTE:PRODUCCION}
