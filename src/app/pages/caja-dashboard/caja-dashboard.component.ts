@@ -11,6 +11,7 @@ import { CajaDashboardCoordinator, extractHttpMessage } from './data/caja-dashbo
 import { CajaPaymentsSectionComponent } from './payments/caja-payments-section.component';
 import { CajaSessionSectionComponent } from './session/caja-session-section.component';
 import { CajaMovementsSectionComponent } from './movements/caja-movements-section.component';
+import { CajaSalesSectionComponent } from './sales/caja-sales-section.component';
 import { CajaReceiptComponent } from './receipt/caja-receipt.component';
 import { construirComprobanteCaja } from './receipt/caja-receipt.builder';
 import { CajaReceiptDto } from './receipt/caja-receipt.dto';
@@ -45,6 +46,7 @@ import {
     CajaPaymentsSectionComponent,
     CajaSessionSectionComponent,
     CajaMovementsSectionComponent,
+    CajaSalesSectionComponent,
     CajaReceiptComponent
   ],
   templateUrl: './caja-dashboard.component.html',
@@ -157,6 +159,7 @@ export class CajaDashboardComponent implements OnInit, AfterViewInit {
   readonly vistasDisponibles = computed(() => {
     const vistas: CajaViewOption[] = [];
     if (this.puedeCobrar()) {
+      vistas.push({ id: 'venta', label: 'Punto de venta' });
       vistas.push({ id: 'cobros', label: 'Cobros' });
     }
     if (this.puedeGestionarSesion()) {
@@ -436,6 +439,11 @@ export class CajaDashboardComponent implements OnInit, AfterViewInit {
     this.vistaActiva.set(vista);
   }
 
+  ventaCompletada() {
+    this.store.setMessage('Venta cobrada e inventario actualizado correctamente.');
+    this.recargarTablero();
+  }
+
   async imprimirComprobante() {
     const cita = this.citaSeleccionada();
     if (!cita) {
@@ -490,7 +498,7 @@ export class CajaDashboardComponent implements OnInit, AfterViewInit {
 
   private obtenerVistaInicial(): VistaCaja {
     if (this.puedeCobrar()) {
-      return 'cobros';
+      return 'venta';
     }
     if (this.puedeGestionarSesion()) {
       return 'sesion';

@@ -24,6 +24,15 @@
     <app-caja-view-navigation [vistas]="vistasDisponibles()" [vistaActiva]="vistaActiva()"
       [cobroActivo]="citaSeleccionada()" (viewSelected)="seleccionarVista($event)" />
 
+    @if (vistaActiva() === 'venta') {
+      <app-caja-sales-section
+        [sucursalId]="sucursalOperativaId()"
+        [citas]="citasPorCobrar()"
+        [metodosPago]="metodosPago()"
+        [cajaAbierta]="cajaAbierta()"
+        (saleCompleted)="ventaCompletada()" />
+    }
+
     @if (vistaActiva() === 'cobros') {
       <app-caja-payments-section
         [citas]="citasPorCobrar()"

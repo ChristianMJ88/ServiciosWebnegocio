@@ -1,0 +1,58 @@
+<div class="pos-layout">
+  <section class="pos-catalog caja-card">
+    <div class="caja-card-heading"><span class="caja-card-kicker">Punto de venta</span><h2>Servicios y productos en una sola cuenta</h2></div>
+    <label class="pos-search"><span>Buscar por nombre, SKU o código</span><input type="search" [ngModel]="busqueda()" (ngModelChange)="busqueda.set($event)" placeholder="Ej. tinte, shampoo, SKU…"></label>
+
+    @if (citas.length) {
+      <div class="pos-section-heading"><div><span>Servicio de la visita</span><small>Opcional: selecciónalo para cobrarlo junto con productos.</small></div></div>
+      <div class="pos-appointments">
+        @for (cita of citas; track cita.citaId) {
+          <button type="button" class="pos-appointment" [class.active]="citaId() === cita.citaId" (click)="seleccionarCita(cita.citaId)">
+            <span><strong>{{ cita.clienteNombre }}</strong><small>{{ cita.servicioNombre }}</small></span>
+            <strong>{{ cita.pendiente | appMoney:cita.moneda:2:2 }}</strong>
+          </button>
+        }
+      </div>
+    }
+
+    <div class="pos-section-heading"><div><span>Productos</span><small>{{ productosFiltrados().length }} disponibles en el catálogo de esta empresa.</small></div></div>
+    @if (cargando()) {<div class="caja-empty">Preparando catálogo e inventario…</div>}
+    @if (!cargando() && !productosFiltrados().length) {<div class="caja-empty">No hay productos que coincidan con la búsqueda.</div>}
+    <div class="pos-products">
+      @for (producto of productosFiltrados(); track producto.id) {
+        <article class="pos-product" [class.unavailable]="producto.controlaInventario && (producto.disponible ?? 0) <= 0">
+          <div class="pos-product-image">@if (producto.imagenUrl) {<img [src]="producto.imagenUrl" [alt]="producto.nombre">} @else {<span>◫</span>}</div>
+          <div class="pos-product-copy"><small>{{ producto.sku }}</small><strong>{{ producto.nombre }}</strong><span>{{ producto.precio | appMoney:producto.moneda:2:2 }}</span>
+            @if (producto.controlaInventario) {<em>{{ producto.disponible }} disponibles</em>}
+          </div>
+          <button mat-stroked-button type="button" (click)="agregar(producto)" [disabled]="producto.controlaInventario && (producto.disponible ?? 0) <= cantidad(producto.id)">{{ cantidad(producto.id) ? '+ Agregar otro' : 'Agregar' }}</button>
+        </article>
+      }
+    </div>
+  </section>
+
+  <aside class="pos-checkout caja-card">
+    <div class="caja-card-heading"><span class="caja-card-kicker">Cuenta actual</span><h2>Resumen de venta</h2></div>
+    @if (citaSeleccionada(); as cita) {
+      <div class="pos-line service"><div><span>Servicio</span><strong>{{ cita.servicioNombre }}</strong><small>{{ cita.clienteNombre }}</small></div><strong>{{ cita.pendiente | appMoney:cita.moneda:2:2 }}</strong><button type="button" aria-label="Quitar servicio" (click)="seleccionarCita(cita.citaId)">×</button></div>
+    }
+    @for (linea of lineas(); track linea.producto.id) {
+      <div class="pos-line"><div><span>Producto</span><strong>{{ linea.producto.nombre }}</strong><small>{{ linea.cantidad }} × {{ linea.producto.precio | appMoney:linea.producto.moneda:2:2 }}</small></div><strong>{{ linea.producto.precio * linea.cantidad | appMoney:linea.producto.moneda:2:2 }}</strong><div class="pos-quantity"><button type="button" (click)="disminuir(linea.producto.id)">−</button><b>{{ linea.cantidad }}</b><button type="button" (click)="agregar(linea.producto)">+</button><button type="button" class="remove" (click)="quitar(linea.producto.id)">×</button></div></div>
+    }
+    @if (!citaSeleccionada() && !lineas().length) {<div class="caja-empty">Selecciona una cita, productos o ambos para crear la cuenta.</div>}
+    <div class="pos-total"><span>Total calculado</span><strong>{{ totalEstimado() | appMoney:moneda():2:2 }}</strong><small>El backend validará precios, saldo e inventario al cobrar.</small></div>
+    <form class="pos-payment" (ngSubmit)="cobrar()">
+      <mat-form-field appearance="outline"><mat-label>Método de pago</mat-label><mat-select name="metodoVenta" [(ngModel)]="metodoPago">@for (metodo of metodosPago; track metodo.codigo) {<mat-option [value]="metodo.codigo">{{ metodo.etiqueta }}</mat-option>}</mat-select></mat-form-field>
+      <mat-form-field appearance="outline"><mat-label>Referencia</mat-label><input matInput name="referenciaVenta" [(ngModel)]="referencia"></mat-form-field>
+      <mat-form-field appearance="outline"><mat-label>Notas</mat-label><textarea matInput rows="2" name="notasVenta" [(ngModel)]="observaciones"></textarea></mat-form-field>
+      <button mat-flat-button color="primary" type="submit" [disabled]="guardando() || !cajaAbierta || (!citaSeleccionada() && !lineas().length)">{{ guardando() ? 'Cobrando…' : 'Cobrar cuenta completa' }}</button>
+    </form>
+    @if (!cajaAbierta) {<div class="caja-empty">Abre la caja de esta sucursal para registrar la venta.</div>}
+    @if (error()) {<div class="pos-alert error">{{ error() }}</div>}
+    @if (mensaje()) {<div class="pos-alert success">{{ mensaje() }}</div>}
+
+    @if (ventas().length) {
+      <div class="pos-history"><span>Ventas recientes</span>@for (venta of ventas().slice(0, 5); track venta.id) {<div><span><strong>{{ venta.folio }}</strong><small>{{ venta.detalles.length }} conceptos · {{ venta.metodoPago }}</small></span><strong>{{ venta.total | appMoney:venta.moneda:2:2 }}</strong></div>}</div>
+    }
+  </aside>
+</div>

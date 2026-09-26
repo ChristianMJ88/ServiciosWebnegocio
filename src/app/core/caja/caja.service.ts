@@ -125,6 +125,41 @@ export interface RegistrarMovimientoCajaPayload {
   observaciones: string | null;
 }
 
+export interface ProductoCaja {
+  id: number;
+  categoriaId: number | null;
+  sku: string;
+  codigoBarras: string | null;
+  nombre: string;
+  imagenUrl: string | null;
+  precio: number;
+  moneda: string;
+  controlaInventario: boolean;
+  disponible: number | null;
+}
+
+export interface CatalogoVentaCaja { productos: ProductoCaja[]; }
+export interface ProductoVentaPayload { productoId: number; cantidad: number; }
+export interface RegistrarVentaPayload {
+  sucursalId: number;
+  citaId: number | null;
+  clienteId: number | null;
+  productos: ProductoVentaPayload[];
+  metodoPago: string;
+  referencia: string | null;
+  observaciones: string | null;
+}
+export interface DetalleVentaCaja {
+  id: number; tipoConcepto: 'SERVICIO' | 'PRODUCTO'; productoId: number | null; servicioId: number | null;
+  citaId: number | null; sku: string | null; nombre: string; cantidad: number; precioUnitario: number;
+  descuento: number; impuestos: number; total: number;
+}
+export interface VentaCaja {
+  id: number; folio: string; sucursalId: number; citaId: number | null; clienteId: number | null;
+  estado: string; moneda: string; subtotal: number; descuentoTotal: number; impuestosTotal: number;
+  total: number; metodoPago: string; referencia: string | null; creadaEn: string; detalles: DetalleVentaCaja[];
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -199,5 +234,21 @@ export class CajaService {
       params = params.set('sucursalId', sucursalId);
     }
     return this.http.get<ResumenCaja>(`${environment.apiBaseUrl}/caja/resumen`, { params });
+  }
+
+  getCatalogoVenta(sucursalId: number): Observable<CatalogoVentaCaja> {
+    return this.http.get<CatalogoVentaCaja>(`${environment.apiBaseUrl}/caja/ventas/catalogo`, {
+      params: new HttpParams().set('sucursalId', sucursalId)
+    });
+  }
+
+  registrarVenta(payload: RegistrarVentaPayload): Observable<VentaCaja> {
+    return this.http.post<VentaCaja>(`${environment.apiBaseUrl}/caja/ventas`, payload);
+  }
+
+  listarVentas(sucursalId: number): Observable<VentaCaja[]> {
+    return this.http.get<VentaCaja[]>(`${environment.apiBaseUrl}/caja/ventas`, {
+      params: new HttpParams().set('sucursalId', sucursalId)
+    });
   }
 }

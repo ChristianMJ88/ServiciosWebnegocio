@@ -1,6 +1,6 @@
 import { CitaPorCobrar } from '../../../core/caja/caja.service';
 
-export type VistaCaja = 'cobros' | 'sesion' | 'movimientos';
+export type VistaCaja = 'venta' | 'cobros' | 'sesion' | 'movimientos';
 
 export interface CajaNotificationViewModel {
   titulo: string;
