@@ -11,6 +11,7 @@ import java.util.Optional;
 
 public interface ProductoExistenciaRepositorio extends JpaRepository<ProductoExistenciaEntidad, ProductoExistenciaId> {
     List<ProductoExistenciaEntidad> findByIdEmpresaIdAndIdSucursalIdIn(Long empresaId, List<Long> sucursalIds);
+    List<ProductoExistenciaEntidad> findByIdEmpresaIdAndIdProductoIdIn(Long empresaId, List<Long> productoIds);
 
     @Modifying
     @Query(value = "INSERT IGNORE INTO producto_existencia (empresa_id, producto_id, sucursal_id, existencia, reservado) VALUES (:empresaId, :productoId, :sucursalId, 0, 0)", nativeQuery = true)

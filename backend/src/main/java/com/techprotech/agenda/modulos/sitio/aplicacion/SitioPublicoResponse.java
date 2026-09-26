@@ -1,5 +1,7 @@
 package com.techprotech.agenda.modulos.sitio.aplicacion;
 
+import com.techprotech.agenda.modulos.productos.api.dto.ConfiguracionTiendaResponse;
+
 import java.util.List;
 
 public record SitioPublicoResponse(
@@ -83,6 +85,7 @@ public record SitioPublicoResponse(
         ResenasSitioPublicoResponse resenas,
         List<PreguntaFrecuenteSitioPublicaResponse> preguntasFrecuentes,
         List<UbicacionMapaSitioPublicaResponse> ubicacionesMapa,
+        ConfiguracionTiendaResponse tienda,
         boolean publicado
 ) {
 }

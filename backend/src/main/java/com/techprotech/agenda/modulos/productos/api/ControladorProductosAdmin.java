@@ -6,6 +6,7 @@ import com.techprotech.agenda.compartido.media.aplicacion.ServicioMediaEmpresa;
 import com.techprotech.agenda.compartido.media.dominio.CategoriaMedia;
 import com.techprotech.agenda.modulos.productos.api.dto.*;
 import com.techprotech.agenda.modulos.productos.aplicacion.ServicioCatalogoProductos;
+import com.techprotech.agenda.modulos.productos.aplicacion.ServicioConfiguracionTienda;
 import com.techprotech.agenda.modulos.productos.seguridad.PermisosProductos;
 import com.techprotech.agenda.seguridad.jwt.UsuarioAutenticado;
 import jakarta.validation.Valid;
@@ -21,15 +22,29 @@ import org.springframework.web.multipart.MultipartFile;
 public class ControladorProductosAdmin {
     private final ServicioCatalogoProductos catalogo;
     private final ServicioMediaEmpresa media;
+    private final ServicioConfiguracionTienda configuracionTienda;
 
-    public ControladorProductosAdmin(ServicioCatalogoProductos catalogo, ServicioMediaEmpresa media) {
+    public ControladorProductosAdmin(ServicioCatalogoProductos catalogo, ServicioMediaEmpresa media,
+                                     ServicioConfiguracionTienda configuracionTienda) {
         this.catalogo = catalogo;
         this.media = media;
+        this.configuracionTienda = configuracionTienda;
     }
 
     @GetMapping("/catalogo")
     public CatalogoProductosAdminResponse catalogo(@AuthenticationPrincipal UsuarioAutenticado usuario) {
         return catalogo.obtenerCatalogo(usuario.empresaId());
+    }
+
+    @GetMapping("/tienda")
+    public ConfiguracionTiendaResponse configuracionTienda(@AuthenticationPrincipal UsuarioAutenticado usuario) {
+        return configuracionTienda.obtener(usuario.empresaId());
+    }
+
+    @PutMapping("/tienda")
+    public ConfiguracionTiendaResponse actualizarTienda(@AuthenticationPrincipal UsuarioAutenticado usuario,
+                                                        @Valid @RequestBody ConfiguracionTiendaRequest request) {
+        return configuracionTienda.actualizar(usuario.empresaId(), request);
     }
 
     @PostMapping("/categorias")

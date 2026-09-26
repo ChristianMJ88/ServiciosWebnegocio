@@ -2,6 +2,7 @@ package com.techprotech.agenda.modulos.sitio.aplicacion;
 
 import com.techprotech.agenda.modulos.sitio.infraestructura.entidad.EmpresaSitioConfigEntidad;
 import com.techprotech.agenda.modulos.sitio.infraestructura.repositorio.EmpresaSitioConfigRepositorio;
+import com.techprotech.agenda.modulos.productos.aplicacion.ServicioConfiguracionTienda;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
@@ -21,6 +22,7 @@ public class ServicioSitioPublico {
     private final ServicioResenasSitio servicioResenasSitio;
     private final ServicioPreguntasFrecuentesSitio servicioPreguntasFrecuentesSitio;
     private final ServicioMapaSitio servicioMapaSitio;
+    private final ServicioConfiguracionTienda servicioConfiguracionTienda;
 
     public ServicioSitioPublico(
             EmpresaSitioConfigRepositorio empresaSitioConfigRepositorio,
@@ -32,7 +34,8 @@ public class ServicioSitioPublico {
             ServicioEquipoSitio servicioEquipoSitio,
             ServicioResenasSitio servicioResenasSitio,
             ServicioPreguntasFrecuentesSitio servicioPreguntasFrecuentesSitio,
-            ServicioMapaSitio servicioMapaSitio
+            ServicioMapaSitio servicioMapaSitio,
+            ServicioConfiguracionTienda servicioConfiguracionTienda
     ) {
         this.empresaSitioConfigRepositorio = empresaSitioConfigRepositorio;
         this.servicioConstructorSitio = servicioConstructorSitio;
@@ -44,6 +47,7 @@ public class ServicioSitioPublico {
         this.servicioResenasSitio = servicioResenasSitio;
         this.servicioPreguntasFrecuentesSitio = servicioPreguntasFrecuentesSitio;
         this.servicioMapaSitio = servicioMapaSitio;
+        this.servicioConfiguracionTienda = servicioConfiguracionTienda;
     }
 
     public SitioPublicoResponse obtenerPorSlug(String slug) {
@@ -148,6 +152,7 @@ public class ServicioSitioPublico {
                 servicioResenasSitio.obtenerParaSitioPublico(sitio.getEmpresaId()),
                 servicioPreguntasFrecuentesSitio.obtenerParaSitioPublico(sitio.getEmpresaId()),
                 servicioMapaSitio.obtenerParaSitioPublico(sitio.getEmpresaId()),
+                servicioConfiguracionTienda.obtener(sitio.getEmpresaId()),
                 sitio.isPublicado()
         );
     }
