@@ -49,6 +49,71 @@
         </div>
       }
     </article>
+
+    @if (configuracion(); as checkout) {
+      <section class="checkout-config" [class.is-disabled]="conexion()?.estado !== 'CONECTADO'">
+        <header class="checkout-config__heading">
+          <div>
+            <span class="payments-panel__eyebrow">Experiencia de compra</span>
+            <h4>Configura qué puede pagar el cliente</h4>
+            <p>El sitio público tomará estas reglas directamente del backend de este negocio.</p>
+          </div>
+          <label class="payment-switch">
+            <input type="checkbox" [checked]="checkout.habilitado"
+                   [disabled]="conexion()?.estado !== 'CONECTADO' || procesando()"
+                   (change)="actualizar('habilitado', $any($event.target).checked)">
+            <span></span><b>{{ checkout.habilitado ? 'Publicado' : 'Desactivado' }}</b>
+          </label>
+        </header>
+
+        <div class="checkout-config__grid">
+          <fieldset>
+            <legend>Conceptos disponibles</legend>
+            <label class="payment-option">
+              <input type="checkbox" [checked]="checkout.permitirPagoProductos"
+                     (change)="actualizar('permitirPagoProductos', $any($event.target).checked)">
+              <span><i class="bi bi-bag"></i><b>Productos</b><small>Artículos publicados en la tienda.</small></span>
+            </label>
+            <label class="payment-option">
+              <input type="checkbox" [checked]="checkout.permitirPagoServicios"
+                     (change)="actualizar('permitirPagoServicios', $any($event.target).checked)">
+              <span><i class="bi bi-calendar2-check"></i><b>Servicios</b><small>Reservas y anticipos de citas.</small></span>
+            </label>
+          </fieldset>
+
+          <fieldset>
+            <legend>Métodos aceptados</legend>
+            <label class="payment-option is-compact"><input type="checkbox" [checked]="checkout.aceptarTarjeta" (change)="actualizar('aceptarTarjeta', $any($event.target).checked)"><span><b>Tarjeta</b></span></label>
+            <label class="payment-option is-compact"><input type="checkbox" [checked]="checkout.aceptarTransferencia" (change)="actualizar('aceptarTransferencia', $any($event.target).checked)"><span><b>Transferencia</b></span></label>
+            <label class="payment-option is-compact"><input type="checkbox" [checked]="checkout.aceptarEfectivoReferenciado" (change)="actualizar('aceptarEfectivoReferenciado', $any($event.target).checked)"><span><b>Efectivo referenciado</b></span></label>
+          </fieldset>
+        </div>
+
+        <div class="checkout-config__rules">
+          <label><span>Cobro de servicios</span>
+            <select [value]="checkout.modalidadServicios" (change)="actualizar('modalidadServicios', $any($event.target).value)">
+              <option value="PAGO_COMPLETO">Pago completo</option>
+              <option value="ANTICIPO_PORCENTAJE">Anticipo por porcentaje</option>
+              <option value="ANTICIPO_IMPORTE">Anticipo por importe</option>
+            </select>
+          </label>
+          @if (checkout.modalidadServicios === 'ANTICIPO_PORCENTAJE') {
+            <label><span>Porcentaje de anticipo</span><input type="number" min="0.01" max="100" step="0.01" [value]="checkout.anticipoPorcentaje ?? ''" (input)="actualizar('anticipoPorcentaje', +$any($event.target).value || null)"></label>
+          }
+          @if (checkout.modalidadServicios === 'ANTICIPO_IMPORTE') {
+            <label><span>Importe de anticipo</span><input type="number" min="0.01" step="0.01" [value]="checkout.anticipoImporte ?? ''" (input)="actualizar('anticipoImporte', +$any($event.target).value || null)"></label>
+          }
+          <label><span>Moneda ISO</span><input type="text" maxlength="3" [value]="checkout.moneda" (input)="actualizar('moneda', $any($event.target).value.toUpperCase())"></label>
+        </div>
+
+        <footer class="checkout-config__footer">
+          <p><i class="bi bi-shield-check"></i> Los precios y totales se recalculan en el servidor antes de cobrar.</p>
+          <button type="button" class="payment-button" [disabled]="procesando() || conexion()?.estado !== 'CONECTADO'" (click)="guardarConfiguracion()">
+            <i class="bi bi-check2-circle"></i>{{ procesando() ? 'Guardando…' : 'Guardar checkout' }}
+          </button>
+        </footer>
+      </section>
+    }
   }
 
   <aside class="payment-note">

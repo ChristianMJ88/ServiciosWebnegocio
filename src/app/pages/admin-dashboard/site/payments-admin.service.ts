@@ -13,10 +13,27 @@ export interface ConexionProveedorPago {
   tokenExpiraEn: string | null;
 }
 
+export interface ConfiguracionCheckout {
+  habilitado: boolean;
+  proveedor: string;
+  conectado: boolean;
+  ambiente: string;
+  aceptarTarjeta: boolean;
+  aceptarTransferencia: boolean;
+  aceptarEfectivoReferenciado: boolean;
+  permitirPagoProductos: boolean;
+  permitirPagoServicios: boolean;
+  modalidadServicios: 'PAGO_COMPLETO' | 'ANTICIPO_PORCENTAJE' | 'ANTICIPO_IMPORTE';
+  anticipoPorcentaje: number | null;
+  anticipoImporte: number | null;
+  moneda: string;
+}
+
 @Injectable({ providedIn: 'root' })
 export class PaymentsAdminService {
   private readonly http = inject(HttpClient);
   private readonly baseUrl = `${environment.apiBaseUrl}/admin/pagos/mercado-pago/oauth`;
+  private readonly configuracionUrl = `${environment.apiBaseUrl}/admin/pagos/configuracion`;
 
   estado(): Observable<ConexionProveedorPago> {
     return this.http.get<ConexionProveedorPago>(`${this.baseUrl}/estado`);
@@ -32,5 +49,14 @@ export class PaymentsAdminService {
 
   desconectar(): Observable<ConexionProveedorPago> {
     return this.http.delete<ConexionProveedorPago>(this.baseUrl);
+  }
+
+  obtenerConfiguracion(): Observable<ConfiguracionCheckout> {
+    return this.http.get<ConfiguracionCheckout>(this.configuracionUrl);
+  }
+
+  guardarConfiguracion(configuracion: ConfiguracionCheckout): Observable<ConfiguracionCheckout> {
+    const { proveedor: _proveedor, conectado: _conectado, ambiente: _ambiente, ...request } = configuracion;
+    return this.http.put<ConfiguracionCheckout>(this.configuracionUrl, request);
   }
 }
