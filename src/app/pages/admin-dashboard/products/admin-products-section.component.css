@@ -114,6 +114,9 @@
   .products-hero { align-items: stretch; flex-direction: column; padding: 1rem; }
   .products-hero button { width: 100%; justify-content: center; }
   .product-tabs { margin-inline: -.15rem; }
+  .product-tabs { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); overflow: visible; }
+  .product-tabs button { justify-content: center; white-space: normal; text-align: center; }
+  .product-tabs button:last-child { grid-column: 1 / -1; }
   .product-editor__layout { grid-template-columns: 1fr; padding: .75rem; }
   .product-image { grid-template-columns: 120px minmax(0, 1fr); align-items: center; }
   .product-image__preview { aspect-ratio: 1; }

@@ -25,6 +25,7 @@
     <button type="button" [class.is-active]="vista() === 'categorias'" (click)="seleccionarVista('categorias')"><i class="bi bi-diagram-3"></i> Categorías</button>
     <button type="button" [class.is-active]="vista() === 'proveedores'" (click)="seleccionarVista('proveedores')"><i class="bi bi-truck"></i> Proveedores</button>
     <button type="button" [class.is-active]="vista() === 'zonas'" (click)="seleccionarVista('zonas')"><i class="bi bi-geo"></i> Precios por zona</button>
+    <button type="button" [class.is-active]="vista() === 'descuentos'" (click)="seleccionarVista('descuentos')"><i class="bi bi-tags"></i> Descuentos</button>
   </nav>
 
   @if (mensaje()) { <div class="products-message is-success" role="status"><i class="bi bi-check-circle"></i>{{ mensaje() }}</div> }
@@ -92,5 +93,6 @@
       @if (formularioZona(); as form) { <form class="editor-card compact-editor" (ngSubmit)="guardarZona()"><header><div><span class="editor-icon"><i class="bi bi-geo"></i></span><div><small>Regionalización</small><h3>{{ form.id ? 'Editar zona' : 'Nueva zona de precio' }}</h3></div></div></header><div class="editor-fields"><mat-form-field appearance="outline"><mat-label>Nombre</mat-label><input matInput [(ngModel)]="form.nombre" name="zonaNombre" required maxlength="120"></mat-form-field><mat-form-field appearance="outline"><mat-label>Clave</mat-label><input matInput [(ngModel)]="form.clave" name="zonaClave" maxlength="60"><mat-hint>Se genera desde el nombre si se deja vacía.</mat-hint></mat-form-field><mat-form-field appearance="outline" class="span-2"><mat-label>Descripción o cobertura</mat-label><textarea matInput [(ngModel)]="form.descripcion" name="zonaDescripcion" rows="2" maxlength="500"></textarea></mat-form-field><mat-form-field appearance="outline"><mat-label>Prioridad</mat-label><input matInput type="number" min="0" [(ngModel)]="form.prioridad" name="zonaPrioridad"></mat-form-field><label class="inline-toggle"><span><strong>Zona activa</strong><small>Disponible para definir precios.</small></span><mat-slide-toggle [(ngModel)]="form.activa" name="zonaActiva"></mat-slide-toggle></label></div><footer><button type="button" mat-button (click)="cancelarFormularios()">Cancelar</button><button type="submit" mat-flat-button color="primary" [disabled]="guardando()">Guardar zona</button></footer></form> }
       <div class="support-grid">@for (item of datos.zonasPrecio; track item.id) {<article class="support-card" (click)="editarZona(item)" tabindex="0"><span><i class="bi bi-geo-alt"></i></span><div><small>{{ item.clave }}</small><h3>{{ item.nombre }}</h3><p>{{ item.descripcion || 'Cobertura por definir.' }}</p></div><em [class.is-active]="item.activa">{{ item.activa ? 'Activa' : 'Inactiva' }}</em></article>} @empty {<div class="products-state span-all">Crea zonas para manejar precios regionales sin duplicar productos.</div>}</div>
     }
+    @if (vista() === 'descuentos') { <app-admin-product-discounts /> }
   }
 </section>

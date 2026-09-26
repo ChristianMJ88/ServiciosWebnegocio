@@ -11,8 +11,9 @@ import {
   CatalogoProductosAdmin, CategoriaProductoAdmin, CategoriaProductoPayload, ProductoAdmin, ProductoPayload,
   ProductsAdminService, ProveedorProductoAdmin, ProveedorProductoPayload, ZonaPrecioProductoAdmin, ZonaPrecioProductoPayload
 } from './products-admin.service';
+import { AdminProductDiscountsComponent } from './admin-product-discounts.component';
 
-type VistaProductos = 'productos' | 'categorias' | 'proveedores' | 'zonas';
+type VistaProductos = 'productos' | 'categorias' | 'proveedores' | 'zonas' | 'descuentos';
 type CategoriaForm = CategoriaProductoPayload & { id: number | null };
 type ProveedorForm = ProveedorProductoPayload & { id: number | null };
 type ZonaForm = ZonaPrecioProductoPayload & { id: number | null };
@@ -21,7 +22,7 @@ type ProductoForm = ProductoPayload & { id: number | null };
 @Component({
   selector: 'app-admin-products-section',
   standalone: true,
-  imports: [CommonModule, FormsModule, MatButtonModule, MatFormFieldModule, MatInputModule, MatSelectModule, MatSlideToggleModule],
+  imports: [CommonModule, FormsModule, MatButtonModule, MatFormFieldModule, MatInputModule, MatSelectModule, MatSlideToggleModule, AdminProductDiscountsComponent],
   providers: [ProductsAdminService],
   templateUrl: './admin-products-section.component.html',
   styleUrl: './admin-products-section.component.css'
