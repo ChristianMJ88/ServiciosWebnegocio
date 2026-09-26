@@ -5,9 +5,12 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 @ConfigurationProperties(prefix = "aplicacion.pagos.mercado-pago")
 public record PropiedadesMercadoPago(
         boolean habilitado,
+        String ambiente,
         String clientId,
         String clientSecret,
         String redirectUri,
         String frontendResultadoUrl,
-        String webhookSecret
+        String webhookSecret,
+        String publicKeyPrueba,
+        String accessTokenPrueba
 ) {}

@@ -30,7 +30,8 @@ import java.util.UUID;
 @Service
 public class ServicioOAuthMercadoPago {
     private static final String CODIGO_PROVEEDOR = "MERCADO_PAGO";
-    private static final String AMBIENTE = "PRODUCCION";
+    private static final String AMBIENTE_PRODUCCION = "PRODUCCION";
+    private static final String AMBIENTE_PRUEBA = "PRUEBA";
     private static final String AUTORIZACION = "https://auth.mercadopago.com/authorization";
     private static final String TOKEN = "https://api.mercadopago.com/oauth/token";
     private static final String PERFIL = "https://api.mercadopago.com/users/me";
@@ -91,13 +92,13 @@ public class ServicioOAuthMercadoPago {
             JsonNode perfil = consultarPerfil(accessToken);
             ProveedorPagoEntidad proveedor = proveedor();
             EmpresaProveedorPagoEntidad conexion = conexiones
-                    .findByEmpresaIdAndProveedorPagoIdAndAmbiente(estado.empresaId(), proveedor.getId(), AMBIENTE)
+                    .findByEmpresaIdAndProveedorPagoIdAndAmbiente(estado.empresaId(), proveedor.getId(), AMBIENTE_PRODUCCION)
                     .orElseGet(EmpresaProveedorPagoEntidad::new);
             LocalDateTime ahora = LocalDateTime.now(ZoneOffset.UTC);
             conexion.setEmpresaId(estado.empresaId());
             conexion.setProveedorPagoId(proveedor.getId());
             conexion.setEstado("CONECTADO");
-            conexion.setAmbiente(AMBIENTE);
+            conexion.setAmbiente(AMBIENTE_PRODUCCION);
             conexion.setCuentaExternaId(cuentaId);
             conexion.setCorreoCuenta(texto(perfil, "email"));
             conexion.setLlavePublica(texto(token, "public_key"));
@@ -117,17 +118,43 @@ public class ServicioOAuthMercadoPago {
     @Transactional(readOnly = true)
     public ConexionProveedorPagoResponse estado(Long empresaId) {
         ProveedorPagoEntidad proveedor = proveedor();
-        return conexiones.findByEmpresaIdAndProveedorPagoIdAndAmbiente(empresaId, proveedor.getId(), AMBIENTE)
+        String ambiente = ambienteActivo();
+        return conexiones.findByEmpresaIdAndProveedorPagoIdAndAmbiente(empresaId, proveedor.getId(), ambiente)
                 .map(this::respuesta)
-                .orElseGet(() -> new ConexionProveedorPagoResponse(CODIGO_PROVEEDOR, "NO_CONECTADO", AMBIENTE,
+                .orElseGet(() -> new ConexionProveedorPagoResponse(CODIGO_PROVEEDOR, "NO_CONECTADO", ambiente,
                         null, null, null, null));
+    }
+
+    @Transactional
+    public ConexionProveedorPagoResponse conectarPruebas(Long empresaId) {
+        validarConfiguracionPruebas();
+        ProveedorPagoEntidad proveedor = proveedor();
+        EmpresaProveedorPagoEntidad conexion = conexiones
+                .findByEmpresaIdAndProveedorPagoIdAndAmbiente(empresaId, proveedor.getId(), AMBIENTE_PRUEBA)
+                .orElseGet(EmpresaProveedorPagoEntidad::new);
+        LocalDateTime ahora = LocalDateTime.now(ZoneOffset.UTC);
+        conexion.setEmpresaId(empresaId);
+        conexion.setProveedorPagoId(proveedor.getId());
+        conexion.setEstado("CONECTADO");
+        conexion.setAmbiente(AMBIENTE_PRUEBA);
+        conexion.setCuentaExternaId(null);
+        conexion.setCorreoCuenta(null);
+        conexion.setLlavePublica(propiedades.publicKeyPrueba());
+        conexion.setTokenAccesoCifrado(protector.encriptar(propiedades.accessTokenPrueba()));
+        conexion.setTokenActualizacionCifrado(null);
+        conexion.setTokenExpiraEn(null);
+        conexion.setConectadoEn(ahora);
+        conexion.setDesconectadoEn(null);
+        conexion.setUltimaSincronizacionEn(ahora);
+        return respuesta(conexiones.save(conexion));
     }
 
     @Transactional
     public ConexionProveedorPagoResponse desconectar(Long empresaId) {
         ProveedorPagoEntidad proveedor = proveedor();
+        String ambiente = ambienteActivo();
         EmpresaProveedorPagoEntidad conexion = conexiones
-                .findByEmpresaIdAndProveedorPagoIdAndAmbiente(empresaId, proveedor.getId(), AMBIENTE)
+                .findByEmpresaIdAndProveedorPagoIdAndAmbiente(empresaId, proveedor.getId(), ambiente)
                 .orElseThrow(() -> new IllegalStateException("Mercado Pago no está conectado"));
         conexion.setEstado("DESCONECTADO");
         conexion.setTokenAccesoCifrado(null);
@@ -139,12 +166,17 @@ public class ServicioOAuthMercadoPago {
 
     @Transactional
     public String obtenerAccessToken(Long empresaId) {
-        validarConfiguracionOAuth();
+        if (!propiedades.habilitado()) throw new IllegalStateException("Mercado Pago no está habilitado");
         ProveedorPagoEntidad proveedor = proveedor();
+        String ambiente = ambienteActivo();
         EmpresaProveedorPagoEntidad conexion = conexiones
-                .findByEmpresaIdAndProveedorPagoIdAndAmbiente(empresaId, proveedor.getId(), AMBIENTE)
+                .findByEmpresaIdAndProveedorPagoIdAndAmbiente(empresaId, proveedor.getId(), ambiente)
                 .filter(entidad -> "CONECTADO".equals(entidad.getEstado()))
                 .orElseThrow(() -> new IllegalStateException("Mercado Pago no está conectado para la empresa"));
+        if (AMBIENTE_PRUEBA.equals(ambiente)) {
+            return protector.desencriptar(conexion.getTokenAccesoCifrado());
+        }
+        validarConfiguracionOAuth();
         LocalDateTime margenRenovacion = LocalDateTime.now(ZoneOffset.UTC).plusDays(1);
         if (conexion.getTokenExpiraEn() != null && conexion.getTokenExpiraEn().isAfter(margenRenovacion)) {
             return protector.desencriptar(conexion.getTokenAccesoCifrado());
@@ -253,6 +285,17 @@ public class ServicioOAuthMercadoPago {
                 || vacio(propiedades.redirectUri()) || vacio(propiedades.frontendResultadoUrl())) {
             throw new IllegalStateException("Mercado Pago no está configurado en Fluora");
         }
+    }
+
+    private void validarConfiguracionPruebas() {
+        if (!propiedades.habilitado() || !AMBIENTE_PRUEBA.equals(ambienteActivo())
+                || vacio(propiedades.publicKeyPrueba()) || vacio(propiedades.accessTokenPrueba())) {
+            throw new IllegalStateException("Las credenciales de prueba de Mercado Pago no están configuradas");
+        }
+    }
+
+    private String ambienteActivo() {
+        return AMBIENTE_PRUEBA.equalsIgnoreCase(propiedades.ambiente()) ? AMBIENTE_PRUEBA : AMBIENTE_PRODUCCION;
     }
 
     private boolean vacio(String valor) { return valor == null || valor.isBlank(); }

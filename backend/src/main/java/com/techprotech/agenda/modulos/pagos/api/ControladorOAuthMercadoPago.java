@@ -35,6 +35,12 @@ public class ControladorOAuthMercadoPago {
         return servicio.iniciar(usuario.empresaId(), usuario.usuarioId());
     }
 
+    @PostMapping("/prueba")
+    @PreAuthorize(PermisosPagos.EXPRESION_CONFIGURAR)
+    public ConexionProveedorPagoResponse conectarPruebas(@AuthenticationPrincipal UsuarioAutenticado usuario) {
+        return servicio.conectarPruebas(usuario.empresaId());
+    }
+
     @GetMapping("/callback")
     public ResponseEntity<Void> callback(
             @RequestParam(required = false) String code,

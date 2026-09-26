@@ -17,7 +17,7 @@
     <article class="provider-card" [class.is-connected]="conexion()?.estado === 'CONECTADO'">
       <div class="provider-card__brand">
         <span class="provider-card__logo">mp</span>
-        <div><strong>Mercado Pago</strong><small>Checkout API · México</small></div>
+        <div><strong>Mercado Pago</strong><small>Checkout API · {{ conexion()?.ambiente === 'PRUEBA' ? 'Ambiente de prueba' : 'Producción' }}</small></div>
       </div>
       <span class="provider-card__status">
         <i class="bi" [class.bi-check-circle-fill]="conexion()?.estado === 'CONECTADO'" [class.bi-circle]="conexion()?.estado !== 'CONECTADO'"></i>
@@ -41,8 +41,10 @@
             <li><i class="bi bi-check2"></i>Cada tenant autoriza su propia cuenta.</li>
             <li><i class="bi bi-check2"></i>Productos y servicios compartirán una sola orden.</li>
           </ul>
-          <button type="button" class="payment-button" [disabled]="procesando()" (click)="conectar()">
-            <i class="bi bi-box-arrow-up-right"></i>{{ procesando() ? 'Preparando conexión…' : 'Conectar Mercado Pago' }}
+          <button type="button" class="payment-button" [disabled]="procesando()"
+                  (click)="conexion()?.ambiente === 'PRUEBA' ? conectarPruebas() : conectar()">
+            <i class="bi" [class.bi-flask]="conexion()?.ambiente === 'PRUEBA'" [class.bi-box-arrow-up-right]="conexion()?.ambiente !== 'PRUEBA'"></i>
+            {{ procesando() ? 'Preparando conexión…' : (conexion()?.ambiente === 'PRUEBA' ? 'Activar credenciales de prueba' : 'Conectar Mercado Pago') }}
           </button>
         </div>
       }

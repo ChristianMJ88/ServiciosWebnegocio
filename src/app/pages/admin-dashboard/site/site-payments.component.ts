@@ -48,6 +48,19 @@ export class SitePaymentsComponent implements OnInit {
     });
   }
 
+  conectarPruebas(): void {
+    if (this.procesando()) return;
+    this.procesando.set(true);
+    this.error.set(null);
+    this.servicio.conectarPruebas().pipe(finalize(() => this.procesando.set(false))).subscribe({
+      next: conexion => {
+        this.conexion.set(conexion);
+        this.mensaje.set('Las credenciales de prueba quedaron activadas para este negocio.');
+      },
+      error: err => this.error.set(this.detalleError(err, 'Las credenciales de prueba todavía no están configuradas.'))
+    });
+  }
+
   desconectar(): void {
     if (this.procesando() || !window.confirm('¿Desconectar Mercado Pago de este negocio? Los cobros en línea dejarán de estar disponibles.')) return;
     this.procesando.set(true);

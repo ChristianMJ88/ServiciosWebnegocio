@@ -26,6 +26,10 @@ export class PaymentsAdminService {
     return this.http.get<{ urlAutorizacion: string }>(`${this.baseUrl}/iniciar`);
   }
 
+  conectarPruebas(): Observable<ConexionProveedorPago> {
+    return this.http.post<ConexionProveedorPago>(`${this.baseUrl}/prueba`, {});
+  }
+
   desconectar(): Observable<ConexionProveedorPago> {
     return this.http.delete<ConexionProveedorPago>(this.baseUrl);
   }

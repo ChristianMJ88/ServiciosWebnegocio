@@ -92,11 +92,14 @@ aplicacion:
     llave-cifrado-secretos: ${PAGOS_LLAVE_CIFRADO_SECRETOS:${CORREO_LLAVE_CIFRADO_SECRETOS:}}
     mercado-pago:
       habilitado: ${MERCADO_PAGO_HABILITADO:false}
+      ambiente: ${MERCADO_PAGO_AMBIENTE:PRODUCCION}
       client-id: ${MERCADO_PAGO_CLIENT_ID:}
       client-secret: ${MERCADO_PAGO_CLIENT_SECRET:}
       redirect-uri: ${MERCADO_PAGO_REDIRECT_URI:https://api.refluora.com/api/v1/admin/pagos/mercado-pago/oauth/callback}
       frontend-resultado-url: ${MERCADO_PAGO_FRONTEND_RESULTADO_URL:https://app.refluora.com/admin/sitio}
       webhook-secret: ${MERCADO_PAGO_WEBHOOK_SECRET:}
+      public-key-prueba: ${MERCADO_PAGO_PRUEBA_PUBLIC_KEY:}
+      access-token-prueba: ${MERCADO_PAGO_PRUEBA_ACCESS_TOKEN:}
   correo-bienvenida:
     soporte: ${CORREO_BIENVENIDA_SOPORTE:contacto@refluora.com}
     url-acceso: ${CORREO_BIENVENIDA_URL_ACCESO:https://app.refluora.com/acceso}
