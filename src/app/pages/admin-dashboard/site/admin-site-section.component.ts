@@ -23,6 +23,13 @@ import { SiteReviewsComponent } from './site-reviews.component';
 import { SiteFaqComponent } from './site-faq.component';
 import { AdminSiteFacade } from './admin-site.facade';
 import { finalize } from 'rxjs';
+import { AuthService } from '../../../core/auth/auth.service';
+import { SitePaymentsComponent } from './site-payments.component';
+
+type SiteEditorSectionId =
+  | 'estructura' | 'servicios_destacados' | 'beneficios' | 'promociones' | 'galeria'
+  | 'resenas' | 'preguntas_frecuentes' | 'pagos' | 'identidad' | 'apariencia'
+  | 'navegacion' | 'portada' | 'contacto' | 'seo_footer' | 'publicacion';
 
 @Component({
   selector: 'app-admin-site-section',
@@ -42,7 +49,8 @@ import { finalize } from 'rxjs';
     SiteGalleryComponent,
     SiteBenefitsComponent,
     SiteReviewsComponent,
-    SiteFaqComponent
+    SiteFaqComponent,
+    SitePaymentsComponent
   ],
   templateUrl: './admin-site-section.component.html',
   styleUrl: './admin-site-section.component.css'
@@ -50,6 +58,7 @@ import { finalize } from 'rxjs';
 export class AdminSiteSectionComponent implements OnInit {
   private readonly platformHost = inject(PlatformHostService);
   private readonly facade = inject(AdminSiteFacade);
+  private readonly auth = inject(AuthService);
   readonly defaultHeroImage = '/fluora-showcase-sites.svg';
 
   readonly formularioSitio = input.required<GuardarConfiguracionSitioPayload>();
@@ -59,7 +68,7 @@ export class AdminSiteSectionComponent implements OnInit {
   readonly etiquetaAccionAuditoriaConfiguracion = input.required<(accion: string) => string>();
 
   readonly save = output<void>();
-  readonly seccionActiva = signal<'estructura' | 'servicios_destacados' | 'beneficios' | 'promociones' | 'galeria' | 'resenas' | 'preguntas_frecuentes' | 'identidad' | 'apariencia' | 'navegacion' | 'portada' | 'contacto' | 'seo_footer' | 'publicacion'>('estructura');
+  readonly seccionActiva = signal<SiteEditorSectionId>('estructura');
   readonly previewDevice = signal<'movil' | 'tablet' | 'escritorio'>('escritorio');
   readonly configuracionMedia = signal<ConfiguracionMediaAdmin | null>(null);
   readonly subiendoBranding = signal<'logo' | 'portada' | null>(null);
@@ -71,7 +80,7 @@ export class AdminSiteSectionComponent implements OnInit {
     escritorio: '1440 × 900 px'
   })[this.previewDevice()]);
 
-  readonly secciones = [
+  private readonly seccionesBase: Array<{ id: SiteEditorSectionId; label: string; icon: string }> = [
     { id: 'estructura' as const, label: 'Estructura', icon: 'bi bi-layout-text-window-reverse' },
     { id: 'servicios_destacados' as const, label: 'Servicios destacados', icon: 'bi bi-stars' },
     { id: 'beneficios' as const, label: 'Beneficios', icon: 'bi bi-patch-check' },
@@ -87,6 +96,15 @@ export class AdminSiteSectionComponent implements OnInit {
     { id: 'seo_footer' as const, label: 'SEO y footer', icon: 'bi bi-search' },
     { id: 'publicacion' as const, label: 'Dominio y publicación', icon: 'bi bi-globe2' }
   ];
+
+  readonly secciones = computed(() => {
+    const secciones = [...this.seccionesBase];
+    if (this.auth.puedeConfigurarPagos()) {
+      const indice = secciones.findIndex(seccion => seccion.id === 'publicacion');
+      secciones.splice(indice, 0, { id: 'pagos' as const, label: 'Pagos en línea', icon: 'bi bi-credit-card-2-front' });
+    }
+    return secciones;
+  });
 
   readonly slugPreview = computed(() => this.normalizarSlug(
     this.formularioSitio().slug || this.formularioSitio().nombreComercial || 'mi-negocio'

@@ -1,0 +1,56 @@
+<section class="payments-panel">
+  <header class="payments-panel__heading">
+    <span class="payments-panel__icon"><i class="bi bi-credit-card-2-front"></i></span>
+    <div>
+      <span class="payments-panel__eyebrow">Cobros por internet</span>
+      <h3>Pagos en línea</h3>
+      <p>Conecta la cuenta del negocio para recibir pagos de productos y servicios directamente.</p>
+    </div>
+  </header>
+
+  @if (mensaje()) { <p class="payment-feedback is-success"><i class="bi bi-check-circle"></i>{{ mensaje() }}</p> }
+  @if (error()) { <p class="payment-feedback is-error"><i class="bi bi-exclamation-circle"></i>{{ error() }}</p> }
+
+  @if (cargando()) {
+    <div class="payment-loading"><span></span><span></span><span></span><p>Consultando la conexión del negocio…</p></div>
+  } @else {
+    <article class="provider-card" [class.is-connected]="conexion()?.estado === 'CONECTADO'">
+      <div class="provider-card__brand">
+        <span class="provider-card__logo">mp</span>
+        <div><strong>Mercado Pago</strong><small>Checkout API · México</small></div>
+      </div>
+      <span class="provider-card__status">
+        <i class="bi" [class.bi-check-circle-fill]="conexion()?.estado === 'CONECTADO'" [class.bi-circle]="conexion()?.estado !== 'CONECTADO'"></i>
+        {{ conexion()?.estado === 'CONECTADO' ? 'Cuenta conectada' : 'Sin conectar' }}
+      </span>
+
+      @if (conexion()?.estado === 'CONECTADO') {
+        <dl class="provider-card__details">
+          <div><dt>Cuenta</dt><dd>{{ conexion()?.correoCuenta || 'Cuenta Mercado Pago' }}</dd></div>
+          <div><dt>Identificador</dt><dd>{{ conexion()?.cuentaExternaId }}</dd></div>
+          <div><dt>Conectada</dt><dd>{{ conexion()?.conectadoEn | date:'dd/MM/yyyy HH:mm':'':'es-MX' }}</dd></div>
+        </dl>
+        <div class="provider-card__actions">
+          <span><i class="bi bi-shield-lock"></i> Fluora cifra y renueva el acceso de forma segura.</span>
+          <button type="button" class="payment-button payment-button--secondary" [disabled]="procesando()" (click)="desconectar()">Desconectar</button>
+        </div>
+      } @else {
+        <div class="provider-card__body">
+          <ul>
+            <li><i class="bi bi-check2"></i>El dinero llega a la cuenta del negocio.</li>
+            <li><i class="bi bi-check2"></i>Cada tenant autoriza su propia cuenta.</li>
+            <li><i class="bi bi-check2"></i>Productos y servicios compartirán una sola orden.</li>
+          </ul>
+          <button type="button" class="payment-button" [disabled]="procesando()" (click)="conectar()">
+            <i class="bi bi-box-arrow-up-right"></i>{{ procesando() ? 'Preparando conexión…' : 'Conectar Mercado Pago' }}
+          </button>
+        </div>
+      }
+    </article>
+  }
+
+  <aside class="payment-note">
+    <i class="bi bi-info-circle"></i>
+    <p><strong>Configuración por negocio</strong><span>Las credenciales privadas de Fluora nunca se muestran aquí. Cada empresa conecta y administra únicamente su propia cuenta.</span></p>
+  </aside>
+</section>
