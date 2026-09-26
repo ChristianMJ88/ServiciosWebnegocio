@@ -131,6 +131,19 @@ export interface TenantMapLocation {
   indicacionesUrl: string;
 }
 
+export interface TenantStoreConfig {
+  habilitada: boolean;
+  menuMostrarProductos: boolean;
+  titulo: string | null;
+  descripcion: string | null;
+  seoTitulo: string | null;
+  seoDescripcion: string | null;
+  textoAgregar: string | null;
+  carritoHabilitado: boolean;
+  mostrarStock: boolean;
+  permitirPedidoWhatsapp: boolean;
+}
+
 export interface TenantSiteConfig {
   empresaId: number;
   slug: string;
@@ -212,6 +225,7 @@ export interface TenantSiteConfig {
   resenas?: TenantReviews | null;
   preguntasFrecuentes?: TenantFrequentlyAskedQuestion[];
   ubicacionesMapa?: TenantMapLocation[];
+  tienda?: TenantStoreConfig | null;
   publicado: boolean;
 }
 

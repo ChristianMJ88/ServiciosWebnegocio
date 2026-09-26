@@ -42,7 +42,7 @@ export class App {
       )
       .subscribe(() => {
         this.sincronizarTenantConRuta(this.router.url);
-        this.publicReservationPage.set(/\/(agendar|servicios)$/.test(this.normalizarUrl(this.router.url)));
+        this.publicReservationPage.set(/\/(agendar|servicios|productos)(\/[^/]+)?$/.test(this.normalizarUrl(this.router.url)));
         this.esPanelInterno.set(this.calcularEsPanelInterno());
         this.mostrarChromePublico.set(this.calcularLayout() === 'public');
       });

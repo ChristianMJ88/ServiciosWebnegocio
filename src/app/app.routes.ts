@@ -7,6 +7,7 @@ export const routes: Routes = [
   ...publicContentRoutes,
   ...privateApplicationRoutes,
   { path: 'servicios', redirectTo: '', pathMatch: 'full' },
+  { path: 'productos', redirectTo: '', pathMatch: 'full' },
   { path: 'agendar', redirectTo: '', pathMatch: 'full' },
   { path: 'contacto', redirectTo: '', pathMatch: 'full' },
   { path: '**', redirectTo: '' }

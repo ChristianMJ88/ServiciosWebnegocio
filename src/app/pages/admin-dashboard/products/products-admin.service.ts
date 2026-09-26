@@ -15,6 +15,18 @@ export interface ProductoAdmin {
   stockMinimo: number; visiblePublico: boolean; activo: boolean; preciosZona: PrecioZonaProductoAdmin[];
 }
 export interface CatalogoProductosAdmin { monedaPredeterminada: string; categorias: CategoriaProductoAdmin[]; proveedores: ProveedorProductoAdmin[]; zonasPrecio: ZonaPrecioProductoAdmin[]; productos: ProductoAdmin[]; }
+export interface ConfiguracionTiendaAdmin {
+  habilitada: boolean;
+  menuMostrarProductos: boolean;
+  titulo: string | null;
+  descripcion: string | null;
+  seoTitulo: string | null;
+  seoDescripcion: string | null;
+  textoAgregar: string | null;
+  carritoHabilitado: boolean;
+  mostrarStock: boolean;
+  permitirPedidoWhatsapp: boolean;
+}
 export type CategoriaProductoPayload = Omit<CategoriaProductoAdmin, 'id'>;
 export type ProveedorProductoPayload = Omit<ProveedorProductoAdmin, 'id'>;
 export type ZonaPrecioProductoPayload = Omit<ZonaPrecioProductoAdmin, 'id'>;
@@ -26,6 +38,10 @@ export class ProductsAdminService {
   private readonly base = `${environment.apiBaseUrl}/admin/productos`;
 
   obtenerCatalogo(): Observable<CatalogoProductosAdmin> { return this.http.get<CatalogoProductosAdmin>(`${this.base}/catalogo`); }
+  obtenerConfiguracionTienda(): Observable<ConfiguracionTiendaAdmin> { return this.http.get<ConfiguracionTiendaAdmin>(`${this.base}/tienda`); }
+  actualizarConfiguracionTienda(payload: ConfiguracionTiendaAdmin): Observable<ConfiguracionTiendaAdmin> {
+    return this.http.put<ConfiguracionTiendaAdmin>(`${this.base}/tienda`, payload);
+  }
   crearCategoria(payload: CategoriaProductoPayload) { return this.http.post<CategoriaProductoAdmin>(`${this.base}/categorias`, payload); }
   actualizarCategoria(id: number, payload: CategoriaProductoPayload) { return this.http.patch<CategoriaProductoAdmin>(`${this.base}/categorias/${id}`, payload); }
   crearProveedor(payload: ProveedorProductoPayload) { return this.http.post<ProveedorProductoAdmin>(`${this.base}/proveedores`, payload); }

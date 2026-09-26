@@ -40,6 +40,7 @@ export class HeaderComponent {
   readonly menuSolido = computed(() => this.tenantActivo() && this.tenantContext.menuEstilo() === 'SOLIDO');
   readonly homeLink = computed(() => this.tenantActivo() ? this.tenantContext.routeFor() : '/');
   readonly servicesLink = computed(() => this.tenantActivo() ? this.tenantContext.routeFor('servicios') : '/#funcionalidades');
+  readonly productsLink = computed(() => this.tenantActivo() ? this.tenantContext.routeFor('productos') : '/#funcionalidades');
   readonly contactLink = computed(() => this.tenantActivo() ? this.tenantContext.routeFor('contacto') : '/#experiencias');
   readonly registerLink = computed(() => this.tenantActivo() ? this.tenantContext.routeFor('registro') : '/registro');
   readonly ctaLink = computed(() => this.tenantActivo()

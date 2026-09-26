@@ -89,6 +89,9 @@ export class TenantContextService {
   readonly serviciosDestacados = computed(() => this.tenant()?.serviciosDestacados ?? null);
   readonly galeria = computed(() => this.tenant()?.galeria ?? null);
   readonly promociones = computed(() => this.tenant()?.promociones ?? []);
+  readonly tienda = computed(() => this.tenant()?.tienda ?? null);
+  readonly tiendaHabilitada = computed(() => this.tienda()?.habilitada ?? false);
+  readonly menuMostrarProductos = computed(() => this.tiendaHabilitada() && (this.tienda()?.menuMostrarProductos ?? true));
   readonly logoUrl = computed(() => this.tenant()?.logoUrl ?? null);
   readonly whatsapp = computed(() => this.tenant()?.whatsapp ?? null);
   readonly whatsappHabilitado = computed(() => (this.tenant()?.whatsappHabilitado ?? true) && Boolean(this.tenant()?.whatsapp));

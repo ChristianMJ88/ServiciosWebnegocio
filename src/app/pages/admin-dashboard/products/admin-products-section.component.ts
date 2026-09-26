@@ -6,14 +6,14 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
-import { Observable, finalize } from 'rxjs';
+import { Observable, finalize, forkJoin } from 'rxjs';
 import {
-  CatalogoProductosAdmin, CategoriaProductoAdmin, CategoriaProductoPayload, ProductoAdmin, ProductoPayload,
+  CatalogoProductosAdmin, CategoriaProductoAdmin, CategoriaProductoPayload, ConfiguracionTiendaAdmin, ProductoAdmin, ProductoPayload,
   ProductsAdminService, ProveedorProductoAdmin, ProveedorProductoPayload, ZonaPrecioProductoAdmin, ZonaPrecioProductoPayload
 } from './products-admin.service';
 import { AdminProductDiscountsComponent } from './admin-product-discounts.component';
 
-type VistaProductos = 'productos' | 'categorias' | 'proveedores' | 'zonas' | 'descuentos';
+type VistaProductos = 'productos' | 'categorias' | 'proveedores' | 'zonas' | 'descuentos' | 'tienda';
 type CategoriaForm = CategoriaProductoPayload & { id: number | null };
 type ProveedorForm = ProveedorProductoPayload & { id: number | null };
 type ZonaForm = ZonaPrecioProductoPayload & { id: number | null };
@@ -30,6 +30,7 @@ type ProductoForm = ProductoPayload & { id: number | null };
 export class AdminProductsSectionComponent implements OnInit {
   private readonly service = inject(ProductsAdminService);
   readonly catalogo = signal<CatalogoProductosAdmin | null>(null);
+  readonly configuracionTienda = signal<ConfiguracionTiendaAdmin | null>(null);
   readonly vista = signal<VistaProductos>('productos');
   readonly cargando = signal(true);
   readonly guardando = signal(false);
@@ -136,6 +137,19 @@ export class AdminProductsSectionComponent implements OnInit {
     this.ejecutar(id ? this.service.actualizarZona(id, payload) : this.service.crearZona(payload), 'Zona de precio guardada.');
   }
 
+  guardarTienda(): void {
+    const configuracion = this.configuracionTienda();
+    if (!configuracion || this.guardando()) return;
+    this.ejecutar(this.service.actualizarConfiguracionTienda({
+      ...configuracion,
+      titulo: this.texto(configuracion.titulo),
+      descripcion: this.texto(configuracion.descripcion),
+      seoTitulo: this.texto(configuracion.seoTitulo),
+      seoDescripcion: this.texto(configuracion.seoDescripcion),
+      textoAgregar: this.texto(configuracion.textoAgregar)
+    }), 'Configuración de la tienda guardada.');
+  }
+
   cancelarFormularios(): void {
     this.formularioProducto.set(null); this.formularioCategoria.set(null); this.formularioProveedor.set(null); this.formularioZona.set(null);
   }
@@ -147,8 +161,16 @@ export class AdminProductsSectionComponent implements OnInit {
 
   private cargar(mensaje?: string): void {
     this.cargando.set(true);
-    this.service.obtenerCatalogo().pipe(finalize(() => this.cargando.set(false))).subscribe({
-      next: catalogo => { this.catalogo.set(catalogo); this.cancelarFormularios(); if (mensaje) this.mensaje.set(mensaje); },
+    forkJoin({
+      catalogo: this.service.obtenerCatalogo(),
+      tienda: this.service.obtenerConfiguracionTienda()
+    }).pipe(finalize(() => this.cargando.set(false))).subscribe({
+      next: ({ catalogo, tienda }) => {
+        this.catalogo.set(catalogo);
+        this.configuracionTienda.set(tienda);
+        this.cancelarFormularios();
+        if (mensaje) this.mensaje.set(mensaje);
+      },
       error: err => this.error.set(err?.error?.message || 'No fue posible cargar el catálogo de productos.')
     });
   }
@@ -162,4 +184,5 @@ export class AdminProductsSectionComponent implements OnInit {
   }
 
   private limpiarMensajes(): void { this.error.set(null); this.mensaje.set(null); }
+  private texto(valor: string | null): string | null { return valor?.trim() || null; }
 }

@@ -54,6 +54,9 @@
               <a [attr.href]="featuresHref()" class="footer-link">Funciones</a>
             }
           </li>
+          @if (tenantActivo() && tenantContext.tiendaHabilitada()) {
+            <li><a [routerLink]="productsLink()" class="footer-link">Productos</a></li>
+          }
           <li>
             @if (tenantActivo()) {
               <a [routerLink]="bookingLink()" class="footer-link">Agendar</a>

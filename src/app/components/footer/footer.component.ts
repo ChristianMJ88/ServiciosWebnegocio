@@ -21,6 +21,7 @@ export class FooterComponent {
     + (this.tenantContext.footerMostrarContacto() ? 1 : 0));
   readonly homeLink = computed(() => this.tenantActivo() ? this.tenantContext.routeFor() : '/');
   readonly servicesLink = computed(() => this.tenantActivo() ? this.tenantContext.routeFor('servicios') : '/');
+  readonly productsLink = computed(() => this.tenantActivo() ? this.tenantContext.routeFor('productos') : '/');
   readonly bookingLink = computed(() => this.tenantActivo() ? this.tenantContext.routeFor('agendar') : '/');
   readonly contactLink = computed(() => this.tenantActivo() ? this.tenantContext.routeFor('contacto') : '/acceso');
   readonly accessHref = computed(() => this.platformHost.appUrl('/acceso'));

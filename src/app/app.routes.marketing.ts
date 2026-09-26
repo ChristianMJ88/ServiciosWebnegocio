@@ -16,6 +16,14 @@ export const publicContentRoutes: Routes = [
     loadComponent: () => import('./pages/services/services.component').then((m) => m.ServicesComponent)
   },
   {
+    path: 'productos', canMatch: [tenantHostMatch], resolve: { tenant: tenantHostResolver },
+    loadComponent: () => import('./pages/products/products.component').then((m) => m.ProductsComponent)
+  },
+  {
+    path: 'productos/:productoSlug', canMatch: [tenantHostMatch], resolve: { tenant: tenantHostResolver },
+    loadComponent: () => import('./pages/products/products.component').then((m) => m.ProductsComponent)
+  },
+  {
     path: 'agendar', canMatch: [tenantHostMatch], resolve: { tenant: tenantHostResolver },
     loadComponent: () => import('./pages/booking/booking.component').then((m) => m.BookingComponent)
   },
@@ -49,6 +57,8 @@ export const publicContentRoutes: Routes = [
     children: [
       { path: '', loadComponent: () => import('./pages/home/home.component').then((m) => m.HomeComponent) },
       { path: 'servicios', loadComponent: () => import('./pages/services/services.component').then((m) => m.ServicesComponent) },
+      { path: 'productos', loadComponent: () => import('./pages/products/products.component').then((m) => m.ProductsComponent) },
+      { path: 'productos/:productoSlug', loadComponent: () => import('./pages/products/products.component').then((m) => m.ProductsComponent) },
       { path: 'agendar', loadComponent: () => import('./pages/booking/booking.component').then((m) => m.BookingComponent) },
       { path: 'login', loadComponent: redirectComponent, data: { destination: 'app', path: '/acceso' } },
       { path: 'registro', loadComponent: () => import('./pages/register/register.component').then((m) => m.RegisterComponent) },
@@ -73,6 +83,7 @@ export const marketingRoutes: Routes = [
   { path: 'recepcion', loadComponent: redirectComponent, data: { destination: 'app' } },
   { path: 'caja', loadComponent: redirectComponent, data: { destination: 'app' } },
   { path: 'servicios', redirectTo: '', pathMatch: 'full' },
+  { path: 'productos', redirectTo: '', pathMatch: 'full' },
   { path: 'agendar', redirectTo: '', pathMatch: 'full' },
   { path: 'contacto', redirectTo: '', pathMatch: 'full' },
   { path: '**', redirectTo: '' }

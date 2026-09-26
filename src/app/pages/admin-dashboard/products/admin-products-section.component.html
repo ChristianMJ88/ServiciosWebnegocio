@@ -26,6 +26,7 @@
     <button type="button" [class.is-active]="vista() === 'proveedores'" (click)="seleccionarVista('proveedores')"><i class="bi bi-truck"></i> Proveedores</button>
     <button type="button" [class.is-active]="vista() === 'zonas'" (click)="seleccionarVista('zonas')"><i class="bi bi-geo"></i> Precios por zona</button>
     <button type="button" [class.is-active]="vista() === 'descuentos'" (click)="seleccionarVista('descuentos')"><i class="bi bi-tags"></i> Descuentos</button>
+    <button type="button" [class.is-active]="vista() === 'tienda'" (click)="seleccionarVista('tienda')"><i class="bi bi-shop-window"></i> Tienda pública</button>
   </nav>
 
   @if (mensaje()) { <div class="products-message is-success" role="status"><i class="bi bi-check-circle"></i>{{ mensaje() }}</div> }
@@ -94,5 +95,38 @@
       <div class="support-grid">@for (item of datos.zonasPrecio; track item.id) {<article class="support-card" (click)="editarZona(item)" tabindex="0"><span><i class="bi bi-geo-alt"></i></span><div><small>{{ item.clave }}</small><h3>{{ item.nombre }}</h3><p>{{ item.descripcion || 'Cobertura por definir.' }}</p></div><em [class.is-active]="item.activa">{{ item.activa ? 'Activa' : 'Inactiva' }}</em></article>} @empty {<div class="products-state span-all">Crea zonas para manejar precios regionales sin duplicar productos.</div>}</div>
     }
     @if (vista() === 'descuentos') { <app-admin-product-discounts /> }
+    @if (vista() === 'tienda' && configuracionTienda(); as tienda) {
+      <form class="store-config" (ngSubmit)="guardarTienda()">
+        <header class="store-config__header">
+          <div><span class="editor-icon"><i class="bi bi-shop-window"></i></span><div><small>Escaparate multitenant</small><h3>Publicación y experiencia de compra</h3><p>Controla cómo aparece el catálogo en el slug de esta empresa.</p></div></div>
+          <span class="store-status" [class.is-live]="tienda.habilitada"><i class="bi" [class.bi-broadcast]="tienda.habilitada" [class.bi-pause-circle]="!tienda.habilitada"></i>{{ tienda.habilitada ? 'Publicada' : 'Oculta' }}</span>
+        </header>
+
+        <div class="store-config__body">
+          <section class="store-config__toggles">
+            <label><span><i class="bi bi-globe2"></i><strong>Publicar tienda</strong><small>Habilita el catálogo en la página pública del tenant.</small></span><mat-slide-toggle [(ngModel)]="tienda.habilitada" name="tiendaHabilitada"></mat-slide-toggle></label>
+            <label><span><i class="bi bi-menu-button-wide"></i><strong>Mostrar en el menú</strong><small>Agrega Productos a la navegación pública.</small></span><mat-slide-toggle [(ngModel)]="tienda.menuMostrarProductos" name="tiendaMenu"></mat-slide-toggle></label>
+            <label><span><i class="bi bi-bag"></i><strong>Habilitar carrito</strong><small>Permite reunir varios productos antes de solicitar el pedido.</small></span><mat-slide-toggle [(ngModel)]="tienda.carritoHabilitado" name="tiendaCarrito"></mat-slide-toggle></label>
+            <label><span><i class="bi bi-boxes"></i><strong>Mostrar existencias</strong><small>Publica las unidades disponibles cuando el producto controla inventario.</small></span><mat-slide-toggle [(ngModel)]="tienda.mostrarStock" name="tiendaStock"></mat-slide-toggle></label>
+            <label><span><i class="bi bi-whatsapp"></i><strong>Pedido por WhatsApp</strong><small>Genera un mensaje con el resumen del carrito.</small></span><mat-slide-toggle [(ngModel)]="tienda.permitirPedidoWhatsapp" name="tiendaWhatsapp"></mat-slide-toggle></label>
+          </section>
+
+          <section class="store-config__fields">
+            <div class="store-config__section-title"><span>01</span><div><strong>Contenido comercial</strong><small>Estos textos pertenecen únicamente a este tenant.</small></div></div>
+            <div class="editor-fields">
+              <mat-form-field appearance="outline" class="span-2"><mat-label>Título de la tienda</mat-label><input matInput [(ngModel)]="tienda.titulo" name="tiendaTitulo" maxlength="160" placeholder="Productos para cuidar de ti"><mat-hint align="end">{{ tienda.titulo?.length || 0 }}/160</mat-hint></mat-form-field>
+              <mat-form-field appearance="outline" class="span-2"><mat-label>Descripción</mat-label><textarea matInput [(ngModel)]="tienda.descripcion" name="tiendaDescripcion" maxlength="500" rows="3"></textarea><mat-hint align="end">{{ tienda.descripcion?.length || 0 }}/500</mat-hint></mat-form-field>
+              <mat-form-field appearance="outline"><mat-label>Texto para agregar</mat-label><input matInput [(ngModel)]="tienda.textoAgregar" name="tiendaTextoAgregar" maxlength="40" placeholder="Agregar al carrito"></mat-form-field>
+            </div>
+            <div class="store-config__section-title"><span>02</span><div><strong>Buscadores</strong><small>Título y descripción específicos del catálogo de productos.</small></div></div>
+            <div class="editor-fields">
+              <mat-form-field appearance="outline" class="span-2"><mat-label>Título SEO</mat-label><input matInput [(ngModel)]="tienda.seoTitulo" name="tiendaSeoTitulo" maxlength="70" placeholder="Productos | Nombre del negocio"><mat-hint align="end">{{ tienda.seoTitulo?.length || 0 }}/70</mat-hint></mat-form-field>
+              <mat-form-field appearance="outline" class="span-2"><mat-label>Descripción SEO</mat-label><textarea matInput [(ngModel)]="tienda.seoDescripcion" name="tiendaSeoDescripcion" maxlength="170" rows="3"></textarea><mat-hint align="end">{{ tienda.seoDescripcion?.length || 0 }}/170</mat-hint></mat-form-field>
+            </div>
+          </section>
+        </div>
+        <footer><p><i class="bi bi-info-circle"></i>Solo se publican productos activos marcados como visibles al público.</p><button type="submit" mat-flat-button color="primary" [disabled]="guardando()">{{ guardando() ? 'Guardando…' : 'Guardar tienda' }}</button></footer>
+      </form>
+    }
   }
 </section>

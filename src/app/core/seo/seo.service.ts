@@ -48,6 +48,43 @@ export class SeoService {
     this.removeTenantStructuredData();
   }
 
+  applyProductCatalog(config: TenantSiteConfig, catalog: {
+    tienda: { seoTitulo?: string | null; seoDescripcion?: string | null; titulo?: string | null; descripcion?: string | null };
+    productos: Array<{ nombre: string; slug: string; descripcion: string | null; imagenUrl: string | null; precio: number; moneda: string; disponible: boolean }>;
+  }, product?: { nombre: string; slug: string; descripcion: string | null; imagenUrl: string | null; precio: number; moneda: string; disponible: boolean } | null): void {
+    const path = product ? `/e/${config.slug}/productos/${product.slug}` : `/e/${config.slug}/productos`;
+    const canonical = this.platformHost.marketingUrl(path);
+    const title = product
+      ? `${product.nombre} | ${config.nombreComercial}`
+      : catalog.tienda.seoTitulo?.trim() || `${catalog.tienda.titulo?.trim() || 'Productos'} | ${config.nombreComercial}`;
+    const description = product?.descripcion?.trim()
+      || catalog.tienda.seoDescripcion?.trim()
+      || catalog.tienda.descripcion?.trim()
+      || `Compra productos de ${config.nombreComercial}.`;
+    const image = product?.imagenUrl || config.logoUrl || config.heroImagenUrl;
+
+    this.title.setTitle(title);
+    this.meta.updateTag({ name: 'description', content: description });
+    this.meta.updateTag({ name: 'robots', content: config.publicado ? 'index, follow, max-image-preview:large' : 'noindex, nofollow' });
+    this.meta.updateTag({ property: 'og:title', content: title });
+    this.meta.updateTag({ property: 'og:description', content: description });
+    this.meta.updateTag({ property: 'og:type', content: product ? 'product' : 'website' });
+    this.meta.updateTag({ property: 'og:url', content: canonical });
+    this.meta.updateTag({ property: 'og:locale', content: 'es_MX' });
+    this.meta.updateTag({ name: 'twitter:card', content: image ? 'summary_large_image' : 'summary' });
+    this.meta.updateTag({ name: 'twitter:title', content: title });
+    this.meta.updateTag({ name: 'twitter:description', content: description });
+    if (image) {
+      const absoluteImage = this.absoluteUrl(image);
+      this.meta.updateTag({ property: 'og:image', content: absoluteImage });
+      this.meta.updateTag({ name: 'twitter:image', content: absoluteImage });
+    }
+    this.setCanonical(canonical);
+    this.setStructuredData(product
+      ? this.productSchema(config, product, canonical, description)
+      : this.productListSchema(config, catalog.productos, canonical));
+  }
+
   private tenantDescription(config: TenantSiteConfig): string {
     return config.descripcionCorta?.trim()
       || config.heroSubtitulo?.trim()
@@ -107,6 +144,32 @@ export class SeoService {
       config.tiktokHabilitado !== false ? config.tiktokUrl : null
     ].filter((value): value is string => Boolean(value));
     if (sameAs.length) schema['sameAs'] = sameAs;
+    return schema;
+  }
+
+  private productListSchema(config: TenantSiteConfig, products: Array<{ nombre: string; slug: string }>, url: string): Record<string, unknown> {
+    return {
+      '@context': 'https://schema.org', '@type': 'ItemList', name: `Productos de ${config.nombreComercial}`,
+      url, numberOfItems: products.length,
+      itemListElement: products.map((product, index) => ({
+        '@type': 'ListItem', position: index + 1, name: product.nombre,
+        url: this.platformHost.marketingUrl(`/e/${config.slug}/productos/${product.slug}`)
+      }))
+    };
+  }
+
+  private productSchema(config: TenantSiteConfig,
+                        product: { nombre: string; imagenUrl: string | null; precio: number; moneda: string; disponible: boolean },
+                        url: string, description: string): Record<string, unknown> {
+    const schema: Record<string, unknown> = {
+      '@context': 'https://schema.org', '@type': 'Product', name: product.nombre, description, url,
+      brand: { '@type': 'Brand', name: config.nombreComercial },
+      offers: {
+        '@type': 'Offer', url, priceCurrency: product.moneda, price: product.precio.toFixed(2),
+        availability: product.disponible ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock'
+      }
+    };
+    if (product.imagenUrl) schema['image'] = this.absoluteUrl(product.imagenUrl);
     return schema;
   }
 
