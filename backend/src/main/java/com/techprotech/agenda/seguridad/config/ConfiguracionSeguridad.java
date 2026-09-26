@@ -49,6 +49,7 @@ public class ConfiguracionSeguridad {
                         .requestMatchers("/api/v1/auth/social/**").permitAll()
                         .requestMatchers("/api/v1/admin/correo/oauth/microsoft/callback").permitAll()
                         .requestMatchers("/api/v1/admin/correo/oauth/google/callback").permitAll()
+                        .requestMatchers("/api/v1/admin/pagos/mercado-pago/oauth/callback").permitAll()
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(filtroAutenticacionJwt, UsernamePasswordAuthenticationFilter.class)

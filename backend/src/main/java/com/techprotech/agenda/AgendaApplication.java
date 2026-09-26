@@ -12,11 +12,13 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import com.techprotech.agenda.compartido.correo.PropiedadesOAuthCorreoMicrosoft;
 import com.techprotech.agenda.compartido.correo.PropiedadesOAuthCorreoGoogle;
 import com.techprotech.agenda.modulos.autenticacion.social.PropiedadesAutenticacionSocial;
+import com.techprotech.agenda.modulos.pagos.infraestructura.mercadopago.PropiedadesMercadoPago;
+import com.techprotech.agenda.modulos.pagos.infraestructura.seguridad.PropiedadesSeguridadPagos;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
 @SpringBootApplication(exclude = UserDetailsServiceAutoConfiguration.class)
 @EnableScheduling
-@EnableConfigurationProperties({PropiedadesJwt.class, PropiedadesCorreo.class, PropiedadesCorreoPlataforma.class, PropiedadesOAuthCorreoMicrosoft.class, PropiedadesOAuthCorreoGoogle.class, PropiedadesAutenticacionSocial.class, PropiedadesWhatsapp.class, PropiedadesCloudinary.class})
+@EnableConfigurationProperties({PropiedadesJwt.class, PropiedadesCorreo.class, PropiedadesCorreoPlataforma.class, PropiedadesOAuthCorreoMicrosoft.class, PropiedadesOAuthCorreoGoogle.class, PropiedadesAutenticacionSocial.class, PropiedadesWhatsapp.class, PropiedadesCloudinary.class, PropiedadesMercadoPago.class, PropiedadesSeguridadPagos.class})
 public class AgendaApplication {
 
     public static void main(String[] args) {
