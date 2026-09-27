@@ -52,7 +52,7 @@
     @if (mensaje()) {<div class="pos-alert success">{{ mensaje() }}</div>}
 
     @if (ventas().length) {
-      <div class="pos-history"><span>Ventas recientes</span>@for (venta of ventas().slice(0, 5); track venta.id) {<div><span><strong>{{ venta.folio }}</strong><small>{{ venta.detalles.length }} conceptos · {{ venta.metodoPago }}</small></span><strong>{{ venta.total | appMoney:venta.moneda:2:2 }}</strong></div>}</div>
+      <div class="pos-history"><span>Ventas recientes</span>@for (venta of ventas().slice(0, 5); track venta.id) {<div><span><strong>{{ venta.folio }}</strong><small>{{ venta.canal === 'ONLINE' ? 'Venta web' : 'Caja' }} · {{ venta.detalles.length }} conceptos · {{ venta.metodoPago }}</small></span><strong>{{ venta.total | appMoney:venta.moneda:2:2 }}</strong></div>}</div>
     }
   </aside>
 </div>

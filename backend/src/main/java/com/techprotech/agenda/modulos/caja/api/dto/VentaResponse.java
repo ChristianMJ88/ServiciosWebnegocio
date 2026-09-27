@@ -19,6 +19,7 @@ public record VentaResponse(
         String metodoPago,
         String referencia,
         LocalDateTime creadaEn,
+        String canal,
         List<DetalleVentaResponse> detalles
 ) {
     public record DetalleVentaResponse(

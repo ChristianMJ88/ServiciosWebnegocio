@@ -129,7 +129,7 @@ public class ServicioVentasCaja {
         VentaEntidad venta = new VentaEntidad();
         venta.setEmpresaId(empresaId); venta.setSucursalId(request.sucursalId()); venta.setCajaSesionId(sesion.getId());
         venta.setClienteId(cita != null ? cita.getClienteId() : request.clienteId()); venta.setCitaId(cita != null ? cita.getId() : null);
-        venta.setFolio(generarFolio()); venta.setEstado("PAGADA"); venta.setMoneda(moneda.toUpperCase(Locale.ROOT));
+        venta.setFolio(generarFolio()); venta.setEstado("PAGADA"); venta.setCanal("CAJA"); venta.setMoneda(moneda.toUpperCase(Locale.ROOT));
         venta.setSubtotal(total); venta.setDescuentoTotal(CERO); venta.setImpuestosTotal(CERO); venta.setTotal(total);
         venta.setObservaciones(limpiar(request.observaciones())); venta.setCreadaPorUsuarioId(usuarioId); venta.setCreadaEn(LocalDateTime.now());
         venta = ventas.save(venta);
@@ -182,7 +182,7 @@ public class ServicioVentasCaja {
     private VentaResponse mapear(VentaEntidad venta, PagoVentaEntidad pago, List<VentaDetalleEntidad> filas) {
         return new VentaResponse(venta.getId(), venta.getFolio(), venta.getSucursalId(), venta.getCitaId(), venta.getClienteId(), venta.getEstado(),
                 venta.getMoneda(), venta.getSubtotal(), venta.getDescuentoTotal(), venta.getImpuestosTotal(), venta.getTotal(),
-                pago == null ? null : pago.getMetodoPago(), pago == null ? null : pago.getReferencia(), venta.getCreadaEn(),
+                pago == null ? null : pago.getMetodoPago(), pago == null ? null : pago.getReferencia(), venta.getCreadaEn(), venta.getCanal(),
                 filas.stream().map(d -> new VentaResponse.DetalleVentaResponse(d.getId(), d.getTipoConcepto(), d.getProductoId(), d.getServicioId(),
                         d.getCitaId(), d.getSku(), d.getNombre(), d.getCantidad(), d.getPrecioUnitario(), d.getDescuento(), d.getImpuestos(), d.getTotal())).toList());
     }

@@ -7,4 +7,5 @@ import java.util.List;
 
 public interface VentaRepositorio extends JpaRepository<VentaEntidad, Long> {
     List<VentaEntidad> findTop50ByEmpresaIdAndSucursalIdOrderByCreadaEnDesc(Long empresaId, Long sucursalId);
+    boolean existsByEmpresaIdAndCheckoutOrdenId(Long empresaId, Long checkoutOrdenId);
 }

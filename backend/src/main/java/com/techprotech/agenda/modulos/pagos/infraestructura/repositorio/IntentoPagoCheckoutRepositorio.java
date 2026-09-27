@@ -9,4 +9,6 @@ public interface IntentoPagoCheckoutRepositorio extends JpaRepository<IntentoPag
     Optional<IntentoPagoCheckoutEntidad> findByEmpresaIdAndIdempotencia(Long empresaId, String idempotencia);
     Optional<IntentoPagoCheckoutEntidad> findByProveedorPagoIdAndReferenciaExterna(Long proveedorPagoId,
                                                                                    String referenciaExterna);
+    Optional<IntentoPagoCheckoutEntidad> findFirstByEmpresaIdAndCheckoutOrdenIdAndEstadoOrderByIdDesc(
+            Long empresaId, Long checkoutOrdenId, String estado);
 }

@@ -22,4 +22,5 @@ public interface CheckoutOrdenRepositorio extends JpaRepository<CheckoutOrdenEnt
 
     List<CheckoutOrdenEntidad> findTop100ByInventarioEstadoAndExpiraEnBeforeOrderByExpiraEnAsc(
             String inventarioEstado, LocalDateTime expiraEn);
+    List<CheckoutOrdenEntidad> findTop100ByEstadoOrderByIdAsc(String estado);
 }

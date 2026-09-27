@@ -157,7 +157,7 @@ export interface DetalleVentaCaja {
 export interface VentaCaja {
   id: number; folio: string; sucursalId: number; citaId: number | null; clienteId: number | null;
   estado: string; moneda: string; subtotal: number; descuentoTotal: number; impuestosTotal: number;
-  total: number; metodoPago: string; referencia: string | null; creadaEn: string; detalles: DetalleVentaCaja[];
+  total: number; metodoPago: string; referencia: string | null; creadaEn: string; canal: 'CAJA' | 'ONLINE'; detalles: DetalleVentaCaja[];
 }
 
 @Injectable({

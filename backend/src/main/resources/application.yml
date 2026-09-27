@@ -94,6 +94,7 @@ aplicacion:
       minutos-vigencia-orden: ${CHECKOUT_MINUTOS_VIGENCIA_ORDEN:15}
       intervalo-liberacion-ms: ${CHECKOUT_INTERVALO_LIBERACION_MS:60000}
       intervalo-webhooks-ms: ${CHECKOUT_INTERVALO_WEBHOOKS_MS:5000}
+      intervalo-proyeccion-ventas-ms: ${CHECKOUT_INTERVALO_PROYECCION_VENTAS_MS:15000}
     mercado-pago:
       habilitado: ${MERCADO_PAGO_HABILITADO:false}
       ambiente: ${MERCADO_PAGO_AMBIENTE:PRODUCCION}
