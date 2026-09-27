@@ -19,13 +19,20 @@ public class ClienteGeocodigosEnvia {
     public GeocodigoResponse validar(String pais, String codigoPostal) {
         try {
             JsonNode respuesta = cliente.get().uri("/zipcode/{pais}/{codigoPostal}", pais, codigoPostal).retrieve().body(JsonNode.class);
-            if (respuesta == null || !respuesta.path("success").asBoolean(false)) {
+            if (respuesta == null || respuesta.isNull() || (respuesta.isArray() && respuesta.isEmpty())) {
                 return new GeocodigoResponse(false, codigoPostal, null, null, pais, null, null);
             }
-            JsonNode data = respuesta.path("data");
+            JsonNode data = respuesta.isArray() ? respuesta.path(0) : respuesta.path("data");
+            if (!respuesta.isArray() && !respuesta.path("success").asBoolean(false)) {
+                return new GeocodigoResponse(false, codigoPostal, null, null, pais, null, null);
+            }
             JsonNode coordenadas = data.path("coordinates");
-            return new GeocodigoResponse(true, texto(data, "zipcode"), texto(data, "city"), texto(data, "state"),
-                    texto(data, "country"), texto(coordenadas, "latitude"), texto(coordenadas, "longitude"));
+            String codigo = primero(texto(data, "zipcode"), texto(data, "zip_code"), codigoPostal);
+            String municipio = primero(texto(data, "city"), texto(data, "locality"), texto(data.path("regions"), "region_2"));
+            String estado = data.path("state").isObject() ? texto(data.path("state"), "name") : texto(data, "state");
+            String codigoPais = data.path("country").isObject() ? texto(data.path("country"), "code") : texto(data, "country");
+            return new GeocodigoResponse(true, codigo, municipio, estado, primero(codigoPais, pais),
+                    texto(coordenadas, "latitude"), texto(coordenadas, "longitude"));
         } catch (RestClientException ex) {
             throw new ResponseStatusException(HttpStatus.BAD_GATEWAY, "No fue posible validar el código postal con Envia.com");
         }
@@ -34,5 +41,10 @@ public class ClienteGeocodigosEnvia {
     private String texto(JsonNode nodo, String campo) {
         String valor = nodo.path(campo).asText(null);
         return valor == null || valor.isBlank() ? null : valor;
+    }
+
+    private String primero(String... valores) {
+        for (String valor : valores) if (valor != null && !valor.isBlank()) return valor;
+        return null;
     }
 }
