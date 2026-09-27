@@ -105,6 +105,11 @@ aplicacion:
       webhook-secret: ${MERCADO_PAGO_WEBHOOK_SECRET:}
       public-key-prueba: ${MERCADO_PAGO_PRUEBA_PUBLIC_KEY:}
       access-token-prueba: ${MERCADO_PAGO_PRUEBA_ACCESS_TOKEN:}
+  envios:
+    envia:
+      geocodigos-base-url: ${ENVIA_GEOCODIGOS_BASE_URL:https://geocodes.envia.com}
+      api-pruebas-base-url: ${ENVIA_API_PRUEBAS_BASE_URL:https://api-test.envia.com}
+      api-produccion-base-url: ${ENVIA_API_PRODUCCION_BASE_URL:https://api.envia.com}
   correo-bienvenida:
     soporte: ${CORREO_BIENVENIDA_SOPORTE:contacto@refluora.com}
     url-acceso: ${CORREO_BIENVENIDA_URL_ACCESO:https://app.refluora.com/acceso}

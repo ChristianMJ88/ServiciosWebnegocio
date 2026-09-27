@@ -85,6 +85,16 @@ export interface CardBrickData {
   payer?: { email?: string };
 }
 
+export interface PostalCodeValidation {
+  valido: boolean;
+  codigoPostal: string;
+  municipio: string | null;
+  estado: string | null;
+  pais: string | null;
+  latitud: string | null;
+  longitud: string | null;
+}
+
 @Injectable({ providedIn: 'root' })
 export class PublicCheckoutService {
   private readonly http = inject(HttpClient);
@@ -92,6 +102,12 @@ export class PublicCheckoutService {
   config(slug: string): Observable<PublicCheckoutConfig> {
     return this.http.get<PublicCheckoutConfig>(
       `${environment.apiBaseUrl}/publico/empresas/${encodeURIComponent(slug)}/checkout/configuracion`
+    );
+  }
+
+  validatePostalCode(country: string, postalCode: string): Observable<PostalCodeValidation> {
+    return this.http.get<PostalCodeValidation>(
+      `${environment.apiBaseUrl}/publico/envios/geocodigos/${encodeURIComponent(country)}/${encodeURIComponent(postalCode)}`
     );
   }
 

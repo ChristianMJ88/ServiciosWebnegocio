@@ -38,6 +38,8 @@ form button:disabled { opacity: .6; }
 .address-fields header div { display: grid; gap: .12rem; }.address-fields header strong { font-size: .74rem; }.address-fields header small { color: #718096; font-size: .62rem; }
 .address-fields .field-wide { grid-column: 1 / -1; }
 .address-fields label span small { color: #94a3b8; font-weight: 600; }
+.postal-feedback { min-height: 1rem; display: flex; align-items: center; gap: .3rem; color: #64748b; font-size: .6rem; font-weight: 650; }.postal-feedback.is-valid { color: #047857; }.postal-feedback .bi-arrow-repeat { animation: postal-spin .8s linear infinite; }
+@keyframes postal-spin { to { transform: rotate(360deg); } }
 .payment-divider { display: flex; align-items: center; gap: .65rem; margin: 1.6rem 0; color: #94a3b8; }
 .payment-divider span { height: 1px; flex: 1; background: #e5ebf0; }.payment-divider b { font-size: .65rem; }
 #cardPaymentBrick_container { min-height: 280px; }

@@ -3,7 +3,7 @@ import { Component, DestroyRef, OnDestroy, OnInit, inject, signal } from '@angul
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
-import { firstValueFrom, forkJoin } from 'rxjs';
+import { finalize, firstValueFrom, forkJoin } from 'rxjs';
 import { TenantContextService } from '../../core/tenant/tenant-context.service';
 import { BookingDataService, SucursalCatalogo } from '../../services/booking-data.service';
 import { MercadoPagoBricksService } from '../../services/mercado-pago-bricks.service';
@@ -38,6 +38,8 @@ export class CheckoutComponent implements OnInit, OnDestroy {
   readonly branches = signal<SucursalCatalogo[]>([]);
   readonly order = signal<CheckoutOrder | null>(null);
   readonly payment = signal<CheckoutPayment | null>(null);
+  readonly validatingPostalCode = signal(false);
+  readonly postalCodeMessage = signal<string | null>(null);
   private controller: BrickController | null = null;
   private orderKey = this.key('orden');
   private paymentKey = this.key('pago');
@@ -139,6 +141,28 @@ export class CheckoutComponent implements OnInit, OnDestroy {
     if (this.form.controls.deliveryMode.value === 'ENTREGA_LOCAL') return config.costoEntregaLocal;
     if (this.form.controls.deliveryMode.value === 'ENVIO_NACIONAL') return config.costoEnvioNacional;
     return 0;
+  }
+
+  validatePostalCode(): void {
+    const postalCode = this.form.controls.postalCode.value.trim();
+    if (!/^\d{5}$/.test(postalCode) || this.validatingPostalCode()) return;
+    this.validatingPostalCode.set(true);
+    this.postalCodeMessage.set(null);
+    this.checkout.validatePostalCode('MX', postalCode).pipe(
+      finalize(() => this.validatingPostalCode.set(false)),
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe({
+      next: result => {
+        if (!result.valido) {
+          this.postalCodeMessage.set('No encontramos este código postal. Verifica el dato.');
+          return;
+        }
+        if (!this.form.controls.municipality.value.trim() && result.municipio) this.form.controls.municipality.setValue(result.municipio);
+        if (!this.form.controls.state.value.trim() && result.estado) this.form.controls.state.setValue(result.estado);
+        this.postalCodeMessage.set('Código postal validado con Envia.com.');
+      },
+      error: () => this.postalCodeMessage.set('No pudimos validarlo ahora; puedes continuar capturando la dirección.')
+    });
   }
 
   private selectInitialDelivery(config: PublicCheckoutConfig): void {

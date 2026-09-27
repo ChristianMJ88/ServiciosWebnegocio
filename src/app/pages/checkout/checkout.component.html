@@ -59,7 +59,7 @@
                   <label><span>Número exterior</span><input type="text" formControlName="exteriorNumber" placeholder="123"></label>
                   <label><span>Número interior <small>(opcional)</small></span><input type="text" formControlName="interiorNumber" placeholder="Depto. 4"></label>
                   <label><span>Colonia</span><input type="text" formControlName="neighborhood" autocomplete="address-line2"></label>
-                  <label><span>Código postal</span><input type="text" inputmode="numeric" maxlength="5" formControlName="postalCode" autocomplete="postal-code" placeholder="72000"></label>
+                  <label><span>Código postal</span><input type="text" inputmode="numeric" maxlength="5" formControlName="postalCode" autocomplete="postal-code" placeholder="72000" (blur)="validatePostalCode()"><small class="postal-feedback" [class.is-valid]="postalCodeMessage()?.includes('validado')"><i class="bi" [class.bi-arrow-repeat]="validatingPostalCode()" [class.bi-geo-alt]="!validatingPostalCode()"></i>{{ validatingPostalCode() ? 'Validando…' : postalCodeMessage() }}</small></label>
                   <label><span>Estado</span><input type="text" formControlName="state" autocomplete="address-level1"></label>
                   <label><span>Municipio o alcaldía</span><input type="text" formControlName="municipality" autocomplete="address-level2"></label>
                   <label class="field-wide"><span>Referencias <small>(opcional)</small></span><input type="text" formControlName="references" placeholder="Entre calles, color de fachada o indicaciones"></label>
