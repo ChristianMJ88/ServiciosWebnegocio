@@ -9,6 +9,7 @@ import { SeoService } from '../../core/seo/seo.service';
 import { ProductCartService } from '../../services/product-cart.service';
 import { ProductStoreService, PublicProductCatalog, StoreCategory, StoreProduct } from '../../services/product-store.service';
 import { MoneyDisplayPipe } from '../../shared/pipes/money-display.pipe';
+import { PublicCheckoutService } from '../../services/public-checkout.service';
 
 interface CategorySection {
   category: StoreCategory | null;
@@ -30,6 +31,7 @@ export class ProductsComponent implements OnInit {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly seo = inject(SeoService);
+  private readonly checkout = inject(PublicCheckoutService);
   private readonly destroyRef = inject(DestroyRef);
 
   readonly catalog = signal<PublicProductCatalog | null>(null);
@@ -38,6 +40,7 @@ export class ProductsComponent implements OnInit {
   readonly search = signal('');
   readonly categoryId = signal<number | null>(null);
   readonly cartOpen = signal(false);
+  readonly onlineCheckout = signal(false);
   readonly productSlug = signal<string | null>(null);
   readonly detailProduct = computed(() => this.catalog()?.productos[0] ?? null);
   readonly isDetail = computed(() => Boolean(this.productSlug()));
@@ -93,6 +96,7 @@ export class ProductsComponent implements OnInit {
 
   productRoute(product: StoreProduct): string { return this.tenantContext.routeFor(`productos/${product.slug}`); }
   storeRoute(): string { return this.tenantContext.routeFor('productos'); }
+  checkoutRoute(): string { return this.tenantContext.routeFor('checkout'); }
   image(product: StoreProduct): string { return product.imagenUrl || this.tenantContext.logoUrl() || '/fluora-mark.svg'; }
 
   whatsappOrder(): string {
@@ -120,6 +124,10 @@ export class ProductsComponent implements OnInit {
         if (tenant) this.seo.applyProductCatalog(tenant, catalog, this.isDetail() ? this.detailProduct() : null);
       },
       error: error => this.error.set(error?.status === 404 ? 'Esta tienda todavía no está disponible.' : 'No pudimos cargar los productos. Intenta de nuevo.')
+    });
+    this.checkout.config(slug).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+      next: config => this.onlineCheckout.set(config.habilitado && config.aceptarTarjeta && config.permitirPagoProductos),
+      error: () => this.onlineCheckout.set(false)
     });
   }
 

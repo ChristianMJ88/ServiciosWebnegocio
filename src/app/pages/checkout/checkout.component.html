@@ -1,0 +1,49 @@
+<main class="checkout-page">
+  <div class="checkout-shell">
+    <a class="checkout-back" [routerLink]="tenant.routeFor('productos')"><i class="bi bi-arrow-left"></i> Volver a productos</a>
+
+    @if (loading()) {
+      <section class="checkout-state"><span class="checkout-spinner"></span><strong>Preparando pago seguro…</strong></section>
+    } @else if (!config()?.habilitado || !config()?.permitirPagoProductos || !config()?.aceptarTarjeta) {
+      <section class="checkout-state checkout-state--empty"><i class="bi bi-credit-card-2-front"></i><h1>Pago en línea no disponible</h1><p>{{ tenant.nombreComercial() }} todavía no ha habilitado el cobro de productos con tarjeta.</p><a [routerLink]="tenant.routeFor('productos')">Regresar a la tienda</a></section>
+    } @else if (!cart.items().length && !payment()) {
+      <section class="checkout-state checkout-state--empty"><i class="bi bi-bag"></i><h1>Tu carrito está vacío</h1><p>Agrega productos antes de iniciar el pago.</p><a [routerLink]="tenant.routeFor('productos')">Explorar productos</a></section>
+    } @else {
+      <header class="checkout-heading"><span>Compra segura</span><h1>Revisa y paga tu pedido</h1><p>El total se valida nuevamente en el servidor antes de mostrar el formulario de tarjeta.</p></header>
+
+      @if (error()) {<div class="checkout-alert" role="alert"><i class="bi bi-exclamation-circle"></i><span>{{ error() }}</span></div>}
+
+      @if (payment(); as result) {
+        <section class="payment-result" [class.is-approved]="result.estadoPago === 'APROBADO'">
+          <i class="bi" [class.bi-check-circle-fill]="result.estadoPago === 'APROBADO'" [class.bi-hourglass-split]="result.estadoPago !== 'APROBADO'"></i>
+          <div><span>Estado del pago</span><h2>{{ result.estadoPago === 'APROBADO' ? 'Pago aprobado' : 'Pago en proceso' }}</h2><p>{{ result.detalleRespuesta || 'Estamos confirmando la operación con Mercado Pago.' }}</p><strong>{{ result.importe | appMoney:result.moneda:2:2 }}</strong></div>
+        </section>
+      } @else {
+        <div class="checkout-layout">
+          <section class="checkout-panel checkout-panel--main">
+            <div class="step-heading"><b>1</b><div><span>Datos del pedido</span><h2>¿Dónde y a nombre de quién?</h2></div></div>
+            <form [formGroup]="form" (ngSubmit)="confirmOrder()">
+              <label><span>Correo para el comprobante</span><input type="email" formControlName="email" autocomplete="email" placeholder="nombre@correo.com"></label>
+              <label><span>Sucursal que preparará el pedido</span><select formControlName="branchId"><option [ngValue]="0" disabled>Selecciona una sucursal</option>@for (branch of branches(); track branch.id) {<option [ngValue]="branch.id">{{ branch.nombre }}</option>}</select></label>
+              @if (!order()) {<button type="submit" [disabled]="creatingOrder()"><span>{{ creatingOrder() ? 'Validando orden…' : 'Continuar al pago' }}</span><i class="bi bi-arrow-right"></i></button>}
+            </form>
+
+            @if (order()) {
+              <div class="payment-divider"><span></span><b>2</b><span></span></div>
+              <div class="step-heading"><b>2</b><div><span>Pago protegido</span><h2>Tarjeta de crédito o débito</h2><p>Los datos se capturan directamente en Mercado Pago; Fluora no almacena el número ni el código de seguridad.</p></div></div>
+              @if (!brickReady()) {<div class="brick-loading"><span class="checkout-spinner"></span> Cargando formulario seguro…</div>}
+              <div id="cardPaymentBrick_container"></div>
+              @if (config()?.ambiente === 'PRUEBA') {<div class="sandbox-note"><i class="bi bi-shield-check"></i><span><strong>Ambiente de prueba</strong> Usa únicamente las tarjetas de prueba de Mercado Pago.</span></div>}
+            }
+          </section>
+
+          <aside class="checkout-panel checkout-summary">
+            <header><span>Tu pedido</span><strong>{{ cart.units() }} {{ cart.units() === 1 ? 'producto' : 'productos' }}</strong></header>
+            <div class="summary-items">@for (item of cart.items(); track item.productoId) {<article>@if (item.imagenUrl) {<img [src]="item.imagenUrl" [alt]="item.nombre">} @else {<span><i class="bi bi-box-seam"></i></span>}<div><strong>{{ item.nombre }}</strong><small>{{ item.cantidad }} × {{ item.precio | appMoney:item.moneda:2:2 }}</small></div><b>{{ item.precio * item.cantidad | appMoney:item.moneda:2:2 }}</b></article>}</div>
+            <footer><div><span>{{ order() ? 'Total confirmado' : 'Total estimado' }}</span><strong>{{ (order()?.total ?? cart.total()) | appMoney:(order()?.moneda ?? cart.currency()):2:2 }}</strong></div><small><i class="bi bi-lock"></i> Cifrado y tokenización segura por Mercado Pago</small></footer>
+          </aside>
+        </div>
+      }
+    }
+  </div>
+</main>

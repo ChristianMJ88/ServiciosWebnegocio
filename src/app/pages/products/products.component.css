@@ -84,7 +84,9 @@
 .cart-drawer > footer > div span { color: #64748b; font-size: .68rem; }
 .cart-drawer > footer > div strong { font-size: 1.15rem; }
 .cart-drawer > footer small { display: block; margin: .35rem 0 .8rem; color: #64748b; font-size: .58rem; line-height: 1.4; }
-.cart-drawer > footer a { min-height: 46px; display: flex; align-items: center; justify-content: center; gap: .45rem; border-radius: 11px; color: #fff; background: #16a34a; font-size: .72rem; font-weight: 800; text-decoration: none; }
+.cart-drawer > footer a { min-height: 46px; display: flex; align-items: center; justify-content: center; gap: .45rem; border-radius: 11px; color: #fff; font-size: .72rem; font-weight: 800; text-decoration: none; }
+.cart-drawer > footer .cart-checkout { background: var(--tenant-primary); box-shadow: 0 10px 22px color-mix(in srgb, var(--tenant-primary) 20%, transparent); }
+.cart-drawer > footer .cart-whatsapp { margin-top: .45rem; background: #16a34a; }
 .cart-clear { width: 100%; margin-top: .45rem; padding: .5rem; border: 0; color: #64748b; background: transparent; font-size: .62rem; }
 .mobile-cart-bar { display: none; }
 .product-detail { min-height: 100vh; padding: 7.5rem 0 4rem; }
