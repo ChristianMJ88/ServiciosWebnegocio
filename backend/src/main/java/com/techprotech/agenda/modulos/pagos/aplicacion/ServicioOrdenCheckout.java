@@ -113,6 +113,7 @@ public class ServicioOrdenCheckout {
         orden.setZonaPrecioId(cotizacion.zonaPrecioId());
         orden.setIdempotencia(idempotencia.trim());
         orden.setEstado("PENDIENTE_PAGO");
+        orden.setInventarioEstado(cantidades.isEmpty() ? "NO_APLICA" : "PENDIENTE");
         orden.setCorreoCliente(request.correoCliente().trim().toLowerCase(Locale.ROOT));
         orden.setMoneda(config.moneda());
         orden.setSubtotal(subtotal);

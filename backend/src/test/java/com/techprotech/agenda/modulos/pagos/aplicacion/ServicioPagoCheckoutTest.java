@@ -28,6 +28,8 @@ class ServicioPagoCheckoutTest {
     private CheckoutOrdenRepositorio ordenes;
     private IntentoPagoCheckoutRepositorio intentos;
     private ProveedorPagosPort mercadoPago;
+    private ServicioInventarioCheckout inventario;
+    private ServicioEstadoPagoCheckout estados;
     private ServicioPagoCheckout servicio;
 
     @BeforeEach
@@ -39,6 +41,8 @@ class ServicioPagoCheckoutTest {
         ordenes = mock(CheckoutOrdenRepositorio.class);
         intentos = mock(IntentoPagoCheckoutRepositorio.class);
         mercadoPago = mock(ProveedorPagosPort.class);
+        inventario = mock(ServicioInventarioCheckout.class);
+        estados = mock(ServicioEstadoPagoCheckout.class);
 
         EmpresaSitioConfigEntidad sitio = new EmpresaSitioConfigEntidad();
         sitio.setEmpresaId(25L); sitio.setSlug("nail-art"); sitio.setPublicado(true);
@@ -52,10 +56,10 @@ class ServicioPagoCheckoutTest {
         proveedor.setId(7L); proveedor.setCodigo("MERCADO_PAGO"); proveedor.setActivo(true);
         when(proveedores.findById(7L)).thenReturn(Optional.of(proveedor));
         when(mercadoPago.proveedor()).thenReturn(ProveedorPago.MERCADO_PAGO);
-        when(intentos.save(any())).thenAnswer(inv -> inv.getArgument(0));
+        when(intentos.save(any())).thenAnswer(inv -> { IntentoPagoCheckoutEntidad item = inv.getArgument(0); item.setId(55L); return item; });
 
         servicio = new ServicioPagoCheckout(configuracion, sitios, checkoutConfigs, proveedores,
-                ordenes, intentos, List.of(mercadoPago));
+                ordenes, intentos, List.of(mercadoPago), inventario, estados);
     }
 
     @Test
@@ -64,6 +68,11 @@ class ServicioPagoCheckoutTest {
         when(ordenes.findByEmpresaIdAndPublicId(25L, "orden-123")).thenReturn(Optional.of(orden));
         when(mercadoPago.crearCobro(any())).thenReturn(new ResultadoCobro(ProveedorPago.MERCADO_PAGO,
                 "mp-order-9", EstadoPago.APROBADO, null, "approved", "Aprobado", OffsetDateTime.now()));
+        IntentoPagoCheckoutEntidad aplicado = new IntentoPagoCheckoutEntidad();
+        aplicado.setId(55L); aplicado.setEstado("APROBADO"); aplicado.setImporte(new BigDecimal("480.00"));
+        aplicado.setMoneda("MXN"); aplicado.setProveedorPagoId(7L); aplicado.setReferenciaExterna("mp-order-9");
+        when(estados.aplicar(eq(55L), any())).thenReturn(
+                new ServicioEstadoPagoCheckout.EstadoAplicado("orden-123", "PAGADA", aplicado));
 
         var respuesta = servicio.pagarConTarjeta("nail-art", "orden-123", "pago-abc", request());
 
@@ -72,8 +81,10 @@ class ServicioPagoCheckoutTest {
         verify(mercadoPago).crearCobro(argThat(cobro -> cobro.importe().compareTo(new BigDecimal("480.00")) == 0
                 && cobro.empresaId().equals(25L) && cobro.referenciaOrden().equals("orden-123")
                 && cobro.correoPagador().equals("cliente@test.mx")));
-        verify(intentos, atLeastOnce()).save(argThat(intento -> intento.getEstado().equals("APROBADO")
+        verify(intentos).save(argThat(intento -> intento.getEstado().equals("CREADO")
                 && intento.getProveedorPagoId().equals(7L)));
+        verify(inventario).reservar(25L, 41L);
+        verify(estados).aplicar(eq(55L), any());
     }
 
     @Test
@@ -106,6 +117,7 @@ class ServicioPagoCheckoutTest {
         CheckoutOrdenEntidad orden = new CheckoutOrdenEntidad();
         orden.setId(41L); orden.setPublicId("orden-123"); orden.setEmpresaId(25L); orden.setSucursalId(3L);
         orden.setEstado("PENDIENTE_PAGO"); orden.setCorreoCliente("cliente@test.mx"); orden.setMoneda("MXN");
+        orden.setInventarioEstado("PENDIENTE");
         orden.setSubtotal(new BigDecimal("480.00")); orden.setDescuentoTotal(BigDecimal.ZERO);
         orden.setImpuestosTotal(BigDecimal.ZERO); orden.setTotal(new BigDecimal("480.00"));
         orden.setExpiraEn(LocalDateTime.now(ZoneOffset.UTC).plusMinutes(10));

@@ -7,4 +7,6 @@ import java.util.Optional;
 
 public interface IntentoPagoCheckoutRepositorio extends JpaRepository<IntentoPagoCheckoutEntidad, Long> {
     Optional<IntentoPagoCheckoutEntidad> findByEmpresaIdAndIdempotencia(Long empresaId, String idempotencia);
+    Optional<IntentoPagoCheckoutEntidad> findByProveedorPagoIdAndReferenciaExterna(Long proveedorPagoId,
+                                                                                   String referenciaExterna);
 }

@@ -17,6 +17,7 @@ public class CheckoutOrdenEntidad {
     @Column(name = "zona_precio_id") private Long zonaPrecioId;
     @Column(nullable = false, length = 128) private String idempotencia;
     @Column(nullable = false, length = 30) private String estado;
+    @Column(name = "inventario_estado", nullable = false, length = 20) private String inventarioEstado;
     @Column(name = "correo_cliente", nullable = false, length = 180) private String correoCliente;
     @Column(nullable = false, length = 10) private String moneda;
     @Column(nullable = false, precision = 12, scale = 2) private BigDecimal subtotal;

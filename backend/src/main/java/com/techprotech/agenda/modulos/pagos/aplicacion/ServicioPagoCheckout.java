@@ -29,6 +29,8 @@ public class ServicioPagoCheckout {
     private final CheckoutOrdenRepositorio ordenes;
     private final IntentoPagoCheckoutRepositorio intentos;
     private final List<ProveedorPagosPort> adaptadores;
+    private final ServicioInventarioCheckout inventario;
+    private final ServicioEstadoPagoCheckout estados;
 
     public ServicioPagoCheckout(ServicioConfiguracionCheckout configuracionCheckout,
                                 EmpresaSitioConfigRepositorio sitios,
@@ -36,7 +38,9 @@ public class ServicioPagoCheckout {
                                 ProveedorPagoRepositorio proveedores,
                                 CheckoutOrdenRepositorio ordenes,
                                 IntentoPagoCheckoutRepositorio intentos,
-                                List<ProveedorPagosPort> adaptadores) {
+                                List<ProveedorPagosPort> adaptadores,
+                                ServicioInventarioCheckout inventario,
+                                ServicioEstadoPagoCheckout estados) {
         this.configuracionCheckout = configuracionCheckout;
         this.sitios = sitios;
         this.configuraciones = configuraciones;
@@ -44,6 +48,8 @@ public class ServicioPagoCheckout {
         this.ordenes = ordenes;
         this.intentos = intentos;
         this.adaptadores = adaptadores;
+        this.inventario = inventario;
+        this.estados = estados;
     }
 
     public PagoCheckoutResponse pagarConTarjeta(String slug, String ordenPublicId, String idempotencia,
@@ -71,6 +77,7 @@ public class ServicioPagoCheckout {
         ProveedorPagosPort adaptador = adaptadores.stream().filter(item -> item.proveedor() == proveedorDominio)
                 .findFirst().orElseThrow(() -> error(HttpStatus.SERVICE_UNAVAILABLE, "El proveedor de pago no está disponible"));
 
+        inventario.reservar(orden.getEmpresaId(), orden.getId());
         IntentoPagoCheckoutEntidad intento = nuevoIntento(orden, proveedor, clave);
         intentos.save(intento);
 
@@ -92,18 +99,8 @@ public class ServicioPagoCheckout {
             throw error(HttpStatus.BAD_GATEWAY, ex.getMessage());
         }
 
-        intento.setReferenciaExterna(resultado.referenciaExterna());
-        intento.setEstado(resultado.estado().name());
-        intento.setImporte(orden.getTotal());
-        intento.setMoneda(orden.getMoneda());
-        intento.setAccionUrl(resultado.accionUrl());
-        intento.setCodigoRespuesta(resultado.codigoRespuesta());
-        intento.setDetalleRespuesta(limitar(resultado.detalleRespuesta(), 500));
-        intento = intentos.save(intento);
-
-        orden.setEstado(estadoOrden(resultado.estado()));
-        ordenes.save(orden);
-        return respuesta(orden.getPublicId(), intento, orden.getEstado(), proveedor.getCodigo());
+        ServicioEstadoPagoCheckout.EstadoAplicado aplicado = estados.aplicar(intento.getId(), resultado);
+        return respuesta(aplicado.ordenPublicId(), aplicado.intento(), aplicado.estadoOrden(), proveedor.getCodigo());
     }
 
     private IntentoPagoCheckoutEntidad nuevoIntento(CheckoutOrdenEntidad orden, ProveedorPagoEntidad proveedor,
@@ -140,15 +137,6 @@ public class ServicioPagoCheckout {
         if (!orden.getCorreoCliente().equalsIgnoreCase(request.correoPagador().trim())) {
             throw error(HttpStatus.BAD_REQUEST, "El correo del pagador debe coincidir con el de la orden");
         }
-    }
-
-    private String estadoOrden(EstadoPago estado) {
-        return switch (estado) {
-            case APROBADO -> "PAGADA";
-            case CREADO, REQUIERE_ACCION, PROCESANDO -> "PAGO_EN_PROCESO";
-            case CANCELADO -> "CANCELADA";
-            default -> "PENDIENTE_PAGO";
-        };
     }
 
     private PagoCheckoutResponse respuestaIdempotente(String ordenPublicId, IntentoPagoCheckoutEntidad intento) {
