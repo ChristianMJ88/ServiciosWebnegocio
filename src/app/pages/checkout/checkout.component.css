@@ -39,6 +39,7 @@ form button:disabled { opacity: .6; }
 .address-fields .field-wide { grid-column: 1 / -1; }
 .address-fields label span small { color: #94a3b8; font-weight: 600; }
 .postal-feedback { min-height: 1rem; display: flex; align-items: center; gap: .3rem; color: #64748b; font-size: .6rem; font-weight: 650; }.postal-feedback.is-valid { color: #047857; }.postal-feedback .bi-arrow-repeat { animation: postal-spin .8s linear infinite; }
+.address-validation { display:flex; align-items:center; gap:.7rem; flex-wrap:wrap; padding-top:.2rem; }.address-validation button { width:auto; min-height:40px; padding:0 .85rem; border:1px solid color-mix(in srgb, var(--tenant-primary) 35%, #d7e0e8); color:var(--tenant-primary); background:#fff; box-shadow:none; }.address-validation p { display:flex; align-items:center; gap:.35rem; margin:0; color:#526174; font-size:.62rem; }
 @keyframes postal-spin { to { transform: rotate(360deg); } }
 .payment-divider { display: flex; align-items: center; gap: .65rem; margin: 1.6rem 0; color: #94a3b8; }
 .payment-divider span { height: 1px; flex: 1; background: #e5ebf0; }.payment-divider b { font-size: .65rem; }

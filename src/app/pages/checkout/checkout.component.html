@@ -53,8 +53,11 @@
               </fieldset>
 
               @if (requiresAddress()) {
-                <section class="address-fields">
+                <section class="address-fields" (input)="clearAddressValidation()">
                   <header><i class="bi bi-geo-alt"></i><div><strong>Dirección de entrega</strong><small>Captúrala tal como aparece en el domicilio.</small></div></header>
+                  @if (addressConfig()?.autocompleteHabilitado) {
+                    <app-google-address-autocomplete class="field-wide" [config]="addressConfig()!" (addressSelected)="applyGoogleAddress($event)"></app-google-address-autocomplete>
+                  }
                   <label class="field-wide"><span>Calle</span><input type="text" formControlName="street" autocomplete="address-line1" placeholder="Nombre de la calle"></label>
                   <label><span>Número exterior</span><input type="text" formControlName="exteriorNumber" placeholder="123"></label>
                   <label><span>Número interior <small>(opcional)</small></span><input type="text" formControlName="interiorNumber" placeholder="Depto. 4"></label>
@@ -62,7 +65,13 @@
                   <label><span>Código postal</span><input type="text" inputmode="numeric" maxlength="5" formControlName="postalCode" autocomplete="postal-code" placeholder="72000" (blur)="validatePostalCode()"><small class="postal-feedback" [class.is-valid]="postalCodeMessage()?.includes('validado')"><i class="bi" [class.bi-arrow-repeat]="validatingPostalCode()" [class.bi-geo-alt]="!validatingPostalCode()"></i>{{ validatingPostalCode() ? 'Validando…' : postalCodeMessage() }}</small></label>
                   <label><span>Estado</span><input type="text" formControlName="state" autocomplete="address-level1"></label>
                   <label><span>Municipio o alcaldía</span><input type="text" formControlName="municipality" autocomplete="address-level2"></label>
+                  @if ((addressConfig()?.regionesPermitidas?.length ?? 0) > 1) {
+                    <label><span>País</span><select formControlName="countryCode">@for (region of addressConfig()!.regionesPermitidas; track region) {<option [value]="region">{{ region }}</option>}</select></label>
+                  }
                   <label class="field-wide"><span>Referencias <small>(opcional)</small></span><input type="text" formControlName="references" placeholder="Entre calles, color de fachada o indicaciones"></label>
+                  @if (addressConfig()?.validacionServidorHabilitada) {
+                    <div class="address-validation field-wide"><button type="button" (click)="validateAddress()" [disabled]="validatingAddress()"><i class="bi bi-patch-check"></i>{{ validatingAddress() ? 'Verificando…' : 'Verificar dirección' }}</button>@if (addressValidationMessage()) {<p><i class="bi bi-info-circle"></i>{{ addressValidationMessage() }}</p>}</div>
+                  }
                 </section>
               }
               @if (!order()) {<button type="submit" [disabled]="creatingOrder()"><span>{{ creatingOrder() ? 'Validando orden…' : 'Continuar al pago' }}</span><i class="bi bi-arrow-right"></i></button>}

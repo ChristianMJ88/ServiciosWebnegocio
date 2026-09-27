@@ -21,6 +21,8 @@ export interface OrigenEnvioAdmin {
   codigoPostal: string;
   codigoPais: string;
   referencias: string | null;
+  direccionFormateada: string | null;
+  direccionValidacionEstado: string;
 }
 
 export interface ConfiguracionEnviosAdmin {
@@ -68,7 +70,7 @@ export class ShippingAdminService {
       permitirSeleccionPaquetera: configuracion.permitirSeleccionPaquetera,
       tipoRecargo: configuracion.tipoRecargo,
       valorRecargo: configuracion.tipoRecargo === 'NINGUNO' ? 0 : Number(configuracion.valorRecargo || 0),
-      origenes: configuracion.origenes.filter(origen => origen.configurado).map(({ sucursalNombre, sucursalActiva, configurado, ...origen }) => origen)
+      origenes: configuracion.origenes.filter(origen => origen.configurado).map(({ sucursalNombre, sucursalActiva, configurado, direccionFormateada, direccionValidacionEstado, ...origen }) => origen)
     });
   }
 }

@@ -61,6 +61,7 @@ export interface DeliveryAddressInput {
   estado: string;
   municipio: string;
   codigoPostal: string;
+  codigoPais: string;
   referencias: string | null;
 }
 

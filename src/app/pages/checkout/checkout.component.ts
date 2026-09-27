@@ -10,13 +10,15 @@ import { MercadoPagoBricksService } from '../../services/mercado-pago-bricks.ser
 import { ProductCartService } from '../../services/product-cart.service';
 import { CardBrickData, CheckoutOrder, CheckoutPayment, DeliveryMode, PublicCheckoutConfig, PublicCheckoutService } from '../../services/public-checkout.service';
 import { MoneyDisplayPipe } from '../../shared/pipes/money-display.pipe';
+import { AddressInput, AddressPlatformConfig, AddressValidationService } from '../../services/address-validation.service';
+import { GoogleAddressAutocompleteComponent } from '../../shared/google-address-autocomplete/google-address-autocomplete.component';
 
 interface BrickController { unmount(): void; }
 
 @Component({
   selector: 'app-checkout',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterLink, MoneyDisplayPipe],
+  imports: [CommonModule, ReactiveFormsModule, RouterLink, MoneyDisplayPipe, GoogleAddressAutocompleteComponent],
   templateUrl: './checkout.component.html',
   styleUrl: './checkout.component.css'
 })
@@ -29,6 +31,7 @@ export class CheckoutComponent implements OnInit, OnDestroy {
   private readonly route = inject(ActivatedRoute);
   private readonly destroyRef = inject(DestroyRef);
   private readonly fb = inject(FormBuilder);
+  private readonly addressApi = inject(AddressValidationService);
 
   readonly loading = signal(true);
   readonly creatingOrder = signal(false);
@@ -40,6 +43,9 @@ export class CheckoutComponent implements OnInit, OnDestroy {
   readonly payment = signal<CheckoutPayment | null>(null);
   readonly validatingPostalCode = signal(false);
   readonly postalCodeMessage = signal<string | null>(null);
+  readonly addressConfig = signal<AddressPlatformConfig | null>(null);
+  readonly validatingAddress = signal(false);
+  readonly addressValidationMessage = signal<string | null>(null);
   private controller: BrickController | null = null;
   private orderKey = this.key('orden');
   private paymentKey = this.key('pago');
@@ -57,6 +63,7 @@ export class CheckoutComponent implements OnInit, OnDestroy {
     state: [''],
     municipality: [''],
     postalCode: [''],
+    countryCode: [''],
     references: ['']
   });
 
@@ -65,11 +72,13 @@ export class CheckoutComponent implements OnInit, OnDestroy {
     const empresaId = this.tenant.empresaId();
     if (!slug || !empresaId) { this.fail('No encontramos el negocio para iniciar el pago.'); return; }
     this.cart.connect(empresaId);
-    forkJoin({ config: this.checkout.config(slug), branches: this.branchesApi.getBranches(empresaId) })
+    forkJoin({ config: this.checkout.config(slug), branches: this.branchesApi.getBranches(empresaId), addressConfig: this.addressApi.configuration() })
       .pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
-        next: ({ config, branches }) => {
+        next: ({ config, branches, addressConfig }) => {
           this.config.set(config);
           this.branches.set(branches);
+          this.addressConfig.set(addressConfig);
+          this.form.controls.countryCode.setValue(addressConfig.regionPredeterminada);
           if (branches.length === 1) this.form.controls.branchId.setValue(branches[0].id);
           this.selectInitialDelivery(config);
           this.loading.set(false);
@@ -105,6 +114,7 @@ export class CheckoutComponent implements OnInit, OnDestroy {
           estado: this.form.controls.state.value.trim(),
           municipio: this.form.controls.municipality.value.trim(),
           codigoPostal: this.form.controls.postalCode.value.trim(),
+          codigoPais: this.form.controls.countryCode.value.trim(),
           referencias: this.optional(this.form.controls.references.value)
         } : null,
         productos: this.cart.items().map(item => ({ productoId: item.productoId, cantidad: item.cantidad })),
@@ -134,6 +144,39 @@ export class CheckoutComponent implements OnInit, OnDestroy {
   }
 
   requiresAddress(): boolean { return this.form.controls.deliveryMode.value !== 'RECOGE_EN_SUCURSAL'; }
+
+  applyGoogleAddress(address: Partial<AddressInput>): void {
+    const controls = this.form.controls;
+    if (address.calle) controls.street.setValue(address.calle);
+    if (address.numeroExterior) controls.exteriorNumber.setValue(address.numeroExterior);
+    if (address.numeroInterior) controls.interiorNumber.setValue(address.numeroInterior);
+    if (address.colonia) controls.neighborhood.setValue(address.colonia);
+    if (address.municipio) controls.municipality.setValue(address.municipio);
+    if (address.estado) controls.state.setValue(address.estado);
+    if (address.codigoPostal) controls.postalCode.setValue(address.codigoPostal);
+    if (address.codigoPais) controls.countryCode.setValue(address.codigoPais);
+    this.addressValidationMessage.set('Dirección seleccionada. Verifica el número y confirma los datos.');
+  }
+
+  validateAddress(): void {
+    if (this.validatingAddress() || !this.requiresAddress()) return;
+    const input = this.addressInput();
+    if (!input) { this.addressValidationMessage.set('Completa los datos obligatorios para verificar la dirección.'); return; }
+    this.validatingAddress.set(true);
+    this.addressValidationMessage.set(null);
+    this.addressApi.validate(input).pipe(
+      finalize(() => this.validatingAddress.set(false)),
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe({
+      next: result => {
+        if (result.valida) this.applyGoogleAddress(result.direccion);
+        this.addressValidationMessage.set(result.mensaje);
+      },
+      error: error => this.addressValidationMessage.set(this.message(error, 'No pudimos verificar la dirección.'))
+    });
+  }
+
+  clearAddressValidation(): void { this.addressValidationMessage.set(null); }
 
   deliveryCost(): number {
     const config = this.config();
@@ -172,6 +215,18 @@ export class CheckoutComponent implements OnInit, OnDestroy {
   }
 
   private optional(value: string): string | null { return value.trim() || null; }
+
+  private addressInput(): AddressInput | null {
+    const controls = this.form.controls;
+    const values: AddressInput = {
+      calle: controls.street.value.trim(), numeroExterior: controls.exteriorNumber.value.trim(),
+      numeroInterior: this.optional(controls.interiorNumber.value), colonia: controls.neighborhood.value.trim(),
+      municipio: controls.municipality.value.trim(), estado: controls.state.value.trim(),
+      codigoPostal: controls.postalCode.value.trim(), codigoPais: controls.countryCode.value.trim()
+    };
+    return [values.calle, values.numeroExterior, values.colonia, values.municipio, values.estado,
+      values.codigoPostal, values.codigoPais].every(Boolean) ? values : null;
+  }
 
   private async mountBrick(config: PublicCheckoutConfig, order: CheckoutOrder): Promise<void> {
     if (!config.llavePublica) throw new Error('El negocio todavía no tiene una llave pública de pago disponible.');
