@@ -9,6 +9,7 @@ import java.util.List;
 public record ConfiguracionEnvioRequest(
         boolean habilitado,
         @NotBlank @Pattern(regexp = "PRUEBA|PRODUCCION") String ambiente,
+        @NotBlank @Pattern(regexp = "CUENTA_PROPIA|PLATAFORMA") String modoCredencial,
         @Size(max = 2000) String token,
         boolean eliminarToken,
         boolean generarGuiaAutomaticamente,

@@ -18,6 +18,7 @@ export class SiteShippingComponent implements OnInit {
   readonly guardando = signal(false);
   readonly mensaje = signal<string | null>(null);
   readonly error = signal<string | null>(null);
+  readonly mostrarConexion = signal(false);
   token = '';
   eliminarToken = false;
 
@@ -26,9 +27,23 @@ export class SiteShippingComponent implements OnInit {
   cargar(): void {
     this.cargando.set(true);
     this.servicio.obtener().pipe(finalize(() => this.cargando.set(false))).subscribe({
-      next: configuracion => this.configuracion.set(configuracion),
+      next: configuracion => {
+        this.configuracion.set(configuracion);
+        this.mostrarConexion.set(!configuracion.credencialDisponible);
+      },
       error: error => this.error.set(error?.error?.detail || 'No fue posible cargar la configuración de envíos.')
     });
+  }
+
+  alternarConexion(): void {
+    this.mostrarConexion.update(valor => !valor);
+  }
+
+  cambiarModoCredencial(modo: ConfiguracionEnviosAdmin['modoCredencial']): void {
+    const configuracion = this.configuracion();
+    if (!configuracion) return;
+    configuracion.modoCredencial = modo;
+    this.mostrarConexion.set(modo === 'CUENTA_PROPIA');
   }
 
   guardar(): void {

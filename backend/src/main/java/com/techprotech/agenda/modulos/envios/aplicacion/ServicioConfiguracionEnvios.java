@@ -3,6 +3,7 @@ package com.techprotech.agenda.modulos.envios.aplicacion;
 import com.techprotech.agenda.modulos.envios.api.dto.*;
 import com.techprotech.agenda.modulos.envios.infraestructura.entidad.EmpresaEnvioConfigEntidad;
 import com.techprotech.agenda.modulos.envios.infraestructura.entidad.SucursalEnvioOrigenEntidad;
+import com.techprotech.agenda.modulos.envios.infraestructura.envia.PropiedadesEnvia;
 import com.techprotech.agenda.modulos.envios.infraestructura.repositorio.EmpresaEnvioConfigRepositorio;
 import com.techprotech.agenda.modulos.envios.infraestructura.repositorio.SucursalEnvioOrigenRepositorio;
 import com.techprotech.agenda.modulos.envios.infraestructura.seguridad.ProtectorSecretosEnvio;
@@ -25,15 +26,18 @@ public class ServicioConfiguracionEnvios {
     private final SucursalEnvioOrigenRepositorio origenes;
     private final SucursalRepositorio sucursales;
     private final ProtectorSecretosEnvio secretos;
+    private final PropiedadesEnvia propiedadesEnvia;
 
     public ServicioConfiguracionEnvios(EmpresaEnvioConfigRepositorio configuraciones,
                                        SucursalEnvioOrigenRepositorio origenes,
                                        SucursalRepositorio sucursales,
-                                       ProtectorSecretosEnvio secretos) {
+                                       ProtectorSecretosEnvio secretos,
+                                       PropiedadesEnvia propiedadesEnvia) {
         this.configuraciones = configuraciones;
         this.origenes = origenes;
         this.sucursales = sucursales;
         this.secretos = secretos;
+        this.propiedadesEnvia = propiedadesEnvia;
     }
 
     @Transactional(readOnly = true)
@@ -48,6 +52,10 @@ public class ServicioConfiguracionEnvios {
         if (request.eliminarToken()) config.setTokenCifrado(null);
         if (tokenNuevo != null) config.setTokenCifrado(secretos.encriptar(tokenNuevo));
 
+        if ("PLATAFORMA".equals(request.modoCredencial()) && !plataformaDisponible(request.ambiente())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Los envíos administrados por la plataforma no están disponibles");
+        }
+
         Map<Long, SucursalEntidad> sucursalesEmpresa = sucursales.findByEmpresaIdOrderByNombreAsc(empresaId).stream()
                 .collect(Collectors.toMap(SucursalEntidad::getId, Function.identity()));
         Set<Long> ids = new HashSet<>();
@@ -59,8 +67,8 @@ public class ServicioConfiguracionEnvios {
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "La sucursal indicada no pertenece a la empresa");
             }
         }
-        if (request.habilitado() && (config.getTokenCifrado() == null || config.getTokenCifrado().isBlank())) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Configura el token de Envia.com antes de habilitar envíos");
+        if (request.habilitado() && !credencialDisponible(config, request.modoCredencial(), request.ambiente())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Configura una credencial de Envia.com antes de habilitar envíos");
         }
         if (request.habilitado() && request.origenes().stream().noneMatch(OrigenEnvioRequest::activo)) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Configura al menos un origen activo antes de habilitar envíos");
@@ -69,6 +77,7 @@ public class ServicioConfiguracionEnvios {
         config.setProveedor("ENVIA");
         config.setHabilitado(request.habilitado());
         config.setAmbiente(request.ambiente());
+        config.setModoCredencial(request.modoCredencial());
         config.setGenerarGuiaAutomaticamente(request.generarGuiaAutomaticamente());
         config.setPermitirSeleccionPaquetera(request.permitirSeleccionPaquetera());
         config.setTipoRecargo(request.tipoRecargo());
@@ -86,10 +95,39 @@ public class ServicioConfiguracionEnvios {
         List<OrigenEnvioResponse> lista = sucursales.findByEmpresaIdOrderByNombreAsc(empresaId).stream()
                 .map(sucursal -> respuestaOrigen(sucursal, configurados.get(sucursal.getId())))
                 .toList();
+        boolean tokenConfigurado = config.getTokenCifrado() != null && !config.getTokenCifrado().isBlank();
         return new ConfiguracionEnvioResponse(config.getProveedor(), config.isHabilitado(), config.getAmbiente(),
-                config.getTokenCifrado() != null && !config.getTokenCifrado().isBlank(),
+                config.getModoCredencial(), tokenConfigurado,
+                credencialDisponible(config, config.getModoCredencial(), config.getAmbiente()),
                 config.isGenerarGuiaAutomaticamente(), config.isPermitirSeleccionPaquetera(),
-                config.getTipoRecargo(), config.getValorRecargo(), lista);
+                config.getTipoRecargo(), config.getValorRecargo(), lista, onboarding(config.getAmbiente()));
+    }
+
+    private OnboardingEnvioResponse onboarding(String ambiente) {
+        boolean plataformaDisponible = plataformaDisponible(ambiente);
+        boolean produccion = "PRODUCCION".equals(ambiente);
+        return new OnboardingEnvioResponse(
+                plataformaDisponible,
+                produccion ? propiedadesEnvia.registroProduccionUrl() : propiedadesEnvia.registroPruebasUrl(),
+                produccion ? propiedadesEnvia.credencialesProduccionUrl() : propiedadesEnvia.credencialesPruebasUrl(),
+                List.of(
+                        new ModoCredencialEnvioResponse("CUENTA_PROPIA", "Cuenta propia", "El negocio usa su saldo y facturación de Envia.com.", true),
+                        new ModoCredencialEnvioResponse("PLATAFORMA", "Administrado por Fluora", "Fluora genera las guías y registra el cargo para el negocio.", plataformaDisponible)
+                )
+        );
+    }
+
+    private boolean credencialDisponible(EmpresaEnvioConfigEntidad config, String modoCredencial, String ambiente) {
+        if ("PLATAFORMA".equals(modoCredencial)) return plataformaDisponible(ambiente);
+        return config.getTokenCifrado() != null && !config.getTokenCifrado().isBlank();
+    }
+
+    private boolean plataformaDisponible(String ambiente) {
+        if (!propiedadesEnvia.plataformaHabilitada()) return false;
+        String token = "PRODUCCION".equals(ambiente)
+                ? propiedadesEnvia.tokenPlataformaProduccion()
+                : propiedadesEnvia.tokenPlataformaPruebas();
+        return token != null && !token.isBlank();
     }
 
     private EmpresaEnvioConfigEntidad predeterminada(Long empresaId) {

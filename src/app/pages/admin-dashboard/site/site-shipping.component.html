@@ -15,11 +15,38 @@
         <div class="integration-card__brand"><span>e</span><div><strong>Envia.com</strong><small>Shipping, Queries y Geocodes API</small></div></div>
         <label class="shipping-switch"><input type="checkbox" [(ngModel)]="config.habilitado" [ngModelOptions]="{standalone:true}"><span></span><b>{{ config.habilitado ? 'Activo' : 'Borrador' }}</b></label>
       </div>
-      <div class="integration-grid">
-        <label><span>Ambiente</span><select [(ngModel)]="config.ambiente" [ngModelOptions]="{standalone:true}"><option value="PRUEBA">Pruebas</option><option value="PRODUCCION">Producción</option></select></label>
-        <label class="token-field"><span>Token privado</span><input type="password" [(ngModel)]="token" [ngModelOptions]="{standalone:true}" autocomplete="new-password" [placeholder]="config.tokenConfigurado ? 'Token protegido · escribe sólo para reemplazar' : 'Pega el token de Envia.com'"><small><i class="bi bi-shield-lock"></i>{{ config.tokenConfigurado ? 'Hay un token cifrado para este negocio.' : 'Todavía no hay un token configurado.' }}</small></label>
+      <div class="credential-modes" role="radiogroup" aria-label="Responsable de la cuenta de envíos">
+        @for (modo of config.onboarding.modosCredencial; track modo.codigo) {
+          <button type="button" role="radio" [attr.aria-checked]="config.modoCredencial === modo.codigo" [class.is-selected]="config.modoCredencial === modo.codigo" [disabled]="!modo.disponible" (click)="cambiarModoCredencial(modo.codigo)">
+            <i class="bi" [class.bi-building]="modo.codigo === 'CUENTA_PROPIA'" [class.bi-stars]="modo.codigo === 'PLATAFORMA'"></i>
+            <span><strong>{{ modo.nombre }}</strong><small>{{ modo.descripcion }}</small></span>
+            @if (!modo.disponible) { <em>Próximamente</em> }
+          </button>
+        }
       </div>
-      @if (config.tokenConfigurado) {
+      <div class="connection-status" [class.is-connected]="config.credencialDisponible">
+        <span><i class="bi" [class.bi-check-circle-fill]="config.credencialDisponible" [class.bi-link-45deg]="!config.credencialDisponible"></i></span>
+        <div><strong>{{ config.credencialDisponible ? 'Conexión preparada' : 'Conecta la cuenta del negocio' }}</strong><small>{{ config.modoCredencial === 'PLATAFORMA' ? 'Fluora administrará la credencial y el cargo de cada guía.' : (config.tokenConfigurado ? 'La credencial está cifrada y nunca se devuelve al navegador.' : 'Te llevamos al panel correcto según el ambiente.') }}</small></div>
+        @if (config.modoCredencial === 'CUENTA_PROPIA') { <button type="button" class="outline-button" (click)="alternarConexion()">{{ config.tokenConfigurado ? 'Administrar' : 'Conectar Envia.com' }}</button> }
+      </div>
+      @if (config.modoCredencial === 'CUENTA_PROPIA' && mostrarConexion()) {
+        <section class="connection-guide" aria-label="Asistente de conexión con Envia.com">
+          <header><div><span class="shipping-panel__eyebrow">Conexión guiada</span><h4>Vincula tu cuenta en tres pasos</h4></div><span class="connection-method">Token cifrado</span></header>
+          <ol>
+            <li><span>1</span><div><strong>Crea o abre tu cuenta</strong><small>Usa cuentas separadas para pruebas y producción.</small></div><a class="guide-link" [href]="config.onboarding.registroUrl" target="_blank" rel="noopener noreferrer">Abrir registro <i class="bi bi-box-arrow-up-right"></i></a></li>
+            <li><span>2</span><div><strong>Genera la clave API</strong><small>En Desarrolladores → API Keys, crea o copia el token.</small></div><a class="guide-link" [href]="config.onboarding.credencialesUrl" target="_blank" rel="noopener noreferrer">Abrir credenciales <i class="bi bi-box-arrow-up-right"></i></a></li>
+            <li><span>3</span><div><strong>Guárdala en Fluora</strong><small>Se cifra por negocio y no vuelve a mostrarse.</small></div></li>
+          </ol>
+          <p class="provider-limitation"><i class="bi bi-info-circle"></i>Envia.com no publica OAuth para conectar cuentas de terceros. Este paso se realiza una sola vez y no comparte la contraseña.</p>
+          <div class="integration-grid">
+            <label><span>Ambiente</span><select [(ngModel)]="config.ambiente" [ngModelOptions]="{standalone:true}"><option value="PRUEBA">Pruebas</option><option value="PRODUCCION">Producción</option></select></label>
+            <label class="token-field"><span>Token privado</span><input type="password" [(ngModel)]="token" [ngModelOptions]="{standalone:true}" autocomplete="new-password" [placeholder]="config.tokenConfigurado ? 'Token protegido · escribe sólo para reemplazar' : 'Pega el token de Envia.com'"><small><i class="bi bi-shield-lock"></i>{{ config.tokenConfigurado ? 'Hay un token cifrado para este negocio.' : 'Todavía no hay un token configurado.' }}</small></label>
+          </div>
+        </section>
+      } @else {
+        <div class="environment-summary"><span>Ambiente</span><strong>{{ config.ambiente === 'PRODUCCION' ? 'Producción' : 'Pruebas' }}</strong></div>
+      }
+      @if (config.tokenConfigurado && config.modoCredencial === 'CUENTA_PROPIA') {
         <label class="remove-token"><input type="checkbox" [(ngModel)]="eliminarToken" [ngModelOptions]="{standalone:true}"> Eliminar el token guardado al guardar</label>
       }
     </article>

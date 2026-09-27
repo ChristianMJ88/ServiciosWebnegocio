@@ -110,6 +110,13 @@ aplicacion:
       geocodigos-base-url: ${ENVIA_GEOCODIGOS_BASE_URL:https://geocodes.envia.com}
       api-pruebas-base-url: ${ENVIA_API_PRUEBAS_BASE_URL:https://api-test.envia.com}
       api-produccion-base-url: ${ENVIA_API_PRODUCCION_BASE_URL:https://api.envia.com}
+      registro-pruebas-url: ${ENVIA_REGISTRO_PRUEBAS_URL:https://accounts-sandbox.envia.com/signup}
+      credenciales-pruebas-url: ${ENVIA_CREDENCIALES_PRUEBAS_URL:https://shipping-test.envia.com/settings/developers}
+      registro-produccion-url: ${ENVIA_REGISTRO_PRODUCCION_URL:https://accounts.envia.com/signup}
+      credenciales-produccion-url: ${ENVIA_CREDENCIALES_PRODUCCION_URL:https://shipping.envia.com/settings/developers}
+      plataforma-habilitada: ${ENVIA_PLATAFORMA_HABILITADA:false}
+      token-plataforma-pruebas: ${ENVIA_PLATAFORMA_TOKEN_PRUEBAS:}
+      token-plataforma-produccion: ${ENVIA_PLATAFORMA_TOKEN_PRODUCCION:}
   correo-bienvenida:
     soporte: ${CORREO_BIENVENIDA_SOPORTE:contacto@refluora.com}
     url-acceso: ${CORREO_BIENVENIDA_URL_ACCESO:https://app.refluora.com/acceso}

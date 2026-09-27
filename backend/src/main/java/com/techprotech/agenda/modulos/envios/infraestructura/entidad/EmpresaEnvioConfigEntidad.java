@@ -19,6 +19,7 @@ public class EmpresaEnvioConfigEntidad {
     @Column(nullable = false, length = 40) private String proveedor = "ENVIA";
     @Column(nullable = false) private boolean habilitado;
     @Column(nullable = false, length = 20) private String ambiente = "PRUEBA";
+    @Column(name = "modo_credencial", nullable = false, length = 30) private String modoCredencial = "CUENTA_PROPIA";
     @Column(name = "token_cifrado", columnDefinition = "MEDIUMTEXT") private String tokenCifrado;
     @Column(name = "generar_guia_automaticamente", nullable = false) private boolean generarGuiaAutomaticamente;
     @Column(name = "permitir_seleccion_paquetera", nullable = false) private boolean permitirSeleccionPaquetera = true;

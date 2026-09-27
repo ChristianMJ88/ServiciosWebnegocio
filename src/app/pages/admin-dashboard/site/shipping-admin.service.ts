@@ -27,12 +27,25 @@ export interface ConfiguracionEnviosAdmin {
   proveedor: string;
   habilitado: boolean;
   ambiente: 'PRUEBA' | 'PRODUCCION';
+  modoCredencial: 'CUENTA_PROPIA' | 'PLATAFORMA';
   tokenConfigurado: boolean;
+  credencialDisponible: boolean;
   generarGuiaAutomaticamente: boolean;
   permitirSeleccionPaquetera: boolean;
   tipoRecargo: 'NINGUNO' | 'PORCENTAJE' | 'IMPORTE';
   valorRecargo: number;
   origenes: OrigenEnvioAdmin[];
+  onboarding: {
+    conexionAutomaticaDisponible: boolean;
+    registroUrl: string;
+    credencialesUrl: string;
+    modosCredencial: Array<{
+      codigo: 'CUENTA_PROPIA' | 'PLATAFORMA';
+      nombre: string;
+      descripcion: string;
+      disponible: boolean;
+    }>;
+  };
 }
 
 @Injectable({ providedIn: 'root' })
@@ -48,6 +61,7 @@ export class ShippingAdminService {
     return this.http.put<ConfiguracionEnviosAdmin>(this.url, {
       habilitado: configuracion.habilitado,
       ambiente: configuracion.ambiente,
+      modoCredencial: configuracion.modoCredencial,
       token: token.trim() || null,
       eliminarToken,
       generarGuiaAutomaticamente: configuracion.generarGuiaAutomaticamente,
