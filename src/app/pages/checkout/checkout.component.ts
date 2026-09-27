@@ -8,7 +8,7 @@ import { TenantContextService } from '../../core/tenant/tenant-context.service';
 import { BookingDataService, SucursalCatalogo } from '../../services/booking-data.service';
 import { MercadoPagoBricksService } from '../../services/mercado-pago-bricks.service';
 import { ProductCartService } from '../../services/product-cart.service';
-import { CardBrickData, CheckoutOrder, CheckoutPayment, PublicCheckoutConfig, PublicCheckoutService } from '../../services/public-checkout.service';
+import { CardBrickData, CheckoutOrder, CheckoutPayment, DeliveryMode, PublicCheckoutConfig, PublicCheckoutService } from '../../services/public-checkout.service';
 import { MoneyDisplayPipe } from '../../shared/pipes/money-display.pipe';
 
 interface BrickController { unmount(): void; }
@@ -44,7 +44,18 @@ export class CheckoutComponent implements OnInit, OnDestroy {
 
   readonly form = this.fb.nonNullable.group({
     email: ['', [Validators.required, Validators.email, Validators.maxLength(180)]],
-    branchId: [0, [Validators.required, Validators.min(1)]]
+    name: ['', [Validators.required, Validators.maxLength(180)]],
+    phone: ['', [Validators.required, Validators.maxLength(30)]],
+    branchId: [0, [Validators.required, Validators.min(1)]],
+    deliveryMode: ['RECOGE_EN_SUCURSAL' as DeliveryMode, Validators.required],
+    street: [''],
+    exteriorNumber: [''],
+    interiorNumber: [''],
+    neighborhood: [''],
+    state: [''],
+    municipality: [''],
+    postalCode: [''],
+    references: ['']
   });
 
   ngOnInit(): void {
@@ -58,6 +69,7 @@ export class CheckoutComponent implements OnInit, OnDestroy {
           this.config.set(config);
           this.branches.set(branches);
           if (branches.length === 1) this.form.controls.branchId.setValue(branches[0].id);
+          this.selectInitialDelivery(config);
           this.loading.set(false);
         },
         error: () => this.fail('No pudimos preparar el pago. Intenta de nuevo más tarde.')
@@ -80,6 +92,19 @@ export class CheckoutComponent implements OnInit, OnDestroy {
         sucursalId: this.form.controls.branchId.value,
         zonaPrecioClave: this.route.snapshot.queryParamMap.get('zona'),
         correoCliente: this.form.controls.email.value.trim().toLowerCase(),
+        nombreDestinatario: this.form.controls.name.value.trim(),
+        telefonoDestinatario: this.form.controls.phone.value.trim(),
+        modalidadEntrega: this.form.controls.deliveryMode.value,
+        direccion: this.requiresAddress() ? {
+          calle: this.form.controls.street.value.trim(),
+          numeroExterior: this.form.controls.exteriorNumber.value.trim(),
+          numeroInterior: this.optional(this.form.controls.interiorNumber.value),
+          colonia: this.form.controls.neighborhood.value.trim(),
+          estado: this.form.controls.state.value.trim(),
+          municipio: this.form.controls.municipality.value.trim(),
+          codigoPostal: this.form.controls.postalCode.value.trim(),
+          referencias: this.optional(this.form.controls.references.value)
+        } : null,
         productos: this.cart.items().map(item => ({ productoId: item.productoId, cantidad: item.cantidad })),
         citaIds: []
       }, this.orderKey));
@@ -92,6 +117,37 @@ export class CheckoutComponent implements OnInit, OnDestroy {
       this.creatingOrder.set(false);
     }
   }
+
+  selectDelivery(mode: DeliveryMode): void {
+    this.form.controls.deliveryMode.setValue(mode);
+    const required = mode !== 'RECOGE_EN_SUCURSAL';
+    const controls = [this.form.controls.street, this.form.controls.exteriorNumber,
+      this.form.controls.neighborhood, this.form.controls.state, this.form.controls.municipality];
+    controls.forEach(control => {
+      control.setValidators(required ? [Validators.required] : []);
+      control.updateValueAndValidity({ emitEvent: false });
+    });
+    this.form.controls.postalCode.setValidators(required ? [Validators.required, Validators.pattern(/^\d{5}$/)] : []);
+    this.form.controls.postalCode.updateValueAndValidity({ emitEvent: false });
+  }
+
+  requiresAddress(): boolean { return this.form.controls.deliveryMode.value !== 'RECOGE_EN_SUCURSAL'; }
+
+  deliveryCost(): number {
+    const config = this.config();
+    if (!config) return 0;
+    if (this.form.controls.deliveryMode.value === 'ENTREGA_LOCAL') return config.costoEntregaLocal;
+    if (this.form.controls.deliveryMode.value === 'ENVIO_NACIONAL') return config.costoEnvioNacional;
+    return 0;
+  }
+
+  private selectInitialDelivery(config: PublicCheckoutConfig): void {
+    const mode: DeliveryMode = config.permitirRecoleccion ? 'RECOGE_EN_SUCURSAL'
+      : config.permitirEntregaLocal ? 'ENTREGA_LOCAL' : 'ENVIO_NACIONAL';
+    this.selectDelivery(mode);
+  }
+
+  private optional(value: string): string | null { return value.trim() || null; }
 
   private async mountBrick(config: PublicCheckoutConfig, order: CheckoutOrder): Promise<void> {
     if (!config.llavePublica) throw new Error('El negocio todavía no tiene una llave pública de pago disponible.');

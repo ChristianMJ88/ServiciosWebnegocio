@@ -89,6 +89,25 @@
           </fieldset>
         </div>
 
+        <fieldset class="delivery-config">
+          <legend>Entrega de productos</legend>
+          <p class="delivery-config__intro">Publica únicamente las opciones que este negocio puede cumplir. El costo se suma y valida en el servidor.</p>
+          <div class="delivery-config__grid">
+            <label class="payment-option delivery-config__option">
+              <input type="checkbox" [checked]="checkout.permitirRecoleccion" (change)="actualizar('permitirRecoleccion', $any($event.target).checked)">
+              <span><i class="bi bi-shop"></i><b>Cliente recoge</b><small>El cliente elige la sucursal que preparará el pedido.</small></span>
+            </label>
+            <div class="payment-option delivery-config__option">
+              <label><input type="checkbox" [checked]="checkout.permitirEntregaLocal" (change)="actualizar('permitirEntregaLocal', $any($event.target).checked)"><span><i class="bi bi-bicycle"></i><b>Entrega local</b><small>Para reparto propio dentro de la zona del negocio.</small></span></label>
+              @if (checkout.permitirEntregaLocal) {<label class="delivery-config__price"><span>Costo</span><input type="number" min="0" step="0.01" [value]="checkout.costoEntregaLocal" (input)="actualizar('costoEntregaLocal', +$any($event.target).value || 0)"></label>}
+            </div>
+            <div class="payment-option delivery-config__option">
+              <label><input type="checkbox" [checked]="checkout.permitirEnvioNacional" (change)="actualizar('permitirEnvioNacional', $any($event.target).checked)"><span><i class="bi bi-truck"></i><b>Envío nacional</b><small>Tarifa temporal mientras se conecta la cotización de paquetería.</small></span></label>
+              @if (checkout.permitirEnvioNacional) {<label class="delivery-config__price"><span>Costo actual</span><input type="number" min="0" step="0.01" [value]="checkout.costoEnvioNacional" (input)="actualizar('costoEnvioNacional', +$any($event.target).value || 0)"></label>}
+            </div>
+          </div>
+        </fieldset>
+
         <div class="checkout-config__rules">
           <label><span>Cobro de servicios</span>
             <select [value]="checkout.modalidadServicios" (change)="actualizar('modalidadServicios', $any($event.target).value)">

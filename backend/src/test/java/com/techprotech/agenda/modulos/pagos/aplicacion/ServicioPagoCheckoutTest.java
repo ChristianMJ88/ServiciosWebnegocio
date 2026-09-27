@@ -130,6 +130,7 @@ class ServicioPagoCheckoutTest {
 
     private ConfiguracionCheckoutPublicaResponse configHabilitada() {
         return new ConfiguracionCheckoutPublicaResponse(true, "MERCADO_PAGO", "PRUEBA", "public-key",
-                true, false, false, true, true, "PAGO_COMPLETO", null, null, "MXN");
+                true, false, false, true, true, true, false, BigDecimal.ZERO, false, BigDecimal.ZERO,
+                "PAGO_COMPLETO", null, null, "MXN");
     }
 }

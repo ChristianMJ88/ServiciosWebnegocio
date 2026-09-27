@@ -14,6 +14,8 @@ import com.techprotech.agenda.modulos.sitio.infraestructura.entidad.EmpresaSitio
 import com.techprotech.agenda.modulos.sitio.infraestructura.repositorio.EmpresaSitioConfigRepositorio;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+
+import java.math.BigDecimal;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.Optional;
@@ -95,6 +97,7 @@ class ServicioConfiguracionCheckoutTest {
 
     private ConfiguracionCheckoutRequest requestHabilitado() {
         return new ConfiguracionCheckoutRequest(true, true, false, false, true, true,
+                true, false, BigDecimal.ZERO, false, BigDecimal.ZERO,
                 "PAGO_COMPLETO", null, null, "MXN");
     }
 

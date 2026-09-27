@@ -32,6 +32,16 @@ public class EmpresaCheckoutConfigEntidad {
     private boolean permitirPagoProductos;
     @Column(name = "permitir_pago_servicios", nullable = false)
     private boolean permitirPagoServicios;
+    @Column(name = "permitir_recoleccion", nullable = false)
+    private boolean permitirRecoleccion = true;
+    @Column(name = "permitir_entrega_local", nullable = false)
+    private boolean permitirEntregaLocal;
+    @Column(name = "costo_entrega_local", nullable = false, precision = 12, scale = 2)
+    private BigDecimal costoEntregaLocal = BigDecimal.ZERO;
+    @Column(name = "permitir_envio_nacional", nullable = false)
+    private boolean permitirEnvioNacional;
+    @Column(name = "costo_envio_nacional", nullable = false, precision = 12, scale = 2)
+    private BigDecimal costoEnvioNacional = BigDecimal.ZERO;
     @Column(name = "modalidad_servicios", nullable = false, length = 30)
     private String modalidadServicios = "PAGO_COMPLETO";
     @Column(name = "anticipo_porcentaje", precision = 7, scale = 4)

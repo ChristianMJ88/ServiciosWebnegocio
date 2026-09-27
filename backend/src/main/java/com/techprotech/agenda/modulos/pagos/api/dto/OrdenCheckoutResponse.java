@@ -12,7 +12,9 @@ public record OrdenCheckoutResponse(
         BigDecimal subtotal,
         BigDecimal descuentoTotal,
         BigDecimal impuestosTotal,
+        BigDecimal costoEnvio,
         BigDecimal total,
+        String modalidadEntrega,
         LocalDateTime expiraEn,
         List<Detalle> detalles
 ) {

@@ -23,6 +23,11 @@ export interface ConfiguracionCheckout {
   aceptarEfectivoReferenciado: boolean;
   permitirPagoProductos: boolean;
   permitirPagoServicios: boolean;
+  permitirRecoleccion: boolean;
+  permitirEntregaLocal: boolean;
+  costoEntregaLocal: number;
+  permitirEnvioNacional: boolean;
+  costoEnvioNacional: number;
   modalidadServicios: 'PAGO_COMPLETO' | 'ANTICIPO_PORCENTAJE' | 'ANTICIPO_IMPORTE';
   anticipoPorcentaje: number | null;
   anticipoImporte: number | null;

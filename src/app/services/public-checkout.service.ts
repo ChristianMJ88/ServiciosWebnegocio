@@ -13,6 +13,11 @@ export interface PublicCheckoutConfig {
   aceptarEfectivoReferenciado: boolean;
   permitirPagoProductos: boolean;
   permitirPagoServicios: boolean;
+  permitirRecoleccion: boolean;
+  permitirEntregaLocal: boolean;
+  costoEntregaLocal: number;
+  permitirEnvioNacional: boolean;
+  costoEnvioNacional: number;
   modalidadServicios: string;
   anticipoPorcentaje: number | null;
   anticipoImporte: number | null;
@@ -27,7 +32,9 @@ export interface CheckoutOrder {
   subtotal: number;
   descuentoTotal: number;
   impuestosTotal: number;
+  costoEnvio: number;
   total: number;
+  modalidadEntrega: DeliveryMode;
   expiraEn: string;
   detalles: Array<{
     tipo: string;
@@ -42,6 +49,19 @@ export interface CheckoutOrder {
     impuestos: number;
     total: number;
   }>;
+}
+
+export type DeliveryMode = 'RECOGE_EN_SUCURSAL' | 'ENTREGA_LOCAL' | 'ENVIO_NACIONAL';
+
+export interface DeliveryAddressInput {
+  calle: string;
+  numeroExterior: string;
+  numeroInterior: string | null;
+  colonia: string;
+  estado: string;
+  municipio: string;
+  codigoPostal: string;
+  referencias: string | null;
 }
 
 export interface CheckoutPayment {
@@ -79,6 +99,10 @@ export class PublicCheckoutService {
     sucursalId: number;
     zonaPrecioClave: string | null;
     correoCliente: string;
+    nombreDestinatario: string;
+    telefonoDestinatario: string;
+    modalidadEntrega: DeliveryMode;
+    direccion: DeliveryAddressInput | null;
     productos: Array<{ productoId: number; cantidad: number }>;
     citaIds: number[];
   }, idempotencyKey: string): Observable<CheckoutOrder> {

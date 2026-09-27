@@ -90,6 +90,7 @@ public class ServicioOrdenCheckout {
         if (cantidades.isEmpty() && citaIds.isEmpty()) throw error(HttpStatus.BAD_REQUEST, "Agrega productos o citas a la orden");
         if (!cantidades.isEmpty() && !config.permitirPagoProductos()) throw error(HttpStatus.CONFLICT, "El pago de productos no está habilitado");
         if (!citaIds.isEmpty() && !config.permitirPagoServicios()) throw error(HttpStatus.CONFLICT, "El pago de servicios no está habilitado");
+        BigDecimal costoEnvio = validarEntrega(request, config, !cantidades.isEmpty());
 
         ServicioCotizacionProductos.ResultadoCotizacion cotizacion = cotizadorProductos.cotizar(
                 sitio.getEmpresaId(), request.sucursalId(), request.zonaPrecioClave(), cantidades);
@@ -98,6 +99,11 @@ public class ServicioOrdenCheckout {
                 producto.nombre(), producto.cantidad(), producto.precioListaUnitario(), producto.precioUnitario(),
                 producto.descuento(), CERO, producto.total(), producto.moneda())));
         lineas.addAll(cotizarCitas(sitio.getEmpresaId(), request.sucursalId(), request.correoCliente(), citaIds, config));
+        if (costoEnvio.signum() > 0) {
+            String nombreEnvio = "ENTREGA_LOCAL".equals(request.modalidadEntrega()) ? "Entrega local" : "Envío nacional";
+            lineas.add(new Linea("ENVIO", null, null, null, nombreEnvio, BigDecimal.ONE,
+                    costoEnvio, costoEnvio, CERO, CERO, costoEnvio, config.moneda()));
+        }
         validarMoneda(lineas, config.moneda());
 
         BigDecimal descuento = lineas.stream().map(Linea::descuento).reduce(CERO, BigDecimal::add).setScale(2, RoundingMode.HALF_UP);
@@ -115,10 +121,15 @@ public class ServicioOrdenCheckout {
         orden.setEstado("PENDIENTE_PAGO");
         orden.setInventarioEstado(cantidades.isEmpty() ? "NO_APLICA" : "PENDIENTE");
         orden.setCorreoCliente(request.correoCliente().trim().toLowerCase(Locale.ROOT));
+        orden.setModalidadEntrega(request.modalidadEntrega());
+        orden.setNombreDestinatario(request.nombreDestinatario().trim());
+        orden.setTelefonoDestinatario(request.telefonoDestinatario().trim());
+        aplicarDireccion(orden, request.direccion());
         orden.setMoneda(config.moneda());
         orden.setSubtotal(subtotal);
         orden.setDescuentoTotal(descuento);
         orden.setImpuestosTotal(impuestos);
+        orden.setCostoEnvio(costoEnvio);
         orden.setTotal(total);
         orden.setExpiraEn(LocalDateTime.now(ZoneOffset.UTC).plusMinutes(propiedades.minutosVigenciaOrden()));
         orden = ordenes.save(orden);
@@ -195,7 +206,8 @@ public class ServicioOrdenCheckout {
                         item.getServicioId(), item.getCitaId(), item.getNombre(), item.getCantidad(), item.getPrecioListaUnitario(),
                         item.getPrecioUnitario(), item.getDescuento(), item.getImpuestos(), item.getTotal())).toList();
         return new OrdenCheckoutResponse(orden.getPublicId(), orden.getEstado(), orden.getSucursalId(), orden.getMoneda(),
-                orden.getSubtotal(), orden.getDescuentoTotal(), orden.getImpuestosTotal(), orden.getTotal(), orden.getExpiraEn(), filas);
+                orden.getSubtotal(), orden.getDescuentoTotal(), orden.getImpuestosTotal(), orden.getCostoEnvio(), orden.getTotal(),
+                orden.getModalidadEntrega(), orden.getExpiraEn(), filas);
     }
 
     private EmpresaSitioConfigEntidad sitio(String slug) {
@@ -206,6 +218,46 @@ public class ServicioOrdenCheckout {
         return request.productos() == null ? List.of() : request.productos();
     }
     private BigDecimal seguro(BigDecimal valor) { return valor == null ? CERO : valor; }
+
+    private BigDecimal validarEntrega(CrearOrdenCheckoutRequest request, ConfiguracionCheckoutPublicaResponse config,
+                                      boolean contieneProductos) {
+        if (!contieneProductos) return CERO;
+        return switch (request.modalidadEntrega()) {
+            case "RECOGE_EN_SUCURSAL" -> {
+                if (!config.permitirRecoleccion()) throw error(HttpStatus.CONFLICT, "La recolección en sucursal no está disponible");
+                yield CERO;
+            }
+            case "ENTREGA_LOCAL" -> {
+                if (!config.permitirEntregaLocal()) throw error(HttpStatus.CONFLICT, "La entrega local no está disponible");
+                exigirDireccion(request.direccion());
+                yield seguro(config.costoEntregaLocal()).setScale(2, RoundingMode.HALF_UP);
+            }
+            case "ENVIO_NACIONAL" -> {
+                if (!config.permitirEnvioNacional()) throw error(HttpStatus.CONFLICT, "El envío nacional no está disponible");
+                exigirDireccion(request.direccion());
+                yield seguro(config.costoEnvioNacional()).setScale(2, RoundingMode.HALF_UP);
+            }
+            default -> throw error(HttpStatus.BAD_REQUEST, "Modalidad de entrega no válida");
+        };
+    }
+
+    private void exigirDireccion(CrearOrdenCheckoutRequest.DireccionEntregaRequest direccion) {
+        if (direccion == null) throw error(HttpStatus.BAD_REQUEST, "Captura la dirección completa para la entrega");
+    }
+
+    private void aplicarDireccion(CheckoutOrdenEntidad orden, CrearOrdenCheckoutRequest.DireccionEntregaRequest direccion) {
+        if (direccion == null || "RECOGE_EN_SUCURSAL".equals(orden.getModalidadEntrega())) return;
+        orden.setCalle(direccion.calle().trim());
+        orden.setNumeroExterior(direccion.numeroExterior().trim());
+        orden.setNumeroInterior(texto(direccion.numeroInterior()));
+        orden.setColonia(direccion.colonia().trim());
+        orden.setEstadoDireccion(direccion.estado().trim());
+        orden.setMunicipio(direccion.municipio().trim());
+        orden.setCodigoPostal(direccion.codigoPostal().trim());
+        orden.setReferenciasDireccion(texto(direccion.referencias()));
+    }
+
+    private String texto(String valor) { return valor == null || valor.isBlank() ? null : valor.trim(); }
     private ResponseStatusException error(HttpStatus estado, String mensaje) { return new ResponseStatusException(estado, mensaje); }
     private record Linea(String tipo, Long productoId, Long servicioId, Long citaId, String nombre,
                          BigDecimal cantidad, BigDecimal precioLista, BigDecimal precio, BigDecimal descuento,

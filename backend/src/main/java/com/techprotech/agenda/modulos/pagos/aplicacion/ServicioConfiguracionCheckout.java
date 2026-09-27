@@ -67,6 +67,11 @@ public class ServicioConfiguracionCheckout {
         configuracion.setAceptarEfectivoReferenciado(request.aceptarEfectivoReferenciado());
         configuracion.setPermitirPagoProductos(request.permitirPagoProductos());
         configuracion.setPermitirPagoServicios(request.permitirPagoServicios());
+        configuracion.setPermitirRecoleccion(request.permitirRecoleccion());
+        configuracion.setPermitirEntregaLocal(request.permitirEntregaLocal());
+        configuracion.setCostoEntregaLocal(seguro(request.costoEntregaLocal()));
+        configuracion.setPermitirEnvioNacional(request.permitirEnvioNacional());
+        configuracion.setCostoEnvioNacional(seguro(request.costoEnvioNacional()));
         configuracion.setModalidadServicios(request.modalidadServicios());
         configuracion.setAnticipoPorcentaje("ANTICIPO_PORCENTAJE".equals(request.modalidadServicios()) ? request.anticipoPorcentaje() : null);
         configuracion.setAnticipoImporte("ANTICIPO_IMPORTE".equals(request.modalidadServicios()) ? request.anticipoImporte() : null);
@@ -94,6 +99,11 @@ public class ServicioConfiguracionCheckout {
                 habilitado && configuracion.isAceptarEfectivoReferenciado(),
                 habilitado && configuracion.isPermitirPagoProductos(),
                 habilitado && configuracion.isPermitirPagoServicios(),
+                habilitado && configuracion.isPermitirRecoleccion(),
+                habilitado && configuracion.isPermitirEntregaLocal(),
+                configuracion.getCostoEntregaLocal(),
+                habilitado && configuracion.isPermitirEnvioNacional(),
+                configuracion.getCostoEnvioNacional(),
                 configuracion.getModalidadServicios(),
                 configuracion.getAnticipoPorcentaje(),
                 configuracion.getAnticipoImporte(),
@@ -111,6 +121,10 @@ public class ServicioConfiguracionCheckout {
         if (request.habilitado() && !request.permitirPagoProductos() && !request.permitirPagoServicios()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Selecciona productos, servicios o ambos para el checkout");
         }
+        if (request.habilitado() && request.permitirPagoProductos()
+                && !request.permitirRecoleccion() && !request.permitirEntregaLocal() && !request.permitirEnvioNacional()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Selecciona al menos una modalidad de entrega para productos");
+        }
         if ("ANTICIPO_PORCENTAJE".equals(request.modalidadServicios()) && request.anticipoPorcentaje() == null) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Indica el porcentaje de anticipo");
         }
@@ -124,7 +138,9 @@ public class ServicioConfiguracionCheckout {
         return new ConfiguracionCheckoutResponse(
                 config.isHabilitado(), proveedor, conectada(conexion), ambienteActivo(), config.isAceptarTarjeta(),
                 config.isAceptarTransferencia(), config.isAceptarEfectivoReferenciado(), config.isPermitirPagoProductos(),
-                config.isPermitirPagoServicios(), config.getModalidadServicios(), config.getAnticipoPorcentaje(),
+                config.isPermitirPagoServicios(), config.isPermitirRecoleccion(), config.isPermitirEntregaLocal(),
+                config.getCostoEntregaLocal(), config.isPermitirEnvioNacional(), config.getCostoEnvioNacional(),
+                config.getModalidadServicios(), config.getAnticipoPorcentaje(),
                 config.getAnticipoImporte(), config.getMoneda()
         );
     }
@@ -138,6 +154,11 @@ public class ServicioConfiguracionCheckout {
         config.setAceptarEfectivoReferenciado(false);
         config.setPermitirPagoProductos(true);
         config.setPermitirPagoServicios(true);
+        config.setPermitirRecoleccion(true);
+        config.setPermitirEntregaLocal(false);
+        config.setCostoEntregaLocal(BigDecimal.ZERO);
+        config.setPermitirEnvioNacional(false);
+        config.setCostoEnvioNacional(BigDecimal.ZERO);
         config.setModalidadServicios("PAGO_COMPLETO");
         config.setMoneda("MXN");
         return config;
@@ -159,5 +180,9 @@ public class ServicioConfiguracionCheckout {
 
     private String ambienteActivo() {
         return PRUEBA.equalsIgnoreCase(propiedadesMercadoPago.ambiente()) ? PRUEBA : PRODUCCION;
+    }
+
+    private BigDecimal seguro(BigDecimal valor) {
+        return valor == null ? BigDecimal.ZERO : valor.setScale(2, java.math.RoundingMode.HALF_UP);
     }
 }

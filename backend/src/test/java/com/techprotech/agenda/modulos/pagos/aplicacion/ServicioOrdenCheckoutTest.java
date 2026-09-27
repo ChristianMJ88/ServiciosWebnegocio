@@ -74,6 +74,7 @@ class ServicioOrdenCheckoutTest {
                                 new BigDecimal("100.00"), new BigDecimal("80.00"), new BigDecimal("40.00"),
                                 new BigDecimal("160.00"), "MXN"))));
         CrearOrdenCheckoutRequest request = new CrearOrdenCheckoutRequest(3L, "CENTRO", "cliente@test.mx",
+                "Ana Pérez", "2221234567", "RECOGE_EN_SUCURSAL", null,
                 List.of(new CrearOrdenCheckoutRequest.ProductoOrdenRequest(12L, new BigDecimal("2"))), List.of());
 
         OrdenCheckoutResponse respuesta = servicio.crear("nail-art", "carrito-123", request);
@@ -86,6 +87,33 @@ class ServicioOrdenCheckoutTest {
     }
 
     @Test
+    void agregaEntregaLocalYConservaLaDireccionEnLaOrden() {
+        when(configuracion.obtenerPublica("nail-art")).thenReturn(new ConfiguracionCheckoutPublicaResponse(
+                true, "MERCADO_PAGO", "PRUEBA", "public-key", true, false, false, true, true,
+                true, true, new BigDecimal("49.00"), true, new BigDecimal("129.00"),
+                "PAGO_COMPLETO", null, null, "MXN"));
+        when(cotizador.cotizar(eq(25L), eq(3L), isNull(), any())).thenReturn(
+                new ServicioCotizacionProductos.ResultadoCotizacion(null, List.of(
+                        new ServicioCotizacionProductos.CotizacionProducto(12L, "Aceite", BigDecimal.ONE,
+                                new BigDecimal("160.00"), new BigDecimal("160.00"), BigDecimal.ZERO,
+                                new BigDecimal("160.00"), "MXN"))));
+        CrearOrdenCheckoutRequest.DireccionEntregaRequest direccion =
+                new CrearOrdenCheckoutRequest.DireccionEntregaRequest("Reforma", "123", "4",
+                        "Centro", "Puebla", "Puebla", "72000", "Portón blanco");
+        CrearOrdenCheckoutRequest request = new CrearOrdenCheckoutRequest(3L, null, "cliente@test.mx",
+                "Ana Pérez", "2221234567", "ENTREGA_LOCAL", direccion,
+                List.of(new CrearOrdenCheckoutRequest.ProductoOrdenRequest(12L, BigDecimal.ONE)), List.of());
+
+        OrdenCheckoutResponse respuesta = servicio.crear("nail-art", "entrega-local-1", request);
+
+        assertThat(respuesta.costoEnvio()).isEqualByComparingTo("49.00");
+        assertThat(respuesta.total()).isEqualByComparingTo("209.00");
+        verify(ordenes).save(argThat(orden -> "ENTREGA_LOCAL".equals(orden.getModalidadEntrega())
+                && "Reforma".equals(orden.getCalle()) && "72000".equals(orden.getCodigoPostal())
+                && orden.getCostoEnvio().compareTo(new BigDecimal("49.00")) == 0));
+    }
+
+    @Test
     void noPermiteUsarUnaCitaDeOtroTenant() {
         UsuarioEntidad cliente = new UsuarioEntidad(); cliente.setId(70L); cliente.setEmpresaId(25L); cliente.setCorreo("cliente@test.mx");
         when(usuarios.findByEmpresaIdAndCorreo(25L, "cliente@test.mx")).thenReturn(Optional.of(cliente));
@@ -93,7 +121,8 @@ class ServicioOrdenCheckoutTest {
         when(citas.findAllById(List.of(91L))).thenReturn(List.of(citaAjena));
         when(cotizador.cotizar(25L, 3L, null, java.util.Map.of()))
                 .thenReturn(new ServicioCotizacionProductos.ResultadoCotizacion(null, List.of()));
-        CrearOrdenCheckoutRequest request = new CrearOrdenCheckoutRequest(3L, null, "cliente@test.mx", List.of(), List.of(91L));
+        CrearOrdenCheckoutRequest request = new CrearOrdenCheckoutRequest(3L, null, "cliente@test.mx",
+                "Ana Pérez", "2221234567", "RECOGE_EN_SUCURSAL", null, List.of(), List.of(91L));
 
         assertThatThrownBy(() -> servicio.crear("nail-art", "cita-ajena", request))
                 .isInstanceOf(ResponseStatusException.class)
@@ -108,11 +137,13 @@ class ServicioOrdenCheckoutTest {
         existente.setSucursalId(3L); existente.setEstado("PENDIENTE_PAGO"); existente.setMoneda("MXN");
         existente.setSubtotal(new BigDecimal("80.00")); existente.setDescuentoTotal(new BigDecimal("0.00"));
         existente.setImpuestosTotal(new BigDecimal("0.00")); existente.setTotal(new BigDecimal("80.00"));
+        existente.setCostoEnvio(BigDecimal.ZERO); existente.setModalidadEntrega("RECOGE_EN_SUCURSAL");
         existente.setExpiraEn(java.time.LocalDateTime.now().plusMinutes(10));
         when(ordenes.findByEmpresaIdAndIdempotencia(25L, "misma-clave")).thenReturn(Optional.of(existente));
 
         OrdenCheckoutResponse respuesta = servicio.crear("nail-art", "misma-clave",
-                new CrearOrdenCheckoutRequest(3L, null, "cliente@test.mx", List.of(), List.of()));
+                new CrearOrdenCheckoutRequest(3L, null, "cliente@test.mx", "Ana Pérez", "2221234567",
+                        "RECOGE_EN_SUCURSAL", null, List.of(), List.of()));
 
         assertThat(respuesta.id()).isEqualTo("orden-existente");
         verifyNoInteractions(cotizador);
@@ -120,6 +151,7 @@ class ServicioOrdenCheckoutTest {
 
     private ConfiguracionCheckoutPublicaResponse configHabilitada() {
         return new ConfiguracionCheckoutPublicaResponse(true, "MERCADO_PAGO", "PRUEBA", "public-key",
-                true, false, false, true, true, "PAGO_COMPLETO", null, null, "MXN");
+                true, false, false, true, true, true, false, BigDecimal.ZERO, false, BigDecimal.ZERO,
+                "PAGO_COMPLETO", null, null, "MXN");
     }
 }
