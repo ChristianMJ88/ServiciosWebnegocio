@@ -4,6 +4,9 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+
 @Getter
 @Setter
 @Entity
@@ -25,4 +28,10 @@ public class SucursalEnvioOrigenEntidad {
     @Column(name = "codigo_postal", nullable = false, length = 12) private String codigoPostal;
     @Column(name = "codigo_pais", nullable = false, length = 2) private String codigoPais = "MX";
     @Column(length = 500) private String referencias;
+    @Column(name = "direccion_formateada", length = 500) private String direccionFormateada;
+    @Column(name = "direccion_validacion_estado", nullable = false, length = 30) private String direccionValidacionEstado = "NO_CONFIGURADA";
+    @Column(name = "google_place_id", length = 255) private String googlePlaceId;
+    @Column(precision = 10, scale = 7) private BigDecimal latitud;
+    @Column(precision = 10, scale = 7) private BigDecimal longitud;
+    @Column(name = "direccion_validada_en") private LocalDateTime direccionValidadaEn;
 }

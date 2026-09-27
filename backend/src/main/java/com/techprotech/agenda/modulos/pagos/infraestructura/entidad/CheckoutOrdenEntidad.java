@@ -29,7 +29,14 @@ public class CheckoutOrdenEntidad {
     @Column(length = 150) private String municipio;
     @Column(name = "estado_direccion", length = 120) private String estadoDireccion;
     @Column(name = "codigo_postal", length = 12) private String codigoPostal;
+    @Column(name = "codigo_pais", length = 2) private String codigoPais;
     @Column(name = "referencias_direccion", length = 500) private String referenciasDireccion;
+    @Column(name = "direccion_formateada", length = 500) private String direccionFormateada;
+    @Column(name = "direccion_validacion_estado", nullable = false, length = 30) private String direccionValidacionEstado = "NO_APLICA";
+    @Column(name = "google_place_id", length = 255) private String googlePlaceId;
+    @Column(precision = 10, scale = 7) private BigDecimal latitud;
+    @Column(precision = 10, scale = 7) private BigDecimal longitud;
+    @Column(name = "direccion_validada_en") private LocalDateTime direccionValidadaEn;
     @Column(nullable = false, length = 10) private String moneda;
     @Column(nullable = false, precision = 12, scale = 2) private BigDecimal subtotal;
     @Column(name = "descuento_total", nullable = false, precision = 12, scale = 2) private BigDecimal descuentoTotal;

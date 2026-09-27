@@ -1,5 +1,8 @@
 package com.techprotech.agenda.modulos.pagos.aplicacion;
 
+import com.techprotech.agenda.compartido.direcciones.aplicacion.ServicioValidacionDirecciones;
+import com.techprotech.agenda.compartido.direcciones.dominio.Direccion;
+import com.techprotech.agenda.compartido.direcciones.dominio.ResultadoValidacionDireccion;
 import com.techprotech.agenda.modulos.autenticacion.infraestructura.entidad.UsuarioEntidad;
 import com.techprotech.agenda.modulos.autenticacion.infraestructura.repositorio.UsuarioRepositorio;
 import com.techprotech.agenda.modulos.caja.infraestructura.repositorio.PagoCitaRepositorio;
@@ -48,6 +51,7 @@ public class ServicioOrdenCheckout {
     private final CheckoutOrdenRepositorio ordenes;
     private final CheckoutOrdenDetalleRepositorio detalles;
     private final PropiedadesCheckout propiedades;
+    private final ServicioValidacionDirecciones direcciones;
 
     public ServicioOrdenCheckout(ServicioConfiguracionCheckout configuracionCheckout,
                                  EmpresaSitioConfigRepositorio sitios, SucursalRepositorio sucursales,
@@ -55,7 +59,7 @@ public class ServicioOrdenCheckout {
                                  ServicioRepositorio servicios, UsuarioRepositorio usuarios,
                                  PagoCitaRepositorio pagosCita, VentaDetalleRepositorio detallesVenta,
                                  CheckoutOrdenRepositorio ordenes, CheckoutOrdenDetalleRepositorio detalles,
-                                 PropiedadesCheckout propiedades) {
+                                 PropiedadesCheckout propiedades, ServicioValidacionDirecciones direcciones) {
         this.configuracionCheckout = configuracionCheckout;
         this.sitios = sitios;
         this.sucursales = sucursales;
@@ -68,6 +72,7 @@ public class ServicioOrdenCheckout {
         this.ordenes = ordenes;
         this.detalles = detalles;
         this.propiedades = propiedades;
+        this.direcciones = direcciones;
     }
 
     @Transactional
@@ -246,15 +251,29 @@ public class ServicioOrdenCheckout {
     }
 
     private void aplicarDireccion(CheckoutOrdenEntidad orden, CrearOrdenCheckoutRequest.DireccionEntregaRequest direccion) {
-        if (direccion == null || "RECOGE_EN_SUCURSAL".equals(orden.getModalidadEntrega())) return;
-        orden.setCalle(direccion.calle().trim());
-        orden.setNumeroExterior(direccion.numeroExterior().trim());
-        orden.setNumeroInterior(texto(direccion.numeroInterior()));
-        orden.setColonia(direccion.colonia().trim());
-        orden.setEstadoDireccion(direccion.estado().trim());
-        orden.setMunicipio(direccion.municipio().trim());
-        orden.setCodigoPostal(direccion.codigoPostal().trim());
+        if (direccion == null || "RECOGE_EN_SUCURSAL".equals(orden.getModalidadEntrega())) {
+            orden.setDireccionValidacionEstado("NO_APLICA");
+            return;
+        }
+        ResultadoValidacionDireccion validacion = direcciones.validarParaPersistencia(new Direccion(
+                direccion.calle(), direccion.numeroExterior(), direccion.numeroInterior(), direccion.colonia(),
+                direccion.municipio(), direccion.estado(), direccion.codigoPostal(), direccion.codigoPais()));
+        Direccion normalizada = validacion.direccion();
+        orden.setCalle(normalizada.calle());
+        orden.setNumeroExterior(normalizada.numeroExterior());
+        orden.setNumeroInterior(normalizada.numeroInterior());
+        orden.setColonia(normalizada.colonia());
+        orden.setEstadoDireccion(normalizada.estado());
+        orden.setMunicipio(normalizada.municipio());
+        orden.setCodigoPostal(normalizada.codigoPostal());
+        orden.setCodigoPais(normalizada.codigoPais());
         orden.setReferenciasDireccion(texto(direccion.referencias()));
+        orden.setDireccionFormateada(validacion.direccionFormateada());
+        orden.setDireccionValidacionEstado(validacion.estadoValidacion());
+        orden.setGooglePlaceId(validacion.placeId());
+        orden.setLatitud(validacion.latitud());
+        orden.setLongitud(validacion.longitud());
+        orden.setDireccionValidadaEn(validacion.valida() ? LocalDateTime.now(ZoneOffset.UTC) : null);
     }
 
     private String texto(String valor) { return valor == null || valor.isBlank() ? null : valor.trim(); }

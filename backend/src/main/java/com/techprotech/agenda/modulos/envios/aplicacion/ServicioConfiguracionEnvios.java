@@ -1,5 +1,8 @@
 package com.techprotech.agenda.modulos.envios.aplicacion;
 
+import com.techprotech.agenda.compartido.direcciones.aplicacion.ServicioValidacionDirecciones;
+import com.techprotech.agenda.compartido.direcciones.dominio.Direccion;
+import com.techprotech.agenda.compartido.direcciones.dominio.ResultadoValidacionDireccion;
 import com.techprotech.agenda.modulos.envios.api.dto.*;
 import com.techprotech.agenda.modulos.envios.infraestructura.entidad.EmpresaEnvioConfigEntidad;
 import com.techprotech.agenda.modulos.envios.infraestructura.entidad.SucursalEnvioOrigenEntidad;
@@ -16,6 +19,8 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -27,17 +32,20 @@ public class ServicioConfiguracionEnvios {
     private final SucursalRepositorio sucursales;
     private final ProtectorSecretosEnvio secretos;
     private final PropiedadesEnvia propiedadesEnvia;
+    private final ServicioValidacionDirecciones direcciones;
 
     public ServicioConfiguracionEnvios(EmpresaEnvioConfigRepositorio configuraciones,
                                        SucursalEnvioOrigenRepositorio origenes,
                                        SucursalRepositorio sucursales,
                                        ProtectorSecretosEnvio secretos,
-                                       PropiedadesEnvia propiedadesEnvia) {
+                                       PropiedadesEnvia propiedadesEnvia,
+                                       ServicioValidacionDirecciones direcciones) {
         this.configuraciones = configuraciones;
         this.origenes = origenes;
         this.sucursales = sucursales;
         this.secretos = secretos;
         this.propiedadesEnvia = propiedadesEnvia;
+        this.direcciones = direcciones;
     }
 
     @Transactional(readOnly = true)
@@ -137,6 +145,10 @@ public class ServicioConfiguracionEnvios {
     }
 
     private SucursalEnvioOrigenEntidad entidad(Long empresaId, OrigenEnvioRequest request) {
+        ResultadoValidacionDireccion validacion = direcciones.validarParaPersistencia(new Direccion(
+                request.calle(), request.numeroExterior(), request.numeroInterior(), request.colonia(), request.municipio(),
+                request.estado(), request.codigoPostal(), request.codigoPais()));
+        Direccion direccion = validacion.direccion();
         SucursalEnvioOrigenEntidad entidad = new SucursalEnvioOrigenEntidad();
         entidad.setEmpresaId(empresaId);
         entidad.setSucursalId(request.sucursalId());
@@ -144,27 +156,34 @@ public class ServicioConfiguracionEnvios {
         entidad.setNombreContacto(request.nombreContacto().trim());
         entidad.setTelefono(request.telefono().trim());
         entidad.setCorreo(limpio(request.correo()));
-        entidad.setCalle(request.calle().trim());
-        entidad.setNumeroExterior(request.numeroExterior().trim());
-        entidad.setNumeroInterior(limpio(request.numeroInterior()));
-        entidad.setColonia(request.colonia().trim());
-        entidad.setMunicipio(request.municipio().trim());
-        entidad.setEstado(request.estado().trim());
-        entidad.setCodigoPostal(request.codigoPostal().trim().toUpperCase(Locale.ROOT));
-        entidad.setCodigoPais(request.codigoPais().trim().toUpperCase(Locale.ROOT));
+        entidad.setCalle(direccion.calle());
+        entidad.setNumeroExterior(direccion.numeroExterior());
+        entidad.setNumeroInterior(direccion.numeroInterior());
+        entidad.setColonia(direccion.colonia());
+        entidad.setMunicipio(direccion.municipio());
+        entidad.setEstado(direccion.estado());
+        entidad.setCodigoPostal(direccion.codigoPostal());
+        entidad.setCodigoPais(direccion.codigoPais());
         entidad.setReferencias(limpio(request.referencias()));
+        entidad.setDireccionFormateada(validacion.direccionFormateada());
+        entidad.setDireccionValidacionEstado(validacion.estadoValidacion());
+        entidad.setGooglePlaceId(validacion.placeId());
+        entidad.setLatitud(validacion.latitud());
+        entidad.setLongitud(validacion.longitud());
+        entidad.setDireccionValidadaEn(validacion.valida() ? LocalDateTime.now(ZoneOffset.UTC) : null);
         return entidad;
     }
 
     private OrigenEnvioResponse respuestaOrigen(SucursalEntidad sucursal, SucursalEnvioOrigenEntidad origen) {
         if (origen == null) {
             return new OrigenEnvioResponse(sucursal.getId(), sucursal.getNombre(), sucursal.isActiva(), false, false,
-                    "", sucursal.getTelefono(), null, "", "", null, "", "", "", "", "MX", null);
+                    "", sucursal.getTelefono(), null, "", "", null, "", "", "", "",
+                    direcciones.configuracion().regionPredeterminada(), null, null, "NO_CONFIGURADA");
         }
         return new OrigenEnvioResponse(sucursal.getId(), sucursal.getNombre(), sucursal.isActiva(), true, origen.isActivo(),
                 origen.getNombreContacto(), origen.getTelefono(), origen.getCorreo(), origen.getCalle(), origen.getNumeroExterior(),
                 origen.getNumeroInterior(), origen.getColonia(), origen.getMunicipio(), origen.getEstado(), origen.getCodigoPostal(),
-                origen.getCodigoPais(), origen.getReferencias());
+                origen.getCodigoPais(), origen.getReferencias(), origen.getDireccionFormateada(), origen.getDireccionValidacionEstado());
     }
 
     private String limpio(String valor) {

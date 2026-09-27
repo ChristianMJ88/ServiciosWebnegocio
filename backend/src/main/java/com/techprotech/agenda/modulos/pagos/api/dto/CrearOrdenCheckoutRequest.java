@@ -30,6 +30,7 @@ public record CrearOrdenCheckoutRequest(
             @NotBlank @Size(max = 120) String estado,
             @NotBlank @Size(max = 150) String municipio,
             @NotBlank @Pattern(regexp = "[0-9]{5}") String codigoPostal,
+            @Pattern(regexp = "[A-Za-z]{2}") String codigoPais,
             @Size(max = 500) String referencias
     ) {}
 }

@@ -1,5 +1,8 @@
 package com.techprotech.agenda.modulos.pagos.aplicacion;
 
+import com.techprotech.agenda.compartido.direcciones.aplicacion.ServicioValidacionDirecciones;
+import com.techprotech.agenda.compartido.direcciones.dominio.Direccion;
+import com.techprotech.agenda.compartido.direcciones.dominio.ResultadoValidacionDireccion;
 import com.techprotech.agenda.modulos.autenticacion.infraestructura.entidad.UsuarioEntidad;
 import com.techprotech.agenda.modulos.autenticacion.infraestructura.repositorio.UsuarioRepositorio;
 import com.techprotech.agenda.modulos.caja.infraestructura.repositorio.PagoCitaRepositorio;
@@ -62,8 +65,14 @@ class ServicioOrdenCheckoutTest {
             CheckoutOrdenEntidad orden = invocacion.getArgument(0); orden.setId(44L); return orden;
         });
         when(detalles.findByEmpresaIdAndCheckoutOrdenIdOrderByIdAsc(any(), any())).thenReturn(List.of());
+        ServicioValidacionDirecciones direcciones = mock(ServicioValidacionDirecciones.class);
+        when(direcciones.validarParaPersistencia(any())).thenAnswer(invocacion -> {
+            Direccion direccion = invocacion.getArgument(0);
+            return new ResultadoValidacionDireccion(true, "VALIDADA", "Dirección verificada",
+                    "Reforma 123, Centro, Puebla", direccion, "place-1", new BigDecimal("19.0433"), new BigDecimal("-98.2019"));
+        });
         servicio = new ServicioOrdenCheckout(configuracion, sitios, sucursales, cotizador, citas, servicios,
-                usuarios, pagosCita, detallesVenta, ordenes, detalles, new PropiedadesCheckout(20));
+                usuarios, pagosCita, detallesVenta, ordenes, detalles, new PropiedadesCheckout(20), direcciones);
     }
 
     @Test
@@ -99,7 +108,7 @@ class ServicioOrdenCheckoutTest {
                                 new BigDecimal("160.00"), "MXN"))));
         CrearOrdenCheckoutRequest.DireccionEntregaRequest direccion =
                 new CrearOrdenCheckoutRequest.DireccionEntregaRequest("Reforma", "123", "4",
-                        "Centro", "Puebla", "Puebla", "72000", "Portón blanco");
+                        "Centro", "Puebla", "Puebla", "72000", "MX", "Portón blanco");
         CrearOrdenCheckoutRequest request = new CrearOrdenCheckoutRequest(3L, null, "cliente@test.mx",
                 "Ana Pérez", "2221234567", "ENTREGA_LOCAL", direccion,
                 List.of(new CrearOrdenCheckoutRequest.ProductoOrdenRequest(12L, BigDecimal.ONE)), List.of());

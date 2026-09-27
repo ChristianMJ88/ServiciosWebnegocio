@@ -22,6 +22,7 @@ public class FiltroLimiteSolicitudes extends OncePerRequestFilter {
             new Regla("recuperacion", List.of("/api/v1/publico/recuperacion-contrasena/solicitar"), 5, 900),
             new Regla("registro", List.of("/api/v1/auth/registrar-cliente", "/api/v1/onboarding/empresas"), 5, 3600),
             new Regla("contacto", List.of("/api/v1/publico/contactos"), 10, 3600),
+            new Regla("direccion", List.of("/api/v1/publico/direcciones/validar"), 30, 3600),
             new Regla("token", List.of("/api/v1/auth/refrescar-token"), 60, 60),
             new Regla("acceso-social", List.of("/api/v1/auth/social/intercambiar-acceso"), 10, 60),
             new Regla("confirmacion", List.of(

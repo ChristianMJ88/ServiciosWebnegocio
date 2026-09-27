@@ -117,6 +117,15 @@ aplicacion:
       plataforma-habilitada: ${ENVIA_PLATAFORMA_HABILITADA:false}
       token-plataforma-pruebas: ${ENVIA_PLATAFORMA_TOKEN_PRUEBAS:}
       token-plataforma-produccion: ${ENVIA_PLATAFORMA_TOKEN_PRODUCCION:}
+  direcciones:
+    google-maps:
+      habilitado: ${GOOGLE_MAPS_HABILITADO:false}
+      validacion-requerida: ${GOOGLE_MAPS_VALIDACION_REQUERIDA:true}
+      browser-api-key: ${GOOGLE_MAPS_BROWSER_API_KEY:}
+      server-api-key: ${GOOGLE_MAPS_SERVER_API_KEY:}
+      address-validation-base-url: ${GOOGLE_MAPS_ADDRESS_VALIDATION_BASE_URL:https://addressvalidation.googleapis.com}
+      region-predeterminada: ${GOOGLE_MAPS_REGION_PREDETERMINADA:MX}
+      regiones-permitidas: ${GOOGLE_MAPS_REGIONES_PERMITIDAS:MX}
   correo-bienvenida:
     soporte: ${CORREO_BIENVENIDA_SOPORTE:contacto@refluora.com}
     url-acceso: ${CORREO_BIENVENIDA_URL_ACCESO:https://app.refluora.com/acceso}
