@@ -38,6 +38,14 @@ public class ProductoEntidad {
     private BigDecimal precioBase;
     @Column(precision = 12, scale = 2)
     private BigDecimal costo;
+    @Column(name = "peso_kg", precision = 10, scale = 3)
+    private BigDecimal pesoKg;
+    @Column(name = "largo_cm", precision = 10, scale = 2)
+    private BigDecimal largoCm;
+    @Column(name = "ancho_cm", precision = 10, scale = 2)
+    private BigDecimal anchoCm;
+    @Column(name = "alto_cm", precision = 10, scale = 2)
+    private BigDecimal altoCm;
     @Column(nullable = false, length = 10)
     private String moneda;
     @Column(name = "tasa_impuesto", nullable = false, precision = 7, scale = 4)

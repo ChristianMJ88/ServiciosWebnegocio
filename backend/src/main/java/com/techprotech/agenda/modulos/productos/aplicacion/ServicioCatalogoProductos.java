@@ -221,6 +221,10 @@ public class ServicioCatalogoProductos {
         entidad.setImagenUrl(imagenUrl);
         entidad.setPrecioBase(request.precioBase());
         entidad.setCosto(request.costo());
+        entidad.setPesoKg(request.pesoKg());
+        entidad.setLargoCm(request.largoCm());
+        entidad.setAnchoCm(request.anchoCm());
+        entidad.setAltoCm(request.altoCm());
         entidad.setMoneda(request.moneda().trim().toUpperCase(Locale.ROOT));
         entidad.setTasaImpuesto(request.tasaImpuesto());
         entidad.setControlaInventario(request.controlaInventario());
@@ -294,7 +298,8 @@ public class ServicioCatalogoProductos {
         return new ProductoResponse(e.getId(), e.getCategoriaId(), categoria == null ? null : categoria.getNombre(),
                 e.getProveedorId(), proveedor == null ? null : proveedor.getNombre(), e.getMediaId(), e.getSku(),
                 e.getCodigoBarras(), e.getNombre(), e.getSlug(), e.getDescripcion(), e.getImagenUrl(), e.getPrecioBase(),
-                e.getCosto(), e.getMoneda(), e.getTasaImpuesto(), e.isControlaInventario(), e.getStockMinimo(),
+                e.getCosto(), e.getPesoKg(), e.getLargoCm(), e.getAnchoCm(), e.getAltoCm(), e.getMoneda(),
+                e.getTasaImpuesto(), e.isControlaInventario(), e.getStockMinimo(),
                 e.isVisiblePublico(), e.isActivo(), preciosZona);
     }
 

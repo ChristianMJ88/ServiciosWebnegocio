@@ -12,6 +12,7 @@ export interface ProductoAdmin {
   id: number; categoriaId: number | null; categoriaNombre: string | null; proveedorId: number | null; proveedorNombre: string | null;
   mediaId: number | null; sku: string; codigoBarras: string | null; nombre: string; slug: string; descripcion: string | null;
   imagenUrl: string | null; precioBase: number; costo: number | null; moneda: string; tasaImpuesto: number; controlaInventario: boolean;
+  pesoKg: number | null; largoCm: number | null; anchoCm: number | null; altoCm: number | null;
   stockMinimo: number; visiblePublico: boolean; activo: boolean; preciosZona: PrecioZonaProductoAdmin[];
 }
 export interface CatalogoProductosAdmin { monedaPredeterminada: string; categorias: CategoriaProductoAdmin[]; proveedores: ProveedorProductoAdmin[]; zonasPrecio: ZonaPrecioProductoAdmin[]; productos: ProductoAdmin[]; }

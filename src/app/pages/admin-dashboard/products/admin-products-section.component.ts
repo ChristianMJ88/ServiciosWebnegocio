@@ -65,6 +65,7 @@ export class AdminProductsSectionComponent implements OnInit {
     this.formularioProducto.set({
       id: null, categoriaId: null, proveedorId: null, mediaId: null, sku: '', codigoBarras: null, nombre: '', slug: '',
       descripcion: null, imagenUrl: null, precioBase: 0, costo: null, moneda, tasaImpuesto: 0, controlaInventario: true,
+      pesoKg: null, largoCm: null, anchoCm: null, altoCm: null,
       stockMinimo: 0, visiblePublico: false, activo: true, preciosZona: (this.catalogo()?.zonasPrecio ?? []).filter(zona => zona.activa)
         .map(zona => ({ zonaPrecioId: zona.id, zonaNombre: zona.nombre, precio: 0, moneda, activo: false }))
     });
@@ -77,6 +78,7 @@ export class AdminProductsSectionComponent implements OnInit {
       id: item.id, categoriaId: item.categoriaId, proveedorId: item.proveedorId, mediaId: item.mediaId, sku: item.sku,
       codigoBarras: item.codigoBarras, nombre: item.nombre, slug: item.slug, descripcion: item.descripcion,
       imagenUrl: item.imagenUrl, precioBase: item.precioBase, costo: item.costo, moneda, tasaImpuesto: item.tasaImpuesto,
+      pesoKg: item.pesoKg, largoCm: item.largoCm, anchoCm: item.anchoCm, altoCm: item.altoCm,
       controlaInventario: item.controlaInventario, stockMinimo: item.stockMinimo, visiblePublico: item.visiblePublico,
       activo: item.activo, preciosZona: (this.catalogo()?.zonasPrecio ?? []).filter(zona => zona.activa).map(zona => ({
         ...(existentes.get(zona.id) ?? { zonaPrecioId: zona.id, precio: 0, moneda, activo: false }), zonaNombre: zona.nombre
