@@ -7,6 +7,7 @@ export const PERMISOS = {
   inventarioGestionar: 'INVENTARIO_GESTIONAR',
   comisionesGestionar: 'COMISIONES_GESTIONAR',
   pagosConfigurar: 'PAGOS_CONFIGURAR',
+  enviosConfigurar: 'ENVIOS_CONFIGURAR',
   prestadoresGestionar: 'PRESTADORES_GESTIONAR',
   usuariosInternosGestionar: 'USUARIOS_INTERNOS_GESTIONAR',
   clientesGestionar: 'CLIENTES_GESTIONAR',

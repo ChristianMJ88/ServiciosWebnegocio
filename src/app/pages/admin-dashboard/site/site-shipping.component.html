@@ -1,0 +1,72 @@
+<section class="shipping-panel">
+  <header class="shipping-panel__heading">
+    <span class="shipping-panel__icon"><i class="bi bi-truck"></i></span>
+    <div><span class="shipping-panel__eyebrow">Logística multitenant</span><h3>Entregas y Envia.com</h3><p>Conecta la cuenta del negocio, define los domicilios de origen y prepara tarifas nacionales.</p></div>
+  </header>
+
+  @if (mensaje()) { <p class="shipping-feedback is-success"><i class="bi bi-check-circle"></i>{{ mensaje() }}</p> }
+  @if (error()) { <p class="shipping-feedback is-error"><i class="bi bi-exclamation-circle"></i>{{ error() }}</p> }
+
+  @if (cargando()) {
+    <div class="shipping-loading"><span></span><span></span><span></span><p>Cargando configuración…</p></div>
+  } @else if (configuracion(); as config) {
+    <article class="integration-card" [class.is-enabled]="config.habilitado">
+      <div class="integration-card__top">
+        <div class="integration-card__brand"><span>e</span><div><strong>Envia.com</strong><small>Shipping, Queries y Geocodes API</small></div></div>
+        <label class="shipping-switch"><input type="checkbox" [(ngModel)]="config.habilitado" [ngModelOptions]="{standalone:true}"><span></span><b>{{ config.habilitado ? 'Activo' : 'Borrador' }}</b></label>
+      </div>
+      <div class="integration-grid">
+        <label><span>Ambiente</span><select [(ngModel)]="config.ambiente" [ngModelOptions]="{standalone:true}"><option value="PRUEBA">Pruebas</option><option value="PRODUCCION">Producción</option></select></label>
+        <label class="token-field"><span>Token privado</span><input type="password" [(ngModel)]="token" [ngModelOptions]="{standalone:true}" autocomplete="new-password" [placeholder]="config.tokenConfigurado ? 'Token protegido · escribe sólo para reemplazar' : 'Pega el token de Envia.com'"><small><i class="bi bi-shield-lock"></i>{{ config.tokenConfigurado ? 'Hay un token cifrado para este negocio.' : 'Todavía no hay un token configurado.' }}</small></label>
+      </div>
+      @if (config.tokenConfigurado) {
+        <label class="remove-token"><input type="checkbox" [(ngModel)]="eliminarToken" [ngModelOptions]="{standalone:true}"> Eliminar el token guardado al guardar</label>
+      }
+    </article>
+
+    <div class="shipping-options">
+      <label><span><i class="bi bi-box-arrow-up-right"></i><b>Generar guía automáticamente</b><small>Se ejecutará después de confirmar el pago, nunca antes.</small></span><input type="checkbox" [(ngModel)]="config.generarGuiaAutomaticamente" [ngModelOptions]="{standalone:true}"></label>
+      <label><span><i class="bi bi-list-check"></i><b>Permitir elegir paquetería</b><small>El cliente podrá comparar las opciones disponibles.</small></span><input type="checkbox" [(ngModel)]="config.permitirSeleccionPaquetera" [ngModelOptions]="{standalone:true}"></label>
+    </div>
+
+    <article class="surcharge-card">
+      <div><i class="bi bi-calculator"></i><span><strong>Ajuste sobre la tarifa</strong><small>Agrega manejo o empaque sin modificar el precio que devuelve Envia.com.</small></span></div>
+      <label><span>Tipo</span><select [(ngModel)]="config.tipoRecargo" [ngModelOptions]="{standalone:true}"><option value="NINGUNO">Sin ajuste</option><option value="PORCENTAJE">Porcentaje</option><option value="IMPORTE">Importe fijo</option></select></label>
+      @if (config.tipoRecargo !== 'NINGUNO') {<label><span>Valor</span><input type="number" min="0" step="0.01" [(ngModel)]="config.valorRecargo" [ngModelOptions]="{standalone:true}"></label>}
+    </article>
+
+    <section class="origins-section">
+      <header><div><span class="shipping-panel__eyebrow">Origen de paquetes</span><h4>Domicilios por sucursal</h4><p>Configura sólo las sucursales desde las que se preparan envíos.</p></div><span class="origin-count">{{ config.origenes.length }} sucursales</span></header>
+      <div class="origin-list">
+        @for (origen of config.origenes; track origen.sucursalId) {
+          <details class="origin-card" [open]="origen.configurado">
+            <summary><span class="origin-card__status" [class.is-ready]="origen.configurado && origenCompleto(origen)"><i class="bi" [class.bi-check2]="origen.configurado && origenCompleto(origen)" [class.bi-geo-alt]="!origen.configurado || !origenCompleto(origen)"></i></span><span><strong>{{ origen.sucursalNombre }}</strong><small>{{ origen.configurado ? (origenCompleto(origen) ? 'Origen listo' : 'Faltan datos') : 'Sin configurar' }}</small></span><i class="bi bi-chevron-down origin-card__arrow"></i></summary>
+            <div class="origin-card__body">
+              @if (!origen.configurado) {
+                <button class="outline-button" type="button" (click)="activarOrigen(origen)"><i class="bi bi-plus-circle"></i>Configurar esta sucursal</button>
+              } @else {
+                <div class="origin-toolbar"><label><input type="checkbox" [(ngModel)]="origen.activo" [ngModelOptions]="{standalone:true}"> Usar como origen activo</label><button type="button" (click)="origen.configurado = false"><i class="bi bi-trash3"></i>Quitar configuración</button></div>
+                <div class="origin-grid">
+                  <label><span>Contacto</span><input [(ngModel)]="origen.nombreContacto" [ngModelOptions]="{standalone:true}" maxlength="180"></label>
+                  <label><span>Teléfono</span><input [(ngModel)]="origen.telefono" [ngModelOptions]="{standalone:true}" maxlength="30"></label>
+                  <label><span>Correo</span><input type="email" [(ngModel)]="origen.correo" [ngModelOptions]="{standalone:true}" maxlength="180"></label>
+                  <label><span>Calle</span><input [(ngModel)]="origen.calle" [ngModelOptions]="{standalone:true}" maxlength="180"></label>
+                  <label><span>Número exterior</span><input [(ngModel)]="origen.numeroExterior" [ngModelOptions]="{standalone:true}" maxlength="30"></label>
+                  <label><span>Número interior</span><input [(ngModel)]="origen.numeroInterior" [ngModelOptions]="{standalone:true}" maxlength="30"></label>
+                  <label><span>Colonia</span><input [(ngModel)]="origen.colonia" [ngModelOptions]="{standalone:true}" maxlength="150"></label>
+                  <label><span>Municipio o alcaldía</span><input [(ngModel)]="origen.municipio" [ngModelOptions]="{standalone:true}" maxlength="150"></label>
+                  <label><span>Estado</span><input [(ngModel)]="origen.estado" [ngModelOptions]="{standalone:true}" maxlength="120"></label>
+                  <label><span>Código postal</span><input inputmode="numeric" [(ngModel)]="origen.codigoPostal" [ngModelOptions]="{standalone:true}" maxlength="12"></label>
+                  <label><span>País ISO</span><input [(ngModel)]="origen.codigoPais" [ngModelOptions]="{standalone:true}" maxlength="2"></label>
+                  <label class="span-2"><span>Referencias</span><input [(ngModel)]="origen.referencias" [ngModelOptions]="{standalone:true}" maxlength="500"></label>
+                </div>
+              }
+            </div>
+          </details>
+        }
+      </div>
+    </section>
+
+    <footer class="shipping-footer"><p><i class="bi bi-info-circle"></i>Las cotizaciones se recalcularán en backend antes de cobrar.</p><button type="button" class="primary-button" [disabled]="guardando()" (click)="guardar()"><i class="bi bi-check2-circle"></i>{{ guardando() ? 'Guardando…' : 'Guardar envíos' }}</button></footer>
+  }
+</section>

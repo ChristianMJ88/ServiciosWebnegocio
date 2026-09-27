@@ -1,0 +1,60 @@
+import { HttpClient } from '@angular/common/http';
+import { Injectable, inject } from '@angular/core';
+import { Observable } from 'rxjs';
+import { environment } from '../../../../environments/environment';
+
+export interface OrigenEnvioAdmin {
+  sucursalId: number;
+  sucursalNombre: string;
+  sucursalActiva: boolean;
+  configurado: boolean;
+  activo: boolean;
+  nombreContacto: string;
+  telefono: string;
+  correo: string | null;
+  calle: string;
+  numeroExterior: string;
+  numeroInterior: string | null;
+  colonia: string;
+  municipio: string;
+  estado: string;
+  codigoPostal: string;
+  codigoPais: string;
+  referencias: string | null;
+}
+
+export interface ConfiguracionEnviosAdmin {
+  proveedor: string;
+  habilitado: boolean;
+  ambiente: 'PRUEBA' | 'PRODUCCION';
+  tokenConfigurado: boolean;
+  generarGuiaAutomaticamente: boolean;
+  permitirSeleccionPaquetera: boolean;
+  tipoRecargo: 'NINGUNO' | 'PORCENTAJE' | 'IMPORTE';
+  valorRecargo: number;
+  origenes: OrigenEnvioAdmin[];
+}
+
+@Injectable({ providedIn: 'root' })
+export class ShippingAdminService {
+  private readonly http = inject(HttpClient);
+  private readonly url = `${environment.apiBaseUrl}/admin/envios/configuracion`;
+
+  obtener(): Observable<ConfiguracionEnviosAdmin> {
+    return this.http.get<ConfiguracionEnviosAdmin>(this.url);
+  }
+
+  guardar(configuracion: ConfiguracionEnviosAdmin, token: string, eliminarToken: boolean): Observable<ConfiguracionEnviosAdmin> {
+    return this.http.put<ConfiguracionEnviosAdmin>(this.url, {
+      habilitado: configuracion.habilitado,
+      ambiente: configuracion.ambiente,
+      token: token.trim() || null,
+      eliminarToken,
+      generarGuiaAutomaticamente: configuracion.generarGuiaAutomaticamente,
+      permitirSeleccionPaquetera: configuracion.permitirSeleccionPaquetera,
+      tipoRecargo: configuracion.tipoRecargo,
+      valorRecargo: configuracion.tipoRecargo === 'NINGUNO' ? 0 : Number(configuracion.valorRecargo || 0),
+      origenes: configuracion.origenes.filter(origen => origen.configurado).map(({ sucursalNombre, sucursalActiva, configurado, ...origen }) => origen)
+    });
+  }
+}

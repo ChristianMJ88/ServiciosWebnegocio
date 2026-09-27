@@ -102,6 +102,7 @@ export class AuthService {
   readonly puedeGestionarProductos = computed(() => this.tienePermiso(PERMISOS.productosGestionar));
   readonly puedeGestionarInventario = computed(() => this.tienePermiso(PERMISOS.inventarioGestionar));
   readonly puedeConfigurarPagos = computed(() => this.tienePermiso(PERMISOS.pagosConfigurar));
+  readonly puedeConfigurarEnvios = computed(() => this.tienePermiso(PERMISOS.enviosConfigurar));
   readonly puedeGestionarPrestadores = computed(() => this.tienePermiso(PERMISOS.prestadoresGestionar));
   readonly puedeGestionarUsuariosInternos = computed(() => this.tienePermiso(PERMISOS.usuariosInternosGestionar));
   readonly sucursalesPermitidas = computed(() =>
