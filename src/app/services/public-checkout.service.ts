@@ -60,7 +60,7 @@ export interface CheckoutPayment {
 export interface CardBrickData {
   token: string;
   payment_method_id: string;
-  payment_type_id: string;
+  payment_type_id?: string;
   installments: number;
   payer?: { email?: string };
 }

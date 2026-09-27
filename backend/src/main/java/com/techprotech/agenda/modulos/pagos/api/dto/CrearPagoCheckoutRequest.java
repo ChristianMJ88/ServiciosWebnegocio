@@ -9,7 +9,7 @@ import jakarta.validation.constraints.Size;
 public record CrearPagoCheckoutRequest(
         @NotBlank @Size(max = 600) String tokenMedioPago,
         @NotBlank @Size(max = 80) String metodoPagoId,
-        @NotBlank @Size(max = 40) String tipoPagoId,
+        @Size(max = 40) String tipoPagoId,
         @Min(1) @Max(48) int parcialidades,
         @NotBlank @Email @Size(max = 180) String correoPagador
 ) {

@@ -14,10 +14,14 @@ import java.math.RoundingMode;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Component
 public class AdaptadorMercadoPagoOrders implements ProveedorPagosPort {
     private static final String ORDERS = "https://api.mercadopago.com/v1/orders";
+    private static final String PAYMENT_METHODS = "https://api.mercadopago.com/v1/payment_methods";
+    private static final Set<String> TIPOS_TARJETA = Set.of("credit_card", "debit_card", "prepaid_card");
 
     private final ServicioOAuthMercadoPago oauth;
     private final RestClient restClient;
@@ -25,6 +29,7 @@ public class AdaptadorMercadoPagoOrders implements ProveedorPagosPort {
     private final MapeadorRespuestaMercadoPago mapeador;
     private final ValidadorFirmaWebhookMercadoPago validadorFirma;
     private final PropiedadesMercadoPago propiedades;
+    private final Map<String, String> tiposMetodoPago = new ConcurrentHashMap<>();
 
     public AdaptadorMercadoPagoOrders(ServicioOAuthMercadoPago oauth, RestClient.Builder restClientBuilder,
                                       ObjectMapper objectMapper, MapeadorRespuestaMercadoPago mapeador,
@@ -43,14 +48,15 @@ public class AdaptadorMercadoPagoOrders implements ProveedorPagosPort {
     @Override
     public ResultadoCobro crearCobro(SolicitudCobro solicitud) {
         validarCobro(solicitud);
-        return mapeador.cobro(post(ORDERS, solicitud.empresaId(), solicitud.idempotencia(), cuerpoCobro(solicitud)));
+        return mapeador.cobro(post(ORDERS, solicitud.empresaId(), solicitud.idempotencia(),
+                cuerpoCobro(solicitud, resolverTipoMetodoPago(solicitud))));
     }
 
     @Override
     public ResultadoCobro consultarCobro(Long empresaId, String referenciaExterna) {
         requerido(empresaId, "empresaId");
         requerido(referenciaExterna, "referenciaExterna");
-        return mapeador.cobro(get(ORDERS + "/" + segmento(referenciaExterna), empresaId));
+        return mapeador.cobro(respuestaRequerida(get(ORDERS + "/" + segmento(referenciaExterna), empresaId)));
     }
 
     @Override
@@ -86,11 +92,11 @@ public class AdaptadorMercadoPagoOrders implements ProveedorPagosPort {
         }
     }
 
-    private Map<String, Object> cuerpoCobro(SolicitudCobro solicitud) {
+    private Map<String, Object> cuerpoCobro(SolicitudCobro solicitud, String tipoMetodoPago) {
         Map<String, String> metadatos = solicitud.metadatos() == null ? Map.of() : solicitud.metadatos();
         Map<String, Object> metodo = new LinkedHashMap<>();
         metodo.put("id", requerido(metadatos.get("payment_method_id"), "payment_method_id"));
-        metodo.put("type", requerido(metadatos.get("payment_type_id"), "payment_type_id"));
+        metodo.put("type", tipoMetodoPago);
         metodo.put("token", solicitud.tokenMedioPago());
         metodo.put("installments", enteroPositivo(metadatos.get("installments"), "installments"));
         opcional(metodo, "statement_descriptor", metadatos.get("statement_descriptor"));
@@ -124,12 +130,39 @@ public class AdaptadorMercadoPagoOrders implements ProveedorPagosPort {
 
     private JsonNode get(String uri, Long empresaId) {
         try {
-            return respuestaRequerida(restClient.get().uri(uri)
+            JsonNode respuesta = restClient.get().uri(uri)
                     .headers(h -> h.setBearerAuth(oauth.obtenerAccessToken(empresaId)))
-                    .retrieve().body(JsonNode.class));
+                    .retrieve().body(JsonNode.class);
+            if (respuesta == null) throw new IllegalStateException("Mercado Pago no devolvió una respuesta válida");
+            return respuesta;
         } catch (RestClientResponseException ex) {
             return respuestaErrorOExcepcion(ex);
         }
+    }
+
+    private String resolverTipoMetodoPago(SolicitudCobro solicitud) {
+        Map<String, String> metadatos = solicitud.metadatos() == null ? Map.of() : solicitud.metadatos();
+        String tipoInformado = metadatos.get("payment_type_id");
+        if (tipoInformado != null && !tipoInformado.isBlank()) return validarTipoTarjeta(tipoInformado);
+
+        String metodoId = requerido(metadatos.get("payment_method_id"), "payment_method_id").trim();
+        String llave = solicitud.empresaId() + ":" + metodoId;
+        return tiposMetodoPago.computeIfAbsent(llave, ignorada -> {
+            JsonNode metodos = get(PAYMENT_METHODS, solicitud.empresaId());
+            if (!metodos.isArray()) throw new IllegalStateException("Mercado Pago no devolvió su catálogo de medios de pago");
+            for (JsonNode metodo : metodos) {
+                if (metodoId.equalsIgnoreCase(texto(metodo, "id"))) {
+                    return validarTipoTarjeta(requerido(texto(metodo, "payment_type_id"), "payment_type_id"));
+                }
+            }
+            throw new IllegalArgumentException("El medio de pago no está disponible para la cuenta conectada");
+        });
+    }
+
+    private String validarTipoTarjeta(String valor) {
+        String tipo = valor.trim().toLowerCase(java.util.Locale.ROOT);
+        if (!TIPOS_TARJETA.contains(tipo)) throw new IllegalArgumentException("El medio seleccionado no es una tarjeta válida");
+        return tipo;
     }
 
     private JsonNode respuestaErrorOExcepcion(RestClientResponseException ex) {

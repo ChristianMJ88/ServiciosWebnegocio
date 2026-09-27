@@ -15,8 +15,10 @@ import org.springframework.web.server.ResponseStatusException;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 
 @Service
 public class ServicioPagoCheckout {
@@ -83,14 +85,16 @@ public class ServicioPagoCheckout {
 
         ResultadoCobro resultado;
         try {
+            Map<String, String> metadatos = new LinkedHashMap<>();
+            metadatos.put("payment_method_id", request.metodoPagoId().trim());
+            if (request.tipoPagoId() != null && !request.tipoPagoId().isBlank()) {
+                metadatos.put("payment_type_id", request.tipoPagoId().trim());
+            }
+            metadatos.put("installments", String.valueOf(request.parcialidades()));
+            metadatos.put("description", "Orden " + orden.getPublicId());
             resultado = adaptador.crearCobro(new SolicitudCobro(
                     sitio.getEmpresaId(), orden.getPublicId(), clave, orden.getTotal(), orden.getMoneda(),
-                    SIN_COMISION, request.tokenMedioPago().trim(), orden.getCorreoCliente(), java.util.Map.of(
-                    "payment_method_id", request.metodoPagoId().trim(),
-                    "payment_type_id", request.tipoPagoId().trim(),
-                    "installments", String.valueOf(request.parcialidades()),
-                    "description", "Orden " + orden.getPublicId()
-            )));
+                    SIN_COMISION, request.tokenMedioPago().trim(), orden.getCorreoCliente(), metadatos));
         } catch (IllegalArgumentException ex) {
             registrarError(intento, "SOLICITUD_INVALIDA", ex.getMessage());
             throw error(HttpStatus.BAD_REQUEST, ex.getMessage());

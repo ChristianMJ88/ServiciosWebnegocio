@@ -80,6 +80,32 @@ class AdaptadorMercadoPagoOrdersTest {
     }
 
     @Test
+    void resuelveElTipoDeTarjetaDesdeElCatalogoDelTenantCuandoElBrickNoLoEnvia() {
+        servidor.expect(once(), requestTo("https://api.mercadopago.com/v1/payment_methods"))
+                .andExpect(method(HttpMethod.GET))
+                .andExpect(header("Authorization", "Bearer token-de-prueba"))
+                .andRespond(withSuccess("""
+                        [{"id":"master","name":"Mastercard","payment_type_id":"credit_card"}]
+                        """, MediaType.APPLICATION_JSON));
+        servidor.expect(once(), requestTo("https://api.mercadopago.com/v1/orders"))
+                .andExpect(method(HttpMethod.POST))
+                .andExpect(content().json("""
+                        {"transactions":{"payments":[{"payment_method":{"id":"master","type":"credit_card"}}]}}
+                        """, false))
+                .andRespond(withSuccess("""
+                        {"id":"ORD-43","status":"processed","status_detail":"accredited"}
+                        """, MediaType.APPLICATION_JSON));
+
+        ResultadoCobro resultado = adaptador.crearCobro(new SolicitudCobro(
+                12L, "VENTA-43", "idem-venta-43", new BigDecimal("185"), "MXN", BigDecimal.ZERO,
+                "card-token", "cliente@example.com",
+                Map.of("payment_method_id", "master", "installments", "1")));
+
+        assertThat(resultado.referenciaExterna()).isEqualTo("ORD-43");
+        servidor.verify();
+    }
+
+    @Test
     void reembolsaUnaTransaccionParcialSinConfundirOrdenYPago() {
         servidor.expect(once(), requestTo("https://api.mercadopago.com/v1/orders/ORD-42/refund"))
                 .andExpect(method(HttpMethod.POST))
