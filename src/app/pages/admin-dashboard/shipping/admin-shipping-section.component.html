@@ -1,7 +1,7 @@
 <section class="shipping-panel">
   <header class="shipping-panel__heading">
     <span class="shipping-panel__icon"><i class="bi bi-truck"></i></span>
-    <div><span class="shipping-panel__eyebrow">Logística multitenant</span><h3>Entregas y Envia.com</h3><p>Conecta la cuenta del negocio, define los domicilios de origen y prepara tarifas nacionales.</p></div>
+    <div><span class="shipping-panel__eyebrow">Logística multitenant</span><h3>Operación de envíos</h3><p>Administra pedidos, domicilios de origen y proveedores logísticos para este negocio.</p></div>
   </header>
 
   @if (mensaje()) { <p class="shipping-feedback is-success"><i class="bi bi-check-circle"></i>{{ mensaje() }}</p> }
@@ -10,6 +10,12 @@
   @if (cargando()) {
     <div class="shipping-loading"><span></span><span></span><span></span><p>Cargando configuración…</p></div>
   } @else if (configuracion(); as config) {
+    <nav class="shipping-tabs" aria-label="Secciones del módulo de envíos">
+      <button type="button" [class.is-active]="vistaActiva() === 'pedidos'" (click)="vistaActiva.set('pedidos')"><i class="bi bi-box-seam"></i><span><strong>Pedidos</strong><small>Guías y seguimiento</small></span><b>{{ pedidos().length }}</b></button>
+      <button type="button" [class.is-active]="vistaActiva() === 'configuracion'" (click)="vistaActiva.set('configuracion')"><i class="bi bi-sliders"></i><span><strong>Configuración</strong><small>Proveedor y orígenes</small></span></button>
+    </nav>
+
+    @if (vistaActiva() === 'configuracion') {
     <article class="shipping-mode" [class.is-integrated]="config.habilitado">
       <span><i class="bi" [class.bi-person-check]="!config.habilitado" [class.bi-lightning-charge]="config.habilitado"></i></span>
       <div><strong>{{ config.habilitado ? 'Cotización integrada activa' : 'Gestión manual activa' }}</strong><small>{{ config.habilitado ? 'Envia.com cotiza durante la compra y conserva la tarifa elegida.' : 'El negocio cobra la tarifa nacional configurada en Checkout y contrata la guía por su cuenta después del pago.' }}</small></div>
@@ -112,6 +118,10 @@
       </div>
     </section>
 
+    <footer class="shipping-footer"><p><i class="bi bi-info-circle"></i>La tarifa real requiere una credencial verificada y peso y medidas completos en cada producto.</p><button type="button" class="primary-button" [disabled]="guardando()" (click)="guardar()"><i class="bi bi-check2-circle"></i>{{ guardando() ? 'Guardando…' : 'Guardar envíos' }}</button></footer>
+    }
+
+    @if (vistaActiva() === 'pedidos') {
     <section class="shipments-section">
       <header><div><span class="shipping-panel__eyebrow">Después del pago</span><h4>Pedidos por preparar</h4><p>El estado se calcula en backend con la configuración y el catálogo de este negocio.</p></div><span class="origin-count">{{ pedidos().length }} recientes</span></header>
       @if (pedidos().length) {
@@ -150,7 +160,6 @@
         <div class="shipments-empty"><i class="bi bi-box-seam"></i><div><strong>Aún no hay pedidos nacionales pagados</strong><small>Cuando se confirme un pago, aquí aparecerá la preparación de su envío.</small></div></div>
       }
     </section>
-
-    <footer class="shipping-footer"><p><i class="bi bi-info-circle"></i>La tarifa real requiere una credencial verificada y peso y medidas completos en cada producto.</p><button type="button" class="primary-button" [disabled]="guardando()" (click)="guardar()"><i class="bi bi-check2-circle"></i>{{ guardando() ? 'Guardando…' : 'Guardar envíos' }}</button></footer>
+    }
   }
 </section>

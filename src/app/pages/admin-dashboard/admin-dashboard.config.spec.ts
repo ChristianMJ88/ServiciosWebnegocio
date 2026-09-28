@@ -21,4 +21,11 @@ describe('configuración del menú administrativo', () => {
     expect(esSeccionAdmin('whatsapp')).toBe(true);
     expect(esSeccionAdmin('empresa-especifica')).toBe(false);
   });
+
+  it('ubica envíos en logística cuando el backend concede el permiso', () => {
+    const grupos = construirGruposSidebarAdmin(filtrarModulosAdmin([PERMISOS.enviosConfigurar]));
+
+    expect(grupos.find(grupo => grupo.id === 'logistica')?.modulosVisibles.map(modulo => modulo.id))
+      .toEqual(['envios']);
+  });
 });

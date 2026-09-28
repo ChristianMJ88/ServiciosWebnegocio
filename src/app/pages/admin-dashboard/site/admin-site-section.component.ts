@@ -25,12 +25,11 @@ import { AdminSiteFacade } from './admin-site.facade';
 import { finalize } from 'rxjs';
 import { AuthService } from '../../../core/auth/auth.service';
 import { SitePaymentsComponent } from './site-payments.component';
-import { SiteShippingComponent } from './site-shipping.component';
 
 type SiteEditorSectionId =
   | 'estructura' | 'servicios_destacados' | 'beneficios' | 'promociones' | 'galeria'
   | 'resenas' | 'preguntas_frecuentes' | 'pagos' | 'identidad' | 'apariencia'
-  | 'envios' | 'navegacion' | 'portada' | 'contacto' | 'seo_footer' | 'publicacion';
+  | 'navegacion' | 'portada' | 'contacto' | 'seo_footer' | 'publicacion';
 
 @Component({
   selector: 'app-admin-site-section',
@@ -51,8 +50,7 @@ type SiteEditorSectionId =
     SiteBenefitsComponent,
     SiteReviewsComponent,
     SiteFaqComponent,
-    SitePaymentsComponent,
-    SiteShippingComponent
+    SitePaymentsComponent
   ],
   templateUrl: './admin-site-section.component.html',
   styleUrl: './admin-site-section.component.css'
@@ -104,10 +102,6 @@ export class AdminSiteSectionComponent implements OnInit {
     if (this.auth.puedeConfigurarPagos()) {
       const indice = secciones.findIndex(seccion => seccion.id === 'publicacion');
       secciones.splice(indice, 0, { id: 'pagos' as const, label: 'Pagos en línea', icon: 'bi bi-credit-card-2-front' });
-    }
-    if (this.auth.puedeConfigurarEnvios()) {
-      const indice = secciones.findIndex(seccion => seccion.id === 'publicacion');
-      secciones.splice(indice, 0, { id: 'envios' as const, label: 'Entregas y envíos', icon: 'bi bi-truck' });
     }
     return secciones;
   });

@@ -8,13 +8,13 @@ import { GoogleAddressAutocompleteComponent } from '../../../shared/google-addre
 import { MoneyDisplayPipe } from '../../../shared/pipes/money-display.pipe';
 
 @Component({
-  selector: 'app-site-shipping',
+  selector: 'app-admin-shipping-section',
   standalone: true,
   imports: [CommonModule, FormsModule, GoogleAddressAutocompleteComponent, MoneyDisplayPipe],
-  templateUrl: './site-shipping.component.html',
-  styleUrl: './site-shipping.component.css'
+  templateUrl: './admin-shipping-section.component.html',
+  styleUrl: './admin-shipping-section.component.css'
 })
-export class SiteShippingComponent implements OnInit {
+export class AdminShippingSectionComponent implements OnInit {
   private readonly servicio = inject(ShippingAdminService);
   private readonly direcciones = inject(AddressValidationService);
   readonly configuracion = signal<ConfiguracionEnviosAdmin | null>(null);
@@ -26,6 +26,7 @@ export class SiteShippingComponent implements OnInit {
   readonly mostrarConexion = signal(false);
   readonly configuracionDirecciones = signal<AddressPlatformConfig | null>(null);
   readonly pedidos = signal<EnvioPedidoAdmin[]>([]);
+  readonly vistaActiva = signal<'pedidos' | 'configuracion'>('pedidos');
   readonly gestionAbierta = signal<number | null>(null);
   readonly guardandoGestion = signal<number | null>(null);
   gestionManual: GestionEnvioManual | null = null;
