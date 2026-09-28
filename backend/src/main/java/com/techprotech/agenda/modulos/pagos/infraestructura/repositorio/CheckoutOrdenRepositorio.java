@@ -7,11 +7,12 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import jakarta.persistence.LockModeType;
 
-import java.util.Optional;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 public interface CheckoutOrdenRepositorio extends JpaRepository<CheckoutOrdenEntidad, Long> {
+    List<CheckoutOrdenEntidad> findTop50ByEstadoAndModalidadEntregaOrderByIdAsc(String estado, String modalidadEntrega);
     Optional<CheckoutOrdenEntidad> findByEmpresaIdAndIdempotencia(Long empresaId, String idempotencia);
     Optional<CheckoutOrdenEntidad> findByEmpresaIdAndPublicId(Long empresaId, String publicId);
 

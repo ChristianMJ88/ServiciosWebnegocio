@@ -59,6 +59,27 @@ export interface PruebaConexionEnvio {
   mensaje: string;
 }
 
+export interface EnvioPedidoAdmin {
+  id: number;
+  ordenPublicId: string;
+  estado: string;
+  motivoBloqueo: string | null;
+  ambiente: 'PRUEBA' | 'PRODUCCION';
+  paqueteria: string | null;
+  servicio: string | null;
+  numeroGuia: string | null;
+  urlEtiqueta: string | null;
+  estadoRastreo: string | null;
+  costoProveedor: number | null;
+  costoCliente: number;
+  totalOrden: number;
+  moneda: string;
+  destinatario: string;
+  destino: string;
+  creadoEn: string;
+  actualizadoEn: string;
+}
+
 @Injectable({ providedIn: 'root' })
 export class ShippingAdminService {
   private readonly http = inject(HttpClient);
@@ -85,5 +106,9 @@ export class ShippingAdminService {
 
   probarConexion(): Observable<PruebaConexionEnvio> {
     return this.http.post<PruebaConexionEnvio>(`${this.url}/probar-conexion`, {});
+  }
+
+  listarPedidos(): Observable<EnvioPedidoAdmin[]> {
+    return this.http.get<EnvioPedidoAdmin[]>(`${this.url}/pedidos`);
   }
 }

@@ -101,6 +101,28 @@
       </div>
     </section>
 
+    <section class="shipments-section">
+      <header><div><span class="shipping-panel__eyebrow">Después del pago</span><h4>Pedidos por preparar</h4><p>El estado se calcula en backend con la configuración y el catálogo de este negocio.</p></div><span class="origin-count">{{ pedidos().length }} recientes</span></header>
+      @if (pedidos().length) {
+        <div class="shipment-list">
+          @for (pedido of pedidos(); track pedido.id) {
+            <article class="shipment-card" [class.is-ready]="estadoListo(pedido.estado)">
+              <div class="shipment-card__icon"><i class="bi" [class.bi-box-seam]="!estadoListo(pedido.estado)" [class.bi-check2-circle]="estadoListo(pedido.estado)"></i></div>
+              <div class="shipment-card__main">
+                <div class="shipment-card__title"><strong>{{ pedido.destinatario }}</strong><span>{{ etiquetaEstado(pedido.estado) }}</span></div>
+                <small>{{ pedido.destino }}</small>
+                @if (pedido.motivoBloqueo) { <p><i class="bi bi-info-circle"></i>{{ pedido.motivoBloqueo }}</p> }
+                <div class="shipment-card__meta"><span>Orden {{ pedido.ordenPublicId | slice:0:8 }}</span><span>{{ pedido.creadoEn | date:'dd MMM, HH:mm' }}</span><span>{{ pedido.ambiente === 'PRUEBA' ? 'Sandbox' : 'Producción' }}</span></div>
+              </div>
+              <div class="shipment-card__amount"><small>Envío cobrado</small><strong>{{ pedido.costoCliente | appMoney:pedido.moneda:2:2 }}</strong><span>Total {{ pedido.totalOrden | appMoney:pedido.moneda:2:2 }}</span></div>
+            </article>
+          }
+        </div>
+      } @else {
+        <div class="shipments-empty"><i class="bi bi-box-seam"></i><div><strong>Aún no hay pedidos nacionales pagados</strong><small>Cuando se confirme un pago, aquí aparecerá la preparación de su envío.</small></div></div>
+      }
+    </section>
+
     <footer class="shipping-footer"><p><i class="bi bi-info-circle"></i>La tarifa real requiere una credencial verificada y peso y medidas completos en cada producto.</p><button type="button" class="primary-button" [disabled]="guardando()" (click)="guardar()"><i class="bi bi-check2-circle"></i>{{ guardando() ? 'Guardando…' : 'Guardar envíos' }}</button></footer>
   }
 </section>

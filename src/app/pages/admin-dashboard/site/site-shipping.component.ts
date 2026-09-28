@@ -2,14 +2,15 @@ import { CommonModule } from '@angular/common';
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { finalize, forkJoin } from 'rxjs';
-import { ConfiguracionEnviosAdmin, OrigenEnvioAdmin, ShippingAdminService } from './shipping-admin.service';
+import { ConfiguracionEnviosAdmin, EnvioPedidoAdmin, OrigenEnvioAdmin, ShippingAdminService } from './shipping-admin.service';
 import { AddressInput, AddressPlatformConfig, AddressValidationService } from '../../../services/address-validation.service';
 import { GoogleAddressAutocompleteComponent } from '../../../shared/google-address-autocomplete/google-address-autocomplete.component';
+import { MoneyDisplayPipe } from '../../../shared/pipes/money-display.pipe';
 
 @Component({
   selector: 'app-site-shipping',
   standalone: true,
-  imports: [CommonModule, FormsModule, GoogleAddressAutocompleteComponent],
+  imports: [CommonModule, FormsModule, GoogleAddressAutocompleteComponent, MoneyDisplayPipe],
   templateUrl: './site-shipping.component.html',
   styleUrl: './site-shipping.component.css'
 })
@@ -24,6 +25,7 @@ export class SiteShippingComponent implements OnInit {
   readonly error = signal<string | null>(null);
   readonly mostrarConexion = signal(false);
   readonly configuracionDirecciones = signal<AddressPlatformConfig | null>(null);
+  readonly pedidos = signal<EnvioPedidoAdmin[]>([]);
   token = '';
   eliminarToken = false;
 
@@ -31,10 +33,11 @@ export class SiteShippingComponent implements OnInit {
 
   cargar(): void {
     this.cargando.set(true);
-    forkJoin({ envios: this.servicio.obtener(), direcciones: this.direcciones.configuration() }).pipe(finalize(() => this.cargando.set(false))).subscribe({
-      next: ({ envios: configuracion, direcciones }) => {
+    forkJoin({ envios: this.servicio.obtener(), direcciones: this.direcciones.configuration(), pedidos: this.servicio.listarPedidos() }).pipe(finalize(() => this.cargando.set(false))).subscribe({
+      next: ({ envios: configuracion, direcciones, pedidos }) => {
         this.configuracion.set(configuracion);
         this.configuracionDirecciones.set(direcciones);
+        this.pedidos.set(pedidos);
         this.mostrarConexion.set(!configuracion.credencialDisponible);
       },
       error: error => this.error.set(error?.error?.detail || 'No fue posible cargar la configuración de envíos.')
@@ -109,5 +112,23 @@ export class SiteShippingComponent implements OnInit {
   origenCompleto(origen: OrigenEnvioAdmin): boolean {
     return [origen.nombreContacto, origen.telefono, origen.calle, origen.numeroExterior, origen.colonia,
       origen.municipio, origen.estado, origen.codigoPostal, origen.codigoPais].every(valor => Boolean(valor?.trim()));
+  }
+
+  etiquetaEstado(estado: string): string {
+    const etiquetas: Record<string, string> = {
+      BLOQUEADO_CONFIGURACION: 'Configuración pendiente',
+      BLOQUEADO_CREDENCIAL: 'Credencial pendiente',
+      BLOQUEADO_ORIGEN: 'Origen pendiente',
+      BLOQUEADO_DIMENSIONES: 'Dimensiones pendientes',
+      REQUIERE_COTIZACION: 'Requiere cotización',
+      GUIA_GENERADA: 'Guía generada',
+      EN_TRANSITO: 'En tránsito',
+      ENTREGADO: 'Entregado'
+    };
+    return etiquetas[estado] ?? estado.replaceAll('_', ' ').toLowerCase();
+  }
+
+  estadoListo(estado: string): boolean {
+    return ['GUIA_GENERADA', 'EN_TRANSITO', 'ENTREGADO'].includes(estado);
   }
 }
