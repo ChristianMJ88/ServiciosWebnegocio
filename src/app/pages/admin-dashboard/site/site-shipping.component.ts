@@ -2,7 +2,7 @@ import { CommonModule } from '@angular/common';
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { finalize, forkJoin } from 'rxjs';
-import { ConfiguracionEnviosAdmin, EnvioPedidoAdmin, OrigenEnvioAdmin, ShippingAdminService } from './shipping-admin.service';
+import { ConfiguracionEnviosAdmin, EnvioPedidoAdmin, GestionEnvioManual, OrigenEnvioAdmin, ShippingAdminService } from './shipping-admin.service';
 import { AddressInput, AddressPlatformConfig, AddressValidationService } from '../../../services/address-validation.service';
 import { GoogleAddressAutocompleteComponent } from '../../../shared/google-address-autocomplete/google-address-autocomplete.component';
 import { MoneyDisplayPipe } from '../../../shared/pipes/money-display.pipe';
@@ -26,6 +26,9 @@ export class SiteShippingComponent implements OnInit {
   readonly mostrarConexion = signal(false);
   readonly configuracionDirecciones = signal<AddressPlatformConfig | null>(null);
   readonly pedidos = signal<EnvioPedidoAdmin[]>([]);
+  readonly gestionAbierta = signal<number | null>(null);
+  readonly guardandoGestion = signal<number | null>(null);
+  gestionManual: GestionEnvioManual | null = null;
   token = '';
   eliminarToken = false;
 
@@ -121,6 +124,8 @@ export class SiteShippingComponent implements OnInit {
       BLOQUEADO_ORIGEN: 'Origen pendiente',
       BLOQUEADO_DIMENSIONES: 'Dimensiones pendientes',
       REQUIERE_COTIZACION: 'Requiere cotización',
+      PENDIENTE_GESTION_MANUAL: 'Gestión manual',
+      LISTO_PARA_GUIA: 'Listo para generar guía',
       GUIA_GENERADA: 'Guía generada',
       EN_TRANSITO: 'En tránsito',
       ENTREGADO: 'Entregado'
@@ -130,5 +135,44 @@ export class SiteShippingComponent implements OnInit {
 
   estadoListo(estado: string): boolean {
     return ['GUIA_GENERADA', 'EN_TRANSITO', 'ENTREGADO'].includes(estado);
+  }
+
+  abrirGestion(pedido: EnvioPedidoAdmin): void {
+    if (this.gestionAbierta() === pedido.id) {
+      this.gestionAbierta.set(null);
+      this.gestionManual = null;
+      return;
+    }
+    this.gestionManual = {
+      paqueteria: pedido.paqueteria ?? '', servicio: pedido.servicio,
+      numeroGuia: pedido.numeroGuia ?? '', urlEtiqueta: pedido.urlEtiqueta,
+      costoProveedor: Number(pedido.costoProveedor ?? 0), estado: this.estadoManual(pedido.estado)
+    };
+    this.gestionAbierta.set(pedido.id);
+  }
+
+  guardarGestion(pedido: EnvioPedidoAdmin): void {
+    const gestion = this.gestionManual;
+    if (!gestion || !gestion.paqueteria.trim() || !gestion.numeroGuia.trim() || this.guardandoGestion()) return;
+    this.guardandoGestion.set(pedido.id);
+    this.mensaje.set(null);
+    this.error.set(null);
+    this.servicio.actualizarManual(pedido.id, gestion).pipe(finalize(() => this.guardandoGestion.set(null))).subscribe({
+      next: actualizado => {
+        this.pedidos.update(items => items.map(item => item.id === actualizado.id ? actualizado : item));
+        this.gestionAbierta.set(null);
+        this.gestionManual = null;
+        this.mensaje.set('La guía y el seguimiento del envío se actualizaron correctamente.');
+      },
+      error: error => this.error.set(error?.error?.detail || error?.error?.message || 'No fue posible actualizar el envío.')
+    });
+  }
+
+  puedeGestionarse(pedido: EnvioPedidoAdmin): boolean {
+    return !['ENTREGADO', 'CANCELADO'].includes(pedido.estado);
+  }
+
+  private estadoManual(estado: string): GestionEnvioManual['estado'] {
+    return estado === 'EN_TRANSITO' || estado === 'ENTREGADO' ? estado : 'GUIA_GENERADA';
   }
 }

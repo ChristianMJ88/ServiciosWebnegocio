@@ -80,6 +80,15 @@ export interface EnvioPedidoAdmin {
   actualizadoEn: string;
 }
 
+export interface GestionEnvioManual {
+  paqueteria: string;
+  servicio: string | null;
+  numeroGuia: string;
+  urlEtiqueta: string | null;
+  costoProveedor: number;
+  estado: 'GUIA_GENERADA' | 'EN_TRANSITO' | 'ENTREGADO';
+}
+
 @Injectable({ providedIn: 'root' })
 export class ShippingAdminService {
   private readonly http = inject(HttpClient);
@@ -110,5 +119,9 @@ export class ShippingAdminService {
 
   listarPedidos(): Observable<EnvioPedidoAdmin[]> {
     return this.http.get<EnvioPedidoAdmin[]>(`${this.url}/pedidos`);
+  }
+
+  actualizarManual(envioId: number, gestion: GestionEnvioManual): Observable<EnvioPedidoAdmin> {
+    return this.http.patch<EnvioPedidoAdmin>(`${this.url}/pedidos/${envioId}/gestion-manual`, gestion);
   }
 }

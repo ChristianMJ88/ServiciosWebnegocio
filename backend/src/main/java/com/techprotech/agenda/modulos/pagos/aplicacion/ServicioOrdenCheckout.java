@@ -9,6 +9,8 @@ import com.techprotech.agenda.modulos.caja.infraestructura.repositorio.PagoCitaR
 import com.techprotech.agenda.modulos.caja.infraestructura.repositorio.VentaDetalleRepositorio;
 import com.techprotech.agenda.modulos.citas.infraestructura.entidad.CitaEntidad;
 import com.techprotech.agenda.modulos.citas.infraestructura.repositorio.CitaRepositorio;
+import com.techprotech.agenda.modulos.envios.api.dto.CotizarEnvioPublicoRequest;
+import com.techprotech.agenda.modulos.envios.aplicacion.ServicioCotizacionesEnvio;
 import com.techprotech.agenda.modulos.pagos.api.dto.*;
 import com.techprotech.agenda.modulos.pagos.infraestructura.checkout.PropiedadesCheckout;
 import com.techprotech.agenda.modulos.pagos.infraestructura.entidad.CheckoutOrdenDetalleEntidad;
@@ -52,6 +54,7 @@ public class ServicioOrdenCheckout {
     private final CheckoutOrdenDetalleRepositorio detalles;
     private final PropiedadesCheckout propiedades;
     private final ServicioValidacionDirecciones direcciones;
+    private final ServicioCotizacionesEnvio cotizacionesEnvio;
 
     public ServicioOrdenCheckout(ServicioConfiguracionCheckout configuracionCheckout,
                                  EmpresaSitioConfigRepositorio sitios, SucursalRepositorio sucursales,
@@ -59,7 +62,8 @@ public class ServicioOrdenCheckout {
                                  ServicioRepositorio servicios, UsuarioRepositorio usuarios,
                                  PagoCitaRepositorio pagosCita, VentaDetalleRepositorio detallesVenta,
                                  CheckoutOrdenRepositorio ordenes, CheckoutOrdenDetalleRepositorio detalles,
-                                 PropiedadesCheckout propiedades, ServicioValidacionDirecciones direcciones) {
+                                 PropiedadesCheckout propiedades, ServicioValidacionDirecciones direcciones,
+                                 ServicioCotizacionesEnvio cotizacionesEnvio) {
         this.configuracionCheckout = configuracionCheckout;
         this.sitios = sitios;
         this.sucursales = sucursales;
@@ -73,6 +77,7 @@ public class ServicioOrdenCheckout {
         this.detalles = detalles;
         this.propiedades = propiedades;
         this.direcciones = direcciones;
+        this.cotizacionesEnvio = cotizacionesEnvio;
     }
 
     @Transactional
@@ -95,7 +100,7 @@ public class ServicioOrdenCheckout {
         if (cantidades.isEmpty() && citaIds.isEmpty()) throw error(HttpStatus.BAD_REQUEST, "Agrega productos o citas a la orden");
         if (!cantidades.isEmpty() && !config.permitirPagoProductos()) throw error(HttpStatus.CONFLICT, "El pago de productos no está habilitado");
         if (!citaIds.isEmpty() && !config.permitirPagoServicios()) throw error(HttpStatus.CONFLICT, "El pago de servicios no está habilitado");
-        BigDecimal costoEnvio = validarEntrega(request, config, !cantidades.isEmpty());
+        BigDecimal costoEnvio = validarEntrega(sitio.getEmpresaId(), cantidades, request, config, !cantidades.isEmpty());
 
         ServicioCotizacionProductos.ResultadoCotizacion cotizacion = cotizadorProductos.cotizar(
                 sitio.getEmpresaId(), request.sucursalId(), request.zonaPrecioClave(), cantidades);
@@ -135,6 +140,8 @@ public class ServicioOrdenCheckout {
         orden.setDescuentoTotal(descuento);
         orden.setImpuestosTotal(impuestos);
         orden.setCostoEnvio(costoEnvio);
+        orden.setEnvioCotizacionId("ENVIO_NACIONAL".equals(request.modalidadEntrega())
+                ? texto(request.cotizacionEnvioId()) : null);
         orden.setTotal(total);
         orden.setExpiraEn(LocalDateTime.now(ZoneOffset.UTC).plusMinutes(propiedades.minutosVigenciaOrden()));
         orden = ordenes.save(orden);
@@ -224,7 +231,8 @@ public class ServicioOrdenCheckout {
     }
     private BigDecimal seguro(BigDecimal valor) { return valor == null ? CERO : valor; }
 
-    private BigDecimal validarEntrega(CrearOrdenCheckoutRequest request, ConfiguracionCheckoutPublicaResponse config,
+    private BigDecimal validarEntrega(Long empresaId, Map<Long, BigDecimal> productos,
+                                      CrearOrdenCheckoutRequest request, ConfiguracionCheckoutPublicaResponse config,
                                       boolean contieneProductos) {
         if (!contieneProductos) return CERO;
         return switch (request.modalidadEntrega()) {
@@ -240,7 +248,11 @@ public class ServicioOrdenCheckout {
             case "ENVIO_NACIONAL" -> {
                 if (!config.permitirEnvioNacional()) throw error(HttpStatus.CONFLICT, "El envío nacional no está disponible");
                 exigirDireccion(request.direccion());
-                yield seguro(config.costoEnvioNacional()).setScale(2, RoundingMode.HALF_UP);
+                if (request.cotizacionEnvioId() == null || request.cotizacionEnvioId().isBlank()) {
+                    yield seguro(config.costoEnvioNacional()).setScale(2, RoundingMode.HALF_UP);
+                }
+                yield cotizacionesEnvio.validar(request.cotizacionEnvioId().trim(), empresaId, request.sucursalId(),
+                        direccionCotizacion(request.direccion()), productos).setScale(2, RoundingMode.HALF_UP);
             }
             default -> throw error(HttpStatus.BAD_REQUEST, "Modalidad de entrega no válida");
         };
@@ -248,6 +260,13 @@ public class ServicioOrdenCheckout {
 
     private void exigirDireccion(CrearOrdenCheckoutRequest.DireccionEntregaRequest direccion) {
         if (direccion == null) throw error(HttpStatus.BAD_REQUEST, "Captura la dirección completa para la entrega");
+    }
+
+    private CotizarEnvioPublicoRequest.Direccion direccionCotizacion(
+            CrearOrdenCheckoutRequest.DireccionEntregaRequest direccion) {
+        return new CotizarEnvioPublicoRequest.Direccion(direccion.calle(), direccion.numeroExterior(),
+                direccion.numeroInterior(), direccion.colonia(), direccion.municipio(), direccion.estado(),
+                direccion.codigoPostal(), direccion.codigoPais(), direccion.referencias());
     }
 
     private void aplicarDireccion(CheckoutOrdenEntidad orden, CrearOrdenCheckoutRequest.DireccionEntregaRequest direccion) {

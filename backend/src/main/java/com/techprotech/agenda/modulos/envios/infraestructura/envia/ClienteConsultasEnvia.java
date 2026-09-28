@@ -9,6 +9,9 @@ import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.util.List;
+import java.util.stream.StreamSupport;
+
 @Component
 public class ClienteConsultasEnvia {
     private final RestClient.Builder builder;
@@ -20,6 +23,10 @@ public class ClienteConsultasEnvia {
     }
 
     public int contarPaqueterias(String token, String ambiente, String codigoPais) {
+        return listarPaqueterias(token, ambiente, codigoPais).size();
+    }
+
+    public List<String> listarPaqueterias(String token, String ambiente, String codigoPais) {
         String baseUrl = "PRODUCCION".equals(ambiente)
                 ? propiedades.consultasProduccionBaseUrl()
                 : propiedades.consultasPruebasBaseUrl();
@@ -30,7 +37,10 @@ public class ClienteConsultasEnvia {
                     .retrieve()
                     .body(JsonNode.class);
             JsonNode datos = respuesta == null ? null : (respuesta.isArray() ? respuesta : respuesta.path("data"));
-            return datos != null && datos.isArray() ? datos.size() : 0;
+            if (datos == null || !datos.isArray()) return List.of();
+            return StreamSupport.stream(datos.spliterator(), false)
+                    .map(item -> item.path("name").asText(""))
+                    .map(String::trim).filter(valor -> !valor.isBlank()).distinct().toList();
         } catch (HttpClientErrorException.Unauthorized | HttpClientErrorException.Forbidden ex) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
                     "La credencial de Envia.com no es válida para el ambiente seleccionado");

@@ -10,6 +10,7 @@ import com.techprotech.agenda.modulos.pagos.infraestructura.mercadopago.Propieda
 import com.techprotech.agenda.modulos.pagos.infraestructura.repositorio.EmpresaCheckoutConfigRepositorio;
 import com.techprotech.agenda.modulos.pagos.infraestructura.repositorio.EmpresaProveedorPagoRepositorio;
 import com.techprotech.agenda.modulos.pagos.infraestructura.repositorio.ProveedorPagoRepositorio;
+import com.techprotech.agenda.modulos.envios.infraestructura.repositorio.EmpresaEnvioConfigRepositorio;
 import com.techprotech.agenda.modulos.sitio.infraestructura.entidad.EmpresaSitioConfigEntidad;
 import com.techprotech.agenda.modulos.sitio.infraestructura.repositorio.EmpresaSitioConfigRepositorio;
 import org.junit.jupiter.api.BeforeEach;
@@ -37,13 +38,15 @@ class ServicioConfiguracionCheckoutTest {
         ProveedorPagoRepositorio proveedores = mock(ProveedorPagoRepositorio.class);
         conexiones = mock(EmpresaProveedorPagoRepositorio.class);
         sitios = mock(EmpresaSitioConfigRepositorio.class);
+        EmpresaEnvioConfigRepositorio configuracionesEnvio = mock(EmpresaEnvioConfigRepositorio.class);
         ProveedorPagoEntidad proveedor = new ProveedorPagoEntidad();
         proveedor.setId(7L);
         proveedor.setCodigo("MERCADO_PAGO");
         when(proveedores.findByCodigoAndActivoTrue("MERCADO_PAGO")).thenReturn(Optional.of(proveedor));
         when(configuraciones.save(any())).thenAnswer(invocacion -> invocacion.getArgument(0));
         servicio = new ServicioConfiguracionCheckout(configuraciones, proveedores, conexiones, sitios,
-                new PropiedadesMercadoPago(true, "PRUEBA", "", "", "", "", "", "", ""));
+                new PropiedadesMercadoPago(true, "PRUEBA", "", "", "", "", "", "", ""),
+                configuracionesEnvio);
     }
 
     @Test

@@ -13,6 +13,7 @@ public record CrearOrdenCheckoutRequest(
         @NotBlank @Size(max = 180) String nombreDestinatario,
         @NotBlank @Size(max = 30) String telefonoDestinatario,
         @NotBlank @Pattern(regexp = "RECOGE_EN_SUCURSAL|ENTREGA_LOCAL|ENVIO_NACIONAL") String modalidadEntrega,
+        @Size(max = 36) String cotizacionEnvioId,
         @Valid DireccionEntregaRequest direccion,
         @Valid @Size(max = 100) List<ProductoOrdenRequest> productos,
         @Size(max = 20) List<Long> citaIds

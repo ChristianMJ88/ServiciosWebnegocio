@@ -116,6 +116,7 @@ aplicacion:
       credenciales-pruebas-url: ${ENVIA_CREDENCIALES_PRUEBAS_URL:https://shipping-test.envia.com/settings/developers}
       registro-produccion-url: ${ENVIA_REGISTRO_PRODUCCION_URL:https://accounts.envia.com/signup}
       credenciales-produccion-url: ${ENVIA_CREDENCIALES_PRODUCCION_URL:https://shipping.envia.com/settings/developers}
+      vigencia-cotizacion-minutos: ${ENVIA_COTIZACION_VIGENCIA_MINUTOS:15}
       plataforma-habilitada: ${ENVIA_PLATAFORMA_HABILITADA:false}
       token-plataforma-pruebas: ${ENVIA_PLATAFORMA_TOKEN_PRUEBAS:}
       token-plataforma-produccion: ${ENVIA_PLATAFORMA_TOKEN_PRODUCCION:}

@@ -10,11 +10,17 @@
   @if (cargando()) {
     <div class="shipping-loading"><span></span><span></span><span></span><p>Cargando configuración…</p></div>
   } @else if (configuracion(); as config) {
+    <article class="shipping-mode" [class.is-integrated]="config.habilitado">
+      <span><i class="bi" [class.bi-person-check]="!config.habilitado" [class.bi-lightning-charge]="config.habilitado"></i></span>
+      <div><strong>{{ config.habilitado ? 'Cotización integrada activa' : 'Gestión manual activa' }}</strong><small>{{ config.habilitado ? 'Envia.com cotiza durante la compra y conserva la tarifa elegida.' : 'El negocio cobra la tarifa nacional configurada en Checkout y contrata la guía por su cuenta después del pago.' }}</small></div>
+    </article>
+
     <article class="integration-card" [class.is-enabled]="config.habilitado">
       <div class="integration-card__top">
         <div class="integration-card__brand"><span>e</span><div><strong>Envia.com</strong><small>Shipping, Queries y Geocodes API</small></div></div>
-        <label class="shipping-switch"><input type="checkbox" [(ngModel)]="config.habilitado" [ngModelOptions]="{standalone:true}"><span></span><b>{{ config.habilitado ? 'Activo' : 'Borrador' }}</b></label>
+        <label class="shipping-switch"><input type="checkbox" [(ngModel)]="config.habilitado" [ngModelOptions]="{standalone:true}"><span></span><b>{{ config.habilitado ? 'Integración activa' : 'Integración inactiva' }}</b></label>
       </div>
+      @if (config.habilitado) {
       <div class="credential-modes" role="radiogroup" aria-label="Responsable de la cuenta de envíos">
         @for (modo of config.onboarding.modosCredencial; track modo.codigo) {
           <button type="button" role="radio" [attr.aria-checked]="config.modoCredencial === modo.codigo" [class.is-selected]="config.modoCredencial === modo.codigo" [disabled]="!modo.disponible" (click)="cambiarModoCredencial(modo.codigo)">
@@ -52,8 +58,12 @@
       @if (config.tokenConfigurado && config.modoCredencial === 'CUENTA_PROPIA') {
         <label class="remove-token"><input type="checkbox" [(ngModel)]="eliminarToken" [ngModelOptions]="{standalone:true}"> Eliminar el token guardado al guardar</label>
       }
+      } @else {
+        <p class="manual-mode-note"><i class="bi bi-shield-check"></i><span><strong>Envia.com no es obligatorio</strong><small>Las compras nacionales continuarán. Después del pago aparecerán abajo para que registres la guía contratada con cualquier paquetería.</small></span></p>
+      }
     </article>
 
+    @if (config.habilitado) {
     <div class="shipping-options">
       <label><span><i class="bi bi-box-arrow-up-right"></i><b>Generar guía automáticamente</b><small>Se ejecutará después de confirmar el pago, nunca antes.</small></span><input type="checkbox" [(ngModel)]="config.generarGuiaAutomaticamente" [ngModelOptions]="{standalone:true}"></label>
       <label><span><i class="bi bi-list-check"></i><b>Permitir elegir paquetería</b><small>El cliente podrá comparar las opciones disponibles.</small></span><input type="checkbox" [(ngModel)]="config.permitirSeleccionPaquetera" [ngModelOptions]="{standalone:true}"></label>
@@ -64,6 +74,7 @@
       <label><span>Tipo</span><select [(ngModel)]="config.tipoRecargo" [ngModelOptions]="{standalone:true}"><option value="NINGUNO">Sin ajuste</option><option value="PORCENTAJE">Porcentaje</option><option value="IMPORTE">Importe fijo</option></select></label>
       @if (config.tipoRecargo !== 'NINGUNO') {<label><span>Valor</span><input type="number" min="0" step="0.01" [(ngModel)]="config.valorRecargo" [ngModelOptions]="{standalone:true}"></label>}
     </article>
+    }
 
     <section class="origins-section">
       <header><div><span class="shipping-panel__eyebrow">Origen de paquetes</span><h4>Domicilios por sucursal</h4><p>Configura sólo las sucursales desde las que se preparan envíos.</p></div><span class="origin-count">{{ config.origenes.length }} sucursales</span></header>
@@ -115,6 +126,23 @@
                 <div class="shipment-card__meta"><span>Orden {{ pedido.ordenPublicId | slice:0:8 }}</span><span>{{ pedido.creadoEn | date:'dd MMM, HH:mm' }}</span><span>{{ pedido.ambiente === 'PRUEBA' ? 'Sandbox' : 'Producción' }}</span></div>
               </div>
               <div class="shipment-card__amount"><small>Envío cobrado</small><strong>{{ pedido.costoCliente | appMoney:pedido.moneda:2:2 }}</strong><span>Total {{ pedido.totalOrden | appMoney:pedido.moneda:2:2 }}</span></div>
+              @if (puedeGestionarse(pedido)) {
+                <button type="button" class="shipment-manage" (click)="abrirGestion(pedido)"><i class="bi bi-pencil-square"></i>{{ gestionAbierta() === pedido.id ? 'Cerrar' : 'Gestionar envío' }}</button>
+              }
+              @if (gestionAbierta() === pedido.id && gestionManual; as gestion) {
+                <form class="manual-shipment-form" (ngSubmit)="guardarGestion(pedido)">
+                  <header><div><strong>Registrar guía externa</strong><small>Contrata el envío con el proveedor que prefieras y conserva aquí el seguimiento.</small></div><span>Orden pagada</span></header>
+                  <div class="manual-shipment-grid">
+                    <label><span>Paquetería</span><input name="paqueteria-{{pedido.id}}" [(ngModel)]="gestion.paqueteria" required maxlength="80" placeholder="DHL, FedEx, Estafeta…"></label>
+                    <label><span>Servicio</span><input name="servicio-{{pedido.id}}" [(ngModel)]="gestion.servicio" maxlength="120" placeholder="Terrestre, día siguiente…"></label>
+                    <label><span>Número de guía</span><input name="guia-{{pedido.id}}" [(ngModel)]="gestion.numeroGuia" required maxlength="160"></label>
+                    <label><span>Costo real</span><input name="costo-{{pedido.id}}" type="number" min="0" step="0.01" [(ngModel)]="gestion.costoProveedor" required></label>
+                    <label><span>Estado</span><select name="estado-{{pedido.id}}" [(ngModel)]="gestion.estado"><option value="GUIA_GENERADA">Guía generada</option><option value="EN_TRANSITO">En tránsito</option><option value="ENTREGADO">Entregado</option></select></label>
+                    <label class="span-2"><span>Enlace de etiqueta o rastreo</span><input name="etiqueta-{{pedido.id}}" type="url" [(ngModel)]="gestion.urlEtiqueta" maxlength="1000" placeholder="https://..."></label>
+                  </div>
+                  <footer><button type="submit" class="primary-button" [disabled]="guardandoGestion() === pedido.id || !gestion.paqueteria || !gestion.numeroGuia"><i class="bi bi-check2-circle"></i>{{ guardandoGestion() === pedido.id ? 'Guardando…' : 'Guardar seguimiento' }}</button></footer>
+                </form>
+              }
             </article>
           }
         </div>

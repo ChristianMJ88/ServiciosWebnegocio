@@ -6,6 +6,7 @@ import com.techprotech.agenda.modulos.envios.api.dto.PruebaConexionEnvioResponse
 import com.techprotech.agenda.modulos.envios.aplicacion.ServicioConfiguracionEnvios;
 import com.techprotech.agenda.modulos.envios.aplicacion.ServicioEnviosCheckout;
 import com.techprotech.agenda.modulos.envios.api.dto.EnvioPedidoResponse;
+import com.techprotech.agenda.modulos.envios.api.dto.ActualizarEnvioManualRequest;
 import com.techprotech.agenda.modulos.envios.seguridad.PermisosEnvios;
 import com.techprotech.agenda.seguridad.jwt.UsuarioAutenticado;
 import jakarta.validation.Valid;
@@ -46,5 +47,12 @@ public class ControladorConfiguracionEnvios {
     @GetMapping("/pedidos")
     public List<EnvioPedidoResponse> listarPedidos(@AuthenticationPrincipal UsuarioAutenticado usuario) {
         return enviosCheckout.listar(usuario.empresaId());
+    }
+
+    @PatchMapping("/pedidos/{envioId}/gestion-manual")
+    public EnvioPedidoResponse actualizarManual(@AuthenticationPrincipal UsuarioAutenticado usuario,
+                                                 @PathVariable Long envioId,
+                                                 @Valid @RequestBody ActualizarEnvioManualRequest request) {
+        return enviosCheckout.actualizarManual(usuario.empresaId(), envioId, request);
     }
 }

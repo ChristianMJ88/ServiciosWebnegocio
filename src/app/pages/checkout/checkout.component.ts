@@ -8,7 +8,7 @@ import { TenantContextService } from '../../core/tenant/tenant-context.service';
 import { BookingDataService, SucursalCatalogo } from '../../services/booking-data.service';
 import { MercadoPagoBricksService } from '../../services/mercado-pago-bricks.service';
 import { ProductCartService } from '../../services/product-cart.service';
-import { CardBrickData, CheckoutOrder, CheckoutPayment, DeliveryMode, PublicCheckoutConfig, PublicCheckoutService } from '../../services/public-checkout.service';
+import { CardBrickData, CheckoutOrder, CheckoutPayment, DeliveryMode, PublicCheckoutConfig, PublicCheckoutService, ShippingQuoteOption } from '../../services/public-checkout.service';
 import { MoneyDisplayPipe } from '../../shared/pipes/money-display.pipe';
 import { AddressInput, AddressPlatformConfig, AddressValidationService } from '../../services/address-validation.service';
 import { GoogleAddressAutocompleteComponent } from '../../shared/google-address-autocomplete/google-address-autocomplete.component';
@@ -46,6 +46,10 @@ export class CheckoutComponent implements OnInit, OnDestroy {
   readonly addressConfig = signal<AddressPlatformConfig | null>(null);
   readonly validatingAddress = signal(false);
   readonly addressValidationMessage = signal<string | null>(null);
+  readonly quotingShipping = signal(false);
+  readonly shippingQuotes = signal<ShippingQuoteOption[]>([]);
+  readonly selectedShippingQuote = signal<ShippingQuoteOption | null>(null);
+  readonly shippingQuoteMessage = signal<string | null>(null);
   private controller: BrickController | null = null;
   private orderKey = this.key('orden');
   private paymentKey = this.key('pago');
@@ -106,6 +110,7 @@ export class CheckoutComponent implements OnInit, OnDestroy {
         nombreDestinatario: this.form.controls.name.value.trim(),
         telefonoDestinatario: this.form.controls.phone.value.trim(),
         modalidadEntrega: this.form.controls.deliveryMode.value,
+        cotizacionEnvioId: this.selectedShippingQuote()?.id ?? null,
         direccion: this.requiresAddress() ? {
           calle: this.form.controls.street.value.trim(),
           numeroExterior: this.form.controls.exteriorNumber.value.trim(),
@@ -141,6 +146,7 @@ export class CheckoutComponent implements OnInit, OnDestroy {
     });
     this.form.controls.postalCode.setValidators(required ? [Validators.required, Validators.pattern(/^\d{5}$/)] : []);
     this.form.controls.postalCode.updateValueAndValidity({ emitEvent: false });
+    this.clearShippingQuotes();
   }
 
   requiresAddress(): boolean { return this.form.controls.deliveryMode.value !== 'RECOGE_EN_SUCURSAL'; }
@@ -156,6 +162,7 @@ export class CheckoutComponent implements OnInit, OnDestroy {
     if (address.codigoPostal) controls.postalCode.setValue(address.codigoPostal);
     if (address.codigoPais) controls.countryCode.setValue(address.codigoPais);
     this.addressValidationMessage.set('Dirección seleccionada. Verifica el número y confirma los datos.');
+    this.clearShippingQuotes();
   }
 
   validateAddress(): void {
@@ -176,13 +183,63 @@ export class CheckoutComponent implements OnInit, OnDestroy {
     });
   }
 
-  clearAddressValidation(): void { this.addressValidationMessage.set(null); }
+  clearAddressValidation(): void { this.addressValidationMessage.set(null); this.clearShippingQuotes(); }
+
+  quoteShipping(): void {
+    const slug = this.tenant.slug();
+    const direccion = this.deliveryAddress();
+    if (!slug || !direccion || this.form.controls.branchId.invalid || this.form.controls.name.invalid
+      || this.form.controls.email.invalid || this.form.controls.phone.invalid || this.quotingShipping()) {
+      this.form.markAllAsTouched();
+      this.shippingQuoteMessage.set('Completa tus datos, sucursal y dirección para consultar las paqueterías.');
+      return;
+    }
+    this.quotingShipping.set(true);
+    this.shippingQuoteMessage.set(null);
+    this.shippingQuotes.set([]);
+    this.selectedShippingQuote.set(null);
+    this.checkout.quoteShipping(slug, {
+      sucursalId: this.form.controls.branchId.value,
+      zonaPrecioClave: this.route.snapshot.queryParamMap.get('zona'),
+      nombreDestinatario: this.form.controls.name.value.trim(),
+      correoDestinatario: this.form.controls.email.value.trim().toLowerCase(),
+      telefonoDestinatario: this.form.controls.phone.value.trim(),
+      direccion,
+      productos: this.cart.items().map(item => ({ productoId: item.productoId, cantidad: item.cantidad }))
+    }).pipe(finalize(() => this.quotingShipping.set(false)), takeUntilDestroyed(this.destroyRef)).subscribe({
+      next: response => {
+        this.shippingQuotes.set(response.opciones);
+        if (response.opciones.length === 1) this.selectShippingQuote(response.opciones[0]);
+        this.shippingQuoteMessage.set(response.opciones.length
+          ? 'Selecciona la opción que prefieras. La tarifa se confirmará en el servidor.'
+          : 'No encontramos opciones disponibles para este destino.');
+      },
+      error: error => this.shippingQuoteMessage.set(this.message(error, 'No pudimos consultar las tarifas de paquetería.'))
+    });
+  }
+
+  selectShippingQuote(option: ShippingQuoteOption): void {
+    this.selectedShippingQuote.set(option);
+    this.error.set(null);
+  }
+
+  clearShippingQuotes(): void {
+    this.shippingQuotes.set([]);
+    this.selectedShippingQuote.set(null);
+    this.shippingQuoteMessage.set(null);
+  }
+
+  postPaymentMessage(): string {
+    return switchDeliveryMessage(this.form.controls.deliveryMode.value, Boolean(this.selectedShippingQuote()));
+  }
 
   deliveryCost(): number {
     const config = this.config();
     if (!config) return 0;
     if (this.form.controls.deliveryMode.value === 'ENTREGA_LOCAL') return config.costoEntregaLocal;
-    if (this.form.controls.deliveryMode.value === 'ENVIO_NACIONAL') return config.costoEnvioNacional;
+    if (this.form.controls.deliveryMode.value === 'ENVIO_NACIONAL') {
+      return this.selectedShippingQuote()?.costo ?? config.costoEnvioNacional;
+    }
     return 0;
   }
 
@@ -228,6 +285,12 @@ export class CheckoutComponent implements OnInit, OnDestroy {
       values.codigoPostal, values.codigoPais].every(Boolean) ? values : null;
   }
 
+  private deliveryAddress() {
+    const input = this.addressInput();
+    if (!input) return null;
+    return { ...input, referencias: this.optional(this.form.controls.references.value) };
+  }
+
   private async mountBrick(config: PublicCheckoutConfig, order: CheckoutOrder): Promise<void> {
     if (!config.llavePublica) throw new Error('El negocio todavía no tiene una llave pública de pago disponible.');
     this.controller?.unmount();
@@ -262,4 +325,12 @@ export class CheckoutComponent implements OnInit, OnDestroy {
     const candidate = error as { error?: { detail?: string; message?: string }; message?: string };
     return candidate?.error?.detail || candidate?.error?.message || candidate?.message || fallback;
   }
+}
+
+function switchDeliveryMessage(mode: DeliveryMode, cotizacionIntegrada: boolean): string {
+  if (mode === 'RECOGE_EN_SUCURSAL') return 'La sucursal preparará tu pedido y usará tus datos de contacto para avisarte cuando puedas recogerlo.';
+  if (mode === 'ENTREGA_LOCAL') return 'El negocio recibió tu dirección y preparará la entrega local. Podrá contactarte para coordinar el horario.';
+  return cotizacionIntegrada
+    ? 'La tarifa seleccionada quedó asociada a tu pedido. El negocio preparará la guía y continuará el seguimiento del envío.'
+    : 'El negocio recibió tu dirección y gestionará la guía con su paquetería. Podrá compartirte el seguimiento cuando esté disponible.';
 }

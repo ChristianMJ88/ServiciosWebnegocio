@@ -15,6 +15,7 @@ public class EnvioPedidoEntidad {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY) private Long id;
     @Column(name = "empresa_id", nullable = false) private Long empresaId;
     @Column(name = "checkout_orden_id", nullable = false) private Long checkoutOrdenId;
+    @Column(name = "envio_cotizacion_id", length = 36) private String envioCotizacionId;
     @Column(name = "sucursal_id", nullable = false) private Long sucursalId;
     @Column(nullable = false, length = 40) private String proveedor;
     @Column(nullable = false, length = 20) private String ambiente;

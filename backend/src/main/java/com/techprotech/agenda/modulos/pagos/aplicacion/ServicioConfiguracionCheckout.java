@@ -10,6 +10,7 @@ import com.techprotech.agenda.modulos.pagos.infraestructura.mercadopago.Propieda
 import com.techprotech.agenda.modulos.pagos.infraestructura.repositorio.EmpresaCheckoutConfigRepositorio;
 import com.techprotech.agenda.modulos.pagos.infraestructura.repositorio.EmpresaProveedorPagoRepositorio;
 import com.techprotech.agenda.modulos.pagos.infraestructura.repositorio.ProveedorPagoRepositorio;
+import com.techprotech.agenda.modulos.envios.infraestructura.repositorio.EmpresaEnvioConfigRepositorio;
 import com.techprotech.agenda.modulos.sitio.infraestructura.entidad.EmpresaSitioConfigEntidad;
 import com.techprotech.agenda.modulos.sitio.infraestructura.repositorio.EmpresaSitioConfigRepositorio;
 import org.springframework.http.HttpStatus;
@@ -31,19 +32,22 @@ public class ServicioConfiguracionCheckout {
     private final EmpresaProveedorPagoRepositorio conexiones;
     private final EmpresaSitioConfigRepositorio sitios;
     private final PropiedadesMercadoPago propiedadesMercadoPago;
+    private final EmpresaEnvioConfigRepositorio configuracionesEnvio;
 
     public ServicioConfiguracionCheckout(
             EmpresaCheckoutConfigRepositorio configuraciones,
             ProveedorPagoRepositorio proveedores,
             EmpresaProveedorPagoRepositorio conexiones,
             EmpresaSitioConfigRepositorio sitios,
-            PropiedadesMercadoPago propiedadesMercadoPago
+            PropiedadesMercadoPago propiedadesMercadoPago,
+            EmpresaEnvioConfigRepositorio configuracionesEnvio
     ) {
         this.configuraciones = configuraciones;
         this.proveedores = proveedores;
         this.conexiones = conexiones;
         this.sitios = sitios;
         this.propiedadesMercadoPago = propiedadesMercadoPago;
+        this.configuracionesEnvio = configuracionesEnvio;
     }
 
     @Transactional(readOnly = true)
@@ -104,6 +108,8 @@ public class ServicioConfiguracionCheckout {
                 configuracion.getCostoEntregaLocal(),
                 habilitado && configuracion.isPermitirEnvioNacional(),
                 configuracion.getCostoEnvioNacional(),
+                configuracionesEnvio.findById(sitio.getEmpresaId()).map(item -> item.isHabilitado())
+                        .orElse(false),
                 configuracion.getModalidadServicios(),
                 configuracion.getAnticipoPorcentaje(),
                 configuracion.getAnticipoImporte(),

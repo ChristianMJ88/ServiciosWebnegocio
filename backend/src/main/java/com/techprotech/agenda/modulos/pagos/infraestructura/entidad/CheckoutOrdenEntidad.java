@@ -77,6 +77,8 @@ public class CheckoutOrdenEntidad {
   private BigDecimal impuestosTotal;
   @Column(name = "costo_envio", nullable = false, precision = 12, scale = 2)
   private BigDecimal costoEnvio;
+  @Column(name = "envio_cotizacion_id", length = 36)
+  private String envioCotizacionId;
   @Column(nullable = false, precision = 12, scale = 2)
   private BigDecimal total;
   @Column(name = "expira_en", nullable = false)

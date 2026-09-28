@@ -1,11 +1,13 @@
 package com.techprotech.agenda.modulos.envios.aplicacion;
 
 import com.techprotech.agenda.modulos.envios.api.dto.EnvioPedidoResponse;
+import com.techprotech.agenda.modulos.envios.api.dto.ActualizarEnvioManualRequest;
 import com.techprotech.agenda.modulos.envios.infraestructura.entidad.EmpresaEnvioConfigEntidad;
 import com.techprotech.agenda.modulos.envios.infraestructura.entidad.EnvioPedidoEntidad;
 import com.techprotech.agenda.modulos.envios.infraestructura.entidad.SucursalEnvioOrigenEntidad;
 import com.techprotech.agenda.modulos.envios.infraestructura.repositorio.EmpresaEnvioConfigRepositorio;
 import com.techprotech.agenda.modulos.envios.infraestructura.repositorio.EnvioPedidoRepositorio;
+import com.techprotech.agenda.modulos.envios.infraestructura.repositorio.EnvioCotizacionRepositorio;
 import com.techprotech.agenda.modulos.envios.infraestructura.repositorio.SucursalEnvioOrigenRepositorio;
 import com.techprotech.agenda.modulos.pagos.infraestructura.entidad.CheckoutOrdenDetalleEntidad;
 import com.techprotech.agenda.modulos.pagos.infraestructura.entidad.CheckoutOrdenEntidad;
@@ -28,18 +30,21 @@ public class ServicioEnviosCheckout {
     private final EmpresaEnvioConfigRepositorio configuraciones;
     private final SucursalEnvioOrigenRepositorio origenes;
     private final ProductoRepositorio productos;
+    private final EnvioCotizacionRepositorio cotizaciones;
 
     public ServicioEnviosCheckout(EnvioPedidoRepositorio envios, CheckoutOrdenRepositorio ordenes,
                                   CheckoutOrdenDetalleRepositorio detalles,
                                   EmpresaEnvioConfigRepositorio configuraciones,
                                   SucursalEnvioOrigenRepositorio origenes,
-                                  ProductoRepositorio productos) {
+                                  ProductoRepositorio productos,
+                                  EnvioCotizacionRepositorio cotizaciones) {
         this.envios = envios;
         this.ordenes = ordenes;
         this.detalles = detalles;
         this.configuraciones = configuraciones;
         this.origenes = origenes;
         this.productos = productos;
+        this.cotizaciones = cotizaciones;
     }
 
     @Transactional
@@ -50,15 +55,29 @@ public class ServicioEnviosCheckout {
                 .orElseGet(EnvioPedidoEntidad::new);
         if (envio.getEstado() != null
                 && Set.of("GUIA_GENERADA", "EN_TRANSITO", "ENTREGADO", "CANCELADO").contains(envio.getEstado())) return;
+        if ("MANUAL".equals(envio.getProveedor()) && "PENDIENTE_GESTION_MANUAL".equals(envio.getEstado())) return;
         envio.setEmpresaId(orden.getEmpresaId());
         envio.setCheckoutOrdenId(orden.getId());
         envio.setSucursalId(orden.getSucursalId());
-        envio.setProveedor(config == null ? "ENVIA" : config.getProveedor());
-        envio.setAmbiente(config == null ? "PRUEBA" : config.getAmbiente());
+        envio.setEnvioCotizacionId(orden.getEnvioCotizacionId());
+        boolean integrado = config != null && config.isHabilitado()
+                && orden.getEnvioCotizacionId() != null && !orden.getEnvioCotizacionId().isBlank();
+        envio.setProveedor(integrado ? config.getProveedor() : "MANUAL");
+        envio.setAmbiente(integrado ? config.getAmbiente() : "NO_APLICA");
         envio.setCostoCliente(orden.getCostoEnvio() == null ? BigDecimal.ZERO : orden.getCostoEnvio());
         envio.setMoneda(orden.getMoneda());
+        if (orden.getEnvioCotizacionId() != null) {
+            cotizaciones.findByIdAndEmpresaId(orden.getEnvioCotizacionId(), orden.getEmpresaId()).ifPresent(cotizacion -> {
+                envio.setPaqueteria(cotizacion.getPaqueteria());
+                envio.setServicio(cotizacion.getServicio());
+                envio.setCostoProveedor(cotizacion.getCostoProveedor());
+            });
+        }
 
-        Bloqueo bloqueo = evaluar(orden, config);
+        Bloqueo bloqueo = integrado
+                ? evaluar(orden, config)
+                : new Bloqueo("PENDIENTE_GESTION_MANUAL",
+                "Pago confirmado. Registra la paquetería y la guía cuando contrates el envío");
         envio.setEstado(bloqueo.estado());
         envio.setMotivoBloqueo(bloqueo.motivo());
         envios.save(envio);
@@ -69,10 +88,30 @@ public class ServicioEnviosCheckout {
         return envios.findTop20ByEmpresaIdOrderByCreadoEnDesc(empresaId).stream().map(this::respuesta).toList();
     }
 
-    private Bloqueo evaluar(CheckoutOrdenEntidad orden, EmpresaEnvioConfigEntidad config) {
-        if (config == null || !config.isHabilitado()) {
-            return new Bloqueo("BLOQUEADO_CONFIGURACION", "Activa la integración de Envia.com para este negocio");
+    @Transactional
+    public EnvioPedidoResponse actualizarManual(Long empresaId, Long envioId, ActualizarEnvioManualRequest request) {
+        EnvioPedidoEntidad envio = envios.findById(envioId)
+                .filter(item -> empresaId.equals(item.getEmpresaId()))
+                .orElseThrow(() -> new org.springframework.web.server.ResponseStatusException(
+                        org.springframework.http.HttpStatus.NOT_FOUND, "Envío no encontrado"));
+        if (Set.of("ENTREGADO", "CANCELADO").contains(envio.getEstado())) {
+            throw new org.springframework.web.server.ResponseStatusException(
+                    org.springframework.http.HttpStatus.CONFLICT, "El envío ya no admite cambios operativos");
         }
+        envio.setProveedor("MANUAL");
+        envio.setPaqueteria(request.paqueteria().trim());
+        envio.setServicio(texto(request.servicio()));
+        envio.setNumeroGuia(request.numeroGuia().trim());
+        envio.setUrlEtiqueta(texto(request.urlEtiqueta()));
+        envio.setCostoProveedor(request.costoProveedor().setScale(2, java.math.RoundingMode.HALF_UP));
+        envio.setEstado(request.estado());
+        envio.setEstadoRastreo(request.estado());
+        envio.setMotivoBloqueo(null);
+        envio.setUltimoError(null);
+        return respuesta(envios.save(envio));
+    }
+
+    private Bloqueo evaluar(CheckoutOrdenEntidad orden, EmpresaEnvioConfigEntidad config) {
         if ("CUENTA_PROPIA".equals(config.getModoCredencial())
                 && (config.getTokenCifrado() == null || config.getTokenCifrado().isBlank())) {
             return new Bloqueo("BLOQUEADO_CREDENCIAL", "Configura una credencial de Envia.com");
@@ -94,8 +133,7 @@ public class ServicioEnviosCheckout {
             return new Bloqueo("BLOQUEADO_DIMENSIONES",
                     "Completa peso y medidas: " + String.join(", ", incompletos));
         }
-        return new Bloqueo("REQUIERE_COTIZACION",
-                "Falta seleccionar y guardar una tarifa de Envia.com antes de generar la guía");
+        return new Bloqueo("LISTO_PARA_GUIA", "La tarifa está seleccionada y el pedido puede generar su guía");
     }
 
     private boolean sinDimensiones(ProductoEntidad producto) {
@@ -121,6 +159,8 @@ public class ServicioEnviosCheckout {
     private List<String> textos(String... valores) {
         return Arrays.stream(valores).filter(valor -> valor != null && !valor.isBlank()).distinct().toList();
     }
+
+    private String texto(String valor) { return valor == null || valor.isBlank() ? null : valor.trim(); }
 
     private record Bloqueo(String estado, String motivo) {}
 }

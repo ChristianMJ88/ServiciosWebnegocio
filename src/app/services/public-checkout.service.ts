@@ -18,6 +18,7 @@ export interface PublicCheckoutConfig {
   costoEntregaLocal: number;
   permitirEnvioNacional: boolean;
   costoEnvioNacional: number;
+  cotizacionEnvioDisponible: boolean;
   modalidadServicios: string;
   anticipoPorcentaje: number | null;
   anticipoImporte: number | null;
@@ -96,6 +97,20 @@ export interface PostalCodeValidation {
   longitud: string | null;
 }
 
+export interface ShippingQuoteOption {
+  id: string;
+  paqueteria: string;
+  paqueteriaNombre: string | null;
+  servicio: string;
+  servicioNombre: string | null;
+  entregaEstimada: string | null;
+  costo: number;
+  moneda: string;
+  expiraEn: string;
+}
+
+export interface ShippingQuoteResponse { opciones: ShippingQuoteOption[]; }
+
 @Injectable({ providedIn: 'root' })
 export class PublicCheckoutService {
   private readonly http = inject(HttpClient);
@@ -112,6 +127,20 @@ export class PublicCheckoutService {
     );
   }
 
+  quoteShipping(slug: string, input: {
+    sucursalId: number;
+    zonaPrecioClave: string | null;
+    nombreDestinatario: string;
+    correoDestinatario: string;
+    telefonoDestinatario: string;
+    direccion: DeliveryAddressInput;
+    productos: Array<{ productoId: number; cantidad: number }>;
+  }): Observable<ShippingQuoteResponse> {
+    return this.http.post<ShippingQuoteResponse>(
+      `${environment.apiBaseUrl}/publico/empresas/${encodeURIComponent(slug)}/envios/cotizaciones`, input
+    );
+  }
+
   createOrder(slug: string, input: {
     sucursalId: number;
     zonaPrecioClave: string | null;
@@ -119,6 +148,7 @@ export class PublicCheckoutService {
     nombreDestinatario: string;
     telefonoDestinatario: string;
     modalidadEntrega: DeliveryMode;
+    cotizacionEnvioId: string | null;
     direccion: DeliveryAddressInput | null;
     productos: Array<{ productoId: number; cantidad: number }>;
     citaIds: number[];

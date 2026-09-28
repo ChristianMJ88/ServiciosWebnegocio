@@ -17,6 +17,7 @@ public record ConfiguracionCheckoutPublicaResponse(
         BigDecimal costoEntregaLocal,
         boolean permitirEnvioNacional,
         BigDecimal costoEnvioNacional,
+        boolean cotizacionEnvioDisponible,
         String modalidadServicios,
         BigDecimal anticipoPorcentaje,
         BigDecimal anticipoImporte,
