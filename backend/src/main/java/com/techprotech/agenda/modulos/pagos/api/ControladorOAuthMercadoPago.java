@@ -17,44 +17,44 @@ import java.net.URI;
 @RestController
 @RequestMapping("/api/v1/admin/pagos/mercado-pago/oauth")
 public class ControladorOAuthMercadoPago {
-    private final ServicioOAuthMercadoPago servicio;
+  private final ServicioOAuthMercadoPago servicio;
 
-    public ControladorOAuthMercadoPago(ServicioOAuthMercadoPago servicio) {
-        this.servicio = servicio;
-    }
+  public ControladorOAuthMercadoPago(ServicioOAuthMercadoPago servicio) {
+    this.servicio = servicio;
+  }
 
-    @GetMapping("/estado")
-    @PreAuthorize(PermisosPagos.EXPRESION_CONFIGURAR)
-    public ConexionProveedorPagoResponse estado(@AuthenticationPrincipal UsuarioAutenticado usuario) {
-        return servicio.estado(usuario.empresaId());
-    }
+  @GetMapping("/estado")
+  @PreAuthorize(PermisosPagos.EXPRESION_CONFIGURAR)
+  public ConexionProveedorPagoResponse estado(@AuthenticationPrincipal UsuarioAutenticado usuario) {
+    return servicio.estado(usuario.empresaId());
+  }
 
-    @GetMapping("/iniciar")
-    @PreAuthorize(PermisosPagos.EXPRESION_CONFIGURAR)
-    public InicioOAuthPagoResponse iniciar(@AuthenticationPrincipal UsuarioAutenticado usuario) {
-        return servicio.iniciar(usuario.empresaId(), usuario.usuarioId());
-    }
+  @GetMapping("/iniciar")
+  @PreAuthorize(PermisosPagos.EXPRESION_CONFIGURAR)
+  public InicioOAuthPagoResponse iniciar(@AuthenticationPrincipal UsuarioAutenticado usuario) {
+    return servicio.iniciar(usuario.empresaId(), usuario.usuarioId());
+  }
 
-    @PostMapping("/prueba")
-    @PreAuthorize(PermisosPagos.EXPRESION_CONFIGURAR)
-    public ConexionProveedorPagoResponse conectarPruebas(@AuthenticationPrincipal UsuarioAutenticado usuario) {
-        return servicio.conectarPruebas(usuario.empresaId());
-    }
+  @PostMapping("/prueba")
+  @PreAuthorize(PermisosPagos.EXPRESION_CONFIGURAR)
+  public ConexionProveedorPagoResponse conectarPruebas(@AuthenticationPrincipal UsuarioAutenticado usuario) {
+    return servicio.conectarPruebas(usuario.empresaId());
+  }
 
-    @GetMapping("/callback")
-    public ResponseEntity<Void> callback(
-            @RequestParam(required = false) String code,
-            @RequestParam String state,
-            @RequestParam(required = false) String error
-    ) {
-        return ResponseEntity.status(HttpStatus.FOUND)
-                .header(HttpHeaders.LOCATION, URI.create(servicio.completar(code, state, error)).toString())
-                .build();
-    }
+  @GetMapping("/callback")
+  public ResponseEntity<Void> callback(
+    @RequestParam(required = false) String code,
+    @RequestParam String state,
+    @RequestParam(required = false) String error
+  ) {
+    return ResponseEntity.status(HttpStatus.FOUND)
+      .header(HttpHeaders.LOCATION, URI.create(servicio.completar(code, state, error)).toString())
+      .build();
+  }
 
-    @DeleteMapping
-    @PreAuthorize(PermisosPagos.EXPRESION_CONFIGURAR)
-    public ConexionProveedorPagoResponse desconectar(@AuthenticationPrincipal UsuarioAutenticado usuario) {
-        return servicio.desconectar(usuario.empresaId());
-    }
+  @DeleteMapping
+  @PreAuthorize(PermisosPagos.EXPRESION_CONFIGURAR)
+  public ConexionProveedorPagoResponse desconectar(@AuthenticationPrincipal UsuarioAutenticado usuario) {
+    return servicio.desconectar(usuario.empresaId());
+  }
 }
