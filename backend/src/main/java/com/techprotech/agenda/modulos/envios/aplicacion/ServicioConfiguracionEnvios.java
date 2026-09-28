@@ -7,6 +7,7 @@ import com.techprotech.agenda.modulos.envios.api.dto.*;
 import com.techprotech.agenda.modulos.envios.infraestructura.entidad.EmpresaEnvioConfigEntidad;
 import com.techprotech.agenda.modulos.envios.infraestructura.entidad.SucursalEnvioOrigenEntidad;
 import com.techprotech.agenda.modulos.envios.infraestructura.envia.PropiedadesEnvia;
+import com.techprotech.agenda.modulos.envios.infraestructura.envia.ClienteConsultasEnvia;
 import com.techprotech.agenda.modulos.envios.infraestructura.repositorio.EmpresaEnvioConfigRepositorio;
 import com.techprotech.agenda.modulos.envios.infraestructura.repositorio.SucursalEnvioOrigenRepositorio;
 import com.techprotech.agenda.modulos.envios.infraestructura.seguridad.ProtectorSecretosEnvio;
@@ -32,6 +33,7 @@ public class ServicioConfiguracionEnvios {
     private final SucursalRepositorio sucursales;
     private final ProtectorSecretosEnvio secretos;
     private final PropiedadesEnvia propiedadesEnvia;
+    private final ClienteConsultasEnvia clienteConsultas;
     private final ServicioValidacionDirecciones direcciones;
 
     public ServicioConfiguracionEnvios(EmpresaEnvioConfigRepositorio configuraciones,
@@ -39,13 +41,34 @@ public class ServicioConfiguracionEnvios {
                                        SucursalRepositorio sucursales,
                                        ProtectorSecretosEnvio secretos,
                                        PropiedadesEnvia propiedadesEnvia,
+                                       ClienteConsultasEnvia clienteConsultas,
                                        ServicioValidacionDirecciones direcciones) {
         this.configuraciones = configuraciones;
         this.origenes = origenes;
         this.sucursales = sucursales;
         this.secretos = secretos;
         this.propiedadesEnvia = propiedadesEnvia;
+        this.clienteConsultas = clienteConsultas;
         this.direcciones = direcciones;
+    }
+
+    @Transactional(readOnly = true)
+    public PruebaConexionEnvioResponse probarConexion(Long empresaId) {
+        EmpresaEnvioConfigEntidad config = configuraciones.findById(empresaId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                        "Configura Envia.com antes de probar la conexión"));
+        SucursalEnvioOrigenEntidad origen = origenes.findByEmpresaIdOrderBySucursalIdAsc(empresaId).stream()
+                .filter(SucursalEnvioOrigenEntidad::isActivo)
+                .findFirst()
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                        "Configura un origen activo antes de probar la conexión"));
+        String token = resolverToken(config);
+        int paqueterias = clienteConsultas.contarPaqueterias(token, config.getAmbiente(), origen.getCodigoPais());
+        return new PruebaConexionEnvioResponse(true, config.getProveedor(), config.getAmbiente(),
+                origen.getCodigoPais(), paqueterias,
+                paqueterias > 0
+                        ? "Conexión verificada con Envia.com"
+                        : "La credencial respondió, pero no devolvió paqueterías para el origen configurado");
     }
 
     @Transactional(readOnly = true)
@@ -58,7 +81,7 @@ public class ServicioConfiguracionEnvios {
         EmpresaEnvioConfigEntidad config = configuraciones.findById(empresaId).orElseGet(() -> predeterminada(empresaId));
         String tokenNuevo = limpio(request.token());
         if (request.eliminarToken()) config.setTokenCifrado(null);
-        if (tokenNuevo != null) config.setTokenCifrado(secretos.encriptar(tokenNuevo));
+        if (tokenNuevo != null) config.setTokenCifrado(secretos.encriptar(normalizarToken(tokenNuevo)));
 
         if ("PLATAFORMA".equals(request.modoCredencial()) && !plataformaDisponible(request.ambiente())) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Los envíos administrados por la plataforma no están disponibles");
@@ -136,6 +159,29 @@ public class ServicioConfiguracionEnvios {
                 ? propiedadesEnvia.tokenPlataformaProduccion()
                 : propiedadesEnvia.tokenPlataformaPruebas();
         return token != null && !token.isBlank();
+    }
+
+    private String resolverToken(EmpresaEnvioConfigEntidad config) {
+        if ("PLATAFORMA".equals(config.getModoCredencial())) {
+            String token = "PRODUCCION".equals(config.getAmbiente())
+                    ? propiedadesEnvia.tokenPlataformaProduccion()
+                    : propiedadesEnvia.tokenPlataformaPruebas();
+            if (token == null || token.isBlank()) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                        "La credencial administrada por Fluora no está disponible");
+            }
+            return normalizarToken(token);
+        }
+        if (config.getTokenCifrado() == null || config.getTokenCifrado().isBlank()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "Configura una credencial de Envia.com antes de probar la conexión");
+        }
+        return normalizarToken(secretos.desencriptar(config.getTokenCifrado()));
+    }
+
+    private String normalizarToken(String token) {
+        String valor = token.trim();
+        return valor.regionMatches(true, 0, "Bearer ", 0, 7) ? valor.substring(7).trim() : valor;
     }
 
     private EmpresaEnvioConfigEntidad predeterminada(Long empresaId) {

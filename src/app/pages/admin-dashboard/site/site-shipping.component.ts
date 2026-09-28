@@ -19,6 +19,7 @@ export class SiteShippingComponent implements OnInit {
   readonly configuracion = signal<ConfiguracionEnviosAdmin | null>(null);
   readonly cargando = signal(true);
   readonly guardando = signal(false);
+  readonly probandoConexion = signal(false);
   readonly mensaje = signal<string | null>(null);
   readonly error = signal<string | null>(null);
   readonly mostrarConexion = signal(false);
@@ -42,6 +43,19 @@ export class SiteShippingComponent implements OnInit {
 
   alternarConexion(): void {
     this.mostrarConexion.update(valor => !valor);
+  }
+
+  probarConexion(): void {
+    if (this.probandoConexion()) return;
+    this.probandoConexion.set(true);
+    this.mensaje.set(null);
+    this.error.set(null);
+    this.servicio.probarConexion().pipe(finalize(() => this.probandoConexion.set(false))).subscribe({
+      next: resultado => this.mensaje.set(
+        `${resultado.mensaje}. ${resultado.paqueteriasDisponibles} paqueterías disponibles para ${resultado.codigoPais} en ${resultado.ambiente === 'PRUEBA' ? 'pruebas' : 'producción'}.`
+      ),
+      error: error => this.error.set(error?.error?.mensaje || error?.error?.detail || error?.error?.message || 'No fue posible comprobar la conexión con Envia.com.')
+    });
   }
 
   cambiarModoCredencial(modo: ConfiguracionEnviosAdmin['modoCredencial']): void {
@@ -69,7 +83,7 @@ export class SiteShippingComponent implements OnInit {
         this.eliminarToken = false;
         this.mensaje.set('Configuración de envíos guardada correctamente.');
       },
-      error: error => this.error.set(error?.error?.detail || error?.error?.message || 'No fue posible guardar la configuración.')
+      error: error => this.error.set(error?.error?.mensaje || error?.error?.detail || error?.error?.message || 'No fue posible guardar la configuración.')
     });
   }
 

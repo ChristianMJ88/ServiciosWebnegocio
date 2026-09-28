@@ -50,6 +50,15 @@ export interface ConfiguracionEnviosAdmin {
   };
 }
 
+export interface PruebaConexionEnvio {
+  conectada: boolean;
+  proveedor: string;
+  ambiente: 'PRUEBA' | 'PRODUCCION';
+  codigoPais: string;
+  paqueteriasDisponibles: number;
+  mensaje: string;
+}
+
 @Injectable({ providedIn: 'root' })
 export class ShippingAdminService {
   private readonly http = inject(HttpClient);
@@ -72,5 +81,9 @@ export class ShippingAdminService {
       valorRecargo: configuracion.tipoRecargo === 'NINGUNO' ? 0 : Number(configuracion.valorRecargo || 0),
       origenes: configuracion.origenes.filter(origen => origen.configurado).map(({ sucursalNombre, sucursalActiva, configurado, direccionFormateada, direccionValidacionEstado, ...origen }) => origen)
     });
+  }
+
+  probarConexion(): Observable<PruebaConexionEnvio> {
+    return this.http.post<PruebaConexionEnvio>(`${this.url}/probar-conexion`, {});
   }
 }

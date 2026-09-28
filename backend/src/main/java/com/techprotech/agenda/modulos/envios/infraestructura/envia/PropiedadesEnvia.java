@@ -7,6 +7,8 @@ public record PropiedadesEnvia(
         String geocodigosBaseUrl,
         String apiPruebasBaseUrl,
         String apiProduccionBaseUrl,
+        String consultasPruebasBaseUrl,
+        String consultasProduccionBaseUrl,
         String registroPruebasUrl,
         String credencialesPruebasUrl,
         String registroProduccionUrl,

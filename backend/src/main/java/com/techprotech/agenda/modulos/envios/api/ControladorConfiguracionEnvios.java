@@ -2,6 +2,7 @@ package com.techprotech.agenda.modulos.envios.api;
 
 import com.techprotech.agenda.modulos.envios.api.dto.ConfiguracionEnvioRequest;
 import com.techprotech.agenda.modulos.envios.api.dto.ConfiguracionEnvioResponse;
+import com.techprotech.agenda.modulos.envios.api.dto.PruebaConexionEnvioResponse;
 import com.techprotech.agenda.modulos.envios.aplicacion.ServicioConfiguracionEnvios;
 import com.techprotech.agenda.modulos.envios.seguridad.PermisosEnvios;
 import com.techprotech.agenda.seguridad.jwt.UsuarioAutenticado;
@@ -29,5 +30,10 @@ public class ControladorConfiguracionEnvios {
     public ConfiguracionEnvioResponse actualizar(@AuthenticationPrincipal UsuarioAutenticado usuario,
                                                  @Valid @RequestBody ConfiguracionEnvioRequest request) {
         return servicio.actualizar(usuario.empresaId(), request);
+    }
+
+    @PostMapping("/probar-conexion")
+    public PruebaConexionEnvioResponse probarConexion(@AuthenticationPrincipal UsuarioAutenticado usuario) {
+        return servicio.probarConexion(usuario.empresaId());
     }
 }

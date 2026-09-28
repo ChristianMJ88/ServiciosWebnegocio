@@ -26,8 +26,11 @@
       </div>
       <div class="connection-status" [class.is-connected]="config.credencialDisponible">
         <span><i class="bi" [class.bi-check-circle-fill]="config.credencialDisponible" [class.bi-link-45deg]="!config.credencialDisponible"></i></span>
-        <div><strong>{{ config.credencialDisponible ? 'Conexión preparada' : 'Conecta la cuenta del negocio' }}</strong><small>{{ config.modoCredencial === 'PLATAFORMA' ? 'Fluora administrará la credencial y el cargo de cada guía.' : (config.tokenConfigurado ? 'La credencial está cifrada y nunca se devuelve al navegador.' : 'Te llevamos al panel correcto según el ambiente.') }}</small></div>
-        @if (config.modoCredencial === 'CUENTA_PROPIA') { <button type="button" class="outline-button" (click)="alternarConexion()">{{ config.tokenConfigurado ? 'Administrar' : 'Conectar Envia.com' }}</button> }
+        <div><strong>{{ config.credencialDisponible ? 'Credencial guardada' : 'Conecta la cuenta del negocio' }}</strong><small>{{ config.modoCredencial === 'PLATAFORMA' ? 'Fluora administrará la credencial y el cargo de cada guía.' : (config.tokenConfigurado ? 'Está cifrada por tenant. Usa Probar conexión para validar el ambiente.' : 'Te llevamos al panel correcto según el ambiente.') }}</small></div>
+        <div class="connection-status__actions">
+          @if (config.credencialDisponible) { <button type="button" class="outline-button" [disabled]="probandoConexion()" (click)="probarConexion()"><i class="bi bi-wifi"></i>{{ probandoConexion() ? 'Comprobando…' : 'Probar conexión' }}</button> }
+          @if (config.modoCredencial === 'CUENTA_PROPIA') { <button type="button" class="outline-button" (click)="alternarConexion()">{{ config.tokenConfigurado ? 'Administrar' : 'Conectar Envia.com' }}</button> }
+        </div>
       </div>
       @if (config.modoCredencial === 'CUENTA_PROPIA' && mostrarConexion()) {
         <section class="connection-guide" aria-label="Asistente de conexión con Envia.com">
@@ -98,6 +101,6 @@
       </div>
     </section>
 
-    <footer class="shipping-footer"><p><i class="bi bi-info-circle"></i>Las cotizaciones se recalcularán en backend antes de cobrar.</p><button type="button" class="primary-button" [disabled]="guardando()" (click)="guardar()"><i class="bi bi-check2-circle"></i>{{ guardando() ? 'Guardando…' : 'Guardar envíos' }}</button></footer>
+    <footer class="shipping-footer"><p><i class="bi bi-info-circle"></i>La tarifa real requiere una credencial verificada y peso y medidas completos en cada producto.</p><button type="button" class="primary-button" [disabled]="guardando()" (click)="guardar()"><i class="bi bi-check2-circle"></i>{{ guardando() ? 'Guardando…' : 'Guardar envíos' }}</button></footer>
   }
 </section>
