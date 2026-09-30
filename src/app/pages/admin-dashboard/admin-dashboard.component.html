@@ -486,6 +486,16 @@
   }
 }
 
+@if (seccionActiva() === 'pagos') {
+  @defer {
+    <app-admin-payments-section />
+  } @placeholder {
+    <section class="section-stack">
+      <div class="workspace-card"><p class="helper-text mb-0">Preparando la conexión de cobros del negocio.</p></div>
+    </section>
+  }
+}
+
 @if (seccionActiva() === 'envios') {
   @defer {
     <app-admin-shipping-section />

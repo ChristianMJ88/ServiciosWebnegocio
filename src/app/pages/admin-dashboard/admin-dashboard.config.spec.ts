@@ -28,4 +28,11 @@ describe('configuración del menú administrativo', () => {
     expect(grupos.find(grupo => grupo.id === 'logistica')?.modulosVisibles.map(modulo => modulo.id))
       .toEqual(['envios']);
   });
+
+  it('muestra pagos en comercial únicamente cuando el backend concede el permiso', () => {
+    const grupos = construirGruposSidebarAdmin(filtrarModulosAdmin([PERMISOS.pagosConfigurar]));
+
+    expect(grupos.find(grupo => grupo.id === 'comercial')?.modulosVisibles.map(modulo => modulo.id))
+      .toEqual(['pagos']);
+  });
 });

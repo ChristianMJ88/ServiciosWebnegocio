@@ -81,6 +81,7 @@ import { AdminServicesSectionComponent } from './catalog/admin-services-section.
 import { AdminProductsSectionComponent } from './products/admin-products-section.component';
 import { AdminInventorySectionComponent } from './products/admin-inventory-section.component';
 import { AdminShippingSectionComponent } from './shipping/admin-shipping-section.component';
+import { AdminPaymentsSectionComponent } from './payments/admin-payments-section.component';
 import { AdminCommissionsSectionComponent } from './products/admin-commissions-section.component';
 import { AdminSummarySectionComponent } from './overview/admin-summary-section.component';
 import { AdminOnboardingCardComponent } from './onboarding/admin-onboarding-card.component';
@@ -207,6 +208,7 @@ type NotificacionAdmin = {
     AdminProductsSectionComponent,
     AdminInventorySectionComponent,
     AdminShippingSectionComponent,
+    AdminPaymentsSectionComponent,
     AdminCommissionsSectionComponent,
     AdminSummarySectionComponent,
     AdminOnboardingCardComponent,

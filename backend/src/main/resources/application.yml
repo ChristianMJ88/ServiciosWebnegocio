@@ -101,7 +101,7 @@ aplicacion:
       client-id: ${MERCADO_PAGO_CLIENT_ID:}
       client-secret: ${MERCADO_PAGO_CLIENT_SECRET:}
       redirect-uri: ${MERCADO_PAGO_REDIRECT_URI:https://api.refluora.com/api/v1/admin/pagos/mercado-pago/oauth/callback}
-      frontend-resultado-url: ${MERCADO_PAGO_FRONTEND_RESULTADO_URL:https://app.refluora.com/admin/sitio}
+      frontend-resultado-url: ${MERCADO_PAGO_FRONTEND_RESULTADO_URL:https://app.refluora.com/admin/pagos}
       webhook-secret: ${MERCADO_PAGO_WEBHOOK_SECRET:}
       public-key-prueba: ${MERCADO_PAGO_PRUEBA_PUBLIC_KEY:}
       access-token-prueba: ${MERCADO_PAGO_PRUEBA_ACCESS_TOKEN:}

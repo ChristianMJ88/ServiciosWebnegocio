@@ -5,13 +5,13 @@ import { finalize, forkJoin } from 'rxjs';
 import { ConfiguracionCheckout, ConexionProveedorPago, PaymentsAdminService } from './payments-admin.service';
 
 @Component({
-  selector: 'app-site-payments',
+  selector: 'app-admin-payments-section',
   standalone: true,
   imports: [CommonModule],
-  templateUrl: './site-payments.component.html',
-  styleUrl: './site-payments.component.css'
+  templateUrl: './admin-payments-section.component.html',
+  styleUrl: './admin-payments-section.component.css'
 })
-export class SitePaymentsComponent implements OnInit {
+export class AdminPaymentsSectionComponent implements OnInit {
   private readonly servicio = inject(PaymentsAdminService);
   private readonly route = inject(ActivatedRoute);
 

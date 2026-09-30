@@ -23,12 +23,10 @@ import { SiteReviewsComponent } from './site-reviews.component';
 import { SiteFaqComponent } from './site-faq.component';
 import { AdminSiteFacade } from './admin-site.facade';
 import { finalize } from 'rxjs';
-import { AuthService } from '../../../core/auth/auth.service';
-import { SitePaymentsComponent } from './site-payments.component';
 
 type SiteEditorSectionId =
   | 'estructura' | 'servicios_destacados' | 'beneficios' | 'promociones' | 'galeria'
-  | 'resenas' | 'preguntas_frecuentes' | 'pagos' | 'identidad' | 'apariencia'
+  | 'resenas' | 'preguntas_frecuentes' | 'identidad' | 'apariencia'
   | 'navegacion' | 'portada' | 'contacto' | 'seo_footer' | 'publicacion';
 
 @Component({
@@ -49,8 +47,7 @@ type SiteEditorSectionId =
     SiteGalleryComponent,
     SiteBenefitsComponent,
     SiteReviewsComponent,
-    SiteFaqComponent,
-    SitePaymentsComponent
+    SiteFaqComponent
   ],
   templateUrl: './admin-site-section.component.html',
   styleUrl: './admin-site-section.component.css'
@@ -58,7 +55,6 @@ type SiteEditorSectionId =
 export class AdminSiteSectionComponent implements OnInit {
   private readonly platformHost = inject(PlatformHostService);
   private readonly facade = inject(AdminSiteFacade);
-  private readonly auth = inject(AuthService);
   readonly defaultHeroImage = '/fluora-showcase-sites.svg';
 
   readonly formularioSitio = input.required<GuardarConfiguracionSitioPayload>();
@@ -97,14 +93,7 @@ export class AdminSiteSectionComponent implements OnInit {
     { id: 'publicacion' as const, label: 'Dominio y publicación', icon: 'bi bi-globe2' }
   ];
 
-  readonly secciones = computed(() => {
-    const secciones = [...this.seccionesBase];
-    if (this.auth.puedeConfigurarPagos()) {
-      const indice = secciones.findIndex(seccion => seccion.id === 'publicacion');
-      secciones.splice(indice, 0, { id: 'pagos' as const, label: 'Pagos en línea', icon: 'bi bi-credit-card-2-front' });
-    }
-    return secciones;
-  });
+  readonly secciones = computed(() => [...this.seccionesBase]);
 
   readonly slugPreview = computed(() => this.normalizarSlug(
     this.formularioSitio().slug || this.formularioSitio().nombreComercial || 'mi-negocio'
