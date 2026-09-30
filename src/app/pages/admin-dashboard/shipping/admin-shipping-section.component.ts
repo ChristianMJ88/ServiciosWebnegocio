@@ -29,6 +29,7 @@ export class AdminShippingSectionComponent implements OnInit {
   readonly vistaActiva = signal<'pedidos' | 'configuracion'>('pedidos');
   readonly gestionAbierta = signal<number | null>(null);
   readonly guardandoGestion = signal<number | null>(null);
+  readonly generandoGuia = signal<number | null>(null);
   gestionManual: GestionEnvioManual | null = null;
   token = '';
   eliminarToken = false;
@@ -127,9 +128,13 @@ export class AdminShippingSectionComponent implements OnInit {
       REQUIERE_COTIZACION: 'Requiere cotización',
       PENDIENTE_GESTION_MANUAL: 'Gestión manual',
       LISTO_PARA_GUIA: 'Listo para generar guía',
+      GENERANDO_GUIA: 'Generando guía',
+      ERROR_GUIA: 'Error al generar guía',
       GUIA_GENERADA: 'Guía generada',
       EN_TRANSITO: 'En tránsito',
-      ENTREGADO: 'Entregado'
+      ENTREGADO: 'Entregado',
+      INCIDENCIA: 'Incidencia',
+      CANCELADO: 'Cancelado'
     };
     return etiquetas[estado] ?? estado.replaceAll('_', ' ').toLowerCase();
   }
@@ -171,6 +176,27 @@ export class AdminShippingSectionComponent implements OnInit {
 
   puedeGestionarse(pedido: EnvioPedidoAdmin): boolean {
     return !['ENTREGADO', 'CANCELADO'].includes(pedido.estado);
+  }
+
+  puedeGenerarGuia(pedido: EnvioPedidoAdmin): boolean {
+    return pedido.ambiente !== 'NO_APLICA' && ['LISTO_PARA_GUIA', 'ERROR_GUIA'].includes(pedido.estado);
+  }
+
+  generarGuia(pedido: EnvioPedidoAdmin): void {
+    if (!this.puedeGenerarGuia(pedido) || this.generandoGuia()) return;
+    this.generandoGuia.set(pedido.id);
+    this.mensaje.set(null);
+    this.error.set(null);
+    this.servicio.generarGuia(pedido.id).pipe(finalize(() => this.generandoGuia.set(null))).subscribe({
+      next: actualizado => {
+        this.pedidos.update(items => items.map(item => item.id === actualizado.id ? actualizado : item));
+        this.mensaje.set(`La guía ${actualizado.numeroGuia ?? ''} fue generada correctamente.`.trim());
+      },
+      error: error => {
+        this.error.set(error?.error?.detail || error?.error?.message || 'No fue posible generar la guía.');
+        this.servicio.listarPedidos().subscribe(items => this.pedidos.set(items));
+      }
+    });
   }
 
   private estadoManual(estado: string): GestionEnvioManual['estado'] {

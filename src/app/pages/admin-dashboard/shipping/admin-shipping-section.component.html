@@ -133,11 +133,19 @@
                 <div class="shipment-card__title"><strong>{{ pedido.destinatario }}</strong><span>{{ etiquetaEstado(pedido.estado) }}</span></div>
                 <small>{{ pedido.destino }}</small>
                 @if (pedido.motivoBloqueo) { <p><i class="bi bi-info-circle"></i>{{ pedido.motivoBloqueo }}</p> }
+                @if (pedido.ultimoError) { <p class="shipment-error"><i class="bi bi-exclamation-triangle"></i>{{ pedido.ultimoError }}</p> }
                 <div class="shipment-card__meta"><span>Orden {{ pedido.ordenPublicId | slice:0:8 }}</span><span>{{ pedido.creadoEn | date:'dd MMM, HH:mm' }}</span><span>{{ pedido.ambiente === 'PRUEBA' ? 'Sandbox' : 'Producción' }}</span></div>
+                @if (pedido.numeroGuia) {
+                  <div class="shipment-tracking"><span><small>Número de guía</small><strong>{{ pedido.numeroGuia }}</strong></span>@if (pedido.urlEtiqueta) {<a [href]="pedido.urlEtiqueta" target="_blank" rel="noopener noreferrer"><i class="bi bi-file-earmark-pdf"></i>Etiqueta</a>}@if (pedido.urlRastreo) {<a [href]="pedido.urlRastreo" target="_blank" rel="noopener noreferrer"><i class="bi bi-geo-alt"></i>Rastrear</a>}</div>
+                }
               </div>
               <div class="shipment-card__amount"><small>Envío cobrado</small><strong>{{ pedido.costoCliente | appMoney:pedido.moneda:2:2 }}</strong><span>Total {{ pedido.totalOrden | appMoney:pedido.moneda:2:2 }}</span></div>
-              @if (puedeGestionarse(pedido)) {
-                <button type="button" class="shipment-manage" (click)="abrirGestion(pedido)"><i class="bi bi-pencil-square"></i>{{ gestionAbierta() === pedido.id ? 'Cerrar' : 'Gestionar envío' }}</button>
+              <div class="shipment-actions">
+                @if (puedeGenerarGuia(pedido)) {<button type="button" class="shipment-generate" [disabled]="generandoGuia() === pedido.id" (click)="generarGuia(pedido)"><i class="bi bi-lightning-charge"></i>{{ generandoGuia() === pedido.id ? 'Generando…' : (pedido.estado === 'ERROR_GUIA' ? 'Reintentar guía' : 'Generar guía') }}</button>}
+                @if (puedeGestionarse(pedido)) {<button type="button" class="shipment-manage" (click)="abrirGestion(pedido)"><i class="bi bi-pencil-square"></i>{{ gestionAbierta() === pedido.id ? 'Cerrar' : 'Gestión manual' }}</button>}
+              </div>
+              @if (pedido.eventos.length) {
+                <details class="shipment-timeline"><summary><i class="bi bi-clock-history"></i>Ver historial ({{ pedido.eventos.length }})<i class="bi bi-chevron-down"></i></summary><ol>@for (evento of pedido.eventos; track evento.id) {<li><span></span><div><strong>{{ etiquetaEstado(evento.estado) }}</strong><small>{{ evento.descripcion || evento.tipo }}</small><time>{{ evento.creadoEn | date:'dd MMM, HH:mm' }}</time></div></li>}</ol></details>
               }
               @if (gestionAbierta() === pedido.id && gestionManual; as gestion) {
                 <form class="manual-shipment-form" (ngSubmit)="guardarGestion(pedido)">

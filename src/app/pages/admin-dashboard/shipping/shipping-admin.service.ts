@@ -64,11 +64,12 @@ export interface EnvioPedidoAdmin {
   ordenPublicId: string;
   estado: string;
   motivoBloqueo: string | null;
-  ambiente: 'PRUEBA' | 'PRODUCCION';
+  ambiente: 'PRUEBA' | 'PRODUCCION' | 'NO_APLICA';
   paqueteria: string | null;
   servicio: string | null;
   numeroGuia: string | null;
   urlEtiqueta: string | null;
+  urlRastreo: string | null;
   estadoRastreo: string | null;
   costoProveedor: number | null;
   costoCliente: number;
@@ -76,6 +77,15 @@ export interface EnvioPedidoAdmin {
   moneda: string;
   destinatario: string;
   destino: string;
+  intentos: number;
+  ultimoError: string | null;
+  eventos: Array<{
+    id: number;
+    tipo: string;
+    estado: string;
+    descripcion: string | null;
+    creadoEn: string;
+  }>;
   creadoEn: string;
   actualizadoEn: string;
 }
@@ -123,5 +133,9 @@ export class ShippingAdminService {
 
   actualizarManual(envioId: number, gestion: GestionEnvioManual): Observable<EnvioPedidoAdmin> {
     return this.http.patch<EnvioPedidoAdmin>(`${this.url}/pedidos/${envioId}/gestion-manual`, gestion);
+  }
+
+  generarGuia(envioId: number): Observable<EnvioPedidoAdmin> {
+    return this.http.post<EnvioPedidoAdmin>(`${this.url}/pedidos/${envioId}/generar-guia`, {});
   }
 }
