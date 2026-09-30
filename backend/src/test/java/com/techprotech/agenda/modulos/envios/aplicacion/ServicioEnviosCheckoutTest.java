@@ -31,7 +31,8 @@ class ServicioEnviosCheckoutTest {
         servicio = new ServicioEnviosCheckout(envios, ordenes, mock(CheckoutOrdenDetalleRepositorio.class),
                 configuraciones, mock(SucursalEnvioOrigenRepositorio.class), mock(ProductoRepositorio.class),
                 mock(EnvioCotizacionRepositorio.class), mock(EnvioEventoRepositorio.class),
-                mock(ServicioTrazabilidadEnvio.class));
+                mock(ServicioTrazabilidadEnvio.class),
+                mock(com.techprotech.agenda.compartido.correo.ServicioOutboxCorreoEnvios.class));
         when(envios.save(any())).thenAnswer(invocacion -> invocacion.getArgument(0));
     }
 

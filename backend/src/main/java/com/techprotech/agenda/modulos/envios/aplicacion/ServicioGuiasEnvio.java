@@ -1,5 +1,7 @@
 package com.techprotech.agenda.modulos.envios.aplicacion;
 
+import com.techprotech.agenda.compartido.correo.ServicioOutboxCorreoEnvios;
+
 import com.techprotech.agenda.modulos.envios.dominio.ProveedorGuiasEnvio;
 import com.techprotech.agenda.modulos.envios.infraestructura.entidad.*;
 import com.techprotech.agenda.modulos.envios.infraestructura.repositorio.*;
@@ -32,6 +34,7 @@ public class ServicioGuiasEnvio {
     private final ProductoRepositorio productos;
     private final ResolutorCredencialEnvio credenciales;
     private final ServicioTrazabilidadEnvio trazabilidad;
+    private final ServicioOutboxCorreoEnvios notificaciones;
     private final Map<String, ProveedorGuiasEnvio> proveedores;
     private final TransactionTemplate transaccion;
 
@@ -40,10 +43,12 @@ public class ServicioGuiasEnvio {
                               EmpresaEnvioConfigRepositorio configuraciones,
                               SucursalEnvioOrigenRepositorio origenes, ProductoRepositorio productos,
                               ResolutorCredencialEnvio credenciales, ServicioTrazabilidadEnvio trazabilidad,
+                              ServicioOutboxCorreoEnvios notificaciones,
                               List<ProveedorGuiasEnvio> proveedores, PlatformTransactionManager tx) {
         this.envios = envios; this.ordenes = ordenes; this.detalles = detalles;
         this.configuraciones = configuraciones; this.origenes = origenes; this.productos = productos;
         this.credenciales = credenciales; this.trazabilidad = trazabilidad;
+        this.notificaciones = notificaciones;
         this.proveedores = proveedores.stream().collect(Collectors.toUnmodifiableMap(
                 item -> item.codigo().toUpperCase(Locale.ROOT), Function.identity()));
         this.transaccion = new TransactionTemplate(tx);
@@ -91,7 +96,8 @@ public class ServicioGuiasEnvio {
             ProveedorGuiasEnvio proveedor = proveedores.get(envio.getProveedor().toUpperCase(Locale.ROOT));
             if (config == null || proveedor == null || envio.getNumeroGuia() == null) return;
             var rastreo = proveedor.rastrear(credenciales.resolver(config), envio.getAmbiente(), envio.getNumeroGuia());
-            String estado = normalizarEstado(rastreo.estado(), envio.getEstado());
+            String estadoAnterior = envio.getEstado();
+            String estado = normalizarEstado(rastreo.estado(), estadoAnterior);
             transaccion.executeWithoutResult(status -> {
                 EnvioPedidoEntidad actual = envio(envio.getEmpresaId(), envio.getId());
                 actual.setEstado(estado);
@@ -100,6 +106,9 @@ public class ServicioGuiasEnvio {
                 actual.setUltimoError(null);
                 envios.save(actual);
                 trazabilidad.registrar(actual, "RASTREO", rastreo.descripcion(), rastreo.referenciaExterna());
+                if (!Objects.equals(estadoAnterior, estado)) {
+                    notificaciones.programar(actual.getEmpresaId(), actual.getId(), estado);
+                }
             });
         } catch (RuntimeException ex) {
             transaccion.executeWithoutResult(status -> {
@@ -135,6 +144,9 @@ public class ServicioGuiasEnvio {
         String detalle = descripcion == null || descripcion.isBlank()
                 ? "Envia.com actualizó el estado de la guía" : descripcion;
         trazabilidad.registrar(envio, "RASTREO_WEBHOOK", detalle, "webhook:" + referenciaExterna);
+        if (!Objects.equals(estadoAnterior, estado)) {
+            notificaciones.programar(envio.getEmpresaId(), envio.getId(), estado);
+        }
     }
 
     private Contexto contexto(Long empresaId, Long envioId) {
@@ -194,6 +206,7 @@ public class ServicioGuiasEnvio {
         envios.save(envio);
         trazabilidad.registrar(envio, "GUIA_GENERADA", "La guía fue generada correctamente",
                 "guia:" + guia.numeroGuia());
+        notificaciones.programar(envio.getEmpresaId(), envio.getId(), envio.getEstado());
     }
 
     private void fallar(Long empresaId, Long envioId, RuntimeException ex) {

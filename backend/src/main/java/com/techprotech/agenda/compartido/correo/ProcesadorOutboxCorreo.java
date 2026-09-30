@@ -23,6 +23,7 @@ public class ProcesadorOutboxCorreo {
     private final ServicioCorreoEventosCita servicioCorreoEventosCita;
     private final ServicioCorreoContactos servicioCorreoContactos;
     private final ServicioCorreoBienvenida servicioCorreoBienvenida;
+    private final ServicioCorreoEnvios servicioCorreoEnvios;
     private final ServicioGestionSolicitudesContacto servicioGestionSolicitudesContacto;
     private final PropiedadesCorreo propiedadesCorreo;
     private final ObjectMapper objectMapper;
@@ -33,6 +34,7 @@ public class ProcesadorOutboxCorreo {
             ServicioCorreoEventosCita servicioCorreoEventosCita,
             ServicioCorreoContactos servicioCorreoContactos,
             ServicioCorreoBienvenida servicioCorreoBienvenida,
+            ServicioCorreoEnvios servicioCorreoEnvios,
             ServicioGestionSolicitudesContacto servicioGestionSolicitudesContacto,
             PropiedadesCorreo propiedadesCorreo,
             ObjectMapper objectMapper
@@ -42,6 +44,7 @@ public class ProcesadorOutboxCorreo {
         this.servicioCorreoEventosCita = servicioCorreoEventosCita;
         this.servicioCorreoContactos = servicioCorreoContactos;
         this.servicioCorreoBienvenida = servicioCorreoBienvenida;
+        this.servicioCorreoEnvios = servicioCorreoEnvios;
         this.servicioGestionSolicitudesContacto = servicioGestionSolicitudesContacto;
         this.propiedadesCorreo = propiedadesCorreo;
         this.objectMapper = objectMapper;
@@ -104,6 +107,13 @@ public class ProcesadorOutboxCorreo {
             BienvenidaEmpresaCorreo bienvenida = objectMapper.readValue(
                     pendiente.getPayloadJson(), BienvenidaEmpresaCorreo.class);
             servicioCorreoBienvenida.enviar(bienvenida);
+            return;
+        }
+
+        if (pendiente.getTipoEvento().startsWith("ENVIO_") && pendiente.getTipoEvento().endsWith("_EMAIL")) {
+            EventoEnvioCorreoPayload payload = objectMapper.readValue(
+                    pendiente.getPayloadJson(), EventoEnvioCorreoPayload.class);
+            servicioCorreoEnvios.enviar(pendiente.getEmpresaId(), pendiente.getTipoEvento(), payload);
             return;
         }
 

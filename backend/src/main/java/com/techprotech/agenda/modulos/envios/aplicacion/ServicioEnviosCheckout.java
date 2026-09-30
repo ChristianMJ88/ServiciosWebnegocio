@@ -1,5 +1,7 @@
 package com.techprotech.agenda.modulos.envios.aplicacion;
 
+import com.techprotech.agenda.compartido.correo.ServicioOutboxCorreoEnvios;
+
 import com.techprotech.agenda.modulos.envios.api.dto.EnvioPedidoResponse;
 import com.techprotech.agenda.modulos.envios.api.dto.ActualizarEnvioManualRequest;
 import com.techprotech.agenda.modulos.envios.api.dto.EnvioEventoResponse;
@@ -35,6 +37,7 @@ public class ServicioEnviosCheckout {
     private final EnvioCotizacionRepositorio cotizaciones;
     private final EnvioEventoRepositorio eventos;
     private final ServicioTrazabilidadEnvio trazabilidad;
+    private final ServicioOutboxCorreoEnvios notificaciones;
 
     public ServicioEnviosCheckout(EnvioPedidoRepositorio envios, CheckoutOrdenRepositorio ordenes,
                                   CheckoutOrdenDetalleRepositorio detalles,
@@ -43,7 +46,8 @@ public class ServicioEnviosCheckout {
                                   ProductoRepositorio productos,
                                   EnvioCotizacionRepositorio cotizaciones,
                                   EnvioEventoRepositorio eventos,
-                                  ServicioTrazabilidadEnvio trazabilidad) {
+                                  ServicioTrazabilidadEnvio trazabilidad,
+                                  ServicioOutboxCorreoEnvios notificaciones) {
         this.envios = envios;
         this.ordenes = ordenes;
         this.detalles = detalles;
@@ -53,6 +57,7 @@ public class ServicioEnviosCheckout {
         this.cotizaciones = cotizaciones;
         this.eventos = eventos;
         this.trazabilidad = trazabilidad;
+        this.notificaciones = notificaciones;
     }
 
     @Transactional
@@ -131,6 +136,7 @@ public class ServicioEnviosCheckout {
         envio.setUltimoError(null);
         envio = envios.save(envio);
         trazabilidad.registrar(envio, "GESTION_MANUAL", "El negocio actualizó la guía externa", null);
+        notificaciones.programar(envio.getEmpresaId(), envio.getId(), envio.getEstado());
         return respuesta(envio);
     }
 
