@@ -39,7 +39,7 @@ class ServicioCotizacionesEnvioTest {
         cotizaciones = mock(EnvioCotizacionRepositorio.class);
         proveedor = mock(ProveedorCotizacionesEnvio.class);
         ResolutorCredencialEnvio credenciales = mock(ResolutorCredencialEnvio.class);
-        PropiedadesEnvia propiedades = new PropiedadesEnvia("", "", "", "", "", "", "", "", "",
+        PropiedadesEnvia propiedades = new PropiedadesEnvia("", "", "", "", "", "", "", "", "", "",
                 15, false, "", "");
         servicio = new ServicioCotizacionesEnvio(sitios, configuraciones, origenes, productos, cotizador,
                 cotizaciones, proveedor, credenciales, propiedades);

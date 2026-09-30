@@ -13,6 +13,7 @@ public record PropiedadesEnvia(
         String credencialesPruebasUrl,
         String registroProduccionUrl,
         String credencialesProduccionUrl,
+        String webhookPublicBaseUrl,
         int vigenciaCotizacionMinutos,
         boolean plataformaHabilitada,
         String tokenPlataformaPruebas,

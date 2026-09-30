@@ -20,6 +20,9 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.SecureRandom;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.*;
@@ -28,6 +31,7 @@ import java.util.stream.Collectors;
 
 @Service
 public class ServicioConfiguracionEnvios {
+    private final SecureRandom random = new SecureRandom();
     private final EmpresaEnvioConfigRepositorio configuraciones;
     private final SucursalEnvioOrigenRepositorio origenes;
     private final SucursalRepositorio sucursales;
@@ -116,6 +120,7 @@ public class ServicioConfiguracionEnvios {
         config.setPermitirSeleccionPaquetera(request.permitirSeleccionPaquetera());
         config.setTipoRecargo(request.tipoRecargo());
         config.setValorRecargo(request.valorRecargo().setScale(4, RoundingMode.HALF_UP));
+        asegurarTokenWebhook(config);
         configuraciones.save(config);
 
         origenes.deleteByEmpresaId(empresaId);
@@ -130,11 +135,13 @@ public class ServicioConfiguracionEnvios {
                 .map(sucursal -> respuestaOrigen(sucursal, configurados.get(sucursal.getId())))
                 .toList();
         boolean tokenConfigurado = config.getTokenCifrado() != null && !config.getTokenCifrado().isBlank();
+        String webhookUrl = urlWebhook(config);
         return new ConfiguracionEnvioResponse(config.getProveedor(), config.isHabilitado(), config.getAmbiente(),
                 config.getModoCredencial(), tokenConfigurado,
                 credencialDisponible(config, config.getModoCredencial(), config.getAmbiente()),
                 config.isGenerarGuiaAutomaticamente(), config.isPermitirSeleccionPaquetera(),
-                config.getTipoRecargo(), config.getValorRecargo(), lista, onboarding(config.getAmbiente()));
+                config.getTipoRecargo(), config.getValorRecargo(), lista, onboarding(config.getAmbiente()),
+                webhookUrl, webhookUrl != null);
     }
 
     private OnboardingEnvioResponse onboarding(String ambiente) {
@@ -219,5 +226,31 @@ public class ServicioConfiguracionEnvios {
 
     private String limpio(String valor) {
         return valor == null || valor.isBlank() ? null : valor.trim();
+    }
+
+    private void asegurarTokenWebhook(EmpresaEnvioConfigEntidad config) {
+        if (config.getWebhookTokenHash() != null && config.getWebhookTokenCifrado() != null) return;
+        byte[] bytes = new byte[32];
+        random.nextBytes(bytes);
+        String token = Base64.getUrlEncoder().withoutPadding().encodeToString(bytes);
+        config.setWebhookTokenHash(hash(token));
+        config.setWebhookTokenCifrado(secretos.encriptar(token));
+    }
+
+    private String urlWebhook(EmpresaEnvioConfigEntidad config) {
+        String base = limpio(propiedadesEnvia.webhookPublicBaseUrl());
+        if (base == null || config.getWebhookTokenCifrado() == null) return null;
+        String token = secretos.desencriptar(config.getWebhookTokenCifrado());
+        while (base.endsWith("/")) base = base.substring(0, base.length() - 1);
+        return base + "/api/v1/publico/envios/envia/webhooks/" + token;
+    }
+
+    private String hash(String valor) {
+        try {
+            return HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256")
+                    .digest(valor.getBytes(StandardCharsets.UTF_8)));
+        } catch (Exception ex) {
+            throw new IllegalStateException("No fue posible proteger el webhook de envíos", ex);
+        }
     }
 }

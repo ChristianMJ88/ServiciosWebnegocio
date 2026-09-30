@@ -11,6 +11,8 @@ import java.util.Optional;
 
 public interface EnvioPedidoRepositorio extends JpaRepository<EnvioPedidoEntidad, Long> {
     Optional<EnvioPedidoEntidad> findByEmpresaIdAndCheckoutOrdenId(Long empresaId, Long checkoutOrdenId);
+    Optional<EnvioPedidoEntidad> findByEmpresaIdAndProveedorAndNumeroGuia(Long empresaId, String proveedor, String numeroGuia);
+    Optional<EnvioPedidoEntidad> findByEmpresaIdAndProveedorAndProveedorEnvioId(Long empresaId, String proveedor, String proveedorEnvioId);
     List<EnvioPedidoEntidad> findTop20ByEmpresaIdOrderByCreadoEnDesc(Long empresaId);
     List<EnvioPedidoEntidad> findTop50ByEstadoOrderByActualizadoEnAsc(String estado);
     List<EnvioPedidoEntidad> findTop50ByEstadoInAndNumeroGuiaIsNotNullOrderByRastreoActualizadoEnAsc(List<String> estados);

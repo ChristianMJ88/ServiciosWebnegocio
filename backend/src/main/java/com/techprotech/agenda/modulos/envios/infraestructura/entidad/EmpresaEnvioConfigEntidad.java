@@ -21,6 +21,8 @@ public class EmpresaEnvioConfigEntidad {
     @Column(nullable = false, length = 20) private String ambiente = "PRUEBA";
     @Column(name = "modo_credencial", nullable = false, length = 30) private String modoCredencial = "CUENTA_PROPIA";
     @Column(name = "token_cifrado", columnDefinition = "MEDIUMTEXT") private String tokenCifrado;
+    @Column(name = "webhook_token_hash", length = 64, unique = true) private String webhookTokenHash;
+    @Column(name = "webhook_token_cifrado", columnDefinition = "TEXT") private String webhookTokenCifrado;
     @Column(name = "generar_guia_automaticamente", nullable = false) private boolean generarGuiaAutomaticamente;
     @Column(name = "permitir_seleccion_paquetera", nullable = false) private boolean permitirSeleccionPaquetera = true;
     @Column(name = "tipo_recargo", nullable = false, length = 20) private String tipoRecargo = "NINGUNO";

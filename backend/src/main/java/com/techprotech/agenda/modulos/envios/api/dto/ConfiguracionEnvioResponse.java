@@ -8,5 +8,5 @@ public record ConfiguracionEnvioResponse(
         boolean tokenConfigurado, boolean credencialDisponible,
         boolean generarGuiaAutomaticamente, boolean permitirSeleccionPaquetera,
         String tipoRecargo, BigDecimal valorRecargo, List<OrigenEnvioResponse> origenes,
-        OnboardingEnvioResponse onboarding
+        OnboardingEnvioResponse onboarding, String webhookUrl, boolean webhookDisponible
 ) {}

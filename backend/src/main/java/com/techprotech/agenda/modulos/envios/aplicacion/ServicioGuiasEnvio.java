@@ -111,6 +111,32 @@ public class ServicioGuiasEnvio {
         }
     }
 
+    public void aplicarEventoWebhook(Long empresaId, String proveedor, String proveedorEnvioId,
+                                     String numeroGuia, String estadoProveedor, String descripcion,
+                                     String referenciaExterna) {
+        EnvioPedidoEntidad envio = null;
+        if (proveedorEnvioId != null && !proveedorEnvioId.isBlank()) {
+            envio = envios.findByEmpresaIdAndProveedorAndProveedorEnvioId(empresaId, proveedor, proveedorEnvioId)
+                    .orElse(null);
+        }
+        if (envio == null && numeroGuia != null && !numeroGuia.isBlank()) {
+            envio = envios.findByEmpresaIdAndProveedorAndNumeroGuia(empresaId, proveedor, numeroGuia)
+                    .orElse(null);
+        }
+        if (envio == null) throw new IllegalArgumentException("El evento no corresponde a una guía del negocio");
+
+        String estadoAnterior = envio.getEstado();
+        String estado = normalizarEstado(estadoProveedor, estadoAnterior);
+        envio.setEstado(estado);
+        envio.setEstadoRastreo(estadoProveedor);
+        envio.setRastreoActualizadoEn(LocalDateTime.now(ZoneOffset.UTC));
+        envio.setUltimoError(null);
+        envios.save(envio);
+        String detalle = descripcion == null || descripcion.isBlank()
+                ? "Envia.com actualizó el estado de la guía" : descripcion;
+        trazabilidad.registrar(envio, "RASTREO_WEBHOOK", detalle, "webhook:" + referenciaExterna);
+    }
+
     private Contexto contexto(Long empresaId, Long envioId) {
         EnvioPedidoEntidad envio = envio(empresaId, envioId);
         CheckoutOrdenEntidad orden = ordenes.findById(envio.getCheckoutOrdenId())

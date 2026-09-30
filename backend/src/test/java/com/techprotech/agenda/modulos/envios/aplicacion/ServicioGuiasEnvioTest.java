@@ -91,6 +91,21 @@ class ServicioGuiasEnvioTest {
         verify(proveedor, never()).generar(any(), any(), any());
     }
 
+    @Test
+    void aplicaRastreoDelWebhookSoloALaGuiaDelTenant() {
+        envio.setEstado("GUIA_GENERADA");
+        envio.setNumeroGuia("TRACK-123");
+        when(envios.findByEmpresaIdAndProveedorAndNumeroGuia(25L, "ENVIA", "TRACK-123"))
+                .thenReturn(Optional.of(envio));
+
+        servicio.aplicarEventoWebhook(25L, "ENVIA", null, "TRACK-123", "delivered",
+                "Entregado al destinatario", "delivery-9");
+
+        assertThat(envio.getEstado()).isEqualTo("ENTREGADO");
+        assertThat(envio.getEstadoRastreo()).isEqualTo("delivered");
+        verify(envios).save(envio);
+    }
+
     private CheckoutOrdenEntidad orden() {
         CheckoutOrdenEntidad orden = new CheckoutOrdenEntidad();
         orden.setId(41L); orden.setPublicId("orden-publica"); orden.setEmpresaId(25L); orden.setSucursalId(3L);

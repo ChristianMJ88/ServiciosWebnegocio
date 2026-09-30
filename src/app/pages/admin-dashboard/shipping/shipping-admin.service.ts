@@ -36,6 +36,8 @@ export interface ConfiguracionEnviosAdmin {
   permitirSeleccionPaquetera: boolean;
   tipoRecargo: 'NINGUNO' | 'PORCENTAJE' | 'IMPORTE';
   valorRecargo: number;
+  webhookUrl: string | null;
+  webhookDisponible: boolean;
   origenes: OrigenEnvioAdmin[];
   onboarding: {
     conexionAutomaticaDisponible: boolean;

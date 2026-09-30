@@ -34,6 +34,13 @@ export class AdminShippingSectionComponent implements OnInit {
   token = '';
   eliminarToken = false;
 
+  copiarWebhook(url: string): void {
+    navigator.clipboard.writeText(url).then(
+      () => this.mensaje.set('URL de seguimiento copiada.'),
+      () => this.error.set('No fue posible copiar la URL. Selecciónala manualmente.')
+    );
+  }
+
   ngOnInit(): void { this.cargar(); }
 
   cargar(): void {

@@ -64,6 +64,15 @@
       @if (config.tokenConfigurado && config.modoCredencial === 'CUENTA_PROPIA') {
         <label class="remove-token"><input type="checkbox" [(ngModel)]="eliminarToken" [ngModelOptions]="{standalone:true}"> Eliminar el token guardado al guardar</label>
       }
+      @if (config.webhookDisponible && config.webhookUrl) {
+        <section class="webhook-card">
+          <span><i class="bi bi-broadcast-pin"></i></span>
+          <div><strong>Seguimiento en tiempo real</strong><small>Registra esta URL en Envia.com con el evento firmado <b>tracking.simple</b>. Fluora validará y procesará cada cambio sin bloquear la respuesta.</small><code>{{ config.webhookUrl }}</code></div>
+          <button type="button" class="outline-button" (click)="copiarWebhook(config.webhookUrl)"><i class="bi bi-copy"></i>Copiar URL</button>
+        </section>
+      } @else if (config.habilitado) {
+        <p class="provider-limitation"><i class="bi bi-info-circle"></i>Guarda la configuración para preparar el webhook. En producción también debe definirse la URL pública de Fluora.</p>
+      }
       } @else {
         <p class="manual-mode-note"><i class="bi bi-shield-check"></i><span><strong>Envia.com no es obligatorio</strong><small>Las compras nacionales continuarán. Después del pago aparecerán abajo para que registres la guía contratada con cualquier paquetería.</small></span></p>
       }
