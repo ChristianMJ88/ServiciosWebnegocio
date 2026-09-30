@@ -24,13 +24,17 @@ public class EnvioPedidoEntidad {
     @Column(length = 80) private String paqueteria;
     @Column(length = 120) private String servicio;
     @Column(name = "numero_guia", length = 160) private String numeroGuia;
+    @Column(name = "proveedor_envio_id", length = 160) private String proveedorEnvioId;
     @Column(name = "url_etiqueta", length = 1000) private String urlEtiqueta;
+    @Column(name = "url_rastreo", length = 1000) private String urlRastreo;
     @Column(name = "estado_rastreo", length = 80) private String estadoRastreo;
     @Column(name = "costo_proveedor", precision = 12, scale = 2) private BigDecimal costoProveedor;
     @Column(name = "costo_cliente", nullable = false, precision = 12, scale = 2) private BigDecimal costoCliente;
     @Column(nullable = false, length = 10) private String moneda;
     @Column(nullable = false) private int intentos;
     @Column(name = "ultimo_error", length = 1000) private String ultimoError;
+    @Column(name = "guia_generada_en") private LocalDateTime guiaGeneradaEn;
+    @Column(name = "rastreo_actualizado_en") private LocalDateTime rastreoActualizadoEn;
     @Column(name = "creado_en", insertable = false, updatable = false) private LocalDateTime creadoEn;
     @Column(name = "actualizado_en", insertable = false, updatable = false) private LocalDateTime actualizadoEn;
 }

@@ -2,12 +2,14 @@ package com.techprotech.agenda.modulos.envios.aplicacion;
 
 import com.techprotech.agenda.modulos.envios.api.dto.EnvioPedidoResponse;
 import com.techprotech.agenda.modulos.envios.api.dto.ActualizarEnvioManualRequest;
+import com.techprotech.agenda.modulos.envios.api.dto.EnvioEventoResponse;
 import com.techprotech.agenda.modulos.envios.infraestructura.entidad.EmpresaEnvioConfigEntidad;
 import com.techprotech.agenda.modulos.envios.infraestructura.entidad.EnvioPedidoEntidad;
 import com.techprotech.agenda.modulos.envios.infraestructura.entidad.SucursalEnvioOrigenEntidad;
 import com.techprotech.agenda.modulos.envios.infraestructura.repositorio.EmpresaEnvioConfigRepositorio;
 import com.techprotech.agenda.modulos.envios.infraestructura.repositorio.EnvioPedidoRepositorio;
 import com.techprotech.agenda.modulos.envios.infraestructura.repositorio.EnvioCotizacionRepositorio;
+import com.techprotech.agenda.modulos.envios.infraestructura.repositorio.EnvioEventoRepositorio;
 import com.techprotech.agenda.modulos.envios.infraestructura.repositorio.SucursalEnvioOrigenRepositorio;
 import com.techprotech.agenda.modulos.pagos.infraestructura.entidad.CheckoutOrdenDetalleEntidad;
 import com.techprotech.agenda.modulos.pagos.infraestructura.entidad.CheckoutOrdenEntidad;
@@ -31,13 +33,17 @@ public class ServicioEnviosCheckout {
     private final SucursalEnvioOrigenRepositorio origenes;
     private final ProductoRepositorio productos;
     private final EnvioCotizacionRepositorio cotizaciones;
+    private final EnvioEventoRepositorio eventos;
+    private final ServicioTrazabilidadEnvio trazabilidad;
 
     public ServicioEnviosCheckout(EnvioPedidoRepositorio envios, CheckoutOrdenRepositorio ordenes,
                                   CheckoutOrdenDetalleRepositorio detalles,
                                   EmpresaEnvioConfigRepositorio configuraciones,
                                   SucursalEnvioOrigenRepositorio origenes,
                                   ProductoRepositorio productos,
-                                  EnvioCotizacionRepositorio cotizaciones) {
+                                  EnvioCotizacionRepositorio cotizaciones,
+                                  EnvioEventoRepositorio eventos,
+                                  ServicioTrazabilidadEnvio trazabilidad) {
         this.envios = envios;
         this.ordenes = ordenes;
         this.detalles = detalles;
@@ -45,6 +51,8 @@ public class ServicioEnviosCheckout {
         this.origenes = origenes;
         this.productos = productos;
         this.cotizaciones = cotizaciones;
+        this.eventos = eventos;
+        this.trazabilidad = trazabilidad;
     }
 
     @Transactional
@@ -54,7 +62,8 @@ public class ServicioEnviosCheckout {
         EnvioPedidoEntidad envio = envios.findByEmpresaIdAndCheckoutOrdenId(orden.getEmpresaId(), orden.getId())
                 .orElseGet(EnvioPedidoEntidad::new);
         if (envio.getEstado() != null
-                && Set.of("GUIA_GENERADA", "EN_TRANSITO", "ENTREGADO", "CANCELADO").contains(envio.getEstado())) return;
+                && Set.of("LISTO_PARA_GUIA", "GENERANDO_GUIA", "GUIA_GENERADA", "EN_TRANSITO", "ENTREGADO",
+                "INCIDENCIA", "ERROR_GUIA", "CANCELADO").contains(envio.getEstado())) return;
         if ("MANUAL".equals(envio.getProveedor()) && "PENDIENTE_GESTION_MANUAL".equals(envio.getEstado())) return;
         envio.setEmpresaId(orden.getEmpresaId());
         envio.setCheckoutOrdenId(orden.getId());
@@ -80,12 +89,23 @@ public class ServicioEnviosCheckout {
                 "Pago confirmado. Registra la paquetería y la guía cuando contrates el envío");
         envio.setEstado(bloqueo.estado());
         envio.setMotivoBloqueo(bloqueo.motivo());
-        envios.save(envio);
+        boolean nuevo = envio.getId() == null;
+        EnvioPedidoEntidad guardado = envios.save(envio);
+        if (nuevo) trazabilidad.registrar(guardado, "PREPARACION", bloqueo.motivo(), null);
     }
 
     @Transactional(readOnly = true)
     public List<EnvioPedidoResponse> listar(Long empresaId) {
         return envios.findTop20ByEmpresaIdOrderByCreadoEnDesc(empresaId).stream().map(this::respuesta).toList();
+    }
+
+    @Transactional(readOnly = true)
+    public EnvioPedidoResponse obtener(Long empresaId, Long envioId) {
+        EnvioPedidoEntidad envio = envios.findById(envioId)
+                .filter(item -> empresaId.equals(item.getEmpresaId()))
+                .orElseThrow(() -> new org.springframework.web.server.ResponseStatusException(
+                        org.springframework.http.HttpStatus.NOT_FOUND, "Envío no encontrado"));
+        return respuesta(envio);
     }
 
     @Transactional
@@ -103,12 +123,15 @@ public class ServicioEnviosCheckout {
         envio.setServicio(texto(request.servicio()));
         envio.setNumeroGuia(request.numeroGuia().trim());
         envio.setUrlEtiqueta(texto(request.urlEtiqueta()));
+        envio.setUrlRastreo(texto(request.urlEtiqueta()));
         envio.setCostoProveedor(request.costoProveedor().setScale(2, java.math.RoundingMode.HALF_UP));
         envio.setEstado(request.estado());
         envio.setEstadoRastreo(request.estado());
         envio.setMotivoBloqueo(null);
         envio.setUltimoError(null);
-        return respuesta(envios.save(envio));
+        envio = envios.save(envio);
+        trazabilidad.registrar(envio, "GESTION_MANUAL", "El negocio actualizó la guía externa", null);
+        return respuesta(envio);
     }
 
     private Bloqueo evaluar(CheckoutOrdenEntidad orden, EmpresaEnvioConfigEntidad config) {
@@ -149,10 +172,15 @@ public class ServicioEnviosCheckout {
                 ? String.join(", ", textos(orden.getCalle(), orden.getNumeroExterior(), orden.getColonia(),
                 orden.getMunicipio(), orden.getEstadoDireccion(), orden.getCodigoPostal()))
                 : orden.getDireccionFormateada();
+        List<EnvioEventoResponse> historial = eventos
+                .findByEmpresaIdAndEnvioPedidoIdOrderByCreadoEnAscIdAsc(envio.getEmpresaId(), envio.getId()).stream()
+                .map(item -> new EnvioEventoResponse(item.getId(), item.getTipo(), item.getEstado(),
+                        item.getDescripcion(), item.getCreadoEn())).toList();
         return new EnvioPedidoResponse(envio.getId(), orden.getPublicId(), envio.getEstado(), envio.getMotivoBloqueo(),
                 envio.getAmbiente(), envio.getPaqueteria(), envio.getServicio(), envio.getNumeroGuia(),
-                envio.getUrlEtiqueta(), envio.getEstadoRastreo(), envio.getCostoProveedor(), envio.getCostoCliente(),
+                envio.getUrlEtiqueta(), envio.getUrlRastreo(), envio.getEstadoRastreo(), envio.getCostoProveedor(), envio.getCostoCliente(),
                 orden.getTotal(), envio.getMoneda(), orden.getNombreDestinatario(), destino,
+                envio.getIntentos(), envio.getUltimoError(), historial,
                 envio.getCreadoEn(), envio.getActualizadoEn());
     }
 

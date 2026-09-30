@@ -30,7 +30,8 @@ class ServicioEnviosCheckoutTest {
         configuraciones = mock(EmpresaEnvioConfigRepositorio.class);
         servicio = new ServicioEnviosCheckout(envios, ordenes, mock(CheckoutOrdenDetalleRepositorio.class),
                 configuraciones, mock(SucursalEnvioOrigenRepositorio.class), mock(ProductoRepositorio.class),
-                mock(EnvioCotizacionRepositorio.class));
+                mock(EnvioCotizacionRepositorio.class), mock(EnvioEventoRepositorio.class),
+                mock(ServicioTrazabilidadEnvio.class));
         when(envios.save(any())).thenAnswer(invocacion -> invocacion.getArgument(0));
     }
 

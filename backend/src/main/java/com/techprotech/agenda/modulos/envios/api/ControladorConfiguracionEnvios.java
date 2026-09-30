@@ -22,10 +22,13 @@ import java.util.List;
 public class ControladorConfiguracionEnvios {
     private final ServicioConfiguracionEnvios servicio;
     private final ServicioEnviosCheckout enviosCheckout;
+    private final com.techprotech.agenda.modulos.envios.aplicacion.ServicioGuiasEnvio guias;
 
-    public ControladorConfiguracionEnvios(ServicioConfiguracionEnvios servicio, ServicioEnviosCheckout enviosCheckout) {
+    public ControladorConfiguracionEnvios(ServicioConfiguracionEnvios servicio, ServicioEnviosCheckout enviosCheckout,
+                                          com.techprotech.agenda.modulos.envios.aplicacion.ServicioGuiasEnvio guias) {
         this.servicio = servicio;
         this.enviosCheckout = enviosCheckout;
+        this.guias = guias;
     }
 
     @GetMapping
@@ -54,5 +57,12 @@ public class ControladorConfiguracionEnvios {
                                                  @PathVariable Long envioId,
                                                  @Valid @RequestBody ActualizarEnvioManualRequest request) {
         return enviosCheckout.actualizarManual(usuario.empresaId(), envioId, request);
+    }
+
+    @PostMapping("/pedidos/{envioId}/generar-guia")
+    public EnvioPedidoResponse generarGuia(@AuthenticationPrincipal UsuarioAutenticado usuario,
+                                           @PathVariable Long envioId) {
+        guias.generar(usuario.empresaId(), envioId);
+        return enviosCheckout.obtener(usuario.empresaId(), envioId);
     }
 }
