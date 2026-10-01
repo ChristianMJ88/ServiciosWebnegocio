@@ -9,7 +9,7 @@
     } @else if (!hasPayableItems() && !payment()) {
       <section class="checkout-state checkout-state--empty"><i class="bi bi-bag"></i><h1>No hay conceptos por pagar</h1><p>Agrega productos o reserva un servicio antes de iniciar el pago.</p><a [routerLink]="tenant.routeFor('servicios')">Explorar servicios</a></section>
     } @else {
-      <header class="checkout-heading"><span>Pago seguro</span><h1>{{ hasAppointments() && !hasProducts() ? 'Confirma y paga tu cita' : 'Revisa y paga tu pedido' }}</h1><p>El total se calcula nuevamente en el servidor según la configuración del negocio antes de mostrar el formulario de tarjeta.</p></header>
+      <header class="checkout-heading"><span>Pago seguro</span><h1>{{ hasAppointments() && !hasProducts() ? 'Confirma y paga tu cita' : 'Revisa y paga tu pedido' }}</h1><p>El total se calcula nuevamente en el servidor según la configuración del negocio antes de mostrar las opciones de pago.</p></header>
 
       @if (error()) {<div class="checkout-alert" role="alert"><i class="bi bi-exclamation-circle"></i><span>{{ error() }}</span></div>}
 
