@@ -1,6 +1,10 @@
 import { Injectable } from '@angular/core';
 import { CardBrickData } from './public-checkout.service';
 
+export function supportsMercadoPagoStatusScreen(paymentId: string | null | undefined): paymentId is string {
+  return Boolean(paymentId && /^\d+$/.test(paymentId));
+}
+
 interface BrickController { unmount(): void; }
 interface MercadoPagoWindow extends Window {
   MercadoPago?: new (publicKey: string, options: { locale: string }) => {

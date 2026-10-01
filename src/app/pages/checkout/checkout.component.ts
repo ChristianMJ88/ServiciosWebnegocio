@@ -6,7 +6,7 @@ import { ActivatedRoute, RouterLink } from '@angular/router';
 import { finalize, firstValueFrom, forkJoin } from 'rxjs';
 import { TenantContextService } from '../../core/tenant/tenant-context.service';
 import { BookingDataService, SucursalCatalogo } from '../../services/booking-data.service';
-import { MercadoPagoBricksService } from '../../services/mercado-pago-bricks.service';
+import { MercadoPagoBricksService, supportsMercadoPagoStatusScreen } from '../../services/mercado-pago-bricks.service';
 import { ProductCartService } from '../../services/product-cart.service';
 import { CardBrickData, CheckoutOrder, CheckoutPayment, DeliveryMode, PublicCheckoutConfig, PublicCheckoutService, ShippingQuoteOption } from '../../services/public-checkout.service';
 import { MoneyDisplayPipe } from '../../shared/pipes/money-display.pipe';
@@ -249,6 +249,10 @@ export class CheckoutComponent implements OnInit, OnDestroy {
     return 0;
   }
 
+  canShowProviderStatus(paymentId: string | null): paymentId is string {
+    return Boolean(this.config()?.mostrarEstadoPago) && supportsMercadoPagoStatusScreen(paymentId);
+  }
+
   validatePostalCode(): void {
     const postalCode = this.form.controls.postalCode.value.trim();
     if (!/^\d{5}$/.test(postalCode) || this.validatingPostalCode()) return;
@@ -319,7 +323,7 @@ export class CheckoutComponent implements OnInit, OnDestroy {
         window.location.assign(result.accionUrl);
         return;
       }
-      if (this.config()?.mostrarEstadoPago && result.referenciaPagoExterna && this.config()?.llavePublica) {
+      if (this.canShowProviderStatus(result.referenciaPagoExterna) && this.config()?.llavePublica) {
         await new Promise(resolve => setTimeout(resolve));
         try {
           await this.mountStatus(this.config()!.llavePublica!, result.referenciaPagoExterna);

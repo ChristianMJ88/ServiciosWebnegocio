@@ -19,7 +19,7 @@
             <i class="bi" [class.bi-check-circle-fill]="result.estadoPago === 'APROBADO'" [class.bi-hourglass-split]="result.estadoPago !== 'APROBADO'"></i>
             <div><span>Estado del pago</span><h2>{{ result.estadoPago === 'APROBADO' ? 'Pago aprobado' : 'Pago en proceso' }}</h2><p>{{ result.detalleRespuesta || 'Estamos confirmando la operación con Mercado Pago.' }}</p><strong>{{ result.importe | appMoney:result.moneda:2:2 }}</strong>@if (result.estadoPago === 'APROBADO') {<p class="payment-result__next"><i class="bi bi-box-seam"></i><span><b>¿Qué sigue?</b>{{ postPaymentMessage() }}</span></p>}</div>
           </div>
-          @if (config()?.mostrarEstadoPago && result.referenciaPagoExterna) {
+          @if (canShowProviderStatus(result.referenciaPagoExterna)) {
             <div class="payment-status-brick">
               @if (!statusReady()) {<div class="brick-loading"><span class="checkout-spinner"></span> Consultando detalle del pago…</div>}
               @if (statusMessage()) {<p class="payment-status-brick__message"><i class="bi bi-info-circle"></i>{{ statusMessage() }}</p>}
