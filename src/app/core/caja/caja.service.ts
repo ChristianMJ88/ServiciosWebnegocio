@@ -160,6 +160,13 @@ export interface VentaCaja {
   total: number; metodoPago: string; referencia: string | null; creadaEn: string; canal: 'CAJA' | 'ONLINE'; detalles: DetalleVentaCaja[];
 }
 
+export interface TerminalPointCaja { id: number; terminalId: string; nombre: string; modoOperacion: string | null; sucursalId: number; sucursalNombre: string; activa: boolean; }
+export interface OrdenPointCaja {
+  id: string; ventaId: number; folioVenta: string; terminalId: number; terminalNombre: string;
+  estado: string; detalleEstado: string | null; importe: number; moneda: string;
+  proveedorOrdenId: string | null; proveedorPagoId: string | null; creadoEn: string | null; actualizadoEn: string | null;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -249,6 +256,40 @@ export class CajaService {
   listarVentas(sucursalId: number): Observable<VentaCaja[]> {
     return this.http.get<VentaCaja[]>(`${environment.apiBaseUrl}/caja/ventas`, {
       params: new HttpParams().set('sucursalId', sucursalId)
+    });
+  }
+
+  listarTerminalesPoint(sucursalId: number): Observable<TerminalPointCaja[]> {
+    return this.http.get<TerminalPointCaja[]>(`${environment.apiBaseUrl}/caja/point/terminales`, {
+      params: new HttpParams().set('sucursalId', sucursalId)
+    });
+  }
+
+  crearOrdenPoint(terminalId: number, venta: RegistrarVentaPayload, idempotencia: string): Observable<OrdenPointCaja> {
+    return this.http.post<OrdenPointCaja>(`${environment.apiBaseUrl}/caja/point/ordenes`, { terminalId, venta }, {
+      headers: { 'Idempotency-Key': idempotencia }
+    });
+  }
+
+  consultarOrdenPoint(id: string): Observable<OrdenPointCaja> {
+    return this.http.get<OrdenPointCaja>(`${environment.apiBaseUrl}/caja/point/ordenes/${id}`);
+  }
+
+  listarOrdenesPoint(sucursalId: number): Observable<OrdenPointCaja[]> {
+    return this.http.get<OrdenPointCaja[]>(`${environment.apiBaseUrl}/caja/point/ordenes`, {
+      params: new HttpParams().set('sucursalId', sucursalId)
+    });
+  }
+
+  cancelarOrdenPoint(id: string, idempotencia: string): Observable<OrdenPointCaja> {
+    return this.http.post<OrdenPointCaja>(`${environment.apiBaseUrl}/caja/point/ordenes/${id}/cancelar`, {}, {
+      headers: { 'Idempotency-Key': idempotencia }
+    });
+  }
+
+  reembolsarOrdenPoint(id: string, idempotencia: string): Observable<OrdenPointCaja> {
+    return this.http.post<OrdenPointCaja>(`${environment.apiBaseUrl}/caja/point/ordenes/${id}/reembolsar`, {}, {
+      headers: { 'Idempotency-Key': idempotencia }
     });
   }
 }

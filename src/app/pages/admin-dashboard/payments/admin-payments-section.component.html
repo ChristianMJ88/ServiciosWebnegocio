@@ -50,6 +50,27 @@
       }
     </article>
 
+    @if (conexion()?.estado === 'CONECTADO') {
+      <section class="point-config">
+        <header>
+          <div><span class="payments-panel__eyebrow">Cobros presenciales</span><h4>Terminales Mercado Pago Point</h4><p>Asocia cada dispositivo con la sucursal donde operará. En pruebas puedes usar la terminal virtual oficial.</p></div>
+          <button type="button" class="payment-button payment-button--light" [disabled]="cargandoTerminales()" (click)="cargarTerminales()"><i class="bi bi-arrow-clockwise"></i>Actualizar</button>
+        </header>
+        @if (cargandoTerminales()) {<div class="point-config__empty">Consultando dispositivos de la cuenta conectada…</div>}
+        @for (terminal of terminales(); track terminal.terminalId) {
+          <article class="point-terminal" [class.is-ready]="terminal.configurada && terminal.activa">
+            <span class="point-terminal__icon"><i class="bi bi-credit-card"></i></span>
+            <div class="point-terminal__identity"><strong>{{ terminalNombre[terminal.terminalId] || terminal.nombre }}</strong><small>{{ terminal.terminalId }} · {{ terminal.modoOperacion || 'Modo sin reportar' }}</small></div>
+            <label><span>Nombre visible</span><input [(ngModel)]="terminalNombre[terminal.terminalId]" [name]="'terminalNombre' + terminal.terminalId"></label>
+            <label><span>Sucursal</span><select [(ngModel)]="terminalSucursal[terminal.terminalId]" [name]="'terminalSucursal' + terminal.terminalId"><option [ngValue]="null">Selecciona</option>@for (sucursal of sucursales(); track sucursal.id) {<option [ngValue]="sucursal.id">{{ sucursal.nombre }}</option>}</select></label>
+            <button type="button" class="payment-button" [disabled]="procesando() || !terminalSucursal[terminal.terminalId]" (click)="guardarTerminal(terminal)">{{ terminal.configurada ? 'Actualizar vínculo' : 'Vincular terminal' }}</button>
+          </article>
+        } @empty {
+          @if (!cargandoTerminales()) {<div class="point-config__empty">La cuenta conectada todavía no reporta terminales Point.</div>}
+        }
+      </section>
+    }
+
     @if (configuracion(); as checkout) {
       <section class="checkout-config" [class.is-disabled]="conexion()?.estado !== 'CONECTADO'">
         <header class="checkout-config__heading">

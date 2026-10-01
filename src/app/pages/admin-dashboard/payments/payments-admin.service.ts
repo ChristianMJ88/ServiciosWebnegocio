@@ -35,11 +35,26 @@ export interface ConfiguracionCheckout {
   moneda: string;
 }
 
+export interface TerminalPoint {
+  id: number | null;
+  terminalId: string;
+  posId: string | null;
+  storeId: string | null;
+  externalPosId: string | null;
+  nombre: string;
+  modoOperacion: string | null;
+  sucursalId: number | null;
+  sucursalNombre: string | null;
+  activa: boolean;
+  configurada: boolean;
+}
+
 @Injectable({ providedIn: 'root' })
 export class PaymentsAdminService {
   private readonly http = inject(HttpClient);
   private readonly baseUrl = `${environment.apiBaseUrl}/admin/pagos/mercado-pago/oauth`;
   private readonly configuracionUrl = `${environment.apiBaseUrl}/admin/pagos/configuracion`;
+  private readonly pointUrl = `${environment.apiBaseUrl}/admin/pagos/point/terminales`;
 
   estado(): Observable<ConexionProveedorPago> {
     return this.http.get<ConexionProveedorPago>(`${this.baseUrl}/estado`);
@@ -64,5 +79,13 @@ export class PaymentsAdminService {
   guardarConfiguracion(configuracion: ConfiguracionCheckout): Observable<ConfiguracionCheckout> {
     const { proveedor: _proveedor, conectado: _conectado, ambiente: _ambiente, ...request } = configuracion;
     return this.http.put<ConfiguracionCheckout>(this.configuracionUrl, request);
+  }
+
+  terminalesPoint(): Observable<TerminalPoint[]> {
+    return this.http.get<TerminalPoint[]>(this.pointUrl);
+  }
+
+  guardarTerminalPoint(payload: { terminalId: string; sucursalId: number; nombre: string; activa: boolean }): Observable<TerminalPoint> {
+    return this.http.put<TerminalPoint>(this.pointUrl, payload);
   }
 }

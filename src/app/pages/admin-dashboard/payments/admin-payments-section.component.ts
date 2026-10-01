@@ -1,19 +1,22 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit, inject, signal } from '@angular/core';
+import { FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 import { finalize, forkJoin } from 'rxjs';
-import { ConfiguracionCheckout, ConexionProveedorPago, PaymentsAdminService } from './payments-admin.service';
+import { ConfiguracionCheckout, ConexionProveedorPago, PaymentsAdminService, TerminalPoint } from './payments-admin.service';
+import { AdminService, SucursalAdmin } from '../../../core/admin/admin.service';
 
 @Component({
   selector: 'app-admin-payments-section',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, FormsModule],
   templateUrl: './admin-payments-section.component.html',
   styleUrl: './admin-payments-section.component.css'
 })
 export class AdminPaymentsSectionComponent implements OnInit {
   private readonly servicio = inject(PaymentsAdminService);
   private readonly route = inject(ActivatedRoute);
+  private readonly admin = inject(AdminService);
 
   readonly conexion = signal<ConexionProveedorPago | null>(null);
   readonly configuracion = signal<ConfiguracionCheckout | null>(null);
@@ -21,6 +24,11 @@ export class AdminPaymentsSectionComponent implements OnInit {
   readonly procesando = signal(false);
   readonly mensaje = signal<string | null>(null);
   readonly error = signal<string | null>(null);
+  readonly terminales = signal<TerminalPoint[]>([]);
+  readonly sucursales = signal<SucursalAdmin[]>([]);
+  readonly cargandoTerminales = signal(false);
+  terminalSucursal: Record<string, number | null> = {};
+  terminalNombre: Record<string, string> = {};
 
   ngOnInit(): void {
     const resultado = this.route.snapshot.queryParamMap.get('mercadoPagoOAuth');
@@ -38,9 +46,40 @@ export class AdminPaymentsSectionComponent implements OnInit {
       next: respuesta => {
         this.conexion.set(respuesta.conexion);
         this.configuracion.set(respuesta.configuracion);
+        if (respuesta.conexion.estado === 'CONECTADO') this.cargarTerminales();
       },
       error: err => this.error.set(this.detalleError(err, 'No fue posible consultar el estado de pagos.'))
     });
+  }
+
+  cargarTerminales(): void {
+    this.cargandoTerminales.set(true);
+    forkJoin({ terminales: this.servicio.terminalesPoint(), sucursales: this.admin.getSucursales() })
+      .pipe(finalize(() => this.cargandoTerminales.set(false))).subscribe({
+        next: ({ terminales, sucursales }) => {
+          this.terminales.set(terminales); this.sucursales.set(sucursales.filter(item => item.activa));
+          terminales.forEach(item => {
+            this.terminalSucursal[item.terminalId] = item.sucursalId;
+            this.terminalNombre[item.terminalId] = item.nombre;
+          });
+        },
+        error: err => this.error.set(this.detalleError(err, 'No fue posible consultar las terminales Point.'))
+      });
+  }
+
+  guardarTerminal(terminal: TerminalPoint): void {
+    const sucursalId = this.terminalSucursal[terminal.terminalId];
+    const nombre = this.terminalNombre[terminal.terminalId]?.trim();
+    if (!sucursalId || !nombre || this.procesando()) return;
+    this.procesando.set(true); this.error.set(null); this.mensaje.set(null);
+    this.servicio.guardarTerminalPoint({ terminalId: terminal.terminalId, sucursalId, nombre, activa: true })
+      .pipe(finalize(() => this.procesando.set(false))).subscribe({
+        next: guardada => {
+          this.terminales.update(items => items.map(item => item.terminalId === guardada.terminalId ? guardada : item));
+          this.mensaje.set(`La terminal ${guardada.nombre} quedó vinculada con ${guardada.sucursalNombre}.`);
+        },
+        error: err => this.error.set(this.detalleError(err, 'No fue posible guardar la terminal Point.'))
+      });
   }
 
   conectar(): void {
