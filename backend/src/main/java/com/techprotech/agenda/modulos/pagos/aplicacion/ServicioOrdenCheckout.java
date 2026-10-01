@@ -179,8 +179,8 @@ public class ServicioOrdenCheckout {
                     .add(seguro(detallesVenta.sumarServiciosPagadosPorCita(empresaId, id)));
             BigDecimal pendiente = cita.getPrecio().subtract(pagado).max(CERO).setScale(2, RoundingMode.HALF_UP);
             if (pendiente.signum() <= 0) throw error(HttpStatus.CONFLICT, "Una cita ya está pagada");
-            BigDecimal cobrar = importeServicio(pendiente, config);
             ServicioEntidad servicio = serviciosPorId.get(cita.getServicioId());
+            BigDecimal cobrar = importeServicio(pendiente, config, servicio);
             String nombre = servicio == null ? "Servicio reservado" : servicio.getNombre();
             resultado.add(new Linea("SERVICIO", null, cita.getServicioId(), cita.getId(), nombre,
                     BigDecimal.ONE, cobrar, cobrar, CERO, CERO, cobrar, cita.getMoneda()));
@@ -188,14 +188,31 @@ public class ServicioOrdenCheckout {
         return resultado;
     }
 
-    private BigDecimal importeServicio(BigDecimal pendiente, ConfiguracionCheckoutPublicaResponse config) {
-        BigDecimal resultado = switch (config.modalidadServicios()) {
-            case "ANTICIPO_PORCENTAJE" -> pendiente.multiply(config.anticipoPorcentaje())
+    private BigDecimal importeServicio(BigDecimal pendiente, ConfiguracionCheckoutPublicaResponse config,
+                                       ServicioEntidad servicio) {
+        String modalidad = config.modalidadServicios();
+        BigDecimal porcentaje = config.anticipoPorcentaje();
+        BigDecimal importe = config.anticipoImporte();
+        if (servicio != null && servicio.isRequiereAnticipo()) {
+            modalidad = "PORCENTAJE".equals(servicio.getAnticipoTipo())
+                    ? "ANTICIPO_PORCENTAJE" : "ANTICIPO_IMPORTE";
+            porcentaje = servicio.getAnticipoValor();
+            importe = servicio.getAnticipoValor();
+        }
+        BigDecimal resultado = switch (modalidad) {
+            case "ANTICIPO_PORCENTAJE" -> pendiente.multiply(valorRequerido(porcentaje, "porcentaje de anticipo"))
                     .divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP);
-            case "ANTICIPO_IMPORTE" -> config.anticipoImporte();
+            case "ANTICIPO_IMPORTE" -> valorRequerido(importe, "importe de anticipo");
             default -> pendiente;
         };
         return resultado.min(pendiente).max(CERO).setScale(2, RoundingMode.HALF_UP);
+    }
+
+    private BigDecimal valorRequerido(BigDecimal valor, String campo) {
+        if (valor == null || valor.signum() <= 0) {
+            throw error(HttpStatus.CONFLICT, "El servicio no tiene configurado correctamente el " + campo);
+        }
+        return valor;
     }
 
     private void validarMoneda(List<Linea> lineas, String moneda) {

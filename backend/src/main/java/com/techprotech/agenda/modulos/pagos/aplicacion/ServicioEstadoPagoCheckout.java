@@ -14,12 +14,15 @@ public class ServicioEstadoPagoCheckout {
     private final IntentoPagoCheckoutRepositorio intentos;
     private final CheckoutOrdenRepositorio ordenes;
     private final ServicioInventarioCheckout inventario;
+    private final ServicioConfirmacionCitasCheckout confirmacionCitas;
 
     public ServicioEstadoPagoCheckout(IntentoPagoCheckoutRepositorio intentos, CheckoutOrdenRepositorio ordenes,
-                                      ServicioInventarioCheckout inventario) {
+                                      ServicioInventarioCheckout inventario,
+                                      ServicioConfirmacionCitasCheckout confirmacionCitas) {
         this.intentos = intentos;
         this.ordenes = ordenes;
         this.inventario = inventario;
+        this.confirmacionCitas = confirmacionCitas;
     }
 
     @Transactional
@@ -36,6 +39,7 @@ public class ServicioEstadoPagoCheckout {
 
         if (resultado.estado() == EstadoPago.APROBADO) {
             inventario.confirmar(intento.getEmpresaId(), intento.getCheckoutOrdenId());
+            confirmacionCitas.confirmar(intento.getEmpresaId(), intento.getCheckoutOrdenId());
         } else if (resultado.estado() == EstadoPago.RECHAZADO || resultado.estado() == EstadoPago.CANCELADO) {
             inventario.liberar(intento.getEmpresaId(), intento.getCheckoutOrdenId());
         }

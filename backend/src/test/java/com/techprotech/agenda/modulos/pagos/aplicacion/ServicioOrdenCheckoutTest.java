@@ -13,10 +13,12 @@ import com.techprotech.agenda.modulos.envios.aplicacion.ServicioCotizacionesEnvi
 import com.techprotech.agenda.modulos.pagos.api.dto.*;
 import com.techprotech.agenda.modulos.pagos.infraestructura.checkout.PropiedadesCheckout;
 import com.techprotech.agenda.modulos.pagos.infraestructura.entidad.CheckoutOrdenEntidad;
+import com.techprotech.agenda.modulos.pagos.infraestructura.entidad.CheckoutOrdenDetalleEntidad;
 import com.techprotech.agenda.modulos.pagos.infraestructura.repositorio.CheckoutOrdenDetalleRepositorio;
 import com.techprotech.agenda.modulos.pagos.infraestructura.repositorio.CheckoutOrdenRepositorio;
 import com.techprotech.agenda.modulos.productos.aplicacion.ServicioCotizacionProductos;
 import com.techprotech.agenda.modulos.servicios.infraestructura.repositorio.ServicioRepositorio;
+import com.techprotech.agenda.modulos.servicios.infraestructura.entidad.ServicioEntidad;
 import com.techprotech.agenda.modulos.sitio.infraestructura.entidad.EmpresaSitioConfigEntidad;
 import com.techprotech.agenda.modulos.sitio.infraestructura.repositorio.EmpresaSitioConfigRepositorio;
 import com.techprotech.agenda.modulos.sucursales.infraestructura.entidad.SucursalEntidad;
@@ -38,6 +40,7 @@ class ServicioOrdenCheckoutTest {
     private ServicioConfiguracionCheckout configuracion;
     private ServicioCotizacionProductos cotizador;
     private CitaRepositorio citas;
+    private ServicioRepositorio servicios;
     private UsuarioRepositorio usuarios;
     private CheckoutOrdenRepositorio ordenes;
     private CheckoutOrdenDetalleRepositorio detalles;
@@ -51,7 +54,7 @@ class ServicioOrdenCheckoutTest {
         SucursalRepositorio sucursales = mock(SucursalRepositorio.class);
         cotizador = mock(ServicioCotizacionProductos.class);
         citas = mock(CitaRepositorio.class);
-        ServicioRepositorio servicios = mock(ServicioRepositorio.class);
+        servicios = mock(ServicioRepositorio.class);
         usuarios = mock(UsuarioRepositorio.class);
         PagoCitaRepositorio pagosCita = mock(PagoCitaRepositorio.class);
         VentaDetalleRepositorio detallesVenta = mock(VentaDetalleRepositorio.class);
@@ -160,6 +163,32 @@ class ServicioOrdenCheckoutTest {
 
         assertThat(respuesta.id()).isEqualTo("orden-existente");
         verifyNoInteractions(cotizador);
+    }
+
+    @Test
+    void respetaElAnticipoConfiguradoEnElServicioSobreLaModalidadGeneral() {
+        UsuarioEntidad cliente = new UsuarioEntidad(); cliente.setId(70L); cliente.setEmpresaId(25L); cliente.setCorreo("cliente@test.mx");
+        when(usuarios.findByEmpresaIdAndCorreo(25L, "cliente@test.mx")).thenReturn(Optional.of(cliente));
+        CitaEntidad cita = new CitaEntidad();
+        cita.setId(91L); cita.setEmpresaId(25L); cita.setClienteId(70L); cita.setSucursalId(3L);
+        cita.setServicioId(12L); cita.setEstado("PENDIENTE"); cita.setPrecio(new BigDecimal("800.00")); cita.setMoneda("MXN");
+        when(citas.findAllById(List.of(91L))).thenReturn(List.of(cita));
+        ServicioEntidad servicioEntidad = new ServicioEntidad();
+        servicioEntidad.setId(12L); servicioEntidad.setNombre("Coloración"); servicioEntidad.setRequiereAnticipo(true);
+        servicioEntidad.setAnticipoTipo("PORCENTAJE"); servicioEntidad.setAnticipoValor(new BigDecimal("25.00"));
+        when(servicios.findByEmpresaIdAndIdIn(eq(25L), any())).thenReturn(List.of(servicioEntidad));
+        when(cotizador.cotizar(25L, 3L, null, java.util.Map.of()))
+                .thenReturn(new ServicioCotizacionProductos.ResultadoCotizacion(null, List.of()));
+
+        OrdenCheckoutResponse respuesta = servicio.crear("nail-art", "anticipo-servicio",
+                new CrearOrdenCheckoutRequest(3L, null, "cliente@test.mx", "Ana Pérez", "2221234567",
+                        "RECOGE_EN_SUCURSAL", null, null, List.of(), List.of(91L)));
+
+        assertThat(respuesta.total()).isEqualByComparingTo("200.00");
+        verify(detalles).saveAll(argThat(items -> {
+            CheckoutOrdenDetalleEntidad detalle = ((List<CheckoutOrdenDetalleEntidad>) items).getFirst();
+            return detalle.getCitaId().equals(91L) && detalle.getTotal().compareTo(new BigDecimal("200.00")) == 0;
+        }));
     }
 
     private ConfiguracionCheckoutPublicaResponse configHabilitada() {
