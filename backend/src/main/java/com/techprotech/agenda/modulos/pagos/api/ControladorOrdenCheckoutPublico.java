@@ -2,6 +2,7 @@ package com.techprotech.agenda.modulos.pagos.api;
 
 import com.techprotech.agenda.modulos.pagos.api.dto.CrearOrdenCheckoutRequest;
 import com.techprotech.agenda.modulos.pagos.api.dto.CrearPagoCheckoutRequest;
+import com.techprotech.agenda.modulos.pagos.api.dto.CrearPagoAlternativoCheckoutRequest;
 import com.techprotech.agenda.modulos.pagos.api.dto.OrdenCheckoutResponse;
 import com.techprotech.agenda.modulos.pagos.api.dto.PagoCheckoutResponse;
 import com.techprotech.agenda.modulos.pagos.aplicacion.ServicioOrdenCheckout;
@@ -39,5 +40,12 @@ public class ControladorOrdenCheckoutPublico {
                                                 @RequestHeader("Idempotency-Key") String idempotencia,
                                                 @Valid @RequestBody CrearPagoCheckoutRequest request) {
         return pagos.pagarConTarjeta(slug, ordenId, idempotencia, request);
+    }
+
+    @PostMapping("/{ordenId}/pagos/alternativo")
+    public PagoCheckoutResponse pagarConMetodoAlternativo(@PathVariable String slug, @PathVariable String ordenId,
+                                                           @RequestHeader("Idempotency-Key") String idempotencia,
+                                                           @Valid @RequestBody CrearPagoAlternativoCheckoutRequest request) {
+        return pagos.pagarConMetodoAlternativo(slug, ordenId, idempotencia, request);
     }
 }

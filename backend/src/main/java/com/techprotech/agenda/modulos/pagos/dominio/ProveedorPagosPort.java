@@ -5,6 +5,8 @@ public interface ProveedorPagosPort {
 
     ResultadoCobro crearCobro(SolicitudCobro solicitud);
 
+    java.util.List<MetodoPagoProveedor> listarMetodosPago(Long empresaId);
+
     ResultadoCobro consultarCobro(Long empresaId, String referenciaExterna);
 
     ResultadoReembolso reembolsar(SolicitudReembolso solicitud);

@@ -2,6 +2,7 @@ package com.techprotech.agenda.modulos.pagos.aplicacion;
 
 import com.techprotech.agenda.modulos.pagos.api.dto.ConfiguracionCheckoutPublicaResponse;
 import com.techprotech.agenda.modulos.pagos.api.dto.CrearPagoCheckoutRequest;
+import com.techprotech.agenda.modulos.pagos.api.dto.CrearPagoAlternativoCheckoutRequest;
 import com.techprotech.agenda.modulos.pagos.dominio.*;
 import com.techprotech.agenda.modulos.pagos.infraestructura.entidad.*;
 import com.techprotech.agenda.modulos.pagos.infraestructura.repositorio.*;
@@ -26,10 +27,12 @@ import static org.mockito.Mockito.*;
 class ServicioPagoCheckoutTest {
     private ServicioConfiguracionCheckout configuracion;
     private CheckoutOrdenRepositorio ordenes;
+    private CheckoutOrdenDetalleRepositorio detalles;
     private IntentoPagoCheckoutRepositorio intentos;
     private ProveedorPagosPort mercadoPago;
     private ServicioInventarioCheckout inventario;
     private ServicioEstadoPagoCheckout estados;
+    private ServicioMetodosPagoCheckout metodosPago;
     private ServicioPagoCheckout servicio;
 
     @BeforeEach
@@ -39,10 +42,12 @@ class ServicioPagoCheckoutTest {
         EmpresaCheckoutConfigRepositorio checkoutConfigs = mock(EmpresaCheckoutConfigRepositorio.class);
         ProveedorPagoRepositorio proveedores = mock(ProveedorPagoRepositorio.class);
         ordenes = mock(CheckoutOrdenRepositorio.class);
+        detalles = mock(CheckoutOrdenDetalleRepositorio.class);
         intentos = mock(IntentoPagoCheckoutRepositorio.class);
         mercadoPago = mock(ProveedorPagosPort.class);
         inventario = mock(ServicioInventarioCheckout.class);
         estados = mock(ServicioEstadoPagoCheckout.class);
+        metodosPago = mock(ServicioMetodosPagoCheckout.class);
 
         EmpresaSitioConfigEntidad sitio = new EmpresaSitioConfigEntidad();
         sitio.setEmpresaId(25L); sitio.setSlug("nail-art"); sitio.setPublicado(true);
@@ -59,7 +64,7 @@ class ServicioPagoCheckoutTest {
         when(intentos.save(any())).thenAnswer(inv -> { IntentoPagoCheckoutEntidad item = inv.getArgument(0); item.setId(55L); return item; });
 
         servicio = new ServicioPagoCheckout(configuracion, sitios, checkoutConfigs, proveedores,
-                ordenes, intentos, List.of(mercadoPago), inventario, estados);
+                ordenes, detalles, intentos, List.of(mercadoPago), inventario, estados, metodosPago);
     }
 
     @Test
@@ -113,6 +118,21 @@ class ServicioPagoCheckoutTest {
         assertThatThrownBy(() -> servicio.pagarConTarjeta("nail-art", "orden-123", "repetida", request()))
                 .isInstanceOf(ResponseStatusException.class).hasMessageContaining("otra orden");
         verifyNoInteractions(mercadoPago);
+    }
+
+    @Test
+    void rechazaPagoAlternativoCuandoLaOrdenIncluyeServicios() {
+        CheckoutOrdenEntidad orden = ordenPendiente();
+        when(ordenes.findByEmpresaIdAndPublicId(25L, "orden-123")).thenReturn(Optional.of(orden));
+        CheckoutOrdenDetalleEntidad detalleServicio = new CheckoutOrdenDetalleEntidad();
+        detalleServicio.setTipoConcepto("SERVICIO");
+        when(detalles.findByEmpresaIdAndCheckoutOrdenIdOrderByIdAsc(25L, 41L)).thenReturn(List.of(detalleServicio));
+
+        assertThatThrownBy(() -> servicio.pagarConMetodoAlternativo("nail-art", "orden-123", "pago-oxxo",
+                new CrearPagoAlternativoCheckoutRequest("metodo-proveedor", "cliente@test.mx")))
+                .isInstanceOf(ResponseStatusException.class).hasMessageContaining("solo para productos");
+        verifyNoInteractions(metodosPago);
+        verify(mercadoPago, never()).crearCobro(any());
     }
 
     private CheckoutOrdenEntidad ordenPendiente() {

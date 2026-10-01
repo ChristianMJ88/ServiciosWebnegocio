@@ -29,29 +29,35 @@ public class ServicioPagoCheckout {
     private final EmpresaCheckoutConfigRepositorio configuraciones;
     private final ProveedorPagoRepositorio proveedores;
     private final CheckoutOrdenRepositorio ordenes;
+    private final CheckoutOrdenDetalleRepositorio detalles;
     private final IntentoPagoCheckoutRepositorio intentos;
     private final List<ProveedorPagosPort> adaptadores;
     private final ServicioInventarioCheckout inventario;
     private final ServicioEstadoPagoCheckout estados;
+    private final ServicioMetodosPagoCheckout metodosPago;
 
     public ServicioPagoCheckout(ServicioConfiguracionCheckout configuracionCheckout,
                                 EmpresaSitioConfigRepositorio sitios,
                                 EmpresaCheckoutConfigRepositorio configuraciones,
                                 ProveedorPagoRepositorio proveedores,
                                 CheckoutOrdenRepositorio ordenes,
+                                CheckoutOrdenDetalleRepositorio detalles,
                                 IntentoPagoCheckoutRepositorio intentos,
                                 List<ProveedorPagosPort> adaptadores,
                                 ServicioInventarioCheckout inventario,
-                                ServicioEstadoPagoCheckout estados) {
+                                ServicioEstadoPagoCheckout estados,
+                                ServicioMetodosPagoCheckout metodosPago) {
         this.configuracionCheckout = configuracionCheckout;
         this.sitios = sitios;
         this.configuraciones = configuraciones;
         this.proveedores = proveedores;
         this.ordenes = ordenes;
+        this.detalles = detalles;
         this.intentos = intentos;
         this.adaptadores = adaptadores;
         this.inventario = inventario;
         this.estados = estados;
+        this.metodosPago = metodosPago;
     }
 
     public PagoCheckoutResponse pagarConTarjeta(String slug, String ordenPublicId, String idempotencia,
@@ -80,7 +86,8 @@ public class ServicioPagoCheckout {
                 .findFirst().orElseThrow(() -> error(HttpStatus.SERVICE_UNAVAILABLE, "El proveedor de pago no está disponible"));
 
         inventario.reservar(orden.getEmpresaId(), orden.getId());
-        IntentoPagoCheckoutEntidad intento = nuevoIntento(orden, proveedor, clave);
+        IntentoPagoCheckoutEntidad intento = nuevoIntento(orden, proveedor, clave,
+                request.metodoPagoId().trim(), request.tipoPagoId());
         intentos.save(intento);
 
         ResultadoCobro resultado;
@@ -97,9 +104,11 @@ public class ServicioPagoCheckout {
                     SIN_COMISION, request.tokenMedioPago().trim(), orden.getCorreoCliente(), metadatos));
         } catch (IllegalArgumentException ex) {
             registrarError(intento, "SOLICITUD_INVALIDA", ex.getMessage());
+            inventario.liberar(orden.getEmpresaId(), orden.getId());
             throw error(HttpStatus.BAD_REQUEST, ex.getMessage());
         } catch (IllegalStateException ex) {
             registrarError(intento, "ERROR_PROVEEDOR", ex.getMessage());
+            inventario.liberar(orden.getEmpresaId(), orden.getId());
             throw error(HttpStatus.BAD_GATEWAY, ex.getMessage());
         }
 
@@ -107,12 +116,79 @@ public class ServicioPagoCheckout {
         return respuesta(aplicado.ordenPublicId(), aplicado.intento(), aplicado.estadoOrden(), proveedor.getCodigo());
     }
 
+    public PagoCheckoutResponse pagarConMetodoAlternativo(String slug, String ordenPublicId, String idempotencia,
+                                                           com.techprotech.agenda.modulos.pagos.api.dto.CrearPagoAlternativoCheckoutRequest request) {
+        validarIdempotencia(idempotencia);
+        EmpresaSitioConfigEntidad sitio = sitio(slug);
+        String clave = idempotencia.trim();
+        var existente = intentos.findByEmpresaIdAndIdempotencia(sitio.getEmpresaId(), clave);
+        if (existente.isPresent()) return respuestaIdempotente(ordenPublicId, existente.get());
+
+        ConfiguracionCheckoutPublicaResponse config = configuracionCheckout.obtenerPublica(slug);
+        if (!config.habilitado() || !config.permitirPagoProductos()) {
+            throw error(HttpStatus.CONFLICT, "El pago de productos no está habilitado para este negocio");
+        }
+        CheckoutOrdenEntidad orden = ordenes.findByEmpresaIdAndPublicId(sitio.getEmpresaId(), ordenPublicId)
+                .orElseThrow(() -> error(HttpStatus.NOT_FOUND, "Orden no encontrada"));
+        validarOrden(orden, request.correoPagador(), config);
+        var conceptos = detalles.findByEmpresaIdAndCheckoutOrdenIdOrderByIdAsc(orden.getEmpresaId(), orden.getId());
+        if (conceptos.isEmpty() || conceptos.stream().anyMatch(item -> !"PRODUCTO".equals(item.getTipoConcepto()))) {
+            throw error(HttpStatus.CONFLICT, "OXXO, transferencias y pagos referenciados están disponibles solo para productos");
+        }
+
+        EmpresaMetodoPagoCheckoutEntidad metodo = metodosPago.obtenerActivo(sitio.getEmpresaId(), request.metodoPagoId());
+        boolean transferencia = "bank_transfer".equalsIgnoreCase(metodo.getTipoExterno());
+        if ((transferencia && !config.aceptarTransferencia())
+                || (!transferencia && !config.aceptarEfectivoReferenciado())) {
+            throw error(HttpStatus.CONFLICT, "El medio de pago está deshabilitado para este negocio");
+        }
+
+        EmpresaCheckoutConfigEntidad checkout = configuraciones.findById(sitio.getEmpresaId())
+                .orElseThrow(() -> error(HttpStatus.CONFLICT, "El checkout no tiene un proveedor configurado"));
+        ProveedorPagoEntidad proveedor = proveedores.findById(checkout.getProveedorPredeterminadoId())
+                .filter(ProveedorPagoEntidad::isActivo)
+                .orElseThrow(() -> error(HttpStatus.CONFLICT, "El proveedor de pago no está disponible"));
+        ProveedorPagosPort adaptador = adaptadores.stream().filter(item -> item.proveedor() == proveedor(proveedor.getCodigo()))
+                .findFirst().orElseThrow(() -> error(HttpStatus.SERVICE_UNAVAILABLE, "El proveedor de pago no está disponible"));
+
+        inventario.reservar(orden.getEmpresaId(), orden.getId());
+        orden.setExpiraEn(LocalDateTime.now(ZoneOffset.UTC).plusDays(metodo.getVigenciaDias()));
+        ordenes.save(orden);
+        IntentoPagoCheckoutEntidad intento = nuevoIntento(orden, proveedor, clave,
+                metodo.getMetodoExternoId(), metodo.getTipoExterno());
+        intentos.save(intento);
+
+        ResultadoCobro resultado;
+        try {
+            Map<String, String> metadatos = new LinkedHashMap<>();
+            metadatos.put("payment_method_id", metodo.getMetodoExternoId());
+            metadatos.put("payment_type_id", metodo.getTipoExterno());
+            metadatos.put("expiration_time", "P" + metodo.getVigenciaDias() + "D");
+            metadatos.put("description", "Orden " + orden.getPublicId());
+            resultado = adaptador.crearCobro(new SolicitudCobro(sitio.getEmpresaId(), orden.getPublicId(), clave,
+                    orden.getTotal(), orden.getMoneda(), SIN_COMISION, null,
+                    request.correoPagador().trim().toLowerCase(Locale.ROOT), metadatos));
+        } catch (IllegalArgumentException ex) {
+            registrarError(intento, "SOLICITUD_INVALIDA", ex.getMessage());
+            inventario.liberar(orden.getEmpresaId(), orden.getId());
+            throw error(HttpStatus.BAD_REQUEST, ex.getMessage());
+        } catch (IllegalStateException ex) {
+            registrarError(intento, "ERROR_PROVEEDOR", ex.getMessage());
+            inventario.liberar(orden.getEmpresaId(), orden.getId());
+            throw error(HttpStatus.BAD_GATEWAY, ex.getMessage());
+        }
+        ServicioEstadoPagoCheckout.EstadoAplicado aplicado = estados.aplicar(intento.getId(), resultado);
+        return respuesta(aplicado.ordenPublicId(), aplicado.intento(), aplicado.estadoOrden(), proveedor.getCodigo());
+    }
+
     private IntentoPagoCheckoutEntidad nuevoIntento(CheckoutOrdenEntidad orden, ProveedorPagoEntidad proveedor,
-                                                     String idempotencia) {
+                                                     String idempotencia, String metodoPagoId, String tipoPagoId) {
         IntentoPagoCheckoutEntidad intento = new IntentoPagoCheckoutEntidad();
         intento.setCheckoutOrdenId(orden.getId());
         intento.setEmpresaId(orden.getEmpresaId());
         intento.setProveedorPagoId(proveedor.getId());
+        intento.setMetodoPagoId(metodoPagoId);
+        intento.setTipoPagoId(tipoPagoId);
         intento.setIdempotencia(idempotencia);
         intento.setEstado(EstadoPago.CREADO.name());
         intento.setImporte(orden.getTotal());
@@ -129,6 +205,11 @@ public class ServicioPagoCheckout {
 
     private void validarOrden(CheckoutOrdenEntidad orden, CrearPagoCheckoutRequest request,
                               ConfiguracionCheckoutPublicaResponse config) {
+        validarOrden(orden, request.correoPagador(), config);
+    }
+
+    private void validarOrden(CheckoutOrdenEntidad orden, String correoPagador,
+                              ConfiguracionCheckoutPublicaResponse config) {
         if (!"PENDIENTE_PAGO".equals(orden.getEstado())) {
             throw error(HttpStatus.CONFLICT, "La orden ya no está disponible para iniciar un pago");
         }
@@ -138,7 +219,7 @@ public class ServicioPagoCheckout {
         if (!orden.getMoneda().equalsIgnoreCase(config.moneda())) {
             throw error(HttpStatus.CONFLICT, "La moneda de la orden ya no coincide con la configuración del checkout");
         }
-        if (!orden.getCorreoCliente().equalsIgnoreCase(request.correoPagador().trim())) {
+        if (!orden.getCorreoCliente().equalsIgnoreCase(correoPagador.trim())) {
             throw error(HttpStatus.BAD_REQUEST, "El correo del pagador debe coincidir con el de la orden");
         }
     }

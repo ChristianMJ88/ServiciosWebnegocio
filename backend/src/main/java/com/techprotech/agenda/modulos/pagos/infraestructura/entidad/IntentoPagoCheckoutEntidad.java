@@ -21,6 +21,10 @@ public class IntentoPagoCheckoutEntidad {
     private Long empresaId;
     @Column(name = "proveedor_pago_id", nullable = false)
     private Long proveedorPagoId;
+    @Column(name = "metodo_pago_id", length = 80)
+    private String metodoPagoId;
+    @Column(name = "tipo_pago_id", length = 40)
+    private String tipoPagoId;
     @Column(nullable = false, length = 128)
     private String idempotencia;
     @Column(name = "referencia_externa", length = 180)

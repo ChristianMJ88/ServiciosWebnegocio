@@ -22,6 +22,7 @@ public class AdaptadorMercadoPagoOrders implements ProveedorPagosPort {
     private static final String ORDERS = "https://api.mercadopago.com/v1/orders";
     private static final String PAYMENT_METHODS = "https://api.mercadopago.com/v1/payment_methods";
     private static final Set<String> TIPOS_TARJETA = Set.of("credit_card", "debit_card", "prepaid_card");
+    private static final Set<String> TIPOS_ALTERNATIVOS = Set.of("ticket", "atm", "bank_transfer");
 
     private final ServicioOAuthMercadoPago oauth;
     private final RestClient restClient;
@@ -47,9 +48,26 @@ public class AdaptadorMercadoPagoOrders implements ProveedorPagosPort {
 
     @Override
     public ResultadoCobro crearCobro(SolicitudCobro solicitud) {
-        validarCobro(solicitud);
+        String tipoMetodoPago = resolverTipoMetodoPago(solicitud);
+        validarCobro(solicitud, tipoMetodoPago);
         return mapeador.cobro(post(ORDERS, solicitud.empresaId(), solicitud.idempotencia(),
-                cuerpoCobro(solicitud, resolverTipoMetodoPago(solicitud))));
+                cuerpoCobro(solicitud, tipoMetodoPago)));
+    }
+
+    @Override
+    public List<MetodoPagoProveedor> listarMetodosPago(Long empresaId) {
+        requerido(empresaId, "empresaId");
+        JsonNode metodos = get(PAYMENT_METHODS, empresaId);
+        if (!metodos.isArray()) throw new IllegalStateException("Mercado Pago no devolvió su catálogo de medios de pago");
+        java.util.ArrayList<MetodoPagoProveedor> resultado = new java.util.ArrayList<>();
+        for (JsonNode metodo : metodos) {
+            String id = texto(metodo, "id");
+            String tipo = texto(metodo, "payment_type_id");
+            if (id == null || tipo == null) continue;
+            resultado.add(new MetodoPagoProveedor(id, valorO(texto(metodo, "name"), id), tipo,
+                    valorO(texto(metodo, "status"), "active"), texto(metodo, "secure_thumbnail")));
+        }
+        return List.copyOf(resultado);
     }
 
     @Override
@@ -97,8 +115,10 @@ public class AdaptadorMercadoPagoOrders implements ProveedorPagosPort {
         Map<String, Object> metodo = new LinkedHashMap<>();
         metodo.put("id", requerido(metadatos.get("payment_method_id"), "payment_method_id"));
         metodo.put("type", tipoMetodoPago);
-        metodo.put("token", solicitud.tokenMedioPago());
-        metodo.put("installments", enteroPositivo(metadatos.get("installments"), "installments"));
+        if (TIPOS_TARJETA.contains(tipoMetodoPago)) {
+            metodo.put("token", solicitud.tokenMedioPago());
+            metodo.put("installments", enteroPositivo(metadatos.get("installments"), "installments"));
+        }
         opcional(metodo, "statement_descriptor", metadatos.get("statement_descriptor"));
 
         Map<String, Object> cuerpo = new LinkedHashMap<>();
@@ -107,6 +127,7 @@ public class AdaptadorMercadoPagoOrders implements ProveedorPagosPort {
         cuerpo.put("capture_mode", "automatic");
         cuerpo.put("total_amount", importe(solicitud.importe()));
         cuerpo.put("external_reference", solicitud.referenciaOrden());
+        opcional(cuerpo, "expiration_time", metadatos.get("expiration_time"));
         cuerpo.put("payer", Map.of("email", solicitud.correoPagador()));
         cuerpo.put("transactions", Map.of("payments", List.of(Map.of(
                 "amount", importe(solicitud.importe()), "payment_method", metodo))));
@@ -143,7 +164,7 @@ public class AdaptadorMercadoPagoOrders implements ProveedorPagosPort {
     private String resolverTipoMetodoPago(SolicitudCobro solicitud) {
         Map<String, String> metadatos = solicitud.metadatos() == null ? Map.of() : solicitud.metadatos();
         String tipoInformado = metadatos.get("payment_type_id");
-        if (tipoInformado != null && !tipoInformado.isBlank()) return validarTipoTarjeta(tipoInformado);
+        if (tipoInformado != null && !tipoInformado.isBlank()) return validarTipoSoportado(tipoInformado);
 
         String metodoId = requerido(metadatos.get("payment_method_id"), "payment_method_id").trim();
         String llave = solicitud.empresaId() + ":" + metodoId;
@@ -152,16 +173,18 @@ public class AdaptadorMercadoPagoOrders implements ProveedorPagosPort {
             if (!metodos.isArray()) throw new IllegalStateException("Mercado Pago no devolvió su catálogo de medios de pago");
             for (JsonNode metodo : metodos) {
                 if (metodoId.equalsIgnoreCase(texto(metodo, "id"))) {
-                    return validarTipoTarjeta(requerido(texto(metodo, "payment_type_id"), "payment_type_id"));
+                    return validarTipoSoportado(requerido(texto(metodo, "payment_type_id"), "payment_type_id"));
                 }
             }
             throw new IllegalArgumentException("El medio de pago no está disponible para la cuenta conectada");
         });
     }
 
-    private String validarTipoTarjeta(String valor) {
+    private String validarTipoSoportado(String valor) {
         String tipo = valor.trim().toLowerCase(java.util.Locale.ROOT);
-        if (!TIPOS_TARJETA.contains(tipo)) throw new IllegalArgumentException("El medio seleccionado no es una tarjeta válida");
+        if (!TIPOS_TARJETA.contains(tipo) && !TIPOS_ALTERNATIVOS.contains(tipo)) {
+            throw new IllegalArgumentException("El tipo de medio de pago no está soportado");
+        }
         return tipo;
     }
 
@@ -183,12 +206,13 @@ public class AdaptadorMercadoPagoOrders implements ProveedorPagosPort {
         return respuesta;
     }
 
-    private void validarCobro(SolicitudCobro solicitud) {
+    private void validarCobro(SolicitudCobro solicitud, String tipoMetodoPago) {
         requerido(solicitud, "solicitud"); requerido(solicitud.empresaId(), "empresaId");
         requerido(solicitud.referenciaOrden(), "referenciaOrden");
         if (solicitud.referenciaOrden().length() > 64) throw new IllegalArgumentException("referenciaOrden excede 64 caracteres");
         validarIdempotencia(solicitud.idempotencia()); validarImporte(solicitud.importe(), "importe");
-        requerido(solicitud.moneda(), "moneda"); requerido(solicitud.tokenMedioPago(), "tokenMedioPago");
+        requerido(solicitud.moneda(), "moneda");
+        if (TIPOS_TARJETA.contains(tipoMetodoPago)) requerido(solicitud.tokenMedioPago(), "tokenMedioPago");
         requerido(solicitud.correoPagador(), "correoPagador");
         if (solicitud.comisionPlataforma() != null) {
             if (solicitud.comisionPlataforma().signum() < 0) throw new IllegalArgumentException("comisionPlataforma no puede ser negativa");

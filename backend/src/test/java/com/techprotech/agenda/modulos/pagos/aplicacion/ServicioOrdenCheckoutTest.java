@@ -78,7 +78,7 @@ class ServicioOrdenCheckoutTest {
                     "Reforma 123, Centro, Puebla", direccion, "place-1", new BigDecimal("19.0433"), new BigDecimal("-98.2019"));
         });
         servicio = new ServicioOrdenCheckout(configuracion, sitios, sucursales, cotizador, citas, servicios,
-                usuarios, pagosCita, detallesVenta, ordenes, detalles, new PropiedadesCheckout(20), direcciones,
+                usuarios, pagosCita, detallesVenta, ordenes, detalles, new PropiedadesCheckout(20, 3), direcciones,
                 cotizacionesEnvio);
     }
 

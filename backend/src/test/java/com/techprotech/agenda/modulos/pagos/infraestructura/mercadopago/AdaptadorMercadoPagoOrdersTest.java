@@ -106,6 +106,38 @@ class AdaptadorMercadoPagoOrdersTest {
     }
 
     @Test
+    void creaPagoReferenciadoConVigenciaSinTokenDeTarjeta() {
+        servidor.expect(once(), requestTo("https://api.mercadopago.com/v1/orders"))
+                .andExpect(method(HttpMethod.POST))
+                .andExpect(content().json("""
+                        {
+                          "type":"online",
+                          "processing_mode":"automatic",
+                          "expiration_time":"P3D",
+                          "payer":{"email":"cliente@example.com"},
+                          "transactions":{"payments":[{"payment_method":{"id":"metodo-dinamico","type":"ticket"}}]}
+                        }
+                        """, false))
+                .andRespond(withSuccess("""
+                        {
+                          "id":"ORD-REF-1",
+                          "status":"action_required",
+                          "status_detail":"waiting_payment",
+                          "transactions":{"payments":[{"id":"PAY-REF-1","payment_method":{"ticket_url":"https://proveedor.example/instrucciones"}}]}
+                        }
+                        """, MediaType.APPLICATION_JSON));
+
+        ResultadoCobro resultado = adaptador.crearCobro(new SolicitudCobro(
+                12L, "VENTA-REF-1", "idem-ref-1", new BigDecimal("250"), "MXN", BigDecimal.ZERO,
+                null, "cliente@example.com", Map.of("payment_method_id", "metodo-dinamico",
+                "payment_type_id", "ticket", "expiration_time", "P3D")));
+
+        assertThat(resultado.estado()).isEqualTo(EstadoPago.REQUIERE_ACCION);
+        assertThat(resultado.accionUrl()).isEqualTo("https://proveedor.example/instrucciones");
+        servidor.verify();
+    }
+
+    @Test
     void reembolsaUnaTransaccionParcialSinConfundirOrdenYPago() {
         servidor.expect(once(), requestTo("https://api.mercadopago.com/v1/orders/ORD-42/refund"))
                 .andExpect(method(HttpMethod.POST))

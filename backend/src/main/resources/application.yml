@@ -92,6 +92,7 @@ aplicacion:
     llave-cifrado-secretos: ${PAGOS_LLAVE_CIFRADO_SECRETOS:${CORREO_LLAVE_CIFRADO_SECRETOS:}}
     checkout:
       minutos-vigencia-orden: ${CHECKOUT_MINUTOS_VIGENCIA_ORDEN:15}
+      dias-vigencia-pago-diferido: ${CHECKOUT_DIAS_VIGENCIA_PAGO_DIFERIDO:3}
       intervalo-liberacion-ms: ${CHECKOUT_INTERVALO_LIBERACION_MS:60000}
       intervalo-webhooks-ms: ${CHECKOUT_INTERVALO_WEBHOOKS_MS:5000}
       intervalo-proyeccion-ventas-ms: ${CHECKOUT_INTERVALO_PROYECCION_VENTAS_MS:15000}
