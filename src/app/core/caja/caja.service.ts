@@ -90,6 +90,7 @@ export interface ResumenCaja {
   totalCobrado: number;
   totalCobradoEfectivo: number;
   totalCobradoTarjeta: number;
+  totalCobradoPoint: number;
   totalCobradoTransferencia: number;
   totalGastos: number;
   totalRetiros: number;

@@ -65,6 +65,7 @@
       <div class="caja-summary-grid">
         <div><span class="label">Cobrado en efectivo</span><strong>{{ resumen?.totalCobradoEfectivo | appMoney:'MXN':2:2 }}</strong></div>
         <div><span class="label">Cobrado con tarjeta</span><strong>{{ resumen?.totalCobradoTarjeta | appMoney:'MXN':2:2 }}</strong></div>
+        <div><span class="label">Cobrado con Point</span><strong>{{ resumen?.totalCobradoPoint | appMoney:'MXN':2:2 }}</strong></div>
         <div><span class="label">Cobrado por transferencia</span><strong>{{ resumen?.totalCobradoTransferencia | appMoney:'MXN':2:2 }}</strong></div>
         <div><span class="label">Gastos menores</span><strong>{{ resumen?.totalGastos | appMoney:'MXN':2:2 }}</strong></div>
         <div><span class="label">Retiros</span><strong>{{ resumen?.totalRetiros | appMoney:'MXN':2:2 }}</strong></div>

@@ -7,6 +7,7 @@ public record ResumenCajaResponse(
         BigDecimal totalCobrado,
         BigDecimal totalCobradoEfectivo,
         BigDecimal totalCobradoTarjeta,
+        BigDecimal totalCobradoPoint,
         BigDecimal totalCobradoTransferencia,
         BigDecimal totalGastos,
         BigDecimal totalRetiros,

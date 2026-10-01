@@ -298,11 +298,11 @@ public class ServicioCaja {
         int citasPendientes = listarCitasPorCobrar(empresaId, sucursalesPermitidas, sucursalConsulta).size();
         CajaSesionEntidad sesion = resolverSesionAbierta(empresaId, sucursalConsulta).orElse(null);
         if (sesion == null) {
-            return new ResumenCajaResponse(null, BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO, citasPendientes);
+            return new ResumenCajaResponse(null, BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO, citasPendientes);
         }
 
         List<PagoCitaEntidad> pagos = pagoCitaRepositorio.findByEmpresaIdAndCajaSesionIdOrderByRegistradoEnDesc(empresaId, sesion.getId());
-        List<PagoVentaEntidad> pagosVenta = pagoVentaRepositorio.findByEmpresaIdAndCajaSesionIdOrderByRegistradoEnDesc(empresaId, sesion.getId());
+        List<PagoVentaEntidad> pagosVenta = pagoVentaRepositorio.findPagosVigentesDeSesion(empresaId, sesion.getId());
         List<MovimientoCajaEntidad> movimientos = movimientoCajaRepositorio.findByEmpresaIdAndCajaSesionIdOrderByRegistradoEnDesc(empresaId, sesion.getId());
 
         BigDecimal totalCobrado = pagos.stream().map(PagoCitaEntidad::getMonto).reduce(BigDecimal.ZERO, BigDecimal::add)
@@ -311,6 +311,8 @@ public class ServicioCaja {
                 .add(pagosVenta.stream().filter(p -> "EFECTIVO".equals(p.getMetodoPago())).map(PagoVentaEntidad::getMonto).reduce(BigDecimal.ZERO, BigDecimal::add));
         BigDecimal totalTarjeta = pagos.stream().filter(p -> "TARJETA".equals(p.getMetodoPago())).map(PagoCitaEntidad::getMonto).reduce(BigDecimal.ZERO, BigDecimal::add)
                 .add(pagosVenta.stream().filter(p -> "TARJETA".equals(p.getMetodoPago())).map(PagoVentaEntidad::getMonto).reduce(BigDecimal.ZERO, BigDecimal::add));
+        BigDecimal totalPoint = pagosVenta.stream().filter(p -> "MERCADO_PAGO_POINT".equals(p.getMetodoPago()))
+                .map(PagoVentaEntidad::getMonto).reduce(BigDecimal.ZERO, BigDecimal::add);
         BigDecimal totalTransferencia = pagos.stream().filter(p -> "TRANSFERENCIA".equals(p.getMetodoPago())).map(PagoCitaEntidad::getMonto).reduce(BigDecimal.ZERO, BigDecimal::add)
                 .add(pagosVenta.stream().filter(p -> "TRANSFERENCIA".equals(p.getMetodoPago())).map(PagoVentaEntidad::getMonto).reduce(BigDecimal.ZERO, BigDecimal::add));
         BigDecimal totalGastos = movimientos.stream()
@@ -327,6 +329,7 @@ public class ServicioCaja {
                 totalCobrado,
                 totalEfectivo,
                 totalTarjeta,
+                totalPoint,
                 totalTransferencia,
                 totalGastos,
                 totalRetiros,
