@@ -444,6 +444,15 @@ export class CajaDashboardComponent implements OnInit, AfterViewInit {
     this.recargarTablero();
   }
 
+  cobroPointCompletado() {
+    const citaId = this.citaSeleccionadaActualId();
+    this.store.setMessage('Pago con tarjeta aprobado y conciliado desde Mercado Pago Point.');
+    this.recargarTablero();
+    if (citaId) {
+      this.paymentsFacade.list(citaId).subscribe({ next: pagos => this.store.setPayments(pagos) });
+    }
+  }
+
   async imprimirComprobante() {
     const cita = this.citaSeleccionada();
     if (!cita) {

@@ -186,6 +186,9 @@
   color: #184b42;
 }
 
+.point-divider{grid-column:1/-1;display:flex;align-items:center;gap:.7rem;color:#7a7068;font-size:.78rem;text-transform:uppercase;letter-spacing:.06em}.point-divider::before,.point-divider::after{content:"";height:1px;flex:1;background:rgba(110,93,77,.14)}
+.point-action{display:flex;align-items:center;justify-content:space-between;gap:.8rem;padding:.8rem;border:1px solid #bae6fd;border-radius:16px;background:#f0f9ff}.point-action>span{display:flex;align-items:center;gap:.65rem;color:#075985}.point-action>span>i{display:grid;place-items:center;width:36px;height:36px;border-radius:11px;background:#dff3ff;font-size:1.05rem}.point-action strong,.point-action small{display:block}.point-action small{margin-top:.12rem;color:#527083}.point-status{display:flex;align-items:center;gap:.65rem;margin:.75rem 0;padding:.8rem;border:1px solid #bae6fd;border-radius:14px;background:#f0f9ff}.point-status>span{width:11px;height:11px;border-radius:50%;background:#0ea5e9;box-shadow:0 0 0 6px rgba(14,165,233,.12)}.point-status.approved{border-color:#a7f3d0;background:#ecfdf5}.point-status.approved>span{background:#10b981;box-shadow:0 0 0 6px rgba(16,185,129,.12)}.point-status div{display:grid;min-width:0}.point-status small{color:#64748b}.point-status button{margin-left:auto;border:0;background:transparent;color:#b42318;font-weight:700}.point-error{margin:.65rem 0;padding:.72rem;border-radius:12px;background:#fff1f2;color:#9f1239}
+
 @media (max-width: 767px) {
   .caja-appointment-head,
   .caja-appointment-meta,
@@ -199,4 +202,5 @@
   .caja-payment-result {
     gap: 0.35rem;
   }
+  .point-action,.point-status{align-items:stretch;flex-direction:column}.point-action button,.point-status button{width:100%;margin-left:0}
 }

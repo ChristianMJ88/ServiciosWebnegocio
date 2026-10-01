@@ -17,7 +17,7 @@ public class ProyectorVentasCheckout {
         this.servicio = servicio;
     }
 
-    @Scheduled(fixedDelayString = "${fluora.pagos.checkout.intervalo-proyeccion-ventas-ms:15000}")
+    @Scheduled(fixedDelayString = "${aplicacion.pagos.checkout.intervalo-proyeccion-ventas-ms:15000}")
     public void ejecutar() {
         ordenes.findTop100ByEstadoOrderByIdAsc("PAGADA").forEach(orden -> {
             try {

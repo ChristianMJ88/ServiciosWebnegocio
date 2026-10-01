@@ -36,6 +36,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
@@ -248,9 +249,14 @@ public class ServicioCaja {
         CitaEntidad cita = citaRepositorio.findByIdAndEmpresaId(citaId, empresaId)
                 .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "La cita no existe para la empresa"));
         validarAccesoSucursal(sucursalesPermitidas, cita.getSucursalId());
-        return pagoCitaRepositorio.findByEmpresaIdAndCitaIdOrderByRegistradoEnDesc(empresaId, citaId).stream()
+        List<PagoCitaResponse> resultado = new ArrayList<>(pagoCitaRepositorio
+                .findByEmpresaIdAndCitaIdOrderByRegistradoEnDesc(empresaId, citaId).stream()
                 .map(this::mapearPago)
-                .toList();
+                .toList());
+        resultado.addAll(pagoVentaRepositorio.findPagosConciliadosPorCita(empresaId, citaId));
+        resultado.sort(Comparator.comparing(PagoCitaResponse::registradoEn,
+                Comparator.nullsLast(Comparator.reverseOrder())));
+        return resultado;
     }
 
     @Transactional
