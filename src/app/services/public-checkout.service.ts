@@ -203,6 +203,12 @@ export class PublicCheckoutService {
     );
   }
 
+  paymentStatus(slug: string, orderId: string): Observable<CheckoutPayment> {
+    return this.http.get<CheckoutPayment>(
+      `${environment.apiBaseUrl}/publico/empresas/${encodeURIComponent(slug)}/checkout/ordenes/${encodeURIComponent(orderId)}/pago`
+    );
+  }
+
   private idempotency(value: string): HttpHeaders {
     return new HttpHeaders({ 'Idempotency-Key': value });
   }

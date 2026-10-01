@@ -19,6 +19,16 @@
             <i class="bi" [class.bi-check-circle-fill]="result.estadoPago === 'APROBADO'" [class.bi-hourglass-split]="result.estadoPago !== 'APROBADO'"></i>
             <div><span>Estado del pago</span><h2>{{ result.estadoPago === 'APROBADO' ? 'Pago aprobado' : 'Pago en proceso' }}</h2><p>{{ result.detalleRespuesta || 'Estamos confirmando la operación con Mercado Pago.' }}</p><strong>{{ result.importe | appMoney:result.moneda:2:2 }}</strong>@if (result.estadoPago === 'APROBADO') {<p class="payment-result__next"><i class="bi bi-box-seam"></i><span><b>¿Qué sigue?</b>{{ postPaymentMessage() }}</span></p>}</div>
           </div>
+          @if (result.accionUrl || result.estadoPago !== 'APROBADO') {
+            <div class="payment-result__actions">
+              @if (result.accionUrl) {
+                <a [href]="result.accionUrl" target="_blank" rel="noopener"><i class="bi bi-box-arrow-up-right"></i> Ver instrucciones de pago</a>
+              }
+              @if (result.estadoPago !== 'APROBADO') {
+                <button type="button" (click)="refreshPayment()" [disabled]="refreshingPayment()"><i class="bi bi-arrow-clockwise"></i>{{ refreshingPayment() ? 'Consultando…' : 'Actualizar estado' }}</button>
+              }
+            </div>
+          }
           @if (canShowProviderStatus(result.referenciaPagoExterna)) {
             <div class="payment-status-brick">
               @if (!statusReady()) {<div class="brick-loading"><span class="checkout-spinner"></span> Consultando detalle del pago…</div>}

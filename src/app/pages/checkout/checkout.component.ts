@@ -48,6 +48,7 @@ export class CheckoutComponent implements OnInit, OnDestroy {
   readonly paymentMethods = signal<CheckoutPaymentMethod[]>([]);
   readonly selectedPaymentMethod = signal<string>('CARD');
   readonly processingAlternative = signal(false);
+  readonly refreshingPayment = signal(false);
   readonly validatingPostalCode = signal(false);
   readonly postalCodeMessage = signal<string | null>(null);
   readonly addressConfig = signal<AddressPlatformConfig | null>(null);
@@ -308,9 +309,25 @@ export class CheckoutComponent implements OnInit, OnDestroy {
       .subscribe({
         next: result => {
           this.payment.set(result);
-          if (result.accionUrl) window.location.assign(result.accionUrl);
         },
         error: error => this.error.set(this.message(error, 'No pudimos generar las instrucciones de pago.'))
+      });
+  }
+
+  refreshPayment(): void {
+    const slug = this.tenant.slug();
+    const orderId = this.payment()?.ordenId ?? this.order()?.id;
+    if (!slug || !orderId || this.refreshingPayment()) return;
+    this.refreshingPayment.set(true);
+    this.error.set(null);
+    this.checkout.paymentStatus(slug, orderId)
+      .pipe(finalize(() => this.refreshingPayment.set(false)), takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: result => {
+          this.payment.set(result);
+          if (result.estadoPago === 'APROBADO') this.cart.clear();
+        },
+        error: error => this.error.set(this.message(error, 'No pudimos actualizar el estado del pago.'))
       });
   }
 
