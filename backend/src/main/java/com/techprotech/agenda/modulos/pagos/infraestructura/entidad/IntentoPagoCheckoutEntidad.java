@@ -25,6 +25,8 @@ public class IntentoPagoCheckoutEntidad {
     private String idempotencia;
     @Column(name = "referencia_externa", length = 180)
     private String referenciaExterna;
+    @Column(name = "referencia_pago_externa", length = 180)
+    private String referenciaPagoExterna;
     @Column(nullable = false, length = 30)
     private String estado;
     @Column(nullable = false, precision = 12, scale = 2)

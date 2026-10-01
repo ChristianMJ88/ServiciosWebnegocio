@@ -10,6 +10,7 @@ public record ConfiguracionCheckoutResponse(
         boolean aceptarTarjeta,
         boolean aceptarTransferencia,
         boolean aceptarEfectivoReferenciado,
+        boolean mostrarEstadoPago,
         boolean permitirPagoProductos,
         boolean permitirPagoServicios,
         boolean permitirRecoleccion,

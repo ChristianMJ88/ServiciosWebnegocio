@@ -93,13 +93,14 @@ class ServicioConfiguracionCheckoutTest {
         assertThat(respuesta.habilitado()).isTrue();
         assertThat(respuesta.permitirPagoProductos()).isTrue();
         assertThat(respuesta.permitirPagoServicios()).isTrue();
+        assertThat(respuesta.mostrarEstadoPago()).isTrue();
         verify(configuraciones).save(argThat(config -> config.getEmpresaId().equals(25L)
                 && config.getProveedorPredeterminadoId().equals(7L)
                 && "MXN".equals(config.getMoneda())));
     }
 
     private ConfiguracionCheckoutRequest requestHabilitado() {
-        return new ConfiguracionCheckoutRequest(true, true, false, false, true, true,
+        return new ConfiguracionCheckoutRequest(true, true, false, false, true, true, true,
                 true, false, BigDecimal.ZERO, false, BigDecimal.ZERO,
                 "PAGO_COMPLETO", null, null, "MXN");
     }

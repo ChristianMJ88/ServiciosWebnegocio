@@ -90,6 +90,14 @@
         </div>
 
         <fieldset class="delivery-config">
+          <legend>Experiencia de pago</legend>
+          <label class="payment-option">
+            <input type="checkbox" [checked]="checkout.mostrarEstadoPago" (change)="actualizar('mostrarEstadoPago', $any($event.target).checked)">
+            <span><i class="bi bi-receipt"></i><b>Mostrar comprobante interactivo</b><small>Después del cobro, Mercado Pago mostrará el estado y detalle de la transacción dentro del sitio.</small></span>
+          </label>
+        </fieldset>
+
+        <fieldset class="delivery-config">
           <legend>Entrega de productos</legend>
           <p class="delivery-config__intro">Publica únicamente las opciones que este negocio puede cumplir. El costo se suma y valida en el servidor.</p>
           <div class="delivery-config__grid">

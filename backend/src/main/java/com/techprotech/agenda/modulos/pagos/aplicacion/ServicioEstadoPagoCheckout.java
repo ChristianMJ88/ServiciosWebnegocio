@@ -27,6 +27,7 @@ public class ServicioEstadoPagoCheckout {
         IntentoPagoCheckoutEntidad intento = intentos.findById(intentoId)
                 .orElseThrow(() -> new IllegalStateException("Intento de pago no encontrado"));
         intento.setReferenciaExterna(resultado.referenciaExterna());
+        intento.setReferenciaPagoExterna(resultado.referenciaPagoExterna());
         intento.setEstado(resultado.estado().name());
         intento.setAccionUrl(resultado.accionUrl());
         intento.setCodigoRespuesta(resultado.codigoRespuesta());

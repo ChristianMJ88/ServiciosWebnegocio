@@ -30,6 +30,22 @@ export class MercadoPagoBricksService {
     });
   }
 
+  async mountStatus(target: string, publicKey: string, paymentId: string,
+                    onReady: () => void, onError: (message: string) => void): Promise<BrickController> {
+    await this.load();
+    const Constructor = (window as MercadoPagoWindow).MercadoPago;
+    if (!Constructor) throw new Error('No fue posible consultar el estado del pago.');
+    const builder = new Constructor(publicKey, { locale: 'es-MX' }).bricks();
+    return builder.create('statusScreen', target, {
+      initialization: { paymentId },
+      customization: { visual: { style: { theme: 'default' } } },
+      callbacks: {
+        onReady,
+        onError: () => onError('No pudimos mostrar el detalle de Mercado Pago. Tu orden conserva el estado confirmado por el servidor.')
+      }
+    });
+  }
+
   private load(): Promise<void> {
     if (this.loader) return this.loader;
     this.loader = new Promise((resolve, reject) => {

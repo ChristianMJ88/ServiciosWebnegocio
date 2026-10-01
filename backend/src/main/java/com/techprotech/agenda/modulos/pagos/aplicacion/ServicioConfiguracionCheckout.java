@@ -69,6 +69,7 @@ public class ServicioConfiguracionCheckout {
         configuracion.setAceptarTarjeta(request.aceptarTarjeta());
         configuracion.setAceptarTransferencia(request.aceptarTransferencia());
         configuracion.setAceptarEfectivoReferenciado(request.aceptarEfectivoReferenciado());
+        configuracion.setMostrarEstadoPago(request.mostrarEstadoPago());
         configuracion.setPermitirPagoProductos(request.permitirPagoProductos());
         configuracion.setPermitirPagoServicios(request.permitirPagoServicios());
         configuracion.setPermitirRecoleccion(request.permitirRecoleccion());
@@ -101,6 +102,7 @@ public class ServicioConfiguracionCheckout {
                 habilitado && configuracion.isAceptarTarjeta(),
                 habilitado && configuracion.isAceptarTransferencia(),
                 habilitado && configuracion.isAceptarEfectivoReferenciado(),
+                configuracion.isMostrarEstadoPago(),
                 habilitado && configuracion.isPermitirPagoProductos(),
                 habilitado && configuracion.isPermitirPagoServicios(),
                 habilitado && configuracion.isPermitirRecoleccion(),
@@ -143,7 +145,8 @@ public class ServicioConfiguracionCheckout {
                                                       EmpresaProveedorPagoEntidad conexion) {
         return new ConfiguracionCheckoutResponse(
                 config.isHabilitado(), proveedor, conectada(conexion), ambienteActivo(), config.isAceptarTarjeta(),
-                config.isAceptarTransferencia(), config.isAceptarEfectivoReferenciado(), config.isPermitirPagoProductos(),
+                config.isAceptarTransferencia(), config.isAceptarEfectivoReferenciado(), config.isMostrarEstadoPago(),
+                config.isPermitirPagoProductos(),
                 config.isPermitirPagoServicios(), config.isPermitirRecoleccion(), config.isPermitirEntregaLocal(),
                 config.getCostoEntregaLocal(), config.isPermitirEnvioNacional(), config.getCostoEnvioNacional(),
                 config.getModalidadServicios(), config.getAnticipoPorcentaje(),
@@ -158,6 +161,7 @@ public class ServicioConfiguracionCheckout {
         config.setAceptarTarjeta(true);
         config.setAceptarTransferencia(false);
         config.setAceptarEfectivoReferenciado(false);
+        config.setMostrarEstadoPago(true);
         config.setPermitirPagoProductos(true);
         config.setPermitirPagoServicios(true);
         config.setPermitirRecoleccion(true);

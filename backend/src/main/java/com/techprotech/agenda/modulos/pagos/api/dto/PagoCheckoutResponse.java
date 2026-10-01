@@ -8,6 +8,7 @@ public record PagoCheckoutResponse(
         String estadoPago,
         String proveedor,
         String referenciaExterna,
+        String referenciaPagoExterna,
         BigDecimal importe,
         String moneda,
         String accionUrl,

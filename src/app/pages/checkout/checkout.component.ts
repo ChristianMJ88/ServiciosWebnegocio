@@ -36,6 +36,8 @@ export class CheckoutComponent implements OnInit, OnDestroy {
   readonly loading = signal(true);
   readonly creatingOrder = signal(false);
   readonly brickReady = signal(false);
+  readonly statusReady = signal(false);
+  readonly statusMessage = signal<string | null>(null);
   readonly error = signal<string | null>(null);
   readonly config = signal<PublicCheckoutConfig | null>(null);
   readonly branches = signal<SucursalCatalogo[]>([]);
@@ -50,7 +52,8 @@ export class CheckoutComponent implements OnInit, OnDestroy {
   readonly shippingQuotes = signal<ShippingQuoteOption[]>([]);
   readonly selectedShippingQuote = signal<ShippingQuoteOption | null>(null);
   readonly shippingQuoteMessage = signal<string | null>(null);
-  private controller: BrickController | null = null;
+  private paymentController: BrickController | null = null;
+  private statusController: BrickController | null = null;
   private orderKey = this.key('orden');
   private paymentKey = this.key('pago');
 
@@ -91,7 +94,10 @@ export class CheckoutComponent implements OnInit, OnDestroy {
       });
   }
 
-  ngOnDestroy(): void { this.controller?.unmount(); }
+  ngOnDestroy(): void {
+    this.paymentController?.unmount();
+    this.statusController?.unmount();
+  }
 
   async confirmOrder(): Promise<void> {
     const slug = this.tenant.slug();
@@ -293,8 +299,8 @@ export class CheckoutComponent implements OnInit, OnDestroy {
 
   private async mountBrick(config: PublicCheckoutConfig, order: CheckoutOrder): Promise<void> {
     if (!config.llavePublica) throw new Error('El negocio todavía no tiene una llave pública de pago disponible.');
-    this.controller?.unmount();
-    this.controller = await this.bricks.mountCard('cardPaymentBrick_container', config.llavePublica,
+    this.paymentController?.unmount();
+    this.paymentController = await this.bricks.mountCard('cardPaymentBrick_container', config.llavePublica,
       order.total, this.form.controls.email.value.trim().toLowerCase(),
       data => this.pay(data), () => this.brickReady.set(true), message => this.error.set(message));
   }
@@ -309,11 +315,33 @@ export class CheckoutComponent implements OnInit, OnDestroy {
         this.form.controls.email.value.trim().toLowerCase(), this.paymentKey));
       this.payment.set(result);
       if (result.estadoPago === 'APROBADO') this.cart.clear();
-      if (result.accionUrl) window.location.assign(result.accionUrl);
+      if (result.accionUrl) {
+        window.location.assign(result.accionUrl);
+        return;
+      }
+      if (this.config()?.mostrarEstadoPago && result.referenciaPagoExterna && this.config()?.llavePublica) {
+        await new Promise(resolve => setTimeout(resolve));
+        try {
+          await this.mountStatus(this.config()!.llavePublica!, result.referenciaPagoExterna);
+        } catch {
+          this.statusMessage.set('El pago fue recibido, pero el detalle interactivo no está disponible en este momento.');
+        }
+      }
     } catch (error: unknown) {
       this.error.set(this.message(error, 'El pago no pudo procesarse. Revisa los datos o intenta con otro método.'));
       throw error;
     }
+  }
+
+  private async mountStatus(publicKey: string, paymentId: string): Promise<void> {
+    this.statusReady.set(false);
+    this.statusMessage.set(null);
+    this.statusController?.unmount();
+    this.statusController = await this.bricks.mountStatus('statusScreenBrick_container', publicKey, paymentId,
+      () => this.statusReady.set(true), message => {
+        this.statusReady.set(true);
+        this.statusMessage.set(message);
+      });
   }
 
   private key(prefix: string): string {

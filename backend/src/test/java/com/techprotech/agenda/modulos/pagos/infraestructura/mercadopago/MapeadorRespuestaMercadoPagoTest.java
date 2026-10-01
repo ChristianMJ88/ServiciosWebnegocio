@@ -18,13 +18,14 @@ class MapeadorRespuestaMercadoPagoTest {
                   "id":"ORD-3DS",
                   "status":"action_required",
                   "status_detail":"pending_challenge",
-                  "transactions":{"payments":[{"payment_method":{"transaction_security":{
+                  "transactions":{"payments":[{"id":"PAY-123","payment_method":{"transaction_security":{
                     "url":"https://example.test/3ds"
                   }}}]}
                 }
                 """));
 
         assertThat(resultado.estado()).isEqualTo(EstadoPago.REQUIERE_ACCION);
+        assertThat(resultado.referenciaPagoExterna()).isEqualTo("PAY-123");
         assertThat(resultado.accionUrl()).isEqualTo("https://example.test/3ds");
     }
 

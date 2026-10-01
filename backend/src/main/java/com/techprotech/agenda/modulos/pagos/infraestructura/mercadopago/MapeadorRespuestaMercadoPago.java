@@ -17,7 +17,7 @@ class MapeadorRespuestaMercadoPago {
     ResultadoCobro cobro(JsonNode respuesta) {
         String estado = texto(respuesta, "status");
         String detalle = texto(respuesta, "status_detail");
-        return new ResultadoCobro(ProveedorPago.MERCADO_PAGO, texto(respuesta, "id"), estado(estado, detalle),
+        return new ResultadoCobro(ProveedorPago.MERCADO_PAGO, texto(respuesta, "id"), referenciaPago(respuesta), estado(estado, detalle),
                 accion(respuesta), detalle == null ? estado : detalle, detalle,
                 fecha(respuesta.path("last_updated_date")));
     }
@@ -56,6 +56,10 @@ class MapeadorRespuestaMercadoPago {
         if (seguridad != null) return seguridad;
         String ticket = texto(metodo, "ticket_url");
         return ticket == null ? texto(respuesta, "checkout_url") : ticket;
+    }
+
+    private String referenciaPago(JsonNode respuesta) {
+        return texto(respuesta.path("transactions").path("payments").path(0), "id");
     }
 
     private OffsetDateTime fecha(JsonNode nodo) {

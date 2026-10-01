@@ -28,6 +28,8 @@ public class EmpresaCheckoutConfigEntidad {
   private boolean aceptarTransferencia = true;
   @Column(name = "aceptar_efectivo_referenciado", nullable = false)
   private boolean aceptarEfectivoReferenciado;
+  @Column(name = "mostrar_estado_pago", nullable = false)
+  private boolean mostrarEstadoPago = true;
   @Column(name = "permitir_pago_productos", nullable = false)
   private boolean permitirPagoProductos;
   @Column(name = "permitir_pago_servicios", nullable = false)

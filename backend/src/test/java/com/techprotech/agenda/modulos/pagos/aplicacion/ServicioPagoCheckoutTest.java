@@ -67,10 +67,11 @@ class ServicioPagoCheckoutTest {
         CheckoutOrdenEntidad orden = ordenPendiente();
         when(ordenes.findByEmpresaIdAndPublicId(25L, "orden-123")).thenReturn(Optional.of(orden));
         when(mercadoPago.crearCobro(any())).thenReturn(new ResultadoCobro(ProveedorPago.MERCADO_PAGO,
-                "mp-order-9", EstadoPago.APROBADO, null, "approved", "Aprobado", OffsetDateTime.now()));
+                "mp-order-9", "mp-payment-8", EstadoPago.APROBADO, null, "approved", "Aprobado", OffsetDateTime.now()));
         IntentoPagoCheckoutEntidad aplicado = new IntentoPagoCheckoutEntidad();
         aplicado.setId(55L); aplicado.setEstado("APROBADO"); aplicado.setImporte(new BigDecimal("480.00"));
         aplicado.setMoneda("MXN"); aplicado.setProveedorPagoId(7L); aplicado.setReferenciaExterna("mp-order-9");
+        aplicado.setReferenciaPagoExterna("mp-payment-8");
         when(estados.aplicar(eq(55L), any())).thenReturn(
                 new ServicioEstadoPagoCheckout.EstadoAplicado("orden-123", "PAGADA", aplicado));
 
@@ -78,6 +79,7 @@ class ServicioPagoCheckoutTest {
 
         assertThat(respuesta.estadoOrden()).isEqualTo("PAGADA");
         assertThat(respuesta.importe()).isEqualByComparingTo("480.00");
+        assertThat(respuesta.referenciaPagoExterna()).isEqualTo("mp-payment-8");
         verify(mercadoPago).crearCobro(argThat(cobro -> cobro.importe().compareTo(new BigDecimal("480.00")) == 0
                 && cobro.empresaId().equals(25L) && cobro.referenciaOrden().equals("orden-123")
                 && cobro.correoPagador().equals("cliente@test.mx")));
@@ -130,7 +132,7 @@ class ServicioPagoCheckoutTest {
 
     private ConfiguracionCheckoutPublicaResponse configHabilitada() {
         return new ConfiguracionCheckoutPublicaResponse(true, "MERCADO_PAGO", "PRUEBA", "public-key",
-                true, false, false, true, true, true, false, BigDecimal.ZERO, false, BigDecimal.ZERO,
+                true, false, false, true, true, true, true, false, BigDecimal.ZERO, false, BigDecimal.ZERO,
                 false, "PAGO_COMPLETO", null, null, "MXN");
     }
 }

@@ -157,7 +157,7 @@ public class ServicioPagoCheckout {
     private PagoCheckoutResponse respuesta(String ordenPublicId, IntentoPagoCheckoutEntidad intento,
                                             String estadoOrden, String proveedor) {
         return new PagoCheckoutResponse(ordenPublicId, estadoOrden, intento.getEstado(), proveedor,
-                intento.getReferenciaExterna(), intento.getImporte(), intento.getMoneda(), intento.getAccionUrl(),
+                intento.getReferenciaExterna(), intento.getReferenciaPagoExterna(), intento.getImporte(), intento.getMoneda(), intento.getAccionUrl(),
                 intento.getCodigoRespuesta(), intento.getDetalleRespuesta());
     }
 

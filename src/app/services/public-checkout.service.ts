@@ -11,6 +11,7 @@ export interface PublicCheckoutConfig {
   aceptarTarjeta: boolean;
   aceptarTransferencia: boolean;
   aceptarEfectivoReferenciado: boolean;
+  mostrarEstadoPago: boolean;
   permitirPagoProductos: boolean;
   permitirPagoServicios: boolean;
   permitirRecoleccion: boolean;
@@ -72,6 +73,7 @@ export interface CheckoutPayment {
   estadoPago: string;
   proveedor: string;
   referenciaExterna: string | null;
+  referenciaPagoExterna: string | null;
   importe: number;
   moneda: string;
   accionUrl: string | null;

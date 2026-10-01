@@ -103,7 +103,7 @@ class ServicioOrdenCheckoutTest {
     void agregaEntregaLocalYConservaLaDireccionEnLaOrden() {
         when(configuracion.obtenerPublica("nail-art")).thenReturn(new ConfiguracionCheckoutPublicaResponse(
                 true, "MERCADO_PAGO", "PRUEBA", "public-key", true, false, false, true, true,
-                true, true, new BigDecimal("49.00"), true, new BigDecimal("129.00"),
+                true, true, true, new BigDecimal("49.00"), true, new BigDecimal("129.00"),
                 false, "PAGO_COMPLETO", null, null, "MXN"));
         when(cotizador.cotizar(eq(25L), eq(3L), isNull(), any())).thenReturn(
                 new ServicioCotizacionProductos.ResultadoCotizacion(null, List.of(
@@ -164,7 +164,7 @@ class ServicioOrdenCheckoutTest {
 
     private ConfiguracionCheckoutPublicaResponse configHabilitada() {
         return new ConfiguracionCheckoutPublicaResponse(true, "MERCADO_PAGO", "PRUEBA", "public-key",
-                true, false, false, true, true, true, false, BigDecimal.ZERO, false, BigDecimal.ZERO,
+                true, false, false, true, true, true, true, false, BigDecimal.ZERO, false, BigDecimal.ZERO,
                 false, "PAGO_COMPLETO", null, null, "MXN");
     }
 }
