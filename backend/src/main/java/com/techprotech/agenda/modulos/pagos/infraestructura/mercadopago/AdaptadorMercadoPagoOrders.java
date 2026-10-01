@@ -124,7 +124,7 @@ public class AdaptadorMercadoPagoOrders implements ProveedorPagosPort {
         Map<String, Object> cuerpo = new LinkedHashMap<>();
         cuerpo.put("type", "online");
         cuerpo.put("processing_mode", "automatic");
-        cuerpo.put("capture_mode", "automatic");
+        if (TIPOS_TARJETA.contains(tipoMetodoPago)) cuerpo.put("capture_mode", "automatic");
         cuerpo.put("total_amount", importe(solicitud.importe()));
         cuerpo.put("external_reference", solicitud.referenciaOrden());
         opcional(cuerpo, "expiration_time", metadatos.get("expiration_time"));
@@ -192,13 +192,38 @@ public class AdaptadorMercadoPagoOrders implements ProveedorPagosPort {
         try {
             JsonNode respuesta = objectMapper.readTree(ex.getResponseBodyAsString());
             if (respuesta.hasNonNull("id")) return respuesta;
-            String codigo = valorO(texto(respuesta, "code"), texto(respuesta, "error"));
-            throw new IllegalStateException("Mercado Pago rechazó la operación" + (codigo == null ? "" : ": " + codigo));
+            JsonNode error = primerError(respuesta);
+            String codigo = primerTexto(
+                    texto(respuesta, "code"),
+                    texto(respuesta, "error"),
+                    texto(error, "code"));
+            String mensaje = primerTexto(
+                    texto(respuesta, "message"),
+                    texto(error, "message"),
+                    texto(error, "description"));
+            String contexto = primerTexto(texto(error, "details"), texto(error, "field"));
+            String detalle = codigo == null ? mensaje : codigo + (mensaje == null ? "" : " · " + mensaje);
+            if (contexto != null) detalle = (detalle == null ? "" : detalle + " · ") + contexto;
+            throw new IllegalStateException("Mercado Pago rechazó la operación (HTTP "
+                    + ex.getStatusCode().value() + ")" + (detalle == null ? "" : ": " + detalle));
         } catch (IllegalStateException error) {
             throw error;
         } catch (Exception ignored) {
             throw new IllegalStateException("Mercado Pago rechazó la operación (HTTP " + ex.getStatusCode().value() + ")");
         }
+    }
+
+    private JsonNode primerError(JsonNode respuesta) {
+        for (String campo : List.of("errors", "details", "cause")) {
+            JsonNode candidatos = respuesta.path(campo);
+            if (candidatos.isArray() && !candidatos.isEmpty()) return candidatos.path(0);
+        }
+        return objectMapper.createObjectNode();
+    }
+
+    private String primerTexto(String... valores) {
+        for (String valor : valores) if (valor != null && !valor.isBlank()) return valor;
+        return null;
     }
 
     private JsonNode respuestaRequerida(JsonNode respuesta) {

@@ -109,6 +109,7 @@ class AdaptadorMercadoPagoOrdersTest {
     void creaPagoReferenciadoConVigenciaSinTokenDeTarjeta() {
         servidor.expect(once(), requestTo("https://api.mercadopago.com/v1/orders"))
                 .andExpect(method(HttpMethod.POST))
+                .andExpect(jsonPath("$.capture_mode").doesNotExist())
                 .andExpect(content().json("""
                         {
                           "type":"online",
