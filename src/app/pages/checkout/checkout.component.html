@@ -1,15 +1,15 @@
 <main class="checkout-page">
   <div class="checkout-shell">
-    <a class="checkout-back" [routerLink]="tenant.routeFor('productos')"><i class="bi bi-arrow-left"></i> Volver a productos</a>
+    <a class="checkout-back" [routerLink]="tenant.routeFor(hasAppointments() && !hasProducts() ? 'agendar' : 'productos')"><i class="bi bi-arrow-left"></i> {{ hasAppointments() && !hasProducts() ? 'Volver a agendar' : 'Volver a productos' }}</a>
 
     @if (loading()) {
       <section class="checkout-state"><span class="checkout-spinner"></span><strong>Preparando pago seguro…</strong></section>
-    } @else if (!config()?.habilitado || !config()?.permitirPagoProductos || !config()?.aceptarTarjeta) {
-      <section class="checkout-state checkout-state--empty"><i class="bi bi-credit-card-2-front"></i><h1>Pago en línea no disponible</h1><p>{{ tenant.nombreComercial() }} todavía no ha habilitado el cobro de productos con tarjeta.</p><a [routerLink]="tenant.routeFor('productos')">Regresar a la tienda</a></section>
-    } @else if (!cart.items().length && !payment()) {
-      <section class="checkout-state checkout-state--empty"><i class="bi bi-bag"></i><h1>Tu carrito está vacío</h1><p>Agrega productos antes de iniciar el pago.</p><a [routerLink]="tenant.routeFor('productos')">Explorar productos</a></section>
+    } @else if (!checkoutAvailable(config())) {
+      <section class="checkout-state checkout-state--empty"><i class="bi bi-credit-card-2-front"></i><h1>Pago en línea no disponible</h1><p>{{ tenant.nombreComercial() }} todavía no ha habilitado el cobro en línea para estos conceptos.</p><a [routerLink]="tenant.routeFor(hasAppointments() ? 'agendar' : 'productos')">Regresar</a></section>
+    } @else if (!hasPayableItems() && !payment()) {
+      <section class="checkout-state checkout-state--empty"><i class="bi bi-bag"></i><h1>No hay conceptos por pagar</h1><p>Agrega productos o reserva un servicio antes de iniciar el pago.</p><a [routerLink]="tenant.routeFor('servicios')">Explorar servicios</a></section>
     } @else {
-      <header class="checkout-heading"><span>Compra segura</span><h1>Revisa y paga tu pedido</h1><p>El total se valida nuevamente en el servidor antes de mostrar el formulario de tarjeta.</p></header>
+      <header class="checkout-heading"><span>Pago seguro</span><h1>{{ hasAppointments() && !hasProducts() ? 'Confirma y paga tu cita' : 'Revisa y paga tu pedido' }}</h1><p>El total se calcula nuevamente en el servidor según la configuración del negocio antes de mostrar el formulario de tarjeta.</p></header>
 
       @if (error()) {<div class="checkout-alert" role="alert"><i class="bi bi-exclamation-circle"></i><span>{{ error() }}</span></div>}
 
@@ -37,7 +37,7 @@
               <label><span>Teléfono de contacto</span><input type="tel" formControlName="phone" autocomplete="tel" placeholder="222 123 4567"></label>
               <label><span>Sucursal que preparará el pedido</span><select formControlName="branchId" (change)="clearShippingQuotes()"><option [ngValue]="0" disabled>Selecciona una sucursal</option>@for (branch of branches(); track branch.id) {<option [ngValue]="branch.id">{{ branch.nombre }}</option>}</select></label>
 
-              <fieldset class="delivery-fieldset">
+              @if (hasProducts()) {<fieldset class="delivery-fieldset">
                 <legend>¿Cómo quieres recibir tu pedido?</legend>
                 <div class="delivery-options">
                   @if (config()?.permitirRecoleccion) {
@@ -59,9 +59,9 @@
                     </label>
                   }
                 </div>
-              </fieldset>
+              </fieldset>}
 
-              @if (requiresAddress()) {
+              @if (hasProducts() && requiresAddress()) {
                 <section class="address-fields" (input)="clearAddressValidation()">
                   <header><i class="bi bi-geo-alt"></i><div><strong>Dirección de entrega</strong><small>Captúrala tal como aparece en el domicilio.</small></div></header>
                   @if (addressConfig()?.autocompleteHabilitado) {
@@ -117,11 +117,15 @@
           </section>
 
           <aside class="checkout-panel checkout-summary">
-            <header><span>Tu pedido</span><strong>{{ cart.units() }} {{ cart.units() === 1 ? 'producto' : 'productos' }}</strong></header>
-            <div class="summary-items">@for (item of cart.items(); track item.productoId) {<article>@if (item.imagenUrl) {<img [src]="item.imagenUrl" [alt]="item.nombre">} @else {<span><i class="bi bi-box-seam"></i></span>}<div><strong>{{ item.nombre }}</strong><small>{{ item.cantidad }} × {{ item.precio | appMoney:item.moneda:2:2 }}</small></div><b>{{ item.precio * item.cantidad | appMoney:item.moneda:2:2 }}</b></article>}</div>
+            <header><span>{{ hasAppointments() && !hasProducts() ? 'Tu reserva' : 'Tu pedido' }}</span><strong>@if (hasAppointments()) { {{ appointmentIds().length }} {{ appointmentIds().length === 1 ? 'cita' : 'citas' }} } @if (hasProducts()) { {{ cart.units() }} {{ cart.units() === 1 ? 'producto' : 'productos' }} }</strong></header>
+            <div class="summary-items">
+              @for (item of cart.items(); track item.productoId) {<article>@if (item.imagenUrl) {<img [src]="item.imagenUrl" [alt]="item.nombre">} @else {<span><i class="bi bi-box-seam"></i></span>}<div><strong>{{ item.nombre }}</strong><small>{{ item.cantidad }} × {{ item.precio | appMoney:item.moneda:2:2 }}</small></div><b>{{ item.precio * item.cantidad | appMoney:item.moneda:2:2 }}</b></article>}
+              @if (hasAppointments() && !order()) {<article><span><i class="bi bi-calendar2-check"></i></span><div><strong>{{ appointmentIds().length === 1 ? 'Servicio reservado' : 'Servicios reservados' }}</strong><small>El servidor calculará el anticipo o pago total.</small></div></article>}
+              @for (detail of order()?.detalles ?? []; track $index) {@if (detail.tipo === 'SERVICIO') {<article><span><i class="bi bi-calendar2-check"></i></span><div><strong>{{ detail.nombre }}</strong><small>Importe requerido para confirmar</small></div><b>{{ detail.total | appMoney:order()!.moneda:2:2 }}</b></article>}}
+            </div>
             <footer>
               @if ((order()?.costoEnvio ?? deliveryCost()) > 0) {<div class="summary-shipping"><span>Entrega</span><b>{{ (order()?.costoEnvio ?? deliveryCost()) | appMoney:(order()?.moneda ?? cart.currency()):2:2 }}</b></div>}
-              <div><span>{{ order() ? 'Total confirmado' : 'Total estimado' }}</span><strong>{{ (order()?.total ?? (cart.total() + deliveryCost())) | appMoney:(order()?.moneda ?? cart.currency()):2:2 }}</strong></div><small><i class="bi bi-lock"></i> Cifrado y tokenización segura por Mercado Pago</small>
+              <div><span>{{ order() ? 'Total confirmado' : (hasAppointments() ? 'Total al continuar' : 'Total estimado') }}</span>@if (order() || !hasAppointments()) {<strong>{{ (order()?.total ?? (cart.total() + deliveryCost())) | appMoney:(order()?.moneda ?? cart.currency()):2:2 }}</strong>} @else {<strong>Por calcular</strong>}</div><small><i class="bi bi-lock"></i> Cifrado y tokenización segura por Mercado Pago</small>
             </footer>
           </aside>
         </div>

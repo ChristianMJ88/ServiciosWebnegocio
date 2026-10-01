@@ -12,6 +12,7 @@ import { CardBrickData, CheckoutOrder, CheckoutPayment, DeliveryMode, PublicChec
 import { MoneyDisplayPipe } from '../../shared/pipes/money-display.pipe';
 import { AddressInput, AddressPlatformConfig, AddressValidationService } from '../../services/address-validation.service';
 import { GoogleAddressAutocompleteComponent } from '../../shared/google-address-autocomplete/google-address-autocomplete.component';
+import { AppointmentCheckoutDraftService } from '../../services/appointment-checkout-draft.service';
 
 interface BrickController { unmount(): void; }
 
@@ -32,6 +33,7 @@ export class CheckoutComponent implements OnInit, OnDestroy {
   private readonly destroyRef = inject(DestroyRef);
   private readonly fb = inject(FormBuilder);
   private readonly addressApi = inject(AddressValidationService);
+  private readonly appointmentDraft = inject(AppointmentCheckoutDraftService);
 
   readonly loading = signal(true);
   readonly creatingOrder = signal(false);
@@ -51,6 +53,7 @@ export class CheckoutComponent implements OnInit, OnDestroy {
   readonly quotingShipping = signal(false);
   readonly shippingQuotes = signal<ShippingQuoteOption[]>([]);
   readonly selectedShippingQuote = signal<ShippingQuoteOption | null>(null);
+  readonly appointmentIds = signal<number[]>([]);
   readonly shippingQuoteMessage = signal<string | null>(null);
   private paymentController: BrickController | null = null;
   private statusController: BrickController | null = null;
@@ -79,6 +82,13 @@ export class CheckoutComponent implements OnInit, OnDestroy {
     const empresaId = this.tenant.empresaId();
     if (!slug || !empresaId) { this.fail('No encontramos el negocio para iniciar el pago.'); return; }
     this.cart.connect(empresaId);
+    const requestedAppointments = (this.route.snapshot.queryParamMap.get('citas') ?? '')
+      .split(',').map(value => Number(value)).filter(value => Number.isInteger(value) && value > 0);
+    const draft = this.appointmentDraft.read(empresaId);
+    this.appointmentIds.set(requestedAppointments.length ? requestedAppointments : (draft?.appointmentIds ?? []));
+    if (draft && this.sameAppointments(draft.appointmentIds, this.appointmentIds())) {
+      this.form.patchValue({ name: draft.name, email: draft.email, phone: draft.phone, branchId: draft.branchId });
+    }
     forkJoin({ config: this.checkout.config(slug), branches: this.branchesApi.getBranches(empresaId), addressConfig: this.addressApi.configuration() })
       .pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
         next: ({ config, branches, addressConfig }) => {
@@ -86,7 +96,7 @@ export class CheckoutComponent implements OnInit, OnDestroy {
           this.branches.set(branches);
           this.addressConfig.set(addressConfig);
           this.form.controls.countryCode.setValue(addressConfig.regionPredeterminada);
-          if (branches.length === 1) this.form.controls.branchId.setValue(branches[0].id);
+          if (branches.length === 1 && !this.form.controls.branchId.value) this.form.controls.branchId.setValue(branches[0].id);
           this.selectInitialDelivery(config);
           this.loading.set(false);
         },
@@ -102,7 +112,7 @@ export class CheckoutComponent implements OnInit, OnDestroy {
   async confirmOrder(): Promise<void> {
     const slug = this.tenant.slug();
     const config = this.config();
-    if (!slug || !config || this.form.invalid || !this.cart.items().length) {
+    if (!slug || !config || this.form.invalid || !this.hasPayableItems()) {
       this.form.markAllAsTouched();
       return;
     }
@@ -129,7 +139,7 @@ export class CheckoutComponent implements OnInit, OnDestroy {
           referencias: this.optional(this.form.controls.references.value)
         } : null,
         productos: this.cart.items().map(item => ({ productoId: item.productoId, cantidad: item.cantidad })),
-        citaIds: []
+        citaIds: this.appointmentIds()
       }, this.orderKey));
       this.order.set(order);
       await new Promise(resolve => setTimeout(resolve));
@@ -156,6 +166,14 @@ export class CheckoutComponent implements OnInit, OnDestroy {
   }
 
   requiresAddress(): boolean { return this.form.controls.deliveryMode.value !== 'RECOGE_EN_SUCURSAL'; }
+  hasProducts(): boolean { return this.cart.items().length > 0; }
+  hasAppointments(): boolean { return this.appointmentIds().length > 0; }
+  hasPayableItems(): boolean { return this.hasProducts() || this.hasAppointments(); }
+  checkoutAvailable(config: PublicCheckoutConfig | null): boolean {
+    return Boolean(config?.habilitado && config.aceptarTarjeta
+      && ((!this.hasProducts() || config.permitirPagoProductos)
+        && (!this.hasAppointments() || config.permitirPagoServicios)));
+  }
 
   applyGoogleAddress(address: Partial<AddressInput>): void {
     const controls = this.form.controls;
@@ -236,6 +254,9 @@ export class CheckoutComponent implements OnInit, OnDestroy {
   }
 
   postPaymentMessage(): string {
+    if (this.hasAppointments() && !this.hasProducts()) {
+      return 'Tu pago quedó registrado y la cita fue confirmada. El negocio ya tiene tu horario reservado.';
+    }
     return switchDeliveryMessage(this.form.controls.deliveryMode.value, Boolean(this.selectedShippingQuote()));
   }
 
@@ -318,7 +339,11 @@ export class CheckoutComponent implements OnInit, OnDestroy {
       const result = await firstValueFrom(this.checkout.payCard(slug, order.id, data,
         this.form.controls.email.value.trim().toLowerCase(), this.paymentKey));
       this.payment.set(result);
-      if (result.estadoPago === 'APROBADO') this.cart.clear();
+      if (result.estadoPago === 'APROBADO') {
+        this.cart.clear();
+        const empresaId = this.tenant.empresaId();
+        if (empresaId) this.appointmentDraft.clear(empresaId);
+      }
       if (result.accionUrl) {
         window.location.assign(result.accionUrl);
         return;
@@ -356,6 +381,10 @@ export class CheckoutComponent implements OnInit, OnDestroy {
   private message(error: unknown, fallback: string): string {
     const candidate = error as { error?: { detail?: string; message?: string }; message?: string };
     return candidate?.error?.detail || candidate?.error?.message || candidate?.message || fallback;
+  }
+
+  private sameAppointments(left: number[], right: number[]): boolean {
+    return left.length === right.length && left.every((value, index) => value === right[index]);
   }
 }
 

@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { BreakpointObserver } from '@angular/cdk/layout';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import {
   AppointmentService,
   ConsultaFranjasRequest,
@@ -18,13 +18,15 @@ import {
   SucursalCatalogo
 } from '../../services/booking-data.service';
 import type { CalendarOptions, DateSelectArg } from '@fullcalendar/core';
-import { forkJoin } from 'rxjs';
+import { firstValueFrom, forkJoin } from 'rxjs';
 import { finalize } from 'rxjs/operators';
 import { TenantContextService } from '../../core/tenant/tenant-context.service';
 import { ReservationCartService } from '../../services/reservation-cart.service';
 import { ReservationCartComponent } from '../../shared/components/reservation-cart/reservation-cart.component';
 import { MoneyDisplayPipe } from '../../shared/pipes/money-display.pipe';
 import { BookingCalendarComponent } from './booking-calendar.component';
+import { PublicCheckoutService } from '../../services/public-checkout.service';
+import { AppointmentCheckoutDraftService } from '../../services/appointment-checkout-draft.service';
 
 interface ItinerarioReservaItem {
   servicio: ServicioCatalogo;
@@ -69,6 +71,9 @@ export class BookingComponent implements OnInit {
   private breakpointObserver = inject(BreakpointObserver);
   private destroyRef = inject(DestroyRef);
   private route = inject(ActivatedRoute);
+  private router = inject(Router);
+  private checkout = inject(PublicCheckoutService);
+  private checkoutDraft = inject(AppointmentCheckoutDraftService);
   private readonly cart = inject(ReservationCartService);
   private queryHydrated = false;
   private availabilityVersion = 0;
@@ -708,7 +713,7 @@ export class BookingComponent implements OnInit {
         finalize(() => this.isSubmitting.set(false))
       )
       .subscribe({
-        next: (response: any) => {
+        next: async (response: any) => {
           if (!response) {
             this.handleSuccess();
             return;
@@ -729,6 +734,10 @@ export class BookingComponent implements OnInit {
           }
 
           if (response?.id || response?.total) {
+            const appointmentIds = response?.id
+              ? [Number(response.id)]
+              : (response?.citas ?? []).map((cita: { id: number }) => Number(cita.id)).filter(Boolean);
+            if (appointmentIds.length && await this.continuarAlPago(empresaId, appointmentIds)) return;
             this.handleSuccess(response?.mensaje || 'Tu cita fue registrada correctamente.');
           } else {
             this.errorMessage = response?.mensaje || 'Hubo un problema al procesar la cita.';
@@ -739,6 +748,28 @@ export class BookingComponent implements OnInit {
           this.errorMessage = err?.message || 'No se pudo completar la reserva.';
         }
       });
+  }
+
+  private async continuarAlPago(empresaId: number, appointmentIds: number[]): Promise<boolean> {
+    const slug = this.tenantContext.slug();
+    if (!slug) return false;
+    try {
+      const config = await firstValueFrom(this.checkout.config(slug));
+      if (!config.habilitado || !config.permitirPagoServicios || !config.aceptarTarjeta) return false;
+      this.checkoutDraft.save(empresaId, {
+        appointmentIds,
+        branchId: Number(this.bookingForm.value.branchId),
+        name: this.bookingForm.value.name.trim(),
+        email: this.bookingForm.value.email.trim().toLowerCase(),
+        phone: this.formatPhone(this.bookingForm.value.phone)
+      });
+      await this.router.navigate([this.tenantContext.routeFor('checkout')], {
+        queryParams: { citas: appointmentIds.join(',') }
+      });
+      return true;
+    } catch {
+      return false;
+    }
   }
 
   private formatPhone(phone: string): string {
