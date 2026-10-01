@@ -10,6 +10,7 @@ public final class CatalogosCaja {
             new Opcion(ESTADO_SESION_CERRADA, "Cerrada")
     );
     public static final String METODO_PAGO_EFECTIVO = "EFECTIVO";
+    public static final String METODO_PAGO_POINT = "MERCADO_PAGO_POINT";
     public static final List<Opcion> METODOS_PAGO = List.of(
             new Opcion("EFECTIVO", "Efectivo"),
             new Opcion("TARJETA", "Tarjeta"),

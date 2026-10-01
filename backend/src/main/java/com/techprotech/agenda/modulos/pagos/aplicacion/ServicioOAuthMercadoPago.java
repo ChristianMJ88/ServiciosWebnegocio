@@ -199,6 +199,10 @@ public class ServicioOAuthMercadoPago {
         return accessToken;
     }
 
+    public boolean esAmbientePrueba() {
+        return AMBIENTE_PRUEBA.equals(ambienteActivo());
+    }
+
     private JsonNode solicitarToken(String code, String verifier) {
         if (vacio(code)) throw new IllegalArgumentException("Falta el código OAuth");
         Map<String, String> body = new LinkedHashMap<>();

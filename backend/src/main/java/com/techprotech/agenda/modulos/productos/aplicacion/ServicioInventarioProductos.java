@@ -153,6 +153,25 @@ public class ServicioInventarioProductos {
         });
     }
 
+    @Transactional
+    public void reintegrarVenta(Long empresaId, Long usuarioId, Long sucursalId,
+                                Map<Long, BigDecimal> cantidades, String referencia, String notas) {
+        cantidades.entrySet().stream().sorted(Map.Entry.comparingByKey()).forEach(item -> {
+            ProductoEntidad producto = productos.findByIdAndEmpresaId(item.getKey(), empresaId)
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Producto no encontrado"));
+            if (!producto.isControlaInventario()) return;
+            BigDecimal cantidad = item.getValue();
+            if (cantidad == null || cantidad.signum() <= 0) throw error("La cantidad a reintegrar debe ser mayor que cero");
+            ProductoExistenciaEntidad existencia = bloquearExistencia(empresaId, producto.getId(), sucursalId);
+            BigDecimal anterior = existencia.getExistencia();
+            BigDecimal nueva = anterior.add(cantidad);
+            existencia.setExistencia(nueva);
+            existencias.save(existencia);
+            guardarMovimiento(empresaId, usuarioId, producto.getId(), sucursalId, "DEVOLUCION_VENTA",
+                    cantidad, anterior, nueva, referencia, notas);
+        });
+    }
+
     private ProductoExistenciaEntidad bloquearExistencia(Long empresaId, Long productoId, Long sucursalId) {
         existencias.asegurarFila(empresaId, productoId, sucursalId);
         return existencias.bloquear(empresaId, productoId, sucursalId)

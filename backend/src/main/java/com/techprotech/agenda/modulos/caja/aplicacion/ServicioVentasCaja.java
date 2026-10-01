@@ -82,9 +82,25 @@ public class ServicioVentasCaja {
 
     @Transactional
     public VentaResponse registrar(Long empresaId, Long usuarioId, List<Long> sucursalesPermitidas, RegistrarVentaRequest request) {
+        if (METODO_PAGO_POINT.equalsIgnoreCase(request.metodoPago())) {
+            throw badRequest("El cobro Point debe iniciarse desde el flujo de terminal");
+        }
+        return registrarInterno(empresaId, usuarioId, sucursalesPermitidas, request, false);
+    }
+
+    @Transactional
+    public VentaResponse prepararPoint(Long empresaId, Long usuarioId, List<Long> sucursalesPermitidas,
+                                       RegistrarVentaRequest request) {
+        RegistrarVentaRequest point = new RegistrarVentaRequest(request.sucursalId(), request.citaId(), request.clienteId(),
+                request.productos(), METODO_PAGO_POINT, null, request.observaciones());
+        return registrarInterno(empresaId, usuarioId, sucursalesPermitidas, point, true);
+    }
+
+    private VentaResponse registrarInterno(Long empresaId, Long usuarioId, List<Long> sucursalesPermitidas,
+                                            RegistrarVentaRequest request, boolean point) {
         validarSucursal(empresaId, sucursalesPermitidas, request.sucursalId());
         String metodoPago = request.metodoPago().trim().toUpperCase(Locale.ROOT);
-        if (!contiene(METODOS_PAGO, metodoPago)) throw badRequest("El método de pago no es válido");
+        if (!point && !contiene(METODOS_PAGO, metodoPago)) throw badRequest("El método de pago no es válido");
         CajaSesionEntidad sesion = sesiones.findByEmpresaIdAndSucursalIdAndEstado(empresaId, request.sucursalId(), ESTADO_SESION_ABIERTA)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.CONFLICT, "No hay una caja abierta para la sucursal indicada"));
 
@@ -129,7 +145,7 @@ public class ServicioVentasCaja {
         VentaEntidad venta = new VentaEntidad();
         venta.setEmpresaId(empresaId); venta.setSucursalId(request.sucursalId()); venta.setCajaSesionId(sesion.getId());
         venta.setClienteId(cita != null ? cita.getClienteId() : request.clienteId()); venta.setCitaId(cita != null ? cita.getId() : null);
-        venta.setFolio(generarFolio()); venta.setEstado("PAGADA"); venta.setCanal("CAJA"); venta.setMoneda(moneda.toUpperCase(Locale.ROOT));
+        venta.setFolio(generarFolio()); venta.setEstado(point ? "PENDIENTE_PAGO" : "PAGADA"); venta.setCanal("CAJA"); venta.setMoneda(moneda.toUpperCase(Locale.ROOT));
         venta.setSubtotal(total); venta.setDescuentoTotal(CERO); venta.setImpuestosTotal(CERO); venta.setTotal(total);
         venta.setObservaciones(limpiar(request.observaciones())); venta.setCreadaPorUsuarioId(usuarioId); venta.setCreadaEn(LocalDateTime.now());
         venta = ventas.save(venta);
@@ -140,15 +156,65 @@ public class ServicioVentasCaja {
             filas.add(detalleProducto(empresaId, venta.getId(), productosVenta.get(item.getKey()), item.getValue()));
         filas = detalles.saveAll(filas);
 
-        PagoVentaEntidad pago = new PagoVentaEntidad();
-        pago.setEmpresaId(empresaId); pago.setVentaId(venta.getId()); pago.setCajaSesionId(sesion.getId()); pago.setMonto(total);
-        pago.setMetodoPago(metodoPago); pago.setReferencia(limpiar(request.referencia())); pago.setRegistradoPorUsuarioId(usuarioId);
-        pago.setRegistradoEn(LocalDateTime.now()); pago = pagos.save(pago);
+        PagoVentaEntidad pago = null;
+        if (!point) {
+            pago = new PagoVentaEntidad();
+            pago.setEmpresaId(empresaId); pago.setVentaId(venta.getId()); pago.setCajaSesionId(sesion.getId()); pago.setMonto(total);
+            pago.setMetodoPago(metodoPago); pago.setReferencia(limpiar(request.referencia())); pago.setRegistradoPorUsuarioId(usuarioId);
+            pago.setRegistradoEn(LocalDateTime.now()); pago = pagos.save(pago);
+        }
 
         if (!cantidades.isEmpty()) inventario.descontarVenta(empresaId, usuarioId, sucursalesPermitidas,
                 request.sucursalId(), cantidades, venta.getFolio());
-        if (METODO_PAGO_EFECTIVO.equals(metodoPago)) registrarIngresoEfectivo(empresaId, usuarioId, sesion.getId(), venta, pago);
+        if (!point && METODO_PAGO_EFECTIVO.equals(metodoPago)) registrarIngresoEfectivo(empresaId, usuarioId, sesion.getId(), venta, pago);
         return mapear(venta, pago, filas);
+    }
+
+    @Transactional
+    public VentaResponse confirmarPoint(Long empresaId, Long ventaId, String referenciaPago) {
+        VentaEntidad venta = ventas.findByIdAndEmpresaId(ventaId, empresaId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Venta Point no encontrada"));
+        List<VentaDetalleEntidad> filas = detalles.findByEmpresaIdAndVentaIdOrderByIdAsc(empresaId, ventaId);
+        PagoVentaEntidad existente = pagos.findByEmpresaIdAndVentaIdOrderByRegistradoEnDesc(empresaId, ventaId).stream()
+                .filter(item -> METODO_PAGO_POINT.equals(item.getMetodoPago())).findFirst().orElse(null);
+        if (existente != null) return mapear(venta, existente, filas);
+        if (!"PENDIENTE_PAGO".equals(venta.getEstado())) throw new ResponseStatusException(HttpStatus.CONFLICT, "La venta Point ya no puede confirmarse");
+        venta.setEstado("PAGADA");
+        ventas.save(venta);
+        PagoVentaEntidad pago = new PagoVentaEntidad();
+        pago.setEmpresaId(empresaId); pago.setVentaId(ventaId); pago.setCajaSesionId(venta.getCajaSesionId()); pago.setMonto(venta.getTotal());
+        pago.setMetodoPago(METODO_PAGO_POINT); pago.setReferencia(limpiar(referenciaPago));
+        pago.setRegistradoPorUsuarioId(venta.getCreadaPorUsuarioId()); pago.setRegistradoEn(LocalDateTime.now());
+        return mapear(venta, pagos.save(pago), filas);
+    }
+
+    @Transactional
+    public void cancelarPoint(Long empresaId, Long ventaId, String motivo) {
+        VentaEntidad venta = ventas.findByIdAndEmpresaId(ventaId, empresaId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Venta Point no encontrada"));
+        if ("CANCELADA".equals(venta.getEstado())) return;
+        if (!"PENDIENTE_PAGO".equals(venta.getEstado())) return;
+        Map<Long, BigDecimal> cantidades = detalles.findByEmpresaIdAndVentaIdOrderByIdAsc(empresaId, ventaId).stream()
+                .filter(item -> "PRODUCTO".equals(item.getTipoConcepto()) && item.getProductoId() != null)
+                .collect(Collectors.toMap(VentaDetalleEntidad::getProductoId, VentaDetalleEntidad::getCantidad, BigDecimal::add));
+        if (!cantidades.isEmpty()) inventario.reintegrarVenta(empresaId, venta.getCreadaPorUsuarioId(), venta.getSucursalId(),
+                cantidades, venta.getFolio(), motivo);
+        venta.setEstado("CANCELADA");
+        ventas.save(venta);
+    }
+
+    @Transactional
+    public void marcarReembolsadaPoint(Long empresaId, Long ventaId) {
+        VentaEntidad venta = ventas.findByIdAndEmpresaId(ventaId, empresaId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Venta Point no encontrada"));
+        if ("REEMBOLSADA".equals(venta.getEstado())) return;
+        Map<Long, BigDecimal> cantidades = detalles.findByEmpresaIdAndVentaIdOrderByIdAsc(empresaId, ventaId).stream()
+                .filter(item -> "PRODUCTO".equals(item.getTipoConcepto()) && item.getProductoId() != null)
+                .collect(Collectors.toMap(VentaDetalleEntidad::getProductoId, VentaDetalleEntidad::getCantidad, BigDecimal::add));
+        if (!cantidades.isEmpty()) inventario.reintegrarVenta(empresaId, venta.getCreadaPorUsuarioId(), venta.getSucursalId(),
+                cantidades, venta.getFolio(), "Reembolso de cobro Point");
+        venta.setEstado("REEMBOLSADA");
+        ventas.save(venta);
     }
 
     @Transactional(readOnly = true)

@@ -28,6 +28,7 @@ public class ProcesadorEventosPagoCheckout {
     private final ProveedorPagoRepositorio proveedores;
     private final List<ProveedorPagosPort> adaptadores;
     private final ServicioEstadoPagoCheckout estados;
+    private final ServicioMercadoPagoPoint point;
     private final ObjectMapper objectMapper;
 
     public ProcesadorEventosPagoCheckout(EventoWebhookPagoRepositorio eventos,
@@ -35,12 +36,14 @@ public class ProcesadorEventosPagoCheckout {
                                          ProveedorPagoRepositorio proveedores,
                                          List<ProveedorPagosPort> adaptadores,
                                          ServicioEstadoPagoCheckout estados,
+                                         ServicioMercadoPagoPoint point,
                                          ObjectMapper objectMapper) {
         this.eventos = eventos;
         this.intentos = intentos;
         this.proveedores = proveedores;
         this.adaptadores = adaptadores;
         this.estados = estados;
+        this.point = point;
         this.objectMapper = objectMapper;
     }
 
@@ -57,8 +60,13 @@ public class ProcesadorEventosPagoCheckout {
                     .findByProveedorPagoIdAndReferenciaExterna(evento.getProveedorPagoId(), referencia)
                     .orElse(null);
             if (intento == null) {
-                evento.setEstadoProcesamiento("IGNORADO");
-                evento.setErrorUltimo("El evento no corresponde a una orden de checkout conocida");
+                if (point.procesarWebhook(referencia)) {
+                    evento.setEstadoProcesamiento("PROCESADO");
+                    evento.setErrorUltimo(null);
+                } else {
+                    evento.setEstadoProcesamiento("IGNORADO");
+                    evento.setErrorUltimo("El evento no corresponde a una orden conocida");
+                }
             } else {
                 ProveedorPagoEntidad proveedor = proveedores.findById(evento.getProveedorPagoId())
                         .orElseThrow(() -> new IllegalStateException("Proveedor de pago no encontrado"));
