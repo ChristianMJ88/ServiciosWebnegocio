@@ -27,7 +27,6 @@ export class SitePromotionsComponent implements OnInit {
   readonly sucursales = signal<SucursalAdmin[]>([]);
   readonly cargando = signal(true);
   readonly guardando = signal(false);
-  readonly abierta = signal<PromocionSitioAdmin | null>(null);
   readonly subiendoImagen = signal<PromocionSitioAdmin | null>(null);
   readonly configuracionMedia = signal<ConfiguracionMediaAdmin | null>(null);
   readonly mensaje = signal<string | null>(null);
@@ -53,12 +52,10 @@ export class SitePromotionsComponent implements OnInit {
       servicioIds: [], sucursalIds: []
     };
     this.promociones.update(promociones => [...promociones, nueva]);
-    this.abierta.set(nueva);
     this.limpiarEstado();
   }
 
   quitar(indice: number): void {
-    if (this.abierta() === this.promociones()[indice]) this.abierta.set(null);
     this.promociones.update(promociones => {
       const restantes = promociones.filter((_, i) => i !== indice);
       restantes.forEach((item, orden) => item.orden = orden);
@@ -97,7 +94,6 @@ export class SitePromotionsComponent implements OnInit {
     }).pipe(finalize(() => this.guardando.set(false))).subscribe({
       next: promociones => {
         this.promociones.set(promociones);
-        this.abierta.set(null);
         this.mensaje.set('Las promociones quedaron actualizadas.');
       },
       error: error => this.error.set(error?.error?.message || 'No fue posible guardar las promociones.')
@@ -109,14 +105,6 @@ export class SitePromotionsComponent implements OnInit {
     if (item.fechaInicio && item.fechaInicio > this.hoy()) return 'Programada';
     if (item.fechaFin && item.fechaFin < this.hoy()) return 'Finalizada';
     return 'Visible';
-  }
-
-  alternar(item: PromocionSitioAdmin): void {
-    this.abierta.update(actual => actual === item ? null : item);
-  }
-
-  estaAbierta(item: PromocionSitioAdmin): boolean {
-    return this.abierta() === item;
   }
 
   seleccionarImagen(evento: Event, item: PromocionSitioAdmin): void {
