@@ -69,6 +69,11 @@
           @if (!cargandoTerminales()) {<div class="point-config__empty">La cuenta conectada todavía no reporta terminales Point.</div>}
         }
       </section>
+      @if (webhook()?.disponible && webhook()?.url) {
+        <section class="payment-webhook"><span><i class="bi bi-broadcast-pin"></i></span><div><strong>Notificaciones de Mercado Pago</strong><small>Esta URL única identifica cada cobro y lo concilia con el tenant correspondiente.</small><code>{{ webhook()?.url }}</code></div><button type="button" class="payment-button payment-button--secondary" (click)="copiarWebhook()">Copiar URL</button></section>
+      } @else {
+        <p class="payment-webhook-hint"><i class="bi bi-info-circle"></i> Define <code>MERCADO_PAGO_WEBHOOK_PUBLIC_BASE_URL</code> con el dominio HTTPS del túnel para habilitar las notificaciones.</p>
+      }
     }
 
     @if (configuracion(); as checkout) {

@@ -49,6 +49,8 @@ export interface TerminalPoint {
   configurada: boolean;
 }
 
+export interface WebhookMercadoPago { url: string | null; disponible: boolean; }
+
 export interface MetodoPagoCheckout {
   id: string;
   nombre: string;
@@ -70,6 +72,10 @@ export class PaymentsAdminService {
 
   estado(): Observable<ConexionProveedorPago> {
     return this.http.get<ConexionProveedorPago>(`${this.baseUrl}/estado`);
+  }
+
+  webhook(): Observable<WebhookMercadoPago> {
+    return this.http.get<WebhookMercadoPago>(`${this.baseUrl}/webhook`);
   }
 
   iniciar(): Observable<{ urlAutorizacion: string }> {

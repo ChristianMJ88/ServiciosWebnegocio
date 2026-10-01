@@ -2,7 +2,9 @@ package com.techprotech.agenda.modulos.pagos.api;
 
 import com.techprotech.agenda.modulos.pagos.api.dto.ConexionProveedorPagoResponse;
 import com.techprotech.agenda.modulos.pagos.api.dto.InicioOAuthPagoResponse;
+import com.techprotech.agenda.modulos.pagos.api.dto.WebhookMercadoPagoResponse;
 import com.techprotech.agenda.modulos.pagos.aplicacion.ServicioOAuthMercadoPago;
+import com.techprotech.agenda.modulos.pagos.infraestructura.mercadopago.PropiedadesMercadoPago;
 import com.techprotech.agenda.modulos.pagos.seguridad.PermisosPagos;
 import com.techprotech.agenda.seguridad.jwt.UsuarioAutenticado;
 import org.springframework.http.HttpHeaders;
@@ -18,9 +20,21 @@ import java.net.URI;
 @RequestMapping("/api/v1/admin/pagos/mercado-pago/oauth")
 public class ControladorOAuthMercadoPago {
   private final ServicioOAuthMercadoPago servicio;
+  private final PropiedadesMercadoPago propiedades;
 
-  public ControladorOAuthMercadoPago(ServicioOAuthMercadoPago servicio) {
+  public ControladorOAuthMercadoPago(ServicioOAuthMercadoPago servicio, PropiedadesMercadoPago propiedades) {
     this.servicio = servicio;
+    this.propiedades = propiedades;
+  }
+
+  @GetMapping("/webhook")
+  @PreAuthorize(PermisosPagos.EXPRESION_CONFIGURAR)
+  public WebhookMercadoPagoResponse webhook() {
+    String base = propiedades.webhookPublicBaseUrl();
+    if (base == null || base.isBlank()) return new WebhookMercadoPagoResponse(null, false);
+    String limpia = base.trim().replaceAll("/+$", "");
+    return new WebhookMercadoPagoResponse(
+      limpia + "/api/v1/publico/pagos/mercado-pago/webhook", true);
   }
 
   @GetMapping("/estado")

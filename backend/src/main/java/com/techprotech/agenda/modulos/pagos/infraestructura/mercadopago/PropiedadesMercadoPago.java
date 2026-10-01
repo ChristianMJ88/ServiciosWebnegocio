@@ -10,6 +10,7 @@ public record PropiedadesMercadoPago(
         String clientSecret,
         String redirectUri,
         String frontendResultadoUrl,
+        String webhookPublicBaseUrl,
         String webhookSecret,
         String publicKeyPrueba,
         String accessTokenPrueba

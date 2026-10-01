@@ -34,7 +34,7 @@ class ServicioOAuthMercadoPagoPruebasTest {
         when(conexiones.save(any())).thenAnswer(invocacion -> invocacion.getArgument(0));
         when(protector.encriptar("access-token-prueba")).thenReturn("token-cifrado");
         servicio = new ServicioOAuthMercadoPago(
-                new PropiedadesMercadoPago(true, "PRUEBA", "", "", "redirect", "frontend", "webhook",
+                new PropiedadesMercadoPago(true, "PRUEBA", "", "", "redirect", "frontend", "", "webhook",
                         "public-key-prueba", "access-token-prueba"),
                 protector, proveedores, conexiones, RestClient.builder(), new ObjectMapper());
     }

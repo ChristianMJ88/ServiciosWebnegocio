@@ -37,7 +37,7 @@ class AdaptadorMercadoPagoOrdersTest {
         ObjectMapper objectMapper = new ObjectMapper();
         adaptador = new AdaptadorMercadoPagoOrders(oauth, builder, objectMapper,
                 new MapeadorRespuestaMercadoPago(), new ValidadorFirmaWebhookMercadoPago(),
-                new PropiedadesMercadoPago(true, "PRUEBA", "cliente", "secreto", "redirect", "frontend", "webhook",
+                new PropiedadesMercadoPago(true, "PRUEBA", "cliente", "secreto", "redirect", "frontend", "", "webhook",
                         "publica-prueba", "token-prueba"));
     }
 
