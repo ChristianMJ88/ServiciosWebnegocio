@@ -3,7 +3,7 @@ import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 import { finalize, forkJoin } from 'rxjs';
-import { ConfiguracionCheckout, ConexionProveedorPago, PaymentsAdminService, TerminalPoint } from './payments-admin.service';
+import { ConfiguracionCheckout, ConexionProveedorPago, MetodoPagoCheckout, PaymentsAdminService, TerminalPoint } from './payments-admin.service';
 import { AdminService, SucursalAdmin } from '../../../core/admin/admin.service';
 
 @Component({
@@ -27,6 +27,8 @@ export class AdminPaymentsSectionComponent implements OnInit {
   readonly terminales = signal<TerminalPoint[]>([]);
   readonly sucursales = signal<SucursalAdmin[]>([]);
   readonly cargandoTerminales = signal(false);
+  readonly metodosPago = signal<MetodoPagoCheckout[]>([]);
+  readonly cargandoMetodos = signal(false);
   terminalSucursal: Record<string, number | null> = {};
   terminalNombre: Record<string, string> = {};
 
@@ -46,10 +48,31 @@ export class AdminPaymentsSectionComponent implements OnInit {
       next: respuesta => {
         this.conexion.set(respuesta.conexion);
         this.configuracion.set(respuesta.configuracion);
-        if (respuesta.conexion.estado === 'CONECTADO') this.cargarTerminales();
+        if (respuesta.conexion.estado === 'CONECTADO') { this.cargarTerminales(); this.cargarMetodos(); }
       },
       error: err => this.error.set(this.detalleError(err, 'No fue posible consultar el estado de pagos.'))
     });
+  }
+
+  cargarMetodos(): void {
+    this.cargandoMetodos.set(true);
+    this.servicio.metodosPago().pipe(finalize(() => this.cargandoMetodos.set(false))).subscribe({
+      next: metodos => this.metodosPago.set(metodos),
+      error: err => this.error.set(this.detalleError(err, 'No fue posible consultar los métodos disponibles.'))
+    });
+  }
+
+  guardarMetodo(metodo: MetodoPagoCheckout, activo: boolean, vigenciaDias: number): void {
+    if (this.procesando()) return;
+    this.procesando.set(true); this.error.set(null); this.mensaje.set(null);
+    this.servicio.guardarMetodoPago({ metodoId: metodo.id, activo, soloProductos: true, vigenciaDias })
+      .pipe(finalize(() => this.procesando.set(false))).subscribe({
+        next: guardado => {
+          this.metodosPago.update(items => items.map(item => item.id === guardado.id ? guardado : item));
+          this.mensaje.set(`${guardado.nombre} quedó ${guardado.activo ? 'habilitado' : 'deshabilitado'} para productos.`);
+        },
+        error: err => this.error.set(this.detalleError(err, 'No fue posible guardar el método de pago.'))
+      });
   }
 
   cargarTerminales(): void {

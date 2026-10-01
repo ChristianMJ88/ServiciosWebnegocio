@@ -81,6 +81,17 @@ export interface CheckoutPayment {
   detalleRespuesta: string | null;
 }
 
+export interface CheckoutPaymentMethod {
+  id: string;
+  nombre: string;
+  tipo: 'ticket' | 'atm' | 'bank_transfer' | string;
+  estadoProveedor: string;
+  imagenUrl: string | null;
+  activo: boolean;
+  soloProductos: boolean;
+  vigenciaDias: number;
+}
+
 export interface CardBrickData {
   token: string;
   payment_method_id: string;
@@ -120,6 +131,12 @@ export class PublicCheckoutService {
   config(slug: string): Observable<PublicCheckoutConfig> {
     return this.http.get<PublicCheckoutConfig>(
       `${environment.apiBaseUrl}/publico/empresas/${encodeURIComponent(slug)}/checkout/configuracion`
+    );
+  }
+
+  paymentMethods(slug: string): Observable<CheckoutPaymentMethod[]> {
+    return this.http.get<CheckoutPaymentMethod[]>(
+      `${environment.apiBaseUrl}/publico/empresas/${encodeURIComponent(slug)}/checkout/metodos-pago`
     );
   }
 
@@ -173,6 +190,15 @@ export class PublicCheckoutService {
         parcialidades: data.installments,
         correoPagador: email
       },
+      { headers: this.idempotency(idempotencyKey) }
+    );
+  }
+
+  payAlternative(slug: string, orderId: string, methodId: string, email: string,
+                 idempotencyKey: string): Observable<CheckoutPayment> {
+    return this.http.post<CheckoutPayment>(
+      `${environment.apiBaseUrl}/publico/empresas/${encodeURIComponent(slug)}/checkout/ordenes/${encodeURIComponent(orderId)}/pagos/alternativo`,
+      { metodoPagoId: methodId, correoPagador: email },
       { headers: this.idempotency(idempotencyKey) }
     );
   }

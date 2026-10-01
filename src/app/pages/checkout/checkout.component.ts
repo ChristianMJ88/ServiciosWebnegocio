@@ -3,12 +3,12 @@ import { Component, DestroyRef, OnDestroy, OnInit, inject, signal } from '@angul
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
-import { finalize, firstValueFrom, forkJoin } from 'rxjs';
+import { catchError, finalize, firstValueFrom, forkJoin, of } from 'rxjs';
 import { TenantContextService } from '../../core/tenant/tenant-context.service';
 import { BookingDataService, SucursalCatalogo } from '../../services/booking-data.service';
 import { MercadoPagoBricksService, supportsMercadoPagoStatusScreen } from '../../services/mercado-pago-bricks.service';
 import { ProductCartService } from '../../services/product-cart.service';
-import { CardBrickData, CheckoutOrder, CheckoutPayment, DeliveryMode, PublicCheckoutConfig, PublicCheckoutService, ShippingQuoteOption } from '../../services/public-checkout.service';
+import { CardBrickData, CheckoutOrder, CheckoutPayment, CheckoutPaymentMethod, DeliveryMode, PublicCheckoutConfig, PublicCheckoutService, ShippingQuoteOption } from '../../services/public-checkout.service';
 import { MoneyDisplayPipe } from '../../shared/pipes/money-display.pipe';
 import { AddressInput, AddressPlatformConfig, AddressValidationService } from '../../services/address-validation.service';
 import { GoogleAddressAutocompleteComponent } from '../../shared/google-address-autocomplete/google-address-autocomplete.component';
@@ -45,6 +45,9 @@ export class CheckoutComponent implements OnInit, OnDestroy {
   readonly branches = signal<SucursalCatalogo[]>([]);
   readonly order = signal<CheckoutOrder | null>(null);
   readonly payment = signal<CheckoutPayment | null>(null);
+  readonly paymentMethods = signal<CheckoutPaymentMethod[]>([]);
+  readonly selectedPaymentMethod = signal<string>('CARD');
+  readonly processingAlternative = signal(false);
   readonly validatingPostalCode = signal(false);
   readonly postalCodeMessage = signal<string | null>(null);
   readonly addressConfig = signal<AddressPlatformConfig | null>(null);
@@ -89,10 +92,12 @@ export class CheckoutComponent implements OnInit, OnDestroy {
     if (draft && this.sameAppointments(draft.appointmentIds, this.appointmentIds())) {
       this.form.patchValue({ name: draft.name, email: draft.email, phone: draft.phone, branchId: draft.branchId });
     }
-    forkJoin({ config: this.checkout.config(slug), branches: this.branchesApi.getBranches(empresaId), addressConfig: this.addressApi.configuration() })
+    forkJoin({ config: this.checkout.config(slug), methods: this.checkout.paymentMethods(slug).pipe(catchError(() => of([]))), branches: this.branchesApi.getBranches(empresaId), addressConfig: this.addressApi.configuration() })
       .pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
-        next: ({ config, branches, addressConfig }) => {
+        next: ({ config, methods, branches, addressConfig }) => {
           this.config.set(config);
+          this.paymentMethods.set(methods);
+          this.selectedPaymentMethod.set(config.aceptarTarjeta ? 'CARD' : (this.canUseAlternativeMethods() ? methods[0]?.id ?? '' : ''));
           this.branches.set(branches);
           this.addressConfig.set(addressConfig);
           this.form.controls.countryCode.setValue(addressConfig.regionPredeterminada);
@@ -143,7 +148,7 @@ export class CheckoutComponent implements OnInit, OnDestroy {
       }, this.orderKey));
       this.order.set(order);
       await new Promise(resolve => setTimeout(resolve));
-      await this.mountBrick(config, order);
+      if (this.selectedPaymentMethod() === 'CARD') await this.mountBrick(config, order);
     } catch (error: unknown) {
       this.error.set(this.message(error, 'No pudimos confirmar la orden. Revisa disponibilidad y vuelve a intentar.'));
     } finally {
@@ -170,10 +175,11 @@ export class CheckoutComponent implements OnInit, OnDestroy {
   hasAppointments(): boolean { return this.appointmentIds().length > 0; }
   hasPayableItems(): boolean { return this.hasProducts() || this.hasAppointments(); }
   checkoutAvailable(config: PublicCheckoutConfig | null): boolean {
-    return Boolean(config?.habilitado && config.aceptarTarjeta
+    return Boolean(config?.habilitado && (config.aceptarTarjeta || (this.canUseAlternativeMethods() && this.paymentMethods().length))
       && ((!this.hasProducts() || config.permitirPagoProductos)
         && (!this.hasAppointments() || config.permitirPagoServicios)));
   }
+  canUseAlternativeMethods(): boolean { return this.hasProducts() && !this.hasAppointments(); }
 
   applyGoogleAddress(address: Partial<AddressInput>): void {
     const controls = this.form.controls;
@@ -272,6 +278,47 @@ export class CheckoutComponent implements OnInit, OnDestroy {
 
   canShowProviderStatus(paymentId: string | null): paymentId is string {
     return Boolean(this.config()?.mostrarEstadoPago) && supportsMercadoPagoStatusScreen(paymentId);
+  }
+
+  async selectPaymentMethod(methodId: string): Promise<void> {
+    this.selectedPaymentMethod.set(methodId);
+    this.error.set(null);
+    this.paymentController?.unmount();
+    this.paymentController = null;
+    this.brickReady.set(false);
+    const order = this.order();
+    const config = this.config();
+    if (methodId === 'CARD' && order && config) {
+      await new Promise(resolve => setTimeout(resolve));
+      await this.mountBrick(config, order);
+    }
+  }
+
+  payAlternative(): void {
+    const slug = this.tenant.slug();
+    const order = this.order();
+    const methodId = this.selectedPaymentMethod();
+    if (!slug || !order || !methodId || methodId === 'CARD' || this.processingAlternative()) return;
+    this.processingAlternative.set(true);
+    this.error.set(null);
+    this.paymentKey = this.key(`pago-${methodId}`);
+    this.checkout.payAlternative(slug, order.id, methodId,
+      this.form.controls.email.value.trim().toLowerCase(), this.paymentKey)
+      .pipe(finalize(() => this.processingAlternative.set(false)), takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: result => {
+          this.payment.set(result);
+          if (result.accionUrl) window.location.assign(result.accionUrl);
+        },
+        error: error => this.error.set(this.message(error, 'No pudimos generar las instrucciones de pago.'))
+      });
+  }
+
+  paymentMethodIcon(type: string): string {
+    return type === 'bank_transfer' ? 'bi-bank' : type === 'atm' ? 'bi-building' : 'bi-receipt';
+  }
+  selectedPaymentMethodType(): string {
+    return this.paymentMethods().find(method => method.id === this.selectedPaymentMethod())?.tipo ?? '';
   }
 
   validatePostalCode(): void {

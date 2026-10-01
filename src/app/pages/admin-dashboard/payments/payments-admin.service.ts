@@ -49,12 +49,24 @@ export interface TerminalPoint {
   configurada: boolean;
 }
 
+export interface MetodoPagoCheckout {
+  id: string;
+  nombre: string;
+  tipo: string;
+  estadoProveedor: string;
+  imagenUrl: string | null;
+  activo: boolean;
+  soloProductos: boolean;
+  vigenciaDias: number;
+}
+
 @Injectable({ providedIn: 'root' })
 export class PaymentsAdminService {
   private readonly http = inject(HttpClient);
   private readonly baseUrl = `${environment.apiBaseUrl}/admin/pagos/mercado-pago/oauth`;
   private readonly configuracionUrl = `${environment.apiBaseUrl}/admin/pagos/configuracion`;
   private readonly pointUrl = `${environment.apiBaseUrl}/admin/pagos/point/terminales`;
+  private readonly metodosUrl = `${environment.apiBaseUrl}/admin/pagos/metodos`;
 
   estado(): Observable<ConexionProveedorPago> {
     return this.http.get<ConexionProveedorPago>(`${this.baseUrl}/estado`);
@@ -87,5 +99,13 @@ export class PaymentsAdminService {
 
   guardarTerminalPoint(payload: { terminalId: string; sucursalId: number; nombre: string; activa: boolean }): Observable<TerminalPoint> {
     return this.http.put<TerminalPoint>(this.pointUrl, payload);
+  }
+
+  metodosPago(): Observable<MetodoPagoCheckout[]> {
+    return this.http.get<MetodoPagoCheckout[]>(this.metodosUrl);
+  }
+
+  guardarMetodoPago(payload: { metodoId: string; activo: boolean; soloProductos: boolean; vigenciaDias: number }): Observable<MetodoPagoCheckout> {
+    return this.http.put<MetodoPagoCheckout>(this.metodosUrl, payload);
   }
 }

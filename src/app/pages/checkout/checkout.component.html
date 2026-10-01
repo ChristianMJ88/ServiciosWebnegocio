@@ -109,10 +109,34 @@
 
             @if (order()) {
               <div class="payment-divider"><span></span><b>2</b><span></span></div>
-              <div class="step-heading"><b>2</b><div><span>Pago protegido</span><h2>Tarjeta de crédito o débito</h2><p>Los datos se capturan directamente en Mercado Pago; Fluora no almacena el número ni el código de seguridad.</p></div></div>
-              @if (!brickReady()) {<div class="brick-loading"><span class="checkout-spinner"></span> Cargando formulario seguro…</div>}
-              <div id="cardPaymentBrick_container"></div>
-              @if (config()?.ambiente === 'PRUEBA') {<div class="sandbox-note"><i class="bi bi-shield-check"></i><span><strong>Ambiente de prueba</strong> Usa únicamente las tarjetas de prueba de Mercado Pago.</span></div>}
+              <div class="step-heading"><b>2</b><div><span>Pago protegido</span><h2>Elige cómo pagar</h2><p>Los métodos disponibles provienen de la cuenta de Mercado Pago conectada por este negocio.</p></div></div>
+              <div class="payment-methods" role="radiogroup" aria-label="Método de pago">
+                @if (config()?.aceptarTarjeta) {
+                  <button type="button" [class.is-selected]="selectedPaymentMethod() === 'CARD'" (click)="selectPaymentMethod('CARD')" role="radio" [attr.aria-checked]="selectedPaymentMethod() === 'CARD'">
+                    <span><i class="bi bi-credit-card"></i></span><strong>Tarjeta</strong><small>Crédito o débito</small>
+                  </button>
+                }
+                @if (canUseAlternativeMethods()) {
+                  @for (method of paymentMethods(); track method.id) {
+                    <button type="button" [class.is-selected]="selectedPaymentMethod() === method.id" (click)="selectPaymentMethod(method.id)" role="radio" [attr.aria-checked]="selectedPaymentMethod() === method.id">
+                      <span>@if (method.imagenUrl) {<img [src]="method.imagenUrl" [alt]="method.nombre">} @else {<i class="bi" [ngClass]="paymentMethodIcon(method.tipo)"></i>}</span>
+                      <strong>{{ method.nombre }}</strong><small>{{ method.tipo === 'bank_transfer' ? 'Transferencia SPEI' : 'Pago con referencia' }}</small>
+                    </button>
+                  }
+                }
+              </div>
+              @if (selectedPaymentMethod() === 'CARD') {
+                <p class="payment-privacy"><i class="bi bi-shield-lock"></i> Los datos se capturan directamente en Mercado Pago; Fluora no almacena el número ni el código de seguridad.</p>
+                @if (!brickReady()) {<div class="brick-loading"><span class="checkout-spinner"></span> Cargando formulario seguro…</div>}
+                <div id="cardPaymentBrick_container"></div>
+                @if (config()?.ambiente === 'PRUEBA') {<div class="sandbox-note"><i class="bi bi-shield-check"></i><span><strong>Ambiente de prueba</strong> Usa únicamente las tarjetas de prueba de Mercado Pago.</span></div>}
+              } @else {
+                <section class="alternative-payment">
+                  <i class="bi" [ngClass]="paymentMethodIcon(selectedPaymentMethodType())"></i>
+                  <div><strong>Genera tus instrucciones de pago</strong><p>Mercado Pago mostrará la referencia o CLABE y el plazo configurado por el negocio. El pedido se confirma al acreditarse el pago.</p></div>
+                  <button type="button" (click)="payAlternative()" [disabled]="processingAlternative()">{{ processingAlternative() ? 'Generando…' : 'Continuar con Mercado Pago' }}</button>
+                </section>
+              }
             }
           </section>
 

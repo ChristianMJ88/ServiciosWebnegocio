@@ -110,6 +110,27 @@
           </fieldset>
         </div>
 
+        <fieldset class="provider-methods">
+          <legend>Métodos de Mercado Pago para productos</legend>
+          <div class="provider-methods__heading">
+            <p>Esta lista se consulta desde la cuenta conectada. Activa cada opción y define cuánto tiempo conservar inventario mientras el cliente paga.</p>
+            <button type="button" class="payment-button payment-button--light" [disabled]="cargandoMetodos()" (click)="cargarMetodos()"><i class="bi bi-arrow-clockwise"></i>Actualizar catálogo</button>
+          </div>
+          @if (cargandoMetodos()) {<div class="point-config__empty">Consultando métodos disponibles…</div>}
+          <div class="provider-methods__grid">
+            @for (method of metodosPago(); track method.id) {
+              <article class="provider-method" [class.is-active]="method.activo">
+                <span class="provider-method__logo">@if (method.imagenUrl) {<img [src]="method.imagenUrl" [alt]="method.nombre">} @else {<i class="bi" [class.bi-bank]="method.tipo === 'bank_transfer'" [class.bi-receipt]="method.tipo !== 'bank_transfer'"></i>}</span>
+                <div><strong>{{ method.nombre }}</strong><small>{{ method.tipo === 'bank_transfer' ? 'Transferencia' : 'Pago referenciado' }} · Solo productos</small></div>
+                <label class="provider-method__hours"><span>Vigencia en días</span><input #days type="number" min="1" max="30" [value]="method.vigenciaDias" (change)="guardarMetodo(method, method.activo, +days.value)"></label>
+                <label class="payment-switch"><input type="checkbox" [checked]="method.activo" [disabled]="procesando()" (change)="guardarMetodo(method, $any($event.target).checked, method.vigenciaDias)"><span></span><b>{{ method.activo ? 'Activo' : 'Inactivo' }}</b></label>
+              </article>
+            } @empty {
+              @if (!cargandoMetodos()) {<div class="point-config__empty">La cuenta conectada no reportó métodos referenciados o transferencias compatibles.</div>}
+            }
+          </div>
+        </fieldset>
+
         <fieldset class="delivery-config">
           <legend>Experiencia de pago</legend>
           <label class="payment-option">
