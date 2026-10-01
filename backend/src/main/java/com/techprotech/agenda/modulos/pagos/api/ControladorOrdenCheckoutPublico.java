@@ -48,4 +48,9 @@ public class ControladorOrdenCheckoutPublico {
                                                            @Valid @RequestBody CrearPagoAlternativoCheckoutRequest request) {
         return pagos.pagarConMetodoAlternativo(slug, ordenId, idempotencia, request);
     }
+
+    @GetMapping("/{ordenId}/pago")
+    public PagoCheckoutResponse consultarPago(@PathVariable String slug, @PathVariable String ordenId) {
+        return pagos.consultar(slug, ordenId);
+    }
 }

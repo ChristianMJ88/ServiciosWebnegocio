@@ -99,6 +99,7 @@ public class ServicioPagoCheckout {
             }
             metadatos.put("installments", String.valueOf(request.parcialidades()));
             metadatos.put("description", "Orden " + orden.getPublicId());
+            agregarNombrePagador(metadatos, orden);
             resultado = adaptador.crearCobro(new SolicitudCobro(
                     sitio.getEmpresaId(), orden.getPublicId(), clave, orden.getTotal(), orden.getMoneda(),
                     SIN_COMISION, request.tokenMedioPago().trim(), orden.getCorreoCliente(), metadatos));
@@ -165,6 +166,7 @@ public class ServicioPagoCheckout {
             metadatos.put("payment_type_id", metodo.getTipoExterno());
             metadatos.put("expiration_time", "P" + metodo.getVigenciaDias() + "D");
             metadatos.put("description", "Orden " + orden.getPublicId());
+            agregarNombrePagador(metadatos, orden);
             resultado = adaptador.crearCobro(new SolicitudCobro(sitio.getEmpresaId(), orden.getPublicId(), clave,
                     orden.getTotal(), orden.getMoneda(), SIN_COMISION, null,
                     request.correoPagador().trim().toLowerCase(Locale.ROOT), metadatos));
@@ -179,6 +181,44 @@ public class ServicioPagoCheckout {
         }
         ServicioEstadoPagoCheckout.EstadoAplicado aplicado = estados.aplicar(intento.getId(), resultado);
         return respuesta(aplicado.ordenPublicId(), aplicado.intento(), aplicado.estadoOrden(), proveedor.getCodigo());
+    }
+
+    public PagoCheckoutResponse consultar(String slug, String ordenPublicId) {
+        EmpresaSitioConfigEntidad sitio = sitio(slug);
+        CheckoutOrdenEntidad orden = ordenes.findByEmpresaIdAndPublicId(sitio.getEmpresaId(), ordenPublicId)
+                .orElseThrow(() -> error(HttpStatus.NOT_FOUND, "Orden no encontrada"));
+        IntentoPagoCheckoutEntidad intento = intentos
+                .findFirstByEmpresaIdAndCheckoutOrdenIdOrderByIdDesc(sitio.getEmpresaId(), orden.getId())
+                .orElseThrow(() -> error(HttpStatus.NOT_FOUND, "La orden todavía no tiene un intento de pago"));
+        ProveedorPagoEntidad proveedor = proveedores.findById(intento.getProveedorPagoId())
+                .orElseThrow(() -> error(HttpStatus.CONFLICT, "Proveedor no disponible"));
+
+        if (requiereConsulta(intento) && intento.getReferenciaExterna() != null) {
+            ProveedorPagosPort adaptador = adaptadores.stream()
+                    .filter(item -> item.proveedor() == proveedor(proveedor.getCodigo()))
+                    .findFirst().orElseThrow(() -> error(HttpStatus.SERVICE_UNAVAILABLE,
+                            "El proveedor de pago no está disponible"));
+            try {
+                ServicioEstadoPagoCheckout.EstadoAplicado aplicado = estados.aplicar(intento.getId(),
+                        adaptador.consultarCobro(intento.getEmpresaId(), intento.getReferenciaExterna()));
+                return respuesta(aplicado.ordenPublicId(), aplicado.intento(), aplicado.estadoOrden(), proveedor.getCodigo());
+            } catch (IllegalStateException ignored) {
+                // Conserva el último estado confirmado cuando el proveedor no responde temporalmente.
+            }
+        }
+        return respuesta(ordenPublicId, intento, orden.getEstado(), proveedor.getCodigo());
+    }
+
+    private boolean requiereConsulta(IntentoPagoCheckoutEntidad intento) {
+        return EstadoPago.CREADO.name().equals(intento.getEstado())
+                || EstadoPago.REQUIERE_ACCION.name().equals(intento.getEstado())
+                || EstadoPago.PROCESANDO.name().equals(intento.getEstado());
+    }
+
+    private void agregarNombrePagador(Map<String, String> metadatos, CheckoutOrdenEntidad orden) {
+        if (orden.getNombreDestinatario() != null && !orden.getNombreDestinatario().isBlank()) {
+            metadatos.put("payer_first_name", orden.getNombreDestinatario().trim());
+        }
     }
 
     private IntentoPagoCheckoutEntidad nuevoIntento(CheckoutOrdenEntidad orden, ProveedorPagoEntidad proveedor,

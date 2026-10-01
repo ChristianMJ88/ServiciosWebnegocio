@@ -128,11 +128,16 @@ public class AdaptadorMercadoPagoOrders implements ProveedorPagosPort {
         cuerpo.put("total_amount", importe(solicitud.importe()));
         cuerpo.put("external_reference", solicitud.referenciaOrden());
         opcional(cuerpo, "expiration_time", metadatos.get("expiration_time"));
-        cuerpo.put("payer", Map.of("email", solicitud.correoPagador()));
+        Map<String, Object> pagador = new LinkedHashMap<>();
+        pagador.put("email", solicitud.correoPagador());
+        opcional(pagador, "first_name", metadatos.get("payer_first_name"));
+        cuerpo.put("payer", pagador);
         cuerpo.put("transactions", Map.of("payments", List.of(Map.of(
                 "amount", importe(solicitud.importe()), "payment_method", metodo))));
         if (solicitud.comisionPlataforma() != null && solicitud.comisionPlataforma().signum() > 0) {
             cuerpo.put("marketplace_fee", importe(solicitud.comisionPlataforma()));
+        } else {
+            cuerpo.put("marketplace", "NONE");
         }
         opcional(cuerpo, "description", metadatos.get("description"));
         return cuerpo;

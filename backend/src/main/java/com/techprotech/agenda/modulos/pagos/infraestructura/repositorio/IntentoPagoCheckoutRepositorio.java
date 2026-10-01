@@ -11,4 +11,6 @@ public interface IntentoPagoCheckoutRepositorio extends JpaRepository<IntentoPag
                                                                                    String referenciaExterna);
     Optional<IntentoPagoCheckoutEntidad> findFirstByEmpresaIdAndCheckoutOrdenIdAndEstadoOrderByIdDesc(
             Long empresaId, Long checkoutOrdenId, String estado);
+    Optional<IntentoPagoCheckoutEntidad> findFirstByEmpresaIdAndCheckoutOrdenIdOrderByIdDesc(
+            Long empresaId, Long checkoutOrdenId);
 }

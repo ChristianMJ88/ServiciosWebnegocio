@@ -114,8 +114,9 @@ class AdaptadorMercadoPagoOrdersTest {
                         {
                           "type":"online",
                           "processing_mode":"automatic",
+                          "marketplace":"NONE",
                           "expiration_time":"P3D",
-                          "payer":{"email":"cliente@example.com"},
+                          "payer":{"email":"cliente@example.com","first_name":"Cliente Prueba"},
                           "transactions":{"payments":[{"payment_method":{"id":"metodo-dinamico","type":"ticket"}}]}
                         }
                         """, false))
@@ -131,7 +132,7 @@ class AdaptadorMercadoPagoOrdersTest {
         ResultadoCobro resultado = adaptador.crearCobro(new SolicitudCobro(
                 12L, "VENTA-REF-1", "idem-ref-1", new BigDecimal("250"), "MXN", BigDecimal.ZERO,
                 null, "cliente@example.com", Map.of("payment_method_id", "metodo-dinamico",
-                "payment_type_id", "ticket", "expiration_time", "P3D")));
+                "payment_type_id", "ticket", "expiration_time", "P3D", "payer_first_name", "Cliente Prueba")));
 
         assertThat(resultado.estado()).isEqualTo(EstadoPago.REQUIERE_ACCION);
         assertThat(resultado.accionUrl()).isEqualTo("https://proveedor.example/instrucciones");
