@@ -7,7 +7,7 @@ CREATE TABLE empresa_metodo_pago_checkout (
     nombre VARCHAR(160) NOT NULL,
     activo BOOLEAN NOT NULL DEFAULT FALSE,
     solo_productos BOOLEAN NOT NULL DEFAULT TRUE,
-    vigencia_dias INT NOT NULL DEFAULT 3,
+    vigencia_horas INT NOT NULL DEFAULT 72,
     creado_en TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     actualizado_en TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     PRIMARY KEY (id),
@@ -15,7 +15,7 @@ CREATE TABLE empresa_metodo_pago_checkout (
     KEY idx_empresa_metodo_pago_activo (empresa_id, activo),
     CONSTRAINT fk_empresa_metodo_pago_empresa FOREIGN KEY (empresa_id) REFERENCES empresa(id),
     CONSTRAINT fk_empresa_metodo_pago_proveedor FOREIGN KEY (proveedor_pago_id) REFERENCES proveedor_pago(id),
-    CONSTRAINT chk_empresa_metodo_pago_vigencia CHECK (vigencia_dias BETWEEN 1 AND 30)
+    CONSTRAINT chk_empresa_metodo_pago_vigencia CHECK (vigencia_horas BETWEEN 1 AND 168)
 );
 
 ALTER TABLE intento_pago_checkout
