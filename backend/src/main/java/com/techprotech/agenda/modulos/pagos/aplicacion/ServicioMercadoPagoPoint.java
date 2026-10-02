@@ -118,8 +118,16 @@ public class ServicioMercadoPagoPoint {
         }
         VentaResponse venta = ventas.prepararPoint(empresaId, usuarioId, sucursalesPermitidas, request.venta());
         String publicId = UUID.randomUUID().toString();
-        ClienteMercadoPagoPoint.OrdenRemota remota = cliente.crearOrden(empresaId, idempotencia.trim(), terminal.getTerminalId(),
-                referencia(publicId), venta.total(), "Venta " + venta.folio());
+        ClienteMercadoPagoPoint.OrdenRemota remota;
+        try {
+            remota = cliente.crearOrden(empresaId, idempotencia.trim(), terminal.getTerminalId(),
+                    referencia(publicId), venta.total(), "Venta " + venta.folio());
+        } catch (IllegalStateException ex) {
+            if (ex.getMessage() != null && ex.getMessage().contains("HTTP 409")) {
+                throw error(HttpStatus.CONFLICT, "La terminal ya tiene un cobro pendiente. Retómalo o cancélalo desde Cobros Point antes de enviar otra cuenta");
+            }
+            throw ex;
+        }
         OrdenPointCajaEntidad orden = new OrdenPointCajaEntidad();
         orden.setPublicId(publicId); orden.setEmpresaId(empresaId); orden.setVentaId(venta.id()); orden.setTerminalId(terminal.getId());
         orden.setProveedorOrdenId(remota.ordenId()); orden.setProveedorPagoId(remota.pagoId()); orden.setIdempotencia(idempotencia.trim());
@@ -150,6 +158,22 @@ public class ServicioMercadoPagoPoint {
         OrdenPointCajaEntidad orden = buscar(empresaId, publicId);
         if (!"APROBADO".equals(orden.getEstado())) throw error(HttpStatus.CONFLICT, "Sólo se puede reembolsar un cobro Point aprobado");
         aplicarEstado(orden, cliente.reembolsar(empresaId, orden.getProveedorOrdenId(), idempotencia));
+        return mapear(ordenes.save(orden));
+    }
+
+    @Transactional
+    public OrdenPointResponse simularAprobacion(Long empresaId, String publicId) {
+        OrdenPointCajaEntidad orden = buscar(empresaId, publicId);
+        TerminalMercadoPagoEntidad terminal = terminales.findByIdAndEmpresaId(orden.getTerminalId(), empresaId)
+                .orElseThrow(() -> error(HttpStatus.NOT_FOUND, "La terminal Point no está disponible"));
+        if (!simulacionDisponible(terminal)) {
+            throw error(HttpStatus.CONFLICT, "La simulación sólo está disponible con la terminal virtual en ambiente de prueba");
+        }
+        if (Set.of("APROBADO", "CANCELADO", "RECHAZADO", "EXPIRADO", "REEMBOLSADO").contains(orden.getEstado())) {
+            throw error(HttpStatus.CONFLICT, "La orden Point ya terminó");
+        }
+        cliente.simularAprobacion(empresaId, orden.getProveedorOrdenId());
+        aplicarEstado(orden, cliente.consultar(empresaId, orden.getProveedorOrdenId()));
         return mapear(ordenes.save(orden));
     }
 
@@ -190,7 +214,7 @@ public class ServicioMercadoPagoPoint {
         TerminalMercadoPagoEntidad terminal = terminales.findByIdAndEmpresaId(orden.getTerminalId(), orden.getEmpresaId()).orElse(null);
         return new OrdenPointResponse(orden.getPublicId(), orden.getVentaId(), venta == null ? null : venta.getFolio(), orden.getTerminalId(),
                 terminal == null ? null : terminal.getNombre(), orden.getEstado(), orden.getDetalleEstado(), orden.getImporte(), orden.getMoneda(),
-                orden.getProveedorOrdenId(), orden.getProveedorPagoId(), orden.getCreadoEn(), orden.getActualizadoEn());
+                orden.getProveedorOrdenId(), orden.getProveedorPagoId(), orden.getCreadoEn(), orden.getActualizadoEn(), simulacionDisponible(terminal));
     }
 
     private TerminalPointResponse mapear(ClienteMercadoPagoPoint.TerminalRemota remota, TerminalMercadoPagoEntidad local,
@@ -208,6 +232,9 @@ public class ServicioMercadoPagoPoint {
     private String terminalPruebaId() {
         String id = propiedades.pointTerminalPruebaId();
         return id == null || id.isBlank() ? null : id.trim();
+    }
+    private boolean simulacionDisponible(TerminalMercadoPagoEntidad terminal) {
+        return terminal != null && oauth.esAmbientePrueba() && Objects.equals(terminal.getTerminalId(), terminalPruebaId());
     }
     private String referencia(String publicId) { return "point_" + publicId.replace("-", ""); }
     private String valor(String value) { return value == null ? "" : value; }

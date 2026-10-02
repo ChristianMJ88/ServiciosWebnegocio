@@ -38,6 +38,7 @@ export class CajaSalesSectionComponent implements OnChanges {
   readonly busqueda = signal('');
   readonly cargando = signal(false);
   readonly guardando = signal(false);
+  readonly simulandoPoint = signal(false);
   readonly error = signal('');
   readonly mensaje = signal('');
   metodoPago = '';
@@ -110,6 +111,26 @@ export class CajaSalesSectionComponent implements OnChanges {
     this.caja.cancelarOrdenPoint(orden.id, crypto.randomUUID()).subscribe({
       next: actualizada => { this.ordenPoint.set(actualizada); this.guardando.set(false); this.mensaje.set('La orden Point fue cancelada.'); this.cargar(); },
       error: error => this.error.set(error?.error?.detail || 'No fue posible cancelar la orden Point.')
+    });
+  }
+
+  continuarOrdenPoint(orden: OrdenPointCaja): void {
+    if (this.esEstadoFinalPoint(orden.estado) || this.guardando()) return;
+    this.ordenPoint.set(orden); this.guardando.set(true); this.error.set('');
+    this.mensaje.set('Cobro pendiente recuperado. Completa la operación en la terminal o usa la simulación de pruebas.');
+    this.vigilarPoint(orden.id);
+  }
+
+  simularAprobacionPoint(): void {
+    const orden = this.ordenPoint();
+    if (!orden?.simulacionDisponible || this.esEstadoFinalPoint(orden.estado) || this.simulandoPoint()) return;
+    this.simulandoPoint.set(true); this.error.set('');
+    this.caja.simularAprobacionPoint(orden.id).pipe(finalize(() => this.simulandoPoint.set(false))).subscribe({
+      next: actualizada => {
+        this.ordenPoint.set(actualizada);
+        this.mensaje.set('Mercado Pago recibió el pago simulado. Estamos conciliando la venta…');
+      },
+      error: error => this.error.set(error?.error?.detail || 'No fue posible simular la aprobación de Point.')
     });
   }
 

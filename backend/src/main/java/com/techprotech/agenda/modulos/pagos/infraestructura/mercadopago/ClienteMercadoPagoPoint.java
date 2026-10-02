@@ -64,6 +64,16 @@ public class ClienteMercadoPagoPoint {
         return mapear(post(ORDERS + "/" + segmento(ordenId) + "/refund", empresaId, idempotencia, Map.of()));
     }
 
+    public void simularAprobacion(Long empresaId, String ordenId) {
+        Map<String, Object> cuerpo = new LinkedHashMap<>();
+        cuerpo.put("status", "processed");
+        cuerpo.put("payment_method_type", "credit_card");
+        cuerpo.put("payment_method_id", "visa");
+        cuerpo.put("installments", 1);
+        cuerpo.put("status_detail", "accredited");
+        postSinRespuesta(ORDERS + "/" + segmento(ordenId) + "/events", empresaId, cuerpo);
+    }
+
     private OrdenRemota mapear(JsonNode respuesta) {
         JsonNode pago = respuesta.path("transactions").path("payments").path(0);
         return new OrdenRemota(requerido(respuesta, "id"), texto(respuesta, "status"), texto(respuesta, "status_detail"),
@@ -86,6 +96,14 @@ public class ClienteMercadoPagoPoint {
                     .body(cuerpo).retrieve().body(JsonNode.class);
             if (respuesta == null) throw new IllegalStateException("Mercado Pago no devolvió una respuesta");
             return respuesta;
+        } catch (RestClientResponseException ex) { throw error(ex); }
+    }
+
+    private void postSinRespuesta(String url, Long empresaId, Object cuerpo) {
+        try {
+            restClient.post().uri(url).contentType(MediaType.APPLICATION_JSON)
+                    .headers(h -> h.setBearerAuth(oauth.obtenerAccessToken(empresaId)))
+                    .body(cuerpo).retrieve().toBodilessEntity();
         } catch (RestClientResponseException ex) { throw error(ex); }
     }
 

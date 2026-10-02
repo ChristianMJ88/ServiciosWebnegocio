@@ -47,6 +47,9 @@
         <mat-form-field appearance="outline"><mat-label>Terminal</mat-label><mat-select name="terminalPoint" [(ngModel)]="terminalPointId">@for (terminal of terminalesPoint(); track terminal.id) {<mat-option [value]="terminal.id">{{ terminal.nombre }}</mat-option>}</mat-select></mat-form-field>
         <div class="point-payment-note"><i class="bi bi-credit-card"></i><span><strong>El importe aparecerá en la terminal</strong><small>La venta se conciliará automáticamente cuando Mercado Pago confirme el cobro.</small></span></div>
       }
+      @if (metodoPago === 'TARJETA') {
+        <div class="point-payment-note is-manual"><i class="bi bi-credit-card-2-front"></i><span><strong>Registro manual de tarjeta</strong><small>Cobra primero en una terminal externa y captura la referencia. Esta opción no envía instrucciones a Mercado Pago Point.</small></span></div>
+      }
       <mat-form-field appearance="outline"><mat-label>Referencia</mat-label><input matInput name="referenciaVenta" [(ngModel)]="referencia"></mat-form-field>
       <mat-form-field appearance="outline"><mat-label>Notas</mat-label><textarea matInput rows="2" name="notasVenta" [(ngModel)]="observaciones"></textarea></mat-form-field>
       <button mat-flat-button color="primary" type="submit" [disabled]="guardando() || !cajaAbierta || (!citaSeleccionada() && !lineas().length)">{{ guardando() ? 'Cobrando…' : 'Cobrar cuenta completa' }}</button>
@@ -54,7 +57,12 @@
     @if (ordenPoint(); as orden) {
       <div class="point-payment-status" [class.is-approved]="orden.estado === 'APROBADO'">
         <span class="point-payment-status__pulse"></span><div><strong>{{ orden.estado === 'APROBADO' ? 'Pago confirmado' : 'Esperando terminal' }}</strong><small>{{ orden.terminalNombre }} · {{ orden.estado }}{{ orden.detalleEstado ? ' · ' + orden.detalleEstado : '' }}</small></div>
-        @if (!['APROBADO','CANCELADO','RECHAZADO','EXPIRADO','REEMBOLSADO'].includes(orden.estado)) {<button type="button" (click)="cancelarPoint()">Cancelar</button>}
+        @if (!['APROBADO','CANCELADO','RECHAZADO','EXPIRADO','REEMBOLSADO'].includes(orden.estado)) {
+          <div class="point-payment-status__actions">
+            @if (orden.simulacionDisponible) {<button class="simulate" type="button" [disabled]="simulandoPoint()" (click)="simularAprobacionPoint()">{{ simulandoPoint() ? 'Simulando…' : 'Simular aprobación' }}</button>}
+            <button type="button" (click)="cancelarPoint()">Cancelar</button>
+          </div>
+        }
       </div>
     }
     @if (!cajaAbierta) {<div class="caja-empty">Abre la caja de esta sucursal para registrar la venta.</div>}
@@ -65,7 +73,7 @@
       <div class="pos-history"><span>Ventas recientes</span>@for (venta of ventas().slice(0, 5); track venta.id) {<div><span><strong>{{ venta.folio }}</strong><small>{{ venta.canal === 'ONLINE' ? 'Venta web' : 'Caja' }} · {{ venta.detalles.length }} conceptos · {{ venta.metodoPago }}</small></span><strong>{{ venta.total | appMoney:venta.moneda:2:2 }}</strong></div>}</div>
     }
     @if (historialPoint().length) {
-      <div class="point-history"><span>Cobros Point</span>@for (orden of historialPoint().slice(0, 5); track orden.id) {<article><div><strong>{{ orden.folioVenta }}</strong><small>{{ orden.terminalNombre }} · {{ orden.estado }}</small></div><b>{{ orden.importe | appMoney:orden.moneda:2:2 }}</b>@if (orden.estado === 'APROBADO') {<button type="button" [disabled]="guardando()" (click)="reembolsarPoint(orden)">Reembolsar</button>}</article>}</div>
+      <div class="point-history"><span>Cobros Point</span>@for (orden of historialPoint().slice(0, 5); track orden.id) {<article><div><strong>{{ orden.folioVenta }}</strong><small>{{ orden.terminalNombre }} · {{ orden.estado }}</small></div><b>{{ orden.importe | appMoney:orden.moneda:2:2 }}</b>@if (orden.estado === 'APROBADO') {<button type="button" [disabled]="guardando()" (click)="reembolsarPoint(orden)">Reembolsar</button>} @else if (!['CANCELADO','RECHAZADO','EXPIRADO','REEMBOLSADO'].includes(orden.estado)) {<button class="continue" type="button" [disabled]="guardando()" (click)="continuarOrdenPoint(orden)">Continuar cobro</button>}</article>}</div>
     }
   </aside>
 </div>

@@ -55,6 +55,7 @@
         <form class="caja-form-grid" (ngSubmit)="savePayment.emit()">
           <mat-form-field appearance="outline"><mat-label>Monto</mat-label><input matInput type="number" min="0.01" step="0.01" name="montoPago" [(ngModel)]="formularioPago.monto" required></mat-form-field>
           <mat-form-field appearance="outline"><mat-label>Método de pago</mat-label><mat-select name="metodoPago" [(ngModel)]="formularioPago.metodoPago">@for (metodo of metodosPago; track metodo.codigo) {<mat-option [value]="metodo.codigo">{{ metodo.etiqueta }}</mat-option>}</mat-select></mat-form-field>
+          @if (formularioPago.metodoPago === 'TARJETA') {<div class="manual-card-note full-width"><i class="bi bi-credit-card-2-front"></i><span><strong>Registro manual</strong><small>Cobra en una terminal externa y registra aquí el monto y la referencia.</small></span></div>}
           @if (terminalesPoint().length) {
             <div class="point-divider"><span>o cobra en terminal</span></div>
             <mat-form-field appearance="outline" class="full-width"><mat-label>Terminal Mercado Pago Point</mat-label><mat-select name="terminalPointCobro" [(ngModel)]="terminalPointId">@for (terminal of terminalesPoint(); track terminal.id) {<mat-option [value]="terminal.id">{{ terminal.nombre }}</mat-option>}</mat-select></mat-form-field>
@@ -71,7 +72,7 @@
             @if (pagos.length) {<button mat-stroked-button type="button" (click)="printReceipt.emit()">Imprimir comprobante</button>}
           </div>
         </form>
-        @if (ordenPoint(); as orden) {<div class="point-status" [class.approved]="orden.estado === 'APROBADO'"><span></span><div><strong>{{ orden.estado === 'APROBADO' ? 'Pago conciliado' : 'Orden enviada' }}</strong><small>{{ orden.terminalNombre }} · {{ orden.estado }}{{ orden.detalleEstado ? ' · ' + orden.detalleEstado : '' }}</small></div>@if (!['APROBADO','CANCELADO','RECHAZADO','EXPIRADO','REEMBOLSADO'].includes(orden.estado)) {<button type="button" (click)="cancelarPoint()">Cancelar</button>}</div>}
+        @if (ordenPoint(); as orden) {<div class="point-status" [class.approved]="orden.estado === 'APROBADO'"><span></span><div class="point-status__copy"><strong>{{ orden.estado === 'APROBADO' ? 'Pago conciliado' : 'Orden enviada' }}</strong><small>{{ orden.terminalNombre }} · {{ orden.estado }}{{ orden.detalleEstado ? ' · ' + orden.detalleEstado : '' }}</small></div>@if (!['APROBADO','CANCELADO','RECHAZADO','EXPIRADO','REEMBOLSADO'].includes(orden.estado)) {<div class="point-status__actions">@if (orden.simulacionDisponible) {<button class="simulate" type="button" [disabled]="simulandoPoint()" (click)="simularAprobacionPoint()">{{ simulandoPoint() ? 'Simulando…' : 'Simular aprobación' }}</button>}<button type="button" (click)="cancelarPoint()">Cancelar</button></div>}</div>}
         @if (errorPoint()) {<div class="point-error">{{ errorPoint() }}</div>}
         @if (!cajaAbierta) {<div class="caja-empty">{{ mensajeBloqueo }}</div>}
         <mat-divider></mat-divider>

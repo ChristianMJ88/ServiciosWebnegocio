@@ -13,7 +13,7 @@ public final class CatalogosCaja {
     public static final String METODO_PAGO_POINT = "MERCADO_PAGO_POINT";
     public static final List<Opcion> METODOS_PAGO = List.of(
             new Opcion("EFECTIVO", "Efectivo"),
-            new Opcion("TARJETA", "Tarjeta"),
+            new Opcion("TARJETA", "Tarjeta externa (registro manual)"),
             new Opcion("TRANSFERENCIA", "Transferencia")
     );
     public static final List<Opcion> TIPOS_MOVIMIENTO_MANUAL = List.of(

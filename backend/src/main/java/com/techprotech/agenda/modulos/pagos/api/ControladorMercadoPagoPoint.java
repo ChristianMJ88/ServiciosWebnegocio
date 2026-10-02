@@ -71,4 +71,11 @@ public class ControladorMercadoPagoPoint {
                                          @RequestHeader("Idempotency-Key") String idempotencia) {
         return servicio.reembolsar(usuario.empresaId(), id, idempotencia);
     }
+
+    @PostMapping("/api/v1/caja/point/ordenes/{id}/simular-aprobacion")
+    @PreAuthorize("hasAuthority('CAJA_COBRAR')")
+    public OrdenPointResponse simularAprobacion(@AuthenticationPrincipal UsuarioAutenticado usuario,
+                                                @PathVariable String id) {
+        return servicio.simularAprobacion(usuario.empresaId(), id);
+    }
 }

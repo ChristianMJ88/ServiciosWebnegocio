@@ -21,6 +21,7 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
@@ -85,6 +86,63 @@ class ServicioMercadoPagoPointTest {
         assertThat(respuesta.estado()).isEqualTo("APROBADO");
         assertThat(respuesta.proveedorOrdenId()).isEqualTo("ORD-1");
         verify(ventas).confirmarPoint(7L, 22L, "PAY-1");
+    }
+
+    @Test
+    void simulaAprobacionSoloParaLaTerminalVirtualDePruebas() {
+        ClienteMercadoPagoPoint cliente = mock(ClienteMercadoPagoPoint.class);
+        ServicioOAuthMercadoPago oauth = mock(ServicioOAuthMercadoPago.class);
+        PropiedadesMercadoPago propiedades = propiedades("POINT_VIRTUAL_CONFIGURADA");
+        TerminalMercadoPagoRepositorio terminales = mock(TerminalMercadoPagoRepositorio.class);
+        OrdenPointCajaRepositorio ordenes = mock(OrdenPointCajaRepositorio.class);
+        SucursalRepositorio sucursales = mock(SucursalRepositorio.class);
+        VentaRepositorio ventasRepositorio = mock(VentaRepositorio.class);
+        ServicioVentasCaja ventas = mock(ServicioVentasCaja.class);
+        ServicioMercadoPagoPoint servicio = new ServicioMercadoPagoPoint(cliente, oauth, propiedades, terminales, ordenes,
+                sucursales, ventasRepositorio, ventas);
+        when(oauth.esAmbientePrueba()).thenReturn(true);
+
+        TerminalMercadoPagoEntidad terminal = new TerminalMercadoPagoEntidad();
+        terminal.setId(5L); terminal.setEmpresaId(7L); terminal.setSucursalId(3L);
+        terminal.setTerminalId("POINT_VIRTUAL_CONFIGURADA"); terminal.setNombre("Point virtual"); terminal.setActiva(true);
+        OrdenPointCajaEntidad orden = new OrdenPointCajaEntidad();
+        orden.setPublicId("point-public-id"); orden.setEmpresaId(7L); orden.setVentaId(22L); orden.setTerminalId(5L);
+        orden.setProveedorOrdenId("ORD-1"); orden.setEstado("CREADO"); orden.setImporte(new BigDecimal("180.00")); orden.setMoneda("MXN");
+        VentaEntidad ventaEntidad = new VentaEntidad(); ventaEntidad.setId(22L); ventaEntidad.setEmpresaId(7L); ventaEntidad.setFolio("V-22");
+        when(ordenes.findByEmpresaIdAndPublicId(7L, "point-public-id")).thenReturn(Optional.of(orden));
+        when(terminales.findByIdAndEmpresaId(5L, 7L)).thenReturn(Optional.of(terminal));
+        when(cliente.consultar(7L, "ORD-1"))
+                .thenReturn(new ClienteMercadoPagoPoint.OrdenRemota("ORD-1", "processed", "accredited", "PAY-1", "processed", "accredited"));
+        when(ordenes.save(orden)).thenReturn(orden);
+        when(ventasRepositorio.findByIdAndEmpresaId(22L, 7L)).thenReturn(Optional.of(ventaEntidad));
+
+        var respuesta = servicio.simularAprobacion(7L, "point-public-id");
+
+        verify(cliente).simularAprobacion(7L, "ORD-1");
+        verify(ventas).confirmarPoint(7L, 22L, "PAY-1");
+        assertThat(respuesta.estado()).isEqualTo("APROBADO");
+        assertThat(respuesta.simulacionDisponible()).isTrue();
+    }
+
+    @Test
+    void rechazaSimulacionEnUnaTerminalReal() {
+        ClienteMercadoPagoPoint cliente = mock(ClienteMercadoPagoPoint.class);
+        ServicioOAuthMercadoPago oauth = mock(ServicioOAuthMercadoPago.class);
+        TerminalMercadoPagoRepositorio terminales = mock(TerminalMercadoPagoRepositorio.class);
+        OrdenPointCajaRepositorio ordenes = mock(OrdenPointCajaRepositorio.class);
+        ServicioMercadoPagoPoint servicio = new ServicioMercadoPagoPoint(cliente, oauth, propiedades("POINT_VIRTUAL_CONFIGURADA"), terminales,
+                ordenes, mock(SucursalRepositorio.class), mock(VentaRepositorio.class), mock(ServicioVentasCaja.class));
+        when(oauth.esAmbientePrueba()).thenReturn(true);
+        OrdenPointCajaEntidad orden = new OrdenPointCajaEntidad();
+        orden.setTerminalId(5L); orden.setEstado("CREADO");
+        TerminalMercadoPagoEntidad terminal = new TerminalMercadoPagoEntidad();
+        terminal.setTerminalId("POINT_REAL_123");
+        when(ordenes.findByEmpresaIdAndPublicId(7L, "point-public-id")).thenReturn(Optional.of(orden));
+        when(terminales.findByIdAndEmpresaId(5L, 7L)).thenReturn(Optional.of(terminal));
+
+        assertThatThrownBy(() -> servicio.simularAprobacion(7L, "point-public-id"))
+                .hasMessageContaining("sólo está disponible con la terminal virtual");
+        verify(cliente, never()).simularAprobacion(anyLong(), anyString());
     }
 
     private PropiedadesMercadoPago propiedades(String terminalPruebaId) {

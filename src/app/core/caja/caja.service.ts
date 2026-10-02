@@ -166,6 +166,7 @@ export interface OrdenPointCaja {
   id: string; ventaId: number; folioVenta: string; terminalId: number; terminalNombre: string;
   estado: string; detalleEstado: string | null; importe: number; moneda: string;
   proveedorOrdenId: string | null; proveedorPagoId: string | null; creadoEn: string | null; actualizadoEn: string | null;
+  simulacionDisponible: boolean;
 }
 
 @Injectable({
@@ -292,5 +293,9 @@ export class CajaService {
     return this.http.post<OrdenPointCaja>(`${environment.apiBaseUrl}/caja/point/ordenes/${id}/reembolsar`, {}, {
       headers: { 'Idempotency-Key': idempotencia }
     });
+  }
+
+  simularAprobacionPoint(id: string): Observable<OrdenPointCaja> {
+    return this.http.post<OrdenPointCaja>(`${environment.apiBaseUrl}/caja/point/ordenes/${id}/simular-aprobacion`, {});
   }
 }

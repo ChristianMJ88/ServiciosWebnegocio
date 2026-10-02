@@ -54,6 +54,7 @@ export class CajaPaymentsSectionComponent implements OnChanges {
   readonly terminalesPoint = signal<TerminalPointCaja[]>([]);
   readonly ordenPoint = signal<OrdenPointCaja | null>(null);
   readonly procesandoPoint = signal(false);
+  readonly simulandoPoint = signal(false);
   readonly errorPoint = signal('');
   terminalPointId: number | null = null;
 
@@ -98,6 +99,16 @@ export class CajaPaymentsSectionComponent implements OnChanges {
     this.caja.cancelarOrdenPoint(orden.id, crypto.randomUUID()).subscribe({
       next: actualizada => this.finalizarPoint(actualizada),
       error: error => this.errorPoint.set(error?.error?.detail || 'No fue posible cancelar la orden Point.')
+    });
+  }
+
+  simularAprobacionPoint(): void {
+    const orden = this.ordenPoint();
+    if (!orden?.simulacionDisponible || this.esEstadoFinalPoint(orden.estado) || this.simulandoPoint()) return;
+    this.simulandoPoint.set(true); this.errorPoint.set('');
+    this.caja.simularAprobacionPoint(orden.id).pipe(finalize(() => this.simulandoPoint.set(false))).subscribe({
+      next: actualizada => this.ordenPoint.set(actualizada),
+      error: error => this.errorPoint.set(error?.error?.detail || 'No fue posible simular la aprobación de Point.')
     });
   }
 
