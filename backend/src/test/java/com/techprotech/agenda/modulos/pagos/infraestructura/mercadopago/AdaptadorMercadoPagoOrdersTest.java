@@ -38,7 +38,7 @@ class AdaptadorMercadoPagoOrdersTest {
         adaptador = new AdaptadorMercadoPagoOrders(oauth, builder, objectMapper,
                 new MapeadorRespuestaMercadoPago(), new ValidadorFirmaWebhookMercadoPago(),
                 new PropiedadesMercadoPago(true, "PRUEBA", "cliente", "secreto", "redirect", "frontend", "", "webhook",
-                        "publica-prueba", "token-prueba"));
+                        "publica-prueba", "token-prueba", "NEWLAND_N950__SBX0000001"));
     }
 
     @Test

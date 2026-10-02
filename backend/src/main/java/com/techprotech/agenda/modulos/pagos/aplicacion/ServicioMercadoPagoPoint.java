@@ -8,6 +8,7 @@ import com.techprotech.agenda.modulos.pagos.api.dto.*;
 import com.techprotech.agenda.modulos.pagos.infraestructura.entidad.OrdenPointCajaEntidad;
 import com.techprotech.agenda.modulos.pagos.infraestructura.entidad.TerminalMercadoPagoEntidad;
 import com.techprotech.agenda.modulos.pagos.infraestructura.mercadopago.ClienteMercadoPagoPoint;
+import com.techprotech.agenda.modulos.pagos.infraestructura.mercadopago.PropiedadesMercadoPago;
 import com.techprotech.agenda.modulos.pagos.infraestructura.repositorio.OrdenPointCajaRepositorio;
 import com.techprotech.agenda.modulos.pagos.infraestructura.repositorio.TerminalMercadoPagoRepositorio;
 import com.techprotech.agenda.modulos.sucursales.infraestructura.entidad.SucursalEntidad;
@@ -23,10 +24,9 @@ import java.util.stream.Collectors;
 
 @Service
 public class ServicioMercadoPagoPoint {
-    private static final String TERMINAL_VIRTUAL_ID = "NEWLAND_N950__SBX0000001";
-
     private final ClienteMercadoPagoPoint cliente;
     private final ServicioOAuthMercadoPago oauth;
+    private final PropiedadesMercadoPago propiedades;
     private final TerminalMercadoPagoRepositorio terminales;
     private final OrdenPointCajaRepositorio ordenes;
     private final SucursalRepositorio sucursales;
@@ -34,10 +34,11 @@ public class ServicioMercadoPagoPoint {
     private final ServicioVentasCaja ventas;
 
     public ServicioMercadoPagoPoint(ClienteMercadoPagoPoint cliente, ServicioOAuthMercadoPago oauth,
+                                    PropiedadesMercadoPago propiedades,
                                     TerminalMercadoPagoRepositorio terminales, OrdenPointCajaRepositorio ordenes,
                                     SucursalRepositorio sucursales, VentaRepositorio ventasRepositorio,
                                     ServicioVentasCaja ventas) {
-        this.cliente = cliente; this.oauth = oauth; this.terminales = terminales; this.ordenes = ordenes;
+        this.cliente = cliente; this.oauth = oauth; this.propiedades = propiedades; this.terminales = terminales; this.ordenes = ordenes;
         this.sucursales = sucursales; this.ventasRepositorio = ventasRepositorio; this.ventas = ventas;
     }
 
@@ -48,8 +49,10 @@ public class ServicioMercadoPagoPoint {
         Map<Long, String> nombresSucursal = sucursales.findByEmpresaIdOrderByNombreAsc(empresaId).stream()
                 .collect(Collectors.toMap(SucursalEntidad::getId, SucursalEntidad::getNombre));
         List<ClienteMercadoPagoPoint.TerminalRemota> remotas = new ArrayList<>(cliente.listarTerminales(empresaId));
-        if (oauth.esAmbientePrueba() && remotas.stream().noneMatch(item -> TERMINAL_VIRTUAL_ID.equals(item.terminalId()))) {
-            remotas.add(new ClienteMercadoPagoPoint.TerminalRemota(TERMINAL_VIRTUAL_ID, null, null, null, "PDV"));
+        String terminalPruebaId = terminalPruebaId();
+        if (oauth.esAmbientePrueba() && terminalPruebaId != null
+                && remotas.stream().noneMatch(item -> terminalPruebaId.equals(item.terminalId()))) {
+            remotas.add(new ClienteMercadoPagoPoint.TerminalRemota(terminalPruebaId, null, null, null, "PDV"));
         }
         Set<String> conocidas = remotas.stream().map(ClienteMercadoPagoPoint.TerminalRemota::terminalId).collect(Collectors.toSet());
         List<TerminalPointResponse> resultado = remotas.stream().map(remota -> mapear(remota, guardadas.get(remota.terminalId()), nombresSucursal)).collect(Collectors.toCollection(ArrayList::new));
@@ -87,7 +90,7 @@ public class ServicioMercadoPagoPoint {
                 .orElseThrow(() -> error(HttpStatus.NOT_FOUND, "La sucursal no existe para este negocio"));
         ClienteMercadoPagoPoint.TerminalRemota remota = cliente.listarTerminales(empresaId).stream()
                 .filter(item -> request.terminalId().equals(item.terminalId())).findFirst().orElse(null);
-        if (remota == null && !(oauth.esAmbientePrueba() && TERMINAL_VIRTUAL_ID.equals(request.terminalId()))) {
+        if (remota == null && !(oauth.esAmbientePrueba() && request.terminalId().equals(terminalPruebaId()))) {
             throw error(HttpStatus.BAD_REQUEST, "La terminal no pertenece a la cuenta Mercado Pago conectada");
         }
         TerminalMercadoPagoEntidad entidad = terminales.findByEmpresaIdAndTerminalId(empresaId, request.terminalId())
@@ -202,6 +205,10 @@ public class ServicioMercadoPagoPoint {
     }
 
     private OrdenPointCajaEntidad buscar(Long empresaId, String publicId) { return ordenes.findByEmpresaIdAndPublicId(empresaId, publicId).orElseThrow(() -> error(HttpStatus.NOT_FOUND, "Orden Point no encontrada")); }
+    private String terminalPruebaId() {
+        String id = propiedades.pointTerminalPruebaId();
+        return id == null || id.isBlank() ? null : id.trim();
+    }
     private String referencia(String publicId) { return "point_" + publicId.replace("-", ""); }
     private String valor(String value) { return value == null ? "" : value; }
     private void validarIdempotencia(String value) { if (value == null || value.isBlank() || value.length() > 128) throw error(HttpStatus.BAD_REQUEST, "Idempotency-Key es obligatorio"); }

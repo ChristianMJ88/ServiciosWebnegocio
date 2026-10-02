@@ -13,5 +13,6 @@ public record PropiedadesMercadoPago(
         String webhookPublicBaseUrl,
         String webhookSecret,
         String publicKeyPrueba,
-        String accessTokenPrueba
+        String accessTokenPrueba,
+        String pointTerminalPruebaId
 ) {}

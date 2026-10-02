@@ -45,7 +45,7 @@ class ServicioConfiguracionCheckoutTest {
         when(proveedores.findByCodigoAndActivoTrue("MERCADO_PAGO")).thenReturn(Optional.of(proveedor));
         when(configuraciones.save(any())).thenAnswer(invocacion -> invocacion.getArgument(0));
         servicio = new ServicioConfiguracionCheckout(configuraciones, proveedores, conexiones, sitios,
-                new PropiedadesMercadoPago(true, "PRUEBA", "", "", "", "", "", "", "", ""),
+                new PropiedadesMercadoPago(true, "PRUEBA", "", "", "", "", "", "", "", "", "NEWLAND_N950__SBX0000001"),
                 configuracionesEnvio);
     }
 

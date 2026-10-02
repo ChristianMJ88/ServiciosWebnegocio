@@ -9,6 +9,7 @@ import com.techprotech.agenda.modulos.pagos.api.dto.CrearOrdenPointRequest;
 import com.techprotech.agenda.modulos.pagos.infraestructura.entidad.OrdenPointCajaEntidad;
 import com.techprotech.agenda.modulos.pagos.infraestructura.entidad.TerminalMercadoPagoEntidad;
 import com.techprotech.agenda.modulos.pagos.infraestructura.mercadopago.ClienteMercadoPagoPoint;
+import com.techprotech.agenda.modulos.pagos.infraestructura.mercadopago.PropiedadesMercadoPago;
 import com.techprotech.agenda.modulos.pagos.infraestructura.repositorio.OrdenPointCajaRepositorio;
 import com.techprotech.agenda.modulos.pagos.infraestructura.repositorio.TerminalMercadoPagoRepositorio;
 import com.techprotech.agenda.modulos.sucursales.infraestructura.repositorio.SucursalRepositorio;
@@ -25,15 +26,42 @@ import static org.mockito.Mockito.*;
 
 class ServicioMercadoPagoPointTest {
     @Test
-    void confirmaLaVentaCuandoPointDevuelvePagoProcesado() {
+    void publicaLaTerminalVirtualConfiguradaEnAmbienteDePrueba() {
         ClienteMercadoPagoPoint cliente = mock(ClienteMercadoPagoPoint.class);
         ServicioOAuthMercadoPago oauth = mock(ServicioOAuthMercadoPago.class);
+        PropiedadesMercadoPago propiedades = propiedades("POINT_VIRTUAL_CONFIGURADA");
         TerminalMercadoPagoRepositorio terminales = mock(TerminalMercadoPagoRepositorio.class);
         OrdenPointCajaRepositorio ordenes = mock(OrdenPointCajaRepositorio.class);
         SucursalRepositorio sucursales = mock(SucursalRepositorio.class);
         VentaRepositorio ventasRepositorio = mock(VentaRepositorio.class);
         ServicioVentasCaja ventas = mock(ServicioVentasCaja.class);
-        ServicioMercadoPagoPoint servicio = new ServicioMercadoPagoPoint(cliente, oauth, terminales, ordenes,
+        ServicioMercadoPagoPoint servicio = new ServicioMercadoPagoPoint(cliente, oauth, propiedades, terminales, ordenes,
+                sucursales, ventasRepositorio, ventas);
+        when(oauth.esAmbientePrueba()).thenReturn(true);
+        when(cliente.listarTerminales(7L)).thenReturn(List.of());
+        when(terminales.findByEmpresaIdOrderByNombreAsc(7L)).thenReturn(List.of());
+        when(sucursales.findByEmpresaIdOrderByNombreAsc(7L)).thenReturn(List.of());
+
+        var terminalesDisponibles = servicio.listarTerminales(7L);
+
+        assertThat(terminalesDisponibles).singleElement().satisfies(terminal -> {
+            assertThat(terminal.terminalId()).isEqualTo("POINT_VIRTUAL_CONFIGURADA");
+            assertThat(terminal.modoOperacion()).isEqualTo("PDV");
+            assertThat(terminal.configurada()).isFalse();
+        });
+    }
+
+    @Test
+    void confirmaLaVentaCuandoPointDevuelvePagoProcesado() {
+        ClienteMercadoPagoPoint cliente = mock(ClienteMercadoPagoPoint.class);
+        ServicioOAuthMercadoPago oauth = mock(ServicioOAuthMercadoPago.class);
+        PropiedadesMercadoPago propiedades = propiedades("POINT_VIRTUAL_CONFIGURADA");
+        TerminalMercadoPagoRepositorio terminales = mock(TerminalMercadoPagoRepositorio.class);
+        OrdenPointCajaRepositorio ordenes = mock(OrdenPointCajaRepositorio.class);
+        SucursalRepositorio sucursales = mock(SucursalRepositorio.class);
+        VentaRepositorio ventasRepositorio = mock(VentaRepositorio.class);
+        ServicioVentasCaja ventas = mock(ServicioVentasCaja.class);
+        ServicioMercadoPagoPoint servicio = new ServicioMercadoPagoPoint(cliente, oauth, propiedades, terminales, ordenes,
                 sucursales, ventasRepositorio, ventas);
 
         TerminalMercadoPagoEntidad terminal = new TerminalMercadoPagoEntidad();
@@ -57,5 +85,9 @@ class ServicioMercadoPagoPointTest {
         assertThat(respuesta.estado()).isEqualTo("APROBADO");
         assertThat(respuesta.proveedorOrdenId()).isEqualTo("ORD-1");
         verify(ventas).confirmarPoint(7L, 22L, "PAY-1");
+    }
+
+    private PropiedadesMercadoPago propiedades(String terminalPruebaId) {
+        return new PropiedadesMercadoPago(true, "PRUEBA", "", "", "", "", "", "", "", "", terminalPruebaId);
     }
 }
