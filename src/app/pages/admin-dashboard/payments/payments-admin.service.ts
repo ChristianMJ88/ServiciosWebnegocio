@@ -94,6 +94,32 @@ export interface ConfiguracionReporteLiberacion {
   frecuenciaTipo: string | null;
   frecuenciaHora: number | null;
   frecuenciaValor: string | null;
+  incluirRetirosAlFinal: boolean;
+  ejecutarDespuesDeRetiro: boolean;
+}
+
+export interface GuardarConfiguracionReporteLiberacion {
+  prefijo: string;
+  zonaHoraria: string;
+  frecuenciaTipo: 'daily' | 'weekly' | 'monthly';
+  frecuenciaHora: number;
+  frecuenciaValor: string;
+  incluirRetirosAlFinal: boolean;
+  ejecutarDespuesDeRetiro: boolean;
+}
+
+export interface ReporteLiberacion {
+  id: number;
+  estado: string;
+  tareaExternaId: string;
+  reporteExternoId: string | null;
+  nombreArchivo: string | null;
+  fechaDesde: string;
+  fechaHasta: string;
+  filasProcesadas: number;
+  errorUltimo: string | null;
+  solicitadoEn: string;
+  procesadoEn: string | null;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -157,5 +183,29 @@ export class PaymentsAdminService {
 
   configuracionReporteLiberacion(): Observable<ConfiguracionReporteLiberacion> {
     return this.http.get<ConfiguracionReporteLiberacion>(`${this.reportesUrl}/configuracion`);
+  }
+
+  guardarConfiguracionReporte(payload: GuardarConfiguracionReporteLiberacion, crear = false): Observable<ConfiguracionReporteLiberacion> {
+    return crear
+      ? this.http.post<ConfiguracionReporteLiberacion>(`${this.reportesUrl}/configuracion`, payload)
+      : this.http.put<ConfiguracionReporteLiberacion>(`${this.reportesUrl}/configuracion`, payload);
+  }
+
+  cambiarProgramacionReporte(activar: boolean): Observable<ConfiguracionReporteLiberacion> {
+    return activar
+      ? this.http.post<ConfiguracionReporteLiberacion>(`${this.reportesUrl}/programacion`, {})
+      : this.http.delete<ConfiguracionReporteLiberacion>(`${this.reportesUrl}/programacion`);
+  }
+
+  reportesLiberacion(): Observable<ReporteLiberacion[]> {
+    return this.http.get<ReporteLiberacion[]>(this.reportesUrl);
+  }
+
+  solicitarReporteLiberacion(desde: string, hasta: string): Observable<ReporteLiberacion> {
+    return this.http.post<ReporteLiberacion>(this.reportesUrl, { desde, hasta });
+  }
+
+  sincronizarReporteLiberacion(id: number): Observable<ReporteLiberacion> {
+    return this.http.post<ReporteLiberacion>(`${this.reportesUrl}/${id}/sincronizar`, {});
   }
 }

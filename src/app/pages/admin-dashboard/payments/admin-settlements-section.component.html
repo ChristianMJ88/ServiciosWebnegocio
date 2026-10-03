@@ -1,0 +1,82 @@
+<section class="settlements-page">
+  <div class="settlements-actions">
+    <button type="button" class="icon-action" (click)="cargar()" [disabled]="cargando() || procesando()" aria-label="Actualizar liquidaciones"><i class="bi bi-arrow-clockwise"></i></button>
+  </div>
+
+  @if (mensaje()) { <p class="feedback is-success"><i class="bi bi-check-circle"></i>{{ mensaje() }}</p> }
+  @if (error()) { <p class="feedback is-error"><i class="bi bi-exclamation-circle"></i>{{ error() }}</p> }
+
+  @if (cargando()) {
+    <div class="loading-state"><span></span><span></span><span></span><p>Consultando movimientos y reportes…</p></div>
+  } @else {
+    <section class="summary-grid" aria-label="Resumen de conciliación">
+      <article><span>Venta bruta</span><strong>{{ monedaResumen() ? (bruto() | currency:monedaResumen()!:'symbol-narrow':'1.2-2':'es-MX') : '—' }}</strong><small>{{ conciliaciones().length }} movimientos recientes</small></article>
+      <article class="is-positive"><span>Neto conciliado</span><strong>{{ monedaResumen() ? (neto() | currency:monedaResumen()!:'symbol-narrow':'1.2-2':'es-MX') : '—' }}</strong><small>Confirmado por Mercado Pago</small></article>
+      <article [class.has-pending]="pendientes() > 0"><span>Por conciliar</span><strong>{{ pendientes() }}</strong><small>Esperando Reporte de Liberaciones</small></article>
+    </section>
+
+    <div class="settlements-layout">
+      <section class="workspace-card report-generator">
+        <header class="card-heading"><span class="card-icon"><i class="bi bi-file-earmark-arrow-down"></i></span><div><span class="eyebrow">Operación</span><h2>Generar reporte</h2><p>Solicita un periodo y sincronízalo cuando Mercado Pago termine de prepararlo.</p></div></header>
+        <div class="date-range">
+          <label><span>Desde</span><input type="date" [(ngModel)]="fechaDesde" name="fechaDesde"></label>
+          <label><span>Hasta</span><input type="date" [(ngModel)]="fechaHasta" name="fechaHasta"></label>
+        </div>
+        <button type="button" class="primary-action" (click)="generarReporte()" [disabled]="procesando() || !configuracion()?.listaParaConciliar"><i class="bi bi-plus-circle"></i>Generar reporte manual</button>
+        @if (!configuracion()?.listaParaConciliar) { <p class="inline-hint"><i class="bi bi-info-circle"></i>Primero guarda una configuración válida.</p> }
+      </section>
+
+      <section class="workspace-card schedule-card">
+        <header class="card-heading"><span class="card-icon is-violet"><i class="bi bi-calendar2-check"></i></span><div><span class="eyebrow">Automatización</span><h2>Programación</h2><p>La frecuencia se guarda primero y solo se ejecuta al activar la programación.</p></div></header>
+
+        @if (configuracion(); as actual) {
+          <div class="configuration-status" [class.is-ready]="actual.listaParaConciliar"><i class="bi" [class.bi-check-circle-fill]="actual.listaParaConciliar" [class.bi-exclamation-triangle]="!actual.listaParaConciliar"></i><div><strong>{{ actual.listaParaConciliar ? 'Configuración preparada' : 'Faltan columnas obligatorias' }}</strong><small>{{ actual.listaParaConciliar ? (actual.programado ? 'Generación automática activa' : 'Generación manual') : actual.columnasFaltantes.join(', ') }}</small></div></div>
+        } @else {
+          <div class="configuration-status"><i class="bi bi-info-circle"></i><div><strong>Configuración no localizada</strong><small>Puedes crear la configuración inicial para esta cuenta.</small></div></div>
+        }
+
+        <div class="schedule-form">
+          <label class="wide"><span>Prefijo del archivo</span><input type="text" maxlength="80" [(ngModel)]="formulario.prefijo" name="prefijo" placeholder="Ej. liquidaciones-negocio"></label>
+          <label><span>Zona horaria</span><input type="text" maxlength="40" [(ngModel)]="formulario.zonaHoraria" name="zonaHoraria"></label>
+          <label><span>Frecuencia</span><select [(ngModel)]="formulario.frecuenciaTipo" name="frecuenciaTipo" (change)="alCambiarFrecuencia()"><option value="daily">Diaria</option><option value="weekly">Semanal</option><option value="monthly">Mensual</option></select></label>
+          @if (formulario.frecuenciaTipo === 'weekly') { <label><span>Día</span><select [(ngModel)]="formulario.frecuenciaValor" name="diaSemanal">@for (dia of diasSemana; track dia) { <option [value]="dia">{{ etiquetasDia[dia] }}</option> }</select></label> }
+          @if (formulario.frecuenciaTipo === 'monthly') { <label><span>Día del mes</span><input type="number" min="1" max="31" [(ngModel)]="formulario.frecuenciaValor" name="diaMensual"></label> }
+          <label><span>Hora</span><input type="number" min="0" max="23" [(ngModel)]="formulario.frecuenciaHora" name="hora"></label>
+        </div>
+        <div class="schedule-actions">
+          <button type="button" class="secondary-action" (click)="guardarConfiguracion()" [disabled]="procesando()"><i class="bi bi-check2"></i>Guardar configuración</button>
+          <button type="button" class="primary-action" [class.is-danger]="configuracion()?.programado" (click)="cambiarProgramacion()" [disabled]="procesando() || !configuracion()?.listaParaConciliar"><i class="bi" [class.bi-play-fill]="!configuracion()?.programado" [class.bi-stop-fill]="configuracion()?.programado"></i>{{ configuracion()?.programado ? 'Desactivar' : 'Activar' }} programación</button>
+        </div>
+      </section>
+    </div>
+
+    <section class="workspace-card report-history">
+      <header class="section-heading"><div><span class="eyebrow">Reportes</span><h2>Historial de generación</h2><p>Sincroniza los reportes pendientes para descargar e importar sus movimientos.</p></div><span class="counter">{{ reportes().length }}</span></header>
+      <div class="report-list">
+        @for (reporte of reportes(); track reporte.id) {
+          <article class="report-row" [class.has-error]="reporte.estado === 'ERROR'">
+            <span class="report-row__icon"><i class="bi bi-file-earmark-spreadsheet"></i></span>
+            <div class="report-row__main"><strong>{{ reporte.nombreArchivo || 'Reporte #' + reporte.id }}</strong><small>{{ reporte.fechaDesde | date:'dd MMM yyyy':'':'es-MX' }} – {{ reporte.fechaHasta | date:'dd MMM yyyy':'':'es-MX' }}</small></div>
+            <div class="report-row__metric"><span>Movimientos</span><strong>{{ reporte.filasProcesadas }}</strong></div>
+            <div class="report-row__status" [class.is-ready]="reporte.estado === 'PROCESADO'" [class.is-error]="reporte.estado === 'ERROR'"><span>{{ estadoLegible(reporte.estado) }}</span><small>{{ reporte.solicitadoEn | date:'dd/MM/yyyy HH:mm':'':'es-MX' }}</small></div>
+            @if (reporte.estado !== 'PROCESADO') { <button type="button" class="sync-action" (click)="sincronizar(reporte)" [disabled]="procesando()"><i class="bi bi-arrow-repeat"></i><span>Sincronizar</span></button> }
+            @if (reporte.errorUltimo) { <p class="report-error">{{ reporte.errorUltimo }}</p> }
+          </article>
+        } @empty { <div class="empty-state"><i class="bi bi-inbox"></i><strong>Aún no hay reportes</strong><span>Genera el primero para comenzar la conciliación definitiva.</span></div> }
+      </div>
+    </section>
+
+    <section class="workspace-card movements-card">
+      <header class="section-heading"><div><span class="eyebrow">Movimientos</span><h2>Cobros recientes</h2><p>Checkout y Point reunidos en una sola vista financiera.</p></div><span class="counter">{{ conciliaciones().length }}</span></header>
+      <div class="movement-list">
+        @for (item of conciliaciones(); track item.id) {
+          <article class="movement-row">
+            <div class="movement-row__identity"><span class="channel"><i class="bi" [class.bi-globe2]="item.canal === 'CHECKOUT'" [class.bi-credit-card]="item.canal === 'POINT'"></i>{{ item.canal === 'POINT' ? 'Terminal Point' : 'Sitio público' }}</span><strong>{{ item.importeBruto | currency:item.moneda:'symbol-narrow':'1.2-2':'es-MX' }}</strong><small>{{ item.referenciaPago || item.referenciaOrden }}</small></div>
+            <dl><div><dt>Comisión proveedor</dt><dd>{{ item.comisionProveedorTotal == null ? 'Pendiente' : (item.comisionProveedorTotal | currency:item.moneda:'symbol-narrow':'1.2-2':'es-MX') }}</dd></div><div><dt>Comisión Fluora</dt><dd>{{ item.comisionPlataforma == null ? 'No aplicada' : (item.comisionPlataforma | currency:item.moneda:'symbol-narrow':'1.2-2':'es-MX') }}</dd></div><div><dt>Neto</dt><dd>{{ item.importeNeto == null ? 'Pendiente' : (item.importeNeto | currency:item.moneda:'symbol-narrow':'1.2-2':'es-MX') }}</dd></div></dl>
+            <div class="movement-row__status" [class.is-ready]="item.liquidacionDefinitiva" [class.is-refunded]="item.estado === 'REEMBOLSADA'"><span>{{ item.estado === 'REEMBOLSADA' ? 'Reembolsada' : item.liquidacionDefinitiva ? 'Conciliada' : 'Pendiente' }}</span><small>{{ item.actualizadoEn | date:'dd/MM/yyyy HH:mm':'':'es-MX' }}</small></div>
+          </article>
+        } @empty { <div class="empty-state"><i class="bi bi-receipt"></i><strong>Sin cobros registrados</strong><span>Los pagos aprobados aparecerán aquí.</span></div> }
+      </div>
+    </section>
+  }
+</section>

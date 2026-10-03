@@ -496,6 +496,16 @@
   }
 }
 
+@if (seccionActiva() === 'liquidaciones') {
+  @defer {
+    <app-admin-settlements-section />
+  } @placeholder {
+    <section class="section-stack">
+      <div class="workspace-card"><p class="helper-text mb-0">Preparando reportes y conciliación financiera.</p></div>
+    </section>
+  }
+}
+
 @if (seccionActiva() === 'envios') {
   @defer {
     <app-admin-shipping-section />

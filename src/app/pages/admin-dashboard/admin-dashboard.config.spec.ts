@@ -33,6 +33,6 @@ describe('configuración del menú administrativo', () => {
     const grupos = construirGruposSidebarAdmin(filtrarModulosAdmin([PERMISOS.pagosConfigurar]));
 
     expect(grupos.find(grupo => grupo.id === 'comercial')?.modulosVisibles.map(modulo => modulo.id))
-      .toEqual(['pagos']);
+      .toEqual(['pagos', 'liquidaciones']);
   });
 });

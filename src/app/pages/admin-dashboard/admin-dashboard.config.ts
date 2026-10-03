@@ -13,6 +13,7 @@ export type SeccionAdmin =
   | 'productos'
   | 'inventario'
   | 'pagos'
+  | 'liquidaciones'
   | 'envios'
   | 'comisiones'
   | 'usuarios'
@@ -56,6 +57,7 @@ export const MODULOS_ADMIN: readonly ModuloAdminDef[] = [
   { id: 'productos', titulo: 'Productos', descripcion: 'Artículos, proveedores, precios regionales e inventario.', abreviatura: 'PD', iconClass: 'bi bi-box-seam', permiso: PERMISOS.productosGestionar },
   { id: 'inventario', titulo: 'Inventario', descripcion: 'Existencias, movimientos y transferencias por sucursal.', abreviatura: 'IN', iconClass: 'bi bi-boxes', permiso: PERMISOS.inventarioGestionar },
   { id: 'pagos', titulo: 'Pagos', descripcion: 'Conecta la cuenta de cobro del negocio y configura su checkout.', abreviatura: 'PG', iconClass: 'bi bi-credit-card-2-front', permiso: PERMISOS.pagosConfigurar },
+  { id: 'liquidaciones', titulo: 'Liquidaciones', descripcion: 'Genera reportes, concilia cobros y controla depósitos netos.', abreviatura: 'LQ', iconClass: 'bi bi-file-earmark-spreadsheet', permiso: PERMISOS.pagosConfigurar },
   { id: 'envios', titulo: 'Envíos', descripcion: 'Gestiona proveedores, tarifas, guías y seguimiento de pedidos.', abreviatura: 'EN', iconClass: 'bi bi-truck', permiso: PERMISOS.enviosConfigurar },
   { id: 'comisiones', titulo: 'Comisiones', descripcion: 'Reglas de cálculo para servicios, productos y ventas.', abreviatura: 'CM', iconClass: 'bi bi-percent', permiso: PERMISOS.comisionesGestionar },
   { id: 'usuarios', titulo: 'Usuarios y accesos', descripcion: 'Administra identidades, invitaciones y acceso al sistema.', abreviatura: 'UI', iconClass: 'bi bi-person-badge', permiso: PERMISOS.usuariosInternosGestionar },
@@ -77,7 +79,7 @@ export const GRUPOS_SIDEBAR_ADMIN: readonly GrupoSidebarAdmin[] = [
   { id: 'operacion', titulo: 'Operación', iconClass: 'bi bi-grid-1x2-fill', modulos: ['resumen', 'citas', 'clientes', 'contactos'] },
   { id: 'canales', titulo: 'Canales', iconClass: 'bi bi-broadcast-pin', modulos: ['mensajes', 'whatsapp', 'correo'] },
   { id: 'catalogo', titulo: 'Catálogo', iconClass: 'bi bi-folder2-open', modulos: ['servicios', 'productos', 'inventario', 'sucursales'] },
-  { id: 'comercial', titulo: 'Comercial', iconClass: 'bi bi-graph-up-arrow', modulos: ['pagos', 'comisiones'] },
+  { id: 'comercial', titulo: 'Comercial', iconClass: 'bi bi-graph-up-arrow', modulos: ['pagos', 'liquidaciones', 'comisiones'] },
   { id: 'logistica', titulo: 'Logística', iconClass: 'bi bi-truck-flatbed', modulos: ['envios'] },
   { id: 'equipo', titulo: 'Equipo', iconClass: 'bi bi-people-fill', modulos: ['prestadores', 'usuarios', 'permisos'] },
   { id: 'disponibilidad', titulo: 'Disponibilidad', iconClass: 'bi bi-calendar2-check', modulos: ['reglas', 'excepciones'] },
