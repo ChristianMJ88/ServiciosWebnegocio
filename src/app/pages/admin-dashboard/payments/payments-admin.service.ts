@@ -83,6 +83,19 @@ export interface ConciliacionPago {
   actualizadoEn: string;
 }
 
+export interface ConfiguracionReporteLiberacion {
+  prefijo: string | null;
+  zonaHoraria: string | null;
+  programado: boolean;
+  idioma: string | null;
+  columnas: string[];
+  columnasFaltantes: string[];
+  listaParaConciliar: boolean;
+  frecuenciaTipo: string | null;
+  frecuenciaHora: number | null;
+  frecuenciaValor: string | null;
+}
+
 @Injectable({ providedIn: 'root' })
 export class PaymentsAdminService {
   private readonly http = inject(HttpClient);
@@ -91,6 +104,7 @@ export class PaymentsAdminService {
   private readonly pointUrl = `${environment.apiBaseUrl}/admin/pagos/point/terminales`;
   private readonly metodosUrl = `${environment.apiBaseUrl}/admin/pagos/metodos`;
   private readonly conciliacionesUrl = `${environment.apiBaseUrl}/admin/pagos/conciliaciones`;
+  private readonly reportesUrl = `${environment.apiBaseUrl}/admin/pagos/reportes-liberacion`;
 
   estado(): Observable<ConexionProveedorPago> {
     return this.http.get<ConexionProveedorPago>(`${this.baseUrl}/estado`);
@@ -139,5 +153,9 @@ export class PaymentsAdminService {
 
   conciliaciones(): Observable<ConciliacionPago[]> {
     return this.http.get<ConciliacionPago[]>(this.conciliacionesUrl);
+  }
+
+  configuracionReporteLiberacion(): Observable<ConfiguracionReporteLiberacion> {
+    return this.http.get<ConfiguracionReporteLiberacion>(`${this.reportesUrl}/configuracion`);
   }
 }

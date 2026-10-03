@@ -2,8 +2,8 @@ import { CommonModule } from '@angular/common';
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
-import { finalize, forkJoin } from 'rxjs';
-import { ConciliacionPago, ConfiguracionCheckout, ConexionProveedorPago, MetodoPagoCheckout, PaymentsAdminService, TerminalPoint, WebhookMercadoPago } from './payments-admin.service';
+import { catchError, finalize, forkJoin, of } from 'rxjs';
+import { ConciliacionPago, ConfiguracionCheckout, ConfiguracionReporteLiberacion, ConexionProveedorPago, MetodoPagoCheckout, PaymentsAdminService, TerminalPoint, WebhookMercadoPago } from './payments-admin.service';
 import { AdminService, SucursalAdmin } from '../../../core/admin/admin.service';
 
 @Component({
@@ -31,6 +31,7 @@ export class AdminPaymentsSectionComponent implements OnInit {
   readonly cargandoMetodos = signal(false);
   readonly webhook = signal<WebhookMercadoPago | null>(null);
   readonly conciliaciones = signal<ConciliacionPago[]>([]);
+  readonly configuracionReporte = signal<ConfiguracionReporteLiberacion | null>(null);
   readonly monedaResumen = computed(() => {
     const monedas = new Set(this.conciliaciones().map(item => item.moneda));
     if (monedas.size === 0) return this.configuracion()?.moneda ?? null;
@@ -60,7 +61,8 @@ export class AdminPaymentsSectionComponent implements OnInit {
       conexion: this.servicio.estado(),
       configuracion: this.servicio.obtenerConfiguracion(),
       webhook: this.servicio.webhook(),
-      conciliaciones: this.servicio.conciliaciones()
+      conciliaciones: this.servicio.conciliaciones(),
+      configuracionReporte: this.servicio.configuracionReporteLiberacion().pipe(catchError(() => of(null)))
     })
       .pipe(finalize(() => this.cargando.set(false))).subscribe({
       next: respuesta => {
@@ -68,6 +70,7 @@ export class AdminPaymentsSectionComponent implements OnInit {
         this.configuracion.set(respuesta.configuracion);
         this.webhook.set(respuesta.webhook);
         this.conciliaciones.set(respuesta.conciliaciones);
+        this.configuracionReporte.set(respuesta.configuracionReporte);
         if (respuesta.conexion.estado === 'CONECTADO') { this.cargarTerminales(); this.cargarMetodos(); }
       },
       error: err => this.error.set(this.detalleError(err, 'No fue posible consultar el estado de pagos.'))

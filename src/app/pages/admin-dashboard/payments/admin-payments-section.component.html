@@ -90,6 +90,14 @@
         <article><span>Neto conciliado</span><strong>{{ monedaResumen() ? (netoInformado() | currency:monedaResumen()!:'symbol-narrow':'1.2-2':'es-MX') : '—' }}</strong><small>Confirmado por Reporte de Liberaciones</small></article>
         <article [class.has-pending]="pendientesConciliacion() > 0"><span>Por conciliar</span><strong>{{ pendientesConciliacion() }}</strong><small>{{ pendientesConciliacion() === 1 ? 'Cobro pendiente' : 'Cobros pendientes' }}</small></article>
       </div>
+      @if (configuracionReporte(); as reporte) {
+        <div class="settlement-report-status" [class.is-ready]="reporte.listaParaConciliar">
+          <i class="bi" [class.bi-check-circle-fill]="reporte.listaParaConciliar" [class.bi-exclamation-triangle]="!reporte.listaParaConciliar"></i>
+          <div><strong>{{ reporte.listaParaConciliar ? 'Reporte preparado para conciliación' : 'Configuración incompleta en Mercado Pago' }}</strong><small>{{ reporte.listaParaConciliar ? 'Prefijo ' + reporte.prefijo + ' · ' + (reporte.programado ? 'Generación automática activa' : 'Generación manual') : 'Faltan columnas: ' + reporte.columnasFaltantes.join(', ') }}</small></div>
+        </div>
+      } @else {
+        <div class="settlement-report-status"><i class="bi bi-info-circle"></i><div><strong>Configuración de reportes no disponible</strong><small>La cuenta de prueba o sus permisos todavía no permiten consultar el Reporte de Liberaciones.</small></div></div>
+      }
       @if (conciliaciones().length) {
         <div class="settlement-list">
           @for (item of conciliaciones(); track item.id) {

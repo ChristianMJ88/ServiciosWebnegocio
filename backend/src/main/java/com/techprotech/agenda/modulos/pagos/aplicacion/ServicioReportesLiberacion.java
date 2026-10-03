@@ -1,6 +1,7 @@
 package com.techprotech.agenda.modulos.pagos.aplicacion;
 
 import com.techprotech.agenda.modulos.pagos.api.dto.ReporteLiberacionResponse;
+import com.techprotech.agenda.modulos.pagos.api.dto.ConfiguracionReporteLiberacionResponse;
 import com.techprotech.agenda.modulos.pagos.infraestructura.entidad.ConciliacionPagoEntidad;
 import com.techprotech.agenda.modulos.pagos.infraestructura.entidad.ProveedorPagoEntidad;
 import com.techprotech.agenda.modulos.pagos.infraestructura.entidad.ReporteLiberacionPagoEntidad;
@@ -21,9 +22,12 @@ import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
 import java.time.*;
 import java.util.List;
+import java.util.Set;
 
 @Service
 public class ServicioReportesLiberacion {
+    private static final Set<String> COLUMNAS_CONCILIACION = Set.of("DATE", "SOURCE_ID", "EXTERNAL_REFERENCE",
+            "RECORD_TYPE", "DESCRIPTION", "NET_CREDIT_AMOUNT", "GROSS_AMOUNT", "MP_FEE_AMOUNT");
     private final ClienteReportesMercadoPago cliente;
     private final ReporteLiberacionPagoRepositorio reportes;
     private final ConciliacionPagoRepositorio conciliaciones;
@@ -37,7 +41,6 @@ public class ServicioReportesLiberacion {
     @Transactional
     public ReporteLiberacionResponse solicitar(Long empresaId, OffsetDateTime desde, OffsetDateTime hasta) {
         if (!desde.isBefore(hasta)) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "La fecha inicial debe ser anterior a la final");
-        if (Duration.between(desde, hasta).toDays() > 60) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "El reporte no puede abarcar más de 60 días");
         ProveedorPagoEntidad proveedor = proveedor();
         var tarea = cliente.crear(empresaId, desde, hasta);
         if (tarea.tareaId() == null) throw new IllegalStateException("Mercado Pago no devolvió el identificador de la tarea");
@@ -70,6 +73,14 @@ public class ServicioReportesLiberacion {
     @Transactional(readOnly=true)
     public List<ReporteLiberacionResponse> listar(Long empresaId) {
         return reportes.findTop50ByEmpresaIdOrderBySolicitadoEnDesc(empresaId).stream().map(this::respuesta).toList();
+    }
+
+    public ConfiguracionReporteLiberacionResponse consultarConfiguracion(Long empresaId) {
+        var config=cliente.consultarConfiguracion(empresaId);
+        List<String> faltantes=COLUMNAS_CONCILIACION.stream().filter(item->!config.columnas().contains(item)).sorted().toList();
+        return new ConfiguracionReporteLiberacionResponse(config.prefijo(),config.zonaHoraria(),config.programado(),
+                config.idioma(),config.columnas(),faltantes,faltantes.isEmpty(),config.frecuenciaTipo(),
+                config.frecuenciaHora(),config.frecuenciaValor());
     }
 
     private int importar(Long empresaId, byte[] contenido) throws Exception {

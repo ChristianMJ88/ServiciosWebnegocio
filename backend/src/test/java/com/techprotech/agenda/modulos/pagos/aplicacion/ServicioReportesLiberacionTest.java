@@ -14,6 +14,25 @@ import static org.mockito.Mockito.*;
 
 class ServicioReportesLiberacionTest {
     @Test
+    void informaLasColumnasFaltantesDeLaConfiguracionDelTenant() {
+        ClienteReportesMercadoPago cliente=mock(ClienteReportesMercadoPago.class);
+        when(cliente.consultarConfiguracion(7L)).thenReturn(new ClienteReportesMercadoPago.ConfiguracionReporte(
+                "release-report-7", "GMT-06", false, "es",
+                java.util.List.of("DATE", "SOURCE_ID", "GROSS_AMOUNT", "NET_CREDIT_AMOUNT"),
+                "monthly", 2, "1"));
+        ServicioReportesLiberacion servicio=new ServicioReportesLiberacion(cliente,
+                mock(ReporteLiberacionPagoRepositorio.class), mock(ConciliacionPagoRepositorio.class),
+                mock(ProveedorPagoRepositorio.class));
+
+        var respuesta=servicio.consultarConfiguracion(7L);
+
+        assertThat(respuesta.listaParaConciliar()).isFalse();
+        assertThat(respuesta.programado()).isFalse();
+        assertThat(respuesta.columnasFaltantes()).containsExactly(
+                "DESCRIPTION", "EXTERNAL_REFERENCE", "MP_FEE_AMOUNT", "RECORD_TYPE");
+    }
+
+    @Test
     void convierteEnDefinitivaLaConciliacionAlImportarElReporte() {
         ClienteReportesMercadoPago cliente=mock(ClienteReportesMercadoPago.class);
         ReporteLiberacionPagoRepositorio reportes=mock(ReporteLiberacionPagoRepositorio.class);
