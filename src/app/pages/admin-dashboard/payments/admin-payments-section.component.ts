@@ -1,9 +1,9 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 import { finalize, forkJoin } from 'rxjs';
-import { ConfiguracionCheckout, ConexionProveedorPago, MetodoPagoCheckout, PaymentsAdminService, TerminalPoint, WebhookMercadoPago } from './payments-admin.service';
+import { ConciliacionPago, ConfiguracionCheckout, ConexionProveedorPago, MetodoPagoCheckout, PaymentsAdminService, TerminalPoint, WebhookMercadoPago } from './payments-admin.service';
 import { AdminService, SucursalAdmin } from '../../../core/admin/admin.service';
 
 @Component({
@@ -30,6 +30,17 @@ export class AdminPaymentsSectionComponent implements OnInit {
   readonly metodosPago = signal<MetodoPagoCheckout[]>([]);
   readonly cargandoMetodos = signal(false);
   readonly webhook = signal<WebhookMercadoPago | null>(null);
+  readonly conciliaciones = signal<ConciliacionPago[]>([]);
+  readonly monedaResumen = computed(() => {
+    const monedas = new Set(this.conciliaciones().map(item => item.moneda));
+    if (monedas.size === 0) return this.configuracion()?.moneda ?? null;
+    return monedas.size === 1 ? [...monedas][0] : null;
+  });
+  readonly brutoConciliado = computed(() => this.monedaResumen() == null ? null
+    : this.conciliaciones().reduce((total, item) => total + item.importeBruto, 0));
+  readonly netoInformado = computed(() => this.monedaResumen() == null ? null
+    : this.conciliaciones().reduce((total, item) => total + (item.importeNeto ?? 0), 0));
+  readonly pendientesConciliacion = computed(() => this.conciliaciones().filter(item => !item.liquidacionDefinitiva && item.estado !== 'REEMBOLSADA').length);
   terminalSucursal: Record<string, number | null> = {};
   terminalNombre: Record<string, string> = {};
 
@@ -44,12 +55,18 @@ export class AdminPaymentsSectionComponent implements OnInit {
 
   cargar(): void {
     this.cargando.set(true);
-    forkJoin({ conexion: this.servicio.estado(), configuracion: this.servicio.obtenerConfiguracion(), webhook: this.servicio.webhook() })
+    forkJoin({
+      conexion: this.servicio.estado(),
+      configuracion: this.servicio.obtenerConfiguracion(),
+      webhook: this.servicio.webhook(),
+      conciliaciones: this.servicio.conciliaciones()
+    })
       .pipe(finalize(() => this.cargando.set(false))).subscribe({
       next: respuesta => {
         this.conexion.set(respuesta.conexion);
         this.configuracion.set(respuesta.configuracion);
         this.webhook.set(respuesta.webhook);
+        this.conciliaciones.set(respuesta.conciliaciones);
         if (respuesta.conexion.estado === 'CONECTADO') { this.cargarTerminales(); this.cargarMetodos(); }
       },
       error: err => this.error.set(this.detalleError(err, 'No fue posible consultar el estado de pagos.'))

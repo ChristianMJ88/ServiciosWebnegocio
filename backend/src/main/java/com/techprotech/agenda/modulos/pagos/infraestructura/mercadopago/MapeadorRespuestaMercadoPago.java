@@ -1,6 +1,7 @@
 package com.techprotech.agenda.modulos.pagos.infraestructura.mercadopago;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.techprotech.agenda.modulos.pagos.dominio.DesgloseLiquidacionPago;
 import com.techprotech.agenda.modulos.pagos.dominio.EstadoPago;
 import com.techprotech.agenda.modulos.pagos.dominio.ProveedorPago;
 import com.techprotech.agenda.modulos.pagos.dominio.ResultadoCobro;
@@ -11,15 +12,40 @@ import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.Locale;
+import java.util.Set;
 
 @Component
 class MapeadorRespuestaMercadoPago {
     ResultadoCobro cobro(JsonNode respuesta) {
         String estado = texto(respuesta, "status");
         String detalle = texto(respuesta, "status_detail");
-        return new ResultadoCobro(ProveedorPago.MERCADO_PAGO, texto(respuesta, "id"), referenciaPago(respuesta), estado(estado, detalle),
+        EstadoPago estadoPago = estado(estado, detalle);
+        return new ResultadoCobro(ProveedorPago.MERCADO_PAGO, texto(respuesta, "id"), referenciaPago(respuesta), estadoPago,
                 accion(respuesta), detalle == null ? estado : detalle, detalle,
-                fecha(respuesta.path("last_updated_date")));
+                fecha(respuesta.path("last_updated_date")), liquidacion(respuesta, estadoPago));
+    }
+
+    DesgloseLiquidacionPago liquidacion(JsonNode respuesta, EstadoPago estado) {
+        JsonNode pago = respuesta.path("transactions").path("payments").path(0);
+        BigDecimal bruto = primerDecimal(respuesta.path("total_amount"), pago.path("amount"), pago.path("transaction_amount"));
+        BigDecimal comisionProveedor = sumarComisiones(pago.path("fee_details"),
+                Set.of("mercadopago_fee", "payment_fee", "financing_fee"));
+        BigDecimal comisionPlataforma = primerDecimal(pago.path("marketplace_fee"), respuesta.path("marketplace_fee"));
+        BigDecimal comisionPlataformaDetalle = sumarComisiones(pago.path("fee_details"),
+                Set.of("marketplace_fee", "application_fee"));
+        if (comisionPlataforma == null) comisionPlataforma = comisionPlataformaDetalle;
+        BigDecimal neto = primerDecimal(pago.path("transaction_details").path("net_received_amount"),
+                pago.path("net_received_amount"), respuesta.path("settlement_net_amount"));
+        BigDecimal reembolsado = sumarImportes(respuesta.path("transactions").path("refunds"));
+        String moneda = valorO(texto(respuesta, "currency"), texto(respuesta, "currency_id"));
+        if (moneda == null) moneda = valorO(texto(pago, "currency"), texto(pago, "currency_id"));
+        boolean hayDetalle = bruto != null || comisionProveedor != null || comisionPlataforma != null
+                || neto != null || reembolsado != null;
+        if (!hayDetalle) return null;
+        boolean definitiva = neto != null && (estado == EstadoPago.APROBADO || estado == EstadoPago.REEMBOLSADO);
+        return new DesgloseLiquidacionPago(moneda, bruto, comisionProveedor, null, comisionPlataforma,
+                null, null, reembolsado, neto, definitiva,
+                definitiva ? fecha(respuesta.path("last_updated_date")) : null);
     }
 
     ResultadoReembolso reembolso(JsonNode respuesta, BigDecimal importeSolicitado) {
@@ -78,6 +104,46 @@ class MapeadorRespuestaMercadoPago {
             return predeterminado;
         }
     }
+
+    private BigDecimal primerDecimal(JsonNode... nodos) {
+        for (JsonNode nodo : nodos) {
+            BigDecimal valor = decimal(nodo, null);
+            if (valor != null) return valor;
+        }
+        return null;
+    }
+
+    private BigDecimal sumarComisiones(JsonNode detalles, Set<String> tipos) {
+        if (!detalles.isArray()) return null;
+        BigDecimal total = BigDecimal.ZERO;
+        boolean encontrado = false;
+        for (JsonNode detalle : detalles) {
+            String tipo = normalizar(texto(detalle, "type"));
+            if (!tipos.contains(tipo)) continue;
+            BigDecimal importe = decimal(detalle.path("amount"), null);
+            if (importe != null) {
+                total = total.add(importe.abs());
+                encontrado = true;
+            }
+        }
+        return encontrado ? total : null;
+    }
+
+    private BigDecimal sumarImportes(JsonNode items) {
+        if (!items.isArray() || items.isEmpty()) return null;
+        BigDecimal total = BigDecimal.ZERO;
+        boolean encontrado = false;
+        for (JsonNode item : items) {
+            BigDecimal importe = decimal(item.path("amount"), null);
+            if (importe != null) {
+                total = total.add(importe.abs());
+                encontrado = true;
+            }
+        }
+        return encontrado ? total : null;
+    }
+
+    private String valorO(String primero, String segundo) { return primero == null ? segundo : primero; }
 
     private boolean contiene(String valor, String... fragmentos) {
         for (String fragmento : fragmentos) if (valor.contains(fragmento)) return true;

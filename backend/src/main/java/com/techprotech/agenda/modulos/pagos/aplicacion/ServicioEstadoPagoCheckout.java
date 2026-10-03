@@ -15,14 +15,17 @@ public class ServicioEstadoPagoCheckout {
     private final CheckoutOrdenRepositorio ordenes;
     private final ServicioInventarioCheckout inventario;
     private final ServicioConfirmacionCitasCheckout confirmacionCitas;
+    private final ServicioConciliacionPagos conciliacion;
 
     public ServicioEstadoPagoCheckout(IntentoPagoCheckoutRepositorio intentos, CheckoutOrdenRepositorio ordenes,
                                       ServicioInventarioCheckout inventario,
-                                      ServicioConfirmacionCitasCheckout confirmacionCitas) {
+                                      ServicioConfirmacionCitasCheckout confirmacionCitas,
+                                      ServicioConciliacionPagos conciliacion) {
         this.intentos = intentos;
         this.ordenes = ordenes;
         this.inventario = inventario;
         this.confirmacionCitas = confirmacionCitas;
+        this.conciliacion = conciliacion;
     }
 
     @Transactional
@@ -48,6 +51,7 @@ public class ServicioEstadoPagoCheckout {
                 .orElseThrow(() -> new IllegalStateException("Orden de checkout no encontrada"));
         orden.setEstado(estadoOrden(resultado.estado()));
         ordenes.save(orden);
+        conciliacion.registrarCheckout(intento, resultado);
         return new EstadoAplicado(orden.getPublicId(), orden.getEstado(), intento);
     }
 

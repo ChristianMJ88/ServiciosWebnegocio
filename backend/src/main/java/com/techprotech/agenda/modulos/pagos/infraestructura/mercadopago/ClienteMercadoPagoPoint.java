@@ -2,6 +2,8 @@ package com.techprotech.agenda.modulos.pagos.infraestructura.mercadopago;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.techprotech.agenda.modulos.pagos.aplicacion.ServicioOAuthMercadoPago;
+import com.techprotech.agenda.modulos.pagos.dominio.DesgloseLiquidacionPago;
+import com.techprotech.agenda.modulos.pagos.dominio.EstadoPago;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
@@ -21,10 +23,13 @@ public class ClienteMercadoPagoPoint {
 
     private final ServicioOAuthMercadoPago oauth;
     private final RestClient restClient;
+    private final MapeadorRespuestaMercadoPago mapeador;
 
-    public ClienteMercadoPagoPoint(ServicioOAuthMercadoPago oauth, RestClient.Builder builder) {
+    public ClienteMercadoPagoPoint(ServicioOAuthMercadoPago oauth, RestClient.Builder builder,
+                                   MapeadorRespuestaMercadoPago mapeador) {
         this.oauth = oauth;
         this.restClient = builder.build();
+        this.mapeador = mapeador;
     }
 
     public List<TerminalRemota> listarTerminales(Long empresaId) {
@@ -76,8 +81,10 @@ public class ClienteMercadoPagoPoint {
 
     private OrdenRemota mapear(JsonNode respuesta) {
         JsonNode pago = respuesta.path("transactions").path("payments").path(0);
+        EstadoPago estado = mapeador.estado(texto(respuesta, "status"), texto(respuesta, "status_detail"));
+        DesgloseLiquidacionPago liquidacion = mapeador.liquidacion(respuesta, estado);
         return new OrdenRemota(requerido(respuesta, "id"), texto(respuesta, "status"), texto(respuesta, "status_detail"),
-                texto(pago, "id"), texto(pago, "status"), texto(pago, "status_detail"));
+                texto(pago, "id"), texto(pago, "status"), texto(pago, "status_detail"), liquidacion);
     }
 
     private JsonNode get(String url, Long empresaId) {
@@ -116,5 +123,11 @@ public class ClienteMercadoPagoPoint {
     private String dinero(BigDecimal valor) { return valor.setScale(2, RoundingMode.HALF_UP).toPlainString(); }
 
     public record TerminalRemota(String terminalId, String posId, String storeId, String externalPosId, String modoOperacion) {}
-    public record OrdenRemota(String ordenId, String estado, String detalleEstado, String pagoId, String estadoPago, String detallePago) {}
+    public record OrdenRemota(String ordenId, String estado, String detalleEstado, String pagoId, String estadoPago,
+                              String detallePago, DesgloseLiquidacionPago liquidacion) {
+        public OrdenRemota(String ordenId, String estado, String detalleEstado, String pagoId, String estadoPago,
+                           String detallePago) {
+            this(ordenId, estado, detalleEstado, pagoId, estadoPago, detallePago, null);
+        }
+    }
 }

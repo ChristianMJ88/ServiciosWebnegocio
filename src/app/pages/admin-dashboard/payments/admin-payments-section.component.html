@@ -76,6 +76,39 @@
       }
     }
 
+    <section class="payment-settlements">
+      <header>
+        <div>
+          <span class="payments-panel__eyebrow">Control financiero</span>
+          <h4>Conciliación de cobros</h4>
+          <p>Importes reportados por Mercado Pago para Checkout y Point. Los costos pendientes se completan cuando el proveedor publica la liquidación.</p>
+        </div>
+        <button type="button" class="payment-button payment-button--light" [disabled]="cargando()" (click)="cargar()"><i class="bi bi-arrow-clockwise"></i>Actualizar</button>
+      </header>
+      <div class="settlement-summary">
+        <article><span>Venta bruta</span><strong>{{ monedaResumen() ? (brutoConciliado() | currency:monedaResumen()!:'symbol-narrow':'1.2-2':'es-MX') : '—' }}</strong><small>{{ monedaResumen() ? 'Últimos ' + conciliaciones().length + ' cobros' : 'Totales separados por moneda' }}</small></article>
+        <article><span>Neto informado</span><strong>{{ monedaResumen() ? (netoInformado() | currency:monedaResumen()!:'symbol-narrow':'1.2-2':'es-MX') : '—' }}</strong><small>Confirmado por el proveedor</small></article>
+        <article [class.has-pending]="pendientesConciliacion() > 0"><span>Por conciliar</span><strong>{{ pendientesConciliacion() }}</strong><small>{{ pendientesConciliacion() === 1 ? 'Cobro pendiente' : 'Cobros pendientes' }}</small></article>
+      </div>
+      @if (conciliaciones().length) {
+        <div class="settlement-list">
+          @for (item of conciliaciones(); track item.id) {
+            <article class="settlement-row">
+              <div class="settlement-row__identity"><span class="settlement-channel"><i class="bi" [class.bi-globe2]="item.canal === 'CHECKOUT'" [class.bi-credit-card]="item.canal === 'POINT'"></i>{{ item.canal === 'POINT' ? 'Terminal Point' : 'Sitio público' }}</span><strong>{{ item.importeBruto | currency:item.moneda:'symbol-narrow':'1.2-2':'es-MX' }}</strong><small>{{ item.referenciaPago || item.referenciaOrden }}</small></div>
+              <dl>
+                <div><dt>Comisión proveedor</dt><dd>{{ item.comisionProveedorTotal == null ? 'Pendiente' : (item.comisionProveedorTotal | currency:item.moneda:'symbol-narrow':'1.2-2':'es-MX') }}</dd></div>
+                <div><dt>Comisión Fluora</dt><dd>{{ item.comisionPlataforma == null ? 'No aplicada' : (item.comisionPlataforma | currency:item.moneda:'symbol-narrow':'1.2-2':'es-MX') }}</dd></div>
+                <div><dt>Neto</dt><dd>{{ item.importeNeto == null ? 'Pendiente' : (item.importeNeto | currency:item.moneda:'symbol-narrow':'1.2-2':'es-MX') }}</dd></div>
+              </dl>
+              <div class="settlement-row__status" [class.is-ready]="item.liquidacionDefinitiva" [class.is-refunded]="item.estado === 'REEMBOLSADA'"><span>{{ item.estado === 'REEMBOLSADA' ? 'Reembolsada' : item.liquidacionDefinitiva ? 'Conciliada' : 'Pendiente' }}</span><small>{{ item.actualizadoEn | date:'dd/MM/yyyy HH:mm':'':'es-MX' }}</small></div>
+            </article>
+          }
+        </div>
+      } @else {
+        <div class="point-config__empty">Los cobros aprobados de Checkout y Point aparecerán aquí.</div>
+      }
+    </section>
+
     @if (configuracion(); as checkout) {
       <section class="checkout-config" [class.is-disabled]="conexion()?.estado !== 'CONECTADO'">
         <header class="checkout-config__heading">

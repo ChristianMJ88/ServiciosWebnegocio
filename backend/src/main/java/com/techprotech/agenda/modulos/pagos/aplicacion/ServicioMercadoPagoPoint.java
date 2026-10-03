@@ -32,14 +32,16 @@ public class ServicioMercadoPagoPoint {
     private final SucursalRepositorio sucursales;
     private final VentaRepositorio ventasRepositorio;
     private final ServicioVentasCaja ventas;
+    private final ServicioConciliacionPagos conciliacion;
 
     public ServicioMercadoPagoPoint(ClienteMercadoPagoPoint cliente, ServicioOAuthMercadoPago oauth,
                                     PropiedadesMercadoPago propiedades,
                                     TerminalMercadoPagoRepositorio terminales, OrdenPointCajaRepositorio ordenes,
                                     SucursalRepositorio sucursales, VentaRepositorio ventasRepositorio,
-                                    ServicioVentasCaja ventas) {
+                                    ServicioVentasCaja ventas, ServicioConciliacionPagos conciliacion) {
         this.cliente = cliente; this.oauth = oauth; this.propiedades = propiedades; this.terminales = terminales; this.ordenes = ordenes;
         this.sucursales = sucursales; this.ventasRepositorio = ventasRepositorio; this.ventas = ventas;
+        this.conciliacion = conciliacion;
     }
 
     @Transactional(readOnly = true)
@@ -133,14 +135,19 @@ public class ServicioMercadoPagoPoint {
         orden.setProveedorOrdenId(remota.ordenId()); orden.setProveedorPagoId(remota.pagoId()); orden.setIdempotencia(idempotencia.trim());
         orden.setImporte(venta.total()); orden.setMoneda(venta.moneda()); orden.setCreadoPorUsuarioId(usuarioId);
         aplicarEstado(orden, remota);
-        return mapear(ordenes.save(orden));
+        orden = ordenes.save(orden);
+        conciliacion.registrarPoint(orden, remota);
+        return mapear(orden);
     }
 
     @Transactional
     public OrdenPointResponse consultar(Long empresaId, String publicId) {
         OrdenPointCajaEntidad orden = buscar(empresaId, publicId);
-        aplicarEstado(orden, cliente.consultar(empresaId, orden.getProveedorOrdenId()));
-        return mapear(ordenes.save(orden));
+        ClienteMercadoPagoPoint.OrdenRemota remota = cliente.consultar(empresaId, orden.getProveedorOrdenId());
+        aplicarEstado(orden, remota);
+        orden = ordenes.save(orden);
+        conciliacion.registrarPoint(orden, remota);
+        return mapear(orden);
     }
 
     @Transactional
@@ -148,8 +155,11 @@ public class ServicioMercadoPagoPoint {
         validarIdempotencia(idempotencia);
         OrdenPointCajaEntidad orden = buscar(empresaId, publicId);
         if (Set.of("APROBADO", "REEMBOLSADO").contains(orden.getEstado())) throw error(HttpStatus.CONFLICT, "La orden ya fue cobrada");
-        aplicarEstado(orden, cliente.cancelar(empresaId, orden.getProveedorOrdenId(), idempotencia));
-        return mapear(ordenes.save(orden));
+        ClienteMercadoPagoPoint.OrdenRemota remota = cliente.cancelar(empresaId, orden.getProveedorOrdenId(), idempotencia);
+        aplicarEstado(orden, remota);
+        orden = ordenes.save(orden);
+        conciliacion.registrarPoint(orden, remota);
+        return mapear(orden);
     }
 
     @Transactional
@@ -157,8 +167,11 @@ public class ServicioMercadoPagoPoint {
         validarIdempotencia(idempotencia);
         OrdenPointCajaEntidad orden = buscar(empresaId, publicId);
         if (!"APROBADO".equals(orden.getEstado())) throw error(HttpStatus.CONFLICT, "Sólo se puede reembolsar un cobro Point aprobado");
-        aplicarEstado(orden, cliente.reembolsar(empresaId, orden.getProveedorOrdenId(), idempotencia));
-        return mapear(ordenes.save(orden));
+        ClienteMercadoPagoPoint.OrdenRemota remota = cliente.reembolsar(empresaId, orden.getProveedorOrdenId(), idempotencia);
+        aplicarEstado(orden, remota);
+        orden = ordenes.save(orden);
+        conciliacion.registrarPoint(orden, remota);
+        return mapear(orden);
     }
 
     @Transactional
@@ -173,16 +186,21 @@ public class ServicioMercadoPagoPoint {
             throw error(HttpStatus.CONFLICT, "La orden Point ya terminó");
         }
         cliente.simularAprobacion(empresaId, orden.getProveedorOrdenId());
-        aplicarEstado(orden, cliente.consultar(empresaId, orden.getProveedorOrdenId()));
-        return mapear(ordenes.save(orden));
+        ClienteMercadoPagoPoint.OrdenRemota remota = cliente.consultar(empresaId, orden.getProveedorOrdenId());
+        aplicarEstado(orden, remota);
+        orden = ordenes.save(orden);
+        conciliacion.registrarPoint(orden, remota);
+        return mapear(orden);
     }
 
     @Transactional
     public boolean procesarWebhook(String proveedorOrdenId) {
         OrdenPointCajaEntidad orden = ordenes.findByProveedorOrdenId(proveedorOrdenId).orElse(null);
         if (orden == null) return false;
-        aplicarEstado(orden, cliente.consultar(orden.getEmpresaId(), proveedorOrdenId));
-        ordenes.save(orden);
+        ClienteMercadoPagoPoint.OrdenRemota remota = cliente.consultar(orden.getEmpresaId(), proveedorOrdenId);
+        aplicarEstado(orden, remota);
+        orden = ordenes.save(orden);
+        conciliacion.registrarPoint(orden, remota);
         return true;
     }
 

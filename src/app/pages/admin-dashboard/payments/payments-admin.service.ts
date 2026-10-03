@@ -62,6 +62,27 @@ export interface MetodoPagoCheckout {
   vigenciaDias: number;
 }
 
+export interface ConciliacionPago {
+  id: number;
+  canal: 'CHECKOUT' | 'POINT' | string;
+  estado: 'PENDIENTE_CONCILIACION' | 'CONCILIADA' | 'REEMBOLSADA' | string;
+  proveedor: string;
+  referenciaOrden: string;
+  referenciaPago: string | null;
+  moneda: string;
+  importeBruto: number;
+  comisionProveedorTotal: number | null;
+  impuestoComisionProveedor: number | null;
+  comisionPlataforma: number | null;
+  impuestoComisionPlataforma: number | null;
+  retenciones: number | null;
+  importeReembolsado: number;
+  importeNeto: number | null;
+  liquidacionDefinitiva: boolean;
+  liquidadoEn: string | null;
+  actualizadoEn: string;
+}
+
 @Injectable({ providedIn: 'root' })
 export class PaymentsAdminService {
   private readonly http = inject(HttpClient);
@@ -69,6 +90,7 @@ export class PaymentsAdminService {
   private readonly configuracionUrl = `${environment.apiBaseUrl}/admin/pagos/configuracion`;
   private readonly pointUrl = `${environment.apiBaseUrl}/admin/pagos/point/terminales`;
   private readonly metodosUrl = `${environment.apiBaseUrl}/admin/pagos/metodos`;
+  private readonly conciliacionesUrl = `${environment.apiBaseUrl}/admin/pagos/conciliaciones`;
 
   estado(): Observable<ConexionProveedorPago> {
     return this.http.get<ConexionProveedorPago>(`${this.baseUrl}/estado`);
@@ -113,5 +135,9 @@ export class PaymentsAdminService {
 
   guardarMetodoPago(payload: { metodoId: string; activo: boolean; soloProductos: boolean; vigenciaDias: number }): Observable<MetodoPagoCheckout> {
     return this.http.put<MetodoPagoCheckout>(this.metodosUrl, payload);
+  }
+
+  conciliaciones(): Observable<ConciliacionPago[]> {
+    return this.http.get<ConciliacionPago[]>(this.conciliacionesUrl);
   }
 }

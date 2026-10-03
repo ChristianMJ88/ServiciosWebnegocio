@@ -37,7 +37,7 @@ class ServicioMercadoPagoPointTest {
         VentaRepositorio ventasRepositorio = mock(VentaRepositorio.class);
         ServicioVentasCaja ventas = mock(ServicioVentasCaja.class);
         ServicioMercadoPagoPoint servicio = new ServicioMercadoPagoPoint(cliente, oauth, propiedades, terminales, ordenes,
-                sucursales, ventasRepositorio, ventas);
+                sucursales, ventasRepositorio, ventas, mock(ServicioConciliacionPagos.class));
         when(oauth.esAmbientePrueba()).thenReturn(true);
         when(cliente.listarTerminales(7L)).thenReturn(List.of());
         when(terminales.findByEmpresaIdOrderByNombreAsc(7L)).thenReturn(List.of());
@@ -63,7 +63,7 @@ class ServicioMercadoPagoPointTest {
         VentaRepositorio ventasRepositorio = mock(VentaRepositorio.class);
         ServicioVentasCaja ventas = mock(ServicioVentasCaja.class);
         ServicioMercadoPagoPoint servicio = new ServicioMercadoPagoPoint(cliente, oauth, propiedades, terminales, ordenes,
-                sucursales, ventasRepositorio, ventas);
+                sucursales, ventasRepositorio, ventas, mock(ServicioConciliacionPagos.class));
 
         TerminalMercadoPagoEntidad terminal = new TerminalMercadoPagoEntidad();
         terminal.setId(5L); terminal.setEmpresaId(7L); terminal.setSucursalId(3L); terminal.setTerminalId("POINT__123");
@@ -99,7 +99,7 @@ class ServicioMercadoPagoPointTest {
         VentaRepositorio ventasRepositorio = mock(VentaRepositorio.class);
         ServicioVentasCaja ventas = mock(ServicioVentasCaja.class);
         ServicioMercadoPagoPoint servicio = new ServicioMercadoPagoPoint(cliente, oauth, propiedades, terminales, ordenes,
-                sucursales, ventasRepositorio, ventas);
+                sucursales, ventasRepositorio, ventas, mock(ServicioConciliacionPagos.class));
         when(oauth.esAmbientePrueba()).thenReturn(true);
 
         TerminalMercadoPagoEntidad terminal = new TerminalMercadoPagoEntidad();
@@ -131,7 +131,8 @@ class ServicioMercadoPagoPointTest {
         TerminalMercadoPagoRepositorio terminales = mock(TerminalMercadoPagoRepositorio.class);
         OrdenPointCajaRepositorio ordenes = mock(OrdenPointCajaRepositorio.class);
         ServicioMercadoPagoPoint servicio = new ServicioMercadoPagoPoint(cliente, oauth, propiedades("POINT_VIRTUAL_CONFIGURADA"), terminales,
-                ordenes, mock(SucursalRepositorio.class), mock(VentaRepositorio.class), mock(ServicioVentasCaja.class));
+                ordenes, mock(SucursalRepositorio.class), mock(VentaRepositorio.class), mock(ServicioVentasCaja.class),
+                mock(ServicioConciliacionPagos.class));
         when(oauth.esAmbientePrueba()).thenReturn(true);
         OrdenPointCajaEntidad orden = new OrdenPointCajaEntidad();
         orden.setTerminalId(5L); orden.setEstado("CREADO");
