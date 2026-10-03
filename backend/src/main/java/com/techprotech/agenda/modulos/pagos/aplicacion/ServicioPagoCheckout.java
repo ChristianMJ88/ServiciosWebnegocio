@@ -22,8 +22,6 @@ import java.util.Map;
 
 @Service
 public class ServicioPagoCheckout {
-    private static final BigDecimal SIN_COMISION = new BigDecimal("0.00");
-
     private final ServicioConfiguracionCheckout configuracionCheckout;
     private final EmpresaSitioConfigRepositorio sitios;
     private final EmpresaCheckoutConfigRepositorio configuraciones;
@@ -35,6 +33,7 @@ public class ServicioPagoCheckout {
     private final ServicioInventarioCheckout inventario;
     private final ServicioEstadoPagoCheckout estados;
     private final ServicioMetodosPagoCheckout metodosPago;
+    private final ServicioComisionPlataforma comisiones;
 
     public ServicioPagoCheckout(ServicioConfiguracionCheckout configuracionCheckout,
                                 EmpresaSitioConfigRepositorio sitios,
@@ -46,7 +45,8 @@ public class ServicioPagoCheckout {
                                 List<ProveedorPagosPort> adaptadores,
                                 ServicioInventarioCheckout inventario,
                                 ServicioEstadoPagoCheckout estados,
-                                ServicioMetodosPagoCheckout metodosPago) {
+                                ServicioMetodosPagoCheckout metodosPago,
+                                ServicioComisionPlataforma comisiones) {
         this.configuracionCheckout = configuracionCheckout;
         this.sitios = sitios;
         this.configuraciones = configuraciones;
@@ -58,6 +58,7 @@ public class ServicioPagoCheckout {
         this.inventario = inventario;
         this.estados = estados;
         this.metodosPago = metodosPago;
+        this.comisiones = comisiones;
     }
 
     public PagoCheckoutResponse pagarConTarjeta(String slug, String ordenPublicId, String idempotencia,
@@ -102,7 +103,8 @@ public class ServicioPagoCheckout {
             agregarNombrePagador(metadatos, orden);
             resultado = adaptador.crearCobro(new SolicitudCobro(
                     sitio.getEmpresaId(), orden.getPublicId(), clave, orden.getTotal(), orden.getMoneda(),
-                    SIN_COMISION, request.tokenMedioPago().trim(), orden.getCorreoCliente(), metadatos));
+                    comisiones.calcular(sitio.getEmpresaId(), proveedor.getId(), orden.getTotal(), orden.getMoneda()),
+                    request.tokenMedioPago().trim(), orden.getCorreoCliente(), metadatos));
         } catch (IllegalArgumentException ex) {
             registrarError(intento, "SOLICITUD_INVALIDA", ex.getMessage());
             inventario.liberar(orden.getEmpresaId(), orden.getId());
@@ -168,7 +170,8 @@ public class ServicioPagoCheckout {
             metadatos.put("description", "Orden " + orden.getPublicId());
             agregarNombrePagador(metadatos, orden);
             resultado = adaptador.crearCobro(new SolicitudCobro(sitio.getEmpresaId(), orden.getPublicId(), clave,
-                    orden.getTotal(), orden.getMoneda(), SIN_COMISION, null,
+                    orden.getTotal(), orden.getMoneda(),
+                    comisiones.calcular(sitio.getEmpresaId(), proveedor.getId(), orden.getTotal(), orden.getMoneda()), null,
                     request.correoPagador().trim().toLowerCase(Locale.ROOT), metadatos));
         } catch (IllegalArgumentException ex) {
             registrarError(intento, "SOLICITUD_INVALIDA", ex.getMessage());

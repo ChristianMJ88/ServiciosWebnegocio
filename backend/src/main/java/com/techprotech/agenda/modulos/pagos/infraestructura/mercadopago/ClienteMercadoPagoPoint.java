@@ -43,7 +43,7 @@ public class ClienteMercadoPagoPoint {
     }
 
     public OrdenRemota crearOrden(Long empresaId, String idempotencia, String terminalId, String referencia,
-                                   BigDecimal importe, String descripcion) {
+                                   BigDecimal importe, BigDecimal comisionPlataforma, String descripcion) {
         Map<String, Object> point = new LinkedHashMap<>();
         point.put("terminal_id", terminalId);
         point.put("print_on_terminal", "no_ticket");
@@ -52,6 +52,9 @@ public class ClienteMercadoPagoPoint {
         cuerpo.put("external_reference", referencia);
         cuerpo.put("expiration_time", "PT16M");
         cuerpo.put("transactions", Map.of("payments", List.of(Map.of("amount", dinero(importe)))));
+        if (comisionPlataforma != null && comisionPlataforma.signum() > 0) {
+            cuerpo.put("marketplace_fee", dinero(comisionPlataforma));
+        }
         cuerpo.put("config", Map.of("point", point));
         cuerpo.put("description", descripcion);
         return mapear(post(ORDERS, empresaId, idempotencia, cuerpo));

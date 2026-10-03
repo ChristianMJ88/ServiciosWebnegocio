@@ -5,6 +5,7 @@ import com.techprotech.agenda.modulos.caja.aplicacion.ServicioVentasCaja;
 import com.techprotech.agenda.modulos.caja.infraestructura.entidad.VentaEntidad;
 import com.techprotech.agenda.modulos.caja.infraestructura.repositorio.VentaRepositorio;
 import com.techprotech.agenda.modulos.pagos.api.dto.*;
+import com.techprotech.agenda.modulos.pagos.dominio.ProveedorPago;
 import com.techprotech.agenda.modulos.pagos.infraestructura.entidad.OrdenPointCajaEntidad;
 import com.techprotech.agenda.modulos.pagos.infraestructura.entidad.TerminalMercadoPagoEntidad;
 import com.techprotech.agenda.modulos.pagos.infraestructura.mercadopago.ClienteMercadoPagoPoint;
@@ -33,15 +34,18 @@ public class ServicioMercadoPagoPoint {
     private final VentaRepositorio ventasRepositorio;
     private final ServicioVentasCaja ventas;
     private final ServicioConciliacionPagos conciliacion;
+    private final ServicioComisionPlataforma comisiones;
 
     public ServicioMercadoPagoPoint(ClienteMercadoPagoPoint cliente, ServicioOAuthMercadoPago oauth,
                                     PropiedadesMercadoPago propiedades,
                                     TerminalMercadoPagoRepositorio terminales, OrdenPointCajaRepositorio ordenes,
                                     SucursalRepositorio sucursales, VentaRepositorio ventasRepositorio,
-                                    ServicioVentasCaja ventas, ServicioConciliacionPagos conciliacion) {
+                                    ServicioVentasCaja ventas, ServicioConciliacionPagos conciliacion,
+                                    ServicioComisionPlataforma comisiones) {
         this.cliente = cliente; this.oauth = oauth; this.propiedades = propiedades; this.terminales = terminales; this.ordenes = ordenes;
         this.sucursales = sucursales; this.ventasRepositorio = ventasRepositorio; this.ventas = ventas;
         this.conciliacion = conciliacion;
+        this.comisiones = comisiones;
     }
 
     @Transactional(readOnly = true)
@@ -123,7 +127,9 @@ public class ServicioMercadoPagoPoint {
         ClienteMercadoPagoPoint.OrdenRemota remota;
         try {
             remota = cliente.crearOrden(empresaId, idempotencia.trim(), terminal.getTerminalId(),
-                    referencia(publicId), venta.total(), "Venta " + venta.folio());
+                    referencia(publicId), venta.total(),
+                    comisiones.calcular(empresaId, ProveedorPago.MERCADO_PAGO, venta.total(), venta.moneda()),
+                    "Venta " + venta.folio());
         } catch (IllegalStateException ex) {
             if (ex.getMessage() != null && ex.getMessage().contains("HTTP 409")) {
                 throw error(HttpStatus.CONFLICT, "La terminal ya tiene un cobro pendiente. Retómalo o cancélalo desde Cobros Point antes de enviar otra cuenta");

@@ -65,7 +65,14 @@ class ServicioPagoCheckoutTest {
         when(intentos.save(any())).thenAnswer(inv -> { IntentoPagoCheckoutEntidad item = inv.getArgument(0); item.setId(55L); return item; });
 
         servicio = new ServicioPagoCheckout(configuracion, sitios, checkoutConfigs, proveedores,
-                ordenes, detalles, intentos, List.of(mercadoPago), inventario, estados, metodosPago);
+                ordenes, detalles, intentos, List.of(mercadoPago), inventario, estados, metodosPago,
+                comisionesSinCargo());
+    }
+
+    private ServicioComisionPlataforma comisionesSinCargo() {
+        ServicioComisionPlataforma servicio = mock(ServicioComisionPlataforma.class);
+        when(servicio.calcular(anyLong(), anyLong(), any(), anyString())).thenReturn(BigDecimal.ZERO);
+        return servicio;
     }
 
     @Test
