@@ -30,7 +30,7 @@ class ServicioReportesLiberacionTest {
         var respuesta=servicio.guardarConfiguracion(7L,request,false);
 
         assertThat(respuesta.listaParaConciliar()).isTrue();
-        assertThat(respuesta.columnas()).contains("CUSTOM_COLUMN", "SOURCE_ID", "MP_FEE_AMOUNT");
+        assertThat(respuesta.columnas()).contains("CUSTOM_COLUMN", "SOURCE_ID", "MP_FEE_AMOUNT", "TAXES_AMOUNT");
     }
 
     @Test
@@ -63,7 +63,7 @@ class ServicioReportesLiberacionTest {
         assertThat(respuesta.listaParaConciliar()).isFalse();
         assertThat(respuesta.programado()).isFalse();
         assertThat(respuesta.columnasFaltantes()).containsExactly(
-                "DESCRIPTION", "EXTERNAL_REFERENCE", "MP_FEE_AMOUNT", "RECORD_TYPE");
+                "DESCRIPTION", "EXTERNAL_REFERENCE", "MP_FEE_AMOUNT", "RECORD_TYPE", "TAXES_AMOUNT");
     }
 
     @Test
@@ -77,8 +77,8 @@ class ServicioReportesLiberacionTest {
         when(reportes.findByIdAndEmpresaId(3L,7L)).thenReturn(Optional.of(reporte));
         when(reportes.save(any())).thenAnswer(i->i.getArgument(0));
         when(cliente.consultar(7L,"99")).thenReturn(new ClienteReportesMercadoPago.TareaReporte("99","1701","processed","fluora.csv"));
-        String csv="DATE,SOURCE_ID,EXTERNAL_REFERENCE,RECORD_TYPE,DESCRIPTION,NET_CREDIT_AMOUNT,GROSS_AMOUNT,MP_FEE_AMOUNT\n"
-                +"2026-10-03T10:00:00-06:00,PAY-1,orden-1,release,payment,476.44,500.00,-23.56\n";
+        String csv="DATE,SOURCE_ID,EXTERNAL_REFERENCE,RECORD_TYPE,DESCRIPTION,NET_CREDIT_AMOUNT,GROSS_AMOUNT,MP_FEE_AMOUNT,TAXES_AMOUNT\n"
+                +"2026-10-03T10:00:00-06:00,PAY-1,orden-1,release,payment,471.44,500.00,-23.56,-5.00\n";
         when(cliente.descargar(7L,"fluora.csv")).thenReturn(csv.getBytes(java.nio.charset.StandardCharsets.UTF_8));
         ConciliacionPagoEntidad conciliacion=new ConciliacionPagoEntidad(); conciliacion.setEmpresaId(7L);
         when(conciliaciones.findByEmpresaIdAndReferenciaPagoExterna(7L,"PAY-1")).thenReturn(Optional.of(conciliacion));
@@ -91,6 +91,7 @@ class ServicioReportesLiberacionTest {
         assertThat(conciliacion.isLiquidacionDefinitiva()).isTrue();
         assertThat(conciliacion.getFuente()).isEqualTo("REPORTE_LIBERACIONES");
         assertThat(conciliacion.getComisionProveedorTotal()).isEqualByComparingTo(new BigDecimal("23.56"));
-        assertThat(conciliacion.getImporteNeto()).isEqualByComparingTo(new BigDecimal("476.44"));
+        assertThat(conciliacion.getRetenciones()).isEqualByComparingTo(new BigDecimal("5.00"));
+        assertThat(conciliacion.getImporteNeto()).isEqualByComparingTo(new BigDecimal("471.44"));
     }
 }

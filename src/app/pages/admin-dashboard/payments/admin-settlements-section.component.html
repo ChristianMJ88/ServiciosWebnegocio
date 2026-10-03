@@ -6,10 +6,15 @@
     <div class="loading-state"><span></span><span></span><span></span><p>Consultando movimientos y reportes…</p></div>
   } @else {
     <section class="summary-grid" aria-label="Resumen de conciliación">
-      <article><span>Venta bruta</span><strong>{{ monedaResumen() ? (bruto() | currency:monedaResumen()!:'symbol-narrow':'1.2-2':'es-MX') : '—' }}</strong><small>{{ conciliaciones().length }} movimientos recientes</small></article>
-      <article class="is-positive"><span>Neto conciliado</span><strong>{{ monedaResumen() ? (neto() | currency:monedaResumen()!:'symbol-narrow':'1.2-2':'es-MX') : '—' }}</strong><small>Confirmado por Mercado Pago</small></article>
-      <article [class.has-pending]="pendientes() > 0"><span>Por conciliar</span><strong>{{ pendientes() }}</strong><small>Esperando Reporte de Liberaciones</small></article>
+      <article><span>Venta conciliada</span><strong>{{ monedaResumen() ? (bruto() | currency:monedaResumen()!:'symbol-narrow':'1.2-2':'es-MX') : '—' }}</strong><small>{{ conciliadas().length }} movimientos confirmados</small></article>
+      <article class="is-provider"><span>Mercado Pago</span><strong>{{ monedaResumen() ? (comisionProveedor() | currency:monedaResumen()!:'symbol-narrow':'1.2-2':'es-MX') : '—' }}</strong><small>Comisión total reportada</small></article>
+      <article class="is-platform"><span>Comisión Fluora</span><strong>{{ monedaResumen() ? (comisionFluora() | currency:monedaResumen()!:'symbol-narrow':'1.2-2':'es-MX') : '—' }}</strong><small>Reglas activas de plataforma</small></article>
+      <article class="is-positive"><span>Neto del negocio</span><strong>{{ monedaResumen() ? (neto() | currency:monedaResumen()!:'symbol-narrow':'1.2-2':'es-MX') : '—' }}</strong><small>Importe definitivo recibido</small></article>
     </section>
+
+    @if (pendientes() > 0) {
+      <p class="reconciliation-notice"><i class="bi bi-hourglass-split"></i><strong>{{ pendientes() }} {{ pendientes() === 1 ? 'movimiento pendiente' : 'movimientos pendientes' }}</strong><span>Se incorporarán al resumen cuando Mercado Pago publique el Reporte de Liberaciones.</span></p>
+    }
 
     <div class="settlements-layout">
       <section class="workspace-card report-generator">
@@ -64,11 +69,19 @@
 
     <section class="workspace-card movements-card">
       <header class="section-heading"><div><span class="eyebrow">Movimientos</span><h2>Cobros recientes</h2><p>Checkout y Point reunidos en una sola vista financiera.</p></div><span class="counter">{{ conciliaciones().length }}</span></header>
+      <p class="financial-note"><i class="bi bi-shield-check"></i><span><strong>Importes verificables.</strong> La comisión de Mercado Pago se presenta como total reportado. El sistema muestra IVA por separado únicamente cuando el proveedor lo informa; no lo estima.</span></p>
       <div class="movement-list">
         @for (item of conciliaciones(); track item.id) {
           <article class="movement-row">
             <div class="movement-row__identity"><span class="channel"><i class="bi" [class.bi-globe2]="item.canal === 'CHECKOUT'" [class.bi-credit-card]="item.canal === 'POINT'"></i>{{ item.canal === 'POINT' ? 'Terminal Point' : 'Sitio público' }}</span><strong>{{ item.importeBruto | currency:item.moneda:'symbol-narrow':'1.2-2':'es-MX' }}</strong><small>{{ item.referenciaPago || item.referenciaOrden }}</small></div>
-            <dl><div><dt>Comisión proveedor</dt><dd>{{ item.comisionProveedorTotal == null ? 'Pendiente' : (item.comisionProveedorTotal | currency:item.moneda:'symbol-narrow':'1.2-2':'es-MX') }}</dd></div><div><dt>Comisión Fluora</dt><dd>{{ item.comisionPlataforma == null ? 'No aplicada' : (item.comisionPlataforma | currency:item.moneda:'symbol-narrow':'1.2-2':'es-MX') }}</dd></div><div><dt>Neto</dt><dd>{{ item.importeNeto == null ? 'Pendiente' : (item.importeNeto | currency:item.moneda:'symbol-narrow':'1.2-2':'es-MX') }}</dd></div></dl>
+            <dl>
+              <div><dt>Comisión Mercado Pago</dt><dd>{{ item.comisionProveedorTotal == null ? 'Pendiente' : (item.comisionProveedorTotal | currency:item.moneda:'symbol-narrow':'1.2-2':'es-MX') }}</dd></div>
+              @if (item.impuestoComisionProveedor != null) { <div><dt>IVA informado</dt><dd>{{ item.impuestoComisionProveedor | currency:item.moneda:'symbol-narrow':'1.2-2':'es-MX' }}</dd></div> }
+              <div><dt>Retenciones</dt><dd>{{ item.retenciones == null ? 'Sin informar' : (item.retenciones | currency:item.moneda:'symbol-narrow':'1.2-2':'es-MX') }}</dd></div>
+              <div><dt>Comisión Fluora</dt><dd>{{ item.comisionPlataforma == null ? 'No aplicada' : (item.comisionPlataforma | currency:item.moneda:'symbol-narrow':'1.2-2':'es-MX') }}</dd></div>
+              @if (item.importeReembolsado > 0) { <div><dt>Reembolsado</dt><dd>{{ item.importeReembolsado | currency:item.moneda:'symbol-narrow':'1.2-2':'es-MX' }}</dd></div> }
+              <div class="is-net"><dt>Neto del negocio</dt><dd>{{ item.importeNeto == null ? 'Pendiente' : (item.importeNeto | currency:item.moneda:'symbol-narrow':'1.2-2':'es-MX') }}</dd></div>
+            </dl>
             <div class="movement-row__status" [class.is-ready]="item.liquidacionDefinitiva" [class.is-refunded]="item.estado === 'REEMBOLSADA'"><span>{{ item.estado === 'REEMBOLSADA' ? 'Reembolsada' : item.liquidacionDefinitiva ? 'Conciliada' : 'Pendiente' }}</span><small>{{ item.actualizadoEn | date:'dd/MM/yyyy HH:mm':'':'es-MX' }}</small></div>
           </article>
         } @empty { <div class="empty-state"><i class="bi bi-receipt"></i><strong>Sin cobros registrados</strong><span>Los pagos aprobados aparecerán aquí.</span></div> }

@@ -33,11 +33,17 @@ export class AdminSettlementsSectionComponent implements OnInit {
     const monedas = new Set(this.conciliaciones().map(item => item.moneda));
     return monedas.size === 1 ? [...monedas][0] : null;
   });
+  readonly conciliadas = computed(() => this.conciliaciones().filter(item => item.liquidacionDefinitiva));
   readonly bruto = computed(() => this.monedaResumen() == null ? null
-    : this.conciliaciones().reduce((total, item) => total + item.importeBruto, 0));
+    : this.conciliadas().reduce((total, item) => total + item.importeBruto, 0));
+  readonly comisionProveedor = computed(() => this.monedaResumen() == null ? null
+    : this.conciliadas().reduce((total, item) => total + (item.comisionProveedorTotal ?? 0), 0));
+  readonly comisionFluora = computed(() => this.monedaResumen() == null ? null
+    : this.conciliadas().reduce((total, item) => total + (item.comisionPlataforma ?? 0), 0));
+  readonly retenciones = computed(() => this.monedaResumen() == null ? null
+    : this.conciliadas().reduce((total, item) => total + (item.retenciones ?? 0), 0));
   readonly neto = computed(() => this.monedaResumen() == null ? null
-    : this.conciliaciones().filter(item => item.liquidacionDefinitiva)
-      .reduce((total, item) => total + (item.importeNeto ?? 0), 0));
+    : this.conciliadas().reduce((total, item) => total + (item.importeNeto ?? 0), 0));
   readonly pendientes = computed(() => this.conciliaciones()
     .filter(item => !item.liquidacionDefinitiva && item.estado !== 'REEMBOLSADA').length);
 

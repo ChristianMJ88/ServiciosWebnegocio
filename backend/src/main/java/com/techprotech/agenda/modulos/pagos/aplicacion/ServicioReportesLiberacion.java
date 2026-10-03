@@ -29,7 +29,7 @@ import java.util.LinkedHashSet;
 @Service
 public class ServicioReportesLiberacion {
     private static final Set<String> COLUMNAS_CONCILIACION = Set.of("DATE", "SOURCE_ID", "EXTERNAL_REFERENCE",
-            "RECORD_TYPE", "DESCRIPTION", "NET_CREDIT_AMOUNT", "GROSS_AMOUNT", "MP_FEE_AMOUNT");
+            "RECORD_TYPE", "DESCRIPTION", "NET_CREDIT_AMOUNT", "GROSS_AMOUNT", "MP_FEE_AMOUNT", "TAXES_AMOUNT");
     private final ClienteReportesMercadoPago cliente;
     private final ReporteLiberacionPagoRepositorio reportes;
     private final ConciliacionPagoRepositorio conciliaciones;
@@ -145,6 +145,7 @@ public class ServicioReportesLiberacion {
                 if (conciliacion==null) continue;
                 conciliacion.setImporteBruto(decimal(fila,"GROSS_AMOUNT",conciliacion.getImporteBruto()));
                 conciliacion.setComisionProveedorTotal(absoluto(fila,"MP_FEE_AMOUNT"));
+                conciliacion.setRetenciones(decimal(fila,"TAXES_AMOUNT",conciliacion.getRetenciones()));
                 conciliacion.setImporteNeto(decimal(fila,"NET_CREDIT_AMOUNT",conciliacion.getImporteNeto()));
                 conciliacion.setFuente("REPORTE_LIBERACIONES"); conciliacion.setLiquidacionDefinitiva(true);
                 conciliacion.setEstado("CONCILIADA"); conciliacion.setLiquidadoEn(fecha(campo(fila,"DATE")));
