@@ -19,6 +19,7 @@ import { CajaNotificationViewModel } from '../models/caja-dashboard.models';
 })
 export class CajaHeaderComponent {
   @Input({ required: true }) panelMovil!: boolean;
+  @Input({ required: true }) nombreEmpresa!: string;
   @Input({ required: true }) puedeIrRecepcion!: boolean;
   @Input({ required: true }) puedeIrAdmin!: boolean;
   @Input({ required: true }) notificaciones!: CajaNotificationViewModel[];

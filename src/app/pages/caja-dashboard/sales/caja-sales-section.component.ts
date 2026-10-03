@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, DestroyRef, EventEmitter, Input, OnChanges, Output, SimpleChanges, computed, inject, signal } from '@angular/core';
+import { AfterViewInit, Component, DestroyRef, ElementRef, EventEmitter, Input, OnChanges, Output, SimpleChanges, ViewChild, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
@@ -19,7 +19,8 @@ interface LineaProducto { producto: ProductoCaja; cantidad: number; }
   templateUrl: './caja-sales-section.component.html',
   styleUrl: './caja-sales-section.component.css'
 })
-export class CajaSalesSectionComponent implements OnChanges {
+export class CajaSalesSectionComponent implements OnChanges, AfterViewInit {
+  @ViewChild('resumenVenta') private resumenVenta?: ElementRef<HTMLElement>;
   @Input({ required: true }) sucursalId!: number | null;
   @Input({ required: true }) citas!: CitaPorCobrar[];
   @Input({ required: true }) metodosPago!: OpcionCaja[];
@@ -41,6 +42,7 @@ export class CajaSalesSectionComponent implements OnChanges {
   readonly simulandoPoint = signal(false);
   readonly error = signal('');
   readonly mensaje = signal('');
+  readonly resumenVisible = signal(false);
   metodoPago = '';
   terminalPointId: number | null = null;
   referencia = '';
@@ -53,7 +55,18 @@ export class CajaSalesSectionComponent implements OnChanges {
   readonly citaSeleccionada = computed(() => this.citas.find(item => item.citaId === this.citaId()) ?? null);
   readonly subtotalProductos = computed(() => this.lineas().reduce((total, item) => total + item.producto.precio * item.cantidad, 0));
   readonly totalEstimado = computed(() => this.subtotalProductos() + Number(this.citaSeleccionada()?.pendiente ?? 0));
+  readonly conceptosSeleccionados = computed(() => this.lineas().reduce((total, item) => total + item.cantidad, 0) + (this.citaSeleccionada() ? 1 : 0));
   readonly moneda = computed(() => this.citaSeleccionada()?.moneda ?? this.lineas()[0]?.producto.moneda ?? 'MXN');
+
+  ngAfterViewInit(): void {
+    if (!this.resumenVenta || typeof IntersectionObserver === 'undefined') return;
+    const observer = new IntersectionObserver(
+      ([entry]) => this.resumenVisible.set(entry.isIntersecting),
+      { threshold: 0.12 }
+    );
+    observer.observe(this.resumenVenta.nativeElement);
+    this.destroyRef.onDestroy(() => observer.disconnect());
+  }
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['metodosPago'] && !this.metodosPago.some(item => item.codigo === this.metodoPago)) {
@@ -76,6 +89,10 @@ export class CajaSalesSectionComponent implements OnChanges {
     this.lineas.update(items => items.flatMap(item => item.producto.id !== productoId ? [item] : item.cantidad > 1 ? [{ ...item, cantidad: item.cantidad - 1 }] : []));
   }
   quitar(productoId: number): void { this.lineas.update(items => items.filter(item => item.producto.id !== productoId)); }
+
+  verCuenta(): void {
+    document.getElementById('caja-resumen-venta')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
 
   cobrar(): void {
     if (!this.sucursalId || (!this.citaId() && !this.lineas().length) || !this.metodoPago || !this.cajaAbierta) return;

@@ -1,7 +1,7 @@
 <div class="pos-layout">
   <section class="pos-catalog caja-card">
-    <div class="caja-card-heading"><span class="caja-card-kicker">Punto de venta</span><h2>Servicios y productos en una sola cuenta</h2></div>
-    <label class="pos-search"><span>Buscar por nombre, SKU o código</span><input type="search" [ngModel]="busqueda()" (ngModelChange)="busqueda.set($event)" placeholder="Ej. tinte, shampoo, SKU…"></label>
+    <div class="caja-card-heading pos-catalog-heading"><div><span class="caja-card-kicker">Punto de venta</span><h2>Agregar a la cuenta</h2></div><span class="pos-stock-status"><i class="bi bi-box-seam"></i>{{ productosFiltrados().length }} productos</span></div>
+    <label class="pos-search"><i class="bi bi-search" aria-hidden="true"></i><span class="visually-hidden">Buscar por nombre, SKU o código</span><input type="search" [ngModel]="busqueda()" (ngModelChange)="busqueda.set($event)" placeholder="Buscar producto, SKU o código…" autocomplete="off">@if (busqueda()) {<button type="button" aria-label="Limpiar búsqueda" (click)="busqueda.set('')"><i class="bi bi-x-lg"></i></button>}</label>
 
     @if (citas.length) {
       <div class="pos-section-heading"><div><span>Servicio de la visita</span><small>Opcional: selecciónalo para cobrarlo junto con productos.</small></div></div>
@@ -15,7 +15,7 @@
       </div>
     }
 
-    <div class="pos-section-heading"><div><span>Productos</span><small>{{ productosFiltrados().length }} disponibles en el catálogo de esta empresa.</small></div></div>
+    <div class="pos-section-heading"><div><span>Productos</span><small>Selecciona los artículos que deseas cobrar.</small></div></div>
     @if (cargando()) {<div class="caja-empty">Preparando catálogo e inventario…</div>}
     @if (!cargando() && !productosFiltrados().length) {<div class="caja-empty">No hay productos que coincidan con la búsqueda.</div>}
     <div class="pos-products">
@@ -23,16 +23,16 @@
         <article class="pos-product" [class.unavailable]="producto.controlaInventario && (producto.disponible ?? 0) <= 0">
           <div class="pos-product-image">@if (producto.imagenUrl) {<img [src]="producto.imagenUrl" [alt]="producto.nombre">} @else {<span>◫</span>}</div>
           <div class="pos-product-copy"><small>{{ producto.sku }}</small><strong>{{ producto.nombre }}</strong><span>{{ producto.precio | appMoney:producto.moneda:2:2 }}</span>
-            @if (producto.controlaInventario) {<em>{{ producto.disponible }} disponibles</em>}
+            @if (producto.controlaInventario) {<em [class.low]="(producto.disponible ?? 0) <= 3">{{ producto.disponible }} disponibles</em>}
           </div>
-          <button mat-stroked-button type="button" (click)="agregar(producto)" [disabled]="producto.controlaInventario && (producto.disponible ?? 0) <= cantidad(producto.id)">{{ cantidad(producto.id) ? '+ Agregar otro' : 'Agregar' }}</button>
+          <button mat-stroked-button type="button" (click)="agregar(producto)" [disabled]="producto.controlaInventario && (producto.disponible ?? 0) <= cantidad(producto.id)">@if (cantidad(producto.id)) {<span class="pos-product-count">{{ cantidad(producto.id) }}</span>}<span>{{ cantidad(producto.id) ? 'Agregar otro' : 'Agregar' }}</span></button>
         </article>
       }
     </div>
   </section>
 
-  <aside class="pos-checkout caja-card">
-    <div class="caja-card-heading"><span class="caja-card-kicker">Cuenta actual</span><h2>Resumen de venta</h2></div>
+  <aside #resumenVenta class="pos-checkout caja-card" id="caja-resumen-venta">
+    <div class="caja-card-heading pos-checkout-heading"><div><span class="caja-card-kicker">Cuenta actual</span><h2>Resumen de venta</h2></div><span class="pos-concept-count">{{ conceptosSeleccionados() }} {{ conceptosSeleccionados() === 1 ? 'concepto' : 'conceptos' }}</span></div>
     @if (citaSeleccionada(); as cita) {
       <div class="pos-line service"><div><span>Servicio</span><strong>{{ cita.servicioNombre }}</strong><small>{{ cita.clienteNombre }}</small></div><strong>{{ cita.pendiente | appMoney:cita.moneda:2:2 }}</strong><button type="button" aria-label="Quitar servicio" (click)="seleccionarCita(cita.citaId)">×</button></div>
     }
@@ -76,4 +76,12 @@
       <div class="point-history"><span>Cobros Point</span>@for (orden of historialPoint().slice(0, 5); track orden.id) {<article><div><strong>{{ orden.folioVenta }}</strong><small>{{ orden.terminalNombre }} · {{ orden.estado }}</small></div><b>{{ orden.importe | appMoney:orden.moneda:2:2 }}</b>@if (orden.estado === 'APROBADO') {<button type="button" [disabled]="guardando()" (click)="reembolsarPoint(orden)">Reembolsar</button>} @else if (!['CANCELADO','RECHAZADO','EXPIRADO','REEMBOLSADO'].includes(orden.estado)) {<button class="continue" type="button" [disabled]="guardando()" (click)="continuarOrdenPoint(orden)">Continuar cobro</button>}</article>}</div>
     }
   </aside>
+
+  @if (conceptosSeleccionados() && !resumenVisible()) {
+    <button type="button" class="pos-mobile-cart" (click)="verCuenta()">
+      <span class="pos-mobile-cart__count">{{ conceptosSeleccionados() }}</span>
+      <span><small>Cuenta actual</small><strong>{{ totalEstimado() | appMoney:moneda():2:2 }}</strong></span>
+      <span class="pos-mobile-cart__action">Ver cuenta <i class="bi bi-arrow-up"></i></span>
+    </button>
+  }
 </div>

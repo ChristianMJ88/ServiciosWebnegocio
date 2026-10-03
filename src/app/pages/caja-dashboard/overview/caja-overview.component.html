@@ -1,32 +1,28 @@
 <header class="caja-top-strip">
   <div class="caja-top-copy">
-    <div><span class="caja-eyebrow">Turno actual</span><h1>Caja</h1></div>
-    <div class="caja-top-meta">
-      <span class="caja-top-pill">{{ totalNotificaciones }} pendientes</span>
-      <span class="caja-top-pill">{{ estadoSesionEtiqueta }}</span>
-      @if (sucursalActivaNombre) { <span class="caja-top-pill">{{ sucursalActivaNombre }}</span> }
-      <span class="caja-top-pill">{{ citasPorCobrar }} cobrables</span>
-    </div>
-  </div>
-  <mat-card class="caja-sucursal-card">
-    <div class="caja-top-card-head">
-      <div><span class="caja-card-kicker">Sucursal activa</span><h2>{{ sucursalActivaNombre || 'Cargando sucursal operativa...' }}</h2></div>
-      <div class="caja-status-pills caja-status-pills--head">
-        <span class="caja-status-pill" [class.is-open]="cajaAbierta">{{ estadoSesionEtiqueta }}</span>
-        @if (sucursalActivaResuelta) { <span class="caja-status-pill">Sucursal {{ sucursalActivaId }}</span> }
+    <div class="caja-operation-identity">
+      <span class="caja-operation-icon" aria-hidden="true"><i class="bi bi-shop"></i></span>
+      <div>
+        <span class="caja-eyebrow">Sucursal operativa</span>
+        <h1>{{ sucursalActivaNombre || 'Cargando sucursal...' }}</h1>
+        @if (sucursalActivaDireccion) { <p><i class="bi bi-geo-alt" aria-hidden="true"></i>{{ sucursalActivaDireccion }}</p> }
       </div>
     </div>
-    @if (sucursales.length > 1) {
-      <mat-form-field appearance="outline" class="w-100"><mat-label>Sucursal</mat-label>
-        <mat-select [ngModel]="sucursalActivaId" (ngModelChange)="branchSelected.emit($event)">
-          @for (sucursal of sucursales; track sucursal.id) { <mat-option [value]="sucursal.id">{{ sucursal.nombre }}</mat-option> }
-        </mat-select>
-      </mat-form-field>
-    } @else if (sucursalActivaResuelta) {
-      <div class="caja-sucursal-fixed"><strong>{{ sucursalActivaNombre }}</strong><span>Sucursal operativa bloqueada por tu acceso.</span></div>
-    } @else { <div class="caja-empty">Cargando sucursal operativa...</div> }
-    @if (sucursalActivaDireccion) { <p class="caja-helper">{{ sucursalActivaDireccion }}</p> }
-  </mat-card>
+    <div class="caja-operation-controls">
+      @if (sucursales.length > 1) {
+        <mat-form-field appearance="outline" class="caja-branch-select"><mat-label>Sucursal</mat-label>
+          <mat-select [ngModel]="sucursalActivaId" (ngModelChange)="branchSelected.emit($event)">
+            @for (sucursal of sucursales; track sucursal.id) { <mat-option [value]="sucursal.id">{{ sucursal.nombre }}</mat-option> }
+          </mat-select>
+        </mat-form-field>
+      }
+      <div class="caja-top-meta">
+        <span class="caja-top-pill" [class.is-positive]="cajaAbierta"><i class="bi bi-circle-fill"></i>{{ estadoSesionEtiqueta }}</span>
+        <span class="caja-top-pill"><strong>{{ citasPorCobrar }}</strong> citas por cobrar</span>
+        @if (totalNotificaciones) { <span class="caja-top-pill is-warning"><strong>{{ totalNotificaciones }}</strong> alertas</span> }
+      </div>
+    </div>
+  </div>
 </header>
 @if (error) { <div class="alert alert-danger" role="alert">{{ error }}</div> }
 @if (mensaje) { <div class="alert alert-success" role="status">{{ mensaje }}</div> }

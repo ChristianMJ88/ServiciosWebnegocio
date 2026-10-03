@@ -1,5 +1,8 @@
 <mat-toolbar class="caja-toolbar">
-  <div class="caja-toolbar-brand"><span class="caja-brand-mark">CA</span><div class="caja-brand-copy"><span class="caja-brand-eyebrow">Operación</span><span class="caja-brand-title">Caja</span></div></div>
+  <div class="caja-toolbar-brand">
+    <span class="caja-brand-mark" aria-hidden="true"><i class="bi bi-shop-window"></i></span>
+    <div class="caja-brand-copy"><span class="caja-brand-eyebrow">{{ nombreEmpresa }}</span><span class="caja-brand-title">Punto de venta</span></div>
+  </div>
   <div class="caja-toolbar-actions">
     <button mat-icon-button class="caja-toolbar-icon-button notification-trigger" [matMenuTriggerFor]="menuNotificaciones"
       [matBadge]="totalNotificaciones" [matBadgeHidden]="!totalNotificaciones" matBadgeColor="accent" matBadgeSize="small" aria-label="Alertas de caja"><i class="bi bi-bell"></i></button>

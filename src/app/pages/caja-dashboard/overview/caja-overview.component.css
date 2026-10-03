@@ -1,218 +1,167 @@
-:host {
-  display: block;
-}
+:host { display: block; }
 
-.caja-card-kicker,
 .caja-eyebrow {
-  color: #756556;
-  font-size: 0.78rem;
-  letter-spacing: 0.06em;
+  color: var(--caja-brand);
+  font-size: .7rem;
+  font-weight: 760;
+  letter-spacing: .09em;
   text-transform: uppercase;
 }
 
 .caja-top-strip {
-  display: grid;
-  grid-template-columns: minmax(0, 0.95fr) minmax(380px, 1.1fr);
-  gap: 1rem;
-  margin-bottom: 0.95rem;
+  margin-bottom: .75rem;
 }
 
 .caja-top-copy {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 1rem;
-  padding: 1.05rem 1.15rem;
-  border-radius: 28px;
-  background: radial-gradient(circle at top right, rgba(255, 255, 255, 0.76), transparent 24%),
-    linear-gradient(135deg, rgba(255, 252, 246, 0.96), rgba(243, 246, 241, 0.94));
-  box-shadow: 0 18px 38px rgba(43, 41, 37, 0.08);
-  border: 1px solid rgba(86, 75, 63, 0.1);
+  gap: 1.25rem;
+  min-height: 92px;
+  padding: .9rem 1rem;
+  border: 1px solid var(--caja-line);
+  border-radius: 20px;
+  background: linear-gradient(135deg, rgba(255,255,255,.97), rgba(238,246,242,.93));
+  box-shadow: var(--caja-shadow);
+}
+
+.caja-operation-identity {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  gap: .8rem;
+}
+
+.caja-operation-icon {
+  display: grid;
+  flex: 0 0 auto;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 13px;
+  background: #e3f1eb;
+  color: var(--caja-brand-dark);
+  font-size: 1.05rem;
 }
 
 .caja-top-copy h1 {
-  margin: 0.18rem 0 0;
-  font-size: clamp(1.35rem, 0.9vw + 1rem, 1.72rem);
-  line-height: 1.06;
+  overflow: hidden;
+  margin: .1rem 0 0;
+  font-size: clamp(1.25rem, 1vw + .9rem, 1.65rem);
+  line-height: 1.05;
+  letter-spacing: -.025em;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-.caja-top-meta,
-.caja-status-pills {
+.caja-top-copy p {
   display: flex;
-  flex-wrap: wrap;
-  gap: 0.55rem;
+  align-items: center;
+  gap: .3rem;
+  overflow: hidden;
+  margin: .28rem 0 0;
+  color: var(--caja-muted);
+  font-size: .8rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.caja-operation-controls {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  min-width: 0;
+  gap: .75rem;
+}
+
+.caja-branch-select {
+  width: min(240px, 25vw);
+  margin-bottom: -1.25rem;
 }
 
 .caja-top-meta {
+  display: flex;
+  flex-wrap: wrap;
   justify-content: flex-end;
-}
-
-.caja-top-pill,
-.caja-status-pill {
-  display: inline-flex;
-  align-items: center;
-  border-radius: 999px;
-  font-weight: 600;
+  gap: .42rem;
 }
 
 .caja-top-pill {
-  padding: 0.48rem 0.8rem;
-  background: rgba(31, 112, 97, 0.09);
-  color: #245247;
-  font-size: 0.84rem;
-  border: 1px solid rgba(31, 112, 97, 0.08);
+  display: inline-flex;
+  align-items: center;
+  gap: .34rem;
+  padding: .42rem .65rem;
+  border: 1px solid rgba(28,55,47,.08);
+  border-radius: 999px;
+  background: #f2f6f4;
+  color: #50605a;
+  font-size: .75rem;
+  font-weight: 650;
+  white-space: nowrap;
 }
 
-.caja-sucursal-card,
-.caja-metric-card {
-  border-radius: 24px;
-  box-shadow: 0 18px 36px rgba(43, 41, 37, 0.08);
-  border: 1px solid rgba(86, 75, 63, 0.1);
-}
-
-.caja-sucursal-card {
-  padding: 1rem 1.05rem;
-  background: rgba(255, 252, 246, 0.84);
-  backdrop-filter: blur(16px);
-}
-
-.caja-top-card-head {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 0.85rem;
-}
-
-.caja-helper {
-  margin: 0.18rem 0 0;
-  color: #6f6358;
-  font-size: 0.9rem;
-}
-
-.caja-sucursal-fixed {
-  display: flex;
-  flex-direction: column;
-  gap: 0.35rem;
-  padding: 0.9rem 1rem;
-  border-radius: 18px;
-  background: rgba(31, 112, 97, 0.08);
-  color: #245247;
-}
-
-.caja-sucursal-fixed span {
-  color: #5f665f;
-  font-size: 0.92rem;
-}
-
-.caja-status-pills {
-  margin-top: 0.9rem;
-}
-
-.caja-status-pills--head {
-  margin-top: 0;
-  justify-content: flex-end;
-}
-
-.caja-status-pill {
-  padding: 0.45rem 0.8rem;
-  background: rgba(101, 91, 81, 0.09);
-  color: #64584f;
-  font-size: 0.86rem;
-}
-
-.caja-status-pill.is-open {
-  background: rgba(31, 112, 97, 0.12);
-  color: #1d5d52;
-}
+.caja-top-pill i { color: #9aa6a1; font-size: .46rem; }
+.caja-top-pill.is-positive { background: #e5f4ed; color: #145b4f; }
+.caja-top-pill.is-positive i { color: #21a179; }
+.caja-top-pill.is-warning { background: #fff4e3; color: #7b5424; }
 
 .caja-metric-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 0.85rem;
-  margin-bottom: 0.95rem;
+  gap: .65rem;
+  margin-bottom: .8rem;
 }
 
 .caja-metric-card {
-  padding: 0.82rem 0.95rem;
-  background: linear-gradient(180deg, rgba(255, 252, 246, 0.92), rgba(249, 246, 240, 0.96));
-}
-
-.caja-metric-card.primary {
-  background: linear-gradient(135deg, rgba(233, 178, 106, 0.2), rgba(255, 252, 246, 0.96));
-}
-
-.caja-metric-card span {
-  display: block;
-  color: #7b7068;
-  margin-bottom: 0.4rem;
-}
-
-.caja-metric-card strong {
-  font-size: 1.4rem;
-  line-height: 1.05;
-}
-
-.caja-empty {
-  padding: 0.95rem 1rem;
-  border-radius: 18px;
-  background: rgba(226, 220, 209, 0.55);
-  color: #665c55;
-  font-size: 0.94rem;
-}
-
-.alert {
-  margin-bottom: 1rem;
+  position: relative;
+  overflow: hidden;
+  padding: .75rem .85rem;
+  border: 1px solid var(--caja-line);
   border-radius: 16px;
+  background: rgba(255,255,255,.91);
+  box-shadow: 0 8px 24px rgba(27,49,42,.06);
 }
 
-.w-100 {
-  width: 100%;
+.caja-metric-card::after {
+  content: "";
+  position: absolute;
+  inset: auto 0 0;
+  height: 3px;
+  background: #d9e2de;
 }
 
-@media (max-width: 1199px) {
-  .caja-top-strip {
-    grid-template-columns: 1fr;
-  }
+.caja-metric-card.primary::after { background: var(--caja-brand); }
+.caja-metric-card span { display: block; margin-bottom: .28rem; color: var(--caja-muted); font-size: .74rem; }
+.caja-metric-card strong { color: var(--caja-ink); font-size: 1.16rem; line-height: 1.05; letter-spacing: -.02em; }
+.alert { margin-bottom: .75rem; border-radius: 14px; }
 
-  .caja-metric-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
+@media (max-width: 991px) {
+  .caja-top-copy { align-items: flex-start; }
+  .caja-operation-controls { flex-direction: column; align-items: flex-end; }
+  .caja-branch-select { width: 230px; }
 }
 
 @media (max-width: 767px) {
   .caja-top-copy {
-    flex-direction: column;
-    align-items: flex-start;
-    padding: 1rem 1.05rem;
+    display: block;
+    min-height: 0;
+    padding: .8rem .85rem;
+    border-radius: 17px;
   }
 
-  .caja-top-card-head {
-    flex-direction: column;
-  }
+  .caja-operation-icon { width: 38px; height: 38px; border-radius: 11px; }
+  .caja-top-copy h1 { font-size: 1.2rem; }
+  .caja-top-copy p { max-width: calc(100vw - 7rem); font-size: .73rem; }
+  .caja-operation-controls { align-items: stretch; margin-top: .7rem; }
+  .caja-branch-select { width: 100%; }
+  .caja-top-meta { justify-content: flex-start; }
+  .caja-top-pill { font-size: .69rem; }
+  .caja-metric-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .5rem; }
+  .caja-metric-card { min-height: 68px; padding: .68rem; border-radius: 14px; }
+  .caja-metric-card span { font-size: .66rem; line-height: 1.2; }
+  .caja-metric-card strong { overflow-wrap: anywhere; font-size: 1rem; }
+}
 
-  .caja-top-meta,
-  .caja-status-pills--head {
-    justify-content: flex-start;
-  }
-
-  .caja-metric-grid {
-    gap: 0.65rem;
-  }
-
-  .caja-metric-card {
-    min-height: 82px;
-    padding: 0.75rem;
-    border-radius: 16px;
-  }
-
-  .caja-metric-card span {
-    margin-bottom: 0.25rem;
-    font-size: 0.72rem;
-    line-height: 1.25;
-  }
-
-  .caja-metric-card strong {
-    overflow-wrap: anywhere;
-    font-size: clamp(1rem, 5vw, 1.25rem);
-  }
+@media (max-width: 390px) {
+  .caja-top-pill:nth-child(2) { display: none; }
 }

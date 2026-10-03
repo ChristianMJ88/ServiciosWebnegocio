@@ -1,31 +1,21 @@
-:host {
-  display: block;
-}
-
+:host { display: block; }
 .caja-shell {
-  min-height: 100vh;
-  background:
-    radial-gradient(circle at top left, rgba(233, 178, 106, 0.22), transparent 24%),
-    radial-gradient(circle at top right, rgba(31, 112, 97, 0.14), transparent 24%),
-    radial-gradient(circle at 50% 18%, rgba(121, 169, 154, 0.12), transparent 28%),
-    linear-gradient(180deg, #fbf6ef 0%, #f6f4ef 44%, #eef1ec 100%);
-  color: #2b2925;
+  --caja-ink: #17231f; --caja-muted: #68736e; --caja-line: rgba(28, 55, 47, 0.11);
+  --caja-surface: rgba(255, 255, 255, 0.92); --caja-brand: #176b5b; --caja-brand-dark: #0f4f43;
+  --caja-accent: #d9994b; --caja-shadow: 0 14px 42px rgba(27, 49, 42, 0.08);
+  min-height: 100dvh; color: var(--caja-ink);
+  background: radial-gradient(circle at 8% 0%, rgba(216,153,75,.12), transparent 25rem),
+    radial-gradient(circle at 92% 4%, rgba(23,107,91,.1), transparent 28rem), #f3f6f4;
 }
-
-.caja-body {
-  max-width: 1460px;
-  margin: 0 auto;
-  padding: 1.15rem 1.35rem 1.75rem;
-}
-
+.caja-body { max-width: 1560px; margin: 0 auto; padding: 1.25rem 1.5rem 2.5rem; }
 .caja-shell ::ng-deep .mat-mdc-stroked-button:not(:disabled),
 .caja-shell ::ng-deep .mat-mdc-button:not(:disabled),
-.caja-shell ::ng-deep .mat-mdc-unelevated-button:not(:disabled) {
-  border-radius: 14px;
+.caja-shell ::ng-deep .mat-mdc-unelevated-button:not(:disabled) { border-radius: 12px; }
+.caja-shell ::ng-deep .mat-mdc-unelevated-button.mat-primary:not(:disabled) {
+  background: linear-gradient(135deg, var(--caja-brand), var(--caja-brand-dark));
+  box-shadow: 0 8px 20px rgba(23,107,91,.2);
 }
-
-@media (max-width: 767px) {
-  .caja-body {
-    padding: 1rem;
-  }
+@media (max-width: 767px) { .caja-body { padding: .75rem .75rem calc(6.5rem + env(safe-area-inset-bottom)); } }
+@media (prefers-reduced-motion: reduce) {
+  .caja-shell *, .caja-shell *::before, .caja-shell *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; animation-duration: .01ms !important; }
 }
