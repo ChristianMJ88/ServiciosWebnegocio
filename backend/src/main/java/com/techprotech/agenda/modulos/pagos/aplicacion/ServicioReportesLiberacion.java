@@ -2,6 +2,7 @@ package com.techprotech.agenda.modulos.pagos.aplicacion;
 
 import com.techprotech.agenda.modulos.pagos.api.dto.ReporteLiberacionResponse;
 import com.techprotech.agenda.modulos.pagos.api.dto.ConfiguracionReporteLiberacionResponse;
+import com.techprotech.agenda.modulos.pagos.api.dto.GuardarConfiguracionReporteLiberacionRequest;
 import com.techprotech.agenda.modulos.pagos.infraestructura.entidad.ConciliacionPagoEntidad;
 import com.techprotech.agenda.modulos.pagos.infraestructura.entidad.ProveedorPagoEntidad;
 import com.techprotech.agenda.modulos.pagos.infraestructura.entidad.ReporteLiberacionPagoEntidad;
@@ -23,6 +24,7 @@ import java.nio.charset.StandardCharsets;
 import java.time.*;
 import java.util.List;
 import java.util.Set;
+import java.util.LinkedHashSet;
 
 @Service
 public class ServicioReportesLiberacion {
@@ -76,11 +78,61 @@ public class ServicioReportesLiberacion {
     }
 
     public ConfiguracionReporteLiberacionResponse consultarConfiguracion(Long empresaId) {
-        var config=cliente.consultarConfiguracion(empresaId);
-        List<String> faltantes=COLUMNAS_CONCILIACION.stream().filter(item->!config.columnas().contains(item)).sorted().toList();
+        return respuestaConfiguracion(cliente.consultarConfiguracion(empresaId));
+    }
+
+    public ConfiguracionReporteLiberacionResponse guardarConfiguracion(Long empresaId,
+            GuardarConfiguracionReporteLiberacionRequest request, boolean crear) {
+        validarFrecuencia(request.frecuenciaTipo(), request.frecuenciaValor());
+        Set<String> columnas = new LinkedHashSet<>();
+        if (!crear) columnas.addAll(cliente.consultarConfiguracion(empresaId).columnas());
+        columnas.addAll(COLUMNAS_CONCILIACION);
+        var configuracion = new ClienteReportesMercadoPago.ConfiguracionReporte(request.prefijo().trim(),
+                request.zonaHoraria().trim(), false, "es", List.copyOf(columnas), request.frecuenciaTipo(),
+                request.frecuenciaHora(), request.frecuenciaValor(), request.incluirRetirosAlFinal(),
+                request.ejecutarDespuesDeRetiro());
+        return respuestaConfiguracion(cliente.guardarConfiguracion(empresaId, configuracion, crear));
+    }
+
+    public ConfiguracionReporteLiberacionResponse cambiarProgramacion(Long empresaId, boolean activar) {
+        var config = cliente.consultarConfiguracion(empresaId);
+        List<String> faltantes = columnasFaltantes(config);
+        if (activar && !faltantes.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT,
+                    "Completa la configuración del reporte antes de activar la programación");
+        }
+        cliente.cambiarProgramacion(empresaId, activar);
+        return respuestaConfiguracion(cliente.consultarConfiguracion(empresaId));
+    }
+
+    private ConfiguracionReporteLiberacionResponse respuestaConfiguracion(
+            ClienteReportesMercadoPago.ConfiguracionReporte config) {
+        List<String> faltantes=columnasFaltantes(config);
         return new ConfiguracionReporteLiberacionResponse(config.prefijo(),config.zonaHoraria(),config.programado(),
                 config.idioma(),config.columnas(),faltantes,faltantes.isEmpty(),config.frecuenciaTipo(),
-                config.frecuenciaHora(),config.frecuenciaValor());
+                config.frecuenciaHora(),config.frecuenciaValor(),config.incluirRetirosAlFinal(),
+                config.ejecutarDespuesDeRetiro());
+    }
+
+    private List<String> columnasFaltantes(ClienteReportesMercadoPago.ConfiguracionReporte config) {
+        return COLUMNAS_CONCILIACION.stream().filter(item->!config.columnas().contains(item)).sorted().toList();
+    }
+
+    private void validarFrecuencia(String tipo, String valor) {
+        if ("daily".equals(tipo) && !"0".equals(valor)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "La frecuencia diaria debe usar el valor 0");
+        }
+        if ("monthly".equals(tipo)) {
+            try {
+                int dia = Integer.parseInt(valor);
+                if (dia < 1 || dia > 31) throw new NumberFormatException();
+            } catch (NumberFormatException ex) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "El día mensual debe estar entre 1 y 31");
+            }
+        }
+        if ("weekly".equals(tipo) && !Set.of("monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday").contains(valor)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "El día semanal no es válido");
+        }
     }
 
     private int importar(Long empresaId, byte[] contenido) throws Exception {

@@ -8,18 +8,52 @@ import org.junit.jupiter.api.Test;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.Optional;
+import java.util.List;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 class ServicioReportesLiberacionTest {
     @Test
+    void completaColumnasSinEliminarLasQueYaConfiguroElTenant() {
+        ClienteReportesMercadoPago cliente=mock(ClienteReportesMercadoPago.class);
+        var actual=new ClienteReportesMercadoPago.ConfiguracionReporte("reporte-negocio", "GMT-06", false, "es",
+                List.of("DATE", "CUSTOM_COLUMN"), "daily", 2, "0", true, false);
+        when(cliente.consultarConfiguracion(7L)).thenReturn(actual);
+        when(cliente.guardarConfiguracion(eq(7L), any(), eq(false))).thenAnswer(invocacion -> invocacion.getArgument(1));
+        ServicioReportesLiberacion servicio=new ServicioReportesLiberacion(cliente,
+                mock(ReporteLiberacionPagoRepositorio.class), mock(ConciliacionPagoRepositorio.class),
+                mock(ProveedorPagoRepositorio.class));
+        var request=new com.techprotech.agenda.modulos.pagos.api.dto.GuardarConfiguracionReporteLiberacionRequest(
+                "reporte-negocio", "GMT-06", "daily", 2, "0", true, false);
+
+        var respuesta=servicio.guardarConfiguracion(7L,request,false);
+
+        assertThat(respuesta.listaParaConciliar()).isTrue();
+        assertThat(respuesta.columnas()).contains("CUSTOM_COLUMN", "SOURCE_ID", "MP_FEE_AMOUNT");
+    }
+
+    @Test
+    void impideProgramarUnaConfiguracionIncompleta() {
+        ClienteReportesMercadoPago cliente=mock(ClienteReportesMercadoPago.class);
+        when(cliente.consultarConfiguracion(7L)).thenReturn(new ClienteReportesMercadoPago.ConfiguracionReporte(
+                "reporte-negocio", "GMT-06", false, "es", List.of("DATE"), "daily", 2, "0", true, false));
+        ServicioReportesLiberacion servicio=new ServicioReportesLiberacion(cliente,
+                mock(ReporteLiberacionPagoRepositorio.class), mock(ConciliacionPagoRepositorio.class),
+                mock(ProveedorPagoRepositorio.class));
+
+        org.assertj.core.api.Assertions.assertThatThrownBy(() -> servicio.cambiarProgramacion(7L,true))
+                .isInstanceOf(org.springframework.web.server.ResponseStatusException.class);
+        verify(cliente,never()).cambiarProgramacion(anyLong(),anyBoolean());
+    }
+
+    @Test
     void informaLasColumnasFaltantesDeLaConfiguracionDelTenant() {
         ClienteReportesMercadoPago cliente=mock(ClienteReportesMercadoPago.class);
         when(cliente.consultarConfiguracion(7L)).thenReturn(new ClienteReportesMercadoPago.ConfiguracionReporte(
                 "release-report-7", "GMT-06", false, "es",
                 java.util.List.of("DATE", "SOURCE_ID", "GROSS_AMOUNT", "NET_CREDIT_AMOUNT"),
-                "monthly", 2, "1"));
+                "monthly", 2, "1", true, false));
         ServicioReportesLiberacion servicio=new ServicioReportesLiberacion(cliente,
                 mock(ReporteLiberacionPagoRepositorio.class), mock(ConciliacionPagoRepositorio.class),
                 mock(ProveedorPagoRepositorio.class));
