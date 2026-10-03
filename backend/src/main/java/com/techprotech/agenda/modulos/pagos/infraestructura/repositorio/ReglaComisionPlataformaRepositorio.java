@@ -9,6 +9,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 public interface ReglaComisionPlataformaRepositorio extends JpaRepository<ReglaComisionPlataformaEntidad, Long> {
+    List<ReglaComisionPlataformaEntidad> findAllByOrderByActivaDescPrioridadDescIdDesc();
     @Query("""
             select regla from ReglaComisionPlataformaEntidad regla
             where regla.proveedorPagoId = :proveedorId

@@ -1,6 +1,7 @@
 package com.techprotech.agenda.modulos.pagos.aplicacion;
 
 import com.techprotech.agenda.modulos.pagos.dominio.ProveedorPago;
+import com.techprotech.agenda.modulos.pagos.dominio.TipoComisionPlataforma;
 import com.techprotech.agenda.modulos.pagos.infraestructura.entidad.ReglaComisionPlataformaEntidad;
 import com.techprotech.agenda.modulos.pagos.infraestructura.repositorio.ProveedorPagoRepositorio;
 import com.techprotech.agenda.modulos.pagos.infraestructura.repositorio.ReglaComisionPlataformaRepositorio;
@@ -42,16 +43,20 @@ public class ServicioComisionPlataforma {
     }
 
     private BigDecimal calcular(ReglaComisionPlataformaEntidad regla, BigDecimal importe) {
-        BigDecimal comision = switch (regla.getTipo()) {
-            case PORCENTAJE -> importe.multiply(regla.getValor()).divide(CIEN, 4, RoundingMode.HALF_UP);
-            case MONTO_FIJO -> regla.getValor();
+        return calcularConfiguracion(regla.getTipo(), regla.getValor(), regla.getImporteMinimo(), regla.getImporteMaximo(), importe);
+    }
+
+    public BigDecimal calcularConfiguracion(TipoComisionPlataforma tipo, BigDecimal valor,
+                                             BigDecimal importeMinimo, BigDecimal importeMaximo,
+                                             BigDecimal importe) {
+        if (tipo == null || valor == null) throw new IllegalArgumentException("Tipo y valor son obligatorios");
+        if (importe == null || importe.signum() <= 0) throw new IllegalArgumentException("El importe debe ser mayor a cero");
+        BigDecimal comision = switch (tipo) {
+            case PORCENTAJE -> importe.multiply(valor).divide(CIEN, 4, RoundingMode.HALF_UP);
+            case MONTO_FIJO -> valor;
         };
-        if (regla.getImporteMinimo() != null && comision.compareTo(regla.getImporteMinimo()) < 0) {
-            comision = regla.getImporteMinimo();
-        }
-        if (regla.getImporteMaximo() != null && comision.compareTo(regla.getImporteMaximo()) > 0) {
-            comision = regla.getImporteMaximo();
-        }
+        if (importeMinimo != null && comision.compareTo(importeMinimo) < 0) comision = importeMinimo;
+        if (importeMaximo != null && comision.compareTo(importeMaximo) > 0) comision = importeMaximo;
         if (comision.signum() < 0) throw new IllegalStateException("La comisión de plataforma no puede ser negativa");
         if (comision.compareTo(importe) > 0) throw new IllegalStateException("La comisión de plataforma excede el importe del cobro");
         return comision.setScale(2, RoundingMode.HALF_UP);

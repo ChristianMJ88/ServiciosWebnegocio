@@ -46,4 +46,14 @@ class ServicioComisionPlataformaTest {
 
         assertThat(servicio.calcular(7L, 2L, new BigDecimal("500.00"), "MXN")).isEqualByComparingTo("7.50");
     }
+
+    @Test
+    void laSimulacionUsaElMismoCalculoQueLosCobros() {
+        ServicioComisionPlataforma servicio = new ServicioComisionPlataforma(
+                mock(ReglaComisionPlataformaRepositorio.class), mock(ProveedorPagoRepositorio.class));
+
+        assertThat(servicio.calcularConfiguracion(TipoComisionPlataforma.PORCENTAJE,
+                new BigDecimal("3.5000"), new BigDecimal("5.00"), new BigDecimal("50.00"),
+                new BigDecimal("1000.00"))).isEqualByComparingTo("35.00");
+    }
 }

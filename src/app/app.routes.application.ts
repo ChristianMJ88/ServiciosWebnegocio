@@ -9,7 +9,9 @@ const redirectComponent = () => import('./pages/platform-redirect/platform-redir
 
 export const privateApplicationRoutes: Routes = [
   { path: 'plataforma/acceso', loadComponent: () => import('./pages/platform-access/platform-access.component').then(m => m.PlatformAccessComponent), data: { layout: 'auth' } },
-  { path: 'plataforma', loadComponent: () => import('./pages/platform-dashboard/platform-dashboard.component').then(m => m.PlatformDashboardComponent), canActivate: [platformAuthGuard], data: { layout: 'panel' } },
+  { path: 'plataforma/negocios', loadComponent: () => import('./pages/platform-dashboard/platform-dashboard.component').then(m => m.PlatformDashboardComponent), canActivate: [platformAuthGuard], data: { layout: 'panel', seccion: 'negocios' } },
+  { path: 'plataforma/comisiones', loadComponent: () => import('./pages/platform-dashboard/platform-dashboard.component').then(m => m.PlatformDashboardComponent), canActivate: [platformAuthGuard], data: { layout: 'panel', seccion: 'comisiones' } },
+  { path: 'plataforma', loadComponent: () => import('./pages/platform-dashboard/platform-dashboard.component').then(m => m.PlatformDashboardComponent), canActivate: [platformAuthGuard], data: { layout: 'panel', seccion: 'resumen' } },
   { path: 'acceso', loadComponent: () => import('./pages/fluora-access/fluora-access.component').then((m) => m.FluoraAccessComponent), data: { layout: 'auth' } },
   { path: 'invitacion/aceptar', loadComponent: () => import('./pages/accept-user-invitation/accept-user-invitation.component').then((m) => m.AcceptUserInvitationComponent), data: { layout: 'auth' } },
   { path: 'verificar-correo', loadComponent: () => import('./pages/verify-email/verify-email.component').then((m) => m.VerifyEmailComponent), data: { layout: 'auth' } },

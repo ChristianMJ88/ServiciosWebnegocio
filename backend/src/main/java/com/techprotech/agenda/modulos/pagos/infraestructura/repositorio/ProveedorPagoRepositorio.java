@@ -4,7 +4,9 @@ import com.techprotech.agenda.modulos.pagos.infraestructura.entidad.ProveedorPag
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.Optional;
+import java.util.List;
 
 public interface ProveedorPagoRepositorio extends JpaRepository<ProveedorPagoEntidad, Long> {
     Optional<ProveedorPagoEntidad> findByCodigoAndActivoTrue(String codigo);
+    List<ProveedorPagoEntidad> findByActivoTrueOrderByNombreAsc();
 }
