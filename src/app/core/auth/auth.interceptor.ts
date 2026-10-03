@@ -3,10 +3,13 @@ import { inject } from '@angular/core';
 import { catchError, switchMap, throwError } from 'rxjs';
 import { AuthService } from './auth.service';
 import { environment } from '../../../environments/environment';
+import { PlatformAuthService } from '../platform/platform-auth.service';
 
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
   const authService = inject(AuthService);
-  const token = authService.getTokenAcceso();
+  const platformAuth = inject(PlatformAuthService);
+  const esRutaPlataforma = req.url.includes('/plataforma/');
+  const token = esRutaPlataforma ? platformAuth.token() : authService.getTokenAcceso();
   const esRutaAuth = req.url.includes('/auth/iniciar-sesion')
     || req.url.includes('/auth/registrar-cliente')
     || req.url.includes('/auth/refrescar-token')
@@ -28,6 +31,10 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
 
   return next(requestConToken).pipe(
     catchError(error => {
+      if (esRutaPlataforma) {
+        if (error.status === 401 && !esRutaAuth) platformAuth.cerrar();
+        return throwError(() => error);
+      }
       if (error.status !== 401 || esRutaAuth || omitirRefresh || !authService.autenticado()) {
         return throwError(() => error);
       }

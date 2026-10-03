@@ -34,6 +34,8 @@ public class FiltroAutenticacionJwt extends OncePerRequestFilter {
             var authorities = permisos.stream()
                     .map(SimpleGrantedAuthority::new)
                     .collect(Collectors.toSet());
+            String ambito = servicioTokenJwt.obtenerAmbito(token);
+            authorities.add(new SimpleGrantedAuthority("AMBITO_" + ambito));
             authorities.addAll(servicioTokenJwt.obtenerRoles(token)
                     .stream()
                     .map(rol -> rol.startsWith("ROLE_") ? rol : "ROLE_" + rol)
@@ -44,6 +46,7 @@ public class FiltroAutenticacionJwt extends OncePerRequestFilter {
                     servicioTokenJwt.obtenerSujeto(token),
                     servicioTokenJwt.obtenerUsuarioId(token),
                     servicioTokenJwt.obtenerEmpresaId(token),
+                    ambito,
                     roles,
                     permisos,
                     sucursalesPermitidas

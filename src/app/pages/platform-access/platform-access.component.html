@@ -1,0 +1,17 @@
+<main class="platform-access">
+  <section class="brand-panel">
+    <a class="brand" routerLink="/"><span>F</span><strong>Fluora</strong></a>
+    <div class="brand-copy"><span class="eyebrow">Operación SaaS</span><h1>Control de plataforma, separado de cada negocio.</h1><p>Supervisa tenants, integraciones y finanzas desde un entorno exclusivo para el equipo de Fluora.</p></div>
+    <div class="security-note"><i class="bi bi-shield-lock"></i><span>El acceso de plataforma no concede una sesión dentro de ningún tenant.</span></div>
+  </section>
+  <section class="form-panel">
+    <form (ngSubmit)="ingresar()">
+      <header><span class="mobile-mark">F</span><p>Fluora Plataforma</p><h2>Acceso del equipo</h2><span>Utiliza tus credenciales internas de operación.</span></header>
+      @if (error()) { <p class="error"><i class="bi bi-exclamation-circle"></i>{{ error() }}</p> }
+      <label><span>Correo corporativo</span><input type="email" name="correo" [(ngModel)]="correo" autocomplete="username" placeholder="nombre@refluora.com" required></label>
+      <label><span>Contraseña</span><input type="password" name="contrasena" [(ngModel)]="contrasena" autocomplete="current-password" required></label>
+      <button type="submit" [disabled]="procesando() || !correo.trim() || !contrasena"><span>{{ procesando() ? 'Verificando…' : 'Entrar a plataforma' }}</span><i class="bi bi-arrow-right"></i></button>
+      <small>Acceso registrado y sujeto a los permisos de tu rol de plataforma.</small>
+    </form>
+  </section>
+</main>

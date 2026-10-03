@@ -50,6 +50,12 @@ management:
         enabled: true
 
 aplicacion:
+  plataforma:
+    bootstrap:
+      habilitado: ${PLATAFORMA_BOOTSTRAP_HABILITADO:false}
+      correo: ${PLATAFORMA_BOOTSTRAP_CORREO:}
+      nombre: ${PLATAFORMA_BOOTSTRAP_NOMBRE:Administrador Fluora}
+      contrasena: ${PLATAFORMA_BOOTSTRAP_CONTRASENA:}
   onboarding:
     verificacion-correo:
       url: ${ONBOARDING_VERIFICACION_CORREO_URL:}

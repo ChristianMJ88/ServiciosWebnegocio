@@ -48,6 +48,9 @@ public class ControladorAutenticacion {
         if (usuario == null) {
             throw new ResponseStatusException(UNAUTHORIZED, "La sesión no es válida");
         }
+        if (usuario.esPlataforma()) {
+            throw new ResponseStatusException(UNAUTHORIZED, "Esta sesión pertenece a Fluora Plataforma");
+        }
         return usuarioInternoPerfilRepositorio.findById(usuario.usuarioId())
                 .map(perfil -> ResponseEntity.ok(new PerfilUsuarioResponse(
                         usuario.usuarioId(),

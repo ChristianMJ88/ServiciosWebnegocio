@@ -1,0 +1,47 @@
+<main class="platform-shell" [class.menu-open]="menuAbierto()">
+  <aside class="sidebar">
+    <div class="brand"><span>F</span><div><strong>Fluora</strong><small>Plataforma SaaS</small></div><button type="button" (click)="menuAbierto.set(false)" aria-label="Cerrar menú"><i class="bi bi-x-lg"></i></button></div>
+    <nav aria-label="Navegación de plataforma">
+      <a class="active"><i class="bi bi-grid-1x2-fill"></i><span>Resumen</span></a>
+      <a><i class="bi bi-buildings"></i><span>Negocios</span><b>{{ resumen()?.tenantsTotal ?? 0 }}</b></a>
+      <a><i class="bi bi-credit-card-2-front"></i><span>Suscripciones</span><em>Próximo</em></a>
+      <a><i class="bi bi-percent"></i><span>Comisiones</span><em>Próximo</em></a>
+      <a><i class="bi bi-plug"></i><span>Integraciones</span><em>Próximo</em></a>
+      <a><i class="bi bi-shield-check"></i><span>Auditoría</span><em>Próximo</em></a>
+    </nav>
+    <div class="operator"><span>{{ auth.sesionActual()?.nombre?.slice(0, 1) || 'F' }}</span><div><strong>{{ auth.sesionActual()?.nombre }}</strong><small>{{ auth.sesionActual()?.correo }}</small></div><button type="button" (click)="auth.cerrar()" aria-label="Cerrar sesión"><i class="bi bi-box-arrow-right"></i></button></div>
+  </aside>
+  <button class="backdrop" type="button" (click)="menuAbierto.set(false)" aria-label="Cerrar menú"></button>
+
+  <section class="content">
+    <header class="topbar"><button class="menu-button" type="button" (click)="menuAbierto.set(true)" aria-label="Abrir menú"><i class="bi bi-list"></i></button><div><span>Fluora Plataforma</span><strong>Operación general</strong></div><button class="refresh" type="button" (click)="cargar()" [disabled]="cargando()"><i class="bi bi-arrow-clockwise"></i><span>Actualizar</span></button></header>
+    <div class="workspace">
+      <section class="hero"><div><span class="eyebrow">Administración SaaS</span><h1>Visión completa de Fluora</h1><p>Indicadores consolidados con aislamiento entre negocios y datos financieros conciliados.</p></div><span class="scope"><i class="bi bi-shield-lock-fill"></i>Ámbito plataforma</span></section>
+
+      @if (error()) { <p class="feedback"><i class="bi bi-exclamation-circle"></i>{{ error() }}<button type="button" (click)="cargar()">Reintentar</button></p> }
+      @if (cargando()) { <div class="loading"><span></span><span></span><span></span><p>Preparando indicadores…</p></div> }
+      @else if (resumen(); as datos) {
+        <section class="metrics" aria-label="Indicadores de plataforma">
+          <article><div class="metric-icon blue"><i class="bi bi-buildings"></i></div><span>Negocios activos</span><strong>{{ datos.tenantsActivos }}</strong><small>de {{ datos.tenantsTotal }} registrados</small></article>
+          <article><div class="metric-icon violet"><i class="bi bi-people"></i></div><span>Usuarios tenant</span><strong>{{ datos.usuariosTenant }}</strong><small>En todos los negocios</small></article>
+          <article><div class="metric-icon amber"><i class="bi bi-credit-card"></i></div><span>Cuentas de pago</span><strong>{{ datos.cuentasPagoConectadas }}</strong><small>Con proveedor conectado</small></article>
+          <article class="revenue"><div class="metric-icon green"><i class="bi bi-graph-up-arrow"></i></div><span>Comisión Fluora</span><strong>{{ moneda(datos.comisionesFluora, datos.moneda) }}</strong><small>Conciliada; reglas actuales</small></article>
+        </section>
+
+        <section class="financial-card">
+          <header><div><span class="eyebrow">Operación financiera</span><h2>Flujo conciliado</h2></div><span>Fuente: reportes de proveedores</span></header>
+          <div class="financial-flow"><div><span>Volumen bruto</span><strong>{{ moneda(datos.volumenBrutoConciliado, datos.moneda) }}</strong></div><i class="bi bi-chevron-right"></i><div><span>Comisiones proveedor</span><strong class="negative">− {{ moneda(datos.comisionesProveedor, datos.moneda) }}</strong></div><i class="bi bi-chevron-right"></i><div><span>Neto para negocios</span><strong class="positive">{{ moneda(datos.netoNegocios, datos.moneda) }}</strong></div></div>
+        </section>
+
+        <section class="tenant-card">
+          <header><div><span class="eyebrow">Directorio</span><h2>Negocios registrados</h2><p>Consulta operativa de sólo lectura en esta primera etapa.</p></div><label class="search"><i class="bi bi-search"></i><input type="search" [ngModel]="busqueda()" (ngModelChange)="busqueda.set($event)" placeholder="Buscar nombre o slug"></label></header>
+          <div class="tenant-list">
+            @for (tenant of filtrados(); track tenant.id) {
+              <article><div class="tenant-mark">{{ tenant.nombre.slice(0, 2).toUpperCase() }}</div><div class="tenant-name"><strong>{{ tenant.nombre }}</strong><span>/e/{{ tenant.slug }}</span></div><span class="status" [class.inactive]="tenant.estado !== 'ACTIVA'">{{ tenant.estado }}</span><div class="tenant-stat"><span>Equipo</span><strong>{{ tenant.usuarios }} {{ tenant.usuarios === 1 ? 'usuario' : 'usuarios' }}</strong></div><div class="tenant-stat"><span>Sucursales</span><strong>{{ tenant.sucursales }}</strong></div><div class="tenant-stat"><span>Pagos</span><strong>{{ tenant.pagosConectados ? 'Conectados' : 'Sin conectar' }}</strong></div><div class="tenant-money"><span>Neto conciliado</span><strong>{{ moneda(tenant.netoConciliado, tenant.moneda) }}</strong><small>Fluora {{ moneda(tenant.comisionFluora, tenant.moneda) }}</small></div><button type="button" disabled aria-label="Ver detalle"><i class="bi bi-chevron-right"></i></button></article>
+            } @empty { <div class="empty"><i class="bi bi-buildings"></i><strong>No hay resultados</strong><span>Prueba con otro término de búsqueda.</span></div> }
+          </div>
+        </section>
+      }
+    </div>
+  </section>
+</main>

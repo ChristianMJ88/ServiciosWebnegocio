@@ -6,10 +6,15 @@ public record UsuarioAutenticado(
         String correo,
         Long usuarioId,
         Long empresaId,
+        String ambito,
         List<String> roles,
         List<String> permisos,
         List<Long> sucursalesPermitidas
 ) {
+    public boolean esPlataforma() {
+        return "PLATAFORMA".equals(ambito);
+    }
+
     public boolean tienePermiso(String permiso) {
         return permisos != null && permisos.contains(permiso);
     }

@@ -38,6 +38,8 @@ public class ConfiguracionSeguridad {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/actuator/health", "/actuator/info").permitAll()
                         .requestMatchers("/api/v1/publico/**").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/v1/plataforma/auth/iniciar-sesion").permitAll()
+                        .requestMatchers("/api/v1/plataforma/**").hasAuthority("AMBITO_PLATAFORMA")
                         .requestMatchers(
                                 "/api/v1/auth/iniciar-sesion",
                                 "/api/v1/auth/app-login",

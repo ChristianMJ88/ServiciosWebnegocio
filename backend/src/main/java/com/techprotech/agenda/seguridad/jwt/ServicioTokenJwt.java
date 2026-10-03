@@ -40,9 +40,27 @@ public class ServicioTokenJwt {
                 .claim("usuarioId", usuarioId)
                 .claim("empresaId", empresaId)
                 .claim("empresaSlug", empresaSlug)
+                .claim("ambito", "TENANT")
                 .claim("roles", roles)
                 .claim("permisos", permisos)
                 .claim("sucursales", sucursalesPermitidas)
+                .signWith(claveFirma())
+                .compact();
+    }
+
+    public String generarTokenPlataforma(String sujeto, Long usuarioId,
+                                          Collection<String> roles, Collection<String> permisos) {
+        Instant ahora = Instant.now();
+        return Jwts.builder()
+                .subject(sujeto)
+                .issuer(propiedadesJwt.issuer())
+                .issuedAt(Date.from(ahora))
+                .expiration(Date.from(ahora.plus(propiedadesJwt.minutosAcceso(), ChronoUnit.MINUTES)))
+                .claim("usuarioId", usuarioId)
+                .claim("ambito", "PLATAFORMA")
+                .claim("roles", roles)
+                .claim("permisos", permisos)
+                .claim("sucursales", List.of())
                 .signWith(claveFirma())
                 .compact();
     }
@@ -83,6 +101,11 @@ public class ServicioTokenJwt {
 
     public String obtenerEmpresaSlug(String token) {
         return obtenerClaims(token).get("empresaSlug", String.class);
+    }
+
+    public String obtenerAmbito(String token) {
+        String ambito = obtenerClaims(token).get("ambito", String.class);
+        return ambito == null ? "TENANT" : ambito;
     }
 
     @SuppressWarnings("unchecked")
