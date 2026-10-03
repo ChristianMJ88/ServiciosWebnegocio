@@ -1,8 +1,4 @@
 <section class="settlements-page">
-  <div class="settlements-actions">
-    <button type="button" class="icon-action" (click)="cargar()" [disabled]="cargando() || procesando()" aria-label="Actualizar liquidaciones"><i class="bi bi-arrow-clockwise"></i></button>
-  </div>
-
   @if (mensaje()) { <p class="feedback is-success"><i class="bi bi-check-circle"></i>{{ mensaje() }}</p> }
   @if (error()) { <p class="feedback is-error"><i class="bi bi-exclamation-circle"></i>{{ error() }}</p> }
 
