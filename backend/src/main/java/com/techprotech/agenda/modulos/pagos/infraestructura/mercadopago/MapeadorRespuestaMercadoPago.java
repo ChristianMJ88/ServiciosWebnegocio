@@ -42,10 +42,12 @@ class MapeadorRespuestaMercadoPago {
         boolean hayDetalle = bruto != null || comisionProveedor != null || comisionPlataforma != null
                 || neto != null || reembolsado != null;
         if (!hayDetalle) return null;
-        boolean definitiva = neto != null && (estado == EstadoPago.APROBADO || estado == EstadoPago.REEMBOLSADO);
+        // La respuesta de la orden es operativa. La liquidación definitiva sólo proviene
+        // de los Reportes de Liberaciones/Settlement descargados desde la API de Reportes.
+        boolean definitiva = false;
         return new DesgloseLiquidacionPago(moneda, bruto, comisionProveedor, null, comisionPlataforma,
                 null, null, reembolsado, neto, definitiva,
-                definitiva ? fecha(respuesta.path("last_updated_date")) : null);
+                null);
     }
 
     ResultadoReembolso reembolso(JsonNode respuesta, BigDecimal importeSolicitado) {

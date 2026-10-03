@@ -39,7 +39,8 @@ export class AdminPaymentsSectionComponent implements OnInit {
   readonly brutoConciliado = computed(() => this.monedaResumen() == null ? null
     : this.conciliaciones().reduce((total, item) => total + item.importeBruto, 0));
   readonly netoInformado = computed(() => this.monedaResumen() == null ? null
-    : this.conciliaciones().reduce((total, item) => total + (item.importeNeto ?? 0), 0));
+    : this.conciliaciones().filter(item => item.liquidacionDefinitiva)
+      .reduce((total, item) => total + (item.importeNeto ?? 0), 0));
   readonly pendientesConciliacion = computed(() => this.conciliaciones().filter(item => !item.liquidacionDefinitiva && item.estado !== 'REEMBOLSADA').length);
   terminalSucursal: Record<string, number | null> = {};
   terminalNombre: Record<string, string> = {};

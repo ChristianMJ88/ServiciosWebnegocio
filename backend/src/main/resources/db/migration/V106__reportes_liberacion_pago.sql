@@ -1,0 +1,21 @@
+CREATE TABLE reporte_liberacion_pago (
+    id BIGINT NOT NULL AUTO_INCREMENT,
+    empresa_id BIGINT NOT NULL,
+    proveedor_pago_id BIGINT NOT NULL,
+    tarea_externa_id VARCHAR(100) NOT NULL,
+    reporte_externo_id VARCHAR(100) NULL,
+    nombre_archivo VARCHAR(300) NULL,
+    estado VARCHAR(30) NOT NULL,
+    fecha_desde DATETIME(6) NOT NULL,
+    fecha_hasta DATETIME(6) NOT NULL,
+    filas_procesadas INT NOT NULL DEFAULT 0,
+    error_ultimo VARCHAR(1000) NULL,
+    solicitado_en DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+    procesado_en DATETIME(6) NULL,
+    actualizado_en DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6),
+    PRIMARY KEY (id),
+    CONSTRAINT fk_reporte_liberacion_empresa FOREIGN KEY (empresa_id) REFERENCES empresa(id),
+    CONSTRAINT fk_reporte_liberacion_proveedor FOREIGN KEY (proveedor_pago_id) REFERENCES proveedor_pago(id),
+    CONSTRAINT uk_reporte_liberacion_tarea UNIQUE (proveedor_pago_id, tarea_externa_id),
+    INDEX idx_reporte_liberacion_empresa (empresa_id, estado, solicitado_en)
+);

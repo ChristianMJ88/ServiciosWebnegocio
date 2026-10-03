@@ -9,5 +9,6 @@ import java.util.Optional;
 public interface ConciliacionPagoRepositorio extends JpaRepository<ConciliacionPagoEntidad, Long> {
     Optional<ConciliacionPagoEntidad> findByProveedorPagoIdAndReferenciaOrdenExterna(Long proveedorPagoId,
                                                                                       String referenciaOrdenExterna);
+    Optional<ConciliacionPagoEntidad> findByEmpresaIdAndReferenciaPagoExterna(Long empresaId, String referenciaPagoExterna);
     List<ConciliacionPagoEntidad> findTop100ByEmpresaIdOrderByActualizadoEnDesc(Long empresaId);
 }

@@ -67,6 +67,7 @@ class MapeadorRespuestaMercadoPagoTest {
         assertThat(resultado.liquidacion().comisionPlataforma()).isEqualByComparingTo(new BigDecimal("5.00"));
         assertThat(resultado.liquidacion().importeNeto()).isEqualByComparingTo(new BigDecimal("476.44"));
         assertThat(resultado.liquidacion().impuestoComisionProveedor()).isNull();
-        assertThat(resultado.liquidacion().definitiva()).isTrue();
+        assertThat(resultado.liquidacion().definitiva()).isFalse();
+        assertThat(resultado.liquidacion().liquidadoEn()).isNull();
     }
 }

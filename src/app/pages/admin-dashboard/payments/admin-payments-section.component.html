@@ -81,13 +81,13 @@
         <div>
           <span class="payments-panel__eyebrow">Control financiero</span>
           <h4>Conciliación de cobros</h4>
-          <p>Importes reportados por Mercado Pago para Checkout y Point. Los costos pendientes se completan cuando el proveedor publica la liquidación.</p>
+          <p>Las órdenes muestran datos preliminares. Los importes definitivos se obtienen al generar y consumir el Reporte de Liberaciones de la cuenta del negocio.</p>
         </div>
         <button type="button" class="payment-button payment-button--light" [disabled]="cargando()" (click)="cargar()"><i class="bi bi-arrow-clockwise"></i>Actualizar</button>
       </header>
       <div class="settlement-summary">
         <article><span>Venta bruta</span><strong>{{ monedaResumen() ? (brutoConciliado() | currency:monedaResumen()!:'symbol-narrow':'1.2-2':'es-MX') : '—' }}</strong><small>{{ monedaResumen() ? 'Últimos ' + conciliaciones().length + ' cobros' : 'Totales separados por moneda' }}</small></article>
-        <article><span>Neto informado</span><strong>{{ monedaResumen() ? (netoInformado() | currency:monedaResumen()!:'symbol-narrow':'1.2-2':'es-MX') : '—' }}</strong><small>Confirmado por el proveedor</small></article>
+        <article><span>Neto conciliado</span><strong>{{ monedaResumen() ? (netoInformado() | currency:monedaResumen()!:'symbol-narrow':'1.2-2':'es-MX') : '—' }}</strong><small>Confirmado por Reporte de Liberaciones</small></article>
         <article [class.has-pending]="pendientesConciliacion() > 0"><span>Por conciliar</span><strong>{{ pendientesConciliacion() }}</strong><small>{{ pendientesConciliacion() === 1 ? 'Cobro pendiente' : 'Cobros pendientes' }}</small></article>
       </div>
       @if (conciliaciones().length) {
@@ -98,7 +98,7 @@
               <dl>
                 <div><dt>Comisión proveedor</dt><dd>{{ item.comisionProveedorTotal == null ? 'Pendiente' : (item.comisionProveedorTotal | currency:item.moneda:'symbol-narrow':'1.2-2':'es-MX') }}</dd></div>
                 <div><dt>Comisión Fluora</dt><dd>{{ item.comisionPlataforma == null ? 'No aplicada' : (item.comisionPlataforma | currency:item.moneda:'symbol-narrow':'1.2-2':'es-MX') }}</dd></div>
-                <div><dt>Neto</dt><dd>{{ item.importeNeto == null ? 'Pendiente' : (item.importeNeto | currency:item.moneda:'symbol-narrow':'1.2-2':'es-MX') }}</dd></div>
+                <div><dt>{{ item.liquidacionDefinitiva ? 'Neto conciliado' : 'Neto preliminar' }}</dt><dd>{{ item.importeNeto == null ? 'Pendiente de reporte' : (item.importeNeto | currency:item.moneda:'symbol-narrow':'1.2-2':'es-MX') }}</dd></div>
               </dl>
               <div class="settlement-row__status" [class.is-ready]="item.liquidacionDefinitiva" [class.is-refunded]="item.estado === 'REEMBOLSADA'"><span>{{ item.estado === 'REEMBOLSADA' ? 'Reembolsada' : item.liquidacionDefinitiva ? 'Conciliada' : 'Pendiente' }}</span><small>{{ item.actualizadoEn | date:'dd/MM/yyyy HH:mm':'':'es-MX' }}</small></div>
             </article>
