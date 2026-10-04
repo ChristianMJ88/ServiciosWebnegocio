@@ -5,7 +5,9 @@ import com.techprotech.agenda.modulos.autenticacion.infraestructura.repositorio.
 import com.techprotech.agenda.modulos.plataforma.api.dto.AsignarSuscripcionPlataformaRequest;
 import com.techprotech.agenda.modulos.plataforma.infraestructura.entidad.PlanPlataformaEntidad;
 import com.techprotech.agenda.modulos.plataforma.infraestructura.entidad.SuscripcionPlataformaEntidad;
+import com.techprotech.agenda.modulos.plataforma.infraestructura.repositorio.LimitePlataformaRepositorio;
 import com.techprotech.agenda.modulos.plataforma.infraestructura.repositorio.ModuloPlataformaRepositorio;
+import com.techprotech.agenda.modulos.plataforma.infraestructura.repositorio.PlanLimitePlataformaRepositorio;
 import com.techprotech.agenda.modulos.plataforma.infraestructura.repositorio.PlanModuloPlataformaRepositorio;
 import com.techprotech.agenda.modulos.plataforma.infraestructura.repositorio.PlanPlataformaRepositorio;
 import com.techprotech.agenda.modulos.plataforma.infraestructura.repositorio.SuscripcionPlataformaRepositorio;
@@ -31,6 +33,8 @@ class ServicioSuscripcionesPlataformaTest {
     @Mock private ModuloPlataformaRepositorio modulos;
     @Mock private PlanPlataformaRepositorio planes;
     @Mock private PlanModuloPlataformaRepositorio planModulos;
+    @Mock private LimitePlataformaRepositorio limites;
+    @Mock private PlanLimitePlataformaRepositorio planLimites;
     @Mock private SuscripcionPlataformaRepositorio suscripciones;
     @Mock private EmpresaRepositorio empresas;
     @Mock private ServicioAuditoriaPlataforma auditoria;
@@ -41,7 +45,7 @@ class ServicioSuscripcionesPlataformaTest {
 
     @BeforeEach
     void preparar() {
-        servicio = new ServicioSuscripcionesPlataforma(modulos, planes, planModulos, suscripciones, empresas, auditoria);
+        servicio = new ServicioSuscripcionesPlataforma(modulos, planes, planModulos, limites, planLimites, suscripciones, empresas, auditoria);
         empresa = new EmpresaEntidad();
         empresa.setId(7L);
         empresa.setNombre("Nail Art Studio");
@@ -109,5 +113,71 @@ class ServicioSuscripcionesPlataformaTest {
                 .hasMessageContaining("fecha final de prueba");
 
         verifyNoInteractions(suscripciones);
+    }
+
+    @Test
+    void publicaSoloPlanesDisponiblesEnLaFechaActual() {
+        LocalDateTime ahora = LocalDateTime.now(java.time.ZoneOffset.UTC);
+        plan.setPublico(true);
+        plan.setDestacado(true);
+        plan.setVigenteDesde(ahora.minusDays(1));
+        plan.setVigenteHasta(ahora.plusDays(1));
+        PlanPlataformaEntidad expirado = nuevoPlan(4L, "EXPIRADO");
+        expirado.setVigenteHasta(ahora.minusMinutes(1));
+        PlanPlataformaEntidad futuro = nuevoPlan(5L, "FUTURO");
+        futuro.setVigenteDesde(ahora.plusDays(1));
+        PlanPlataformaEntidad privado = nuevoPlan(6L, "PRIVADO");
+        privado.setPublico(false);
+        when(planes.findAllByOrderByActivoDescNombreAsc()).thenReturn(List.of(expirado, futuro, privado, plan));
+        when(modulos.findAll()).thenReturn(List.of());
+        when(limites.findAll()).thenReturn(List.of());
+        when(planModulos.findByPlanId(any())).thenReturn(List.of());
+        when(planLimites.findByPlanId(any())).thenReturn(List.of());
+
+        var publicados = servicio.planesPublicos();
+
+        assertThat(publicados).extracting("id").containsExactly(plan.getId());
+    }
+
+    @Test
+    void creaLaPruebaDeRegistroConLaDuracionConfiguradaEnElPlan() {
+        plan.setPublico(true);
+        plan.setDiasPrueba(9);
+        when(planes.findById(plan.getId())).thenReturn(Optional.of(plan));
+        when(suscripciones.save(any())).thenAnswer(invocacion -> invocacion.getArgument(0));
+
+        SuscripcionPlataformaEntidad prueba = servicio.crearSuscripcionRegistro(empresa.getId(), plan.getId());
+
+        assertThat(prueba.getEmpresaId()).isEqualTo(empresa.getId());
+        assertThat(prueba.getEstado()).isEqualTo("PRUEBA");
+        assertThat(prueba.getPrecioAcordado()).isEqualByComparingTo(BigDecimal.ZERO);
+        assertThat(prueba.getPruebaHasta()).isEqualTo(prueba.getIniciaEn().plusDays(9));
+        assertThat(prueba.getReferenciaExterna()).isEqualTo("ONBOARDING");
+    }
+
+    @Test
+    void dejaPendienteDePagoElRegistroCuandoElPlanNoOfrecePrueba() {
+        plan.setPublico(true);
+        plan.setDiasPrueba(0);
+        when(planes.findById(plan.getId())).thenReturn(Optional.of(plan));
+        when(suscripciones.save(any())).thenAnswer(invocacion -> invocacion.getArgument(0));
+
+        SuscripcionPlataformaEntidad pendiente = servicio.crearSuscripcionRegistro(empresa.getId(), plan.getId());
+
+        assertThat(pendiente.getEstado()).isEqualTo("PENDIENTE_PAGO");
+        assertThat(pendiente.getPrecioAcordado()).isEqualByComparingTo(plan.getPrecioMensual());
+        assertThat(pendiente.getPruebaHasta()).isNull();
+    }
+
+    private PlanPlataformaEntidad nuevoPlan(Long id, String codigo) {
+        PlanPlataformaEntidad otro = new PlanPlataformaEntidad();
+        otro.setId(id);
+        otro.setCodigo(codigo);
+        otro.setNombre(codigo);
+        otro.setMoneda("MXN");
+        otro.setPrecioMensual(new BigDecimal("99.00"));
+        otro.setActivo(true);
+        otro.setPublico(true);
+        return otro;
     }
 }

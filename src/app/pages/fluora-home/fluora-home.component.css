@@ -67,6 +67,10 @@
 .pricing-card__button { width: 100%; min-height: 44px; display: grid; place-items: center; margin-top: auto; border: 1px solid rgba(255,255,255,.22); border-radius: 999px; color: #fff; background: rgba(255,255,255,.1); font-size: .78rem; font-weight: 800; text-decoration: none; }
 .pricing-card--featured .pricing-card__button { border-color: transparent; color: #12313e; background: #fff; }
 .pricing-swipe-hint { display: none; }
+.pricing-empty { grid-column: 1 / -1; min-height: 180px; display: grid; place-items: center; align-content: center; gap: .45rem; padding: 2rem; border: 1px dashed rgba(255,255,255,.2); border-radius: 20px; color: rgba(255,255,255,.72); text-align: center; background: rgba(255,255,255,.035); }
+.pricing-empty i { font-size: 1.7rem; color: #a7f3d0; }
+.pricing-empty strong { color: #fff; font-size: 1rem; }
+.pricing-empty span { max-width: 520px; font-size: .76rem; line-height: 1.5; }
 .pricing-note { max-width: 780px; display: flex; align-items: flex-start; gap: .55rem; margin: 1.5rem auto 0; color: rgba(255,255,255,.65); font-size: .7rem; line-height: 1.5; text-align: center; }
 @keyframes journey-line { 0%,15% { transform: scaleX(0); opacity: .35; } 70%,100% { transform: scaleX(1); opacity: 1; } }
 @keyframes journey-float { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-4px); } }

@@ -18,6 +18,11 @@ public class PlanPlataformaEntidad {
     @Column(name="precio_anual", precision=12, scale=2) private BigDecimal precioAnual;
     @Column(nullable=false) private boolean activo;
     @Column(nullable=false) private boolean publico;
+    @Column(nullable=false) private boolean destacado;
+    @Column(name="dias_prueba",nullable=false) private int diasPrueba;
+    @Column(name="dias_gracia",nullable=false) private int diasGracia;
+    @Column(name="vigente_desde") private LocalDateTime vigenteDesde;
+    @Column(name="vigente_hasta") private LocalDateTime vigenteHasta;
     @Column(name="creado_en", insertable=false, updatable=false) private LocalDateTime creadoEn;
     @Column(name="actualizado_en", insertable=false, updatable=false) private LocalDateTime actualizadoEn;
 }

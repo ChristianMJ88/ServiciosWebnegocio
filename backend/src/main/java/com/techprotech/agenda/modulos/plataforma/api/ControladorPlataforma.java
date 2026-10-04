@@ -10,6 +10,7 @@ import com.techprotech.agenda.modulos.plataforma.api.dto.SimularComisionPlatafor
 import com.techprotech.agenda.modulos.plataforma.api.dto.TenantPlataformaResponse;
 import com.techprotech.agenda.modulos.plataforma.api.dto.DetalleTenantPlataformaResponse;
 import com.techprotech.agenda.modulos.plataforma.api.dto.ModuloPlataformaResponse;
+import com.techprotech.agenda.modulos.plataforma.api.dto.LimitePlataformaResponse;
 import com.techprotech.agenda.modulos.plataforma.api.dto.GuardarPlanPlataformaRequest;
 import com.techprotech.agenda.modulos.plataforma.api.dto.PlanPlataformaResponse;
 import com.techprotech.agenda.modulos.plataforma.api.dto.AsignarSuscripcionPlataformaRequest;
@@ -89,6 +90,10 @@ public class ControladorPlataforma {
     @GetMapping("/suscripciones/modulos")
     @PreAuthorize("hasAuthority('PLATAFORMA_SUSCRIPCIONES_GESTIONAR')")
     public List<ModuloPlataformaResponse> modulosSuscripcion() { return suscripciones.modulos(); }
+
+    @GetMapping("/suscripciones/limites")
+    @PreAuthorize("hasAuthority('PLATAFORMA_SUSCRIPCIONES_GESTIONAR')")
+    public List<LimitePlataformaResponse> limitesSuscripcion() { return suscripciones.limites(); }
 
     @GetMapping("/suscripciones/planes")
     @PreAuthorize("hasAuthority('PLATAFORMA_SUSCRIPCIONES_GESTIONAR')")

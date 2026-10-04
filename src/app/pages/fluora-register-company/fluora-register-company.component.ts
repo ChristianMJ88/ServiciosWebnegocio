@@ -6,6 +6,7 @@ import { finalize } from 'rxjs/operators';
 import { OnboardingService, RegistrarEmpresaResponse } from '../../core/onboarding/onboarding.service';
 import { PlatformHostService } from '../../core/platform/platform-host.service';
 import { AuthService } from '../../core/auth/auth.service';
+import { PlanPublicoFluora, PublicPlansService } from '../../core/platform/public-plans.service';
 
 @Component({
   selector: 'app-fluora-register-company',
@@ -20,6 +21,7 @@ export class FluoraRegisterCompanyComponent implements OnInit {
   private readonly route = inject(ActivatedRoute);
   readonly platformHost = inject(PlatformHostService);
   private readonly authService = inject(AuthService);
+  private readonly plansApi = inject(PublicPlansService);
 
   readonly loading = signal(false);
   readonly submitted = signal<RegistrarEmpresaResponse | null>(null);
@@ -29,6 +31,9 @@ export class FluoraRegisterCompanyComponent implements OnInit {
   readonly socialConfig = signal({google: false, microsoft: false, apple: false, googleInicioUrl: null as string | null, googleAccesoUrl: null as string | null, microsoftInicioUrl: null as string | null, microsoftAccesoUrl: null as string | null, mostrarProveedoresNoConfigurados: false});
   readonly socialConfigReady = signal(false);
   readonly paso = signal<1 | 2 | 3>(1);
+  readonly planes = signal<PlanPublicoFluora[]>([]);
+  readonly planSeleccionadoId = signal<number | null>(null);
+  readonly planSeleccionado = computed(() => this.planes().find(plan=>plan.id===this.planSeleccionadoId()) || null);
   readonly slugPreview = computed(() => this.slugify(this.form.value.slug || this.form.value.nombreEmpresa || 'tu-negocio'));
   error = '';
 
@@ -45,6 +50,8 @@ export class FluoraRegisterCompanyComponent implements OnInit {
   });
 
   ngOnInit(): void {
+    const planSolicitado=Number(this.route.snapshot.queryParamMap.get('plan'))||null;
+    this.plansApi.listar().subscribe({next:planes=>{this.planes.set(planes);const elegido=planes.find(p=>p.id===planSolicitado)||planes.find(p=>p.destacado)||planes[0];this.planSeleccionadoId.set(elegido?.id??null);}});
     this.onboardingService.configuracionRegistroSocial().subscribe({
       next: config => {
         this.socialConfig.set(config);
@@ -142,7 +149,8 @@ export class FluoraRegisterCompanyComponent implements OnInit {
       telefonoAdministrador: valores.telefonoAdministrador!.trim(),
       contrasena: registroSocialToken ? undefined : valores.contrasena || undefined,
       zonaHoraria: valores.zonaHoraria!.trim(),
-      registroSocialToken
+      registroSocialToken,
+      planId: this.planSeleccionadoId() || undefined
     })
       .pipe(finalize(() => this.loading.set(false)))
       .subscribe({
@@ -169,6 +177,15 @@ export class FluoraRegisterCompanyComponent implements OnInit {
 
   entrarAlPanel(): void {
     globalThis.location.href = this.platformHost.appUrl('/admin/resumen');
+  }
+
+  precioPlan(plan: PlanPublicoFluora): string {
+    return new Intl.NumberFormat('es-MX', {
+      style: 'currency',
+      currency: plan.moneda,
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    }).format(plan.precioMensual);
   }
 
   private slugify(value: string): string {

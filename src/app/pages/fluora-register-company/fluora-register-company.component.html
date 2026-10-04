@@ -6,7 +6,7 @@
         <span class="company-register__eyebrow">Empieza hoy</span>
         <h1>Crea tu cuenta. Configura tu negocio a tu ritmo.</h1>
         <p>Primero protegemos tu acceso y después preparamos únicamente lo esencial para entrar a Fluora.</p>
-        <div class="company-register__trial"><i class="bi bi-gift"></i><div><strong>3 meses de Fluora PRO incluidos</strong><span>Conoce el producto antes de elegir un plan.</span></div></div>
+        @if (planSeleccionado(); as plan) { <div class="company-register__trial"><i class="bi bi-gift"></i><div><strong>{{ plan.diasPrueba }} días de {{ plan.nombre }} incluidos</strong><span>La duración y capacidades corresponden al plan seleccionado.</span></div></div> }
         @if (paso() >= 2) {
           <div class="company-register__panel"><strong>Dirección sugerida de tu minisitio</strong><span>{{ slugPreview() }}</span><small>Podrás editarla antes de publicar: <b>/e/{{ slugPreview() }}</b></small></div>
         }
@@ -53,7 +53,8 @@
 
         @if (paso() === 2) {
           <form [formGroup]="form" (ngSubmit)="onSubmit()" class="company-register__form">
-            <div class="company-register__section"><h3><span>2</span> Tu negocio</h3><div class="company-register__grid">
+            @if (planes().length) { <div class="company-register__section"><h3><span>2</span> Elige cómo quieres comenzar</h3><div class="company-register__plans">@for (plan of planes(); track plan.id) { <button type="button" [class.selected]="planSeleccionadoId() === plan.id" (click)="planSeleccionadoId.set(plan.id)"><span><strong>{{ plan.nombre }}</strong><small>{{ plan.descripcion }}</small></span><b>{{ precioPlan(plan) }}<em>/mes</em></b><i class="bi" [class.bi-check-circle-fill]="planSeleccionadoId() === plan.id" [class.bi-circle]="planSeleccionadoId() !== plan.id"></i></button> }</div></div> }
+            <div class="company-register__section"><h3><span>{{ planes().length ? '3' : '2' }}</span> Tu negocio</h3><div class="company-register__grid">
               <label class="company-register__field company-register__field--full"><span>Nombre del negocio</span><input type="text" formControlName="nombreEmpresa" placeholder="Studio Magnolia" class="form-control"></label>
               <label class="company-register__field"><span>Categoría</span><input type="text" formControlName="giro" placeholder="Describe la actividad del negocio" class="form-control"></label>
               <label class="company-register__field"><span>Personas que atenderán</span><input type="number" min="1" max="500" formControlName="tamanoEquipo" class="form-control"></label>

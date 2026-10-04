@@ -30,6 +30,7 @@ import com.techprotech.agenda.modulos.sitio.infraestructura.entidad.EmpresaSitio
 import com.techprotech.agenda.modulos.sitio.infraestructura.repositorio.EmpresaSitioConfigRepositorio;
 import com.techprotech.agenda.modulos.sucursales.infraestructura.entidad.SucursalEntidad;
 import com.techprotech.agenda.modulos.sucursales.infraestructura.repositorio.SucursalRepositorio;
+import com.techprotech.agenda.modulos.plataforma.aplicacion.ServicioSuscripcionesPlataforma;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -68,6 +69,7 @@ public class ServicioOnboardingEmpresaImpl implements ServicioOnboardingEmpresa 
     private final ServicioVerificacionCorreoOnboarding verificacionCorreo;
     private final ServicioAutenticacion servicioAutenticacion;
     private final EmpresaOnboardingProgresoRepositorio progresoRepositorio;
+    private final ServicioSuscripcionesPlataforma suscripcionesPlataforma;
 
     public ServicioOnboardingEmpresaImpl(
             EmpresaRepositorio empresaRepositorio,
@@ -85,7 +87,8 @@ public class ServicioOnboardingEmpresaImpl implements ServicioOnboardingEmpresa 
             UsuarioIdentidadExternaRepositorio identidadExternaRepositorio,
             ServicioVerificacionCorreoOnboarding verificacionCorreo,
             ServicioAutenticacion servicioAutenticacion,
-            EmpresaOnboardingProgresoRepositorio progresoRepositorio
+            EmpresaOnboardingProgresoRepositorio progresoRepositorio,
+            ServicioSuscripcionesPlataforma suscripcionesPlataforma
     ) {
         this.empresaRepositorio = empresaRepositorio;
         this.usuarioRepositorio = usuarioRepositorio;
@@ -103,6 +106,7 @@ public class ServicioOnboardingEmpresaImpl implements ServicioOnboardingEmpresa 
         this.verificacionCorreo = verificacionCorreo;
         this.servicioAutenticacion = servicioAutenticacion;
         this.progresoRepositorio = progresoRepositorio;
+        this.suscripcionesPlataforma = suscripcionesPlataforma;
     }
 
     @Override
@@ -127,6 +131,7 @@ public class ServicioOnboardingEmpresaImpl implements ServicioOnboardingEmpresa 
         boolean requiereConfirmacion = perfilSocial == null;
         UsuarioEntidad administrador = crearAdministradorInicial(empresa, correoAdministrador, request, perfilSocial);
         crearProgresoInicial(empresa.getId(), request);
+        if (request.planId() != null) suscripcionesPlataforma.crearSuscripcionRegistro(empresa.getId(), request.planId());
         vincularIdentidadSocial(administrador, perfilSocial);
         if (requiereConfirmacion) verificacionCorreo.enviar(empresa, administrador, request.nombreAdministrador().trim());
         else servicioOutboxCorreoBienvenida.programar(new BienvenidaEmpresaCorreo(empresa.getId(), empresa.getNombre(), request.nombreAdministrador().trim(), correoAdministrador, slug));

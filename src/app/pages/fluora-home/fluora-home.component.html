@@ -78,7 +78,7 @@
         <strong>Empieza con tu agenda. Crece sin cambiar de sistema.</strong>
         <span>Configura tu negocio, equipo y servicios paso a paso.</span>
       </div>
-      <a [attr.href]="registrationHref" class="conversion-button">Activar 3 meses PRO <i class="bi bi-arrow-right"></i></a>
+      <a [attr.href]="recommendedRegistrationHref()" class="conversion-button">{{ recommendedCta() }} <i class="bi bi-arrow-right"></i></a>
     </div>
   </section>
 
@@ -122,7 +122,7 @@
       </div>
       <div class="journey-cta">
         <p><strong>No esperes a tener más citas para organizarte.</strong> Empieza con Fluora y crece sobre una base profesional.</p>
-        <a [attr.href]="registrationHref" class="btn btn-primary btn-lg rounded-pill">Comenzar mis 3 meses PRO</a>
+        <a [attr.href]="recommendedRegistrationHref()" class="btn btn-primary btn-lg rounded-pill">{{ recommendedCta() }}</a>
         <small>Sin conocimientos técnicos · Configuración guiada</small>
       </div>
     </div>
@@ -291,33 +291,34 @@
       <div class="section-head section-head--centered">
         <span class="section-kicker">Planes para cada etapa</span>
         <h2>Empieza con lo necesario. Crece sin cambiar de sistema.</h2>
-        <p>Precios mensuales propuestos en pesos mexicanos. Todos los planes conservan la información separada y segura de cada negocio.</p>
+        <p>Planes configurados por Fluora con módulos, límites y vigencias transparentes para cada negocio.</p>
       </div>
-      <aside class="trial-banner" aria-label="Promoción de registro">
+      @if (trialPlan(); as planPrueba) { <aside class="trial-banner" aria-label="Promoción de registro">
         <span class="trial-banner__icon"><i class="bi bi-gift"></i></span>
         <div>
-          <span class="trial-banner__eyebrow">Beneficio de lanzamiento por tiempo limitado</span>
-          <h3>Registra tu negocio sin costo y disfruta el plan PRO durante 3 meses.</h3>
-          <p>Explora agenda, minisitio, CRM, recepción, caja y automatizaciones. Al finalizar el periodo podrás elegir el plan que mejor se adapte a tu negocio.</p>
+          <span class="trial-banner__eyebrow">Prueba configurada por Fluora</span>
+          <h3>Prueba {{ planPrueba.nombre }} durante {{ planPrueba.diasPrueba }} días.</h3>
+          <p>{{ planPrueba.descripcion || 'Conoce las capacidades del plan antes de contratarlo.' }} Después tendrás {{ planPrueba.diasGracia }} días de gracia para conservar la continuidad.</p>
         </div>
-        <a [attr.href]="registrationHref">Comenzar ahora <i class="bi bi-arrow-right"></i></a>
-      </aside>
+        <a [attr.href]="registroPlanHref(planPrueba.id)">Comenzar ahora <i class="bi bi-arrow-right"></i></a>
+      </aside> }
       <p class="pricing-swipe-hint"><i class="bi bi-arrow-left-right"></i> Desliza para comparar los planes</p>
       <div class="pricing-grid" aria-label="Planes de suscripción de Fluora" tabindex="0">
-        @for (plan of plans; track plan.name) {
-          <article class="pricing-card" [class.pricing-card--featured]="plan.featured">
-            @if (plan.featured) { <span class="pricing-card__popular">Más elegido</span> }
+        @for (plan of plans(); track plan.id) {
+          <article class="pricing-card" [class.pricing-card--featured]="plan.destacado">
+            @if (plan.destacado) { <span class="pricing-card__popular">Recomendado</span> }
             <div class="pricing-card__head">
-              <span>{{ plan.name }}</span>
-              <h3>{{ plan.audience }}</h3>
-              <div class="pricing-card__price"><strong>${{ plan.price }}</strong><span>MXN / mes</span></div>
+              <span>{{ plan.nombre }}</span>
+              <h3>{{ plan.descripcion || 'Un plan que se adapta a tu operación' }}</h3>
+              <div class="pricing-card__price"><strong>${{ precioPlan(plan) }}</strong><span>{{ plan.moneda }} / mes</span></div>
             </div>
             <ul>
-              @for (feature of plan.features; track feature) { <li><i class="bi bi-check2-circle"></i>{{ feature }}</li> }
+              @for (modulo of plan.modulos; track modulo.moduloId) { <li><i class="bi bi-check2-circle"></i>{{ modulo.nombre }}</li> }
+              @for (limite of limiteTexto(plan); track limite) { <li><i class="bi bi-speedometer2"></i>{{ limite }}</li> }
             </ul>
-            <a [attr.href]="registrationHref" class="pricing-card__button">Comenzar con PRO gratis</a>
+            <a [attr.href]="registroPlanHref(plan.id)" class="pricing-card__button">{{ planCta(plan) }}</a>
           </article>
-        }
+        } @empty { @if (!plansLoading()) { <div class="pricing-empty"><i class="bi bi-sliders"></i><strong>Estamos preparando los planes disponibles</strong><span>La oferta comercial se publicará desde Fluora Plataforma.</span></div> } }
       </div>
       <div class="pricing-note">
         <i class="bi bi-info-circle"></i>

@@ -15,6 +15,7 @@ export interface RegistrarEmpresaPayload {
   contrasena?: string;
   zonaHoraria?: string;
   registroSocialToken?: string;
+  planId?: number;
 }
 
 export interface ConfiguracionRegistroSocial {

@@ -1,10 +1,11 @@
 
-import { AfterViewInit, Component, ElementRef, NgZone, OnDestroy, inject } from '@angular/core';
+import { AfterViewInit, Component, ElementRef, NgZone, OnDestroy, computed, inject, signal } from '@angular/core';
 import { Meta, Title } from '@angular/platform-browser';
 import { Router } from '@angular/router';
 import { gsap } from 'gsap';
 import { PlatformHostService } from '../../core/platform/platform-host.service';
 import { SeoService } from '../../core/seo/seo.service';
+import { PlanPublicoFluora, PublicPlansService } from '../../core/platform/public-plans.service';
 
 @Component({
   selector: 'app-fluora-home',
@@ -22,6 +23,18 @@ export class FluoraHomeComponent implements AfterViewInit, OnDestroy {
   private readonly title = inject(Title);
   private readonly meta = inject(Meta);
   private readonly seo = inject(SeoService);
+  private readonly plansApi = inject(PublicPlansService);
+  readonly plans = signal<PlanPublicoFluora[]>([]);
+  readonly plansLoading = signal(true);
+  readonly trialPlan = computed(() => this.plans().find(plan => plan.destacado) || this.plans()[0] || null);
+  readonly recommendedRegistrationHref = computed(() => {
+    const plan = this.trialPlan();
+    return plan ? this.registroPlanHref(plan.id) : this.registrationHref;
+  });
+  readonly recommendedCta = computed(() => {
+    const plan = this.trialPlan();
+    return plan ? this.planCta(plan) : 'Crear mi cuenta';
+  });
   private agendaAnimation?: gsap.Context;
   private agendaTimeline?: gsap.core.Timeline;
   private heroObserver?: IntersectionObserver;
@@ -141,30 +154,6 @@ export class FluoraHomeComponent implements AfterViewInit, OnDestroy {
     }
   ];
 
-  readonly plans = [
-    {
-      name: 'Emprende',
-      audience: 'Para comenzar con una imagen profesional',
-      price: '399',
-      featured: false,
-      features: ['1 sucursal', 'Hasta 2 usuarios', 'Agenda y reservas en línea', 'Minisitio web personalizable', 'CRM de clientes', 'Correo institucional y recordatorios']
-    },
-    {
-      name: 'Negocio',
-      audience: 'Para equipos que quieren operar y crecer',
-      price: '699',
-      featured: true,
-      features: ['1 sucursal', 'Hasta 8 usuarios', 'Todo lo incluido en Emprende', 'Recepción y control de llegada', 'Caja, cobros y reportes', 'WhatsApp y automatizaciones', 'Roles y permisos para el equipo']
-    },
-    {
-      name: 'Pro',
-      audience: 'Para empresas con mayor operación',
-      price: '1,199',
-      featured: false,
-      features: ['Hasta 3 sucursales', 'Hasta 20 usuarios', 'Todo lo incluido en Negocio', 'Operación y reportes por sucursal', 'Automatizaciones avanzadas', 'Seguimiento de clientes', 'Soporte prioritario']
-    }
-  ];
-
   readonly faqs = [
     {
       question: '¿Qué es Fluora Agenda?',
@@ -185,6 +174,7 @@ export class FluoraHomeComponent implements AfterViewInit, OnDestroy {
   ];
 
   constructor() {
+    this.plansApi.listar().subscribe({next: planes => {this.plans.set(planes);this.plansLoading.set(false);},error:()=>this.plansLoading.set(false)});
     this.seo.applyMarketing();
     this.title.setTitle('Fluora Agenda | Agenda de citas y minisitio para tu negocio');
     this.meta.updateTag({ name: 'description', content: 'Agenda de citas para pequeños y medianos negocios. Incluye minisitio web personalizable, CRM, recepción, caja y recordatorios por WhatsApp y correo.' });
@@ -195,6 +185,17 @@ export class FluoraHomeComponent implements AfterViewInit, OnDestroy {
     if (this.platformHost.hasDedicatedAppHost() && this.platformHost.isAppHost()) {
       void this.router.navigateByUrl('/acceso');
     }
+  }
+
+  registroPlanHref(planId: number): string { return `${this.registrationHref}?plan=${planId}`; }
+  planCta(plan: PlanPublicoFluora): string {
+    return plan.diasPrueba > 0 ? `Probar ${plan.diasPrueba} días` : `Comenzar con ${plan.nombre}`;
+  }
+  precioPlan(plan: PlanPublicoFluora): string {
+    return new Intl.NumberFormat('es-MX',{maximumFractionDigits:2}).format(plan.precioMensual);
+  }
+  limiteTexto(plan: PlanPublicoFluora): string[] {
+    return plan.limites.map(limite => `${limite.valor} ${limite.unidad}`);
   }
 
   ngAfterViewInit(): void {

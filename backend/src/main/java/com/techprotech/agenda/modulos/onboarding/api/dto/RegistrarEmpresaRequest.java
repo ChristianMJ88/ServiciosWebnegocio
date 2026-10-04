@@ -15,6 +15,7 @@ public record RegistrarEmpresaRequest(
         @NotBlank @Size(min = 10, max = 30) String telefonoAdministrador,
         @Size(min = 8, max = 120) String contrasena,
         @Size(max = 60) String zonaHoraria,
-        String registroSocialToken
+        String registroSocialToken,
+        Long planId
 ) {
 }
