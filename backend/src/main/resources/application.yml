@@ -56,6 +56,15 @@ aplicacion:
       correo: ${PLATAFORMA_BOOTSTRAP_CORREO:}
       nombre: ${PLATAFORMA_BOOTSTRAP_NOMBRE:Administrador Fluora}
       contrasena: ${PLATAFORMA_BOOTSTRAP_CONTRASENA:}
+    stripe:
+      habilitado: ${STRIPE_PLATAFORMA_HABILITADO:false}
+      ambiente: ${STRIPE_PLATAFORMA_AMBIENTE:PRUEBA}
+      secret-key: ${STRIPE_PLATAFORMA_SECRET_KEY:}
+      webhook-secret: ${STRIPE_PLATAFORMA_WEBHOOK_SECRET:}
+      webhook-public-base-url: ${STRIPE_PLATAFORMA_WEBHOOK_PUBLIC_BASE_URL:}
+      checkout-success-url: ${STRIPE_PLATAFORMA_CHECKOUT_SUCCESS_URL:http://localhost:4200/admin/suscripcion?stripe=exito}
+      checkout-cancel-url: ${STRIPE_PLATAFORMA_CHECKOUT_CANCEL_URL:http://localhost:4200/admin/suscripcion?stripe=cancelado}
+      portal-return-url: ${STRIPE_PLATAFORMA_PORTAL_RETURN_URL:http://localhost:4200/admin/suscripcion}
   onboarding:
     verificacion-correo:
       url: ${ONBOARDING_VERIFICACION_CORREO_URL:}

@@ -506,6 +506,14 @@
   }
 }
 
+@if (seccionActiva() === 'suscripcion') {
+  @defer {
+    <app-admin-subscription-section />
+  } @placeholder {
+    <section class="section-stack"><div class="workspace-card"><p class="helper-text mb-0">Preparando el plan y la facturación de Fluora…</p></div></section>
+  }
+}
+
 @if (seccionActiva() === 'envios') {
   @defer {
     <app-admin-shipping-section />

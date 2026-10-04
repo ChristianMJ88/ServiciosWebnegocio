@@ -45,6 +45,8 @@ export interface PlanPlataforma { id: number; codigo: string; nombre: string; de
 export interface PlanPayload { codigo: string; nombre: string; descripcion: string | null; moneda: string; precioMensual: number; precioAnual: number | null; activo: boolean; publico: boolean; destacado: boolean; diasPrueba: number; diasGracia: number; vigenteDesde: string | null; vigenteHasta: string | null; modulos: { moduloId: number; limiteUso: number | null }[]; limites: { limiteId: number; valor: number }[]; }
 export interface SuscripcionPlataforma { id: number; empresaId: number; empresaNombre: string; planId: number; planNombre: string; estado: string; ciclo: string; precioAcordado: number; moneda: string; iniciaEn: string; terminaEn: string | null; pruebaHasta: string | null; proveedorPagoId: number | null; referenciaExterna: string | null; }
 export interface SuscripcionPayload { empresaId: number | null; planId: number | null; ciclo: 'MENSUAL'|'ANUAL'; precioAcordado: number | null; moneda: string | null; estado: 'ACTIVA'|'PRUEBA'; iniciaEn: string; terminaEn: string | null; pruebaHasta: string | null; }
+export interface EstadoStripePlataforma { habilitado: boolean; ambiente: string; credencialConfigurada: boolean; webhookConfigurado: boolean; webhookUrl: string | null; }
+export interface SincronizacionStripePlan { planId: number; productoId: string; precioMensualId: string; precioAnualId: string | null; actualizado: boolean; }
 
 @Injectable({ providedIn: 'root' })
 export class PlatformAdminService {
@@ -66,4 +68,6 @@ export class PlatformAdminService {
   actualizarPlan(id: number,payload: PlanPayload): Observable<PlanPlataforma> { return this.http.put<PlanPlataforma>(`${this.baseUrl}/suscripciones/planes/${id}`,payload); }
   suscripciones(): Observable<SuscripcionPlataforma[]> { return this.http.get<SuscripcionPlataforma[]>(`${this.baseUrl}/suscripciones`); }
   asignarSuscripcion(payload: SuscripcionPayload): Observable<SuscripcionPlataforma> { return this.http.post<SuscripcionPlataforma>(`${this.baseUrl}/suscripciones`,payload); }
+  estadoStripe(): Observable<EstadoStripePlataforma> { return this.http.get<EstadoStripePlataforma>(`${this.baseUrl}/suscripciones/stripe`); }
+  sincronizarPlanStripe(id: number): Observable<SincronizacionStripePlan> { return this.http.post<SincronizacionStripePlan>(`${this.baseUrl}/suscripciones/planes/${id}/stripe/sincronizar`,{}); }
 }

@@ -23,6 +23,10 @@ public class PlanPlataformaEntidad {
     @Column(name="dias_gracia",nullable=false) private int diasGracia;
     @Column(name="vigente_desde") private LocalDateTime vigenteDesde;
     @Column(name="vigente_hasta") private LocalDateTime vigenteHasta;
+    @Column(name="stripe_producto_id", length=100) private String stripeProductoId;
+    @Column(name="stripe_precio_mensual_id", length=100) private String stripePrecioMensualId;
+    @Column(name="stripe_precio_anual_id", length=100) private String stripePrecioAnualId;
+    @Column(name="stripe_config_hash", length=64) private String stripeConfigHash;
     @Column(name="creado_en", insertable=false, updatable=false) private LocalDateTime creadoEn;
     @Column(name="actualizado_en", insertable=false, updatable=false) private LocalDateTime actualizadoEn;
 }

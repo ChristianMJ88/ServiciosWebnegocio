@@ -3,7 +3,7 @@ import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { finalize, forkJoin } from 'rxjs';
-import { DetalleTenantPlataforma, LimitePlataforma, ModuloPlataforma, PlanPayload, PlanPlataforma, PlatformAdminService, ProveedorPagoPlataforma, ReglaComisionPayload, ReglaComisionPlataforma, ResumenPlataforma, SimulacionComision, SuscripcionPayload, SuscripcionPlataforma, TenantPlataforma } from '../../core/platform/platform-admin.service';
+import { DetalleTenantPlataforma, EstadoStripePlataforma, LimitePlataforma, ModuloPlataforma, PlanPayload, PlanPlataforma, PlatformAdminService, ProveedorPagoPlataforma, ReglaComisionPayload, ReglaComisionPlataforma, ResumenPlataforma, SimulacionComision, SuscripcionPayload, SuscripcionPlataforma, TenantPlataforma } from '../../core/platform/platform-admin.service';
 import { PlatformAuthService } from '../../core/platform/platform-auth.service';
 
 @Component({
@@ -30,6 +30,8 @@ export class PlatformDashboardComponent implements OnInit {
   readonly limitesSaas = signal<LimitePlataforma[]>([]);
   readonly planesSaas = signal<PlanPlataforma[]>([]);
   readonly suscripcionesSaas = signal<SuscripcionPlataforma[]>([]);
+  readonly stripeEstado = signal<EstadoStripePlataforma | null>(null);
+  readonly sincronizandoStripeId = signal<number | null>(null);
   planEditando: number | null = null;
   planFormulario: PlanPayload = this.planVacio();
   suscripcionFormulario: SuscripcionPayload = this.suscripcionVacia();
@@ -54,10 +56,10 @@ export class PlatformDashboardComponent implements OnInit {
       return;
     }
     if (this.seccion === 'suscripciones') {
-      forkJoin({ resumen: this.api.resumen(), tenants: this.api.tenants(), modulos: this.api.modulosSuscripcion(), limites: this.api.limitesSuscripcion(), planes: this.api.planes(), suscripciones: this.api.suscripciones() })
+      forkJoin({ resumen: this.api.resumen(), tenants: this.api.tenants(), modulos: this.api.modulosSuscripcion(), limites: this.api.limitesSuscripcion(), planes: this.api.planes(), suscripciones: this.api.suscripciones(), stripe: this.api.estadoStripe() })
         .pipe(finalize(() => this.cargando.set(false))).subscribe({ next: datos => {
           this.resumen.set(datos.resumen); this.tenants.set(datos.tenants); this.modulosSaas.set(datos.modulos); this.limitesSaas.set(datos.limites);
-          this.planesSaas.set(datos.planes); this.suscripcionesSaas.set(datos.suscripciones);
+          this.planesSaas.set(datos.planes); this.suscripcionesSaas.set(datos.suscripciones); this.stripeEstado.set(datos.stripe);
         }, error: e => this.error.set(this.errorApi(e)) });
       return;
     }
@@ -92,6 +94,13 @@ export class PlatformDashboardComponent implements OnInit {
   editarPlan(plan: PlanPlataforma): void { this.planEditando=plan.id; this.planFormulario={codigo:plan.codigo,nombre:plan.nombre,descripcion:plan.descripcion,moneda:plan.moneda,precioMensual:plan.precioMensual,precioAnual:plan.precioAnual,activo:plan.activo,publico:plan.publico,destacado:plan.destacado,diasPrueba:plan.diasPrueba,diasGracia:plan.diasGracia,vigenteDesde:plan.vigenteDesde?this.fechaLocal(plan.vigenteDesde):null,vigenteHasta:plan.vigenteHasta?this.fechaLocal(plan.vigenteHasta):null,modulos:plan.modulos.map(m=>({moduloId:m.moduloId,limiteUso:m.limiteUso})),limites:plan.limites.map(l=>({limiteId:l.limiteId,valor:l.valor}))}; window.scrollTo({top:0,behavior:'smooth'}); }
   cancelarPlan(): void { this.planEditando=null; this.planFormulario=this.planVacio(); }
   asignarSuscripcion(): void { if(!this.suscripcionFormulario.empresaId||!this.suscripcionFormulario.planId){this.error.set('Selecciona negocio y plan.');return;} this.guardando.set(true);this.error.set(null);this.api.asignarSuscripcion(this.suscripcionFormulario).pipe(finalize(()=>this.guardando.set(false))).subscribe({next:()=>{this.mensaje.set('Suscripción asignada y auditada.');this.suscripcionFormulario=this.suscripcionVacia();this.recargarSuscripciones();},error:e=>this.error.set(this.errorApi(e))}); }
+  sincronizarPlanStripe(plan: PlanPlataforma): void {
+    this.sincronizandoStripeId.set(plan.id); this.error.set(null); this.mensaje.set(null);
+    this.api.sincronizarPlanStripe(plan.id).pipe(finalize(()=>this.sincronizandoStripeId.set(null))).subscribe({
+      next: resultado => this.mensaje.set(resultado.actualizado ? `${plan.nombre} quedó sincronizado con Stripe.` : `${plan.nombre} ya estaba actualizado en Stripe.`),
+      error: e => this.error.set(this.errorApi(e))
+    });
+  }
   private recargarSuscripciones(): void { forkJoin({planes:this.api.planes(),suscripciones:this.api.suscripciones()}).subscribe(datos=>{this.planesSaas.set(datos.planes);this.suscripcionesSaas.set(datos.suscripciones);}); }
   cancelarEdicion(): void { this.reglaEditando = null; this.formulario = this.formularioVacio(); const primero = this.proveedores()[0]; if (primero) this.formulario.proveedorId = primero.id; this.simulacion.set(null); }
   private recargarReglas(): void { this.api.reglasComision().subscribe(datos => this.reglas.set(datos)); }

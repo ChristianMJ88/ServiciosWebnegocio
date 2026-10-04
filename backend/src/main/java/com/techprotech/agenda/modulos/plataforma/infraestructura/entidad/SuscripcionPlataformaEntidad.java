@@ -22,6 +22,13 @@ public class SuscripcionPlataformaEntidad {
     @Column(name="cancelada_en") private LocalDateTime canceladaEn;
     @Column(name="proveedor_pago_id") private Long proveedorPagoId;
     @Column(name="referencia_externa", length=180) private String referenciaExterna;
+    @Column(name="stripe_cliente_id", length=100) private String stripeClienteId;
+    @Column(name="stripe_suscripcion_id", length=100) private String stripeSuscripcionId;
+    @Column(name="stripe_checkout_sesion_id", length=100) private String stripeCheckoutSesionId;
+    @Column(name="stripe_ultima_factura_id", length=100) private String stripeUltimaFacturaId;
+    @Column(name="stripe_estado", length=40) private String stripeEstado;
+    @Column(name="periodo_actual_hasta") private LocalDateTime periodoActualHasta;
+    @Column(name="cancelar_al_final_periodo", nullable=false) private boolean cancelarAlFinalPeriodo;
     @Column(name="creada_en", insertable=false, updatable=false) private LocalDateTime creadaEn;
     @Column(name="actualizada_en", insertable=false, updatable=false) private LocalDateTime actualizadaEn;
 }

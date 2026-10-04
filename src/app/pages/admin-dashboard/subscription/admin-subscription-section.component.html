@@ -1,0 +1,38 @@
+<section class="subscription-panel">
+  <header class="subscription-heading">
+    <span class="subscription-icon"><i class="bi bi-stars"></i></span>
+    <div><span>Cuenta Fluora</span><h3>Plan y facturación</h3><p>Consulta la capacidad de tu cuenta y administra la suscripción del negocio.</p></div>
+  </header>
+
+  @if (mensaje()) { <p class="subscription-feedback success"><i class="bi bi-check-circle-fill"></i>{{ mensaje() }}</p> }
+  @if (error()) { <p class="subscription-feedback error"><i class="bi bi-exclamation-circle"></i>{{ error() }}<button type="button" (click)="cargar()">Reintentar</button></p> }
+  @if (cargando()) { <div class="subscription-loading"><span></span><span></span><span></span><p>Consultando tu suscripción…</p></div> }
+  @else {
+    @if (estado(); as actual) {
+      @if (actual.tieneSuscripcion) {
+        <article class="current-plan">
+          <div class="current-plan-main"><span class="plan-kicker">Plan actual</span><h4>{{ actual.planNombre || 'Plan Fluora' }}</h4><p>{{ actual.ciclo === 'ANUAL' ? 'Facturación anual' : 'Facturación mensual' }} · {{ actual.precioAcordado !== null && actual.moneda ? precio(actual.precioAcordado,actual.moneda) : 'Importe administrado por Fluora' }}</p></div>
+          <span class="subscription-state" [class.warning]="actual.estado === 'GRACIA' || actual.estado === 'PENDIENTE_PAGO'">{{ actual.estado }}</span>
+          <dl><div><dt>Inicio</dt><dd>{{ actual.iniciaEn | date:'dd MMM yyyy' }}</dd></div><div><dt>{{ actual.pruebaHasta ? 'Prueba hasta' : 'Periodo actual' }}</dt><dd>{{ (actual.pruebaHasta || actual.periodoActualHasta) ? ((actual.pruebaHasta || actual.periodoActualHasta) | date:'dd MMM yyyy') : 'Sin fecha definida' }}</dd></div></dl>
+          @if (actual.administrableStripe) { <button type="button" class="primary-action" (click)="administrar()" [disabled]="procesando() !== null"><i class="bi bi-box-arrow-up-right"></i>{{ procesando() === 'portal' ? 'Abriendo…' : 'Administrar en Stripe' }}</button> }
+          @else { <p class="managed-note"><i class="bi bi-info-circle"></i>Esta suscripción fue asignada por Fluora. Contacta a soporte para cambiarla.</p> }
+        </article>
+      } @else {
+        <div class="plans-intro"><div><span>Planes disponibles</span><h4>Elige la capacidad que necesita tu negocio</h4></div><p>Los límites, módulos, precios y periodos de prueba provienen de la configuración vigente de Fluora.</p></div>
+        <div class="tenant-plans">
+          @for (plan of planes(); track plan.id) {
+            <article [class.featured]="plan.destacado">
+              @if (plan.destacado) { <span class="featured-label"><i class="bi bi-stars"></i>Recomendado</span> }
+              <div><span class="plan-code">{{ plan.codigo }}</span><h4>{{ plan.nombre }}</h4><p>{{ plan.descripcion }}</p></div>
+              <div class="tenant-plan-price"><strong>{{ precio(plan.precioMensual,plan.moneda) }}</strong><span>/ mes</span>@if (plan.precioAnual !== null) { <small>{{ precio(plan.precioAnual,plan.moneda) }} al año</small> }</div>
+              <ul>@for (modulo of plan.modulos; track modulo.moduloId) { <li><i class="bi bi-check2"></i>{{ modulo.nombre }}</li> }@for (limite of plan.limites; track limite.limiteId) { <li><i class="bi bi-sliders"></i>{{ limite.nombre }}: {{ limite.valor }} {{ limite.unidad }}</li> }</ul>
+              @if (plan.diasPrueba > 0) { <p class="trial"><i class="bi bi-clock-history"></i>{{ plan.diasPrueba }} días de prueba</p> }
+              <div class="plan-buttons"><button type="button" class="primary-action" (click)="contratar(plan,'MENSUAL')" [disabled]="procesando() !== null">{{ procesando() === plan.id + '-MENSUAL' ? 'Preparando…' : 'Elegir mensual' }}</button>@if (plan.precioAnual !== null) { <button type="button" class="secondary-action" (click)="contratar(plan,'ANUAL')" [disabled]="procesando() !== null">{{ procesando() === plan.id + '-ANUAL' ? 'Preparando…' : 'Elegir anual' }}</button> }</div>
+            </article>
+          } @empty { <div class="empty-plans"><i class="bi bi-layers"></i><strong>No hay planes públicos disponibles</strong><p>Fluora publicará aquí los planes vigentes.</p></div> }
+        </div>
+      }
+    }
+    <footer class="secure-note"><i class="bi bi-shield-lock-fill"></i><div><strong>Pago protegido por Stripe</strong><span>Fluora no almacena los datos de tu tarjeta. La activación se confirma desde el servidor.</span></div></footer>
+  }
+</section>

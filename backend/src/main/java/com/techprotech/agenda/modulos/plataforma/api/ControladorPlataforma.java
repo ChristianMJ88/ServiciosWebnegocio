@@ -15,9 +15,12 @@ import com.techprotech.agenda.modulos.plataforma.api.dto.GuardarPlanPlataformaRe
 import com.techprotech.agenda.modulos.plataforma.api.dto.PlanPlataformaResponse;
 import com.techprotech.agenda.modulos.plataforma.api.dto.AsignarSuscripcionPlataformaRequest;
 import com.techprotech.agenda.modulos.plataforma.api.dto.SuscripcionPlataformaResponse;
+import com.techprotech.agenda.modulos.plataforma.api.dto.EstadoStripePlataformaResponse;
+import com.techprotech.agenda.modulos.plataforma.api.dto.SincronizarPlanStripeResponse;
 import com.techprotech.agenda.modulos.plataforma.aplicacion.ServicioConsultaPlataforma;
 import com.techprotech.agenda.modulos.plataforma.aplicacion.ServicioGestionComisionesPlataforma;
 import com.techprotech.agenda.modulos.plataforma.aplicacion.ServicioSuscripcionesPlataforma;
+import com.techprotech.agenda.modulos.plataforma.aplicacion.ServicioStripePlataforma;
 import com.techprotech.agenda.seguridad.jwt.UsuarioAutenticado;
 import jakarta.validation.Valid;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -32,10 +35,11 @@ public class ControladorPlataforma {
     private final ServicioConsultaPlataforma servicio;
     private final ServicioGestionComisionesPlataforma comisiones;
     private final ServicioSuscripcionesPlataforma suscripciones;
+    private final ServicioStripePlataforma stripe;
 
     public ControladorPlataforma(ServicioConsultaPlataforma servicio, ServicioGestionComisionesPlataforma comisiones,
-                                 ServicioSuscripcionesPlataforma suscripciones) {
-        this.servicio = servicio; this.comisiones = comisiones; this.suscripciones = suscripciones;
+                                 ServicioSuscripcionesPlataforma suscripciones, ServicioStripePlataforma stripe) {
+        this.servicio = servicio; this.comisiones = comisiones; this.suscripciones = suscripciones; this.stripe=stripe;
     }
 
     @GetMapping("/resumen")
@@ -123,4 +127,13 @@ public class ControladorPlataforma {
             @Valid @RequestBody AsignarSuscripcionPlataformaRequest solicitud) {
         return suscripciones.asignar(usuario.usuarioId(),solicitud);
     }
+
+    @GetMapping("/suscripciones/stripe")
+    @PreAuthorize("hasAuthority('PLATAFORMA_SUSCRIPCIONES_GESTIONAR')")
+    public EstadoStripePlataformaResponse estadoStripe() { return stripe.estado(); }
+
+    @PostMapping("/suscripciones/planes/{id}/stripe/sincronizar")
+    @PreAuthorize("hasAuthority('PLATAFORMA_SUSCRIPCIONES_GESTIONAR')")
+    public SincronizarPlanStripeResponse sincronizarStripe(@AuthenticationPrincipal UsuarioAutenticado usuario,
+            @PathVariable Long id) { return stripe.sincronizarPlan(usuario.usuarioId(),id); }
 }

@@ -15,6 +15,7 @@ export type SeccionAdmin =
   | 'pagos'
   | 'liquidaciones'
   | 'envios'
+  | 'suscripcion'
   | 'comisiones'
   | 'usuarios'
   | 'permisos'
@@ -59,6 +60,7 @@ export const MODULOS_ADMIN: readonly ModuloAdminDef[] = [
   { id: 'pagos', titulo: 'Pagos', descripcion: 'Conecta la cuenta de cobro del negocio y configura su checkout.', abreviatura: 'PG', iconClass: 'bi bi-credit-card-2-front', permiso: PERMISOS.pagosConfigurar },
   { id: 'liquidaciones', titulo: 'Liquidaciones', descripcion: 'Genera reportes, concilia cobros y controla depósitos netos.', abreviatura: 'LQ', iconClass: 'bi bi-file-earmark-spreadsheet', permiso: PERMISOS.pagosConfigurar },
   { id: 'envios', titulo: 'Envíos', descripcion: 'Gestiona proveedores, tarifas, guías y seguimiento de pedidos.', abreviatura: 'EN', iconClass: 'bi bi-truck', permiso: PERMISOS.enviosConfigurar },
+  { id: 'suscripcion', titulo: 'Plan Fluora', descripcion: 'Administra el plan, la capacidad y la facturación SaaS del negocio.', abreviatura: 'PF', iconClass: 'bi bi-stars', permiso: PERMISOS.suscripcionEmpresaGestionar },
   { id: 'comisiones', titulo: 'Comisiones', descripcion: 'Reglas de cálculo para servicios, productos y ventas.', abreviatura: 'CM', iconClass: 'bi bi-percent', permiso: PERMISOS.comisionesGestionar },
   { id: 'usuarios', titulo: 'Usuarios y accesos', descripcion: 'Administra identidades, invitaciones y acceso al sistema.', abreviatura: 'UI', iconClass: 'bi bi-person-badge', permiso: PERMISOS.usuariosInternosGestionar },
   { id: 'permisos', titulo: 'Permisos', descripcion: 'Define roles y capacidades de acceso por negocio.', abreviatura: 'PE', iconClass: 'bi bi-shield-lock', permiso: PERMISOS.usuariosInternosGestionar },
@@ -79,7 +81,7 @@ export const GRUPOS_SIDEBAR_ADMIN: readonly GrupoSidebarAdmin[] = [
   { id: 'operacion', titulo: 'Operación', iconClass: 'bi bi-grid-1x2-fill', modulos: ['resumen', 'citas', 'clientes', 'contactos'] },
   { id: 'canales', titulo: 'Canales', iconClass: 'bi bi-broadcast-pin', modulos: ['mensajes', 'whatsapp', 'correo'] },
   { id: 'catalogo', titulo: 'Catálogo', iconClass: 'bi bi-folder2-open', modulos: ['servicios', 'productos', 'inventario', 'sucursales'] },
-  { id: 'comercial', titulo: 'Comercial', iconClass: 'bi bi-graph-up-arrow', modulos: ['pagos', 'liquidaciones', 'comisiones'] },
+  { id: 'comercial', titulo: 'Comercial', iconClass: 'bi bi-graph-up-arrow', modulos: ['pagos', 'liquidaciones', 'comisiones', 'suscripcion'] },
   { id: 'logistica', titulo: 'Logística', iconClass: 'bi bi-truck-flatbed', modulos: ['envios'] },
   { id: 'equipo', titulo: 'Equipo', iconClass: 'bi bi-people-fill', modulos: ['prestadores', 'usuarios', 'permisos'] },
   { id: 'disponibilidad', titulo: 'Disponibilidad', iconClass: 'bi bi-calendar2-check', modulos: ['reglas', 'excepciones'] },
