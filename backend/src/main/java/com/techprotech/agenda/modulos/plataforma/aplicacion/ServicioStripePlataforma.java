@@ -146,15 +146,17 @@ public class ServicioStripePlataforma {
             local.setEmpresaId(empresaId); local.setPlanId(plan.getId()); local.setEstado("PENDIENTE_PAGO"); local.setCiclo(ciclo);
             local.setPrecioAcordado("ANUAL".equals(ciclo)?plan.getPrecioAnual():plan.getPrecioMensual()); local.setMoneda(plan.getMoneda());
             local.setIniciaEn(LocalDateTime.now(ZoneOffset.UTC)); local.setStripeClienteId(clienteId); local=suscripciones.save(local);
+            SessionCreateParams.SubscriptionData.Builder datosSuscripcion=SessionCreateParams.SubscriptionData.builder()
+                    .putMetadata("fluora_empresa_id",String.valueOf(empresaId))
+                    .putMetadata("fluora_suscripcion_id",String.valueOf(local.getId()));
+            if(plan.getDiasPrueba()>0) datosSuscripcion.setTrialPeriodDays((long)plan.getDiasPrueba());
             SessionCreateParams params=SessionCreateParams.builder().setMode(SessionCreateParams.Mode.SUBSCRIPTION)
                     .setCustomer(clienteId).setClientReferenceId(String.valueOf(empresaId))
                     .setSuccessUrl(agregarSessionId(propiedades.checkoutSuccessUrl()))
                     .setCancelUrl(propiedades.checkoutCancelUrl())
                     .putMetadata("fluora_empresa_id",String.valueOf(empresaId))
                     .putMetadata("fluora_suscripcion_id",String.valueOf(local.getId()))
-                    .setSubscriptionData(SessionCreateParams.SubscriptionData.builder()
-                            .putMetadata("fluora_empresa_id",String.valueOf(empresaId))
-                            .putMetadata("fluora_suscripcion_id",String.valueOf(local.getId())).build())
+                    .setSubscriptionData(datosSuscripcion.build())
                     .addLineItem(SessionCreateParams.LineItem.builder().setPrice(precioId).setQuantity(1L).build()).build();
             Session sesion=Session.create(params,opciones("checkout-"+local.getId()));
             local.setStripeCheckoutSesionId(sesion.getId()); suscripciones.save(local);
@@ -219,7 +221,8 @@ public class ServicioStripePlataforma {
             if(local==null)return;
             String estado=texto(objeto,"status"); local.setStripeSuscripcionId(id); local.setStripeClienteId(texto(objeto,"customer"));
             local.setStripeEstado(estado); local.setEstado(mapearEstado(estado));
-            long periodo=objeto.path("current_period_end").asLong(0); local.setPeriodoActualHasta(periodo>0?LocalDateTime.ofInstant(Instant.ofEpochSecond(periodo),ZoneOffset.UTC):null);
+            long periodo=epochPeriodoActual(objeto); local.setPeriodoActualHasta(periodo>0?LocalDateTime.ofInstant(Instant.ofEpochSecond(periodo),ZoneOffset.UTC):null);
+            long finPrueba=objeto.path("trial_end").asLong(0); local.setPruebaHasta(finPrueba>0?LocalDateTime.ofInstant(Instant.ofEpochSecond(finPrueba),ZoneOffset.UTC):null);
             local.setCancelarAlFinalPeriodo(objeto.path("cancel_at_period_end").asBoolean(false));
             if("customer.subscription.deleted".equals(tipo))local.setCanceladaEn(LocalDateTime.now(ZoneOffset.UTC));
             suscripciones.save(local); return;
@@ -231,7 +234,9 @@ public class ServicioStripePlataforma {
             String facturaId=texto(objeto,"id");
             suscripciones.findByStripeSuscripcionId(suscripcionId).ifPresent(local->{
                 local.setStripeUltimaFacturaId(facturaId);
-                if("invoice.paid".equals(tipo)){local.setEstado("ACTIVA");local.setStripeEstado("active");}
+                if("invoice.paid".equals(tipo)&&debeActivarPorFactura(objeto,local.getEstado())){
+                    local.setEstado("ACTIVA");local.setStripeEstado("active");
+                }
                 if("invoice.payment_failed".equals(tipo)){local.setEstado("GRACIA");local.setStripeEstado("past_due");}
                 suscripciones.save(local);
             });
@@ -265,6 +270,14 @@ public class ServicioStripePlataforma {
     private SincronizarPlanStripeResponse sincronizado(PlanPlataformaEntidad p,boolean actualizado){return new SincronizarPlanStripeResponse(p.getId(),p.getStripeProductoId(),p.getStripePrecioMensualId(),p.getStripePrecioAnualId(),actualizado);}
     private String ambiente(){return presente(propiedades.ambiente())?propiedades.ambiente().trim().toUpperCase(Locale.ROOT):"PRUEBA";}
     private static String mapearEstado(String estado){return switch(estado==null?"":estado){case "active"->"ACTIVA";case "trialing"->"PRUEBA";case "past_due"->"GRACIA";case "canceled","incomplete_expired"->"CANCELADA";case "unpaid","paused"->"SUSPENDIDA";default->"PENDIENTE_PAGO";};}
+    static long epochPeriodoActual(JsonNode objeto){
+        long periodo=objeto.path("current_period_end").asLong(0);
+        if(periodo>0)return periodo;
+        return objeto.path("items").path("data").path(0).path("current_period_end").asLong(0);
+    }
+    static boolean debeActivarPorFactura(JsonNode objeto,String estadoActual){
+        return !"PRUEBA".equals(estadoActual)||objeto.path("amount_paid").asLong(0)>0;
+    }
     private static String texto(JsonNode n,String campo){String v=n.path(campo).asText(null);return presente(v)?v:null;}
     private static String limpiarBase(String v){if(!presente(v))return null;return v.trim().replaceAll("/+$","");}
     private static String agregarSessionId(String url){if(!presente(url))throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE,"La URL de retorno de Stripe no está configurada");return url+(url.contains("?")?"&":"?")+"session_id={CHECKOUT_SESSION_ID}";}

@@ -9,7 +9,7 @@
   @if (cargando()) { <div class="subscription-loading"><span></span><span></span><span></span><p>Consultando tu suscripción…</p></div> }
   @else {
     @if (estado(); as actual) {
-      @if (actual.tieneSuscripcion) {
+      @if (actual.tieneSuscripcion && actual.estado !== 'PENDIENTE_PAGO') {
         <article class="current-plan">
           <div class="current-plan-main"><span class="plan-kicker">Plan actual</span><h4>{{ actual.planNombre || 'Plan Fluora' }}</h4><p>{{ actual.ciclo === 'ANUAL' ? 'Facturación anual' : 'Facturación mensual' }} · {{ actual.precioAcordado !== null && actual.moneda ? precio(actual.precioAcordado,actual.moneda) : 'Importe administrado por Fluora' }}</p></div>
           <span class="subscription-state" [class.warning]="actual.estado === 'GRACIA' || actual.estado === 'PENDIENTE_PAGO'">{{ actual.estado }}</span>
@@ -19,6 +19,7 @@
         </article>
       } @else {
         <div class="plans-intro"><div><span>Planes disponibles</span><h4>Elige la capacidad que necesita tu negocio</h4></div><p>Los límites, módulos, precios y periodos de prueba provienen de la configuración vigente de Fluora.</p></div>
+        @if (actual.estado === 'PENDIENTE_PAGO') { <p class="subscription-feedback pending"><i class="bi bi-credit-card"></i>La contratación anterior no se completó. Puedes elegir nuevamente el plan y el ciclo de facturación.</p> }
         <div class="tenant-plans">
           @for (plan of planes(); track plan.id) {
             <article [class.featured]="plan.destacado">
