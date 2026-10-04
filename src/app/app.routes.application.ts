@@ -10,6 +10,7 @@ const redirectComponent = () => import('./pages/platform-redirect/platform-redir
 export const privateApplicationRoutes: Routes = [
   { path: 'plataforma/acceso', loadComponent: () => import('./pages/platform-access/platform-access.component').then(m => m.PlatformAccessComponent), data: { layout: 'auth' } },
   { path: 'plataforma/negocios', loadComponent: () => import('./pages/platform-dashboard/platform-dashboard.component').then(m => m.PlatformDashboardComponent), canActivate: [platformAuthGuard], data: { layout: 'panel', seccion: 'negocios' } },
+  { path: 'plataforma/suscripciones', loadComponent: () => import('./pages/platform-dashboard/platform-dashboard.component').then(m => m.PlatformDashboardComponent), canActivate: [platformAuthGuard], data: { layout: 'panel', seccion: 'suscripciones' } },
   { path: 'plataforma/comisiones', loadComponent: () => import('./pages/platform-dashboard/platform-dashboard.component').then(m => m.PlatformDashboardComponent), canActivate: [platformAuthGuard], data: { layout: 'panel', seccion: 'comisiones' } },
   { path: 'plataforma', loadComponent: () => import('./pages/platform-dashboard/platform-dashboard.component').then(m => m.PlatformDashboardComponent), canActivate: [platformAuthGuard], data: { layout: 'panel', seccion: 'resumen' } },
   { path: 'acceso', loadComponent: () => import('./pages/fluora-access/fluora-access.component').then((m) => m.FluoraAccessComponent), data: { layout: 'auth' } },

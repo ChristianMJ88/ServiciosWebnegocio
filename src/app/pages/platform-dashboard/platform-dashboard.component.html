@@ -4,7 +4,7 @@
     <nav aria-label="Navegación de plataforma">
       <a routerLink="/plataforma" [class.active]="seccion === 'resumen'"><i class="bi bi-grid-1x2-fill"></i><span>Resumen</span></a>
       <a routerLink="/plataforma/negocios" [class.active]="seccion === 'negocios'"><i class="bi bi-buildings"></i><span>Negocios</span><b>{{ resumen()?.tenantsTotal ?? 0 }}</b></a>
-      <a><i class="bi bi-credit-card-2-front"></i><span>Suscripciones</span><em>Próximo</em></a>
+      <a routerLink="/plataforma/suscripciones" [class.active]="seccion === 'suscripciones'"><i class="bi bi-credit-card-2-front"></i><span>Suscripciones</span></a>
       <a routerLink="/plataforma/comisiones" [class.active]="seccion === 'comisiones'"><i class="bi bi-percent"></i><span>Comisiones</span></a>
       <a><i class="bi bi-briefcase"></i><span>Ventas y CRM</span><em>Próximo</em></a>
       <a><i class="bi bi-headset"></i><span>Soporte</span><em>Próximo</em></a>
@@ -16,12 +16,14 @@
   <button class="backdrop" type="button" (click)="menuAbierto.set(false)" aria-label="Cerrar menú"></button>
 
   <section class="content">
-    <header class="topbar"><button class="menu-button" type="button" (click)="menuAbierto.set(true)" aria-label="Abrir menú"><i class="bi bi-list"></i></button><div><span>Fluora Plataforma</span><strong>{{ seccion === 'resumen' ? 'Operación general' : seccion === 'negocios' ? 'Directorio de negocios' : 'Ingresos de plataforma' }}</strong></div><button class="refresh" type="button" (click)="cargar()" [disabled]="cargando()"><i class="bi bi-arrow-clockwise"></i><span>Actualizar</span></button></header>
+    <header class="topbar"><button class="menu-button" type="button" (click)="menuAbierto.set(true)" aria-label="Abrir menú"><i class="bi bi-list"></i></button><div><span>Fluora Plataforma</span><strong>{{ seccion === 'resumen' ? 'Operación general' : seccion === 'negocios' ? 'Directorio de negocios' : seccion === 'suscripciones' ? 'Planes y suscripciones' : 'Ingresos de plataforma' }}</strong></div><button class="refresh" type="button" (click)="cargar()" [disabled]="cargando()"><i class="bi bi-arrow-clockwise"></i><span>Actualizar</span></button></header>
     <div class="workspace">
       @if (seccion === 'resumen') {
         <section class="hero"><div><span class="eyebrow">Administración SaaS</span><h1>Visión completa de Fluora</h1><p>Indicadores consolidados con aislamiento entre negocios y datos financieros conciliados.</p></div><span class="scope"><i class="bi bi-shield-lock-fill"></i>Ámbito plataforma</span></section>
       } @else if (seccion === 'negocios') {
         <section class="hero"><div><span class="eyebrow">Operación multitenant</span><h1>Negocios de Fluora</h1><p>Consulta cada tenant sin mezclar sus datos ni acceder con identidades administrativas del negocio.</p></div><span class="scope"><i class="bi bi-buildings-fill"></i>{{ resumen()?.tenantsTotal ?? 0 }} registrados</span></section>
+      } @else if (seccion === 'suscripciones') {
+        <section class="hero"><div><span class="eyebrow">Producto SaaS</span><h1>Planes y suscripciones</h1><p>Define la oferta comercial de Fluora y asigna módulos a cada negocio sin depender de Stripe.</p></div><span class="scope"><i class="bi bi-layers-fill"></i>{{ modulosSaas().length }} módulos disponibles</span></section>
       } @else {
         <section class="hero"><div><span class="eyebrow">Finanzas SaaS</span><h1>Reglas de comisión Fluora</h1><p>Configura vigencia, alcance y prioridad. El cobro permanece en $0.00 cuando no hay una regla activa aplicable.</p></div><span class="scope"><i class="bi bi-journal-check"></i>Cambios auditados</span></section>
       }
@@ -38,7 +40,7 @@
             <article class="revenue"><div class="metric-icon green"><i class="bi bi-graph-up-arrow"></i></div><span>Comisión Fluora</span><strong>{{ moneda(datos.comisionesFluora, datos.moneda) }}</strong><small>Conciliada; reglas actuales</small></article>
           </section>
           <section class="financial-card"><header><div><span class="eyebrow">Operación financiera</span><h2>Flujo conciliado</h2></div><span>Fuente: reportes de proveedores</span></header><div class="financial-flow"><div><span>Volumen bruto</span><strong>{{ moneda(datos.volumenBrutoConciliado, datos.moneda) }}</strong></div><i class="bi bi-chevron-right"></i><div><span>Comisiones proveedor</span><strong class="negative">− {{ moneda(datos.comisionesProveedor, datos.moneda) }}</strong></div><i class="bi bi-chevron-right"></i><div><span>Neto para negocios</span><strong class="positive">{{ moneda(datos.netoNegocios, datos.moneda) }}</strong></div></div></section>
-          <section class="module-grid"><a routerLink="/plataforma/negocios"><i class="bi bi-buildings"></i><div><strong>Administrar negocios</strong><span>Estado, operación e integraciones por tenant</span></div><i class="bi bi-arrow-right"></i></a><a routerLink="/plataforma/comisiones"><i class="bi bi-percent"></i><div><strong>Configurar comisiones</strong><span>Simula reglas antes de activarlas</span></div><i class="bi bi-arrow-right"></i></a></section>
+          <section class="module-grid"><a routerLink="/plataforma/negocios"><i class="bi bi-buildings"></i><div><strong>Administrar negocios</strong><span>Estado, operación e integraciones por tenant</span></div><i class="bi bi-arrow-right"></i></a><a routerLink="/plataforma/suscripciones"><i class="bi bi-credit-card-2-front"></i><div><strong>Planes y suscripciones</strong><span>Módulos, precios y vigencias por negocio</span></div><i class="bi bi-arrow-right"></i></a><a routerLink="/plataforma/comisiones"><i class="bi bi-percent"></i><div><strong>Configurar comisiones</strong><span>Simula reglas antes de activarlas</span></div><i class="bi bi-arrow-right"></i></a></section>
         }
 
         @if (seccion === 'negocios') {
@@ -61,6 +63,37 @@
               }
             </aside>
           }
+        }
+
+        @if (seccion === 'suscripciones') {
+          <section class="subscription-layout">
+            <form class="commission-form plan-form" (ngSubmit)="guardarPlan()">
+              <header><div><span class="eyebrow">{{ planEditando ? 'Editar plan' : 'Nuevo plan' }}</span><h2>Oferta comercial</h2></div><span class="draft" [class.live]="planFormulario.activo">{{ planFormulario.activo ? 'Disponible' : 'Borrador' }}</span></header>
+              <div class="field-grid">
+                <label><span>Código interno</span><input name="planCodigo" maxlength="80" [(ngModel)]="planFormulario.codigo" placeholder="PRO" required></label>
+                <label><span>Nombre comercial</span><input name="planNombre" maxlength="120" [(ngModel)]="planFormulario.nombre" placeholder="Fluora Pro" required></label>
+                <label class="wide"><span>Descripción</span><input name="planDescripcion" maxlength="500" [(ngModel)]="planFormulario.descripcion" placeholder="Describe para quién está pensado"></label>
+                <label><span>Precio mensual</span><div class="input-affix"><i>$</i><input name="precioMensual" type="number" min="0" step="0.01" [(ngModel)]="planFormulario.precioMensual" required></div></label>
+                <label><span>Precio anual</span><div class="input-affix"><i>$</i><input name="precioAnual" type="number" min="0" step="0.01" [(ngModel)]="planFormulario.precioAnual" placeholder="Opcional"></div></label>
+                <label><span>Moneda</span><input name="planMoneda" maxlength="10" [(ngModel)]="planFormulario.moneda" required></label>
+              </div>
+              <div class="module-selector"><span>Módulos incluidos</span><div>@for (modulo of modulosSaas(); track modulo.id) { <label [class.selected]="moduloSeleccionado(modulo.id)"><input type="checkbox" [checked]="moduloSeleccionado(modulo.id)" (change)="alternarModulo(modulo.id,$any($event.target).checked)"><i class="bi" [class.bi-check2]="moduloSeleccionado(modulo.id)" [class.bi-plus]="!moduloSeleccionado(modulo.id)"></i><span><strong>{{ modulo.nombre }}</strong><small>{{ modulo.descripcion }}</small></span></label> }</div></div>
+              <div class="plan-flags"><label><input name="planActivo" type="checkbox" [(ngModel)]="planFormulario.activo"><span><strong>Plan disponible</strong><small>Puede asignarse a nuevos negocios.</small></span></label><label><input name="planPublico" type="checkbox" [(ngModel)]="planFormulario.publico"><span><strong>Mostrar públicamente</strong><small>Preparado para la futura tabla de precios.</small></span></label></div>
+              <div class="form-actions">@if (planEditando) { <button type="button" class="secondary" (click)="cancelarPlan()">Cancelar</button> }<button type="submit" [disabled]="guardando()"><i class="bi bi-check2-circle"></i>{{ guardando() ? 'Guardando…' : planEditando ? 'Guardar plan' : 'Crear plan' }}</button></div>
+            </form>
+            <form class="subscription-assign" (ngSubmit)="asignarSuscripcion()">
+              <span class="eyebrow">Asignación manual</span><h2>Suscribir un negocio</h2><p>Stripe se enlazará después. Por ahora Fluora conserva la fuente de verdad comercial.</p>
+              <label><span>Negocio</span><select name="susEmpresa" [(ngModel)]="suscripcionFormulario.empresaId" required><option [ngValue]="null" disabled>Selecciona un negocio</option>@for (tenant of tenants(); track tenant.id) { <option [ngValue]="tenant.id">{{ tenant.nombre }}</option> }</select></label>
+              <label><span>Plan</span><select name="susPlan" [(ngModel)]="suscripcionFormulario.planId" required><option [ngValue]="null" disabled>Selecciona un plan activo</option>@for (plan of planesSaas(); track plan.id) { @if (plan.activo) { <option [ngValue]="plan.id">{{ plan.nombre }}</option> } }</select></label>
+              <div class="mini-grid"><label><span>Ciclo</span><select name="susCiclo" [(ngModel)]="suscripcionFormulario.ciclo"><option value="MENSUAL">Mensual</option><option value="ANUAL">Anual</option></select></label><label><span>Estado</span><select name="susEstado" [(ngModel)]="suscripcionFormulario.estado"><option value="ACTIVA">Activa</option><option value="PRUEBA">Prueba</option></select></label></div>
+              <label><span>Precio acordado</span><input name="susPrecio" type="number" min="0" step="0.01" [(ngModel)]="suscripcionFormulario.precioAcordado" placeholder="Usar precio del plan"></label>
+              <label><span>Inicia</span><input name="susInicio" type="datetime-local" [(ngModel)]="suscripcionFormulario.iniciaEn" required></label>
+              @if (suscripcionFormulario.estado === 'PRUEBA') { <label><span>Prueba hasta</span><input name="susPrueba" type="datetime-local" [(ngModel)]="suscripcionFormulario.pruebaHasta" required></label> }
+              <button type="submit" [disabled]="guardando()"><i class="bi bi-person-check"></i>Asignar suscripción</button>
+            </form>
+          </section>
+          <section class="plans-card"><header><div><span class="eyebrow">Catálogo</span><h2>Planes registrados</h2></div><span>{{ planesSaas().length }} planes</span></header><div class="plan-list">@for (plan of planesSaas(); track plan.id) { <article><div class="plan-heading"><span class="rule-provider">{{ plan.codigo }}</span><strong>{{ plan.nombre }}</strong><small>{{ plan.descripcion || 'Sin descripción' }}</small></div><div class="plan-price"><strong>{{ moneda(plan.precioMensual,plan.moneda) }}</strong><span>/ mes</span>@if (plan.precioAnual !== null) { <small>{{ moneda(plan.precioAnual,plan.moneda) }} anual</small> }</div><div class="plan-modules">@for (modulo of plan.modulos; track modulo.moduloId) { <span>{{ modulo.nombre }}</span> }</div><span class="status" [class.inactive]="!plan.activo">{{ plan.activo ? 'ACTIVO' : 'BORRADOR' }}</span><button type="button" class="icon-button" (click)="editarPlan(plan)" aria-label="Editar plan"><i class="bi bi-pencil"></i></button></article> } @empty { <div class="empty"><i class="bi bi-layers"></i><strong>Aún no hay planes</strong><span>Crea el primer plan sin activarlo hasta revisar módulos y precios.</span></div> }</div></section>
+          <section class="rules-card"><header><div><span class="eyebrow">Historial</span><h2>Suscripciones por negocio</h2></div><span>{{ suscripcionesSaas().length }} registros</span></header><div class="subscription-list">@for (suscripcion of suscripcionesSaas(); track suscripcion.id) { <article><div><strong>{{ suscripcion.empresaNombre }}</strong><span>{{ suscripcion.planNombre }} · {{ suscripcion.ciclo }}</span></div><div><strong>{{ moneda(suscripcion.precioAcordado,suscripcion.moneda) }}</strong><span>Desde {{ suscripcion.iniciaEn | date:'dd MMM yyyy' }}</span></div><span class="status" [class.inactive]="suscripcion.estado !== 'ACTIVA' && suscripcion.estado !== 'PRUEBA'">{{ suscripcion.estado }}</span></article> } @empty { <div class="empty compact"><i class="bi bi-credit-card"></i><strong>No hay suscripciones asignadas</strong></div> }</div></section>
         }
 
         @if (seccion === 'comisiones') {

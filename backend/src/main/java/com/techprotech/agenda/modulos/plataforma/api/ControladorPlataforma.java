@@ -9,8 +9,14 @@ import com.techprotech.agenda.modulos.plataforma.api.dto.SimulacionComisionPlata
 import com.techprotech.agenda.modulos.plataforma.api.dto.SimularComisionPlataformaRequest;
 import com.techprotech.agenda.modulos.plataforma.api.dto.TenantPlataformaResponse;
 import com.techprotech.agenda.modulos.plataforma.api.dto.DetalleTenantPlataformaResponse;
+import com.techprotech.agenda.modulos.plataforma.api.dto.ModuloPlataformaResponse;
+import com.techprotech.agenda.modulos.plataforma.api.dto.GuardarPlanPlataformaRequest;
+import com.techprotech.agenda.modulos.plataforma.api.dto.PlanPlataformaResponse;
+import com.techprotech.agenda.modulos.plataforma.api.dto.AsignarSuscripcionPlataformaRequest;
+import com.techprotech.agenda.modulos.plataforma.api.dto.SuscripcionPlataformaResponse;
 import com.techprotech.agenda.modulos.plataforma.aplicacion.ServicioConsultaPlataforma;
 import com.techprotech.agenda.modulos.plataforma.aplicacion.ServicioGestionComisionesPlataforma;
+import com.techprotech.agenda.modulos.plataforma.aplicacion.ServicioSuscripcionesPlataforma;
 import com.techprotech.agenda.seguridad.jwt.UsuarioAutenticado;
 import jakarta.validation.Valid;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -24,9 +30,11 @@ import java.util.List;
 public class ControladorPlataforma {
     private final ServicioConsultaPlataforma servicio;
     private final ServicioGestionComisionesPlataforma comisiones;
+    private final ServicioSuscripcionesPlataforma suscripciones;
 
-    public ControladorPlataforma(ServicioConsultaPlataforma servicio, ServicioGestionComisionesPlataforma comisiones) {
-        this.servicio = servicio; this.comisiones = comisiones;
+    public ControladorPlataforma(ServicioConsultaPlataforma servicio, ServicioGestionComisionesPlataforma comisiones,
+                                 ServicioSuscripcionesPlataforma suscripciones) {
+        this.servicio = servicio; this.comisiones = comisiones; this.suscripciones = suscripciones;
     }
 
     @GetMapping("/resumen")
@@ -76,5 +84,38 @@ public class ControladorPlataforma {
     @PreAuthorize("hasAuthority('PLATAFORMA_COMISIONES_GESTIONAR')")
     public SimulacionComisionPlataformaResponse simular(@Valid @RequestBody SimularComisionPlataformaRequest solicitud) {
         return comisiones.simular(solicitud);
+    }
+
+    @GetMapping("/suscripciones/modulos")
+    @PreAuthorize("hasAuthority('PLATAFORMA_SUSCRIPCIONES_GESTIONAR')")
+    public List<ModuloPlataformaResponse> modulosSuscripcion() { return suscripciones.modulos(); }
+
+    @GetMapping("/suscripciones/planes")
+    @PreAuthorize("hasAuthority('PLATAFORMA_SUSCRIPCIONES_GESTIONAR')")
+    public List<PlanPlataformaResponse> planes() { return suscripciones.planes(); }
+
+    @PostMapping("/suscripciones/planes")
+    @PreAuthorize("hasAuthority('PLATAFORMA_SUSCRIPCIONES_GESTIONAR')")
+    public PlanPlataformaResponse crearPlan(@AuthenticationPrincipal UsuarioAutenticado usuario,
+            @Valid @RequestBody GuardarPlanPlataformaRequest solicitud) {
+        return suscripciones.crearPlan(usuario.usuarioId(),solicitud);
+    }
+
+    @PutMapping("/suscripciones/planes/{id}")
+    @PreAuthorize("hasAuthority('PLATAFORMA_SUSCRIPCIONES_GESTIONAR')")
+    public PlanPlataformaResponse actualizarPlan(@AuthenticationPrincipal UsuarioAutenticado usuario,
+            @PathVariable Long id,@Valid @RequestBody GuardarPlanPlataformaRequest solicitud) {
+        return suscripciones.actualizarPlan(usuario.usuarioId(),id,solicitud);
+    }
+
+    @GetMapping("/suscripciones")
+    @PreAuthorize("hasAuthority('PLATAFORMA_SUSCRIPCIONES_GESTIONAR')")
+    public List<SuscripcionPlataformaResponse> suscripciones() { return suscripciones.suscripciones(); }
+
+    @PostMapping("/suscripciones")
+    @PreAuthorize("hasAuthority('PLATAFORMA_SUSCRIPCIONES_GESTIONAR')")
+    public SuscripcionPlataformaResponse asignarSuscripcion(@AuthenticationPrincipal UsuarioAutenticado usuario,
+            @Valid @RequestBody AsignarSuscripcionPlataformaRequest solicitud) {
+        return suscripciones.asignar(usuario.usuarioId(),solicitud);
     }
 }

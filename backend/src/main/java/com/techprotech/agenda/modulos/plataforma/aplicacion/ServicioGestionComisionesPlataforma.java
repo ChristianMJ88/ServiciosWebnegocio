@@ -1,7 +1,5 @@
 package com.techprotech.agenda.modulos.plataforma.aplicacion;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.techprotech.agenda.modulos.autenticacion.infraestructura.entidad.EmpresaEntidad;
 import com.techprotech.agenda.modulos.autenticacion.infraestructura.repositorio.EmpresaRepositorio;
 import com.techprotech.agenda.modulos.pagos.aplicacion.ServicioComisionPlataforma;
@@ -11,8 +9,6 @@ import com.techprotech.agenda.modulos.pagos.infraestructura.entidad.ReglaComisio
 import com.techprotech.agenda.modulos.pagos.infraestructura.repositorio.ProveedorPagoRepositorio;
 import com.techprotech.agenda.modulos.pagos.infraestructura.repositorio.ReglaComisionPlataformaRepositorio;
 import com.techprotech.agenda.modulos.plataforma.api.dto.*;
-import com.techprotech.agenda.modulos.plataforma.infraestructura.entidad.AuditoriaPlataformaEntidad;
-import com.techprotech.agenda.modulos.plataforma.infraestructura.repositorio.AuditoriaPlataformaRepositorio;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -27,16 +23,14 @@ public class ServicioGestionComisionesPlataforma {
     private final ReglaComisionPlataformaRepositorio reglas;
     private final ProveedorPagoRepositorio proveedores;
     private final EmpresaRepositorio empresas;
-    private final AuditoriaPlataformaRepositorio auditoria;
+    private final ServicioAuditoriaPlataforma auditoria;
     private final ServicioComisionPlataforma calculadora;
-    private final ObjectMapper json;
 
     public ServicioGestionComisionesPlataforma(ReglaComisionPlataformaRepositorio reglas,
             ProveedorPagoRepositorio proveedores, EmpresaRepositorio empresas,
-            AuditoriaPlataformaRepositorio auditoria, ServicioComisionPlataforma calculadora,
-            ObjectMapper json) {
+            ServicioAuditoriaPlataforma auditoria, ServicioComisionPlataforma calculadora) {
         this.reglas = reglas; this.proveedores = proveedores; this.empresas = empresas;
-        this.auditoria = auditoria; this.calculadora = calculadora; this.json = json;
+        this.auditoria = auditoria; this.calculadora = calculadora;
     }
 
     @Transactional(readOnly = true)
@@ -129,12 +123,10 @@ public class ServicioGestionComisionesPlataforma {
     }
 
     private void registrar(Long usuarioId, String accion, ReglaComisionPlataformaEntidad regla) {
-        AuditoriaPlataformaEntidad evento = new AuditoriaPlataformaEntidad(); evento.setUsuarioId(usuarioId);
-        evento.setAccion(accion); evento.setRecurso("REGLA_COMISION"); evento.setRecursoId(String.valueOf(regla.getId()));
-        try { evento.setDetalle(json.writeValueAsString(Map.of("activa", regla.isActiva(), "proveedorId", regla.getProveedorPagoId(),
-                "alcance", regla.getEmpresaId() == null ? "GLOBAL" : "TENANT", "tipo", regla.getTipo().name(), "valor", regla.getValor()))); }
-        catch (JsonProcessingException ex) { throw new IllegalStateException("No fue posible registrar la auditoría", ex); }
-        auditoria.save(evento);
+        auditoria.registrar(usuarioId, accion, "REGLA_COMISION", String.valueOf(regla.getId()),
+                Map.of("activa", regla.isActiva(), "proveedorId", regla.getProveedorPagoId(),
+                        "alcance", regla.getEmpresaId() == null ? "GLOBAL" : "TENANT",
+                        "tipo", regla.getTipo().name(), "valor", regla.getValor()));
     }
 
     private static String normalizarMoneda(String valor) { return valor.trim().toUpperCase(Locale.ROOT); }
