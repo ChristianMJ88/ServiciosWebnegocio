@@ -30,6 +30,9 @@ export interface TenantPlataforma {
   netoConciliado: number;
   moneda: string | null;
 }
+export interface IntegracionPagoTenant { proveedorId: number; proveedorNombre: string; estado: string; ambiente: string; conectadoEn: string | null; ultimaSincronizacionEn: string | null; }
+export interface ConfiguracionComercioTenant { checkoutConfigurado: boolean; checkoutHabilitado: boolean; productosHabilitados: boolean; serviciosHabilitados: boolean; moneda: string | null; enviosConfigurados: boolean; enviosHabilitados: boolean; proveedorEnvio: string | null; ambienteEnvio: string | null; }
+export interface DetalleTenantPlataforma { tenant: TenantPlataforma; serviciosActivos: number; productosActivos: number; clientes: number; citasUltimos30Dias: number; ventasUltimos30Dias: number; importeVentasUltimos30Dias: number; monedaVentas: string | null; comercio: ConfiguracionComercioTenant; integracionesPago: IntegracionPagoTenant[]; }
 export interface ProveedorPagoPlataforma { id: number; codigo: string; nombre: string; }
 export interface ReglaComisionPlataforma { id: number; proveedorId: number; proveedorNombre: string; empresaId: number | null; empresaNombre: string | null; tipo: 'PORCENTAJE'|'MONTO_FIJO'; valor: number; importeMinimo: number | null; importeMaximo: number | null; moneda: string | null; prioridad: number; vigenteDesde: string; vigenteHasta: string | null; activa: boolean; }
 export interface ReglaComisionPayload { proveedorId: number | null; empresaId: number | null; tipo: 'PORCENTAJE'|'MONTO_FIJO'; valor: number; importeMinimo: number | null; importeMaximo: number | null; moneda: string | null; prioridad: number; vigenteDesde: string; vigenteHasta: string | null; activa: boolean; }
@@ -41,6 +44,7 @@ export class PlatformAdminService {
   private readonly baseUrl = `${environment.apiBaseUrl}/plataforma`;
   resumen(): Observable<ResumenPlataforma> { return this.http.get<ResumenPlataforma>(`${this.baseUrl}/resumen`); }
   tenants(): Observable<TenantPlataforma[]> { return this.http.get<TenantPlataforma[]>(`${this.baseUrl}/tenants`); }
+  tenant(id: number): Observable<DetalleTenantPlataforma> { return this.http.get<DetalleTenantPlataforma>(`${this.baseUrl}/tenants/${id}`); }
   proveedoresPago(): Observable<ProveedorPagoPlataforma[]> { return this.http.get<ProveedorPagoPlataforma[]>(`${this.baseUrl}/comisiones/proveedores`); }
   reglasComision(): Observable<ReglaComisionPlataforma[]> { return this.http.get<ReglaComisionPlataforma[]>(`${this.baseUrl}/comisiones/reglas`); }
   crearRegla(payload: ReglaComisionPayload): Observable<ReglaComisionPlataforma> { return this.http.post<ReglaComisionPlataforma>(`${this.baseUrl}/comisiones/reglas`, payload); }

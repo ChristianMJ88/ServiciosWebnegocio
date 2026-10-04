@@ -8,6 +8,7 @@ import com.techprotech.agenda.modulos.plataforma.api.dto.ResumenPlataformaRespon
 import com.techprotech.agenda.modulos.plataforma.api.dto.SimulacionComisionPlataformaResponse;
 import com.techprotech.agenda.modulos.plataforma.api.dto.SimularComisionPlataformaRequest;
 import com.techprotech.agenda.modulos.plataforma.api.dto.TenantPlataformaResponse;
+import com.techprotech.agenda.modulos.plataforma.api.dto.DetalleTenantPlataformaResponse;
 import com.techprotech.agenda.modulos.plataforma.aplicacion.ServicioConsultaPlataforma;
 import com.techprotech.agenda.modulos.plataforma.aplicacion.ServicioGestionComisionesPlataforma;
 import com.techprotech.agenda.seguridad.jwt.UsuarioAutenticado;
@@ -35,6 +36,12 @@ public class ControladorPlataforma {
     @GetMapping("/tenants")
     @PreAuthorize("hasAuthority('PLATAFORMA_TENANTS_VER')")
     public List<TenantPlataformaResponse> tenants() { return servicio.tenants(); }
+
+    @GetMapping("/tenants/{empresaId}")
+    @PreAuthorize("hasAuthority('PLATAFORMA_TENANTS_VER')")
+    public DetalleTenantPlataformaResponse tenant(@PathVariable Long empresaId) {
+        return servicio.tenant(empresaId);
+    }
 
     @GetMapping("/comisiones/proveedores")
     @PreAuthorize("hasAuthority('PLATAFORMA_COMISIONES_GESTIONAR')")

@@ -3,7 +3,7 @@ import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { finalize, forkJoin } from 'rxjs';
-import { PlatformAdminService, ProveedorPagoPlataforma, ReglaComisionPayload, ReglaComisionPlataforma, ResumenPlataforma, SimulacionComision, TenantPlataforma } from '../../core/platform/platform-admin.service';
+import { DetalleTenantPlataforma, PlatformAdminService, ProveedorPagoPlataforma, ReglaComisionPayload, ReglaComisionPlataforma, ResumenPlataforma, SimulacionComision, TenantPlataforma } from '../../core/platform/platform-admin.service';
 import { PlatformAuthService } from '../../core/platform/platform-auth.service';
 
 @Component({
@@ -24,6 +24,8 @@ export class PlatformDashboardComponent implements OnInit {
   readonly simulacion = signal<SimulacionComision | null>(null);
   readonly guardando = signal(false);
   readonly mensaje = signal<string | null>(null);
+  readonly detalleTenant = signal<DetalleTenantPlataforma | null>(null);
+  readonly cargandoDetalle = signal(false);
   reglaEditando: number | null = null;
   importeSimulacion = 1000;
   formulario: ReglaComisionPayload = this.formularioVacio();
@@ -60,6 +62,8 @@ export class PlatformDashboardComponent implements OnInit {
   }
   editar(regla: ReglaComisionPlataforma): void { this.reglaEditando = regla.id; this.formulario = { proveedorId: regla.proveedorId, empresaId: regla.empresaId, tipo: regla.tipo, valor: regla.valor, importeMinimo: regla.importeMinimo, importeMaximo: regla.importeMaximo, moneda: regla.moneda, prioridad: regla.prioridad, vigenteDesde: this.fechaLocal(regla.vigenteDesde), vigenteHasta: regla.vigenteHasta ? this.fechaLocal(regla.vigenteHasta) : null, activa: regla.activa }; this.simulacion.set(null); window.scrollTo({ top: 0, behavior: 'smooth' }); }
   cambiarEstado(regla: ReglaComisionPlataforma): void { this.api.cambiarEstadoRegla(regla.id, !regla.activa).subscribe({ next: () => this.recargarReglas(), error: e => this.error.set(this.errorApi(e)) }); }
+  abrirTenant(id: number): void { this.cargandoDetalle.set(true); this.detalleTenant.set(null); this.api.tenant(id).pipe(finalize(() => this.cargandoDetalle.set(false))).subscribe({ next: detalle => this.detalleTenant.set(detalle), error: e => this.error.set(this.errorApi(e)) }); }
+  cerrarTenant(): void { this.detalleTenant.set(null); }
   cancelarEdicion(): void { this.reglaEditando = null; this.formulario = this.formularioVacio(); const primero = this.proveedores()[0]; if (primero) this.formulario.proveedorId = primero.id; this.simulacion.set(null); }
   private recargarReglas(): void { this.api.reglasComision().subscribe(datos => this.reglas.set(datos)); }
   private formularioVacio(): ReglaComisionPayload { const ahora = new Date(); ahora.setMinutes(ahora.getMinutes() - ahora.getTimezoneOffset()); return { proveedorId: null, empresaId: null, tipo: 'PORCENTAJE', valor: 1, importeMinimo: null, importeMaximo: null, moneda: 'MXN', prioridad: 0, vigenteDesde: ahora.toISOString().slice(0,16), vigenteHasta: null, activa: false }; }
