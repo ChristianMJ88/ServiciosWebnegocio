@@ -20,8 +20,10 @@ export class AdminSubscriptionSectionComponent implements OnInit {
   readonly estado=signal<EstadoSuscripcionEmpresa|null>(null);
   readonly error=signal<string|null>(null);
   readonly mensaje=signal<string|null>(null);
+  readonly moduloSolicitado=signal<string|null>(null);
 
   ngOnInit(): void {
+    this.moduloSolicitado.set(this.route.snapshot.queryParamMap.get('modulo'));
     const resultado=this.route.snapshot.queryParamMap.get('stripe');
     if(resultado==='exito')this.mensaje.set('Stripe recibió la solicitud. Confirmaremos la suscripción en cuanto llegue la notificación segura.');
     if(resultado==='cancelado')this.mensaje.set('El proceso se canceló y no se realizó ningún cargo.');

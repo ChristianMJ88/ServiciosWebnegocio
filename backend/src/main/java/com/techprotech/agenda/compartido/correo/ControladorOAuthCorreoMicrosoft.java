@@ -1,5 +1,6 @@
 package com.techprotech.agenda.compartido.correo;
 
+import com.techprotech.agenda.modulos.plataforma.seguridad.RequiereModulo;
 import com.techprotech.agenda.seguridad.jwt.UsuarioAutenticado;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -15,6 +16,7 @@ import java.net.URI;
 
 @RestController
 @RequestMapping("/api/v1/admin/correo/oauth/microsoft")
+@RequiereModulo("CORREO")
 public class ControladorOAuthCorreoMicrosoft {
 
     private final ServicioOAuthCorreoMicrosoft servicio;
@@ -40,4 +42,3 @@ public class ControladorOAuthCorreoMicrosoft {
                 .header(HttpHeaders.LOCATION, URI.create(destino).toString()).build();
     }
 }
-

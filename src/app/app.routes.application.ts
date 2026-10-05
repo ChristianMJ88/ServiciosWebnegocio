@@ -3,6 +3,7 @@ import { authGuard } from './core/auth/auth.guard';
 import { PERMISOS } from './core/auth/permissions';
 import { roleGuard } from './core/auth/role.guard';
 import { platformAuthGuard } from './core/platform/platform-auth.guard';
+import { moduleGuard } from './core/subscription/module.guard';
 
 const redirectComponent = () => import('./pages/platform-redirect/platform-redirect.component')
   .then((m) => m.PlatformRedirectComponent);
@@ -39,11 +40,11 @@ export const privateApplicationRoutes: Routes = [
   },
   {
     path: 'recepcion', loadComponent: () => import('./pages/recepcion-dashboard/recepcion-dashboard.component').then((m) => m.RecepcionDashboardComponent),
-    canActivate: [roleGuard], data: { permissions: [PERMISOS.recepcionAcceso], layout: 'panel' }
+    canActivate: [roleGuard, moduleGuard], data: { permissions: [PERMISOS.recepcionAcceso], module: 'RECEPCION', layout: 'panel' }
   },
   {
     path: 'caja', loadComponent: () => import('./pages/caja-dashboard/caja-dashboard.component').then((m) => m.CajaDashboardComponent),
-    canActivate: [roleGuard], data: { permissions: [PERMISOS.cajaAcceso], layout: 'panel' }
+    canActivate: [roleGuard, moduleGuard], data: { permissions: [PERMISOS.cajaAcceso], module: 'CAJA', layout: 'panel' }
   }
 ];
 

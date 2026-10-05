@@ -48,6 +48,7 @@ import com.techprotech.agenda.modulos.admin.api.dto.UsuarioInternoAdminRequest;
 import com.techprotech.agenda.modulos.admin.api.dto.UsuarioInternoAdminResponse;
 import com.techprotech.agenda.modulos.admin.aplicacion.ServicioAdminCitas;
 import com.techprotech.agenda.modulos.citas.api.dto.CitaClienteResponse;
+import com.techprotech.agenda.modulos.plataforma.seguridad.RequiereModulo;
 import jakarta.validation.Valid;
 import com.techprotech.agenda.seguridad.jwt.UsuarioAutenticado;
 import org.springframework.http.ResponseEntity;
@@ -222,6 +223,7 @@ public class ControladorAdminCitas {
 
     @GetMapping("/configuracion-correo")
     @PreAuthorize("hasAuthority('CONFIGURACION_EMPRESA_GESTIONAR')")
+    @RequiereModulo("CORREO")
     public ConfiguracionCorreoAdminResponse configuracionCorreo(@AuthenticationPrincipal UsuarioAutenticado usuario) {
         return servicioAdminCitas.obtenerConfiguracionCorreo(usuario.empresaId());
     }
@@ -243,6 +245,7 @@ public class ControladorAdminCitas {
 
     @PatchMapping("/configuracion-correo")
     @PreAuthorize("hasAuthority('CONFIGURACION_EMPRESA_GESTIONAR')")
+    @RequiereModulo("CORREO")
     public ConfiguracionCorreoAdminResponse actualizarConfiguracionCorreo(
             @AuthenticationPrincipal UsuarioAutenticado usuario,
             @Valid @RequestBody ConfiguracionCorreoAdminRequest request
@@ -252,6 +255,7 @@ public class ControladorAdminCitas {
 
     @DeleteMapping("/configuracion-correo")
     @PreAuthorize("hasAuthority('CONFIGURACION_EMPRESA_GESTIONAR')")
+    @RequiereModulo("CORREO")
     public ConfiguracionCorreoAdminResponse usarCorreoPlataforma(
             @AuthenticationPrincipal UsuarioAutenticado usuario
     ) {
@@ -260,12 +264,14 @@ public class ControladorAdminCitas {
 
     @PostMapping("/configuracion-correo/migrar-secretos")
     @PreAuthorize("hasAuthority('CONFIGURACION_EMPRESA_GESTIONAR')")
+    @RequiereModulo("CORREO")
     public MigracionSecretosCorreoResponse migrarSecretosCorreo(@AuthenticationPrincipal UsuarioAutenticado usuario) {
         return servicioAdminCitas.migrarSecretosCorreo(usuario.empresaId(), usuario.usuarioId());
     }
 
     @GetMapping("/configuracion-whatsapp")
     @PreAuthorize("hasAuthority('WHATSAPP_CONFIGURAR')")
+    @RequiereModulo("WHATSAPP")
     public ConfiguracionWhatsappAdminResponse configuracionWhatsapp(@AuthenticationPrincipal UsuarioAutenticado usuario) {
         return servicioAdminCitas.obtenerConfiguracionWhatsapp(usuario.empresaId());
     }
@@ -278,6 +284,7 @@ public class ControladorAdminCitas {
 
     @PatchMapping("/configuracion-whatsapp")
     @PreAuthorize("hasAuthority('WHATSAPP_CONFIGURAR')")
+    @RequiereModulo("WHATSAPP")
     public ConfiguracionWhatsappAdminResponse actualizarConfiguracionWhatsapp(
             @AuthenticationPrincipal UsuarioAutenticado usuario,
             @Valid @RequestBody ConfiguracionWhatsappAdminRequest request
@@ -287,18 +294,21 @@ public class ControladorAdminCitas {
 
     @GetMapping("/configuracion-whatsapp/plantillas")
     @PreAuthorize("hasAuthority('WHATSAPP_CONFIGURAR')")
+    @RequiereModulo("WHATSAPP")
     public List<PlantillaWhatsappAdminResponse> plantillasWhatsapp(@AuthenticationPrincipal UsuarioAutenticado usuario) {
         return servicioAdminCitas.listarPlantillasWhatsapp(usuario.empresaId());
     }
 
     @GetMapping("/configuracion-whatsapp/plantillas-empresa")
     @PreAuthorize("hasAuthority('WHATSAPP_CONFIGURAR')")
+    @RequiereModulo("WHATSAPP")
     public List<PlantillaWhatsappEmpresaAdminResponse> plantillasWhatsappEmpresa(@AuthenticationPrincipal UsuarioAutenticado usuario) {
         return servicioAdminCitas.listarPlantillasWhatsappEmpresa(usuario.empresaId());
     }
 
     @PostMapping("/configuracion-whatsapp/plantillas-empresa")
     @PreAuthorize("hasAuthority('WHATSAPP_CONFIGURAR')")
+    @RequiereModulo("WHATSAPP")
     public PlantillaWhatsappEmpresaAdminResponse crearPlantillaWhatsappEmpresa(
             @AuthenticationPrincipal UsuarioAutenticado usuario,
             @Valid @RequestBody PlantillaWhatsappEmpresaAdminRequest request
@@ -308,6 +318,7 @@ public class ControladorAdminCitas {
 
     @PatchMapping("/configuracion-whatsapp/plantillas-empresa/{plantillaId}")
     @PreAuthorize("hasAuthority('WHATSAPP_CONFIGURAR')")
+    @RequiereModulo("WHATSAPP")
     public PlantillaWhatsappEmpresaAdminResponse actualizarPlantillaWhatsappEmpresa(
             @AuthenticationPrincipal UsuarioAutenticado usuario,
             @PathVariable Long plantillaId,
@@ -318,6 +329,7 @@ public class ControladorAdminCitas {
 
     @DeleteMapping("/configuracion-whatsapp/plantillas-empresa/{plantillaId}")
     @PreAuthorize("hasAuthority('WHATSAPP_CONFIGURAR')")
+    @RequiereModulo("WHATSAPP")
     public ResponseEntity<Void> eliminarPlantillaWhatsappEmpresa(
             @AuthenticationPrincipal UsuarioAutenticado usuario,
             @PathVariable Long plantillaId
@@ -328,18 +340,21 @@ public class ControladorAdminCitas {
 
     @GetMapping("/configuracion-whatsapp/logs")
     @PreAuthorize("hasAuthority('WHATSAPP_CONFIGURAR')")
+    @RequiereModulo("WHATSAPP")
     public List<LogMensajeWhatsappAdminResponse> logsWhatsapp(@AuthenticationPrincipal UsuarioAutenticado usuario) {
         return servicioAdminCitas.listarLogsWhatsapp(usuario.empresaId());
     }
 
     @GetMapping("/whatsapp/mensajes")
     @PreAuthorize("hasAuthority('WHATSAPP_CONFIGURAR')")
+    @RequiereModulo("WHATSAPP")
     public List<MensajeWhatsappAdminResponse> mensajesWhatsapp(@AuthenticationPrincipal UsuarioAutenticado usuario) {
         return servicioAdminCitas.listarMensajesWhatsapp(usuario.empresaId());
     }
 
     @PostMapping("/whatsapp/mensajes")
     @PreAuthorize("hasAuthority('WHATSAPP_CONFIGURAR')")
+    @RequiereModulo("WHATSAPP")
     public MensajeWhatsappAdminResponse enviarMensajeWhatsapp(
             @AuthenticationPrincipal UsuarioAutenticado usuario,
             @Valid @RequestBody EnviarMensajeWhatsappAdminRequest request
@@ -349,6 +364,7 @@ public class ControladorAdminCitas {
 
     @PostMapping("/configuracion-whatsapp/provisionar-subcuenta")
     @PreAuthorize("hasAuthority('WHATSAPP_CONFIGURAR')")
+    @RequiereModulo("WHATSAPP")
     public ProvisionarSubcuentaWhatsappResponse provisionarSubcuentaWhatsapp(
             @AuthenticationPrincipal UsuarioAutenticado usuario,
             @Valid @RequestBody ProvisionarSubcuentaWhatsappRequest request
@@ -358,6 +374,7 @@ public class ControladorAdminCitas {
 
     @PostMapping("/configuracion-whatsapp/provisionar-messaging-service")
     @PreAuthorize("hasAuthority('WHATSAPP_CONFIGURAR')")
+    @RequiereModulo("WHATSAPP")
     public ProvisionarMessagingServiceWhatsappResponse provisionarMessagingServiceWhatsapp(
             @AuthenticationPrincipal UsuarioAutenticado usuario,
             @Valid @RequestBody ProvisionarMessagingServiceWhatsappRequest request
@@ -367,6 +384,7 @@ public class ControladorAdminCitas {
 
     @PostMapping("/configuracion-whatsapp/asociar-channel-sender")
     @PreAuthorize("hasAuthority('WHATSAPP_CONFIGURAR')")
+    @RequiereModulo("WHATSAPP")
     public AsociarChannelSenderWhatsappResponse asociarChannelSenderWhatsapp(
             @AuthenticationPrincipal UsuarioAutenticado usuario,
             @Valid @RequestBody AsociarChannelSenderWhatsappRequest request
@@ -376,6 +394,7 @@ public class ControladorAdminCitas {
 
     @PostMapping("/configuracion-whatsapp/detectar-channel-sender")
     @PreAuthorize("hasAuthority('WHATSAPP_CONFIGURAR')")
+    @RequiereModulo("WHATSAPP")
     public DetectarChannelSenderWhatsappResponse detectarChannelSenderWhatsapp(
             @AuthenticationPrincipal UsuarioAutenticado usuario
     ) {
@@ -384,6 +403,7 @@ public class ControladorAdminCitas {
 
     @PostMapping("/configuracion-whatsapp/probar-plantilla")
     @PreAuthorize("hasAuthority('WHATSAPP_CONFIGURAR')")
+    @RequiereModulo("WHATSAPP")
     public PruebaPlantillaWhatsappResponse probarPlantillaWhatsapp(
             @AuthenticationPrincipal UsuarioAutenticado usuario,
             @Valid @RequestBody PruebaPlantillaWhatsappRequest request

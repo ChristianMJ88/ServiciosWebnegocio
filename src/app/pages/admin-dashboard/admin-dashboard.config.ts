@@ -32,6 +32,7 @@ export type ModuloAdminDef = {
   abreviatura: string;
   iconClass: string;
   permiso?: PermisoCodigo;
+  moduloPlan?: string;
 };
 
 export type GrupoSidebarAdmin = {
@@ -47,27 +48,27 @@ export type GrupoSidebarAdminView = GrupoSidebarAdmin & {
 
 export const MODULOS_ADMIN: readonly ModuloAdminDef[] = [
   { id: 'resumen', titulo: 'Dashboard', descripcion: 'Indicadores clave, agenda e ingresos del negocio.', abreviatura: 'DB', iconClass: 'bi bi-speedometer2' },
-  { id: 'sitio', titulo: 'Sitio web', descripcion: 'Identidad, dominio y publicación de tu página pública.', abreviatura: 'SW', iconClass: 'bi bi-window-sidebar', permiso: PERMISOS.configuracionEmpresaGestionar },
-  { id: 'correo', titulo: 'Correo', descripcion: 'Configura el envío de confirmaciones y avisos de tu empresa.', abreviatura: 'CO', iconClass: 'bi bi-envelope-paper', permiso: PERMISOS.configuracionEmpresaGestionar },
-  { id: 'whatsapp', titulo: 'WhatsApp', descripcion: 'Conecta el canal, administra plantillas y verifica su funcionamiento.', abreviatura: 'WA', iconClass: 'bi bi-whatsapp', permiso: PERMISOS.whatsappConfigurar },
-  { id: 'mensajes', titulo: 'Mensajes', descripcion: 'Inbox de conversaciones WhatsApp con clientes.', abreviatura: 'MS', iconClass: 'bi bi-chat-left-text', permiso: PERMISOS.whatsappConfigurar },
-  { id: 'contactos', titulo: 'Contactos', descripcion: 'Mensajes recibidos desde el formulario web y seguimiento comercial.', abreviatura: 'CN', iconClass: 'bi bi-chat-left-text', permiso: PERMISOS.contactosAdminVer },
-  { id: 'clientes', titulo: 'Clientes', descripcion: 'Directorio, datos de contacto e historial de citas por cliente.', abreviatura: 'CL', iconClass: 'bi bi-person-vcard', permiso: PERMISOS.clientesGestionar },
+  { id: 'sitio', titulo: 'Sitio web', descripcion: 'Identidad, dominio y publicación de tu página pública.', abreviatura: 'SW', iconClass: 'bi bi-window-sidebar', permiso: PERMISOS.configuracionEmpresaGestionar, moduloPlan: 'SITIO_PUBLICO' },
+  { id: 'correo', titulo: 'Correo', descripcion: 'Configura el envío de confirmaciones y avisos de tu empresa.', abreviatura: 'CO', iconClass: 'bi bi-envelope-paper', permiso: PERMISOS.configuracionEmpresaGestionar, moduloPlan: 'CORREO' },
+  { id: 'whatsapp', titulo: 'WhatsApp', descripcion: 'Conecta el canal, administra plantillas y verifica su funcionamiento.', abreviatura: 'WA', iconClass: 'bi bi-whatsapp', permiso: PERMISOS.whatsappConfigurar, moduloPlan: 'WHATSAPP' },
+  { id: 'mensajes', titulo: 'Mensajes', descripcion: 'Inbox de conversaciones WhatsApp con clientes.', abreviatura: 'MS', iconClass: 'bi bi-chat-left-text', permiso: PERMISOS.whatsappConfigurar, moduloPlan: 'WHATSAPP' },
+  { id: 'contactos', titulo: 'Contactos', descripcion: 'Mensajes recibidos desde el formulario web y seguimiento comercial.', abreviatura: 'CN', iconClass: 'bi bi-chat-left-text', permiso: PERMISOS.contactosAdminVer, moduloPlan: 'CRM' },
+  { id: 'clientes', titulo: 'Clientes', descripcion: 'Directorio, datos de contacto e historial de citas por cliente.', abreviatura: 'CL', iconClass: 'bi bi-person-vcard', permiso: PERMISOS.clientesGestionar, moduloPlan: 'CRM' },
   { id: 'sucursales', titulo: 'Sucursales', descripcion: 'Alta y mantenimiento de sedes operativas.', abreviatura: 'SU', iconClass: 'bi bi-buildings', permiso: PERMISOS.sucursalesGestionar },
-  { id: 'servicios', titulo: 'Servicios', descripcion: 'Catálogo, duración, buffers y precio.', abreviatura: 'SV', iconClass: 'bi bi-list-check', permiso: PERMISOS.serviciosGestionar },
-  { id: 'productos', titulo: 'Productos', descripcion: 'Artículos, proveedores, precios regionales e inventario.', abreviatura: 'PD', iconClass: 'bi bi-box-seam', permiso: PERMISOS.productosGestionar },
-  { id: 'inventario', titulo: 'Inventario', descripcion: 'Existencias, movimientos y transferencias por sucursal.', abreviatura: 'IN', iconClass: 'bi bi-boxes', permiso: PERMISOS.inventarioGestionar },
-  { id: 'pagos', titulo: 'Pagos', descripcion: 'Conecta la cuenta de cobro del negocio y configura su checkout.', abreviatura: 'PG', iconClass: 'bi bi-credit-card-2-front', permiso: PERMISOS.pagosConfigurar },
-  { id: 'liquidaciones', titulo: 'Liquidaciones', descripcion: 'Genera reportes, concilia cobros y controla depósitos netos.', abreviatura: 'LQ', iconClass: 'bi bi-file-earmark-spreadsheet', permiso: PERMISOS.pagosConfigurar },
-  { id: 'envios', titulo: 'Envíos', descripcion: 'Gestiona proveedores, tarifas, guías y seguimiento de pedidos.', abreviatura: 'EN', iconClass: 'bi bi-truck', permiso: PERMISOS.enviosConfigurar },
+  { id: 'servicios', titulo: 'Servicios', descripcion: 'Catálogo, duración, buffers y precio.', abreviatura: 'SV', iconClass: 'bi bi-list-check', permiso: PERMISOS.serviciosGestionar, moduloPlan: 'AGENDA' },
+  { id: 'productos', titulo: 'Productos', descripcion: 'Artículos, proveedores, precios regionales e inventario.', abreviatura: 'PD', iconClass: 'bi bi-box-seam', permiso: PERMISOS.productosGestionar, moduloPlan: 'PRODUCTOS' },
+  { id: 'inventario', titulo: 'Inventario', descripcion: 'Existencias, movimientos y transferencias por sucursal.', abreviatura: 'IN', iconClass: 'bi bi-boxes', permiso: PERMISOS.inventarioGestionar, moduloPlan: 'INVENTARIO' },
+  { id: 'pagos', titulo: 'Pagos', descripcion: 'Conecta la cuenta de cobro del negocio y configura su checkout.', abreviatura: 'PG', iconClass: 'bi bi-credit-card-2-front', permiso: PERMISOS.pagosConfigurar, moduloPlan: 'PAGOS_ONLINE' },
+  { id: 'liquidaciones', titulo: 'Liquidaciones', descripcion: 'Genera reportes, concilia cobros y controla depósitos netos.', abreviatura: 'LQ', iconClass: 'bi bi-file-earmark-spreadsheet', permiso: PERMISOS.pagosConfigurar, moduloPlan: 'PAGOS_ONLINE' },
+  { id: 'envios', titulo: 'Envíos', descripcion: 'Gestiona proveedores, tarifas, guías y seguimiento de pedidos.', abreviatura: 'EN', iconClass: 'bi bi-truck', permiso: PERMISOS.enviosConfigurar, moduloPlan: 'ENVIOS' },
   { id: 'suscripcion', titulo: 'Plan Fluora', descripcion: 'Administra el plan, la capacidad y la facturación SaaS del negocio.', abreviatura: 'PF', iconClass: 'bi bi-stars', permiso: PERMISOS.suscripcionEmpresaGestionar },
-  { id: 'comisiones', titulo: 'Comisiones', descripcion: 'Reglas de cálculo para servicios, productos y ventas.', abreviatura: 'CM', iconClass: 'bi bi-percent', permiso: PERMISOS.comisionesGestionar },
+  { id: 'comisiones', titulo: 'Comisiones', descripcion: 'Reglas de cálculo para servicios, productos y ventas.', abreviatura: 'CM', iconClass: 'bi bi-percent', permiso: PERMISOS.comisionesGestionar, moduloPlan: 'COMISIONES' },
   { id: 'usuarios', titulo: 'Usuarios y accesos', descripcion: 'Administra identidades, invitaciones y acceso al sistema.', abreviatura: 'UI', iconClass: 'bi bi-person-badge', permiso: PERMISOS.usuariosInternosGestionar },
   { id: 'permisos', titulo: 'Permisos', descripcion: 'Define roles y capacidades de acceso por negocio.', abreviatura: 'PE', iconClass: 'bi bi-shield-lock', permiso: PERMISOS.usuariosInternosGestionar },
-  { id: 'prestadores', titulo: 'Prestadores', descripcion: 'Perfiles operativos que atienden servicios y aparecen en la agenda.', abreviatura: 'PR', iconClass: 'bi bi-person-workspace', permiso: PERMISOS.prestadoresGestionar },
-  { id: 'reglas', titulo: 'Horarios base', descripcion: 'Reglas semanales por sucursal o prestador.', abreviatura: 'HB', iconClass: 'bi bi-calendar3', permiso: PERMISOS.prestadoresGestionar },
-  { id: 'excepciones', titulo: 'Bloqueos', descripcion: 'Vacaciones, descansos y cierres puntuales.', abreviatura: 'BL', iconClass: 'bi bi-lock', permiso: PERMISOS.prestadoresGestionar },
-  { id: 'citas', titulo: 'Agenda', descripcion: 'Seguimiento operativo y gestión detallada de reservas.', abreviatura: 'AG', iconClass: 'bi bi-calendar-week', permiso: PERMISOS.citasAdminGestionar },
+  { id: 'prestadores', titulo: 'Prestadores', descripcion: 'Perfiles operativos que atienden servicios y aparecen en la agenda.', abreviatura: 'PR', iconClass: 'bi bi-person-workspace', permiso: PERMISOS.prestadoresGestionar, moduloPlan: 'AGENDA' },
+  { id: 'reglas', titulo: 'Horarios base', descripcion: 'Reglas semanales por sucursal o prestador.', abreviatura: 'HB', iconClass: 'bi bi-calendar3', permiso: PERMISOS.prestadoresGestionar, moduloPlan: 'AGENDA' },
+  { id: 'excepciones', titulo: 'Bloqueos', descripcion: 'Vacaciones, descansos y cierres puntuales.', abreviatura: 'BL', iconClass: 'bi bi-lock', permiso: PERMISOS.prestadoresGestionar, moduloPlan: 'AGENDA' },
+  { id: 'citas', titulo: 'Agenda', descripcion: 'Seguimiento operativo y gestión detallada de reservas.', abreviatura: 'AG', iconClass: 'bi bi-calendar-week', permiso: PERMISOS.citasAdminGestionar, moduloPlan: 'AGENDA' },
   { id: 'parametros', titulo: 'Parámetros', descripcion: 'Valores operativos configurables para este negocio.', abreviatura: 'PA', iconClass: 'bi bi-sliders', permiso: PERMISOS.parametrosSistemaGestionar }
 ];
 
@@ -88,9 +89,12 @@ export const GRUPOS_SIDEBAR_ADMIN: readonly GrupoSidebarAdmin[] = [
   { id: 'personalizacion', titulo: 'Personalización', iconClass: 'bi bi-palette2', modulos: ['sitio', 'parametros'] }
 ];
 
-export function filtrarModulosAdmin(permisosBackend: readonly string[]): ModuloAdminDef[] {
+export function filtrarModulosAdmin(permisosBackend: readonly string[],modulosPlan?: ReadonlySet<string>): ModuloAdminDef[] {
   const permisos = new Set(permisosBackend);
-  return MODULOS_ADMIN.filter(modulo => !modulo.permiso || permisos.has(modulo.permiso));
+  return MODULOS_ADMIN.filter(modulo =>
+    (!modulo.permiso || permisos.has(modulo.permiso))
+    && (!modulo.moduloPlan || !modulosPlan || modulosPlan.has(modulo.moduloPlan))
+  );
 }
 
 export function construirGruposSidebarAdmin(modulos: readonly ModuloAdminDef[]): GrupoSidebarAdminView[] {

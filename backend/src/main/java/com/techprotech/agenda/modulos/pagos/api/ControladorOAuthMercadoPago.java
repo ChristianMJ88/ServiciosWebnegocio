@@ -7,6 +7,7 @@ import com.techprotech.agenda.modulos.pagos.aplicacion.ServicioOAuthMercadoPago;
 import com.techprotech.agenda.modulos.pagos.infraestructura.mercadopago.PropiedadesMercadoPago;
 import com.techprotech.agenda.modulos.pagos.seguridad.PermisosPagos;
 import com.techprotech.agenda.seguridad.jwt.UsuarioAutenticado;
+import com.techprotech.agenda.modulos.plataforma.seguridad.RequiereModulo;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -18,6 +19,7 @@ import java.net.URI;
 
 @RestController
 @RequestMapping("/api/v1/admin/pagos/mercado-pago/oauth")
+@RequiereModulo("PAGOS_ONLINE")
 public class ControladorOAuthMercadoPago {
   private final ServicioOAuthMercadoPago servicio;
   private final PropiedadesMercadoPago propiedades;

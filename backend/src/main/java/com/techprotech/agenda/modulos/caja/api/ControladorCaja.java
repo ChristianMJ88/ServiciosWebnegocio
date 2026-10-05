@@ -16,6 +16,7 @@ import com.techprotech.agenda.modulos.caja.api.dto.VentaResponse;
 import com.techprotech.agenda.modulos.caja.aplicacion.ServicioCaja;
 import com.techprotech.agenda.modulos.caja.aplicacion.ServicioVentasCaja;
 import com.techprotech.agenda.seguridad.jwt.UsuarioAutenticado;
+import com.techprotech.agenda.modulos.plataforma.seguridad.RequiereModulo;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -34,6 +35,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/v1/caja")
 @PreAuthorize("hasAuthority('CAJA_ACCESO')")
+@RequiereModulo("CAJA")
 public class ControladorCaja {
 
     private final ServicioCaja servicioCaja;

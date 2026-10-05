@@ -11,6 +11,7 @@ import com.techprotech.agenda.modulos.recepcion.api.dto.FranjaRecepcionDisponibl
 import com.techprotech.agenda.modulos.recepcion.api.dto.ReagendarRecepcionRequest;
 import com.techprotech.agenda.modulos.recepcion.api.dto.SolicitudEsperaRecepcionResponse;
 import com.techprotech.agenda.modulos.recepcion.aplicacion.ServicioRecepcion;
+import com.techprotech.agenda.modulos.plataforma.seguridad.RequiereModulo;
 import com.techprotech.agenda.seguridad.jwt.UsuarioAutenticado;
 import jakarta.validation.Valid;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -31,6 +32,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/v1/recepcion")
 @PreAuthorize("hasAuthority('RECEPCION_ACCESO')")
+@RequiereModulo("RECEPCION")
 public class ControladorRecepcion {
 
     private final ServicioRecepcion servicioRecepcion;

@@ -1,6 +1,7 @@
 package com.techprotech.agenda.modulos.whatsapp.onboarding.api;
 
 import com.techprotech.agenda.modulos.whatsapp.onboarding.aplicacion.ServicioOnboardingWhatsapp;
+import com.techprotech.agenda.modulos.plataforma.seguridad.RequiereModulo;
 import com.techprotech.agenda.seguridad.jwt.UsuarioAutenticado;
 import jakarta.validation.Valid;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -14,6 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/api/v1/admin/whatsapp/onboarding")
 @PreAuthorize("hasAuthority('WHATSAPP_CONFIGURAR')")
+@RequiereModulo("WHATSAPP")
 public class ControladorOnboardingWhatsapp {
 
     private final ServicioOnboardingWhatsapp servicio;

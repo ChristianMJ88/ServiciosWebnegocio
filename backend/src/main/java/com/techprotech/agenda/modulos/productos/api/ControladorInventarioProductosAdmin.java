@@ -4,6 +4,7 @@ import com.techprotech.agenda.modulos.productos.api.dto.*;
 import com.techprotech.agenda.modulos.productos.aplicacion.ServicioInventarioProductos;
 import com.techprotech.agenda.modulos.productos.seguridad.PermisosProductos;
 import com.techprotech.agenda.seguridad.jwt.UsuarioAutenticado;
+import com.techprotech.agenda.modulos.plataforma.seguridad.RequiereModulo;
 import jakarta.validation.Valid;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -14,6 +15,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/v1/admin/inventario-productos")
 @PreAuthorize(PermisosProductos.EXPRESION_INVENTARIO)
+@RequiereModulo("INVENTARIO")
 public class ControladorInventarioProductosAdmin {
     private final ServicioInventarioProductos inventario;
 

@@ -63,6 +63,7 @@ import {
   UsuarioInternoAdmin
 } from '../../core/admin/admin.service';
 import { AuthService } from '../../core/auth/auth.service';
+import { CompanyCapabilitiesService } from '../../core/subscription/company-capabilities.service';
 import { EstadoOnboarding, OnboardingService } from '../../core/onboarding/onboarding.service';
 import { CitaCliente } from '../../core/auth/client-appointments.service';
 import { PerfilUsuarioLocal, UserProfileService } from '../../core/profile/user-profile.service';
@@ -242,6 +243,7 @@ export class AdminDashboardComponent implements OnInit {
   private readonly dashboardLoader = inject(AdminDashboardLoader);
   private readonly breakpointObserver = inject(BreakpointObserver);
   private readonly authService = inject(AuthService);
+  private readonly companyCapabilities = inject(CompanyCapabilitiesService);
   private readonly onboardingService = inject(OnboardingService);
   private readonly userProfileService = inject(UserProfileService);
   private readonly router = inject(Router);
@@ -359,7 +361,7 @@ export class AdminDashboardComponent implements OnInit {
   readonly tiposBloqueo = computed(() => this.metadatosDisponibilidad()?.tiposBloqueo ?? []);
   readonly intervaloMinimoMinutos = computed(() => this.metadatosDisponibilidad()?.intervaloMinimoMinutos ?? 0);
   readonly modulosAdmin = computed(() =>
-    filtrarModulosAdmin(this.authService.sesionActual()?.permisos ?? [])
+    filtrarModulosAdmin(this.authService.sesionActual()?.permisos ?? [],this.companyCapabilities.moduleCodes())
   );
   readonly gruposSidebar = computed(() => construirGruposSidebarAdmin(this.modulosAdmin()));
   readonly moduloActivo = computed(() => this.modulosAdmin().find(modulo => modulo.id === this.seccionActiva()) ?? this.modulosAdmin()[0]);
@@ -815,7 +817,19 @@ export class AdminDashboardComponent implements OnInit {
 
     if (this.authService.asegurarSesion()) {
       this.cargarEstadoOnboarding();
-      this.recargar();
+      this.companyCapabilities.load(true)
+        .pipe(takeUntilDestroyed(this.destroyRef))
+        .subscribe({
+          next: () => {
+            this.asegurarSeccionActivaDisponible();
+            this.recargar();
+          },
+          error: error => {
+            this.marcarErrorCarga(error, 'No se pudieron consultar los módulos incluidos en el plan.');
+            this.asegurarSeccionActivaDisponible();
+            this.recargar();
+          }
+        });
     }
 
     this.breakpointObserver

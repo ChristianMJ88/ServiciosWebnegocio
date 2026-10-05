@@ -35,4 +35,13 @@ describe('configuración del menú administrativo', () => {
     expect(grupos.find(grupo => grupo.id === 'comercial')?.modulosVisibles.map(modulo => modulo.id))
       .toEqual(['pagos', 'liquidaciones']);
   });
+
+  it('combina permisos del usuario con módulos contratados por la empresa', () => {
+    const permisos = [PERMISOS.productosGestionar, PERMISOS.inventarioGestionar, PERMISOS.pagosConfigurar];
+    const modulos = filtrarModulosAdmin(permisos, new Set(['PRODUCTOS']));
+
+    expect(modulos.map(modulo => modulo.id)).toContain('productos');
+    expect(modulos.map(modulo => modulo.id)).not.toContain('inventario');
+    expect(modulos.map(modulo => modulo.id)).not.toContain('pagos');
+  });
 });

@@ -9,6 +9,7 @@ import com.techprotech.agenda.modulos.productos.aplicacion.ServicioCatalogoProdu
 import com.techprotech.agenda.modulos.productos.aplicacion.ServicioConfiguracionTienda;
 import com.techprotech.agenda.modulos.productos.seguridad.PermisosProductos;
 import com.techprotech.agenda.seguridad.jwt.UsuarioAutenticado;
+import com.techprotech.agenda.modulos.plataforma.seguridad.RequiereModulo;
 import jakarta.validation.Valid;
 import org.springframework.http.MediaType;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -19,6 +20,7 @@ import org.springframework.web.multipart.MultipartFile;
 @RestController
 @RequestMapping("/api/v1/admin/productos")
 @PreAuthorize(PermisosProductos.EXPRESION_GESTIONAR)
+@RequiereModulo("PRODUCTOS")
 public class ControladorProductosAdmin {
     private final ServicioCatalogoProductos catalogo;
     private final ServicioMediaEmpresa media;

@@ -9,6 +9,7 @@ import com.techprotech.agenda.modulos.envios.api.dto.EnvioPedidoResponse;
 import com.techprotech.agenda.modulos.envios.api.dto.ActualizarEnvioManualRequest;
 import com.techprotech.agenda.modulos.envios.seguridad.PermisosEnvios;
 import com.techprotech.agenda.seguridad.jwt.UsuarioAutenticado;
+import com.techprotech.agenda.modulos.plataforma.seguridad.RequiereModulo;
 import jakarta.validation.Valid;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -19,6 +20,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/v1/admin/envios/configuracion")
 @PreAuthorize(PermisosEnvios.EXPRESION_CONFIGURAR)
+@RequiereModulo("ENVIOS")
 public class ControladorConfiguracionEnvios {
     private final ServicioConfiguracionEnvios servicio;
     private final ServicioEnviosCheckout enviosCheckout;

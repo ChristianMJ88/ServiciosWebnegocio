@@ -6,6 +6,7 @@ import java.util.Optional;
 public interface SuscripcionPlataformaRepositorio extends JpaRepository<SuscripcionPlataformaEntidad,Long>{
     List<SuscripcionPlataformaEntidad> findAllByOrderByCreadaEnDesc();
     List<SuscripcionPlataformaEntidad> findByEmpresaIdAndEstadoIn(Long empresaId, List<String> estados);
+    List<SuscripcionPlataformaEntidad> findByEmpresaIdAndEstadoInOrderByCreadaEnDesc(Long empresaId, List<String> estados);
     Optional<SuscripcionPlataformaEntidad> findByStripeCheckoutSesionId(String stripeCheckoutSesionId);
     Optional<SuscripcionPlataformaEntidad> findByStripeSuscripcionId(String stripeSuscripcionId);
     Optional<SuscripcionPlataformaEntidad> findFirstByEmpresaIdOrderByCreadaEnDesc(Long empresaId);

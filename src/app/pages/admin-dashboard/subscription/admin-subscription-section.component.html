@@ -5,6 +5,7 @@
   </header>
 
   @if (mensaje()) { <p class="subscription-feedback success"><i class="bi bi-check-circle-fill"></i>{{ mensaje() }}</p> }
+  @if (moduloSolicitado()) { <p class="subscription-feedback pending"><i class="bi bi-lock-fill"></i>El plan actual no incluye el módulo solicitado. Consulta la capacidad de los planes o administra tu suscripción para habilitarlo.</p> }
   @if (error()) { <p class="subscription-feedback error"><i class="bi bi-exclamation-circle"></i>{{ error() }}<button type="button" (click)="cargar()">Reintentar</button></p> }
   @if (cargando()) { <div class="subscription-loading"><span></span><span></span><span></span><p>Consultando tu suscripción…</p></div> }
   @else {

@@ -4,6 +4,7 @@ import com.techprotech.agenda.modulos.pagos.api.dto.*;
 import com.techprotech.agenda.modulos.pagos.aplicacion.ServicioReportesLiberacion;
 import com.techprotech.agenda.modulos.pagos.seguridad.PermisosPagos;
 import com.techprotech.agenda.seguridad.jwt.UsuarioAutenticado;
+import com.techprotech.agenda.modulos.plataforma.seguridad.RequiereModulo;
 import jakarta.validation.Valid;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -13,6 +14,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/v1/admin/pagos/reportes-liberacion")
 @PreAuthorize(PermisosPagos.EXPRESION_CONFIGURAR)
+@RequiereModulo("PAGOS_ONLINE")
 public class ControladorReportesLiberacion {
     private final ServicioReportesLiberacion servicio;
     public ControladorReportesLiberacion(ServicioReportesLiberacion servicio){this.servicio=servicio;}
