@@ -22,6 +22,7 @@ public interface ProductoRepositorio extends JpaRepository<ProductoEntidad, Long
     boolean existsByEmpresaIdAndSkuAndIdNot(Long empresaId, String sku, Long id);
     boolean existsByEmpresaIdAndSlug(Long empresaId, String slug);
     boolean existsByEmpresaIdAndSlugAndIdNot(Long empresaId, String slug, Long id);
+    long countByEmpresaIdAndActivoTrue(Long empresaId);
 
     @Query(value = """
             SELECT sitio.slug AS sitioSlug, producto.slug AS productoSlug

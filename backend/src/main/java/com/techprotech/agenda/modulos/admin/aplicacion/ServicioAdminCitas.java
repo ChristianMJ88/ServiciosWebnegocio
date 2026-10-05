@@ -83,6 +83,7 @@ import com.techprotech.agenda.modulos.autenticacion.infraestructura.repositorio.
 import com.techprotech.agenda.modulos.autenticacion.infraestructura.repositorio.UsuarioRepositorio;
 import com.techprotech.agenda.modulos.autenticacion.infraestructura.repositorio.UsuarioRolEmpresaRepositorio;
 import com.techprotech.agenda.modulos.citas.api.dto.CitaClienteResponse;
+import com.techprotech.agenda.modulos.plataforma.aplicacion.ServicioCapacidadesEmpresa;
 import com.techprotech.agenda.modulos.citas.infraestructura.entidad.CitaEntidad;
 import com.techprotech.agenda.modulos.citas.infraestructura.entidad.HistorialEstadoCitaEntidad;
 import com.techprotech.agenda.modulos.citas.infraestructura.repositorio.CitaRepositorio;
@@ -283,6 +284,7 @@ public class ServicioAdminCitas {
     private final AuditoriaRolEmpresaRepositorio auditoriaRolEmpresaRepositorio;
     private final ObjectMapper objectMapper;
     private final ProtectorSecretosCorreo protectorSecretosCorreo;
+    private final ServicioCapacidadesEmpresa capacidadesEmpresa;
 
     public ServicioAdminCitas(
             CitaRepositorio citaRepositorio,
@@ -319,7 +321,8 @@ public class ServicioAdminCitas {
             AuditoriaConfiguracionEmpresaRepositorio auditoriaConfiguracionEmpresaRepositorio,
             AuditoriaRolEmpresaRepositorio auditoriaRolEmpresaRepositorio,
             ObjectMapper objectMapper,
-            ProtectorSecretosCorreo protectorSecretosCorreo
+            ProtectorSecretosCorreo protectorSecretosCorreo,
+            ServicioCapacidadesEmpresa capacidadesEmpresa
     ) {
         this.citaRepositorio = citaRepositorio;
         this.historialEstadoCitaRepositorio = historialEstadoCitaRepositorio;
@@ -356,6 +359,7 @@ public class ServicioAdminCitas {
         this.auditoriaRolEmpresaRepositorio = auditoriaRolEmpresaRepositorio;
         this.objectMapper = objectMapper;
         this.protectorSecretosCorreo = protectorSecretosCorreo;
+        this.capacidadesEmpresa = capacidadesEmpresa;
     }
 
     @Transactional(readOnly = true)
@@ -1469,6 +1473,9 @@ public class ServicioAdminCitas {
 
     @Transactional
     public SucursalAdminResponse crearSucursal(Long empresaId, SucursalAdminRequest request) {
+        if (request.activa()) {
+            capacidadesEmpresa.exigirLimite(empresaId, "SUCURSALES_MAX", sucursalRepositorio.countByEmpresaIdAndActivaTrue(empresaId));
+        }
         SucursalEntidad sucursal = new SucursalEntidad();
         sucursal.setEmpresaId(empresaId);
         aplicarSucursal(sucursal, request);
@@ -1479,6 +1486,9 @@ public class ServicioAdminCitas {
     public SucursalAdminResponse actualizarSucursal(Long empresaId, Long sucursalId, SucursalAdminRequest request) {
         SucursalEntidad sucursal = sucursalRepositorio.findByIdAndEmpresaId(sucursalId, empresaId)
                 .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "La sucursal no existe para la empresa"));
+        if (request.activa() && !sucursal.isActiva()) {
+            capacidadesEmpresa.exigirLimite(empresaId, "SUCURSALES_MAX", sucursalRepositorio.countByEmpresaIdAndActivaTrue(empresaId));
+        }
         aplicarSucursal(sucursal, request);
         return mapearSucursal(sucursalRepositorio.save(sucursal));
     }
@@ -1689,6 +1699,9 @@ public class ServicioAdminCitas {
 
     @Transactional
     public ServicioAdminResponse crearServicio(Long empresaId, ServicioAdminRequest request) {
+        if (request.activo()) {
+            capacidadesEmpresa.exigirLimite(empresaId, "SERVICIOS_MAX", servicioRepositorio.countByEmpresaIdAndActivoTrue(empresaId));
+        }
         SucursalEntidad sucursal = sucursalRepositorio.findByIdAndEmpresaId(request.sucursalId(), empresaId)
                 .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "La sucursal indicada no existe para la empresa"));
         List<Long> sucursalIds = validarSucursalesServicio(empresaId, request.sucursalId(), request.sucursalIds());
@@ -1715,6 +1728,9 @@ public class ServicioAdminCitas {
     public ServicioAdminResponse actualizarServicio(Long empresaId, Long servicioId, ServicioAdminRequest request) {
         ServicioEntidad servicio = servicioRepositorio.findByIdAndEmpresaId(servicioId, empresaId)
                 .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "El servicio no existe para la empresa"));
+        if (request.activo() && !servicio.isActivo()) {
+            capacidadesEmpresa.exigirLimite(empresaId, "SERVICIOS_MAX", servicioRepositorio.countByEmpresaIdAndActivoTrue(empresaId));
+        }
         SucursalEntidad sucursal = sucursalRepositorio.findByIdAndEmpresaId(request.sucursalId(), empresaId)
                 .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "La sucursal indicada no existe para la empresa"));
         List<Long> sucursalIds = validarSucursalesServicio(empresaId, request.sucursalId(), request.sucursalIds());
@@ -2109,6 +2125,9 @@ public class ServicioAdminCitas {
 
     @Transactional
     public UsuarioInternoAdminResponse crearUsuarioInterno(Long empresaId, Long usuarioActorId, UsuarioInternoAdminRequest request) {
+        if (request.activo()) {
+            capacidadesEmpresa.exigirLimite(empresaId, "USUARIOS_MAX", usuarioInternoPerfilRepositorio.countActivosByEmpresaId(empresaId));
+        }
         exigirCorreoVerificado(empresaId, usuarioActorId, "agregar personal");
         RolEmpresaEntidad rolEmpresa = resolverRolUsuarioInterno(empresaId, request.rolEmpresaId());
         validarSucursalUsuarioInterno(empresaId, request.sucursalId());
@@ -2174,6 +2193,9 @@ public class ServicioAdminCitas {
 
         UsuarioEntidad usuario = usuarioRepositorio.findByIdAndEmpresaId(usuarioId, empresaId)
                 .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "El usuario interno no existe para la empresa"));
+        if (request.activo() && !usuario.isHabilitado()) {
+            capacidadesEmpresa.exigirLimite(empresaId, "USUARIOS_MAX", usuarioInternoPerfilRepositorio.countActivosByEmpresaId(empresaId));
+        }
         UsuarioInternoPerfilEntidad perfil = usuarioInternoPerfilRepositorio.findById(usuarioId)
                 .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "El perfil interno no existe"));
         RolEmpresaEntidad rolActual = usuarioRolEmpresaRepositorio.findByUsuario_IdAndRolEmpresa_EmpresaId(usuarioId, empresaId).stream()
@@ -2222,6 +2244,9 @@ public class ServicioAdminCitas {
 
     @Transactional
     public PrestadorAdminResponse crearPrestador(Long empresaId, PrestadorAdminRequest request) {
+        if (request.activo()) {
+            capacidadesEmpresa.exigirLimite(empresaId, "PRESTADORES_MAX", prestadorServicioRepositorio.countActivosByEmpresaId(empresaId));
+        }
         if (request.contrasenaTemporal() == null || request.contrasenaTemporal().isBlank()) {
             throw new ResponseStatusException(CONFLICT, "Debes indicar una contrasena temporal para el prestador");
         }
@@ -2261,6 +2286,9 @@ public class ServicioAdminCitas {
                 .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "El usuario del prestador no existe para la empresa"));
         PrestadorServicioEntidad prestador = prestadorServicioRepositorio.findById(prestadorId)
                 .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "El prestador no existe"));
+        if (request.activo() && !prestador.isActivo()) {
+            capacidadesEmpresa.exigirLimite(empresaId, "PRESTADORES_MAX", prestadorServicioRepositorio.countActivosByEmpresaId(empresaId));
+        }
         SucursalEntidad sucursal = sucursalRepositorio.findByIdAndEmpresaId(request.sucursalId(), empresaId)
                 .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "La sucursal indicada no existe para la empresa"));
 

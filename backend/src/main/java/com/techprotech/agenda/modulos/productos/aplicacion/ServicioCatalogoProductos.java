@@ -5,6 +5,7 @@ import com.techprotech.agenda.compartido.media.dominio.CategoriaMedia;
 import com.techprotech.agenda.compartido.media.infraestructura.EmpresaArchivoMediaEntidad;
 import com.techprotech.agenda.modulos.productos.api.dto.*;
 import com.techprotech.agenda.modulos.parametros.aplicacion.ServicioParametrosSistema;
+import com.techprotech.agenda.modulos.plataforma.aplicacion.ServicioCapacidadesEmpresa;
 import com.techprotech.agenda.modulos.productos.infraestructura.entidad.*;
 import com.techprotech.agenda.modulos.productos.infraestructura.repositorio.*;
 import org.springframework.http.HttpStatus;
@@ -26,6 +27,7 @@ public class ServicioCatalogoProductos {
     private final PrecioZonaProductoRepositorio precios;
     private final ServicioMediaEmpresa servicioMedia;
     private final ServicioParametrosSistema parametros;
+    private final ServicioCapacidadesEmpresa capacidadesEmpresa;
 
     public ServicioCatalogoProductos(
             CategoriaProductoRepositorio categorias,
@@ -34,7 +36,8 @@ public class ServicioCatalogoProductos {
             ProductoRepositorio productos,
             PrecioZonaProductoRepositorio precios,
             ServicioMediaEmpresa servicioMedia,
-            ServicioParametrosSistema parametros
+            ServicioParametrosSistema parametros,
+            ServicioCapacidadesEmpresa capacidadesEmpresa
     ) {
         this.categorias = categorias;
         this.proveedores = proveedores;
@@ -43,6 +46,7 @@ public class ServicioCatalogoProductos {
         this.precios = precios;
         this.servicioMedia = servicioMedia;
         this.parametros = parametros;
+        this.capacidadesEmpresa = capacidadesEmpresa;
     }
 
     @Transactional(readOnly = true)
@@ -122,6 +126,9 @@ public class ServicioCatalogoProductos {
 
     @Transactional
     public ProductoResponse crearProducto(Long empresaId, ProductoRequest request) {
+        if (request.activo()) {
+            capacidadesEmpresa.exigirLimite(empresaId, "PRODUCTOS_MAX", productos.countByEmpresaIdAndActivoTrue(empresaId));
+        }
         ProductoEntidad entidad = new ProductoEntidad();
         entidad.setEmpresaId(empresaId);
         aplicarProducto(empresaId, entidad, request);
@@ -133,6 +140,9 @@ public class ServicioCatalogoProductos {
     @Transactional
     public ProductoResponse actualizarProducto(Long empresaId, Long id, ProductoRequest request) {
         ProductoEntidad entidad = producto(empresaId, id);
+        if (request.activo() && !entidad.isActivo()) {
+            capacidadesEmpresa.exigirLimite(empresaId, "PRODUCTOS_MAX", productos.countByEmpresaIdAndActivoTrue(empresaId));
+        }
         aplicarProducto(empresaId, entidad, request);
         productos.save(entidad);
         precios.deleteByEmpresaIdAndProductoId(empresaId, id);

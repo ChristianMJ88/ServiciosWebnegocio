@@ -3,6 +3,7 @@ import { Component, OnInit, inject, signal } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { finalize, forkJoin } from 'rxjs';
 import { PlanPublicoFluora, PublicPlansService } from '../../../core/platform/public-plans.service';
+import { CompanyCapabilitiesService } from '../../../core/subscription/company-capabilities.service';
 import { AdminSubscriptionService, EstadoSuscripcionEmpresa } from './admin-subscription.service';
 
 @Component({
@@ -14,6 +15,7 @@ export class AdminSubscriptionSectionComponent implements OnInit {
   private readonly suscripcionApi=inject(AdminSubscriptionService);
   private readonly documento=inject(DOCUMENT);
   private readonly route=inject(ActivatedRoute);
+  private readonly capacidadesApi=inject(CompanyCapabilitiesService);
   readonly cargando=signal(true);
   readonly procesando=signal<string|null>(null);
   readonly planes=signal<PlanPublicoFluora[]>([]);
@@ -21,6 +23,7 @@ export class AdminSubscriptionSectionComponent implements OnInit {
   readonly error=signal<string|null>(null);
   readonly mensaje=signal<string|null>(null);
   readonly moduloSolicitado=signal<string|null>(null);
+  readonly capacidades=this.capacidadesApi.current;
 
   ngOnInit(): void {
     this.moduloSolicitado.set(this.route.snapshot.queryParamMap.get('modulo'));
@@ -32,7 +35,7 @@ export class AdminSubscriptionSectionComponent implements OnInit {
 
   cargar(): void {
     this.cargando.set(true); this.error.set(null);
-    forkJoin({planes:this.planesApi.listar(),estado:this.suscripcionApi.estado()}).pipe(finalize(()=>this.cargando.set(false))).subscribe({
+    forkJoin({planes:this.planesApi.listar(),estado:this.suscripcionApi.estado(),capacidades:this.capacidadesApi.load(true)}).pipe(finalize(()=>this.cargando.set(false))).subscribe({
       next:datos=>{this.planes.set(datos.planes);this.estado.set(datos.estado);},
       error:e=>this.error.set(this.errorApi(e))
     });

@@ -208,7 +208,8 @@ class ServicioAdminCitasCorreoTest {
                 crearAuditoriaConfiguracionRepositorio(),
                 crearAuditoriaRolRepositorio(),
                 new ObjectMapper(),
-                protector
+                protector,
+                null
         );
     }
 

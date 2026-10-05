@@ -15,6 +15,15 @@
           <div class="current-plan-main"><span class="plan-kicker">Plan actual</span><h4>{{ actual.planNombre || 'Plan Fluora' }}</h4><p>{{ actual.ciclo === 'ANUAL' ? 'Facturación anual' : 'Facturación mensual' }} · {{ actual.precioAcordado !== null && actual.moneda ? precio(actual.precioAcordado,actual.moneda) : 'Importe administrado por Fluora' }}</p></div>
           <span class="subscription-state" [class.warning]="actual.estado === 'GRACIA' || actual.estado === 'PENDIENTE_PAGO'">{{ actual.estado }}</span>
           <dl><div><dt>Inicio</dt><dd>{{ actual.iniciaEn | date:'dd MMM yyyy' }}</dd></div><div><dt>{{ actual.pruebaHasta ? 'Prueba hasta' : 'Periodo actual' }}</dt><dd>{{ (actual.pruebaHasta || actual.periodoActualHasta) ? ((actual.pruebaHasta || actual.periodoActualHasta) | date:'dd MMM yyyy') : 'Sin fecha definida' }}</dd></div></dl>
+          @if (capacidades(); as capacidad) {
+            <section class="plan-capacity" aria-label="Capacidad del plan actual">
+              <div class="capacity-heading"><span>Capacidad incluida</span><p>La configuración vigente de Fluora se aplica automáticamente a este negocio.</p></div>
+              <div class="capacity-groups">
+                <div><strong>Módulos</strong><ul>@for (modulo of capacidad.modulos; track modulo.codigo) { <li><i class="bi bi-check2-circle"></i>{{ modulo.nombre }}</li> }</ul></div>
+                <div><strong>Límites</strong><ul>@for (limite of capacidad.limites; track limite.codigo) { <li><i class="bi bi-speedometer2"></i><span>{{ limite.nombre }}</span><b>{{ limite.valor }} {{ limite.unidad }}</b></li> }</ul></div>
+              </div>
+            </section>
+          }
           @if (actual.administrableStripe) { <button type="button" class="primary-action" (click)="administrar()" [disabled]="procesando() !== null"><i class="bi bi-box-arrow-up-right"></i>{{ procesando() === 'portal' ? 'Abriendo…' : 'Administrar en Stripe' }}</button> }
           @else { <p class="managed-note"><i class="bi bi-info-circle"></i>Esta suscripción fue asignada por Fluora. Contacta a soporte para cambiarla.</p> }
         </article>

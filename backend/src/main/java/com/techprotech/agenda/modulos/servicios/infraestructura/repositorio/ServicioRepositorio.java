@@ -70,4 +70,6 @@ public interface ServicioRepositorio extends JpaRepository<ServicioEntidad, Long
     boolean existsByEmpresaIdAndSlugAndIdNot(Long empresaId, String slug, Long id);
 
     long countByEmpresaId(Long empresaId);
+
+    long countByEmpresaIdAndActivoTrue(Long empresaId);
 }

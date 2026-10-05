@@ -53,6 +53,21 @@ public class ServicioCapacidadesEmpresa {
             throw new ResponseStatusException(HttpStatus.PAYMENT_REQUIRED,"El plan actual no incluye el módulo solicitado");
     }
 
+    @Transactional(readOnly=true)
+    public void exigirLimite(Long empresaId,String codigo,long usoActual) {
+        CapacidadesEmpresaResponse capacidades=obtener(empresaId);
+        if(!capacidades.suscripcionVigente())
+            throw new ResponseStatusException(HttpStatus.PAYMENT_REQUIRED,"El negocio no tiene una suscripción vigente");
+        capacidades.limites().stream()
+                .filter(limite->limite.codigo().equalsIgnoreCase(codigo))
+                .findFirst()
+                .ifPresent(limite->{
+                    if(usoActual>=limite.valor())
+                        throw new ResponseStatusException(HttpStatus.PAYMENT_REQUIRED,
+                                "El plan alcanzó el límite de "+limite.valor()+" "+limite.unidad());
+                });
+    }
+
     private boolean estaVigente(SuscripcionPlataformaEntidad suscripcion,LocalDateTime ahora) {
         if(suscripcion.getTerminaEn()!=null&&!suscripcion.getTerminaEn().isAfter(ahora))return false;
         return !"PRUEBA".equals(suscripcion.getEstado())

@@ -72,6 +72,18 @@ class ServicioCapacidadesEmpresaTest {
         assertThat(servicio.obtener(3L).suscripcionVigente()).isFalse();
     }
 
+    @Test
+    void rechazaCrearCuandoElUsoAlcanzoElLimite() {
+        prepararSuscripcionVigente();
+        when(planModulos.findCapacidadesByPlanId(4L)).thenReturn(List.of());
+        when(planLimites.findCapacidadesByPlanId(4L)).thenReturn(List.of(
+                new CapacidadLimiteEmpresaResponse("SERVICIOS_MAX","Servicios","servicios",20L)));
+
+        assertThatThrownBy(()->servicio.exigirLimite(3L,"SERVICIOS_MAX",20L))
+                .isInstanceOf(ResponseStatusException.class)
+                .hasMessageContaining("20 servicios");
+    }
+
     private void prepararSuscripcionVigente() {
         when(suscripciones.findByEmpresaIdAndEstadoInOrderByCreadaEnDesc(3L,List.of("ACTIVA","PRUEBA","GRACIA")))
                 .thenReturn(List.of(suscripcion));
