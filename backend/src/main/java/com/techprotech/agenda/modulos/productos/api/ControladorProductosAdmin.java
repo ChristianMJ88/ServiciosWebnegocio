@@ -1,5 +1,6 @@
 package com.techprotech.agenda.modulos.productos.api;
 
+import static com.techprotech.agenda.modulos.plataforma.dominio.CodigosModuloPlataforma.PRODUCTOS;
 import com.techprotech.agenda.compartido.media.api.dto.ArchivoMediaAdminResponse;
 import com.techprotech.agenda.compartido.media.api.dto.ConfiguracionMediaAdminResponse;
 import com.techprotech.agenda.compartido.media.aplicacion.ServicioMediaEmpresa;
@@ -20,7 +21,7 @@ import org.springframework.web.multipart.MultipartFile;
 @RestController
 @RequestMapping("/api/v1/admin/productos")
 @PreAuthorize(PermisosProductos.EXPRESION_GESTIONAR)
-@RequiereModulo("PRODUCTOS")
+@RequiereModulo(PRODUCTOS)
 public class ControladorProductosAdmin {
     private final ServicioCatalogoProductos catalogo;
     private final ServicioMediaEmpresa media;

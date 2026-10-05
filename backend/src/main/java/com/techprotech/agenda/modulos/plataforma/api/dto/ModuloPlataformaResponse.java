@@ -1,2 +1,3 @@
 package com.techprotech.agenda.modulos.plataforma.api.dto;
-public record ModuloPlataformaResponse(Long id, String codigo, String nombre, String descripcion, int orden) {}
+import java.util.List;
+public record ModuloPlataformaResponse(Long id,String codigo,String nombre,String descripcion,int orden,List<String> seccionesAdmin) {}

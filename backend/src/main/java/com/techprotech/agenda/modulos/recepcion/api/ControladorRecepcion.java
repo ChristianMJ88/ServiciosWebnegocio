@@ -1,5 +1,6 @@
 package com.techprotech.agenda.modulos.recepcion.api;
 
+import static com.techprotech.agenda.modulos.plataforma.dominio.CodigosModuloPlataforma.RECEPCION;
 import com.techprotech.agenda.modulos.citas.api.dto.CitaClienteResponse;
 import com.techprotech.agenda.modulos.citas.api.dto.CitaCreadaResponse;
 import com.techprotech.agenda.modulos.recepcion.api.dto.CatalogoRecepcionResponse;
@@ -32,7 +33,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/v1/recepcion")
 @PreAuthorize("hasAuthority('RECEPCION_ACCESO')")
-@RequiereModulo("RECEPCION")
+@RequiereModulo(RECEPCION)
 public class ControladorRecepcion {
 
     private final ServicioRecepcion servicioRecepcion;

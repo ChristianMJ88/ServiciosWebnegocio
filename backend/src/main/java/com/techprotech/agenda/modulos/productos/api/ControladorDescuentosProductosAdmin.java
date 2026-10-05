@@ -1,5 +1,6 @@
 package com.techprotech.agenda.modulos.productos.api;
 
+import static com.techprotech.agenda.modulos.plataforma.dominio.CodigosModuloPlataforma.PRODUCTOS;
 import com.techprotech.agenda.modulos.productos.api.dto.*;
 import com.techprotech.agenda.modulos.productos.aplicacion.ServicioDescuentosProductos;
 import com.techprotech.agenda.modulos.productos.seguridad.PermisosProductos;
@@ -13,7 +14,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/v1/admin/productos/descuentos")
 @PreAuthorize(PermisosProductos.EXPRESION_GESTIONAR)
-@RequiereModulo("PRODUCTOS")
+@RequiereModulo(PRODUCTOS)
 public class ControladorDescuentosProductosAdmin {
     private final ServicioDescuentosProductos servicio;
     public ControladorDescuentosProductosAdmin(ServicioDescuentosProductos servicio){this.servicio=servicio;}

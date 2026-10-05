@@ -7,10 +7,12 @@ import com.techprotech.agenda.modulos.plataforma.infraestructura.entidad.PlanPla
 import com.techprotech.agenda.modulos.plataforma.infraestructura.entidad.SuscripcionPlataformaEntidad;
 import com.techprotech.agenda.modulos.plataforma.infraestructura.repositorio.LimitePlataformaRepositorio;
 import com.techprotech.agenda.modulos.plataforma.infraestructura.repositorio.ModuloPlataformaRepositorio;
+import com.techprotech.agenda.modulos.plataforma.infraestructura.repositorio.ModuloSeccionAdminPlataformaRepositorio;
 import com.techprotech.agenda.modulos.plataforma.infraestructura.repositorio.PlanLimitePlataformaRepositorio;
 import com.techprotech.agenda.modulos.plataforma.infraestructura.repositorio.PlanModuloPlataformaRepositorio;
 import com.techprotech.agenda.modulos.plataforma.infraestructura.repositorio.PlanPlataformaRepositorio;
 import com.techprotech.agenda.modulos.plataforma.infraestructura.repositorio.SuscripcionPlataformaRepositorio;
+import com.techprotech.agenda.modulos.plataforma.infraestructura.repositorio.SeccionAdminPlataformaRepositorio;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -38,6 +40,8 @@ class ServicioSuscripcionesPlataformaTest {
     @Mock private SuscripcionPlataformaRepositorio suscripciones;
     @Mock private EmpresaRepositorio empresas;
     @Mock private ServicioAuditoriaPlataforma auditoria;
+    @Mock private SeccionAdminPlataformaRepositorio seccionesAdmin;
+    @Mock private ModuloSeccionAdminPlataformaRepositorio moduloSecciones;
 
     private ServicioSuscripcionesPlataforma servicio;
     private EmpresaEntidad empresa;
@@ -45,7 +49,7 @@ class ServicioSuscripcionesPlataformaTest {
 
     @BeforeEach
     void preparar() {
-        servicio = new ServicioSuscripcionesPlataforma(modulos, planes, planModulos, limites, planLimites, suscripciones, empresas, auditoria);
+        servicio = new ServicioSuscripcionesPlataforma(modulos, planes, planModulos, limites, planLimites, suscripciones, empresas, auditoria,seccionesAdmin,moduloSecciones);
         empresa = new EmpresaEntidad();
         empresa.setId(7L);
         empresa.setNombre("Nail Art Studio");

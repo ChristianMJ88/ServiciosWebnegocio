@@ -1,5 +1,6 @@
 package com.techprotech.agenda.modulos.caja.api;
 
+import static com.techprotech.agenda.modulos.plataforma.dominio.CodigosModuloPlataforma.CAJA;
 import com.techprotech.agenda.modulos.caja.api.dto.AbrirCajaRequest;
 import com.techprotech.agenda.modulos.caja.api.dto.CatalogoCajaResponse;
 import com.techprotech.agenda.modulos.caja.api.dto.CajaSesionResponse;
@@ -35,7 +36,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/v1/caja")
 @PreAuthorize("hasAuthority('CAJA_ACCESO')")
-@RequiereModulo("CAJA")
+@RequiereModulo(CAJA)
 public class ControladorCaja {
 
     private final ServicioCaja servicioCaja;

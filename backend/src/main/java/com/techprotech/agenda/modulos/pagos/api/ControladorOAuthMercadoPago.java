@@ -1,5 +1,6 @@
 package com.techprotech.agenda.modulos.pagos.api;
 
+import static com.techprotech.agenda.modulos.plataforma.dominio.CodigosModuloPlataforma.PAGOS_ONLINE;
 import com.techprotech.agenda.modulos.pagos.api.dto.ConexionProveedorPagoResponse;
 import com.techprotech.agenda.modulos.pagos.api.dto.InicioOAuthPagoResponse;
 import com.techprotech.agenda.modulos.pagos.api.dto.WebhookMercadoPagoResponse;
@@ -19,7 +20,7 @@ import java.net.URI;
 
 @RestController
 @RequestMapping("/api/v1/admin/pagos/mercado-pago/oauth")
-@RequiereModulo("PAGOS_ONLINE")
+@RequiereModulo(PAGOS_ONLINE)
 public class ControladorOAuthMercadoPago {
   private final ServicioOAuthMercadoPago servicio;
   private final PropiedadesMercadoPago propiedades;

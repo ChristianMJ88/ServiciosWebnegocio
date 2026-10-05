@@ -27,13 +27,14 @@ class ServicioCapacidadesEmpresaTest {
     @Mock private PlanPlataformaRepositorio planes;
     @Mock private PlanModuloPlataformaRepositorio planModulos;
     @Mock private PlanLimitePlataformaRepositorio planLimites;
+    @Mock private SeccionAdminPlataformaRepositorio seccionesAdmin;
     private ServicioCapacidadesEmpresa servicio;
     private SuscripcionPlataformaEntidad suscripcion;
     private PlanPlataformaEntidad plan;
 
     @BeforeEach
     void preparar() {
-        servicio=new ServicioCapacidadesEmpresa(suscripciones,planes,planModulos,planLimites);
+        servicio=new ServicioCapacidadesEmpresa(suscripciones,planes,planModulos,planLimites,seccionesAdmin);
         suscripcion=new SuscripcionPlataformaEntidad();suscripcion.setId(8L);suscripcion.setEmpresaId(3L);
         suscripcion.setPlanId(4L);suscripcion.setEstado("PRUEBA");
         suscripcion.setPruebaHasta(LocalDateTime.now(ZoneOffset.UTC).plusDays(5));

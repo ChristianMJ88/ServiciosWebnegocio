@@ -1,5 +1,6 @@
 package com.techprotech.agenda.modulos.productos.api;
 
+import static com.techprotech.agenda.modulos.plataforma.dominio.CodigosModuloPlataforma.COMISIONES;
 import com.techprotech.agenda.modulos.plataforma.seguridad.RequiereModulo;
 import com.techprotech.agenda.modulos.productos.api.dto.*;
 import com.techprotech.agenda.modulos.productos.aplicacion.ServicioComisiones;
@@ -13,7 +14,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/v1/admin/comisiones")
 @PreAuthorize(PermisosComisiones.EXPRESION)
-@RequiereModulo("COMISIONES")
+@RequiereModulo(COMISIONES)
 public class ControladorComisionesAdmin {
     private final ServicioComisiones servicio;
     public ControladorComisionesAdmin(ServicioComisiones servicio){this.servicio=servicio;}

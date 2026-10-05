@@ -19,11 +19,13 @@ public class ServicioCapacidadesEmpresa {
     private final PlanPlataformaRepositorio planes;
     private final PlanModuloPlataformaRepositorio planModulos;
     private final PlanLimitePlataformaRepositorio planLimites;
+    private final SeccionAdminPlataformaRepositorio seccionesAdmin;
 
     public ServicioCapacidadesEmpresa(SuscripcionPlataformaRepositorio suscripciones,PlanPlataformaRepositorio planes,
-            PlanModuloPlataformaRepositorio planModulos,PlanLimitePlataformaRepositorio planLimites) {
+            PlanModuloPlataformaRepositorio planModulos,PlanLimitePlataformaRepositorio planLimites,
+            SeccionAdminPlataformaRepositorio seccionesAdmin) {
         this.suscripciones=suscripciones;this.planes=planes;this.planModulos=planModulos;
-        this.planLimites=planLimites;
+        this.planLimites=planLimites;this.seccionesAdmin=seccionesAdmin;
     }
 
     @Transactional(readOnly=true)
@@ -32,15 +34,16 @@ public class ServicioCapacidadesEmpresa {
         SuscripcionPlataformaEntidad suscripcion=suscripciones
                 .findByEmpresaIdAndEstadoInOrderByCreadaEnDesc(empresaId,ESTADOS_CON_ACCESO).stream()
                 .filter(s->estaVigente(s,ahora)).findFirst().orElse(null);
-        if(suscripcion==null)return CapacidadesEmpresaResponse.sinSuscripcion();
+        if(suscripcion==null)return CapacidadesEmpresaResponse.sinSuscripcion(seccionesAdmin.findCodigosSinModulo());
         PlanPlataformaEntidad plan=planes.findById(suscripcion.getPlanId()).orElse(null);
-        if(plan==null)return CapacidadesEmpresaResponse.sinSuscripcion();
+        if(plan==null)return CapacidadesEmpresaResponse.sinSuscripcion(seccionesAdmin.findCodigosSinModulo());
 
         List<CapacidadModuloEmpresaResponse> capacidades=planModulos.findCapacidadesByPlanId(plan.getId());
         List<CapacidadLimiteEmpresaResponse> cotas=planLimites.findCapacidadesByPlanId(plan.getId());
+        List<String> secciones=seccionesAdmin.findCodigosDisponiblesByPlanId(plan.getId());
 
         return new CapacidadesEmpresaResponse(true,suscripcion.getId(),plan.getId(),plan.getCodigo(),plan.getNombre(),
-                suscripcion.getEstado(),suscripcion.getPruebaHasta(),suscripcion.getPeriodoActualHasta(),capacidades,cotas);
+                suscripcion.getEstado(),suscripcion.getPruebaHasta(),suscripcion.getPeriodoActualHasta(),capacidades,cotas,secciones);
     }
 
     @Transactional(readOnly=true)

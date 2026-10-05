@@ -1,5 +1,6 @@
 package com.techprotech.agenda.modulos.pagos.api;
 
+import static com.techprotech.agenda.modulos.plataforma.dominio.CodigosModuloPlataforma.PAGOS_ONLINE;
 import com.techprotech.agenda.modulos.pagos.api.dto.*;
 import com.techprotech.agenda.modulos.pagos.aplicacion.ServicioReportesLiberacion;
 import com.techprotech.agenda.modulos.pagos.seguridad.PermisosPagos;
@@ -14,7 +15,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/v1/admin/pagos/reportes-liberacion")
 @PreAuthorize(PermisosPagos.EXPRESION_CONFIGURAR)
-@RequiereModulo("PAGOS_ONLINE")
+@RequiereModulo(PAGOS_ONLINE)
 public class ControladorReportesLiberacion {
     private final ServicioReportesLiberacion servicio;
     public ControladorReportesLiberacion(ServicioReportesLiberacion servicio){this.servicio=servicio;}

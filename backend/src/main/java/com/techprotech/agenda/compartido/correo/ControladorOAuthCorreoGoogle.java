@@ -1,5 +1,6 @@
 package com.techprotech.agenda.compartido.correo;
 
+import static com.techprotech.agenda.modulos.plataforma.dominio.CodigosModuloPlataforma.CORREO;
 import com.techprotech.agenda.modulos.plataforma.seguridad.RequiereModulo;
 import com.techprotech.agenda.seguridad.jwt.UsuarioAutenticado;
 import org.springframework.http.HttpHeaders;
@@ -16,7 +17,7 @@ import java.net.URI;
 
 @RestController
 @RequestMapping("/api/v1/admin/correo/oauth/google")
-@RequiereModulo("CORREO")
+@RequiereModulo(CORREO)
 public class ControladorOAuthCorreoGoogle {
     private final ServicioOAuthCorreoGoogle servicio;
     public ControladorOAuthCorreoGoogle(ServicioOAuthCorreoGoogle servicio) { this.servicio = servicio; }

@@ -1,5 +1,6 @@
 package com.techprotech.agenda.modulos.pagos.api;
 
+import static com.techprotech.agenda.modulos.plataforma.dominio.CodigosModuloPlataforma.PAGOS_ONLINE;
 import com.techprotech.agenda.modulos.pagos.api.dto.ConciliacionPagoResponse;
 import com.techprotech.agenda.modulos.pagos.aplicacion.ServicioConciliacionPagos;
 import com.techprotech.agenda.modulos.pagos.seguridad.PermisosPagos;
@@ -15,7 +16,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/admin/pagos/conciliaciones")
-@RequiereModulo("PAGOS_ONLINE")
+@RequiereModulo(PAGOS_ONLINE)
 public class ControladorConciliacionPagos {
     private final ServicioConciliacionPagos servicio;
 

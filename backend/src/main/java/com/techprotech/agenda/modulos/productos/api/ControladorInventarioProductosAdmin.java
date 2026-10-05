@@ -1,5 +1,6 @@
 package com.techprotech.agenda.modulos.productos.api;
 
+import static com.techprotech.agenda.modulos.plataforma.dominio.CodigosModuloPlataforma.INVENTARIO;
 import com.techprotech.agenda.modulos.productos.api.dto.*;
 import com.techprotech.agenda.modulos.productos.aplicacion.ServicioInventarioProductos;
 import com.techprotech.agenda.modulos.productos.seguridad.PermisosProductos;
@@ -15,7 +16,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/v1/admin/inventario-productos")
 @PreAuthorize(PermisosProductos.EXPRESION_INVENTARIO)
-@RequiereModulo("INVENTARIO")
+@RequiereModulo(INVENTARIO)
 public class ControladorInventarioProductosAdmin {
     private final ServicioInventarioProductos inventario;
 

@@ -28,19 +28,54 @@ public class ServicioSuscripcionesPlataforma {
     private final SuscripcionPlataformaRepositorio suscripciones;
     private final EmpresaRepositorio empresas;
     private final ServicioAuditoriaPlataforma auditoria;
+    private final SeccionAdminPlataformaRepositorio seccionesAdmin;
+    private final ModuloSeccionAdminPlataformaRepositorio moduloSecciones;
 
     public ServicioSuscripcionesPlataforma(ModuloPlataformaRepositorio modulos, PlanPlataformaRepositorio planes,
             PlanModuloPlataformaRepositorio planModulos, LimitePlataformaRepositorio limites,
             PlanLimitePlataformaRepositorio planLimites, SuscripcionPlataformaRepositorio suscripciones,
-            EmpresaRepositorio empresas, ServicioAuditoriaPlataforma auditoria) {
+            EmpresaRepositorio empresas, ServicioAuditoriaPlataforma auditoria,
+            SeccionAdminPlataformaRepositorio seccionesAdmin,ModuloSeccionAdminPlataformaRepositorio moduloSecciones) {
         this.modulos=modulos; this.planes=planes; this.planModulos=planModulos; this.limites=limites; this.planLimites=planLimites;
         this.suscripciones=suscripciones; this.empresas=empresas; this.auditoria=auditoria;
+        this.seccionesAdmin=seccionesAdmin;this.moduloSecciones=moduloSecciones;
     }
 
     @Transactional(readOnly=true)
     public List<ModuloPlataformaResponse> modulos() {
-        return modulos.findByActivoTrueOrderByOrdenAscNombreAsc().stream()
-                .map(m->new ModuloPlataformaResponse(m.getId(),m.getCodigo(),m.getNombre(),m.getDescripcion(),m.getOrden())).toList();
+        List<ModuloPlataformaEntidad> catalogo=modulos.findByActivoTrueOrderByOrdenAscNombreAsc();
+        Map<Long,List<String>> relaciones=moduloSecciones.findByModuloIdIn(catalogo.stream().map(ModuloPlataformaEntidad::getId).toList()).stream()
+                .collect(Collectors.groupingBy(ModuloSeccionAdminPlataformaEntidad::getModuloId,
+                        Collectors.mapping(ModuloSeccionAdminPlataformaEntidad::getSeccionCodigo,Collectors.toList())));
+        return catalogo.stream().map(m->new ModuloPlataformaResponse(m.getId(),m.getCodigo(),m.getNombre(),m.getDescripcion(),m.getOrden(),
+                relaciones.getOrDefault(m.getId(),List.of()))).toList();
+    }
+
+    @Transactional(readOnly=true)
+    public List<SeccionAdminPlataformaResponse> seccionesAdmin() {
+        return seccionesAdmin.findByActivoTrueOrderByOrdenAscNombreAsc().stream()
+                .map(s->new SeccionAdminPlataformaResponse(s.getId(),s.getCodigo(),s.getNombre(),s.getDescripcion(),s.isRequiereModulo(),s.getOrden()))
+                .toList();
+    }
+
+    @Transactional
+    public ModuloPlataformaResponse configurarSeccionesModulo(Long usuarioId,Long moduloId,ConfigurarSeccionesModuloRequest solicitud) {
+        ModuloPlataformaEntidad modulo=modulos.findById(moduloId).filter(ModuloPlataformaEntidad::isActivo)
+                .orElseThrow(()->new ResponseStatusException(HttpStatus.NOT_FOUND,"El módulo no existe"));
+        Set<String> solicitadas=solicitud.secciones().stream().map(String::trim).filter(codigo->!codigo.isEmpty()).collect(Collectors.toSet());
+        Set<String> disponibles=seccionesAdmin.findByActivoTrueOrderByOrdenAscNombreAsc().stream()
+                .filter(SeccionAdminPlataformaEntidad::isRequiereModulo).map(SeccionAdminPlataformaEntidad::getCodigo).collect(Collectors.toSet());
+        if(!disponibles.containsAll(solicitadas))
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"Una de las secciones no está disponible para asignación");
+        moduloSecciones.deleteByModuloId(moduloId);
+        moduloSecciones.saveAll(solicitadas.stream().map(codigo->{
+            ModuloSeccionAdminPlataformaEntidad relacion=new ModuloSeccionAdminPlataformaEntidad();
+            relacion.setModuloId(moduloId);relacion.setSeccionCodigo(codigo);return relacion;
+        }).toList());
+        auditoria.registrar(usuarioId,"CONFIGURAR","MODULO_SECCIONES_ADMIN",String.valueOf(moduloId),
+                Map.of("modulo",modulo.getCodigo(),"secciones",solicitadas));
+        return new ModuloPlataformaResponse(modulo.getId(),modulo.getCodigo(),modulo.getNombre(),modulo.getDescripcion(),modulo.getOrden(),
+                solicitadas.stream().sorted().toList());
     }
 
     @Transactional(readOnly=true)

@@ -17,6 +17,8 @@ import com.techprotech.agenda.modulos.plataforma.api.dto.AsignarSuscripcionPlata
 import com.techprotech.agenda.modulos.plataforma.api.dto.SuscripcionPlataformaResponse;
 import com.techprotech.agenda.modulos.plataforma.api.dto.EstadoStripePlataformaResponse;
 import com.techprotech.agenda.modulos.plataforma.api.dto.SincronizarPlanStripeResponse;
+import com.techprotech.agenda.modulos.plataforma.api.dto.SeccionAdminPlataformaResponse;
+import com.techprotech.agenda.modulos.plataforma.api.dto.ConfigurarSeccionesModuloRequest;
 import com.techprotech.agenda.modulos.plataforma.aplicacion.ServicioConsultaPlataforma;
 import com.techprotech.agenda.modulos.plataforma.aplicacion.ServicioGestionComisionesPlataforma;
 import com.techprotech.agenda.modulos.plataforma.aplicacion.ServicioSuscripcionesPlataforma;
@@ -94,6 +96,17 @@ public class ControladorPlataforma {
     @GetMapping("/suscripciones/modulos")
     @PreAuthorize("hasAuthority('PLATAFORMA_SUSCRIPCIONES_GESTIONAR')")
     public List<ModuloPlataformaResponse> modulosSuscripcion() { return suscripciones.modulos(); }
+
+    @GetMapping("/suscripciones/secciones-admin")
+    @PreAuthorize("hasAuthority('PLATAFORMA_SUSCRIPCIONES_GESTIONAR')")
+    public List<SeccionAdminPlataformaResponse> seccionesAdmin() { return suscripciones.seccionesAdmin(); }
+
+    @PutMapping("/suscripciones/modulos/{id}/secciones-admin")
+    @PreAuthorize("hasAuthority('PLATAFORMA_SUSCRIPCIONES_GESTIONAR')")
+    public ModuloPlataformaResponse configurarSeccionesModulo(@AuthenticationPrincipal UsuarioAutenticado usuario,
+            @PathVariable Long id,@Valid @RequestBody ConfigurarSeccionesModuloRequest solicitud) {
+        return suscripciones.configurarSeccionesModulo(usuario.usuarioId(),id,solicitud);
+    }
 
     @GetMapping("/suscripciones/limites")
     @PreAuthorize("hasAuthority('PLATAFORMA_SUSCRIPCIONES_GESTIONAR')")

@@ -1,5 +1,6 @@
 package com.techprotech.agenda.modulos.envios.api;
 
+import static com.techprotech.agenda.modulos.plataforma.dominio.CodigosModuloPlataforma.ENVIOS;
 import com.techprotech.agenda.modulos.envios.api.dto.ConfiguracionEnvioRequest;
 import com.techprotech.agenda.modulos.envios.api.dto.ConfiguracionEnvioResponse;
 import com.techprotech.agenda.modulos.envios.api.dto.PruebaConexionEnvioResponse;
@@ -20,7 +21,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/v1/admin/envios/configuracion")
 @PreAuthorize(PermisosEnvios.EXPRESION_CONFIGURAR)
-@RequiereModulo("ENVIOS")
+@RequiereModulo(ENVIOS)
 public class ControladorConfiguracionEnvios {
     private final ServicioConfiguracionEnvios servicio;
     private final ServicioEnviosCheckout enviosCheckout;
