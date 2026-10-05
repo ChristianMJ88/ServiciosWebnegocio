@@ -3,7 +3,7 @@ import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { finalize, forkJoin } from 'rxjs';
-import { DetalleTenantPlataforma, EstadoStripePlataforma, LimitePlataforma, ModuloPlataforma, PlanPayload, PlanPlataforma, PlatformAdminService, ProveedorPagoPlataforma, ReglaComisionPayload, ReglaComisionPlataforma, ResumenPlataforma, SimulacionComision, SuscripcionPayload, SuscripcionPlataforma, TenantPlataforma } from '../../core/platform/platform-admin.service';
+import { DetalleTenantPlataforma, EstadoStripePlataforma, LimitePlataforma, ModuloPlataforma, PlanPayload, PlanPlataforma, PlatformAdminService, ProveedorPagoPlataforma, ReglaComisionPayload, ReglaComisionPlataforma, ResumenPlataforma, SeccionAdminPlataforma, SimulacionComision, SuscripcionPayload, SuscripcionPlataforma, TenantPlataforma } from '../../core/platform/platform-admin.service';
 import { PlatformAuthService } from '../../core/platform/platform-auth.service';
 
 @Component({
@@ -27,6 +27,9 @@ export class PlatformDashboardComponent implements OnInit {
   readonly detalleTenant = signal<DetalleTenantPlataforma | null>(null);
   readonly cargandoDetalle = signal(false);
   readonly modulosSaas = signal<ModuloPlataforma[]>([]);
+  readonly seccionesAdminSaas = signal<SeccionAdminPlataforma[]>([]);
+  readonly moduloConfigurandoId = signal<number | null>(null);
+  readonly seccionesModuloSeleccionadas = signal<Set<string>>(new Set());
   readonly limitesSaas = signal<LimitePlataforma[]>([]);
   readonly planesSaas = signal<PlanPlataforma[]>([]);
   readonly suscripcionesSaas = signal<SuscripcionPlataforma[]>([]);
@@ -56,9 +59,9 @@ export class PlatformDashboardComponent implements OnInit {
       return;
     }
     if (this.seccion === 'suscripciones') {
-      forkJoin({ resumen: this.api.resumen(), tenants: this.api.tenants(), modulos: this.api.modulosSuscripcion(), limites: this.api.limitesSuscripcion(), planes: this.api.planes(), suscripciones: this.api.suscripciones(), stripe: this.api.estadoStripe() })
+      forkJoin({ resumen: this.api.resumen(), tenants: this.api.tenants(), modulos: this.api.modulosSuscripcion(), seccionesAdmin: this.api.seccionesAdminSuscripcion(), limites: this.api.limitesSuscripcion(), planes: this.api.planes(), suscripciones: this.api.suscripciones(), stripe: this.api.estadoStripe() })
         .pipe(finalize(() => this.cargando.set(false))).subscribe({ next: datos => {
-          this.resumen.set(datos.resumen); this.tenants.set(datos.tenants); this.modulosSaas.set(datos.modulos); this.limitesSaas.set(datos.limites);
+          this.resumen.set(datos.resumen); this.tenants.set(datos.tenants); this.modulosSaas.set(datos.modulos); this.seccionesAdminSaas.set(datos.seccionesAdmin); this.limitesSaas.set(datos.limites);
           this.planesSaas.set(datos.planes); this.suscripcionesSaas.set(datos.suscripciones); this.stripeEstado.set(datos.stripe);
         }, error: e => this.error.set(this.errorApi(e)) });
       return;
@@ -83,6 +86,18 @@ export class PlatformDashboardComponent implements OnInit {
   cerrarTenant(): void { this.detalleTenant.set(null); }
   moduloSeleccionado(id: number): boolean { return this.planFormulario.modulos.some(item => item.moduloId === id); }
   alternarModulo(id: number, seleccionado: boolean): void { this.planFormulario.modulos = seleccionado ? [...this.planFormulario.modulos,{moduloId:id,limiteUso:null}] : this.planFormulario.modulos.filter(item=>item.moduloId!==id); }
+  abrirSeccionesModulo(modulo: ModuloPlataforma): void { this.moduloConfigurandoId.set(modulo.id);this.seccionesModuloSeleccionadas.set(new Set(modulo.seccionesAdmin)); }
+  cancelarSeccionesModulo(): void { this.moduloConfigurandoId.set(null);this.seccionesModuloSeleccionadas.set(new Set()); }
+  seccionModuloSeleccionada(codigo: string): boolean { return this.seccionesModuloSeleccionadas().has(codigo); }
+  alternarSeccionModulo(codigo: string,seleccionada: boolean): void { const siguientes=new Set(this.seccionesModuloSeleccionadas());seleccionada?siguientes.add(codigo):siguientes.delete(codigo);this.seccionesModuloSeleccionadas.set(siguientes); }
+  guardarSeccionesModulo(): void {
+    const id=this.moduloConfigurandoId();if(id===null)return;
+    this.guardando.set(true);this.error.set(null);this.mensaje.set(null);
+    this.api.configurarSeccionesModulo(id,[...this.seccionesModuloSeleccionadas()]).pipe(finalize(()=>this.guardando.set(false))).subscribe({
+      next: actualizado=>{this.modulosSaas.update(lista=>lista.map(modulo=>modulo.id===actualizado.id?actualizado:modulo));this.mensaje.set('Secciones administrativas actualizadas desde Plataforma.');this.cancelarSeccionesModulo();},
+      error:e=>this.error.set(this.errorApi(e))
+    });
+  }
   valorLimite(id: number): number | null { return this.planFormulario.limites.find(item=>item.limiteId===id)?.valor ?? null; }
   cambiarLimite(id: number, valor: string): void { const numero=valor===''?null:Number(valor); this.planFormulario.limites=this.planFormulario.limites.filter(item=>item.limiteId!==id); if(numero!==null&&Number.isFinite(numero)&&numero>=0)this.planFormulario.limites.push({limiteId:id,valor:numero}); }
   guardarPlan(): void {

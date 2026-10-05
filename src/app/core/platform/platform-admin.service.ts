@@ -37,7 +37,8 @@ export interface ProveedorPagoPlataforma { id: number; codigo: string; nombre: s
 export interface ReglaComisionPlataforma { id: number; proveedorId: number; proveedorNombre: string; empresaId: number | null; empresaNombre: string | null; tipo: 'PORCENTAJE'|'MONTO_FIJO'; valor: number; importeMinimo: number | null; importeMaximo: number | null; moneda: string | null; prioridad: number; vigenteDesde: string; vigenteHasta: string | null; activa: boolean; }
 export interface ReglaComisionPayload { proveedorId: number | null; empresaId: number | null; tipo: 'PORCENTAJE'|'MONTO_FIJO'; valor: number; importeMinimo: number | null; importeMaximo: number | null; moneda: string | null; prioridad: number; vigenteDesde: string; vigenteHasta: string | null; activa: boolean; }
 export interface SimulacionComision { importeBase: number; comisionFluora: number; netoAntesComisionProveedor: number; moneda: string; }
-export interface ModuloPlataforma { id: number; codigo: string; nombre: string; descripcion: string | null; orden: number; }
+export interface ModuloPlataforma { id: number; codigo: string; nombre: string; descripcion: string | null; orden: number; seccionesAdmin: string[]; }
+export interface SeccionAdminPlataforma { id: number; codigo: string; nombre: string; descripcion: string | null; requiereModulo: boolean; orden: number; }
 export interface LimitePlataforma { id: number; codigo: string; nombre: string; descripcion: string | null; unidad: string; orden: number; }
 export interface ModuloPlan { moduloId: number; codigo: string; nombre: string; limiteUso: number | null; }
 export interface LimitePlan { limiteId: number; codigo: string; nombre: string; unidad: string; valor: number; }
@@ -62,6 +63,8 @@ export class PlatformAdminService {
   cambiarEstadoRegla(id: number, activa: boolean): Observable<ReglaComisionPlataforma> { return this.http.patch<ReglaComisionPlataforma>(`${this.baseUrl}/comisiones/reglas/${id}/estado`, { activa }); }
   simularComision(payload: ReglaComisionPayload, importe: number): Observable<SimulacionComision> { return this.http.post<SimulacionComision>(`${this.baseUrl}/comisiones/simular`, { tipo: payload.tipo, valor: payload.valor, importeMinimo: payload.importeMinimo, importeMaximo: payload.importeMaximo, importe, moneda: payload.moneda || 'MXN' }); }
   modulosSuscripcion(): Observable<ModuloPlataforma[]> { return this.http.get<ModuloPlataforma[]>(`${this.baseUrl}/suscripciones/modulos`); }
+  seccionesAdminSuscripcion(): Observable<SeccionAdminPlataforma[]> { return this.http.get<SeccionAdminPlataforma[]>(`${this.baseUrl}/suscripciones/secciones-admin`); }
+  configurarSeccionesModulo(id: number,secciones: string[]): Observable<ModuloPlataforma> { return this.http.put<ModuloPlataforma>(`${this.baseUrl}/suscripciones/modulos/${id}/secciones-admin`,{secciones}); }
   limitesSuscripcion(): Observable<LimitePlataforma[]> { return this.http.get<LimitePlataforma[]>(`${this.baseUrl}/suscripciones/limites`); }
   planes(): Observable<PlanPlataforma[]> { return this.http.get<PlanPlataforma[]>(`${this.baseUrl}/suscripciones/planes`); }
   crearPlan(payload: PlanPayload): Observable<PlanPlataforma> { return this.http.post<PlanPlataforma>(`${this.baseUrl}/suscripciones/planes`,payload); }

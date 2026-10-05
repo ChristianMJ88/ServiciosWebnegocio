@@ -361,7 +361,7 @@ export class AdminDashboardComponent implements OnInit {
   readonly tiposBloqueo = computed(() => this.metadatosDisponibilidad()?.tiposBloqueo ?? []);
   readonly intervaloMinimoMinutos = computed(() => this.metadatosDisponibilidad()?.intervaloMinimoMinutos ?? 0);
   readonly modulosAdmin = computed(() =>
-    filtrarModulosAdmin(this.authService.sesionActual()?.permisos ?? [],this.companyCapabilities.moduleCodes())
+    filtrarModulosAdmin(this.authService.sesionActual()?.permisos ?? [],this.companyCapabilities.adminSectionCodes())
   );
   readonly gruposSidebar = computed(() => construirGruposSidebarAdmin(this.modulosAdmin()));
   readonly moduloActivo = computed(() => this.modulosAdmin().find(modulo => modulo.id === this.seccionActiva()) ?? this.modulosAdmin()[0]);

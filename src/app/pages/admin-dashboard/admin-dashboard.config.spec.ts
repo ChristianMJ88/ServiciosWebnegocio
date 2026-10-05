@@ -36,9 +36,9 @@ describe('configuración del menú administrativo', () => {
       .toEqual(['pagos', 'liquidaciones']);
   });
 
-  it('combina permisos del usuario con módulos contratados por la empresa', () => {
+  it('combina permisos del usuario con las secciones autorizadas por el backend', () => {
     const permisos = [PERMISOS.productosGestionar, PERMISOS.inventarioGestionar, PERMISOS.pagosConfigurar];
-    const modulos = filtrarModulosAdmin(permisos, new Set(['PRODUCTOS']));
+    const modulos = filtrarModulosAdmin(permisos, new Set(['productos']));
 
     expect(modulos.map(modulo => modulo.id)).toContain('productos');
     expect(modulos.map(modulo => modulo.id)).not.toContain('inventario');

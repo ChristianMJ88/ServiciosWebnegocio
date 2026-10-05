@@ -27,6 +27,7 @@ export interface CompanyCapabilities {
   periodoActualHasta: string | null;
   modulos: CompanyModuleCapability[];
   limites: CompanyLimitCapability[];
+  seccionesAdmin: string[];
 }
 
 @Injectable({ providedIn: 'root' })
@@ -36,7 +37,7 @@ export class CompanyCapabilitiesService {
   private loadingRequest$: Observable<CompanyCapabilities> | null = null;
 
   readonly current = computed(() => this.capabilities());
-  readonly moduleCodes = computed(() => new Set(this.capabilities()?.modulos.map(module => module.codigo) ?? []));
+  readonly adminSectionCodes = computed(() => new Set(this.capabilities()?.seccionesAdmin ?? []));
 
   load(force = false): Observable<CompanyCapabilities> {
     if (!force && this.loadingRequest$) return this.loadingRequest$;
@@ -49,8 +50,8 @@ export class CompanyCapabilitiesService {
     return request$;
   }
 
-  hasModule(code: string): boolean {
-    return this.moduleCodes().has(code);
+  hasAdminSection(code: string): boolean {
+    return this.adminSectionCodes().has(code);
   }
 
   limit(code: string): number | null {

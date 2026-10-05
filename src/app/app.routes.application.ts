@@ -40,11 +40,11 @@ export const privateApplicationRoutes: Routes = [
   },
   {
     path: 'recepcion', loadComponent: () => import('./pages/recepcion-dashboard/recepcion-dashboard.component').then((m) => m.RecepcionDashboardComponent),
-    canActivate: [roleGuard, moduleGuard], data: { permissions: [PERMISOS.recepcionAcceso], module: 'RECEPCION', layout: 'panel' }
+    canActivate: [roleGuard, moduleGuard], data: { permissions: [PERMISOS.recepcionAcceso], sectionCapability: 'recepcion', layout: 'panel' }
   },
   {
     path: 'caja', loadComponent: () => import('./pages/caja-dashboard/caja-dashboard.component').then((m) => m.CajaDashboardComponent),
-    canActivate: [roleGuard, moduleGuard], data: { permissions: [PERMISOS.cajaAcceso], module: 'CAJA', layout: 'panel' }
+    canActivate: [roleGuard, moduleGuard], data: { permissions: [PERMISOS.cajaAcceso], sectionCapability: 'caja', layout: 'panel' }
   }
 ];
 
