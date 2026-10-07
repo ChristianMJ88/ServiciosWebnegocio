@@ -176,8 +176,8 @@
               <span class="content-header-kicker">{{ grupoActivoTitulo() }}</span>
               <span class="badge rounded-pill content-header-badge">{{ nombreEmpresa() }}</span>
             </div>
-            <h1>{{ moduloActivo().titulo }}</h1>
-            <p>{{ moduloActivo().descripcion }}</p>
+            <h1>{{ moduloActivo()?.titulo }}</h1>
+            <p>{{ moduloActivo()?.descripcion }}</p>
           </div>
 
           <div class="content-header-actions">

@@ -1,7 +1,8 @@
 import { CommonModule, DOCUMENT } from '@angular/common';
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, DestroyRef, OnInit, inject, signal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute } from '@angular/router';
-import { finalize, forkJoin } from 'rxjs';
+import { exhaustMap, finalize, forkJoin, take, takeWhile, timer } from 'rxjs';
 import { PlanPublicoFluora, PublicPlansService } from '../../../core/platform/public-plans.service';
 import { CompanyCapabilitiesService } from '../../../core/subscription/company-capabilities.service';
 import { AdminSubscriptionService, EstadoSuscripcionEmpresa } from './admin-subscription.service';
@@ -16,6 +17,7 @@ export class AdminSubscriptionSectionComponent implements OnInit {
   private readonly documento=inject(DOCUMENT);
   private readonly route=inject(ActivatedRoute);
   private readonly capacidadesApi=inject(CompanyCapabilitiesService);
+  private readonly destroyRef=inject(DestroyRef);
   readonly cargando=signal(true);
   readonly procesando=signal<string|null>(null);
   readonly planes=signal<PlanPublicoFluora[]>([]);
@@ -26,11 +28,27 @@ export class AdminSubscriptionSectionComponent implements OnInit {
   readonly capacidades=this.capacidadesApi.current;
 
   ngOnInit(): void {
-    this.moduloSolicitado.set(this.route.snapshot.queryParamMap.get('modulo'));
+    this.moduloSolicitado.set(this.route.snapshot.queryParamMap.get('seccion') || this.route.snapshot.queryParamMap.get('modulo'));
     const resultado=this.route.snapshot.queryParamMap.get('stripe');
     if(resultado==='exito')this.mensaje.set('Stripe recibió la solicitud. Confirmaremos la suscripción en cuanto llegue la notificación segura.');
     if(resultado==='cancelado')this.mensaje.set('El proceso se canceló y no se realizó ningún cargo.');
     this.cargar();
+    if(resultado==='exito')this.esperarConfirmacion();
+  }
+
+  private esperarConfirmacion(): void {
+    timer(2000,2000).pipe(
+      exhaustMap(()=>forkJoin({estado:this.suscripcionApi.estado(),capacidades:this.capacidadesApi.load(true)})),
+      takeWhile(datos=>datos.estado.estado==='PENDIENTE_PAGO',true),
+      take(30),
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe({
+      next:datos=>{
+        this.estado.set(datos.estado);
+        if(datos.capacidades.suscripcionVigente)this.mensaje.set('El servidor confirmó tu suscripción y actualizó la capacidad de tu negocio.');
+      },
+      error:e=>this.error.set(this.errorApi(e))
+    });
   }
 
   cargar(): void {

@@ -820,15 +820,15 @@ export class AdminDashboardComponent implements OnInit {
       this.companyCapabilities.load(true)
         .pipe(takeUntilDestroyed(this.destroyRef))
         .subscribe({
-          next: () => {
+          next: () => this.actualizarVistaEnZona(() => {
             this.asegurarSeccionActivaDisponible();
             this.recargar();
-          },
-          error: error => {
+          }),
+          error: error => this.actualizarVistaEnZona(() => {
             this.marcarErrorCarga(error, 'No se pudieron consultar los módulos incluidos en el plan.');
             this.asegurarSeccionActivaDisponible();
             this.recargar();
-          }
+          })
         });
     }
 
