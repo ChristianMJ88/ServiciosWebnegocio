@@ -90,4 +90,31 @@ class ServicioCapacidadesEmpresaTest {
                 .thenReturn(List.of(suscripcion));
         when(planes.findById(4L)).thenReturn(Optional.of(plan));
     }
+
+    @Test
+    void rechazaGraciaVencidaAunqueStripeNoHayaNotificadoSuspension() {
+        suscripcion.setEstado("GRACIA");
+        suscripcion.setGraciaHasta(LocalDateTime.now(ZoneOffset.UTC).minusSeconds(1));
+        when(suscripciones.findByEmpresaIdAndEstadoInOrderByCreadaEnDesc(3L,List.of("ACTIVA","PRUEBA","GRACIA")))
+                .thenReturn(List.of(suscripcion));
+        assertThatThrownBy(()->servicio.exigirModulo(3L,"AGENDA"))
+                .isInstanceOf(ResponseStatusException.class).hasMessageContaining("vigente");
+    }
+
+    @Test
+    void noConcedeGraciaSinUnaFechaDefinidaPorBackend() {
+        suscripcion.setEstado("GRACIA");
+        when(suscripciones.findByEmpresaIdAndEstadoInOrderByCreadaEnDesc(3L,List.of("ACTIVA","PRUEBA","GRACIA")))
+                .thenReturn(List.of(suscripcion));
+        assertThat(servicio.obtener(3L).suscripcionVigente()).isFalse();
+    }
+
+    @Test
+    void permiteGraciaDuranteLaVentanaConfigurada() {
+        prepararSuscripcionVigente();
+        suscripcion.setEstado("GRACIA");
+        suscripcion.setGraciaHasta(LocalDateTime.now(ZoneOffset.UTC).plusDays(1));
+        when(planModulos.findCapacidadesByPlanId(4L)).thenReturn(List.of(new CapacidadModuloEmpresaResponse("AGENDA","Agenda",null)));
+        assertThat(servicio.obtener(3L).suscripcionVigente()).isTrue();
+    }
 }

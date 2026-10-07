@@ -19,6 +19,7 @@ public class SuscripcionPlataformaEntidad {
     @Column(name="inicia_en", nullable=false) private LocalDateTime iniciaEn;
     @Column(name="termina_en") private LocalDateTime terminaEn;
     @Column(name="prueba_hasta") private LocalDateTime pruebaHasta;
+    @Column(name="gracia_hasta") private LocalDateTime graciaHasta;
     @Column(name="cancelada_en") private LocalDateTime canceladaEn;
     @Column(name="proveedor_pago_id") private Long proveedorPagoId;
     @Column(name="referencia_externa", length=180) private String referenciaExterna;

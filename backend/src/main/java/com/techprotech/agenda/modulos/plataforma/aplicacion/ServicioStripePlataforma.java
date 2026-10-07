@@ -187,6 +187,8 @@ public class ServicioStripePlataforma {
         try { event=Webhook.constructEvent(payload,firma,propiedades.webhookSecret()); }
         catch(SignatureVerificationException ex) { throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"Firma de Stripe inválida"); }
         catch(Exception ex) { throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"Evento de Stripe inválido"); }
+        if(Boolean.TRUE.equals(event.getLivemode())!="PRODUCCION".equals(ambiente()))
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"El evento de Stripe corresponde a otro ambiente");
         if(eventos.existsByStripeEventoId(event.getId())) return;
         StripeEventoPlataformaEntidad registro=new StripeEventoPlataformaEntidad();
         registro.setStripeEventoId(event.getId()); registro.setTipo(event.getType()); registro.setModoProduccion(Boolean.TRUE.equals(event.getLivemode())); registro.setEstado("PROCESANDO");
@@ -221,6 +223,8 @@ public class ServicioStripePlataforma {
             if(local==null)return;
             String estado=texto(objeto,"status"); local.setStripeSuscripcionId(id); local.setStripeClienteId(texto(objeto,"customer"));
             local.setStripeEstado(estado); local.setEstado(mapearEstado(estado));
+            if("past_due".equals(estado)) iniciarGracia(local);
+            else if("active".equals(estado)||"trialing".equals(estado)) local.setGraciaHasta(null);
             long periodo=epochPeriodoActual(objeto); local.setPeriodoActualHasta(periodo>0?LocalDateTime.ofInstant(Instant.ofEpochSecond(periodo),ZoneOffset.UTC):null);
             long finPrueba=objeto.path("trial_end").asLong(0); local.setPruebaHasta(finPrueba>0?LocalDateTime.ofInstant(Instant.ofEpochSecond(finPrueba),ZoneOffset.UTC):null);
             local.setCancelarAlFinalPeriodo(objeto.path("cancel_at_period_end").asBoolean(false));
@@ -235,12 +239,24 @@ public class ServicioStripePlataforma {
             suscripciones.findByStripeSuscripcionId(suscripcionId).ifPresent(local->{
                 local.setStripeUltimaFacturaId(facturaId);
                 if("invoice.paid".equals(tipo)&&debeActivarPorFactura(objeto,local.getEstado())){
-                    local.setEstado("ACTIVA");local.setStripeEstado("active");
+                    if(!"CANCELADA".equals(local.getEstado())&&!"REEMPLAZADA".equals(local.getEstado())) {
+                        local.setEstado("ACTIVA");local.setStripeEstado("active");local.setGraciaHasta(null);
+                    }
                 }
-                if("invoice.payment_failed".equals(tipo)){local.setEstado("GRACIA");local.setStripeEstado("past_due");}
+                if("invoice.payment_failed".equals(tipo)&&!"CANCELADA".equals(local.getEstado())
+                        &&!"REEMPLAZADA".equals(local.getEstado())&&!"PENDIENTE_PAGO".equals(local.getEstado())){
+                    iniciarGracia(local);local.setEstado("GRACIA");local.setStripeEstado("past_due");
+                }
                 suscripciones.save(local);
             });
         }
+    }
+
+    private void iniciarGracia(SuscripcionPlataformaEntidad local) {
+        if(local.getGraciaHasta()!=null)return;
+        PlanPlataformaEntidad plan=planes.findById(local.getPlanId())
+                .orElseThrow(()->new ResponseStatusException(HttpStatus.CONFLICT,"El plan de la suscripción no existe"));
+        local.setGraciaHasta(LocalDateTime.now(ZoneOffset.UTC).plusDays(plan.getDiasGracia()));
     }
 
     private Price crearPrecio(PlanPlataformaEntidad plan,String productoId,BigDecimal importe,
