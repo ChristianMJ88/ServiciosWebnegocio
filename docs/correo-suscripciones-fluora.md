@@ -55,3 +55,9 @@ El backend resuelve la identidad de Fluora con `ServicioIdentidadCorreoPlataform
 Los alias se configuran en el entorno, sin direcciones incrustadas en el selector. Si no se configuran, se conserva la identidad previa del transporte. Todos utilizan la autenticación del buzón configurado; un alias no tiene contraseña independiente. El servicio rechaza configuraciones con empresaId para evitar sustituir la identidad del tenant. Las citas, contactos y envíos de los negocios mantienen sus servicios actuales.
 
 La bienvenida utiliza ahora el transporte configurado de Fluora (SMTP o SendGrid), como las suscripciones. El propósito ATENCION está disponible para futuros mensajes de soporte; no crea un módulo ni envía campañas automáticamente.
+
+## Validación de pago en Stripe de prueba (2026-10-08)
+
+Se verificó la conversión de una prueba a pago con tarjeta de prueba. Stripe calculó un prorrateo de MXN 495.12 sobre el plan mensual configurado. La factura quedó pagada, el webhook `invoice.paid` se procesó y el outbox envió un único aviso con importe, moneda, plan, referencia y destinatario correspondientes a la empresa. La suscripción quedó ACTIVA con renovación habilitada. La recepción en la bandeja del destinatario debe confirmarse aparte.
+
+La prueba detectó un aviso incorrecto por una factura de inicio de prueba de cero. Se corrigió el handler: las facturas sin importe pagado positivo no generan avisos de cobro ni activan una suscripción pendiente. El estado de las suscripciones gratuitas o bonificadas continúa sincronizándose por los eventos `customer.subscription.*`. El correo incorrecto enviado durante la prueba permanece en el historial como evidencia; no se borraron registros.

@@ -22,17 +22,36 @@ class ServicioStripeWebhookTest {
     private final PlanPlataformaRepositorio planes=mock(PlanPlataformaRepositorio.class);
     private final StripeEventoPlataformaRepositorio eventos=mock(StripeEventoPlataformaRepositorio.class);
     private ServicioStripePlataforma servicio;
+    private final ServicioAvisosSuscripcion avisos=mock(ServicioAvisosSuscripcion.class);
     private SuscripcionPlataformaEntidad local;
 
     @BeforeEach void preparar() {
         servicio=new ServicioStripePlataforma(new PropiedadesStripePlataforma(true,"PRUEBA","sk_test_fixture","whsec_fixture",null,null,null,null),
                 planes,suscripciones,mock(StripeClientePlataformaRepositorio.class),eventos,mock(EmpresaRepositorio.class),
-                mock(UsuarioRepositorio.class),mock(ServicioAuditoriaPlataforma.class),new ObjectMapper(),new ServicioPlanSuscripcionStripe(planes),mock(ServicioAvisosSuscripcion.class));
+                mock(UsuarioRepositorio.class),mock(ServicioAuditoriaPlataforma.class),new ObjectMapper(),new ServicioPlanSuscripcionStripe(planes),avisos);
         local=new SuscripcionPlataformaEntidad();local.setPlanId(4L);local.setEstado("ACTIVA");
         when(suscripciones.findByStripeSuscripcionId("sub_fixture")).thenReturn(Optional.of(local));
         when(eventos.save(any())).thenAnswer(i->i.getArgument(0));
         PlanPlataformaEntidad plan=new PlanPlataformaEntidad();plan.setDiasGracia(2);
         when(planes.findById(4L)).thenReturn(Optional.of(plan));
+    }
+
+    @Test void facturaSinCobroNoEnviaAvisoDePagoAunqueLaSuscripcionSigaActiva() throws Exception {
+        enviar("evt_zero","invoice.paid",0);
+        assertThat(local.getEstado()).isEqualTo("ACTIVA");
+        verifyNoInteractions(avisos);
+    }
+
+    @Test void facturaSinCobroNoActivaSuscripcionPendiente() throws Exception {
+        local.setEstado("PENDIENTE_PAGO");
+        enviar("evt_zero","invoice.paid",0);
+        assertThat(local.getEstado()).isEqualTo("PENDIENTE_PAGO");
+        verifyNoInteractions(avisos);
+    }
+
+    @Test void pagoPositivoGeneraAvisoConElImporteReal() throws Exception {
+        enviar("evt_positive","invoice.paid",49900);
+        verify(avisos).programar(eq(local),eq("PAGO"),any(),eq(java.math.BigDecimal.valueOf(49900,2)));
     }
 
     @Test void fallaDeRenovacionIniciaGraciaYLosReintentosNoLaExtienden() throws Exception {

@@ -267,7 +267,7 @@ public class ServicioStripePlataforma {
                     iniciarGracia(local);local.setEstado("GRACIA");local.setStripeEstado("past_due");
                 }
                 suscripciones.save(local);
-                if("invoice.paid".equals(tipo)&&"ACTIVA".equals(local.getEstado()))
+                if("invoice.paid".equals(tipo)&&"ACTIVA".equals(local.getEstado())&&objeto.path("amount_paid").asLong(0)>0)
                     avisos.programar(local,"PAGO",facturaId,BigDecimal.valueOf(objeto.path("amount_paid").asLong(0),2));
                 if("invoice.payment_failed".equals(tipo)&&!"CANCELADA".equals(local.getEstado())&&!"REEMPLAZADA".equals(local.getEstado()))avisos.programar(local,"FALLO",facturaId,null);
             });
@@ -321,7 +321,7 @@ public class ServicioStripePlataforma {
         return objeto.path("items").path("data").path(0).path("current_period_end").asLong(0);
     }
     static boolean debeActivarPorFactura(JsonNode objeto,String estadoActual){
-        return !"PRUEBA".equals(estadoActual)||objeto.path("amount_paid").asLong(0)>0;
+        return objeto.path("amount_paid").asLong(0)>0;
     }
     private static String texto(JsonNode n,String campo){String v=n.path(campo).asText(null);return presente(v)?v:null;}
     private static String limpiarBase(String v){if(!presente(v))return null;return v.trim().replaceAll("/+$","");}
