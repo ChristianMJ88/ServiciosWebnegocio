@@ -42,6 +42,45 @@ class ServicioStripeWebhookTest {
         verifyNoInteractions(avisos);
     }
 
+    @Test void primerPagoAnteriorALaVinculacionActivaYNotificaElTenantCorrecto() throws Exception {
+        prepararFacturaInicial();
+        enviarFacturaInicial("1","cus_fixture");
+        assertThat(local.getEstado()).isEqualTo("ACTIVA");
+        assertThat(local.getStripeSuscripcionId()).isEqualTo("sub_fixture");
+        verify(avisos).programar(local,"PAGO","in_first",java.math.BigDecimal.valueOf(19900,2));
+    }
+
+    @Test void metadataDeOtroTenantNoVinculaNiActivaLaSuscripcion() throws Exception {
+        prepararFacturaInicial();
+        enviarFacturaInicial("2","cus_fixture");
+        assertThat(local.getEstado()).isEqualTo("PENDIENTE_PAGO");
+        assertThat(local.getStripeSuscripcionId()).isNull();
+        verifyNoInteractions(avisos);verify(suscripciones,never()).save(any());
+    }
+
+    @Test void clienteStripeDiferenteNoVinculaNiActivaLaSuscripcion() throws Exception {
+        prepararFacturaInicial();
+        enviarFacturaInicial("1","cus_other");
+        assertThat(local.getEstado()).isEqualTo("PENDIENTE_PAGO");
+        assertThat(local.getStripeSuscripcionId()).isNull();
+        verifyNoInteractions(avisos);verify(suscripciones,never()).save(any());
+    }
+
+    private void prepararFacturaInicial() {
+        local.setId(8L);local.setEmpresaId(1L);local.setEstado("PENDIENTE_PAGO");local.setStripeClienteId("cus_fixture");
+        when(suscripciones.findByStripeSuscripcionId("sub_fixture")).thenReturn(Optional.empty());
+        when(suscripciones.findById(8L)).thenReturn(Optional.of(local));
+    }
+
+    private void enviarFacturaInicial(String empresa,String cliente) throws Exception {
+        enviarPayload("""
+                {"id":"evt_first","type":"invoice.paid","livemode":false,"created":200,
+                "data":{"object":{"id":"in_first","customer":"%s","amount_paid":19900,
+                "parent":{"subscription_details":{"subscription":"sub_fixture",
+                "metadata":{"fluora_suscripcion_id":"8","fluora_empresa_id":"%s"}}}}}}
+                """.formatted(cliente,empresa));
+    }
+
     @Test void facturaSinCobroNoActivaSuscripcionPendiente() throws Exception {
         local.setEstado("PENDIENTE_PAGO");
         enviar("evt_zero","invoice.paid",0);

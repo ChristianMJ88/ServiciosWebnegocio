@@ -252,7 +252,7 @@ public class ServicioStripePlataforma {
             if(suscripcionId==null)suscripcionId=objeto.path("parent").path("subscription_details").path("subscription").asText(null);
             if(suscripcionId==null)return;
             String facturaId=texto(objeto,"id");
-            suscripciones.findByStripeSuscripcionId(suscripcionId).ifPresent(local->{
+            resolverSuscripcionFactura(objeto,suscripcionId).ifPresent(local->{
                 if(!aceptarEvento(local,creado))return;
                 local.setStripeUltimaFacturaId(facturaId);
                 String correo=texto(objeto,"customer_email");
@@ -272,6 +272,23 @@ public class ServicioStripePlataforma {
                 if("invoice.payment_failed".equals(tipo)&&!"CANCELADA".equals(local.getEstado())&&!"REEMPLAZADA".equals(local.getEstado()))avisos.programar(local,"FALLO",facturaId,null);
             });
         }
+    }
+
+    private java.util.Optional<SuscripcionPlataformaEntidad> resolverSuscripcionFactura(JsonNode factura,String stripeId) {
+        var vinculada=suscripciones.findByStripeSuscripcionId(stripeId);
+        if(vinculada.isPresent())return vinculada;
+        // Stripe puede entregar invoice.paid antes de customer.subscription.created.
+        var metadata=factura.path("parent").path("subscription_details").path("metadata");
+        if(metadata.isMissingNode())metadata=factura.path("subscription_details").path("metadata");
+        String id=metadata.path("fluora_suscripcion_id").asText(null);
+        String empresaId=metadata.path("fluora_empresa_id").asText(null);
+        String clienteId=texto(factura,"customer");
+        if(id==null||empresaId==null||clienteId==null)return java.util.Optional.empty();
+        Long localId;
+        try {localId=Long.valueOf(id);} catch(NumberFormatException ex){return java.util.Optional.empty();}
+        return suscripciones.findById(localId).filter(s->"PENDIENTE_PAGO".equals(s.getEstado())
+                &&s.getStripeSuscripcionId()==null&&empresaId.equals(String.valueOf(s.getEmpresaId()))
+                &&clienteId.equals(s.getStripeClienteId())).map(s->{s.setStripeSuscripcionId(stripeId);return s;});
     }
 
     private boolean aceptarEvento(SuscripcionPlataformaEntidad local,long creado) {
