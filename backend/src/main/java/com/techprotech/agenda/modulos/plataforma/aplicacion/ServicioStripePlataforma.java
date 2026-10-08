@@ -79,7 +79,7 @@ public class ServicioStripePlataforma {
             String planNombre=planes.findById(suscripcion.getPlanId()).map(PlanPlataformaEntidad::getNombre).orElse(null);
             return new EstadoSuscripcionEmpresaResponse(true,suscripcion.getId(),suscripcion.getPlanId(),planNombre,
                     suscripcion.getEstado(),suscripcion.getCiclo(),suscripcion.getPrecioAcordado(),suscripcion.getMoneda(),
-                    suscripcion.getIniciaEn(),suscripcion.getPruebaHasta(),suscripcion.getPeriodoActualHasta(),
+                    suscripcion.getIniciaEn(),"PRUEBA".equals(suscripcion.getEstado())?suscripcion.getPruebaHasta():null,suscripcion.getPeriodoActualHasta(),
                     suscripcion.isCancelarAlFinalPeriodo(),presente(suscripcion.getStripeClienteId()));
         }).orElseGet(EstadoSuscripcionEmpresaResponse::sinSuscripcion);
     }

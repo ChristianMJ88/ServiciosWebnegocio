@@ -93,6 +93,17 @@ class ServicioStripeWebhookTest {
         verify(suscripciones).save(local);
     }
 
+    @Test void suscripcionActivaExponePeriodoVigenteSinPresentarLaPruebaHistorica() {
+        LocalDateTime historica=LocalDateTime.of(2026,10,7,12,0);
+        LocalDateTime periodo=historica.plusMonths(1);
+        local.setPruebaHasta(historica);local.setPeriodoActualHasta(periodo);
+        when(suscripciones.findFirstByEmpresaIdOrderByCreadaEnDesc(1L)).thenReturn(Optional.of(local));
+        var respuesta=servicio.estadoSuscripcion(1L);
+        assertThat(respuesta.pruebaHasta()).isNull();
+        assertThat(respuesta.periodoActualHasta()).isEqualTo(periodo);
+        assertThat(local.getPruebaHasta()).isEqualTo(historica);
+    }
+
     private void enviarPayload(String payload) throws Exception {
         long instante=Instant.now().getEpochSecond();
         Mac mac=Mac.getInstance("HmacSHA256");
