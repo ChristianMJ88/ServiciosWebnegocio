@@ -37,6 +37,19 @@ No avanzar el reloj ni cancelar la suscripción del tenant compartido para simul
 
 ### Verificación del 8 de octubre de 2026
 
+#### Cobro y rechazo contra Stripe de pruebas
+
+Se creó un negocio local independiente (empresa 6, suscripción 3), sin cambiar Nail Art Studio. El precio Inicial se obtuvo del catálogo. La suscripción `sub_1UOCdtAzYrdtuY8aeJNuvjz1` utilizó métodos de pago virtuales oficiales de Stripe.
+
+- Se reinició el ciclo sin prorrateo para generar una factura de $199.00: `in_1UOCggAzYrdtuY8a7u3LZexd` / `CCKX2TZW-0002`, pagada en Stripe. El aviso 257 quedó ENVIADA en Fluora.
+- Con el método de prueba que rechaza cobros, el siguiente reinicio generó `in_1UOERpAzYrdtuY8aaQ0Ajp0q` / `CCKX2TZW-0003`: abierta, importe pagado cero, suscripción Stripe `past_due`.
+- El túnel temporal perdió resolución DNS. Se restableció y se actualizó el destino existente, conservando su secreto y sus seis eventos. El evento real `evt_1UOERtAzYrdtuY8an7GjnXeV` se reenvió desde Stripe y respondió 200. Fluora pasó a GRACIA; aviso 258 ENVIADA, un intento y sin error. Reenviar el mismo evento no duplicó el aviso ni extendió la gracia.
+- Se canceló la suscripción aislada al terminar para detener futuros cobros de prueba. La suscripción Profesional del demo se preservó.
+
+Esta ejecución comprueba cobros por reinicio de ciclo (`billing_reason=subscription_update`); no equivale a avanzar un mes mediante un reloj de Stripe. La clave restringida permite consultar relojes, pero no crearlos. Queda pendiente esa simulación temporal y la validación de capacidades en una sesión renovada: el token de onboarding expiró y la consulta protegida respondió 401.
+
+La factura inicial expuso un orden posible de webhooks: `invoice.paid` llegó antes de vincular la suscripción. Se agregó resolución por metadata de la factura únicamente para registros PENDIENTE_PAGO sin vínculo, verificando empresa y cliente Stripe. Tres regresiones prueban el cobro anticipado y rechazan empresa o cliente distintos. Suite dirigida: 34 pruebas aprobadas.
+
 - Cambio temporal Profesional → Expansión y restauración a Profesional mediante Stripe en modo prueba, sin prorrateo ni nuevos cargos. Ambos webhooks fueron procesados; los avisos de cambio 255 y 256 quedaron ENVIADA, con un intento y sin error. La suscripción del negocio quedó ACTIVA y con renovación habilitada.
 - Fallo de renovación, recuperación y vencimiento se verificaron con pruebas automatizadas del backend; esta ejecución no simula un rechazo real de tarjeta ni adelanta el reloj del tenant compartido.
 - Se comprueba que los reintentos de una factura fallida conservan el plazo de gracia y la referencia de deduplicación del aviso. El procesador de vencimientos no modifica la política de acceso; si falla la preparación del aviso, no marca al negocio como notificado y permite reintentarlo.
