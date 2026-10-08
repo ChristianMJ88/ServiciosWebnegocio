@@ -28,6 +28,7 @@ public class SuscripcionPlataformaEntidad {
     @Column(name="stripe_checkout_sesion_id", length=100) private String stripeCheckoutSesionId;
     @Column(name="stripe_ultima_factura_id", length=100) private String stripeUltimaFacturaId;
     @Column(name="stripe_estado", length=40) private String stripeEstado;
+    @Column(name="stripe_ultimo_evento_creado") private Long stripeUltimoEventoCreado;
     @Column(name="periodo_actual_hasta") private LocalDateTime periodoActualHasta;
     @Column(name="cancelar_al_final_periodo", nullable=false) private boolean cancelarAlFinalPeriodo;
     @Column(name="creada_en", insertable=false, updatable=false) private LocalDateTime creadaEn;

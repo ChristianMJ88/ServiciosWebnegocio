@@ -56,13 +56,15 @@ public class ServicioStripePlataforma {
     private final UsuarioRepositorio usuarios;
     private final ServicioAuditoriaPlataforma auditoria;
     private final ObjectMapper objectMapper;
+    private final ServicioPlanSuscripcionStripe planSuscripcion;
 
     public ServicioStripePlataforma(PropiedadesStripePlataforma propiedades, PlanPlataformaRepositorio planes,
             SuscripcionPlataformaRepositorio suscripciones, StripeClientePlataformaRepositorio clientes,
             StripeEventoPlataformaRepositorio eventos, EmpresaRepositorio empresas, UsuarioRepositorio usuarios,
-            ServicioAuditoriaPlataforma auditoria, ObjectMapper objectMapper) {
+            ServicioAuditoriaPlataforma auditoria, ObjectMapper objectMapper,ServicioPlanSuscripcionStripe planSuscripcion) {
         this.propiedades=propiedades; this.planes=planes; this.suscripciones=suscripciones; this.clientes=clientes;
         this.eventos=eventos; this.empresas=empresas; this.usuarios=usuarios; this.auditoria=auditoria; this.objectMapper=objectMapper;
+        this.planSuscripcion=planSuscripcion;
     }
 
     public EstadoStripePlataformaResponse estado() {
@@ -196,7 +198,7 @@ public class ServicioStripePlataforma {
         catch(DataIntegrityViolationException duplicado) { return; }
         try {
             JsonNode objeto=objectMapper.readTree(payload).path("data").path("object");
-            procesarEvento(event.getType(),objeto);
+            procesarEvento(event.getType(),objeto,event.getCreated()==null?0:event.getCreated());
             registro.setEstado("PROCESADO"); registro.setProcesadoEn(LocalDateTime.now(ZoneOffset.UTC));
         } catch(Exception ex) {
             registro.setEstado("ERROR"); registro.setErrorUltimo(recortar(ex.getMessage(),1000)); eventos.save(registro);
@@ -205,7 +207,7 @@ public class ServicioStripePlataforma {
         eventos.save(registro);
     }
 
-    private void procesarEvento(String tipo,JsonNode objeto) {
+    private void procesarEvento(String tipo,JsonNode objeto,long creado) {
         if("checkout.session.completed".equals(tipo)) {
             String sesion=texto(objeto,"id");
             suscripciones.findByStripeCheckoutSesionId(sesion).ifPresent(local->{
@@ -221,6 +223,10 @@ public class ServicioStripePlataforma {
                 return localId==null?null:suscripciones.findById(Long.valueOf(localId)).orElse(null);
             });
             if(local==null)return;
+            if("REEMPLAZADA".equals(local.getEstado()))return;
+            if("CANCELADA".equals(local.getEstado())&&!"customer.subscription.deleted".equals(tipo))return;
+            if(!aceptarEvento(local,creado))return;
+            if(!"customer.subscription.deleted".equals(tipo))planSuscripcion.actualizar(local,objeto);
             String estado=texto(objeto,"status"); local.setStripeSuscripcionId(id); local.setStripeClienteId(texto(objeto,"customer"));
             local.setStripeEstado(estado); local.setEstado(mapearEstado(estado));
             if("past_due".equals(estado)) iniciarGracia(local);
@@ -231,12 +237,13 @@ public class ServicioStripePlataforma {
             if("customer.subscription.deleted".equals(tipo))local.setCanceladaEn(LocalDateTime.now(ZoneOffset.UTC));
             suscripciones.save(local); return;
         }
-        if(tipo.startsWith("invoice.")) {
+        if("invoice.paid".equals(tipo)||"invoice.payment_failed".equals(tipo)) {
             String suscripcionId=texto(objeto,"subscription");
             if(suscripcionId==null)suscripcionId=objeto.path("parent").path("subscription_details").path("subscription").asText(null);
             if(suscripcionId==null)return;
             String facturaId=texto(objeto,"id");
             suscripciones.findByStripeSuscripcionId(suscripcionId).ifPresent(local->{
+                if(!aceptarEvento(local,creado))return;
                 local.setStripeUltimaFacturaId(facturaId);
                 if("invoice.paid".equals(tipo)&&debeActivarPorFactura(objeto,local.getEstado())){
                     if(!"CANCELADA".equals(local.getEstado())&&!"REEMPLAZADA".equals(local.getEstado())) {
@@ -250,6 +257,13 @@ public class ServicioStripePlataforma {
                 suscripciones.save(local);
             });
         }
+    }
+
+    private boolean aceptarEvento(SuscripcionPlataformaEntidad local,long creado) {
+        if(creado<=0)return true;
+        if(local.getStripeUltimoEventoCreado()!=null&&creado<local.getStripeUltimoEventoCreado())return false;
+        local.setStripeUltimoEventoCreado(creado);
+        return true;
     }
 
     private void iniciarGracia(SuscripcionPlataformaEntidad local) {

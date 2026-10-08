@@ -27,7 +27,7 @@ class ServicioStripeWebhookTest {
     @BeforeEach void preparar() {
         servicio=new ServicioStripePlataforma(new PropiedadesStripePlataforma(true,"PRUEBA","sk_test_fixture","whsec_fixture",null,null,null,null),
                 planes,suscripciones,mock(StripeClientePlataformaRepositorio.class),eventos,mock(EmpresaRepositorio.class),
-                mock(UsuarioRepositorio.class),mock(ServicioAuditoriaPlataforma.class),new ObjectMapper());
+                mock(UsuarioRepositorio.class),mock(ServicioAuditoriaPlataforma.class),new ObjectMapper(),new ServicioPlanSuscripcionStripe(planes));
         local=new SuscripcionPlataformaEntidad();local.setPlanId(4L);local.setEstado("ACTIVA");
         when(suscripciones.findByStripeSuscripcionId("sub_fixture")).thenReturn(Optional.of(local));
         when(eventos.save(any())).thenAnswer(i->i.getArgument(0));
@@ -66,6 +66,34 @@ class ServicioStripeWebhookTest {
 
     private void enviar(String id,String tipo,long pagado) throws Exception {
         String payload="{\"id\":\""+id+"\",\"object\":\"event\",\"type\":\""+tipo+"\",\"livemode\":false,\"data\":{\"object\":{\"id\":\"in_fixture\",\"subscription\":\"sub_fixture\",\"amount_paid\":"+pagado+"}}}";
+        enviarPayload(payload);
+    }
+
+    @Test void notificacionAnteriorNoRevierteUnaRecuperacion() throws Exception {
+        local.setStripeUltimoEventoCreado(200L);
+        enviarPayload("{\"id\":\"evt_old\",\"object\":\"event\",\"created\":100,\"type\":\"invoice.payment_failed\",\"livemode\":false,\"data\":{\"object\":{\"id\":\"in_fixture\",\"subscription\":\"sub_fixture\"}}}");
+        assertThat(local.getEstado()).isEqualTo("ACTIVA");
+        assertThat(local.getGraciaHasta()).isNull();
+        assertThat(local.getStripeUltimoEventoCreado()).isEqualTo(200L);
+    }
+
+    @Test void eventoDeSuscripcionNoReactivaUnaCancelada() throws Exception {
+        local.setEstado("CANCELADA");
+        enviarPayload("{\"id\":\"evt_old\",\"object\":\"event\",\"type\":\"customer.subscription.updated\",\"livemode\":false,\"data\":{\"object\":{\"id\":\"sub_fixture\",\"status\":\"active\"}}}");
+        assertThat(local.getEstado()).isEqualTo("CANCELADA");
+    }
+
+    @Test void cambioDePlanDesdeStripeActualizaLaSuscripcionDelNegocio() throws Exception {
+        PlanPlataformaEntidad nuevo=new PlanPlataformaEntidad();nuevo.setId(9L);nuevo.setMoneda("MXN");
+        when(planes.findByStripePrecioMensualIdOrStripePrecioAnualId("price_nuevo","price_nuevo")).thenReturn(Optional.of(nuevo));
+        enviarPayload("{\"id\":\"evt_plan\",\"object\":\"event\",\"created\":200,\"type\":\"customer.subscription.updated\",\"livemode\":false,\"data\":{\"object\":{\"id\":\"sub_fixture\",\"status\":\"active\",\"items\":{\"data\":[{\"quantity\":1,\"price\":{\"id\":\"price_nuevo\",\"currency\":\"mxn\",\"unit_amount\":39900,\"recurring\":{\"interval\":\"month\",\"interval_count\":1}}}]}}}}");
+        assertThat(local.getPlanId()).isEqualTo(9L);
+        assertThat(local.getPrecioAcordado()).isEqualByComparingTo("399.00");
+        assertThat(local.getCiclo()).isEqualTo("MENSUAL");
+        verify(suscripciones).save(local);
+    }
+
+    private void enviarPayload(String payload) throws Exception {
         long instante=Instant.now().getEpochSecond();
         Mac mac=Mac.getInstance("HmacSHA256");
         mac.init(new SecretKeySpec("whsec_fixture".getBytes(StandardCharsets.UTF_8),"HmacSHA256"));

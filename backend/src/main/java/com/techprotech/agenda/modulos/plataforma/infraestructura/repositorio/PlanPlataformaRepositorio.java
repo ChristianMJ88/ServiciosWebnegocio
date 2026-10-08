@@ -6,5 +6,6 @@ import java.util.Optional;
 public interface PlanPlataformaRepositorio extends JpaRepository<PlanPlataformaEntidad,Long>{
     boolean existsByCodigoIgnoreCase(String codigo);
     Optional<PlanPlataformaEntidad> findByCodigoIgnoreCase(String codigo);
+    Optional<PlanPlataformaEntidad> findByStripePrecioMensualIdOrStripePrecioAnualId(String mensual,String anual);
     List<PlanPlataformaEntidad> findAllByOrderByActivoDescNombreAsc();
 }
