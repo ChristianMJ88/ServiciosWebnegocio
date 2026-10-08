@@ -39,6 +39,14 @@
             class="sidebar-submenu"
             [class.is-open]="!compacto() && grupoExpandido(grupo.id)"
             [id]="'sidebar-group-' + grupo.id">
+            @if (grupo.id === 'operacion') {
+              @for (panel of panelesOperativos(); track panel.id) {
+                <a class="sidebar-nav-item" [routerLink]="panel.ruta" [attr.aria-label]="panel.titulo">
+                  <span class="sidebar-nav-icon" aria-hidden="true"><i [class]="panel.iconClass"></i></span>
+                  <span class="sidebar-nav-copy"><span class="sidebar-nav-title">{{ panel.titulo }}</span></span>
+                </a>
+              }
+            }
             @for (modulo of grupo.modulosVisibles; track modulo.id) {
               <button
                 type="button"
@@ -68,6 +76,13 @@
       (mouseleave)="programarCierreFlyout()"
       aria-label="Submenú {{ grupo.titulo }}">
       <span class="sidebar-flyout-title">{{ grupo.titulo }}</span>
+      @if (grupo.id === 'operacion') {
+        @for (panel of panelesOperativos(); track panel.id) {
+          <a class="sidebar-flyout-item" [routerLink]="panel.ruta">
+            <i [class]="panel.iconClass" aria-hidden="true"></i><span>{{ panel.titulo }}</span>
+          </a>
+        }
+      }
       @for (modulo of grupo.modulosVisibles; track modulo.id) {
         <button
           type="button"

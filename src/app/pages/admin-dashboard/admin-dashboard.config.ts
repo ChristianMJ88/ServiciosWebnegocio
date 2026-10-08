@@ -34,6 +34,24 @@ export type ModuloAdminDef = {
   permiso?: PermisoCodigo;
 };
 
+export type PanelOperativoAdmin = {
+  id: 'caja' | 'recepcion';
+  titulo: string;
+  ruta: string;
+  iconClass: string;
+  permiso: PermisoCodigo;
+};
+
+const PANELES_OPERATIVOS: readonly PanelOperativoAdmin[] = [
+  { id: 'recepcion', titulo: 'Recepción', ruta: '/recepcion', iconClass: 'bi bi-person-check', permiso: PERMISOS.recepcionAcceso },
+  { id: 'caja', titulo: 'Caja', ruta: '/caja', iconClass: 'bi bi-shop-window', permiso: PERMISOS.cajaAcceso }
+];
+
+export function filtrarPanelesOperativosAdmin(permisosBackend: readonly string[], seccionesBackend: ReadonlySet<string>): PanelOperativoAdmin[] {
+  const permisos = new Set(permisosBackend);
+  return PANELES_OPERATIVOS.filter(panel => seccionesBackend.has(panel.id) && permisos.has(panel.permiso));
+}
+
 export type GrupoSidebarAdmin = {
   id: string;
   titulo: string;

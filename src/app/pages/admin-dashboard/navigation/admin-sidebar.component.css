@@ -74,6 +74,11 @@
   gap: 0.75rem;
 }
 
+a.sidebar-nav-item,
+a.sidebar-flyout-item {
+  text-decoration: none;
+}
+
 /* El sidebar gobierna su propia presentación; Bootstrap solo aporta los glifos. */
 .admin-sidebar .sidebar-brand {
   padding-bottom: 1rem;

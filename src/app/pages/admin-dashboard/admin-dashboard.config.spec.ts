@@ -1,8 +1,17 @@
 import { describe, expect, it } from 'vitest';
 import { PERMISOS } from '../../core/auth/permissions';
-import { construirGruposSidebarAdmin, esSeccionAdmin, filtrarModulosAdmin } from './admin-dashboard.config';
+import { construirGruposSidebarAdmin, esSeccionAdmin, filtrarModulosAdmin, filtrarPanelesOperativosAdmin } from './admin-dashboard.config';
 
 describe('configuración del menú administrativo', () => {
+  it('permite abrir Caja y Recepción cuando capacidad y permiso son concedidos por el backend', () => {
+    expect(filtrarPanelesOperativosAdmin([PERMISOS.cajaAcceso, PERMISOS.recepcionAcceso], new Set(['caja', 'recepcion']))
+      .map(panel => panel.ruta)).toEqual(['/recepcion', '/caja']);
+  });
+
+  it('no muestra paneles que el plan o el usuario no pueden abrir', () => {
+    expect(filtrarPanelesOperativosAdmin([PERMISOS.cajaAcceso], new Set(['recepcion']))).toEqual([]);
+    expect(filtrarPanelesOperativosAdmin([], new Set(['caja', 'recepcion']))).toEqual([]);
+  });
   it('muestra únicamente módulos autorizados por los permisos del backend', () => {
     const modulos = filtrarModulosAdmin([PERMISOS.serviciosGestionar]);
 

@@ -1,14 +1,17 @@
 import { Component, effect, input, OnDestroy, output, signal } from '@angular/core';
-import { GrupoSidebarAdminView, SeccionAdmin } from '../admin-dashboard.config';
+import { GrupoSidebarAdminView, PanelOperativoAdmin, SeccionAdmin } from '../admin-dashboard.config';
+import { RouterLink } from '@angular/router';
 
 @Component({
   selector: 'app-admin-sidebar',
   standalone: true,
+  imports: [RouterLink],
   templateUrl: './admin-sidebar.component.html',
   styleUrl: './admin-sidebar.component.css'
 })
 export class AdminSidebarComponent implements OnDestroy {
   readonly grupos = input.required<readonly GrupoSidebarAdminView[]>();
+  readonly panelesOperativos = input<readonly PanelOperativoAdmin[]>([]);
   readonly seccionActiva = input.required<SeccionAdmin>();
   readonly compacto = input(false);
   readonly inicialesEmpresa = input.required<string>();
