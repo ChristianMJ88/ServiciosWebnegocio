@@ -12,9 +12,9 @@
     <div class="promotions-state"><span class="promotions-state__spinner"></span>Cargando promociones…</div>
   } @else {
     <div class="promotions-list">
-      @for (item of promociones(); track item.id || $index; let i = $index) {
+      @for (item of promociones(); track item; let i = $index) {
         <article class="promotion-card" [class.is-hidden]="!item.activa">
-          <details class="promotion-card__details">
+          <details class="promotion-card__details" [open]="abiertas().has(item)" (toggle)="alternar(item, $any($event.target).open)">
           <summary class="promotion-card__header">
             <span class="promotion-card__summary">
               <span class="promotion-card__number">{{ i + 1 }}</span>
@@ -23,6 +23,7 @@
             </span>
           </summary>
 
+            @if (abiertas().has(item)) {
             <div class="promotion-card__content" [id]="'promotion-content-' + i">
               <section class="promotion-media" aria-label="Imagen de la promoción">
                 <div class="promotion-media__preview">
@@ -68,6 +69,7 @@
                 <label class="promotion-card__toggle full-width"><span><strong>Promoción activa</strong><small>La vigencia también controla su aparición pública.</small></span><mat-slide-toggle [(ngModel)]="item.activa" [name]="'promoActiva' + i"></mat-slide-toggle></label>
               </div>
             </div>
+            }
           </details>
             <div class="promotion-card__tools" aria-label="Acciones de la promoción">
               <button type="button" mat-icon-button [disabled]="i === 0" (click)="mover(i, -1)" aria-label="Subir promoción"><i class="bi bi-arrow-up"></i></button>

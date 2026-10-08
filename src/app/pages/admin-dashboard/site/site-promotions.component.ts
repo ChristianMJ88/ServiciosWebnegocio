@@ -22,6 +22,8 @@ import { SitePromotionsFacade } from './site-promotions.facade';
 })
 export class SitePromotionsComponent implements OnInit {
   private readonly facade = inject(SitePromotionsFacade);
+  private readonly fechas = new Map<string, Date>();
+  readonly abiertas = signal<ReadonlySet<PromocionSitioAdmin>>(new Set());
   readonly promociones = signal<PromocionSitioAdmin[]>([]);
   readonly servicios = signal<ServicioAdmin[]>([]);
   readonly sucursales = signal<SucursalAdmin[]>([]);
@@ -52,10 +54,13 @@ export class SitePromotionsComponent implements OnInit {
       servicioIds: [], sucursalIds: []
     };
     this.promociones.update(promociones => [...promociones, nueva]);
+    this.alternar(nueva, true);
     this.limpiarEstado();
   }
 
   quitar(indice: number): void {
+    const item = this.promociones()[indice];
+    if (item) this.alternar(item, false);
     this.promociones.update(promociones => {
       const restantes = promociones.filter((_, i) => i !== indice);
       restantes.forEach((item, orden) => item.orden = orden);
@@ -93,6 +98,8 @@ export class SitePromotionsComponent implements OnInit {
       }))
     }).pipe(finalize(() => this.guardando.set(false))).subscribe({
       next: promociones => {
+        this.abiertas.set(new Set());
+        this.fechas.clear();
         this.promociones.set(promociones);
         this.mensaje.set('Las promociones quedaron actualizadas.');
       },
@@ -147,8 +154,23 @@ export class SitePromotionsComponent implements OnInit {
 
   fechaComoDate(valor: string | null): Date | null {
     if (!valor) return null;
+    const existente = this.fechas.get(valor);
+    if (existente) return existente;
     const [anio, mes, dia] = valor.split('-').map(Number);
-    return anio && mes && dia ? new Date(anio, mes - 1, dia) : null;
+    if (!anio || !mes || !dia) return null;
+    const fecha = new Date(anio, mes - 1, dia);
+    this.fechas.set(valor, fecha);
+    return fecha;
+  }
+
+  alternar(item: PromocionSitioAdmin, abierta: boolean): void {
+    if (this.abiertas().has(item) === abierta) return;
+    this.abiertas.update(actuales => {
+      const siguientes = new Set(actuales);
+      if (abierta) siguientes.add(item);
+      else siguientes.delete(item);
+      return siguientes;
+    });
   }
 
   actualizarFecha(item: PromocionSitioAdmin, campo: 'fechaInicio' | 'fechaFin', valor: Date | null): void {
