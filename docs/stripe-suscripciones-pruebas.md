@@ -35,6 +35,13 @@ No avanzar el reloj ni cancelar la suscripción del tenant compartido para simul
 
 ## Ejecución local
 
+### Verificación del 8 de octubre de 2026
+
+- Cambio temporal Profesional → Expansión y restauración a Profesional mediante Stripe en modo prueba, sin prorrateo ni nuevos cargos. Ambos webhooks fueron procesados; los avisos de cambio 255 y 256 quedaron ENVIADA, con un intento y sin error. La suscripción del negocio quedó ACTIVA y con renovación habilitada.
+- Fallo de renovación, recuperación y vencimiento se verificaron con pruebas automatizadas del backend; esta ejecución no simula un rechazo real de tarjeta ni adelanta el reloj del tenant compartido.
+- Se comprueba que los reintentos de una factura fallida conservan el plazo de gracia y la referencia de deduplicación del aviso. El procesador de vencimientos no modifica la política de acceso; si falla la preparación del aviso, no marca al negocio como notificado y permite reintentarlo.
+- Los precios y planes de la prueba se resolvieron desde el catálogo configurado, sin modificar las reglas del frontend.
+
 Desde `backend`, con JDK 21:
 
 ```sh

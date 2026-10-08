@@ -61,6 +61,7 @@ class ServicioStripeWebhookTest {
         enviar("evt_2","invoice.payment_failed",0);
         assertThat(local.getGraciaHasta()).isEqualTo(hasta);
         assertThat(local.getEstado()).isEqualTo("GRACIA");
+        verify(avisos,times(2)).programar(eq(local),eq("FALLO"),eq("in_fixture"),isNull());
     }
 
     @Test void pagoRecuperadoEliminaLaGracia() throws Exception {
@@ -109,6 +110,7 @@ class ServicioStripeWebhookTest {
         assertThat(local.getPlanId()).isEqualTo(9L);
         assertThat(local.getPrecioAcordado()).isEqualByComparingTo("399.00");
         assertThat(local.getCiclo()).isEqualTo("MENSUAL");
+        verify(avisos).programar(local,"PLAN","200:9",null);
         verify(suscripciones).save(local);
     }
 
