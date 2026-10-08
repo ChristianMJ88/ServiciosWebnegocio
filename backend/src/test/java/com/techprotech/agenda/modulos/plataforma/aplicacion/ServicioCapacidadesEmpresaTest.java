@@ -117,4 +117,21 @@ class ServicioCapacidadesEmpresaTest {
         when(planModulos.findCapacidadesByPlanId(4L)).thenReturn(List.of(new CapacidadModuloEmpresaResponse("AGENDA","Agenda",null)));
         assertThat(servicio.obtener(3L).suscripcionVigente()).isTrue();
     }
+
+    @Test
+    void cancelacionProgramadaMantieneAccesoDuranteElPeriodoPagado() {
+        prepararSuscripcionVigente();
+        suscripcion.setEstado("ACTIVA");suscripcion.setCancelarAlFinalPeriodo(true);
+        suscripcion.setPeriodoActualHasta(LocalDateTime.now(ZoneOffset.UTC).plusDays(1));
+        assertThat(servicio.obtener(3L).suscripcionVigente()).isTrue();
+    }
+
+    @Test
+    void cancelacionProgramadaRetiraAccesoAlVencerAunqueElWebhookSeRetrase() {
+        suscripcion.setEstado("ACTIVA");suscripcion.setCancelarAlFinalPeriodo(true);
+        suscripcion.setPeriodoActualHasta(LocalDateTime.now(ZoneOffset.UTC).minusSeconds(1));
+        when(suscripciones.findByEmpresaIdAndEstadoInOrderByCreadaEnDesc(3L,List.of("ACTIVA","PRUEBA","GRACIA")))
+                .thenReturn(List.of(suscripcion));
+        assertThat(servicio.obtener(3L).suscripcionVigente()).isFalse();
+    }
 }

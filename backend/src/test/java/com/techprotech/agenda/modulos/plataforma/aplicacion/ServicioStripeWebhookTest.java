@@ -111,4 +111,65 @@ class ServicioStripeWebhookTest {
         String firma=HexFormat.of().formatHex(mac.doFinal((instante+"."+payload).getBytes(StandardCharsets.UTF_8)));
         servicio.recibirWebhook("t="+instante+",v1="+firma,payload);
     }
+
+    @Test void completarCheckoutVinculaStripeSinConcederAccesoAntesDelPago() throws Exception {
+        local.setEstado("PENDIENTE_PAGO");
+        when(suscripciones.findByStripeCheckoutSesionId("cs_fixture")).thenReturn(Optional.of(local));
+        enviarPayload("""
+                {"id":"evt_checkout","object":"event","type":"checkout.session.completed","livemode":false,
+                 "data":{"object":{"id":"cs_fixture","subscription":"sub_fixture","customer":"cus_fixture"}}}
+                """);
+        assertThat(local.getEstado()).isEqualTo("PENDIENTE_PAGO");
+        assertThat(local.getStripeSuscripcionId()).isEqualTo("sub_fixture");
+        assertThat(local.getStripeClienteId()).isEqualTo("cus_fixture");
+        enviar("evt_paid","invoice.paid",19900);
+        assertThat(local.getEstado()).isEqualTo("ACTIVA");
+    }
+
+    @Test void facturaDeRenovacionResuelveSuscripcionEnElFormatoActualDeStripe() throws Exception {
+        local.setEstado("GRACIA");local.setGraciaHasta(LocalDateTime.now(ZoneOffset.UTC).plusDays(1));
+        enviarPayload("""
+                {"id":"evt_renewal","object":"event","type":"invoice.paid","livemode":false,
+                 "data":{"object":{"id":"in_renewal","amount_paid":19900,
+                 "parent":{"subscription_details":{"subscription":"sub_fixture"}}}}}
+                """);
+        assertThat(local.getEstado()).isEqualTo("ACTIVA");
+        assertThat(local.getGraciaHasta()).isNull();
+        assertThat(local.getStripeUltimaFacturaId()).isEqualTo("in_renewal");
+    }
+
+    @Test void cancelacionProgramadaConservaEstadoActivoYFechaDeCorte() throws Exception {
+        PlanPlataformaEntidad plan=new PlanPlataformaEntidad();plan.setId(4L);plan.setMoneda("MXN");
+        when(planes.findByStripePrecioMensualIdOrStripePrecioAnualId("price_fixture","price_fixture"))
+                .thenReturn(Optional.of(plan));
+        enviarPayload("""
+                {"id":"evt_cancel_scheduled","object":"event","type":"customer.subscription.updated","livemode":false,
+                 "data":{"object":{"id":"sub_fixture","status":"active","cancel_at_period_end":true,
+                 "items":{"data":[{"current_period_end":2000000000,"quantity":1,"price":{
+                 "id":"price_fixture","currency":"mxn","unit_amount":19900,
+                 "recurring":{"interval":"month","interval_count":1}}}]}}}}
+                """);
+        assertThat(local.getEstado()).isEqualTo("ACTIVA");
+        assertThat(local.isCancelarAlFinalPeriodo()).isTrue();
+        assertThat(local.getPeriodoActualHasta()).isEqualTo(LocalDateTime.ofInstant(Instant.ofEpochSecond(2000000000),ZoneOffset.UTC));
+    }
+
+    @Test void cancelacionDefinitivaImpideQueUnaFacturaPosteriorReactiveElPlan() throws Exception {
+        enviarPayload("""
+                {"id":"evt_deleted","object":"event","type":"customer.subscription.deleted","livemode":false,
+                 "data":{"object":{"id":"sub_fixture","status":"canceled","customer":"cus_fixture"}}}
+                """);
+        assertThat(local.getEstado()).isEqualTo("CANCELADA");
+        assertThat(local.getCanceladaEn()).isNotNull();
+        enviar("evt_late_paid","invoice.paid",19900);
+        assertThat(local.getEstado()).isEqualTo("CANCELADA");
+    }
+
+    @Test void eventoDuplicadoNoVuelveAProcesarUnaFactura() throws Exception {
+        when(eventos.existsByStripeEventoId("evt_duplicate")).thenReturn(true);
+        enviar("evt_duplicate","invoice.payment_failed",0);
+        assertThat(local.getEstado()).isEqualTo("ACTIVA");
+        verify(suscripciones,never()).save(any());
+        verify(eventos,never()).save(any());
+    }
 }
