@@ -43,3 +43,15 @@ Las fechas del correo se convierten desde UTC a la zona horaria guardada para el
 `CorreoSuscripcionesEnvioRealTest` permanece desactivada salvo que exista `FLUORA_CORREO_PRUEBA_DESTINATARIO`. Envía siete ejemplos claramente marcados como pruebas. No modifica suscripciones ni registra pagos y no debe activarse en CI.
 
 Las pruebas normales de plantillas, contacto, aislamiento SMTP y deduplicación no envían correos externos.
+
+## Identidad de salida por propósito
+
+El backend resuelve la identidad de Fluora con `ServicioIdentidadCorreoPlataforma`:
+
+- `CORREO_FLUORA_AUTOMATICO`: avisos transaccionales de suscripción.
+- `CORREO_FLUORA_INFORMATIVO`: bienvenida e información de incorporación.
+- `CORREO_FLUORA_CONTACTO`: atención humana y dirección de respuesta de ambos flujos.
+
+Los alias se configuran en el entorno, sin direcciones incrustadas en el selector. Si no se configuran, se conserva la identidad previa del transporte. Todos utilizan la autenticación del buzón configurado; un alias no tiene contraseña independiente. El servicio rechaza configuraciones con empresaId para evitar sustituir la identidad del tenant. Las citas, contactos y envíos de los negocios mantienen sus servicios actuales.
+
+La bienvenida utiliza ahora el transporte configurado de Fluora (SMTP o SendGrid), como las suscripciones. El propósito ATENCION está disponible para futuros mensajes de soporte; no crea un módulo ni envía campañas automáticamente.

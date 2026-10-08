@@ -18,7 +18,7 @@ class CorreoSuscripcionesEnvioRealTest {
                 System.getenv("SUSCRIPCIONES_CORREO_SMTP_USERNAME"),System.getenv("SUSCRIPCIONES_CORREO_SMTP_PASSWORD"),
                 Boolean.parseBoolean(System.getenv().getOrDefault("SUSCRIPCIONES_CORREO_SMTP_SSL","true")),Boolean.parseBoolean(System.getenv().getOrDefault("SUSCRIPCIONES_CORREO_SMTP_START_TLS","false")));
         var servicio=new ServicioCorreoSuscripciones(new ClienteCorreoSuscripciones(new ClienteCorreoSendgrid(RestClient.builder(),propiedades),smtp),
-                System.getenv().getOrDefault("CORREO_BIENVENIDA_URL_ACCESO","http://localhost:4200/admin/suscripcion"),remitente);
+                System.getenv().getOrDefault("CORREO_BIENVENIDA_URL_ACCESO","http://localhost:4200/admin/suscripcion"),new ServicioIdentidadCorreoPlataforma(remitente,null,null));
         for(String evento:List.of("Inicio de prueba","Pago confirmado","Cambio de plan","Pago fallido","Cancelación programada","Cancelación confirmada","Vencimiento")) {
             servicio.enviar(new SuscripcionCorreoPayload(destino,"Demostración de Fluora","Ejemplo de plan",
                     "PRUEBA · "+evento,"Este correo comprueba el diseño y el envío de avisos. No confirma un cobro, una contratación ni un cambio real de tu cuenta.",

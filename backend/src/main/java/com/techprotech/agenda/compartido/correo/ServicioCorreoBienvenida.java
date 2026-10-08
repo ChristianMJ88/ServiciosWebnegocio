@@ -8,35 +8,38 @@ import java.util.List;
 @Service
 public class ServicioCorreoBienvenida {
 
-    private final ClienteCorreoSendgrid correoSendgrid;
+    private final ClienteCorreoSuscripciones correo;
+    private final ServicioIdentidadCorreoPlataforma identidades;
     private final String correoSoporte;
     private final String urlAcceso;
     private final String origenPublico;
 
     public ServicioCorreoBienvenida(
-            ClienteCorreoSendgrid correoSendgrid,
+            ClienteCorreoSuscripciones correo,
+            ServicioIdentidadCorreoPlataforma identidades,
             @Value("${aplicacion.correo-bienvenida.soporte}") String correoSoporte,
             @Value("${aplicacion.correo-bienvenida.url-acceso}") String urlAcceso,
             @Value("${aplicacion.correo-bienvenida.origen-publico}") String origenPublico
     ) {
-        this.correoSendgrid = correoSendgrid;
+        this.correo = correo;
+        this.identidades = identidades;
         this.correoSoporte = correoSoporte;
         this.urlAcceso = urlAcceso;
         this.origenPublico = origenPublico;
     }
 
     public void enviar(BienvenidaEmpresaCorreo bienvenida) {
-        ConfiguracionCorreoResolvida canonica = correoSendgrid.configuracionCanonica();
+        ConfiguracionCorreoResolvida canonica = identidades.resolver(correo.configuracion(), PropositoCorreoPlataforma.INFORMATIVO);
         if (!canonica.habilitado()) {
             throw new IllegalStateException("El correo canónico de Fluora no está configurado");
         }
         String sitio = origenPublico + "/e/" + bienvenida.slug();
-        correoSendgrid.enviar(canonica, new MensajeCorreoSaliente(
+        correo.enviar(canonica, new MensajeCorreoSaliente(
                 bienvenida.correoAdministrador(),
                 "Te damos la bienvenida a Fluora | " + bienvenida.nombreEmpresa(),
                 texto(bienvenida, sitio),
                 html(bienvenida, sitio),
-                correoSoporte,
+                canonica.responderA() == null || canonica.responderA().isBlank() ? correoSoporte : canonica.responderA(),
                 List.of()
         ));
     }

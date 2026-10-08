@@ -9,17 +9,16 @@ import java.util.List;
 public class ServicioCorreoSuscripciones {
     private final ClienteCorreoSuscripciones cliente;
     private final String urlAcceso;
-    private final String remitente;
+    private final ServicioIdentidadCorreoPlataforma identidades;
     public ServicioCorreoSuscripciones(ClienteCorreoSuscripciones cliente,
             @Value("${aplicacion.correo-bienvenida.url-acceso}") String urlAcceso,
-            @Value("${aplicacion.suscripciones.correo.remitente:}") String remitente) {
-        this.cliente=cliente;this.urlAcceso=urlAcceso;this.remitente=remitente;
+            ServicioIdentidadCorreoPlataforma identidades) {
+        this.cliente=cliente;this.urlAcceso=urlAcceso;this.identidades=identidades;
     }
     public void enviar(SuscripcionCorreoPayload p) {
         var config=cliente.configuracion();
         if(!config.habilitado())throw new IllegalStateException("El remitente de Fluora no está configurado");
-        if(config.proveedor()==ProveedorCorreo.SENDGRID&&remitente!=null&&!remitente.isBlank())config=new ConfiguracionCorreoResolvida(null,true,ProveedorCorreo.SENDGRID,
-                remitente,config.nombreRemitente(),config.responderA(),null,0,null,null,false,false,null,null,null,null,null,null,null);
+        config=identidades.resolver(config,PropositoCorreoPlataforma.TRANSACCIONAL);
         String detalle=p.descripcion()+"\nNegocio: "+p.negocio()+"\nPlan: "+p.plan()
                 +(p.fecha()==null?"":"\nFecha: "+p.fecha())
                 +(p.importe()==null?"":"\nImporte pagado: "+p.importe().setScale(2)+" "+p.moneda())

@@ -148,6 +148,10 @@ aplicacion:
       address-validation-base-url: ${GOOGLE_MAPS_ADDRESS_VALIDATION_BASE_URL:https://addressvalidation.googleapis.com}
       region-predeterminada: ${GOOGLE_MAPS_REGION_PREDETERMINADA:MX}
       regiones-permitidas: ${GOOGLE_MAPS_REGIONES_PERMITIDAS:MX}
+  correo-identidades:
+    automatico: ${CORREO_FLUORA_AUTOMATICO:${SUSCRIPCIONES_CORREO_REMITENTE:}}
+    informativo: ${CORREO_FLUORA_INFORMATIVO:}
+    contacto: ${CORREO_FLUORA_CONTACTO:}
   correo-bienvenida:
     soporte: ${CORREO_BIENVENIDA_SOPORTE:contacto@refluora.com}
     url-acceso: ${CORREO_BIENVENIDA_URL_ACCESO:https://app.refluora.com/acceso}
