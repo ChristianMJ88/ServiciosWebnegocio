@@ -27,7 +27,8 @@ public class ClienteCorreoSmtp {
             JavaMailSenderImpl sender = crearMailSender(configuracion);
             MimeMessage mimeMessage = sender.createMimeMessage();
             boolean tieneAdjuntos = mensaje.adjuntos() != null && !mensaje.adjuntos().isEmpty();
-            MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, tieneAdjuntos, "UTF-8");
+            // Las versiones texto y HTML requieren multipart incluso sin adjuntos.
+            MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, true, "UTF-8");
             helper.setTo(mensaje.destinatario());
             helper.setSubject(mensaje.asunto());
             helper.setText(mensaje.textoPlano(), mensaje.contenidoHtml());
@@ -57,7 +58,7 @@ public class ClienteCorreoSmtp {
         }
     }
 
-    private JavaMailSenderImpl crearMailSender(ConfiguracionCorreoResolvida configuracion) {
+    protected JavaMailSenderImpl crearMailSender(ConfiguracionCorreoResolvida configuracion) {
         JavaMailSenderImpl sender = new JavaMailSenderImpl();
         sender.setHost(configuracion.smtpHost());
         sender.setPort(configuracion.smtpPort());
