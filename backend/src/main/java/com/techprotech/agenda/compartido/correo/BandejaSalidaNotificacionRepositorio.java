@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Optional;
 
 public interface BandejaSalidaNotificacionRepositorio extends JpaRepository<BandejaSalidaNotificacionEntidad, Long>, BandejaSalidaNotificacionRepositorioCustom {
+    boolean existsByClaveDeduplicacion(String claveDeduplicacion);
 
     boolean existsByAgregadoIdAndCanalAndTipoEventoAndEstadoIn(Long agregadoId, String canal, String tipoEvento, Collection<String> estados);
 

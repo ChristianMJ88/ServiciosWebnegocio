@@ -57,14 +57,16 @@ public class ServicioStripePlataforma {
     private final ServicioAuditoriaPlataforma auditoria;
     private final ObjectMapper objectMapper;
     private final ServicioPlanSuscripcionStripe planSuscripcion;
+    private final ServicioAvisosSuscripcion avisos;
 
     public ServicioStripePlataforma(PropiedadesStripePlataforma propiedades, PlanPlataformaRepositorio planes,
             SuscripcionPlataformaRepositorio suscripciones, StripeClientePlataformaRepositorio clientes,
             StripeEventoPlataformaRepositorio eventos, EmpresaRepositorio empresas, UsuarioRepositorio usuarios,
-            ServicioAuditoriaPlataforma auditoria, ObjectMapper objectMapper,ServicioPlanSuscripcionStripe planSuscripcion) {
+            ServicioAuditoriaPlataforma auditoria, ObjectMapper objectMapper,ServicioPlanSuscripcionStripe planSuscripcion,ServicioAvisosSuscripcion avisos) {
         this.propiedades=propiedades; this.planes=planes; this.suscripciones=suscripciones; this.clientes=clientes;
         this.eventos=eventos; this.empresas=empresas; this.usuarios=usuarios; this.auditoria=auditoria; this.objectMapper=objectMapper;
         this.planSuscripcion=planSuscripcion;
+        this.avisos=avisos;
     }
 
     public EstadoStripePlataformaResponse estado() {
@@ -146,6 +148,7 @@ public class ServicioStripePlataforma {
             String clienteId=obtenerOCrearCliente(empresa,usuario);
             SuscripcionPlataformaEntidad local=new SuscripcionPlataformaEntidad();
             local.setEmpresaId(empresaId); local.setPlanId(plan.getId()); local.setEstado("PENDIENTE_PAGO"); local.setCiclo(ciclo);
+            local.setCorreoFacturacion(usuario.getCorreo());
             local.setPrecioAcordado("ANUAL".equals(ciclo)?plan.getPrecioAnual():plan.getPrecioMensual()); local.setMoneda(plan.getMoneda());
             local.setIniciaEn(LocalDateTime.now(ZoneOffset.UTC)); local.setStripeClienteId(clienteId); local=suscripciones.save(local);
             SessionCreateParams.SubscriptionData.Builder datosSuscripcion=SessionCreateParams.SubscriptionData.builder()
@@ -226,16 +229,23 @@ public class ServicioStripePlataforma {
             if("REEMPLAZADA".equals(local.getEstado()))return;
             if("CANCELADA".equals(local.getEstado())&&!"customer.subscription.deleted".equals(tipo))return;
             if(!aceptarEvento(local,creado))return;
+            Long planAnterior=local.getPlanId();String estadoAnterior=local.getEstado();
+            boolean cancelacionAnterior=local.isCancelarAlFinalPeriodo();
             if(!"customer.subscription.deleted".equals(tipo))planSuscripcion.actualizar(local,objeto);
             String estado=texto(objeto,"status"); local.setStripeSuscripcionId(id); local.setStripeClienteId(texto(objeto,"customer"));
             local.setStripeEstado(estado); local.setEstado(mapearEstado(estado));
             if("past_due".equals(estado)) iniciarGracia(local);
-            else if("active".equals(estado)||"trialing".equals(estado)) local.setGraciaHasta(null);
+            else if("active".equals(estado)||"trialing".equals(estado)) {local.setGraciaHasta(null);local.setAvisoVencimientoEn(null);}
             long periodo=epochPeriodoActual(objeto); local.setPeriodoActualHasta(periodo>0?LocalDateTime.ofInstant(Instant.ofEpochSecond(periodo),ZoneOffset.UTC):null);
             long finPrueba=objeto.path("trial_end").asLong(0); local.setPruebaHasta(finPrueba>0?LocalDateTime.ofInstant(Instant.ofEpochSecond(finPrueba),ZoneOffset.UTC):null);
             local.setCancelarAlFinalPeriodo(objeto.path("cancel_at_period_end").asBoolean(false));
             if("customer.subscription.deleted".equals(tipo))local.setCanceladaEn(LocalDateTime.now(ZoneOffset.UTC));
-            suscripciones.save(local); return;
+            suscripciones.save(local);
+            if(!java.util.Objects.equals(planAnterior,local.getPlanId()))avisos.programar(local,"PLAN",String.valueOf(creado)+":"+local.getPlanId(),null);
+            if("PRUEBA".equals(local.getEstado())&&!"PRUEBA".equals(estadoAnterior))avisos.programar(local,"PRUEBA",String.valueOf(local.getPruebaHasta()),null);
+            if(local.isCancelarAlFinalPeriodo()&&!cancelacionAnterior)avisos.programar(local,"CANCELACION_PROGRAMADA",String.valueOf(creado),null);
+            if("CANCELADA".equals(local.getEstado())&&!"CANCELADA".equals(estadoAnterior))avisos.programar(local,"CANCELADA",id,null);
+            return;
         }
         if("invoice.paid".equals(tipo)||"invoice.payment_failed".equals(tipo)) {
             String suscripcionId=texto(objeto,"subscription");
@@ -245,9 +255,11 @@ public class ServicioStripePlataforma {
             suscripciones.findByStripeSuscripcionId(suscripcionId).ifPresent(local->{
                 if(!aceptarEvento(local,creado))return;
                 local.setStripeUltimaFacturaId(facturaId);
+                String correo=texto(objeto,"customer_email");
+                if(local.getCorreoFacturacion()==null&&correo!=null)local.setCorreoFacturacion(correo);
                 if("invoice.paid".equals(tipo)&&debeActivarPorFactura(objeto,local.getEstado())){
                     if(!"CANCELADA".equals(local.getEstado())&&!"REEMPLAZADA".equals(local.getEstado())) {
-                        local.setEstado("ACTIVA");local.setStripeEstado("active");local.setGraciaHasta(null);
+                        local.setEstado("ACTIVA");local.setStripeEstado("active");local.setGraciaHasta(null);local.setAvisoVencimientoEn(null);
                     }
                 }
                 if("invoice.payment_failed".equals(tipo)&&!"CANCELADA".equals(local.getEstado())
@@ -255,6 +267,9 @@ public class ServicioStripePlataforma {
                     iniciarGracia(local);local.setEstado("GRACIA");local.setStripeEstado("past_due");
                 }
                 suscripciones.save(local);
+                if("invoice.paid".equals(tipo)&&"ACTIVA".equals(local.getEstado()))
+                    avisos.programar(local,"PAGO",facturaId,BigDecimal.valueOf(objeto.path("amount_paid").asLong(0),2));
+                if("invoice.payment_failed".equals(tipo)&&!"CANCELADA".equals(local.getEstado())&&!"REEMPLAZADA".equals(local.getEstado()))avisos.programar(local,"FALLO",facturaId,null);
             });
         }
     }

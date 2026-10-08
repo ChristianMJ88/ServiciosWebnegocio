@@ -22,7 +22,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 
 @SpringBootApplication(exclude = UserDetailsServiceAutoConfiguration.class)
 @EnableScheduling
-@EnableConfigurationProperties({PropiedadesJwt.class, PropiedadesCorreo.class, PropiedadesCorreoPlataforma.class, PropiedadesOAuthCorreoMicrosoft.class, PropiedadesOAuthCorreoGoogle.class, PropiedadesAutenticacionSocial.class, PropiedadesWhatsapp.class, PropiedadesCloudinary.class, PropiedadesMercadoPago.class, PropiedadesSeguridadPagos.class, PropiedadesCheckout.class, PropiedadesEnvia.class, PropiedadesGoogleMaps.class, PropiedadesStripePlataforma.class})
+@EnableConfigurationProperties({PropiedadesJwt.class, PropiedadesCorreo.class, PropiedadesCorreoPlataforma.class, PropiedadesOAuthCorreoMicrosoft.class, PropiedadesOAuthCorreoGoogle.class, PropiedadesAutenticacionSocial.class, PropiedadesWhatsapp.class, PropiedadesCloudinary.class, PropiedadesMercadoPago.class, PropiedadesSeguridadPagos.class, PropiedadesCheckout.class, PropiedadesEnvia.class, PropiedadesGoogleMaps.class, PropiedadesStripePlataforma.class, com.techprotech.agenda.compartido.correo.PropiedadesCorreoSuscripciones.class})
 public class AgendaApplication {
 
     public static void main(String[] args) {

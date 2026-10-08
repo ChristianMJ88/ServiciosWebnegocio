@@ -24,6 +24,7 @@ public class ProcesadorOutboxCorreo {
     private final ServicioCorreoContactos servicioCorreoContactos;
     private final ServicioCorreoBienvenida servicioCorreoBienvenida;
     private final ServicioCorreoEnvios servicioCorreoEnvios;
+    private final ServicioCorreoSuscripciones servicioCorreoSuscripciones;
     private final ServicioGestionSolicitudesContacto servicioGestionSolicitudesContacto;
     private final PropiedadesCorreo propiedadesCorreo;
     private final ObjectMapper objectMapper;
@@ -35,6 +36,7 @@ public class ProcesadorOutboxCorreo {
             ServicioCorreoContactos servicioCorreoContactos,
             ServicioCorreoBienvenida servicioCorreoBienvenida,
             ServicioCorreoEnvios servicioCorreoEnvios,
+            ServicioCorreoSuscripciones servicioCorreoSuscripciones,
             ServicioGestionSolicitudesContacto servicioGestionSolicitudesContacto,
             PropiedadesCorreo propiedadesCorreo,
             ObjectMapper objectMapper
@@ -45,6 +47,7 @@ public class ProcesadorOutboxCorreo {
         this.servicioCorreoContactos = servicioCorreoContactos;
         this.servicioCorreoBienvenida = servicioCorreoBienvenida;
         this.servicioCorreoEnvios = servicioCorreoEnvios;
+        this.servicioCorreoSuscripciones = servicioCorreoSuscripciones;
         this.servicioGestionSolicitudesContacto = servicioGestionSolicitudesContacto;
         this.propiedadesCorreo = propiedadesCorreo;
         this.objectMapper = objectMapper;
@@ -78,6 +81,10 @@ public class ProcesadorOutboxCorreo {
     }
 
     private void procesarSegunEvento(BandejaSalidaNotificacionEntidad pendiente) throws JsonProcessingException {
+        if (pendiente.getTipoEvento().startsWith("SUSCRIPCION_") && pendiente.getTipoEvento().endsWith("_EMAIL")) {
+            servicioCorreoSuscripciones.enviar(objectMapper.readValue(pendiente.getPayloadJson(), SuscripcionCorreoPayload.class));
+            return;
+        }
         if (pendiente.getTipoEvento().startsWith("CITA_") && pendiente.getTipoEvento().endsWith("_EMAIL")) {
             EventoCitaCorreoPayload payload = objectMapper.readValue(
                     pendiente.getPayloadJson(),

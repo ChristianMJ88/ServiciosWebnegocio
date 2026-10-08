@@ -26,6 +26,8 @@ export class AdminSubscriptionSectionComponent implements OnInit {
   readonly mensaje=signal<string|null>(null);
   readonly moduloSolicitado=signal<string|null>(null);
   readonly capacidades=this.capacidadesApi.current;
+  readonly correoFacturacion=signal('');
+  readonly guardandoCorreo=signal(false);
 
   ngOnInit(): void {
     this.moduloSolicitado.set(this.route.snapshot.queryParamMap.get('seccion') || this.route.snapshot.queryParamMap.get('modulo'));
@@ -53,8 +55,8 @@ export class AdminSubscriptionSectionComponent implements OnInit {
 
   cargar(): void {
     this.cargando.set(true); this.error.set(null);
-    forkJoin({planes:this.planesApi.listar(),estado:this.suscripcionApi.estado(),capacidades:this.capacidadesApi.load(true)}).pipe(finalize(()=>this.cargando.set(false))).subscribe({
-      next:datos=>{this.planes.set(datos.planes);this.estado.set(datos.estado);},
+    forkJoin({planes:this.planesApi.listar(),estado:this.suscripcionApi.estado(),capacidades:this.capacidadesApi.load(true),correo:this.suscripcionApi.correo()}).pipe(finalize(()=>this.cargando.set(false))).subscribe({
+      next:datos=>{this.planes.set(datos.planes);this.estado.set(datos.estado);this.correoFacturacion.set(datos.correo.correo??'');},
       error:e=>this.error.set(this.errorApi(e))
     });
   }
@@ -74,6 +76,13 @@ export class AdminSubscriptionSectionComponent implements OnInit {
   }
 
   precio(valor:number,codigo:string): string { return new Intl.NumberFormat('es-MX',{style:'currency',currency:codigo}).format(valor); }
+  guardarCorreo(event:Event): void {
+    event.preventDefault();this.guardandoCorreo.set(true);this.error.set(null);
+    this.suscripcionApi.guardarCorreo(this.correoFacturacion()).pipe(finalize(()=>this.guardandoCorreo.set(false)),takeUntilDestroyed(this.destroyRef)).subscribe({
+      next:()=>this.mensaje.set('Correo de facturación actualizado. Los próximos avisos se enviarán a esta dirección.'),
+      error:e=>this.error.set(this.errorApi(e))
+    });
+  }
   private redirigir(url:string): void { if(!/^https:\/\//i.test(url)) { this.error.set('Stripe devolvió una dirección no válida.'); return; } this.documento.location.assign(url); }
   private errorApi(error:any): string { return error?.error?.mensaje||error?.error?.message||error?.error?.detail||'No fue posible completar la operación.'; }
 }

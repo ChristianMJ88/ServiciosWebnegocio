@@ -44,6 +44,13 @@
         </div>
       }
     }
+    @if (estado()?.tieneSuscripcion) {
+      <form class="billing-contact" (submit)="guardarCorreo($event)">
+        <div><h4>Avisos de facturación</h4><p>Recibe confirmaciones de pago, cambios de plan y avisos del período de acceso.</p></div>
+        <label for="subscription-billing-email">Correo de facturación</label>
+        <div class="billing-contact-actions"><input id="subscription-billing-email" name="correoFacturacion" type="email" required maxlength="150" autocomplete="email" [value]="correoFacturacion()" (input)="correoFacturacion.set($any($event.target).value)"><button type="submit" class="secondary-action" [disabled]="guardandoCorreo()">{{ guardandoCorreo() ? 'Guardando…' : 'Guardar correo' }}</button></div>
+      </form>
+    }
     <footer class="secure-note"><i class="bi bi-shield-lock-fill"></i><div><strong>Pago protegido por Stripe</strong><span>Fluora no almacena los datos de tu tarjeta. La activación se confirma desde el servidor.</span></div></footer>
   }
 </section>

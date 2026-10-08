@@ -20,6 +20,8 @@ public class BandejaSalidaNotificacionEntidad {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+    @Column(name = "clave_deduplicacion", length = 200)
+    private String claveDeduplicacion;
 
     @Column(name = "empresa_id", nullable = false)
     private Long empresaId;

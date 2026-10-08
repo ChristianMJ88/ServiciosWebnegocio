@@ -131,7 +131,7 @@ public class ServicioOnboardingEmpresaImpl implements ServicioOnboardingEmpresa 
         boolean requiereConfirmacion = perfilSocial == null;
         UsuarioEntidad administrador = crearAdministradorInicial(empresa, correoAdministrador, request, perfilSocial);
         crearProgresoInicial(empresa.getId(), request);
-        if (request.planId() != null) suscripcionesPlataforma.crearSuscripcionRegistro(empresa.getId(), request.planId());
+        if (request.planId() != null) suscripcionesPlataforma.crearSuscripcionRegistro(empresa.getId(), request.planId(), correoAdministrador);
         vincularIdentidadSocial(administrador, perfilSocial);
         if (requiereConfirmacion) verificacionCorreo.enviar(empresa, administrador, request.nombreAdministrador().trim());
         else servicioOutboxCorreoBienvenida.programar(new BienvenidaEmpresaCorreo(empresa.getId(), empresa.getNombre(), request.nombreAdministrador().trim(), correoAdministrador, slug));

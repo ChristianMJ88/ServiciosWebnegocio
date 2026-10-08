@@ -152,6 +152,20 @@ aplicacion:
     soporte: ${CORREO_BIENVENIDA_SOPORTE:contacto@refluora.com}
     url-acceso: ${CORREO_BIENVENIDA_URL_ACCESO:https://app.refluora.com/acceso}
     origen-publico: ${CORREO_BIENVENIDA_ORIGEN_PUBLICO:https://refluora.com}
+  suscripciones:
+    correo:
+      remitente: ${SUSCRIPCIONES_CORREO_REMITENTE:}
+      proveedor: ${SUSCRIPCIONES_CORREO_PROVEEDOR:SENDGRID}
+      nombre-remitente: ${SUSCRIPCIONES_CORREO_NOMBRE_REMITENTE:Fluora}
+      responder-a: ${SUSCRIPCIONES_CORREO_RESPONDER_A:}
+      smtp-host: ${SUSCRIPCIONES_CORREO_SMTP_HOST:}
+      smtp-port: ${SUSCRIPCIONES_CORREO_SMTP_PORT:465}
+      smtp-username: ${SUSCRIPCIONES_CORREO_SMTP_USERNAME:}
+      smtp-password: ${SUSCRIPCIONES_CORREO_SMTP_PASSWORD:}
+      smtp-ssl: ${SUSCRIPCIONES_CORREO_SMTP_SSL:true}
+      smtp-start-tls: ${SUSCRIPCIONES_CORREO_SMTP_START_TLS:false}
+      lote: ${SUSCRIPCIONES_CORREO_LOTE:100}
+      vencimientos-delay-ms: ${SUSCRIPCIONES_CORREO_VENCIMIENTOS_DELAY_MS:60000}
   cors:
     origenes-permitidos: ${CORS_ORIGENES:http://localhost:4200,http://127.0.0.1:4200,https://refluora.com,https://www.refluora.com,https://app.refluora.com,https://fir-serviciosweb-b2901.web.app,https://fir-serviciosweb-b2901.firebaseapp.com,https://fluora.web.app}
   jwt:

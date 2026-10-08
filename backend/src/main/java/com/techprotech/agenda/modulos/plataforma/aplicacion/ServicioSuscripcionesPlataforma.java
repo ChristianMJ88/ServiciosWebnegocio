@@ -30,15 +30,17 @@ public class ServicioSuscripcionesPlataforma {
     private final ServicioAuditoriaPlataforma auditoria;
     private final SeccionAdminPlataformaRepositorio seccionesAdmin;
     private final ModuloSeccionAdminPlataformaRepositorio moduloSecciones;
+    private final ServicioAvisosSuscripcion avisos;
 
     public ServicioSuscripcionesPlataforma(ModuloPlataformaRepositorio modulos, PlanPlataformaRepositorio planes,
             PlanModuloPlataformaRepositorio planModulos, LimitePlataformaRepositorio limites,
             PlanLimitePlataformaRepositorio planLimites, SuscripcionPlataformaRepositorio suscripciones,
             EmpresaRepositorio empresas, ServicioAuditoriaPlataforma auditoria,
-            SeccionAdminPlataformaRepositorio seccionesAdmin,ModuloSeccionAdminPlataformaRepositorio moduloSecciones) {
+            SeccionAdminPlataformaRepositorio seccionesAdmin,ModuloSeccionAdminPlataformaRepositorio moduloSecciones,ServicioAvisosSuscripcion avisos) {
         this.modulos=modulos; this.planes=planes; this.planModulos=planModulos; this.limites=limites; this.planLimites=planLimites;
         this.suscripciones=suscripciones; this.empresas=empresas; this.auditoria=auditoria;
         this.seccionesAdmin=seccionesAdmin;this.moduloSecciones=moduloSecciones;
+        this.avisos=avisos;
     }
 
     @Transactional(readOnly=true)
@@ -146,17 +148,22 @@ public class ServicioSuscripcionesPlataforma {
         PlanPlataformaEntidad plan=planes.findById(s.planId()).filter(this::estaVigente)
                 .orElseThrow(()->new ResponseStatusException(HttpStatus.BAD_REQUEST,"El plan seleccionado no está activo"));
         validarFechas(s);
+        String correoFacturacion=suscripciones.findFirstByEmpresaIdOrderByCreadaEnDesc(s.empresaId())
+                .map(SuscripcionPlataformaEntidad::getCorreoFacturacion).orElse(null);
         LocalDateTime ahora=LocalDateTime.now(ZoneOffset.UTC);
         List<SuscripcionPlataformaEntidad> anteriores=suscripciones.findByEmpresaIdAndEstadoIn(s.empresaId(),ESTADOS_VIGENTES);
         anteriores.forEach(anterior->{anterior.setEstado("REEMPLAZADA"); anterior.setTerminaEn(ahora);});
         suscripciones.saveAll(anteriores);
         SuscripcionPlataformaEntidad nueva=new SuscripcionPlataformaEntidad();
         nueva.setEmpresaId(empresa.getId()); nueva.setPlanId(plan.getId()); nueva.setEstado(s.estado());
+        nueva.setCorreoFacturacion(correoFacturacion);
         nueva.setCiclo(s.ciclo()); nueva.setMoneda(normalizarMoneda(s.moneda()==null?plan.getMoneda():s.moneda()));
         BigDecimal precio=s.precioAcordado()!=null?s.precioAcordado():("ANUAL".equals(s.ciclo())?plan.getPrecioAnual():plan.getPrecioMensual());
         if(precio==null) throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"El plan no tiene precio para el ciclo seleccionado");
         nueva.setPrecioAcordado(precio); nueva.setIniciaEn(s.iniciaEn()); nueva.setTerminaEn(s.terminaEn());
         nueva.setPruebaHasta(s.pruebaHasta()); nueva=suscripciones.save(nueva);
+        if("PRUEBA".equals(nueva.getEstado()))avisos.programar(nueva,"PRUEBA",String.valueOf(nueva.getPruebaHasta()),null);
+        else if("ACTIVA".equals(nueva.getEstado()))avisos.programar(nueva,"PLAN",String.valueOf(nueva.getId()),null);
         auditoria.registrar(usuarioId,"ASIGNAR","SUSCRIPCION_SAAS",String.valueOf(nueva.getId()),
                 Map.of("empresaId",empresa.getId(),"planId",plan.getId(),"estado",nueva.getEstado(),"ciclo",nueva.getCiclo()));
         return respuesta(nueva,empresa,plan);
@@ -164,6 +171,11 @@ public class ServicioSuscripcionesPlataforma {
 
     @Transactional
     public SuscripcionPlataformaEntidad crearSuscripcionRegistro(Long empresaId,Long planId) {
+        return crearSuscripcionRegistro(empresaId,planId,null);
+    }
+
+    @Transactional
+    public SuscripcionPlataformaEntidad crearSuscripcionRegistro(Long empresaId,Long planId,String correoFacturacion) {
         PlanPlataformaEntidad plan=planes.findById(planId)
                 .filter(PlanPlataformaEntidad::isPublico).filter(this::estaVigente)
                 .orElseThrow(()->new ResponseStatusException(HttpStatus.BAD_REQUEST,"El plan seleccionado no está disponible"));
@@ -173,7 +185,10 @@ public class ServicioSuscripcionesPlataforma {
         nueva.setEmpresaId(empresaId); nueva.setPlanId(plan.getId()); nueva.setEstado(ofrecePrueba?"PRUEBA":"PENDIENTE_PAGO"); nueva.setCiclo("MENSUAL");
         nueva.setPrecioAcordado(ofrecePrueba?BigDecimal.ZERO:plan.getPrecioMensual()); nueva.setMoneda(plan.getMoneda()); nueva.setIniciaEn(ahora);
         nueva.setPruebaHasta(ofrecePrueba?ahora.plusDays(plan.getDiasPrueba()):null); nueva.setReferenciaExterna("ONBOARDING");
-        return suscripciones.save(nueva);
+        nueva.setCorreoFacturacion(correoFacturacion);
+        nueva=suscripciones.save(nueva);
+        if(ofrecePrueba)avisos.programar(nueva,"PRUEBA",String.valueOf(nueva.getPruebaHasta()),null);
+        return nueva;
     }
 
     private PlanPlataformaEntidad guardarPlan(PlanPlataformaEntidad plan,GuardarPlanPlataformaRequest s,String codigo) {

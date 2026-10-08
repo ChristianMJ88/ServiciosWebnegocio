@@ -26,4 +26,6 @@ export class AdminSubscriptionService {
   estado(): Observable<EstadoSuscripcionEmpresa> { return this.http.get<EstadoSuscripcionEmpresa>(this.baseUrl); }
   checkout(planId:number,ciclo:'MENSUAL'|'ANUAL'): Observable<{url:string}> { return this.http.post<{url:string}>(`${this.baseUrl}/checkout`,{planId,ciclo}); }
   portal(): Observable<{url:string}> { return this.http.post<{url:string}>(`${this.baseUrl}/portal`,{}); }
+  correo(): Observable<{correo:string|null}> { return this.http.get<{correo:string|null}>(`${this.baseUrl}/correo`); }
+  guardarCorreo(correo:string): Observable<void> { return this.http.put<void>(`${this.baseUrl}/correo`,{correo}); }
 }

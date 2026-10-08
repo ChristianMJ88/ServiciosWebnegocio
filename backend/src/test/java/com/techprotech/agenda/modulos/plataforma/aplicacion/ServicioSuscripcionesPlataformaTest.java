@@ -49,7 +49,7 @@ class ServicioSuscripcionesPlataformaTest {
 
     @BeforeEach
     void preparar() {
-        servicio = new ServicioSuscripcionesPlataforma(modulos, planes, planModulos, limites, planLimites, suscripciones, empresas, auditoria,seccionesAdmin,moduloSecciones);
+        servicio = new ServicioSuscripcionesPlataforma(modulos, planes, planModulos, limites, planLimites, suscripciones, empresas, auditoria,seccionesAdmin,moduloSecciones,org.mockito.Mockito.mock(ServicioAvisosSuscripcion.class));
         empresa = new EmpresaEntidad();
         empresa.setId(7L);
         empresa.setNombre("Nail Art Studio");
