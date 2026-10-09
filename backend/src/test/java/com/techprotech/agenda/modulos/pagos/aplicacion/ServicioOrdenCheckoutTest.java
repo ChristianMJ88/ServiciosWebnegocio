@@ -79,7 +79,7 @@ class ServicioOrdenCheckoutTest {
         });
         servicio = new ServicioOrdenCheckout(configuracion, sitios, sucursales, cotizador, citas, servicios,
                 usuarios, pagosCita, detallesVenta, ordenes, detalles, new PropiedadesCheckout(20, 3), direcciones,
-                cotizacionesEnvio);
+                cotizacionesEnvio,mock(com.techprotech.agenda.modulos.plataforma.aplicacion.ServicioCapacidadesEmpresa.class));
     }
 
     @Test

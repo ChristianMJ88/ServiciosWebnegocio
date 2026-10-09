@@ -82,3 +82,23 @@ Desde `backend`, con JDK 21:
 ```sh
 mvn -q -Dtest=ServicioCapacidadesEmpresaTest,ServicioStripePlataformaTest,ServicioStripeWebhookTest,ServicioPlanSuscripcionStripeTest test
 ```
+
+## Protección de acceso y conciliación
+
+- Una suscripción de Stripe ACTIVA necesita un período confirmado y futuro para operar. Si el webhook de renovación falta, no concede acceso indefinido. Las suscripciones manuales conservan su vigencia configurada; la prueba y la gracia se evalúan con el reloj UTC del backend.
+- El interceptor exige suscripción vigente en las rutas internas de administración, caja, recepción y staff. Los controles de módulos siguen aplicando los módulos del catálogo. Autenticación, consulta de capacidades, avisos y regularización de la suscripción permanecen disponibles; los permisos existentes siguen restringiendo quién puede contratar o abrir el portal de pagos.
+- La creación de reservas y de nuevas órdenes públicas también verifica la suscripción del negocio en la capa de aplicación. Las confirmaciones de pagos y webhooks existentes siguen procesándose.
+- `/api/v1/admin/suscripcion/acceso` entrega el estado del aviso y la posibilidad de regularizar según los permisos del usuario. La interfaz no calcula vencimientos: consulta al navegar, cada minuto en el panel y al recibir un 402. Durante gracia muestra un aviso; cuando el backend bloquea, presenta un diálogo con foco contenido. En la pantalla de suscripción queda un aviso sin impedir el pago.
+- La conciliación consulta suscripciones vencidas y en gracia/suspensión por lotes, sin mantener una transacción de base de datos durante la llamada externa. Reutiliza el manejador de estados y avisos. Para extender un estado ACTIVA exige que la última factura esté pagada y que cliente, suscripción y ambiente correspondan al registro local. Una consulta fallida no amplía acceso ni reinicia la gracia.
+
+Configuración de servidor: `STRIPE_CONCILIACION_HABILITADO` (por defecto true), `STRIPE_CONCILIACION_DELAY_MS` (300000) y `STRIPE_CONCILIACION_LOTE` (20). El cursor recorre los registros elegibles por lotes para evitar que los primeros negocios monopolicen la consulta. La clave restringida necesita lectura de Subscriptions y de Invoices; el permiso de facturas debe verificarse antes de dar por validada la conciliación contra Stripe.
+
+### Verificación de la protección
+
+Suite dirigida actual: 58 pruebas aprobadas. Incluye suscripción Stripe ACTIVA vencida sin webhook, período no confirmado, gracia vencida, rutas internas sin anotación de módulo, regularización disponible, reserva pública rechazada antes de persistir y conciliación que no extiende acceso por una factura abierta, inaccesible o de otro cliente/ambiente.
+
+Con sesión real de la empresa de prueba cancelada: `GET /admin/citas` respondió 402; `/admin/suscripcion/acceso`, `/admin/suscripcion/capacidades` y `/admin/suscripcion` respondieron 200. El aviso indicó bloqueo y las capacidades devolvieron SIN_SUSCRIPCION. El diálogo se revisó en anchos reales de 390, 820 y 1440 px sin desbordamiento horizontal; el botón Regularizar pago abrió Plan Fluora.
+
+La decisión `puedeContratar` proviene del backend y comparte la política de vigencia. Una deuda en una suscripción Stripe existente se regulariza en el portal; una cuenta cancelada puede contratar de nuevo. `pruebaDisponible` y la creación de Checkout excluyen una nueva prueba si el negocio ya tuvo una fecha de prueba registrada.
+
+La lectura de la factura de prueba con la clave restringida devolvió 403 (`more_permissions_required`). La conciliación externa queda pendiente de autorizar Invoices → Lectura en esa clave y ejecutar una comprobación contra Stripe; su lógica de aislamiento y confirmación de pago está cubierta por las pruebas automatizadas. No se ampliaron permisos productivos.

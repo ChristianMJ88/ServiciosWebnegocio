@@ -134,4 +134,21 @@ class ServicioCapacidadesEmpresaTest {
                 .thenReturn(List.of(suscripcion));
         assertThat(servicio.obtener(3L).suscripcionVigente()).isFalse();
     }
+    @Test void activaStripeVencidaNoPermiteOperarAunqueFalteElWebhook() {
+        suscripcion.setEstado("ACTIVA");suscripcion.setStripeSuscripcionId("sub_test");
+        suscripcion.setPeriodoActualHasta(LocalDateTime.now(ZoneOffset.UTC).minusSeconds(1));
+        when(suscripciones.findByEmpresaIdAndEstadoInOrderByCreadaEnDesc(3L,List.of("ACTIVA","PRUEBA","GRACIA"))).thenReturn(List.of(suscripcion));
+        assertThatThrownBy(()->servicio.exigirSuscripcion(3L)).isInstanceOf(ResponseStatusException.class).hasMessageContaining("Regulariza");
+    }
+    @Test void activaStripeSinPeriodoConfirmadoNoPermiteOperar() {
+        suscripcion.setEstado("ACTIVA");suscripcion.setStripeSuscripcionId("sub_test");
+        when(suscripciones.findByEmpresaIdAndEstadoInOrderByCreadaEnDesc(3L,List.of("ACTIVA","PRUEBA","GRACIA"))).thenReturn(List.of(suscripcion));
+        assertThat(servicio.obtener(3L).suscripcionVigente()).isFalse();
+    }
+    @Test void suscripcionManualRespetaVigenciaSinExigirPeriodoStripe() {
+        prepararSuscripcionVigente();suscripcion.setEstado("ACTIVA");
+        suscripcion.setTerminaEn(LocalDateTime.now(ZoneOffset.UTC).plusDays(1));
+        assertThat(servicio.obtener(3L).suscripcionVigente()).isTrue();
+    }
+
 }

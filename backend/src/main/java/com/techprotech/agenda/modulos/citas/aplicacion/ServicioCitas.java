@@ -1,5 +1,7 @@
 package com.techprotech.agenda.modulos.citas.aplicacion;
 
+import com.techprotech.agenda.modulos.plataforma.aplicacion.ServicioCapacidadesEmpresa;
+
 import com.techprotech.agenda.compartido.correo.ServicioCorreoCitas;
 import com.techprotech.agenda.compartido.correo.ServicioOutboxCorreoCitas;
 import com.techprotech.agenda.compartido.whatsapp.ServicioOutboxWhatsappCitas;
@@ -73,6 +75,7 @@ public class ServicioCitas {
     private final ServicioCorreoCitas servicioCorreoCitas;
     private final ServicioOutboxCorreoCitas servicioOutboxCorreoCitas;
     private final ServicioOutboxWhatsappCitas servicioOutboxWhatsappCitas;
+    private final ServicioCapacidadesEmpresa capacidades;
 
     public ServicioCitas(
             ServicioConsultaDisponibilidad servicioConsultaDisponibilidad,
@@ -90,7 +93,8 @@ public class ServicioCitas {
             PasswordEncoder passwordEncoder,
             ServicioCorreoCitas servicioCorreoCitas,
             ServicioOutboxCorreoCitas servicioOutboxCorreoCitas,
-            ServicioOutboxWhatsappCitas servicioOutboxWhatsappCitas
+            ServicioOutboxWhatsappCitas servicioOutboxWhatsappCitas,
+            ServicioCapacidadesEmpresa capacidades
     ) {
         this.servicioConsultaDisponibilidad = servicioConsultaDisponibilidad;
         this.sucursalRepositorio = sucursalRepositorio;
@@ -108,6 +112,7 @@ public class ServicioCitas {
         this.servicioCorreoCitas = servicioCorreoCitas;
         this.servicioOutboxCorreoCitas = servicioOutboxCorreoCitas;
         this.servicioOutboxWhatsappCitas = servicioOutboxWhatsappCitas;
+        this.capacidades=capacidades;
     }
 
     @Transactional
@@ -117,6 +122,7 @@ public class ServicioCitas {
 
     private CitaCreadaResponse crearCita(CrearCitaRequest request, boolean programarWhatsappConfirmacion) {
         Long empresaId = request.empresaId() != null ? request.empresaId() : 1L;
+        capacidades.exigirSuscripcion(empresaId);
         EmpresaEntidad empresa = empresaRepositorio.findById(empresaId)
                 .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "La empresa no existe"));
 
@@ -214,6 +220,7 @@ public class ServicioCitas {
     @Transactional
     public CitasMultiplesCreadasResponse crearCitasMultiples(CrearCitasMultiplesRequest request) {
         Long empresaId = request.empresaId() != null ? request.empresaId() : 1L;
+        capacidades.exigirSuscripcion(empresaId);
         EmpresaEntidad empresa = empresaRepositorio.findById(empresaId)
                 .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "La empresa no existe"));
         SucursalEntidad sucursal = sucursalRepositorio.findByIdAndEmpresaIdAndActivaTrue(request.sucursalId(), empresaId)

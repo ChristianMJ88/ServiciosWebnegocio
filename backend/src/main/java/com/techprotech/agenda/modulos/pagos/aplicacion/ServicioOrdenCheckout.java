@@ -1,5 +1,7 @@
 package com.techprotech.agenda.modulos.pagos.aplicacion;
 
+import com.techprotech.agenda.modulos.plataforma.aplicacion.ServicioCapacidadesEmpresa;
+
 import com.techprotech.agenda.compartido.direcciones.aplicacion.ServicioValidacionDirecciones;
 import com.techprotech.agenda.compartido.direcciones.dominio.Direccion;
 import com.techprotech.agenda.compartido.direcciones.dominio.ResultadoValidacionDireccion;
@@ -55,6 +57,7 @@ public class ServicioOrdenCheckout {
     private final PropiedadesCheckout propiedades;
     private final ServicioValidacionDirecciones direcciones;
     private final ServicioCotizacionesEnvio cotizacionesEnvio;
+    private final ServicioCapacidadesEmpresa capacidades;
 
     public ServicioOrdenCheckout(ServicioConfiguracionCheckout configuracionCheckout,
                                  EmpresaSitioConfigRepositorio sitios, SucursalRepositorio sucursales,
@@ -63,7 +66,8 @@ public class ServicioOrdenCheckout {
                                  PagoCitaRepositorio pagosCita, VentaDetalleRepositorio detallesVenta,
                                  CheckoutOrdenRepositorio ordenes, CheckoutOrdenDetalleRepositorio detalles,
                                  PropiedadesCheckout propiedades, ServicioValidacionDirecciones direcciones,
-                                 ServicioCotizacionesEnvio cotizacionesEnvio) {
+                                 ServicioCotizacionesEnvio cotizacionesEnvio,
+                                 ServicioCapacidadesEmpresa capacidades) {
         this.configuracionCheckout = configuracionCheckout;
         this.sitios = sitios;
         this.sucursales = sucursales;
@@ -78,6 +82,7 @@ public class ServicioOrdenCheckout {
         this.propiedades = propiedades;
         this.direcciones = direcciones;
         this.cotizacionesEnvio = cotizacionesEnvio;
+        this.capacidades=capacidades;
     }
 
     @Transactional
@@ -85,6 +90,7 @@ public class ServicioOrdenCheckout {
         if (idempotencia == null || idempotencia.isBlank() || idempotencia.length() > 128)
             throw error(HttpStatus.BAD_REQUEST, "Idempotency-Key es obligatorio y debe tener máximo 128 caracteres");
         EmpresaSitioConfigEntidad sitio = sitio(slug);
+        capacidades.exigirSuscripcion(sitio.getEmpresaId());
         Optional<CheckoutOrdenEntidad> existente = ordenes.findByEmpresaIdAndIdempotencia(sitio.getEmpresaId(), idempotencia.trim());
         if (existente.isPresent()) return mapear(existente.get());
         ConfiguracionCheckoutPublicaResponse config = configuracionCheckout.obtenerPublica(slug);

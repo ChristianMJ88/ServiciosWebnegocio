@@ -82,8 +82,14 @@ public class ServicioStripePlataforma {
             return new EstadoSuscripcionEmpresaResponse(true,suscripcion.getId(),suscripcion.getPlanId(),planNombre,
                     suscripcion.getEstado(),suscripcion.getCiclo(),suscripcion.getPrecioAcordado(),suscripcion.getMoneda(),
                     suscripcion.getIniciaEn(),"PRUEBA".equals(suscripcion.getEstado())?suscripcion.getPruebaHasta():null,suscripcion.getPeriodoActualHasta(),
-                    suscripcion.isCancelarAlFinalPeriodo(),presente(suscripcion.getStripeClienteId()));
+                    suscripcion.isCancelarAlFinalPeriodo(),presente(suscripcion.getStripeClienteId()),puedeContratar(empresaId),!suscripciones.existsByEmpresaIdAndPruebaHastaIsNotNull(empresaId));
         }).orElseGet(EstadoSuscripcionEmpresaResponse::sinSuscripcion);
+    }
+
+    private boolean puedeContratar(Long empresaId) {
+        var ahora=LocalDateTime.now(ZoneOffset.UTC);
+        return suscripciones.findByEmpresaIdAndEstadoIn(empresaId,ESTADOS_CON_ACCESO).stream()
+                .noneMatch(s->presente(s.getStripeSuscripcionId())||PoliticaVigenciaSuscripcion.estaVigente(s,ahora));
     }
 
     @Transactional
@@ -142,7 +148,7 @@ public class ServicioStripePlataforma {
         EmpresaEntidad empresa=empresas.findById(empresaId).orElseThrow(()->new ResponseStatusException(HttpStatus.NOT_FOUND,"El negocio no existe"));
         UsuarioEntidad usuario=usuarios.findByIdAndEmpresaId(usuarioId,empresaId)
                 .orElseThrow(()->new ResponseStatusException(HttpStatus.NOT_FOUND,"El usuario no existe"));
-        if(!suscripciones.findByEmpresaIdAndEstadoIn(empresaId,ESTADOS_CON_ACCESO).isEmpty())
+        if(!puedeContratar(empresaId))
             throw new ResponseStatusException(HttpStatus.CONFLICT,"El negocio ya tiene una suscripción; administra el cambio desde el portal");
         try {
             String clienteId=obtenerOCrearCliente(empresa,usuario);
@@ -154,7 +160,7 @@ public class ServicioStripePlataforma {
             SessionCreateParams.SubscriptionData.Builder datosSuscripcion=SessionCreateParams.SubscriptionData.builder()
                     .putMetadata("fluora_empresa_id",String.valueOf(empresaId))
                     .putMetadata("fluora_suscripcion_id",String.valueOf(local.getId()));
-            if(plan.getDiasPrueba()>0) datosSuscripcion.setTrialPeriodDays((long)plan.getDiasPrueba());
+            if(plan.getDiasPrueba()>0&&!suscripciones.existsByEmpresaIdAndPruebaHastaIsNotNull(empresaId)) datosSuscripcion.setTrialPeriodDays((long)plan.getDiasPrueba());
             SessionCreateParams params=SessionCreateParams.builder().setMode(SessionCreateParams.Mode.SUBSCRIPTION)
                     .setCustomer(clienteId).setClientReferenceId(String.valueOf(empresaId))
                     .setSuccessUrl(agregarSessionId(propiedades.checkoutSuccessUrl()))
@@ -208,6 +214,26 @@ public class ServicioStripePlataforma {
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,"No se pudo procesar el evento de Stripe",ex);
         }
         eventos.save(registro);
+    }
+
+    @Transactional
+    public void conciliarSuscripcion(Long localId,com.techprotech.agenda.modulos.plataforma.infraestructura.stripe.ConsultaSuscripcionStripe.Resultado resultado) {
+        var local=suscripciones.findById(localId).orElseThrow();
+        var objeto=resultado.suscripcion();
+        if(!java.util.Objects.equals(local.getStripeSuscripcionId(),texto(objeto,"id"))
+                ||!java.util.Objects.equals(local.getStripeClienteId(),texto(objeto,"customer"))
+                ||objeto.path("livemode").asBoolean()!= "PRODUCCION".equals(ambiente()))
+            throw new IllegalArgumentException("La consulta Stripe no corresponde a la suscripción y ambiente locales");
+        var factura=resultado.factura();
+        if("active".equals(texto(objeto,"status"))) {
+            if(factura==null||!"paid".equals(texto(factura,"status"))
+                    ||!java.util.Objects.equals(texto(objeto,"latest_invoice"),texto(factura,"id"))
+                    ||!java.util.Objects.equals(local.getStripeClienteId(),texto(factura,"customer"))
+                    ||factura.path("livemode").asBoolean()!=objeto.path("livemode").asBoolean())return;
+        }
+        long ahora=Instant.now().getEpochSecond();
+        procesarEvento("canceled".equals(texto(objeto,"status"))?"customer.subscription.deleted":"customer.subscription.updated",objeto,ahora);
+        if(factura!=null&&"paid".equals(texto(factura,"status")))procesarEvento("invoice.paid",factura,ahora);
     }
 
     private void procesarEvento(String tipo,JsonNode objeto,long creado) {

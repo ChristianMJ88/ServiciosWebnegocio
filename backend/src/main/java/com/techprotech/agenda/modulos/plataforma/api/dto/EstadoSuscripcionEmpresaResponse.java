@@ -16,10 +16,12 @@ public record EstadoSuscripcionEmpresaResponse(
         LocalDateTime pruebaHasta,
         LocalDateTime periodoActualHasta,
         boolean cancelarAlFinalPeriodo,
-        boolean administrableStripe
+        boolean administrableStripe,
+        boolean puedeContratar,
+        boolean pruebaDisponible
 ) {
     public static EstadoSuscripcionEmpresaResponse sinSuscripcion() {
         return new EstadoSuscripcionEmpresaResponse(false, null, null, null, null, null, null, null,
-                null, null, null, false, false);
+                null, null, null, false, false, true, true);
     }
 }

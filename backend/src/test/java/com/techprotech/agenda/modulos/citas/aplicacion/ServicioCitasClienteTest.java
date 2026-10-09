@@ -19,6 +19,7 @@ import static org.mockito.Mockito.when;
 class ServicioCitasClienteTest {
 
     @Mock private ClienteRepositorio clienteRepositorio;
+    @org.mockito.Mock private com.techprotech.agenda.modulos.plataforma.aplicacion.ServicioCapacidadesEmpresa capacidades;
     @InjectMocks private ServicioCitas servicioCitas;
 
     @Test
@@ -36,4 +37,11 @@ class ServicioCitasClienteTest {
         assertThat(cliente.getTelefono()).isEqualTo("2213688033");
         assertThat(cliente.isAceptaWhatsapp()).isTrue();
     }
+    @Test void rechazaReservaPublicaSinSuscripcionAntesDeCrearClienteOCita() {
+        org.mockito.Mockito.doThrow(new org.springframework.web.server.ResponseStatusException(org.springframework.http.HttpStatus.PAYMENT_REQUIRED,"Suscripción vencida")).when(capacidades).exigirSuscripcion(3L);
+        var request=new com.techprotech.agenda.modulos.citas.api.dto.CrearCitaRequest(3L,1L,2L,null,"Cliente prueba","test@example.com","2220000000",java.time.OffsetDateTime.now().plusDays(1),null);
+        org.assertj.core.api.Assertions.assertThatThrownBy(()->servicioCitas.crearCita(request)).isInstanceOf(org.springframework.web.server.ResponseStatusException.class);
+        org.mockito.Mockito.verifyNoInteractions(clienteRepositorio);
+    }
+
 }

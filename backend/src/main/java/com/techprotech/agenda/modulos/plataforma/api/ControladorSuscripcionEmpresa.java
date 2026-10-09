@@ -1,6 +1,8 @@
 package com.techprotech.agenda.modulos.plataforma.api;
 
 import com.techprotech.agenda.modulos.plataforma.api.dto.CrearCheckoutSuscripcionRequest;
+import com.techprotech.agenda.modulos.plataforma.api.dto.AvisoAccesoSuscripcionResponse;
+import com.techprotech.agenda.modulos.plataforma.aplicacion.ServicioAvisoAccesoSuscripcion;
 import com.techprotech.agenda.modulos.plataforma.api.dto.CapacidadesEmpresaResponse;
 import com.techprotech.agenda.modulos.plataforma.api.dto.EstadoSuscripcionEmpresaResponse;
 import com.techprotech.agenda.modulos.plataforma.api.dto.RedireccionStripeResponse;
@@ -17,8 +19,9 @@ import org.springframework.web.bind.annotation.*;
 public class ControladorSuscripcionEmpresa {
     private final ServicioStripePlataforma stripe;
     private final ServicioCapacidadesEmpresa capacidades;
-    public ControladorSuscripcionEmpresa(ServicioStripePlataforma stripe,ServicioCapacidadesEmpresa capacidades){
-        this.stripe=stripe;this.capacidades=capacidades;
+    private final ServicioAvisoAccesoSuscripcion avisoAcceso;
+    public ControladorSuscripcionEmpresa(ServicioStripePlataforma stripe,ServicioCapacidadesEmpresa capacidades,ServicioAvisoAccesoSuscripcion avisoAcceso){
+        this.stripe=stripe;this.capacidades=capacidades;this.avisoAcceso=avisoAcceso;
     }
 
     @GetMapping
@@ -31,6 +34,12 @@ public class ControladorSuscripcionEmpresa {
     @PreAuthorize("isAuthenticated()")
     public CapacidadesEmpresaResponse capacidades(@AuthenticationPrincipal UsuarioAutenticado usuario){
         return capacidades.obtener(usuario.empresaId());
+    }
+
+    @GetMapping("/acceso")
+    @PreAuthorize("isAuthenticated()")
+    public AvisoAccesoSuscripcionResponse acceso(@AuthenticationPrincipal UsuarioAutenticado usuario){
+        return avisoAcceso.obtener(usuario);
     }
 
     @PostMapping("/checkout")

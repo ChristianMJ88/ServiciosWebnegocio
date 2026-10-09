@@ -33,7 +33,7 @@ public class ServicioCapacidadesEmpresa {
         LocalDateTime ahora=LocalDateTime.now(ZoneOffset.UTC);
         SuscripcionPlataformaEntidad suscripcion=suscripciones
                 .findByEmpresaIdAndEstadoInOrderByCreadaEnDesc(empresaId,ESTADOS_CON_ACCESO).stream()
-                .filter(s->estaVigente(s,ahora)).findFirst().orElse(null);
+                .filter(s->PoliticaVigenciaSuscripcion.estaVigente(s,ahora)).findFirst().orElse(null);
         if(suscripcion==null)return CapacidadesEmpresaResponse.sinSuscripcion(seccionesAdmin.findCodigosSinModulo());
         PlanPlataformaEntidad plan=planes.findById(suscripcion.getPlanId()).orElse(null);
         if(plan==null)return CapacidadesEmpresaResponse.sinSuscripcion(seccionesAdmin.findCodigosSinModulo());
@@ -44,6 +44,12 @@ public class ServicioCapacidadesEmpresa {
 
         return new CapacidadesEmpresaResponse(true,suscripcion.getId(),plan.getId(),plan.getCodigo(),plan.getNombre(),
                 suscripcion.getEstado(),suscripcion.getPruebaHasta(),suscripcion.getPeriodoActualHasta(),capacidades,cotas,secciones);
+    }
+
+    @Transactional(readOnly=true)
+    public void exigirSuscripcion(Long empresaId) {
+        if(!obtener(empresaId).suscripcionVigente())
+            throw new ResponseStatusException(HttpStatus.PAYMENT_REQUIRED,"Regulariza la suscripción del negocio para continuar");
     }
 
     @Transactional(readOnly=true)
@@ -71,13 +77,4 @@ public class ServicioCapacidadesEmpresa {
                 });
     }
 
-    private boolean estaVigente(SuscripcionPlataformaEntidad suscripcion,LocalDateTime ahora) {
-        if(suscripcion.getTerminaEn()!=null&&!suscripcion.getTerminaEn().isAfter(ahora))return false;
-        if(suscripcion.isCancelarAlFinalPeriodo()&&suscripcion.getPeriodoActualHasta()!=null
-                &&!suscripcion.getPeriodoActualHasta().isAfter(ahora))return false;
-        if("GRACIA".equals(suscripcion.getEstado()))
-            return suscripcion.getGraciaHasta()!=null&&suscripcion.getGraciaHasta().isAfter(ahora);
-        return !"PRUEBA".equals(suscripcion.getEstado())
-                ||(suscripcion.getPruebaHasta()!=null&&suscripcion.getPruebaHasta().isAfter(ahora));
-    }
 }
