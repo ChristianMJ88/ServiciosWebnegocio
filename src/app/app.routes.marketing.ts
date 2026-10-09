@@ -41,7 +41,11 @@ export const publicContentRoutes: Routes = [
     path: 'registro', canMatch: [tenantHostMatch], resolve: { tenant: tenantHostResolver },
     loadComponent: () => import('./pages/register/register.component').then((m) => m.RegisterComponent)
   },
-  { path: 'barberias', canMatch: [() => inject(PlatformHostService).isKnownPlatformHost()], loadComponent: () => import('./pages/fluora-vertical/fluora-vertical.component').then(m => m.FluoraVerticalComponent), data: { vertical: 'barberias', marketingLanding: true } },
+  ...['barberias', 'salones', 'esteticas', 'unas', 'spa'].map(vertical => ({
+    path: vertical, canMatch: [() => inject(PlatformHostService).isKnownPlatformHost()],
+    loadComponent: () => import('./pages/fluora-vertical/fluora-vertical.component').then(m => m.FluoraVerticalComponent),
+    data: { vertical, marketingLanding: true }
+  })),
   { path: '', loadComponent: () => import('./pages/fluora-home/fluora-home.component').then((m) => m.FluoraHomeComponent) },
   {
     path: 'privacidad',

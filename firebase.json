@@ -73,6 +73,34 @@
           }
         },
         {
+          "source": "/salones{,/**}",
+          "function": {
+            "functionId": "landingPage",
+            "region": "us-central1"
+          }
+        },
+        {
+          "source": "/esteticas{,/**}",
+          "function": {
+            "functionId": "landingPage",
+            "region": "us-central1"
+          }
+        },
+        {
+          "source": "/unas{,/**}",
+          "function": {
+            "functionId": "landingPage",
+            "region": "us-central1"
+          }
+        },
+        {
+          "source": "/spa{,/**}",
+          "function": {
+            "functionId": "landingPage",
+            "region": "us-central1"
+          }
+        },
+        {
           "source": "/e/**",
           "function": {
             "functionId": "tenantPage",

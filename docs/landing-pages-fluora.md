@@ -1,6 +1,6 @@
-# Landing pages de Fluora — fase 2
+# Landing pages de Fluora — fases 2 y 3
 
-La primera ruta es `/barberias`. Reutiliza el registro y el catálogo público de planes: no decide precios, módulos ni elegibilidad de prueba.
+Las rutas son `/barberias`, `/salones`, `/esteticas`, `/unas` y `/spa`. Reutilizan una sola plantilla, el registro y el catálogo público de planes: no deciden precios, módulos ni elegibilidad de prueba.
 
 ## Responsabilidades
 
@@ -14,7 +14,7 @@ La primera ruta es `/barberias`. Reutiliza el registro y el catálogo público d
 
 1. Desplegar primero el backend con la migración aditiva V115. Se aplicó solamente en desarrollo durante esta implementación.
 2. Configurar el parámetro no secreto `FLUORA_APP_ORIGIN` con el origen HTTPS del portal de registro, además de los parámetros existentes de las funciones.
-3. Desplegar Functions y el hosting de marketing. La reescritura inicial corresponde a `/barberias`.
+3. Desplegar Functions y el hosting de marketing. Las cinco rutas tienen reescrituras hacia la misma función `landingPage`.
 4. Comprobar HTML inicial, canonical y sitemap en el dominio publicado. Los cachés públicos pueden tardar hasta cinco minutos en reflejar una edición.
 
 No se realizó despliegue productivo ni se afirma indexación en Google.
@@ -31,4 +31,8 @@ No se realizó despliegue productivo ni se afirma indexación en Google.
 
 ## Fases posteriores
 
-Agregar otras industrias reutilizando la plantilla y sus rutas; después abordar atribución de campañas y medición. No se añadieron testimonios, cifras de rendimiento ni registros de adquisición ficticios.
+La fase 3 agrega contenido inicial específico para salones, estéticas, estudios de uñas y spa mediante la migración aditiva V116. Todo ese contenido queda editable desde el mismo módulo de plataforma. No modifica el contenido guardado de barberías. La migración se aplicó únicamente en desarrollo.
+
+Se verificaron las cinco APIs públicas y su HTML inicial con la plantilla compilada: publicación, H1 único y canonical propios. Las compilaciones de marketing y aplicación y las nueve pruebas de Functions pasaron. Se revisaron uñas en móvil, spa en tablet y salones y estéticas en escritorio sin desbordamiento horizontal. La sesión de plataforma venció antes de comprobar la nueva lista desde la interfaz; el guardado previo de barberías sí había sido validado.
+
+Continúa la fase 4: conservación de UTM y eventos de conversión, con configuración real de los proveedores de analítica. La persistencia de atribución en el backend requiere primero presentar y aprobar su propuesta en la fase 5. No se añadieron testimonios, cifras de rendimiento ni registros de adquisición ficticios.
