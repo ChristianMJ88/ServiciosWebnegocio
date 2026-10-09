@@ -80,6 +80,18 @@ public class ManejadorGlobalExcepciones {
         ));
     }
 
+    @ExceptionHandler(org.springframework.web.bind.MissingServletRequestParameterException.class)
+    public ResponseEntity<ErrorApi> manejarParametroFaltante(org.springframework.web.bind.MissingServletRequestParameterException ex) {
+        return ResponseEntity.badRequest().body(new ErrorApi(
+                "VALIDACION_INVALIDA", "Falta el parámetro obligatorio: " + ex.getParameterName(), OffsetDateTime.now()));
+    }
+
+    @ExceptionHandler(org.springframework.web.method.annotation.MethodArgumentTypeMismatchException.class)
+    public ResponseEntity<ErrorApi> manejarTipoParametro(org.springframework.web.method.annotation.MethodArgumentTypeMismatchException ex) {
+        return ResponseEntity.badRequest().body(new ErrorApi(
+                "VALIDACION_INVALIDA", "El parámetro tiene un formato inválido: " + ex.getName(), OffsetDateTime.now()));
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorApi> manejarGeneral(Exception ex) {
         log.error("Error interno no controlado", ex);

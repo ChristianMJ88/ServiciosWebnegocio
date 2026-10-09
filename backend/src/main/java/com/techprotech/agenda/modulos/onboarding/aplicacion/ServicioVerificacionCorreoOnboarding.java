@@ -32,9 +32,8 @@ public class ServicioVerificacionCorreoOnboarding {
     private final VerificacionCorreoOnboardingRepositorio repositorio;
     private final UsuarioRepositorio usuarioRepositorio;
     private final EmpresaRepositorio empresaRepositorio;
-    private final ClienteCorreoSaliente correo;
-    private final ServicioConfiguracionCorreoEmpresa configuracionCorreo;
-    private final PropiedadesCorreo propiedadesCorreo;
+    private final ClienteCorreoSuscripciones correo;
+    private final ServicioIdentidadCorreoPlataforma identidades;
     private final ServicioOutboxCorreoBienvenida bienvenida;
     private final ServicioProteccionAcceso proteccionAcceso;
     private final SecureRandom random = new SecureRandom();
@@ -42,12 +41,12 @@ public class ServicioVerificacionCorreoOnboarding {
     private final int minutos;
 
     public ServicioVerificacionCorreoOnboarding(VerificacionCorreoOnboardingRepositorio repositorio, UsuarioRepositorio usuarioRepositorio, EmpresaRepositorio empresaRepositorio,
-            ClienteCorreoSaliente correo, ServicioConfiguracionCorreoEmpresa configuracionCorreo, PropiedadesCorreo propiedadesCorreo,
+            ClienteCorreoSuscripciones correo, ServicioIdentidadCorreoPlataforma identidades,
             ServicioOutboxCorreoBienvenida bienvenida, ServicioProteccionAcceso proteccionAcceso,
             @Value("${aplicacion.onboarding.verificacion-correo.url}") String url,
             @Value("${aplicacion.onboarding.verificacion-correo.minutos-vigencia:30}") int minutos) {
-        this.repositorio=repo(repositorio); this.usuarioRepositorio=usuarioRepositorio; this.empresaRepositorio=empresaRepositorio; this.correo=correo; this.configuracionCorreo=configuracionCorreo;
-        this.propiedadesCorreo=propiedadesCorreo; this.bienvenida=bienvenida; this.proteccionAcceso=proteccionAcceso; this.url=url; this.minutos=minutos;
+        this.repositorio=repo(repositorio); this.usuarioRepositorio=usuarioRepositorio; this.empresaRepositorio=empresaRepositorio; this.correo=correo; this.identidades=identidades;
+        this.bienvenida=bienvenida; this.proteccionAcceso=proteccionAcceso; this.url=url; this.minutos=minutos;
     }
     private VerificacionCorreoOnboardingRepositorio repo(VerificacionCorreoOnboardingRepositorio r){ return r; }
 
@@ -65,8 +64,9 @@ public class ServicioVerificacionCorreoOnboarding {
         v.setEstado("PENDIENTE"); v.setCreadoEn(LocalDateTime.now()); v.setExpiraEn(LocalDateTime.now().plusMinutes(minutos)); repositorio.save(v);
         String enlace=url+"?token="+token;
         String texto="Hola "+nombre+",\n\nConfirma tu correo para activar tu cuenta en "+empresa.getNombre()+": "+enlace+"\n\nEl enlace vence en "+minutos+" minutos.";
-        ConfiguracionCorreoResolvida cfg=configuracionCorreo.resolver(empresa.getId());
         try {
+            ConfiguracionCorreoResolvida cfg=identidades.resolver(correo.configuracion(), PropositoCorreoPlataforma.TRANSACCIONAL);
+            if (!cfg.habilitado()) throw new IllegalStateException("El correo de Fluora no está configurado");
             correo.enviar(cfg,new MensajeCorreoSaliente(usuario.getCorreo(),"Confirma tu correo en "+empresa.getNombre(),texto,
                     "<p>Hola "+escapar(nombre)+",</p><p>Confirma tu correo para activar tu cuenta en <strong>"+escapar(empresa.getNombre())+"</strong>.</p><p><a href=\""+enlace+"\">Confirmar correo</a></p>",cfg.responderA(), List.of()));
             return true;
