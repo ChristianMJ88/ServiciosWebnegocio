@@ -11,7 +11,7 @@ import { SubscriptionAccessService } from './subscription-access.service';
   selector: 'app-subscription-access-notice', standalone: true, imports: [DatePipe, A11yModule],
   template: `
     @if (internal() && access.notice(); as notice) {
-      @if (notice.bloqueado && !regularization()) {
+      @if (notice.bloqueado && !reviewingPayment()) {
         <div class="access-backdrop">
           <section cdkTrapFocus [cdkTrapFocusAutoCapture]="true" role="alertdialog" aria-modal="true" aria-labelledby="subscription-access-title" aria-describedby="subscription-access-message" tabindex="-1" class="access-card">
             <span class="access-icon" aria-hidden="true">!</span>
@@ -49,8 +49,9 @@ export class SubscriptionAccessNoticeComponent {
   private readonly destroy=inject(DestroyRef);
   readonly internal=signal(false);
   readonly regularization=signal(false);
+  readonly reviewingPayment=signal(false);
   constructor() {
-    effect(() => { if (this.auth.autenticado()) this.updateRoute(); else this.access.clear(); });
+    effect(() => { if (this.auth.autenticado()) this.updateRoute(); else { this.access.clear();this.reviewingPayment.set(false); } });
     this.router.events.pipe(filter(event=>event instanceof NavigationEnd),takeUntilDestroyed(this.destroy)).subscribe(()=>this.updateRoute());
     timer(60000,60000).pipe(takeUntilDestroyed(this.destroy)).subscribe(()=>{if(this.internal()&&this.auth.autenticado())this.access.refresh();});
   }
@@ -58,8 +59,9 @@ export class SubscriptionAccessNoticeComponent {
     const path=this.router.url.split('?')[0];
     this.internal.set(['/admin','/caja','/recepcion','/staff'].some(prefix=>path===prefix||path.startsWith(prefix+'/')));
     this.regularization.set(path==='/admin/suscripcion');
+    if(!this.regularization())this.reviewingPayment.set(false);
     if(this.internal()&&this.auth.autenticado())this.access.refresh();
   }
-  regularize():void { void this.router.navigate(['/admin/suscripcion']); }
+  regularize():void { this.reviewingPayment.set(true);void this.router.navigate(['/admin/suscripcion']); }
   logout():void { this.auth.logout();void this.router.navigate(['/acceso']); }
 }
