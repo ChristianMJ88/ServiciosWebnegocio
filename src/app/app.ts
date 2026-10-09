@@ -1,3 +1,4 @@
+import { SubscriptionAccessNoticeComponent } from './core/subscription/subscription-access-notice.component';
 import { Component, effect, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRouteSnapshot, NavigationEnd, Router, RouterOutlet } from '@angular/router';
@@ -12,7 +13,7 @@ import { PlatformHostService } from './core/platform/platform-host.service';
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [RouterOutlet, HeaderComponent, FooterComponent],
+  imports: [RouterOutlet, HeaderComponent, FooterComponent, SubscriptionAccessNoticeComponent],
   templateUrl: './app.html',
   styleUrl: './app.css'
 })

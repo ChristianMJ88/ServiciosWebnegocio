@@ -1,12 +1,14 @@
 import { HttpInterceptorFn } from '@angular/common/http';
 import { inject } from '@angular/core';
 import { catchError, switchMap, throwError } from 'rxjs';
+import { SubscriptionAccessService } from '../subscription/subscription-access.service';
 import { AuthService } from './auth.service';
 import { environment } from '../../../environments/environment';
 import { PlatformAuthService } from '../platform/platform-auth.service';
 
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
   const authService = inject(AuthService);
+  const subscriptionAccess = inject(SubscriptionAccessService);
   const platformAuth = inject(PlatformAuthService);
   const esRutaPlataforma = req.url.includes('/plataforma/');
   const token = esRutaPlataforma ? platformAuth.token() : authService.getTokenAcceso();
@@ -31,6 +33,7 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
 
   return next(requestConToken).pipe(
     catchError(error => {
+      if (error.status === 402 && !esRutaPlataforma && !req.url.includes("/admin/suscripcion/")) subscriptionAccess.refresh();
       if (esRutaPlataforma) {
         if (error.status === 401 && !esRutaAuth) platformAuth.cerrar();
         return throwError(() => error);

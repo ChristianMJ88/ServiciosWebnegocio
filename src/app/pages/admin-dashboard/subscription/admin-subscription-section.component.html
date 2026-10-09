@@ -10,7 +10,7 @@
   @if (cargando()) { <div class="subscription-loading"><span></span><span></span><span></span><p>Consultando tu suscripción…</p></div> }
   @else {
     @if (estado(); as actual) {
-      @if (actual.tieneSuscripcion && actual.estado !== 'PENDIENTE_PAGO') {
+      @if (!actual.puedeContratar) {
         <article class="current-plan">
           <div class="current-plan-main"><span class="plan-kicker">Plan actual</span><h4>{{ actual.planNombre || 'Plan Fluora' }}</h4><p>{{ actual.ciclo === 'ANUAL' ? 'Facturación anual' : 'Facturación mensual' }} · {{ actual.precioAcordado !== null && actual.moneda ? precio(actual.precioAcordado,actual.moneda) : 'Importe administrado por Fluora' }}</p></div>
           <span class="subscription-state" [class.warning]="actual.estado === 'GRACIA' || actual.estado === 'PENDIENTE_PAGO'">{{ actual.estado }}</span>
@@ -37,7 +37,7 @@
               <div><span class="plan-code">{{ plan.codigo }}</span><h4>{{ plan.nombre }}</h4><p>{{ plan.descripcion }}</p></div>
               <div class="tenant-plan-price"><strong>{{ precio(plan.precioMensual,plan.moneda) }}</strong><span>/ mes</span>@if (plan.precioAnual !== null) { <small>{{ precio(plan.precioAnual,plan.moneda) }} al año</small> }</div>
               <ul>@for (modulo of plan.modulos; track modulo.moduloId) { <li><i class="bi bi-check2"></i>{{ modulo.nombre }}</li> }@for (limite of plan.limites; track limite.limiteId) { <li><i class="bi bi-sliders"></i>{{ limite.nombre }}: {{ limite.valor }} {{ limite.unidad }}</li> }</ul>
-              @if (plan.diasPrueba > 0) { <p class="trial"><i class="bi bi-clock-history"></i>{{ plan.diasPrueba }} días de prueba</p> }
+              @if (actual.pruebaDisponible && plan.diasPrueba > 0) { <p class="trial"><i class="bi bi-clock-history"></i>{{ plan.diasPrueba }} días de prueba</p> }
               <div class="plan-buttons"><button type="button" class="primary-action" (click)="contratar(plan,'MENSUAL')" [disabled]="procesando() !== null">{{ procesando() === plan.id + '-MENSUAL' ? 'Preparando…' : 'Elegir mensual' }}</button>@if (plan.precioAnual !== null) { <button type="button" class="secondary-action" (click)="contratar(plan,'ANUAL')" [disabled]="procesando() !== null">{{ procesando() === plan.id + '-ANUAL' ? 'Preparando…' : 'Elegir anual' }}</button> }</div>
             </article>
           } @empty { <div class="empty-plans"><i class="bi bi-layers"></i><strong>No hay planes públicos disponibles</strong><p>Fluora publicará aquí los planes vigentes.</p></div> }

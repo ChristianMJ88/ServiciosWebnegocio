@@ -1049,6 +1049,10 @@ export class AdminDashboardComponent implements OnInit {
       this.mensajeExito = '';
       this.asegurarSeccionActivaDisponible();
     });
+    if (this.companyCapabilities.current()?.suscripcionVigente === false) {
+      this.loading.set(false);
+      return;
+    }
     const rangoAgenda = obtenerRangoMes(this.fechaAgendaActiva());
     this.dashboardLoader.cargar(rangoAgenda.desde, rangoAgenda.hasta, (error, mensaje) => this.marcarErrorCarga(error, mensaje))
       .pipe(finalize(() => this.actualizarVistaEnZona(() => this.loading.set(false))))

@@ -17,6 +17,8 @@ export interface EstadoSuscripcionEmpresa {
   periodoActualHasta: string | null;
   cancelarAlFinalPeriodo: boolean;
   administrableStripe: boolean;
+  puedeContratar: boolean;
+  pruebaDisponible: boolean;
 }
 
 @Injectable({providedIn:'root'})
