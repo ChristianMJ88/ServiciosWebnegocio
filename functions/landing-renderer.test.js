@@ -17,3 +17,10 @@ test('sitemap incorpora solo slugs válidos de landings sin duplicados',()=>{
  assert.equal((xml.match(/\/barberias</g)||[]).length,1);
  assert.ok(!xml.includes('privado'));
 });
+test('la plantilla de producción conserva estilos noscript sin duplicar contenido de inicio',()=>{
+ const template='<html><head><noscript><link rel="stylesheet" href="styles.css"></noscript></head><body><app-root></app-root><noscript><h1>Inicio general</h1><p>Otra oferta</p></noscript></body></html>';
+ const html=renderLandingHtml(template,landing,'https://marketing.example.test','https://app.example.test');
+ assert.equal((html.match(/<h1>/g)||[]).length,1);
+ assert.ok(!html.includes('Inicio general'));
+ assert.ok(html.includes('<noscript><link rel="stylesheet" href="styles.css"></noscript>'));
+});

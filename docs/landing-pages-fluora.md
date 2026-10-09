@@ -21,12 +21,13 @@ No se realizó despliegue productivo ni se afirma indexación en Google.
 
 ## Validación
 
-- Siete pruebas dirigidas de backend, cinco de SEO frontend y ocho de Functions aprobadas.
+- Siete pruebas dirigidas de backend, cinco de SEO frontend y nueve de Functions aprobadas.
 - Compilaciones de producción de marketing y aplicación aprobadas.
 - API pública: página publicada 200 y página inexistente 404. Editor rechazado sin sesión de plataforma, incluso con sesión de tenant.
 - Navegación al registro existente con el identificador real del plan comprobada.
 - Revisión del sitio público en 390×844, 820×1180, 1024×1366 y 1440×900, sin desbordamiento horizontal. Se corrigieron la separación del encabezado móvil y la navegación local del botón secundario.
-- Queda pendiente probar un guardado mediante la interfaz con una sesión autorizada de plataforma. No se cambiaron credenciales para realizar esa prueba.
+- Guardado mediante la interfaz comprobado con una sesión autorizada de plataforma: confirmación visible y versión 1 recuperada desde la API pública. Se conservó el contenido vigente; no se cambiaron credenciales.
+- HTML inicial comprobado usando la plantilla compilada de producción y el contenido real de la API local: un H1, canonical, registro y sitemap correctos. Se elimina el contenido general de inicio del `noscript` de la plantilla, conservando su respaldo de estilos.
 
 ## Fases posteriores
 

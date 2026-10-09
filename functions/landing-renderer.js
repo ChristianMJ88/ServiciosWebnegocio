@@ -20,7 +20,10 @@ function renderLandingHtml(template,landing,marketingOrigin,appOrigin){
  +blocks('Beneficios',landing.beneficios)+blocks('Funcionalidades',landing.funcionalidades)+blocks('Cómo funciona',landing.pasos)
  +'<section><h2>Preguntas frecuentes</h2>'+landing.preguntas.map(q=>'<details><summary>'+escape(q.pregunta)+'</summary><p>'+escape(q.respuesta)+'</p></details>').join('')+'</section>'
  +'<section><h2>'+escape(landing.tituloFinal)+'</h2><a href="'+escape(register)+'">'+escape(landing.ctaPrincipal)+'</a></section></main>';
- const clean=removeSeoTags(template);
+ // La plantilla general contiene contenido de inicio para navegadores sin JS.
+ // La landing ya ofrece su propio contenido inicial; conserva solo los noscript
+ // técnicos (por ejemplo, la hoja de estilos) para evitar textos y H1 ajenos.
+ const clean=removeSeoTags(template).replace(/<noscript\b[^>]*>[\s\S]*?<\/noscript>/gi, block => /<h1\b/i.test(block) ? '' : block);
  return clean.replace('</head>',head+'\n</head>').replace(/<app-root[^>]*>[\s\S]*?<\/app-root>/i,'<app-root>'+body+'</app-root>');
 }
 module.exports={renderLandingHtml};
