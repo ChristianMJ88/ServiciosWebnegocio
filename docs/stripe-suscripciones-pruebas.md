@@ -101,4 +101,14 @@ Con sesión real de la empresa de prueba cancelada: `GET /admin/citas` respondi�
 
 La decisión `puedeContratar` proviene del backend y comparte la política de vigencia. Una deuda en una suscripción Stripe existente se regulariza en el portal; una cuenta cancelada puede contratar de nuevo. `pruebaDisponible` y la creación de Checkout excluyen una nueva prueba si el negocio ya tuvo una fecha de prueba registrada.
 
-Tras autorizar Invoices → Lectura y completar la verificación de identidad en Stripe, la clave restringida del backend consultó la factura de prueba `in_1UOVEYAzYrdtuY8a5IXYe3bg`: HTTP 200, estado `paid`. Queda resuelto el 403 (`more_permissions_required`) que impedía leer facturas para la conciliación. Esta comprobación valida la lectura externa; la recuperación completa con un webhook deliberadamente ausente sigue pendiente de una prueba integral aislada. La lógica de aislamiento y confirmación de pago está cubierta por las pruebas automatizadas. No se ampliaron permisos productivos.
+Tras autorizar Invoices → Lectura y completar la verificación de identidad en Stripe, la clave restringida del backend consultó la factura de prueba `in_1UOVEYAzYrdtuY8a5IXYe3bg`: HTTP 200, estado `paid`. Queda resuelto el 403 (`more_permissions_required`) que impedía leer facturas para la conciliación. No se ampliaron permisos productivos.
+
+### Conciliación automática con Stripe real en modo de prueba
+
+Empresa aislada 8, suscripción local 5, Stripe `sub_1UOWKmAzYrdtuY8aH4pILU6P`, factura pagada `in_1UOWKmAzYrdtuY8auLn1pv8t`. Se creó mediante onboarding y el catálogo vigente del backend, con tarjeta virtual de prueba. Tras recibir los eventos iniciales, se dejó vencido únicamente el período local de esta empresa para representar la falta de actualización de un webhook de renovación. No se deshabilitó el webhook compartido ni se alteraron otros negocios.
+
+Antes de conciliar, capacidades devolvió `suscripcionVigente=false` y la ruta interna de citas respondió 402. La tarea programada existente, sin ejecución manual ni modificación de su intervalo de cinco minutos, consultó Stripe y restauró `periodo_actual_hasta=2026-11-09 11:27:08` UTC; capacidades devolvió ACTIVA y `suscripcionVigente=true`. El aviso de acceso respondió 200 con `bloqueado=false`. No se duplicó el aviso de pago de la factura: la bandeja conservó un único envío de pago.
+
+La consulta posterior a citas sin sus parámetros obligatorios produjo 500 por ausencia de `desde`; no valida el listado de citas y queda identificada como petición de prueba incompleta. La recuperación de acceso se verificó con capacidades y aviso. Esta prueba valida la recuperación de un estado local desactualizado; no simula una interrupción real de la entrega del webhook.
+
+La empresa demo conservó su suscripción 2 ACTIVA y plan 2. Se canceló la suscripción aislada al finalizar para detener futuras renovaciones de prueba. El correo de verificación de onboarding registró una conexión fallida a localhost:1025; los avisos de suscripción figuraron ENVIADA, sin que esto confirme recepción en bandeja.
