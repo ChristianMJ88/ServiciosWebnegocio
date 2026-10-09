@@ -1,3 +1,5 @@
+import { inject } from '@angular/core';
+import { PlatformHostService } from './core/platform/platform-host.service';
 import { Routes } from '@angular/router';
 import { tenantHostMatch } from './core/tenant/tenant-host.matchers';
 import { tenantHostResolver } from './core/tenant/tenant-host.resolver';
@@ -39,6 +41,7 @@ export const publicContentRoutes: Routes = [
     path: 'registro', canMatch: [tenantHostMatch], resolve: { tenant: tenantHostResolver },
     loadComponent: () => import('./pages/register/register.component').then((m) => m.RegisterComponent)
   },
+  { path: 'barberias', canMatch: [() => inject(PlatformHostService).isKnownPlatformHost()], loadComponent: () => import('./pages/fluora-vertical/fluora-vertical.component').then(m => m.FluoraVerticalComponent), data: { vertical: 'barberias', marketingLanding: true } },
   { path: '', loadComponent: () => import('./pages/fluora-home/fluora-home.component').then((m) => m.FluoraHomeComponent) },
   {
     path: 'privacidad',

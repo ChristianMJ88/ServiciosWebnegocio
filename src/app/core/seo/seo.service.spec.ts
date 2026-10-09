@@ -84,4 +84,16 @@ describe('SeoService', () => {
     expect(document.querySelector<HTMLMetaElement>('meta[name="description"]')?.content)
       .toBe('Reserva manicure, gel y diseño de uñas en línea.');
   });
+
+  it('limpia la identidad del tenant al abrir una landing comercial', () => {
+    const service = TestBed.inject(SeoService);
+    service.applyTenant(tenant);
+    service.applyLanding({slug:'barberias',seoTitulo:'Barberías | Fluora',seoDescripcion:'Organiza citas',imagenUrl:null});
+    expect(document.title).toBe('Barberías | Fluora');
+    expect(document.querySelector<HTMLLinkElement>('link[rel="canonical"]')?.href).toBe('https://example.test/barberias');
+    expect(document.querySelector('meta[property="og:image"]')).toBeNull();
+    const schema = JSON.parse(document.getElementById('tenant-structured-data')?.textContent || '{}');
+    expect(schema['@type']).toBe('WebPage');
+    expect(schema['telephone']).toBeUndefined();
+  });
 });

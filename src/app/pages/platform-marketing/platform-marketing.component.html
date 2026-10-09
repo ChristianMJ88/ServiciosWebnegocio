@@ -1,0 +1,28 @@
+<div class="marketing-admin">
+ <header class="admin-heading"><a routerLink="/plataforma"><i class="bi bi-arrow-left" aria-hidden="true"></i> Plataforma</a><span>Contenido comercial de Fluora</span><h1>Landing pages</h1><p>Edita el contenido público de tus campañas. Los planes y las condiciones se administran desde Suscripciones.</p></header>
+ @if(error()){<div class="alert alert-danger" role="alert">{{ error() }}</div>}
+ @if(message()){<div class="alert alert-success" role="status">{{ message() }}</div>}
+ @if(loading()){<p role="status">Cargando contenido…</p>}
+ <div class="editor-layout"><nav aria-label="Landing pages disponibles">@for(l of landings();track l.slug){<button type="button" (click)="editar(l)" [class.selected]="draft?.slug===l.slug" [disabled]="saving()"><strong>/{{ l.slug }}</strong><span>{{ l.publicado ? 'Publicada' : 'Borrador' }}</span></button>}</nav>
+ @if(draft;as l){<form (ngSubmit)="guardar()" #editor="ngForm">
+  <div class="editor-title"><div><h2>/{{ l.slug }}</h2><a [href]="host.marketingUrl('/'+l.slug)" target="_blank" rel="noopener">Ver página pública <i class="bi bi-box-arrow-up-right" aria-hidden="true"></i></a></div><label class="publish"><input type="checkbox" name="publicado" [(ngModel)]="l.publicado"> Publicar</label></div>
+  <fieldset [disabled]="saving()">
+  <details open><summary>Portada y llamada a la acción</summary><div class="fields">
+   <label>Etiqueta<input name="etiqueta" [(ngModel)]="l.etiqueta" required maxlength="100"></label>
+   <label>Título principal<input name="titulo" [(ngModel)]="l.titulo" required maxlength="180"></label>
+   <label>Descripción<textarea name="descripcion" [(ngModel)]="l.descripcion" required maxlength="500" rows="3"></textarea></label>
+   <div class="field-pair"><label>Botón de registro<input name="ctaPrincipal" [(ngModel)]="l.ctaPrincipal" required maxlength="60"></label><label>Botón de explicación<input name="ctaSecundario" [(ngModel)]="l.ctaSecundario" required maxlength="60"></label></div>
+   <label>Título final<input name="tituloFinal" [(ngModel)]="l.tituloFinal" required maxlength="180"></label>
+   <label>Imagen HTTPS (opcional)<input type="url" name="imagenUrl" [(ngModel)]="l.imagenUrl" maxlength="1000" placeholder="https://…"></label>
+   <label>Descripción accesible de la imagen<input name="imagenAlt" [(ngModel)]="l.imagenAlt" maxlength="180"></label>
+  </div></details>
+  <details><summary>Beneficios</summary><div class="fields">@for(b of l.beneficios;track $index){<div class="block-fields"><label>Título<input [name]="'beneficio-titulo-'+$index" [(ngModel)]="b.titulo" required maxlength="100"></label><label>Descripción<textarea [name]="'beneficio-descripcion-'+$index" [(ngModel)]="b.descripcion" required maxlength="500"></textarea></label></div>}</div></details>
+  <details><summary>Funcionalidades</summary><div class="fields">@for(f of l.funcionalidades;track $index){<div class="block-fields"><label>Título<input [name]="'funcion-titulo-'+$index" [(ngModel)]="f.titulo" required maxlength="100"></label><label>Descripción<textarea [name]="'funcion-descripcion-'+$index" [(ngModel)]="f.descripcion" required maxlength="500"></textarea></label></div>}</div></details>
+  <details><summary>Cómo funciona</summary><div class="fields">@for(s of l.pasos;track $index){<div class="block-fields"><label>Paso {{ $index + 1 }}<input [name]="'paso-titulo-'+$index" [(ngModel)]="s.titulo" required maxlength="100"></label><label>Descripción<textarea [name]="'paso-descripcion-'+$index" [(ngModel)]="s.descripcion" required maxlength="500"></textarea></label></div>}</div></details>
+  <details><summary>Preguntas frecuentes</summary><div class="fields">@for(q of l.preguntas;track $index){<div class="block-fields"><label>Pregunta<input [name]="'pregunta-'+$index" [(ngModel)]="q.pregunta" required maxlength="180"></label><label>Respuesta<textarea [name]="'respuesta-'+$index" [(ngModel)]="q.respuesta" required maxlength="1000"></textarea></label></div>}</div></details>
+  <details><summary>Buscadores y redes sociales</summary><div class="fields"><label>Título SEO<input name="seoTitulo" [(ngModel)]="l.seoTitulo" required maxlength="180"></label><label>Descripción SEO<textarea name="seoDescripcion" [(ngModel)]="l.seoDescripcion" required maxlength="320"></textarea></label></div></details>
+  </fieldset>
+  <footer class="save-bar"><span>El contenido se valida en backend.</span><button class="btn btn-primary" type="submit" [disabled]="saving()||editor.invalid">{{ saving() ? 'Guardando…' : 'Guardar cambios' }}</button></footer>
+ </form>} @else {<section class="select-empty"><i class="bi bi-megaphone" aria-hidden="true"></i><h2>Selecciona una landing</h2><p>Revisa y edita cada sección sin cambiar las condiciones de los planes.</p></section>}
+ </div>
+</div>

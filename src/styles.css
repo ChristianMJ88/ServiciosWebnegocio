@@ -6,6 +6,8 @@
 
 /* Global visual system */
 :root {
+  --fluora-brand-background: #090d16;
+  --fluora-brand-action: #00f5a0;
   --layout-gutter: clamp(0.85rem, 2.5vw, 2rem);
   --layout-section-gap: clamp(1rem, 2vw, 1.75rem);
   --layout-content-max: 1440px;

@@ -31,7 +31,8 @@ export class HeaderComponent {
       ? this.tenantContext.descripcionCorta()
       : 'Agenda para tu negocio'
   );
-  readonly fluoraHomeActiva = computed(() => !this.tenantActivo() && this.rutaActual() === '/');
+  readonly marketingLandingActiva = computed(() => { this.rutaActual(); return this.router.routerState.snapshot.root.firstChild?.data['marketingLanding'] === true; });
+  readonly fluoraHomeActiva = computed(() => !this.tenantActivo() && (this.rutaActual() === '/' || this.router.routerState.snapshot.root.firstChild?.data['marketingLanding'] === true));
   readonly tenantHomeActiva = computed(() => this.tenantActivo() && this.rutaActual() === this.homeLink());
   readonly headerSobreHero = computed(() => this.fluoraHomeActiva() || this.tenantHomeActiva());
   readonly navbarIntegradoHero = computed(() => this.fluoraHomeActiva() && !this.navbarCondensed());

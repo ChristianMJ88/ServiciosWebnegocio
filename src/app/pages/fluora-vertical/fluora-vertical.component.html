@@ -1,0 +1,44 @@
+@if (loading()) {
+ <section class="landing-state" aria-live="polite"><span class="spinner-border" aria-hidden="true"></span><p>Cargando información…</p></section>
+} @else if (landing(); as l) {
+ <div class="vertical-page">
+  <section class="vertical-hero">
+   <div class="vertical-container hero-grid">
+    <div class="hero-copy"><span class="eyebrow">{{ l.etiqueta }}</span><h1>{{ l.titulo }}</h1><p class="lead">{{ l.descripcion }}</p>
+     <div class="actions"><a #primaryAction class="action action-primary" [href]="registrationHref">{{ l.ctaPrincipal }} <i class="bi bi-arrow-right" aria-hidden="true"></i></a><button class="action action-secondary" type="button" (click)="verPasos()">{{ l.ctaSecundario }}</button></div>
+     <p class="conditions">Consulta los módulos, límites y condiciones de cada plan.</p>
+    </div>
+    @if (l.imagenUrl) {
+     <figure class="hero-image"><img [src]="l.imagenUrl" [alt]="l.imagenAlt || ''" fetchpriority="high" width="720" height="600"></figure>
+    } @else {
+     <div class="workflow-preview" aria-label="Etapas para configurar tu negocio"><div class="preview-bar"><span class="preview-brand">F</span><strong>Fluora</strong><span>Tu operación conectada</span></div>
+      <div class="preview-body"><span class="eyebrow">De la reserva a tu agenda</span>
+       @for (step of l.pasos; track $index) {<div class="preview-step"><span>{{ $index + 1 }}</span><div><strong>{{ step.titulo }}</strong><p>{{ step.descripcion }}</p></div><i class="bi bi-arrow-down" aria-hidden="true"></i></div>}
+      </div><p class="preview-caption">Representación del flujo de configuración</p>
+     </div>
+    }
+   </div>
+  </section>
+  <section class="section section-soft"><div class="vertical-container"><header class="section-heading"><span class="eyebrow">Más claridad en tu día</span><h2>Organiza lo que hoy está disperso.</h2></header>
+   <div class="block-grid">@for(b of l.beneficios;track $index){<article class="benefit-card"><span class="card-number">0{{ $index + 1 }}</span><h3>{{ b.titulo }}</h3><p>{{ b.descripcion }}</p></article>}</div>
+  </div></section>
+  <section class="section"><div class="vertical-container"><header class="section-heading"><span class="eyebrow">Un lugar para tu operación</span><h2>Herramientas que trabajan juntas.</h2><p>La disponibilidad de módulos depende del plan y de las integraciones configuradas.</p></header>
+   <div class="feature-grid">@for(f of l.funcionalidades;track $index){<article class="feature-card"><i class="bi bi-grid-1x2" aria-hidden="true"></i><h3>{{ f.titulo }}</h3><p>{{ f.descripcion }}</p></article>}</div>
+  </div></section>
+  <section class="section section-dark" id="como-funciona"><div class="vertical-container"><header class="section-heading"><span class="eyebrow">Paso a paso</span><h2>Empieza con tu negocio real.</h2></header><ol class="steps">@for(s of l.pasos;track $index){<li><span>{{ $index + 1 }}</span><h3>{{ s.titulo }}</h3><p>{{ s.descripcion }}</p></li>}</ol></div></section>
+  <section class="section" id="planes"><div class="vertical-container"><header class="section-heading"><span class="eyebrow">Oferta vigente</span><h2>Elige según lo que necesitas.</h2><p>Los precios y módulos se consultan directamente del catálogo de Fluora.</p></header>
+   @if(plansFailed()){<p role="status">No pudimos consultar los planes. Puedes revisarlos durante el registro.</p>}
+   <div class="plans-grid">@for(p of plans();track p.id){<article class="plan-card" [class.featured]="p.destacado"><h3>{{ p.nombre }}</h3><p>{{ p.descripcion }}</p><div class="price">{{ p.precioMensual | appMoney:p.moneda }} <small>/ mes</small></div>
+    @if(p.diasPrueba > 0){<p class="trial">Prueba de {{ p.diasPrueba }} días, sujeta a elegibilidad.</p>}
+    <ul>@for(m of p.modulos;track m.moduloId){<li><i class="bi bi-check2" aria-hidden="true"></i>{{ m.nombre }}</li>}</ul>
+    @if(p.limites.length){<div class="limits">@for(limit of p.limites;track limit.limiteId){<span>{{ limit.nombre }}: {{ limit.valor }} {{ limit.unidad }}</span>}</div>}
+    <a class="action action-primary" [href]="registroPlan(p)">Elegir {{ p.nombre }}</a>
+   </article>} @empty { @if(!plansFailed()){<p role="status">Consulta la disponibilidad de planes en el registro.</p>} }</div>
+  </div></section>
+  @if(l.preguntas.length){<section class="section section-soft"><div class="vertical-container faq-layout"><header class="section-heading"><span class="eyebrow">Antes de comenzar</span><h2>Resolvamos tus dudas.</h2></header><div class="faq-list">@for(q of l.preguntas;track $index){<details><summary>{{ q.pregunta }}</summary><p>{{ q.respuesta }}</p></details>}</div></div></section>}
+  <section class="section final-section"><div class="vertical-container final-card"><span class="eyebrow">{{ l.etiqueta }}</span><h2>{{ l.tituloFinal }}</h2><a class="action action-primary" [href]="registrationHref">{{ l.ctaPrincipal }} <i class="bi bi-arrow-right" aria-hidden="true"></i></a></div></section>
+  @if(showSticky()){<div class="mobile-cta"><a class="action action-primary" [href]="registrationHref">{{ l.ctaPrincipal }} <i class="bi bi-arrow-right" aria-hidden="true"></i></a></div>}
+ </div>
+} @else if(failed()) {
+ <section class="landing-state"><h1>Esta página no está disponible</h1><p>Consulta la información de Fluora y sus planes vigentes.</p><a class="btn btn-primary" [href]="host.marketingUrl('/')">Ir a Fluora</a></section>
+}

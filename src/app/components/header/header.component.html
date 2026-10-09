@@ -167,7 +167,7 @@
                 </a>
               }
             } @else {
-              <a [attr.href]="registerHref()" class="header-button" (click)="onNavAction()">Probar Fluora gratis</a>
+              <a [attr.href]="registerHref()" class="header-button" (click)="onNavAction()">{{ marketingLandingActiva() ? 'Crear mi cuenta' : 'Probar Fluora gratis' }}</a>
             }
           </li>
         }

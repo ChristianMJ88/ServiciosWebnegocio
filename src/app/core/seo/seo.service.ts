@@ -43,6 +43,38 @@ export class SeoService {
     this.setStructuredData(this.localBusinessSchema(config, canonical, description, image));
   }
 
+  applyLanding(landing: { slug: string; seoTitulo: string; seoDescripcion: string; imagenUrl: string | null }): void {
+    const canonical = this.platformHost.marketingUrl('/' + landing.slug);
+    this.title.setTitle(landing.seoTitulo);
+    this.meta.updateTag({ name: 'description', content: landing.seoDescripcion });
+    this.meta.updateTag({ name: 'robots', content: 'index, follow, max-image-preview:large' });
+    this.meta.removeTag("name='keywords'");
+    for (const [key, value] of Object.entries({
+      'og:title': landing.seoTitulo, 'og:description': landing.seoDescripcion,
+      'og:type': 'website', 'og:url': canonical, 'og:locale': 'es_MX'
+    })) this.meta.updateTag({ property: key, content: value });
+    this.meta.updateTag({name:'twitter:card', content:landing.imagenUrl ? 'summary_large_image' : 'summary'});
+    this.meta.updateTag({name:'twitter:title', content:landing.seoTitulo});
+    this.meta.updateTag({name:'twitter:description', content:landing.seoDescripcion});
+    if (landing.imagenUrl) {
+      this.meta.updateTag({property:'og:image', content:landing.imagenUrl});
+      this.meta.updateTag({name:'twitter:image', content:landing.imagenUrl});
+    } else {
+      this.meta.removeTag("property='og:image'");
+      this.meta.removeTag("name='twitter:image'");
+    }
+    this.setCanonical(canonical);
+    this.setStructuredData({'@context':'https://schema.org', '@type':'WebPage',
+      name:landing.seoTitulo, description:landing.seoDescripcion, url:canonical});
+  }
+
+  applyUnavailableMarketing(): void {
+    this.applyMarketing();
+    this.title.setTitle('Página no disponible | Fluora');
+    this.meta.updateTag({name:'robots', content:'noindex, nofollow'});
+    this.meta.updateTag({name:'description', content:'Esta página no está disponible.'});
+  }
+
   applyMarketing(): void {
     this.setCanonical(this.platformHost.marketingUrl('/'));
     this.removeTenantStructuredData();
