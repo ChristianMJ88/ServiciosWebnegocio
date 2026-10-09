@@ -4,6 +4,8 @@ const { onRequest } = require('firebase-functions/v2/https');
 const { logger } = require('firebase-functions');
 const { defineString } = require('firebase-functions/params');
 const { renderNotFound, renderSitemap, renderTenantHtml } = require('./seo-renderer');
+const { renderLandingHtml } = require('./landing-renderer');
+const appOriginParam = defineString('FLUORA_APP_ORIGIN');
 const { copyUpstreamHeaders } = require('./proxy-headers');
 
 const apiBaseUrlParam = defineString('FLUORA_API_BASE_URL');
@@ -140,27 +142,56 @@ exports.sitemap = onRequest(
   async (_request, response) => {
     const { apiBaseUrl, marketingOrigin } = runtimeConfig();
     try {
-      const [apiResponse, productsResponse] = await Promise.all([
+      const [apiResponse, productsResponse, landingsResponse] = await Promise.all([
         fetch(`${apiBaseUrl}/publico/sitio/indice`, {
           headers: { Accept: 'application/json' }, signal: AbortSignal.timeout(8000)
         }),
         fetch(`${apiBaseUrl}/publico/productos/sitio/indice`, {
           headers: { Accept: 'application/json' }, signal: AbortSignal.timeout(8000)
-        })
+        }),
+        fetch(`${apiBaseUrl}/publico/marketing/landings/indice`, {signal:AbortSignal.timeout(8000)})
       ]);
       if (!apiResponse.ok) throw new Error(`El índice público respondió ${apiResponse.status}`);
       if (!productsResponse.ok) throw new Error(`El índice de productos respondió ${productsResponse.status}`);
 
+      if (!landingsResponse.ok) throw new Error("Índice de landing pages no disponible");
+      const landingSlugs = await landingsResponse.json();
       const index = await apiResponse.json();
       const productIndex = await productsResponse.json();
       const slugs = Array.isArray(index?.slugs) ? index.slugs : [];
       response.status(200)
         .set('Content-Type', 'application/xml; charset=utf-8')
         .set('Cache-Control', 'public, max-age=300, s-maxage=3600, stale-while-revalidate=86400')
-        .send(renderSitemap(slugs, marketingOrigin, Array.isArray(productIndex?.productos) ? productIndex.productos : []));
+        .send(renderSitemap(slugs, marketingOrigin, Array.isArray(productIndex?.productos) ? productIndex.productos : [], landingSlugs));
     } catch (error) {
       logger.error('No fue posible generar el sitemap dinámico.', { error });
       response.status(503).set('Retry-After', '60').set('Cache-Control', 'no-store').send('');
     }
   }
+);
+
+exports.landingPage = onRequest(
+ {region:'us-central1',memory:'256MiB',timeoutSeconds:15,maxInstances:10},
+ async(request,response)=>{
+  const {apiBaseUrl,marketingOrigin}=runtimeConfig();
+  const appOrigin=appOriginParam.value().trim().replace(/\/+$/,'');
+  const slug=request.path.replace(/^\//,'').replace(/\/$/,'');
+  if(!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug)){
+   response.status(404).set('Cache-Control','no-store').send(renderNotFound('solicitada',marketingOrigin));return;
+  }
+  try{
+   if(!appOrigin||!/^https:\/\//i.test(appOrigin))throw new Error('Origen de aplicación no configurado');
+   const [data,template]=await Promise.all([
+    fetch(apiBaseUrl+'/publico/marketing/landings/'+encodeURIComponent(slug),{signal:AbortSignal.timeout(8000)}),
+    loadCurrentTemplate(marketingOrigin)
+   ]);
+   if(data.status===404){response.status(404).set('Cache-Control','no-store').send(renderNotFound('solicitada',marketingOrigin));return;}
+   if(!data.ok)throw new Error('API de marketing no disponible');
+   const landing=await data.json();
+   response.status(200).set('Cache-Control','public,max-age=60,s-maxage=300').send(renderLandingHtml(template,landing,marketingOrigin,appOrigin));
+  }catch(error){
+   logger.error('No fue posible cargar la landing',{error});
+   response.status(503).set('Cache-Control','no-store').set('Retry-After','60').send('Página temporalmente no disponible');
+  }
+ }
 );

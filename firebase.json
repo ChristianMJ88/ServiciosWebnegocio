@@ -66,6 +66,13 @@
           }
         },
         {
+          "source": "/barberias{,/**}",
+          "function": {
+            "functionId": "landingPage",
+            "region": "us-central1"
+          }
+        },
+        {
           "source": "/e/**",
           "function": {
             "functionId": "tenantPage",

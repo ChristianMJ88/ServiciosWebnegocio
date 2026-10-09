@@ -138,7 +138,7 @@ function renderNotFound(slug, marketingOrigin) {
   return `<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow"><title>Negocio no encontrado | Fluora</title></head><body><main><h1>Este sitio no está disponible</h1><p>No encontramos un negocio publicado con la dirección ${safeSlug}.</p><a href="${marketingOrigin}">Volver a Fluora</a></main></body></html>`;
 }
 
-function renderSitemap(slugs, marketingOrigin, products = []) {
+function renderSitemap(slugs, marketingOrigin, products = [], landingSlugs = []) {
   const tenantUrls = [...new Set(slugs)]
     .filter(slug => /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug))
     .map(slug => `  <url><loc>${marketingOrigin}/e/${escapeHtml(slug)}</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>`);
@@ -152,6 +152,8 @@ function renderSitemap(slugs, marketingOrigin, products = []) {
   const urls = [
     `  <url><loc>${marketingOrigin}/</loc><changefreq>weekly</changefreq><priority>1.0</priority></url>`,
     `  <url><loc>${marketingOrigin}/registro</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>`,
+    ...[...new Set(landingSlugs)].filter(slug => /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug))
+      .map(slug => '  <url><loc>'+marketingOrigin+'/'+escapeHtml(slug)+'</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>'),
     ...tenantUrls,
     ...storeUrls,
     ...productUrls
@@ -159,4 +161,4 @@ function renderSitemap(slugs, marketingOrigin, products = []) {
   return `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls.join('\n')}\n</urlset>`;
 }
 
-module.exports = { renderNotFound, renderSitemap, renderTenantHtml };
+module.exports = { renderNotFound, renderSitemap, renderTenantHtml, escapeHtml, removeSeoTags };
