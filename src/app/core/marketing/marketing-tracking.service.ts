@@ -6,6 +6,7 @@ export interface MarketingAttribution {
   vertical?: string;
   campaign: Partial<Record<CampaignKey, string>>;
 }
+export interface AcquisitionPayload { source?: string; medium?: string; campaign?: string; content?: string; term?: string; landingVertical?: string; }
 export type MarketingEvent = 'landing_view' | 'signup_click' | 'signup_started' | 'signup_completed' | 'business_created';
 
 // Solo identificadores de campaña: nunca copiar query strings completas ni referrers.
@@ -40,6 +41,16 @@ export class MarketingTrackingService {
       campaign: Object.keys(incoming.campaign).length ? incoming.campaign : this.context().campaign
     });
     try { globalThis.sessionStorage?.setItem(this.storageKey, JSON.stringify(this.context())); } catch { /* El registro no depende del almacenamiento. */ }
+  }
+
+  acquisitionPayload(): AcquisitionPayload | undefined {
+    const context = this.context();
+    if (!context.vertical && !Object.keys(context.campaign).length) return undefined;
+    return {
+      source: context.campaign.utm_source, medium: context.campaign.utm_medium,
+      campaign: context.campaign.utm_campaign, content: context.campaign.utm_content,
+      term: context.campaign.utm_term, landingVertical: context.vertical
+    };
   }
 
   registrationUrl(base: string, planId?: number): string {

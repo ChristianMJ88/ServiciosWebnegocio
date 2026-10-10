@@ -1,3 +1,4 @@
+import { AcquisitionPayload } from '../marketing/marketing-tracking.service';
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, catchError, concat, of, shareReplay, tap, throwError } from 'rxjs';
@@ -5,6 +6,7 @@ import { environment } from '../../../environments/environment';
 import { RespuestaAccesoApp, RespuestaTokenJwt } from '../auth/auth.service';
 
 export interface RegistrarEmpresaPayload {
+  atribucion?: AcquisitionPayload;
   nombreEmpresa: string;
   slug?: string;
   giro: string;

@@ -154,7 +154,8 @@ export class FluoraRegisterCompanyComponent implements OnInit {
       contrasena: registroSocialToken ? undefined : valores.contrasena || undefined,
       zonaHoraria: valores.zonaHoraria!.trim(),
       registroSocialToken,
-      planId: this.planSeleccionadoId() || undefined
+      planId: this.planSeleccionadoId() || undefined,
+      atribucion: this.tracking.acquisitionPayload()
     })
       .pipe(finalize(() => this.loading.set(false)))
       .subscribe({
