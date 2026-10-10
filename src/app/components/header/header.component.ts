@@ -53,6 +53,7 @@ export class HeaderComponent {
     && this.tenantContext.whatsappHabilitado());
   readonly accessHref = computed(() => this.platformHost.appUrl('/acceso'));
   readonly marketingHomeHref = computed(() => this.platformHost.marketingUrl('/'));
+  readonly directoryHref = computed(() => this.platformHost.marketingUrl('/negocios'));
   readonly featuresHref = computed(() => this.platformHost.marketingUrl('/#producto'));
   readonly workflowHref = computed(() => this.platformHost.marketingUrl('/#como-funciona'));
   readonly companiesHref = computed(() => this.platformHost.marketingUrl('/#beneficios'));

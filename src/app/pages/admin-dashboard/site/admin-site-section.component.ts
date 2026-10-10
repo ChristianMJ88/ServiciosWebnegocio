@@ -23,6 +23,7 @@ import { SiteReviewsComponent } from './site-reviews.component';
 import { SiteFaqComponent } from './site-faq.component';
 import { AdminSiteFacade } from './admin-site.facade';
 import { finalize } from 'rxjs';
+import { SiteMarketplaceComponent } from './site-marketplace.component';
 
 type SiteEditorSectionId =
   | 'estructura' | 'servicios_destacados' | 'beneficios' | 'promociones' | 'galeria'
@@ -47,7 +48,8 @@ type SiteEditorSectionId =
     SiteGalleryComponent,
     SiteBenefitsComponent,
     SiteReviewsComponent,
-    SiteFaqComponent
+    SiteFaqComponent,
+    SiteMarketplaceComponent
   ],
   templateUrl: './admin-site-section.component.html',
   styleUrl: './admin-site-section.component.css'

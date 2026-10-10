@@ -9,6 +9,8 @@ const redirectComponent = () => import('./pages/platform-redirect/platform-redir
   .then((m) => m.PlatformRedirectComponent);
 
 export const publicContentRoutes: Routes = [
+  { path: 'negocios', canMatch: [() => inject(PlatformHostService).isKnownPlatformHost()],
+    loadComponent: () => import('./pages/marketplace/marketplace.component').then(m => m.MarketplaceComponent) },
   {
     path: '', canMatch: [tenantHostMatch], resolve: { tenant: tenantHostResolver },
     loadComponent: () => import('./pages/home/home.component').then((m) => m.HomeComponent)

@@ -1,0 +1,17 @@
+<main class="directory">
+ <header class="directory__intro"><span>DIRECTORIO FLUORA</span><h1>Encuentra tu próximo lugar favorito</h1><p>Explora negocios, conoce sus servicios y reserva directamente con ellos.</p></header>
+ <form class="directory__search" (ngSubmit)="search()"><label for="directory-search">¿Qué estás buscando?</label><div><input id="directory-search" name="search" [(ngModel)]="query" maxlength="100" type="search" placeholder="Servicio, negocio o dirección"><button type="submit">Buscar</button></div></form>
+ <section aria-label="Negocios" aria-live="polite">
+  @if(failed()){<div class="directory__empty"><h2>No pudimos cargar los negocios</h2><p>Intenta nuevamente en unos momentos.</p><button type="button" (click)="search()">Reintentar</button></div>}
+  <div class="directory__grid">@for(b of businesses();track b.empresaId){<article class="business">
+   <div class="business__identity">@if(b.imagenUrl){<img [src]="b.imagenUrl" [alt]="b.nombre" loading="lazy">}@else{<span class="business__initial" aria-hidden="true">{{b.nombre.slice(0,1)}}</span>}<h2><a [href]="site(b)">{{b.nombre}}</a></h2></div>
+   @if(b.descripcion){<p>{{b.descripcion}}</p>}
+   @if(b.direccion){<div class="business__detail"><span>Dirección</span><p>{{b.direccion}}</p></div>}
+   @if(b.telefono){<div class="business__detail"><span>Contacto</span><a [href]="'tel:'+b.telefono">{{b.telefono}}</a></div>}
+   <footer><a [href]="site(b)+'/servicios'">Ver servicios</a><a class="business__book" [href]="site(b)+'/agendar'">Agendar <span aria-hidden="true">↗</span></a></footer>
+  </article>}</div>
+  @if(loading()){<p class="directory__status" role="status">Buscando negocios…</p>}
+  @if(!loading()&&!failed()&&businesses().length===0){<div class="directory__empty"><h2>Aún no hay resultados</h2><p>Prueba con otro servicio o dirección. Solo aparecen negocios que participan en el directorio.</p></div>}
+  @if(cursor()!==null){<button class="directory__more" type="button" [disabled]="loading()" (click)="more()">Explorar más negocios</button>}
+ </section>
+</main>
