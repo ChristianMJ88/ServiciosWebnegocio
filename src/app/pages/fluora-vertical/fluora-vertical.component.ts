@@ -1,3 +1,4 @@
+import { MarketingTrackingService } from '../../core/marketing/marketing-tracking.service';
 import { Component, DestroyRef, ElementRef, ViewChild, inject, signal } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -27,16 +28,18 @@ export class FluoraVerticalComponent {
  readonly failed=signal(false);
  readonly loading=signal(true);
  readonly plansFailed=signal(false);
- readonly registrationHref=this.host.appUrl('/registro');
+ private readonly tracking=inject(MarketingTrackingService);
+ get registrationHref(){return this.tracking.registrationUrl(this.host.appUrl('/registro'));}
+ signupClick(){this.tracking.emit('signup_click');}
  constructor(){
   inject(DestroyRef).onDestroy(()=>this.actionObserver?.disconnect());
   const slug=inject(ActivatedRoute).snapshot.data['vertical'] as string;
   inject(LandingMarketingService).publica(slug).pipe(takeUntilDestroyed()).subscribe({
-   next:l=>{this.landing.set(l);this.loading.set(false);this.seo.applyLanding(l);},
+   next:l=>{this.tracking.capture(globalThis.location.search,l.slug);this.tracking.emit('landing_view');this.landing.set(l);this.loading.set(false);this.seo.applyLanding(l);},
    error:()=>{this.loading.set(false);this.failed.set(true);this.seo.applyUnavailableMarketing();}
   });
   inject(PublicPlansService).listar().pipe(takeUntilDestroyed()).subscribe({next:p=>this.plans.set(p),error:()=>this.plansFailed.set(true)});
  }
  verPasos(){this.element.nativeElement.querySelector<HTMLElement>('#como-funciona')?.scrollIntoView({behavior:'auto',block:'start'});}
- registroPlan(p:PlanPublicoFluora){return this.registrationHref+'?plan='+p.id;}
+ registroPlan(p:PlanPublicoFluora){return this.tracking.registrationUrl(this.host.appUrl('/registro'),p.id);}
 }

@@ -1,3 +1,4 @@
+import { MarketingTrackingService } from '../../core/marketing/marketing-tracking.service';
 import { Component, HostListener, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
@@ -57,7 +58,14 @@ export class HeaderComponent {
   readonly companiesHref = computed(() => this.platformHost.marketingUrl('/#beneficios'));
   readonly pricingHref = computed(() => this.platformHost.marketingUrl('/#planes'));
   readonly faqHref = computed(() => this.platformHost.marketingUrl('/#faq'));
-  readonly registerHref = computed(() => this.platformHost.appUrl('/registro'));
+  private readonly marketingTracking = inject(MarketingTrackingService);
+  readonly registerHref = computed(() => this.marketingLandingActiva()
+    ? this.marketingTracking.registrationUrl(this.platformHost.appUrl('/registro'))
+    : this.platformHost.appUrl('/registro'));
+  onMarketingSignup(): void {
+    if (this.marketingLandingActiva()) this.marketingTracking.emit('signup_click');
+    this.onNavAction();
+  }
 
   constructor() {
     this.actualizarEstadoScroll();

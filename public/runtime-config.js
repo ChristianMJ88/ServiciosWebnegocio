@@ -15,3 +15,7 @@ window.__FLUORA_MARKETING_ORIGIN__ = window.__FLUORA_MARKETING_ORIGIN__
 window.__FLUORA_APP_ORIGIN__ = window.__FLUORA_APP_ORIGIN__
   || origenLocalIntegrado
   || 'https://app.refluora.com';
+
+// Preparación de medición: sin IDs ficticios ni carga automática de proveedores.
+// Habilitar únicamente junto con el consentimiento y la configuración real de GTM.
+window.__FLUORA_MARKETING_TRACKING__ = window.__FLUORA_MARKETING_TRACKING__ || { enabled: false };

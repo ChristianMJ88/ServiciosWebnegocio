@@ -5,7 +5,7 @@
   <section class="vertical-hero">
    <div class="vertical-container hero-grid">
     <div class="hero-copy"><span class="eyebrow">{{ l.etiqueta }}</span><h1>{{ l.titulo }}</h1><p class="lead">{{ l.descripcion }}</p>
-     <div class="actions"><a #primaryAction class="action action-primary" [href]="registrationHref">{{ l.ctaPrincipal }} <i class="bi bi-arrow-right" aria-hidden="true"></i></a><button class="action action-secondary" type="button" (click)="verPasos()">{{ l.ctaSecundario }}</button></div>
+     <div class="actions"><a #primaryAction class="action action-primary" [href]="registrationHref" (click)="signupClick()">{{ l.ctaPrincipal }} <i class="bi bi-arrow-right" aria-hidden="true"></i></a><button class="action action-secondary" type="button" (click)="verPasos()">{{ l.ctaSecundario }}</button></div>
      <p class="conditions">Consulta los módulos, límites y condiciones de cada plan.</p>
     </div>
     @if (l.imagenUrl) {
@@ -32,12 +32,12 @@
     @if(p.diasPrueba > 0){<p class="trial">Prueba de {{ p.diasPrueba }} días, sujeta a elegibilidad.</p>}
     <ul>@for(m of p.modulos;track m.moduloId){<li><i class="bi bi-check2" aria-hidden="true"></i>{{ m.nombre }}</li>}</ul>
     @if(p.limites.length){<div class="limits">@for(limit of p.limites;track limit.limiteId){<span>{{ limit.nombre }}: {{ limit.valor }} {{ limit.unidad }}</span>}</div>}
-    <a class="action action-primary" [href]="registroPlan(p)">Elegir {{ p.nombre }}</a>
+    <a class="action action-primary" [href]="registroPlan(p)" (click)="signupClick()">Elegir {{ p.nombre }}</a>
    </article>} @empty { @if(!plansFailed()){<p role="status">Consulta la disponibilidad de planes en el registro.</p>} }</div>
   </div></section>
   @if(l.preguntas.length){<section class="section section-soft"><div class="vertical-container faq-layout"><header class="section-heading"><span class="eyebrow">Antes de comenzar</span><h2>Resolvamos tus dudas.</h2></header><div class="faq-list">@for(q of l.preguntas;track $index){<details><summary>{{ q.pregunta }}</summary><p>{{ q.respuesta }}</p></details>}</div></div></section>}
-  <section class="section final-section"><div class="vertical-container final-card"><span class="eyebrow">{{ l.etiqueta }}</span><h2>{{ l.tituloFinal }}</h2><a class="action action-primary" [href]="registrationHref">{{ l.ctaPrincipal }} <i class="bi bi-arrow-right" aria-hidden="true"></i></a></div></section>
-  @if(showSticky()){<div class="mobile-cta"><a class="action action-primary" [href]="registrationHref">{{ l.ctaPrincipal }} <i class="bi bi-arrow-right" aria-hidden="true"></i></a></div>}
+  <section class="section final-section"><div class="vertical-container final-card"><span class="eyebrow">{{ l.etiqueta }}</span><h2>{{ l.tituloFinal }}</h2><a class="action action-primary" [href]="registrationHref" (click)="signupClick()">{{ l.ctaPrincipal }} <i class="bi bi-arrow-right" aria-hidden="true"></i></a></div></section>
+  @if(showSticky()){<div class="mobile-cta"><a class="action action-primary" [href]="registrationHref" (click)="signupClick()">{{ l.ctaPrincipal }} <i class="bi bi-arrow-right" aria-hidden="true"></i></a></div>}
  </div>
 } @else if(failed()) {
  <section class="landing-state"><h1>Esta página no está disponible</h1><p>Consulta la información de Fluora y sus planes vigentes.</p><a class="btn btn-primary" [href]="host.marketingUrl('/')">Ir a Fluora</a></section>

@@ -1,3 +1,4 @@
+import { MarketingTrackingService } from '../../core/marketing/marketing-tracking.service';
 
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
@@ -16,6 +17,7 @@ import { PlanPublicoFluora, PublicPlansService } from '../../core/platform/publi
   styleUrl: './fluora-register-company.component.css'
 })
 export class FluoraRegisterCompanyComponent implements OnInit {
+  private readonly tracking = inject(MarketingTrackingService);
   private readonly fb = inject(FormBuilder);
   private readonly onboardingService = inject(OnboardingService);
   private readonly route = inject(ActivatedRoute);
@@ -50,6 +52,8 @@ export class FluoraRegisterCompanyComponent implements OnInit {
   });
 
   ngOnInit(): void {
+    this.tracking.capture(globalThis.location.search);
+    this.tracking.emit('signup_started');
     const planSolicitado=Number(this.route.snapshot.queryParamMap.get('plan'))||null;
     this.plansApi.listar().subscribe({next:planes=>{this.planes.set(planes);const elegido=planes.find(p=>p.id===planSolicitado)||planes.find(p=>p.destacado)||planes[0];this.planSeleccionadoId.set(elegido?.id??null);}});
     this.onboardingService.configuracionRegistroSocial().subscribe({
@@ -155,6 +159,8 @@ export class FluoraRegisterCompanyComponent implements OnInit {
       .pipe(finalize(() => this.loading.set(false)))
       .subscribe({
         next: response => {
+          this.tracking.emit('signup_completed');
+          this.tracking.emit('business_created');
           this.authService.adoptarSesion(response.sesion, response.correoAdministrador);
           this.submitted.set(response);
           this.paso.set(3);
