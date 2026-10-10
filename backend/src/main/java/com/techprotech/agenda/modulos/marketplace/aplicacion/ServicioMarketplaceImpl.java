@@ -19,13 +19,18 @@ public class ServicioMarketplaceImpl implements ServicioMarketplace {
  }
  @Transactional(readOnly=true)
  public DirectorioResponse buscar(String texto,long cursor){
+  return buscar(texto,"","",cursor);
+ }
+ @Transactional(readOnly=true)
+ public DirectorioResponse buscar(String texto,String ubicacion,String categoria,long cursor){
   // Cursor over candidates: bounded work per request, including subscriptions that ceased to be eligible.
-  var candidatos=directorio.buscar(texto.trim(),cursor,25);
+  var candidatos=directorio.buscar(texto.trim(),ubicacion.trim(),categoria.trim(),cursor,25);
   var resultados=new ArrayList<NegocioDirectorioResponse>();
   for(var candidato:candidatos.subList(0,Math.min(24,candidatos.size())))
    if(disponible(candidato.empresaId()))resultados.add(candidato);
   Long siguiente=candidatos.size()>24?candidatos.get(23).empresaId():null;
-  return new DirectorioResponse(resultados,siguiente);
+  var servicios=directorio.servicios(resultados.stream().map(NegocioDirectorioResponse::empresaId).toList(),texto.trim(),categoria.trim());
+  return new DirectorioResponse(resultados.stream().map(n->n.conServicios(servicios.getOrDefault(n.empresaId(),java.util.List.of()))).toList(),siguiente);
  }
  @Transactional(readOnly=true)
  public ParticipacionMarketplaceResponse obtener(Long empresaId){

@@ -14,13 +14,13 @@ class ServicioMarketplaceTest {
  final ServicioCapacidadesEmpresa capacidades=mock(ServicioCapacidadesEmpresa.class);
  final ServicioMarketplace servicio=new ServicioMarketplaceImpl(directorio,participaciones,capacidades);
  @Test void excluyeSuscripcionesSinAccesoAunqueExistanCandidatos(){
-  when(directorio.buscar("uñas",0,25)).thenReturn(List.of(new NegocioDirectorioResponse(1L,"negocio","Negocio",null,null,null,null)));
+  when(directorio.buscar("uñas","","",0,25)).thenReturn(List.of(new NegocioDirectorioResponse(1L,"negocio","Negocio",null,null,null,null)));
   when(capacidades.obtener(1L)).thenReturn(CapacidadesEmpresaResponse.sinSuscripcion());
   assertTrue(servicio.buscar("uñas",0).negocios().isEmpty());
  }
  @Test void publicaSoloModuloIncluidoEnCapacidadesDelBackend(){
   var negocio=new NegocioDirectorioResponse(2L,"negocio","Negocio",null,null,null,null);
-  when(directorio.buscar("",0,25)).thenReturn(List.of(negocio));
+  when(directorio.buscar("","","",0,25)).thenReturn(List.of(negocio));
   when(capacidades.obtener(2L)).thenReturn(new CapacidadesEmpresaResponse(true,1L,1L,"PLAN","Plan","ACTIVA",null,null,
     List.of(new CapacidadModuloEmpresaResponse("MARKETPLACE","Marketplace",null)),List.of(),List.of()));
   assertEquals(List.of(negocio),servicio.buscar("",0).negocios());
@@ -29,6 +29,20 @@ class ServicioMarketplaceTest {
   when(participaciones.findById(7L)).thenReturn(Optional.empty());
   when(capacidades.obtener(7L)).thenReturn(CapacidadesEmpresaResponse.sinSuscripcion());
   assertFalse(servicio.obtener(7L).participante());
+ }
+ @Test void filtraEnRepositorioYEnriqueceSoloEmpresasConAcceso(){
+  var visible=new NegocioDirectorioResponse(2L,"visible","Visible",null,null,null,null);
+  var oculto=new NegocioDirectorioResponse(3L,"oculto","Oculto",null,null,null,null);
+  when(directorio.buscar("gel","Puebla","Uñas",0,25)).thenReturn(List.of(visible,oculto));
+  when(capacidades.obtener(2L)).thenReturn(new CapacidadesEmpresaResponse(true,1L,1L,"PLAN","Plan","ACTIVA",null,null,
+    List.of(new CapacidadModuloEmpresaResponse("MARKETPLACE","Marketplace",null)),List.of(),List.of()));
+  when(capacidades.obtener(3L)).thenReturn(CapacidadesEmpresaResponse.sinSuscripcion());
+  var servicioPublico=new ServicioDirectorioResponse(8L,"Gel","Uñas",new java.math.BigDecimal("80.00"),"MXN",30);
+  when(directorio.servicios(List.of(2L),"gel","Uñas")).thenReturn(Map.of(2L,List.of(servicioPublico)));
+  var resultado=servicio.buscar(" gel "," Puebla "," Uñas ",0);
+  assertEquals(List.of(servicioPublico),resultado.negocios().getFirst().servicios());
+  assertEquals(1,resultado.negocios().size());
+  verify(directorio).servicios(List.of(2L),"gel","Uñas");
  }
  @Test void permiteRetirarseSinExigirPlanYUsaEmpresaAutenticada(){
   when(participaciones.findById(7L)).thenReturn(Optional.empty());

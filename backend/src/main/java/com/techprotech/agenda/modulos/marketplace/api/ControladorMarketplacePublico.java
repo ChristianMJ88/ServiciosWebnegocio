@@ -9,5 +9,7 @@ public class ControladorMarketplacePublico {
  private final ServicioMarketplace servicio;
  public ControladorMarketplacePublico(ServicioMarketplace servicio){this.servicio=servicio;}
  @GetMapping public DirectorioResponse buscar(@RequestParam(defaultValue="") @Size(max=100) String q,
-  @RequestParam(defaultValue="0") @Min(0) long cursor){return servicio.buscar(q,cursor);}
+  @RequestParam(defaultValue="") @Size(max=150) String ubicacion,
+  @RequestParam(defaultValue="") @Size(max=120) String categoria,
+  @RequestParam(defaultValue="0") @Min(0) long cursor){return servicio.buscar(q,ubicacion,categoria,cursor);}
 }
