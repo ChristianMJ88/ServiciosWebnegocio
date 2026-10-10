@@ -9,4 +9,12 @@
 - Las tarjetas usan datos públicos existentes y llevan al catálogo y agenda del negocio. No muestran horarios ni reseñas que no se hayan obtenido de sus fuentes reales.
 - Por ahora la nueva ruta tiene `noindex, follow`: faltan renderizado HTML para buscadores, sitemap y publicación en hosting. No se despliega a producción en esta entrega.
 
-Pendiente: filtros estructurados del catálogo, ubicación normalizada, horarios reales, renderizado SEO, prueba de tarjetas con un negocio participante autorizado y pruebas de activación/desactivación desde el portal con sesión real.
+## Segunda entrega
+
+- Filtros independientes por zona/dirección y grupo de servicios. Los grupos son nombres reales de cada catálogo; no se mantiene una lista fija global. Las sugerencias del formulario provienen de los servicios ya consultados, no representan todo el catálogo.
+- La ubicación consulta direcciones públicas, no infiere ciudades normalizadas ni distancias. Sigue pendiente un modelo de ubicación que permita páginas de ciudad y búsquedas geográficas fiables.
+- Tarjetas con portada configurada, identidad, contacto y hasta tres servicios públicos: precio, moneda y duración del catálogo. Una sola consulta por lote obtiene los servicios de los negocios elegibles, priorizando coincidencias con la búsqueda y grupo elegido.
+- Los servicios deben tener una asignación activa en una sucursal activa de la misma empresa. La paginación conserva los filtros enviados aunque el usuario cambie campos sin aplicarlos.
+- Activación de Nail Art autorizada por el usuario exclusivamente en desarrollo, desde el portal real.
+
+Pendiente: ubicación normalizada, horarios reales, renderizado SEO y prueba de desactivación/republicación.
