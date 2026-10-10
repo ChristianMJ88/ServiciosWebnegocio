@@ -1,5 +1,6 @@
 package com.techprotech.agenda.modulos.onboarding.aplicacion;
 
+import com.techprotech.agenda.modulos.marketing.aplicacion.ServicioAdquisicionEmpresa;
 import com.techprotech.agenda.compartido.correo.BienvenidaEmpresaCorreo;
 import com.techprotech.agenda.compartido.correo.ServicioOutboxCorreoBienvenida;
 import com.techprotech.agenda.modulos.autenticacion.aplicacion.ServicioRolesEmpresa;
@@ -53,6 +54,7 @@ public class ServicioOnboardingEmpresaImpl implements ServicioOnboardingEmpresa 
 
     private static final List<String> CODIGOS_ROL_BASE = List.of("ADMIN", "RECEPCIONISTA", "CAJERO", "STAFF", "CLIENTE");
 
+    private final ServicioAdquisicionEmpresa adquisicion;
     private final EmpresaRepositorio empresaRepositorio;
     private final UsuarioRepositorio usuarioRepositorio;
     private final SucursalRepositorio sucursalRepositorio;
@@ -88,8 +90,10 @@ public class ServicioOnboardingEmpresaImpl implements ServicioOnboardingEmpresa 
             ServicioVerificacionCorreoOnboarding verificacionCorreo,
             ServicioAutenticacion servicioAutenticacion,
             EmpresaOnboardingProgresoRepositorio progresoRepositorio,
-            ServicioSuscripcionesPlataforma suscripcionesPlataforma
+            ServicioSuscripcionesPlataforma suscripcionesPlataforma,
+            ServicioAdquisicionEmpresa adquisicion
     ) {
+        this.adquisicion = adquisicion;
         this.empresaRepositorio = empresaRepositorio;
         this.usuarioRepositorio = usuarioRepositorio;
         this.sucursalRepositorio = sucursalRepositorio;
@@ -124,6 +128,7 @@ public class ServicioOnboardingEmpresaImpl implements ServicioOnboardingEmpresa 
         empresa.setZonaHoraria(resolverZonaHoraria(request.zonaHoraria()));
         empresa.setEstado("ACTIVA");
         empresa = empresaRepositorio.save(empresa);
+        adquisicion.registrar(empresa.getId(), request.atribucion());
 
         crearSucursalPrincipal(empresa, request);
         provisionarRolesEmpresa(empresa.getId());

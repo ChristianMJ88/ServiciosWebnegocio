@@ -1,5 +1,7 @@
 package com.techprotech.agenda.modulos.onboarding.api.dto;
 
+import jakarta.validation.Valid;
+import com.techprotech.agenda.modulos.marketing.api.dto.AtribucionAdquisicionRequest;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
@@ -16,6 +18,7 @@ public record RegistrarEmpresaRequest(
         @Size(min = 8, max = 120) String contrasena,
         @Size(max = 60) String zonaHoraria,
         String registroSocialToken,
-        Long planId
+        Long planId,
+        @Valid AtribucionAdquisicionRequest atribucion
 ) {
 }
