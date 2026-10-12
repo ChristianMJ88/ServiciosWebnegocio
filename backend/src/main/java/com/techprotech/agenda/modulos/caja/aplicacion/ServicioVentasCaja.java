@@ -48,15 +48,26 @@ public class ServicioVentasCaja {
     private final ProductoExistenciaRepositorio existencias;
     private final SucursalRepositorio sucursales;
     private final ServicioInventarioProductos inventario;
+    private final com.techprotech.agenda.modulos.productos.infraestructura.repositorio.ReglaDescuentoProductoRepositorio descuentos;
+    private final com.techprotech.agenda.modulos.productos.infraestructura.repositorio.ZonaPrecioProductoRepositorio zonas;
+    private final com.techprotech.agenda.modulos.productos.infraestructura.repositorio.PrecioZonaProductoRepositorio preciosZona;
+    private final com.techprotech.agenda.modulos.productos.aplicacion.ServicioComisionesDevengadas comisiones;
 
     public ServicioVentasCaja(VentaRepositorio ventas, VentaDetalleRepositorio detalles, PagoVentaRepositorio pagos,
                               CajaSesionRepositorio sesiones, MovimientoCajaRepositorio movimientos,
                               PagoCitaRepositorio pagosCita, CitaRepositorio citas, ClienteRepositorio clientes, ServicioRepositorio servicios,
                               ProductoRepositorio productos, ProductoExistenciaRepositorio existencias,
-                              SucursalRepositorio sucursales, ServicioInventarioProductos inventario) {
+                              SucursalRepositorio sucursales, ServicioInventarioProductos inventario,
+                              com.techprotech.agenda.modulos.productos.infraestructura.repositorio.ReglaDescuentoProductoRepositorio descuentos,
+                              com.techprotech.agenda.modulos.productos.infraestructura.repositorio.ZonaPrecioProductoRepositorio zonas,
+                              com.techprotech.agenda.modulos.productos.infraestructura.repositorio.PrecioZonaProductoRepositorio preciosZona,
+                              com.techprotech.agenda.modulos.productos.aplicacion.ServicioComisionesDevengadas comisiones) {
         this.ventas = ventas; this.detalles = detalles; this.pagos = pagos; this.sesiones = sesiones;
         this.movimientos = movimientos; this.pagosCita = pagosCita; this.citas = citas; this.clientes = clientes; this.servicios = servicios;
         this.productos = productos; this.existencias = existencias; this.sucursales = sucursales; this.inventario = inventario;
+        this.descuentos = descuentos;
+        this.zonas = zonas; this.preciosZona = preciosZona;
+        this.comisiones = comisiones;
     }
 
     @Transactional(readOnly = true)
@@ -69,19 +80,45 @@ public class ServicioVentasCaja {
         Map<Long, ProductoExistenciaEntidad> porProducto = stock.stream()
                 .filter(item -> sucursalId.equals(item.getId().getSucursalId()))
                 .collect(Collectors.toMap(item -> item.getId().getProductoId(), Function.identity()));
+        var reglas = reglasVigentes(empresaId);
+        var contexto = contextoPrecios(empresaId, sucursalId, activos.stream().map(ProductoEntidad::getId).toList());
         return new CatalogoVentaResponse(activos.stream().map(producto -> {
             ProductoExistenciaEntidad existencia = porProducto.get(producto.getId());
             BigDecimal disponible = producto.isControlaInventario()
                     ? existencia == null ? BigDecimal.ZERO : existencia.getExistencia().subtract(existencia.getReservado())
                     : null;
             return new CatalogoVentaResponse.ProductoCajaResponse(producto.getId(), producto.getCategoriaId(), producto.getSku(),
-                    producto.getCodigoBarras(), producto.getNombre(), producto.getImagenUrl(), producto.getPrecioBase(),
+                    producto.getCodigoBarras(), producto.getNombre(), producto.getImagenUrl(), precioProducto(producto, sucursalId, BigDecimal.ONE, reglas, contexto),
                     producto.getMoneda(), producto.isControlaInventario(), disponible);
         }).toList());
     }
 
+    @Transactional(readOnly = true)
+    public com.techprotech.agenda.modulos.caja.api.dto.CotizacionCajaResponse cotizarProductos(Long empresaId, List<Long> permitidas,
+            com.techprotech.agenda.modulos.caja.api.dto.CotizacionCajaRequest request) {
+        validarSucursal(empresaId, permitidas, request.sucursalId());
+        var cantidades = request.productos().stream().collect(Collectors.toMap(RegistrarVentaRequest.ProductoVentaRequest::productoId,
+                RegistrarVentaRequest.ProductoVentaRequest::cantidad, BigDecimal::add));
+        var lista = productos.findByEmpresaIdAndIdIn(empresaId, cantidades.keySet()).stream().filter(ProductoEntidad::isActivo).toList();
+        if (lista.size() != cantidades.size()) throw badRequest("Uno o más productos no están disponibles para la empresa");
+        var reglas = reglasVigentes(empresaId);
+        var contexto = contextoPrecios(empresaId, request.sucursalId(), cantidades.keySet());
+        BigDecimal subtotal = CERO, total = CERO;
+        var lineas = new ArrayList<com.techprotech.agenda.modulos.caja.api.dto.CotizacionCajaResponse.Linea>();
+        for (var producto : lista) {
+            var cantidad = cantidades.get(producto.getId());
+            subtotal = subtotal.add(precioLista(producto, contexto).multiply(cantidad).setScale(2, RoundingMode.HALF_UP));
+            var precio = precioProducto(producto, request.sucursalId(), cantidad, reglas, contexto);
+            var totalLinea = precio.multiply(cantidad).setScale(2, RoundingMode.HALF_UP);
+            total = total.add(totalLinea);
+            lineas.add(new com.techprotech.agenda.modulos.caja.api.dto.CotizacionCajaResponse.Linea(producto.getId(), precio, totalLinea));
+        }
+        return new com.techprotech.agenda.modulos.caja.api.dto.CotizacionCajaResponse(subtotal, subtotal.subtract(total), total, lineas);
+    }
+
     @Transactional
     public VentaResponse registrar(Long empresaId, Long usuarioId, List<Long> sucursalesPermitidas, RegistrarVentaRequest request) {
+        if(request.ventaPendienteId()!=null) throw badRequest("Las cuentas de Staff se cobran desde su acción de cobro");
         if (METODO_PAGO_POINT.equalsIgnoreCase(request.metodoPago())) {
             throw badRequest("El cobro Point debe iniciarse desde el flujo de terminal");
         }
@@ -91,17 +128,27 @@ public class ServicioVentasCaja {
     @Transactional
     public VentaResponse prepararPoint(Long empresaId, Long usuarioId, List<Long> sucursalesPermitidas,
                                        RegistrarVentaRequest request) {
+        if(request.ventaPendienteId()!=null) return prepararPendientePoint(empresaId,usuarioId,sucursalesPermitidas,request.ventaPendienteId(),request.sucursalId());
         RegistrarVentaRequest point = new RegistrarVentaRequest(request.sucursalId(), request.citaId(), request.clienteId(),
                 request.productos(), METODO_PAGO_POINT, null, request.observaciones());
         return registrarInterno(empresaId, usuarioId, sucursalesPermitidas, point, true);
     }
 
+    @Transactional
+    public VentaResponse registrarStaff(Long empresaId,Long usuarioId,Long sucursalId,Long clienteId,List<RegistrarVentaRequest.ProductoVentaRequest> productos) {
+        return registrarInterno(empresaId,usuarioId,List.of(sucursalId),new RegistrarVentaRequest(sucursalId,null,clienteId,productos,"",null,null),false,true);
+    }
+
     private VentaResponse registrarInterno(Long empresaId, Long usuarioId, List<Long> sucursalesPermitidas,
                                             RegistrarVentaRequest request, boolean point) {
+        return registrarInterno(empresaId,usuarioId,sucursalesPermitidas,request,point,false);
+    }
+    private VentaResponse registrarInterno(Long empresaId, Long usuarioId, List<Long> sucursalesPermitidas,
+                                            RegistrarVentaRequest request, boolean point, boolean staff) {
         validarSucursal(empresaId, sucursalesPermitidas, request.sucursalId());
         String metodoPago = request.metodoPago().trim().toUpperCase(Locale.ROOT);
-        if (!point && !contiene(METODOS_PAGO, metodoPago)) throw badRequest("El método de pago no es válido");
-        CajaSesionEntidad sesion = sesiones.findByEmpresaIdAndSucursalIdAndEstado(empresaId, request.sucursalId(), ESTADO_SESION_ABIERTA)
+        if (!staff && !point && !contiene(METODOS_PAGO, metodoPago)) throw badRequest("El método de pago no es válido");
+        CajaSesionEntidad sesion = staff ? null : sesiones.findByEmpresaIdAndSucursalIdAndEstado(empresaId, request.sucursalId(), ESTADO_SESION_ABIERTA)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.CONFLICT, "No hay una caja abierta para la sucursal indicada"));
 
         List<RegistrarVentaRequest.ProductoVentaRequest> solicitados = request.productos() == null ? List.of() : request.productos();
@@ -131,48 +178,56 @@ public class ServicioVentasCaja {
                     .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "El servicio de la cita ya no existe"));
         }
         if (cita == null && cantidades.isEmpty()) throw badRequest("Agrega una cita o al menos un producto a la venta");
-        if (cita == null && request.clienteId() != null && clientes.findByEmpresaId(empresaId).stream().noneMatch(item -> request.clienteId().equals(item.getUsuarioId())))
+        if (cita == null && request.clienteId() != null && clientes.findByClienteIdAndEmpresaId(request.clienteId(),empresaId).isEmpty())
             throw badRequest("El cliente no pertenece a la empresa");
 
         String moneda = cita != null ? cita.getMoneda() : productosVenta.values().stream().findFirst().map(ProductoEntidad::getMoneda).orElse("MXN");
         if (productosVenta.values().stream().anyMatch(item -> !moneda.equalsIgnoreCase(item.getMoneda())))
             throw badRequest("Todos los conceptos de una venta deben usar la misma moneda");
+        var reglas = reglasVigentes(empresaId);
+        var contexto = contextoPrecios(empresaId, request.sucursalId(), cantidades.keySet());
+        Map<Long, BigDecimal> preciosAplicados = cantidades.entrySet().stream().collect(Collectors.toMap(
+                Map.Entry::getKey, item -> precioProducto(productosVenta.get(item.getKey()), request.sucursalId(), item.getValue(), reglas, contexto)));
         BigDecimal subtotalProductos = cantidades.entrySet().stream()
-                .map(item -> productosVenta.get(item.getKey()).getPrecioBase().multiply(item.getValue()))
+                .map(item -> precioLista(productosVenta.get(item.getKey()), contexto).multiply(item.getValue()).setScale(2, RoundingMode.HALF_UP))
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
-        BigDecimal total = pendienteServicio.add(subtotalProductos).setScale(2, RoundingMode.HALF_UP);
+        BigDecimal netoProductos = cantidades.entrySet().stream().map(item -> preciosAplicados.get(item.getKey()).multiply(item.getValue()).setScale(2, RoundingMode.HALF_UP)).reduce(BigDecimal.ZERO, BigDecimal::add);
+        BigDecimal descuentoTotal = subtotalProductos.setScale(2, RoundingMode.HALF_UP).subtract(netoProductos);
+        BigDecimal total = pendienteServicio.add(netoProductos).setScale(2, RoundingMode.HALF_UP);
 
         VentaEntidad venta = new VentaEntidad();
-        venta.setEmpresaId(empresaId); venta.setSucursalId(request.sucursalId()); venta.setCajaSesionId(sesion.getId());
+        venta.setEmpresaId(empresaId); venta.setSucursalId(request.sucursalId()); venta.setCajaSesionId(sesion == null ? null : sesion.getId());
         venta.setClienteId(cita != null ? cita.getClienteId() : request.clienteId()); venta.setCitaId(cita != null ? cita.getId() : null);
-        venta.setFolio(generarFolio()); venta.setEstado(point ? "PENDIENTE_PAGO" : "PAGADA"); venta.setCanal("CAJA"); venta.setMoneda(moneda.toUpperCase(Locale.ROOT));
-        venta.setSubtotal(total); venta.setDescuentoTotal(CERO); venta.setImpuestosTotal(CERO); venta.setTotal(total);
+        venta.setFolio(generarFolio()); venta.setEstado(staff ? "POR_COBRAR" : point ? "PENDIENTE_PAGO" : "PAGADA"); venta.setCanal(staff ? "STAFF" : "CAJA"); venta.setMoneda(moneda.toUpperCase(Locale.ROOT));
+        venta.setSubtotal(total.add(descuentoTotal)); venta.setDescuentoTotal(descuentoTotal); venta.setImpuestosTotal(CERO); venta.setTotal(total);
         venta.setObservaciones(limpiar(request.observaciones())); venta.setCreadaPorUsuarioId(usuarioId); venta.setCreadaEn(LocalDateTime.now());
         venta = ventas.save(venta);
 
         List<VentaDetalleEntidad> filas = new ArrayList<>();
         if (cita != null) filas.add(detalleServicio(empresaId, venta.getId(), cita, servicio, pendienteServicio));
         for (Map.Entry<Long, BigDecimal> item : cantidades.entrySet())
-            filas.add(detalleProducto(empresaId, venta.getId(), productosVenta.get(item.getKey()), item.getValue()));
+            filas.add(detalleProducto(empresaId, venta.getId(), productosVenta.get(item.getKey()), item.getValue(), preciosAplicados.get(item.getKey()), precioLista(productosVenta.get(item.getKey()), contexto)));
+        if (staff) filas.forEach(fila -> fila.setPrestadorResponsableId(usuarioId));
         filas = detalles.saveAll(filas);
 
         PagoVentaEntidad pago = null;
-        if (!point) {
+        if (!staff && !point) {
             pago = new PagoVentaEntidad();
             pago.setEmpresaId(empresaId); pago.setVentaId(venta.getId()); pago.setCajaSesionId(sesion.getId()); pago.setMonto(total);
             pago.setMetodoPago(metodoPago); pago.setReferencia(limpiar(request.referencia())); pago.setRegistradoPorUsuarioId(usuarioId);
             pago.setRegistradoEn(LocalDateTime.now()); pago = pagos.save(pago);
         }
 
-        if (!cantidades.isEmpty()) inventario.descontarVenta(empresaId, usuarioId, sucursalesPermitidas,
+        if (!staff && !cantidades.isEmpty()) inventario.descontarVenta(empresaId, usuarioId, sucursalesPermitidas,
                 request.sucursalId(), cantidades, venta.getFolio());
-        if (!point && METODO_PAGO_EFECTIVO.equals(metodoPago)) registrarIngresoEfectivo(empresaId, usuarioId, sesion.getId(), venta, pago);
+        if (!staff && !point && METODO_PAGO_EFECTIVO.equals(metodoPago)) registrarIngresoEfectivo(empresaId, usuarioId, sesion.getId(), venta, pago);
+        if (!staff && !point) comisiones.registrar(venta, filas);
         return mapear(venta, pago, filas);
     }
 
     @Transactional
     public VentaResponse confirmarPoint(Long empresaId, Long ventaId, String referenciaPago) {
-        VentaEntidad venta = ventas.findByIdAndEmpresaId(ventaId, empresaId)
+        VentaEntidad venta = ventas.findConBloqueoByIdAndEmpresaId(ventaId, empresaId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Venta Point no encontrada"));
         List<VentaDetalleEntidad> filas = detalles.findByEmpresaIdAndVentaIdOrderByIdAsc(empresaId, ventaId);
         PagoVentaEntidad existente = pagos.findByEmpresaIdAndVentaIdOrderByRegistradoEnDesc(empresaId, ventaId).stream()
@@ -185,12 +240,13 @@ public class ServicioVentasCaja {
         pago.setEmpresaId(empresaId); pago.setVentaId(ventaId); pago.setCajaSesionId(venta.getCajaSesionId()); pago.setMonto(venta.getTotal());
         pago.setMetodoPago(METODO_PAGO_POINT); pago.setReferencia(limpiar(referenciaPago));
         pago.setRegistradoPorUsuarioId(venta.getCreadaPorUsuarioId()); pago.setRegistradoEn(LocalDateTime.now());
+        comisiones.registrar(venta, filas);
         return mapear(venta, pagos.save(pago), filas);
     }
 
     @Transactional
     public void cancelarPoint(Long empresaId, Long ventaId, String motivo) {
-        VentaEntidad venta = ventas.findByIdAndEmpresaId(ventaId, empresaId)
+        VentaEntidad venta = ventas.findConBloqueoByIdAndEmpresaId(ventaId, empresaId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Venta Point no encontrada"));
         if ("CANCELADA".equals(venta.getEstado())) return;
         if (!"PENDIENTE_PAGO".equals(venta.getEstado())) return;
@@ -199,13 +255,13 @@ public class ServicioVentasCaja {
                 .collect(Collectors.toMap(VentaDetalleEntidad::getProductoId, VentaDetalleEntidad::getCantidad, BigDecimal::add));
         if (!cantidades.isEmpty()) inventario.reintegrarVenta(empresaId, venta.getCreadaPorUsuarioId(), venta.getSucursalId(),
                 cantidades, venta.getFolio(), motivo);
-        venta.setEstado("CANCELADA");
+        venta.setEstado("STAFF".equals(venta.getCanal()) ? "POR_COBRAR" : "CANCELADA");
         ventas.save(venta);
     }
 
     @Transactional
     public void marcarReembolsadaPoint(Long empresaId, Long ventaId) {
-        VentaEntidad venta = ventas.findByIdAndEmpresaId(ventaId, empresaId)
+        VentaEntidad venta = ventas.findConBloqueoByIdAndEmpresaId(ventaId, empresaId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Venta Point no encontrada"));
         if ("REEMBOLSADA".equals(venta.getEstado())) return;
         Map<Long, BigDecimal> cantidades = detalles.findByEmpresaIdAndVentaIdOrderByIdAsc(empresaId, ventaId).stream()
@@ -226,14 +282,88 @@ public class ServicioVentasCaja {
         }).toList();
     }
 
+    public record PendienteStaff(VentaResponse venta,String clienteNombre,String clienteTelefono) {}
+    @Transactional(readOnly=true)
+    public org.springframework.data.domain.Page<PendienteStaff> pendientesStaff(Long empresaId,List<Long> permitidas,Long sucursalId,int pagina) {
+        validarSucursal(empresaId,permitidas,sucursalId);
+        if(pagina<0) throw badRequest("La página no es válida");
+        var lista=ventas.findByEmpresaIdAndSucursalIdAndEstadoAndCanalOrderByCreadaEnAsc(empresaId,sucursalId,"POR_COBRAR","STAFF",org.springframework.data.domain.PageRequest.of(pagina,20));
+        return lista.map(v->{
+            var cliente=clientes.findByClienteIdAndEmpresaId(v.getClienteId(),empresaId).orElse(null);
+            return new PendienteStaff(mapear(v,null,detalles.findByEmpresaIdAndVentaIdOrderByIdAsc(empresaId,v.getId())),cliente==null?"":cliente.getNombreCompleto(),cliente==null?"":cliente.getTelefono());
+        });
+    }
+
+    private VentaResponse prepararPendientePoint(Long empresaId,Long usuarioId,List<Long> permitidas,Long ventaId,Long sucursalId) {
+        var venta=ventas.findConBloqueoByIdAndEmpresaId(ventaId,empresaId).orElseThrow(()->new ResponseStatusException(HttpStatus.NOT_FOUND,"La venta no existe"));
+        validarSucursal(empresaId,permitidas,venta.getSucursalId());
+        if(!venta.getSucursalId().equals(sucursalId) || !"POR_COBRAR".equals(venta.getEstado()) || !"STAFF".equals(venta.getCanal()))
+            throw new ResponseStatusException(HttpStatus.CONFLICT,"La cuenta no está disponible para esta terminal");
+        var sesion=sesiones.findByEmpresaIdAndSucursalIdAndEstado(empresaId,sucursalId,ESTADO_SESION_ABIERTA)
+            .orElseThrow(()->new ResponseStatusException(HttpStatus.CONFLICT,"Abre la caja de la sucursal para cobrar"));
+        var filas=detalles.findByEmpresaIdAndVentaIdOrderByIdAsc(empresaId,ventaId);
+        var cantidades=filas.stream().filter(f->"PRODUCTO".equals(f.getTipoConcepto())).collect(Collectors.toMap(VentaDetalleEntidad::getProductoId,VentaDetalleEntidad::getCantidad,BigDecimal::add));
+        inventario.descontarVenta(empresaId,usuarioId,permitidas,sucursalId,cantidades,venta.getFolio());
+        venta.setCajaSesionId(sesion.getId());venta.setEstado("PENDIENTE_PAGO");ventas.save(venta);
+        return mapear(venta,null,filas);
+    }
+
+    @Transactional
+    public VentaResponse cobrarPendiente(Long empresaId,Long usuarioId,List<Long> permitidas,Long ventaId,String metodo,String referencia) {
+        VentaEntidad venta=ventas.findConBloqueoByIdAndEmpresaId(ventaId,empresaId)
+            .orElseThrow(()->new ResponseStatusException(HttpStatus.NOT_FOUND,"La venta no existe"));
+        validarSucursal(empresaId,permitidas,venta.getSucursalId());
+        if(!"POR_COBRAR".equals(venta.getEstado()) || !"STAFF".equals(venta.getCanal()))
+            throw new ResponseStatusException(HttpStatus.CONFLICT,"La venta ya no está pendiente de cobro");
+        String codigo=metodo==null?"":metodo.trim().toUpperCase(Locale.ROOT);
+        if(!contiene(METODOS_PAGO,codigo) || METODO_PAGO_POINT.equals(codigo)) throw badRequest("Selecciona un método de cobro directo válido");
+        var sesion=sesiones.findByEmpresaIdAndSucursalIdAndEstado(empresaId,venta.getSucursalId(),ESTADO_SESION_ABIERTA)
+            .orElseThrow(()->new ResponseStatusException(HttpStatus.CONFLICT,"Abre la caja de la sucursal para cobrar"));
+        var filas=detalles.findByEmpresaIdAndVentaIdOrderByIdAsc(empresaId,ventaId);
+        Map<Long,BigDecimal> cantidades=filas.stream().filter(f->"PRODUCTO".equals(f.getTipoConcepto()))
+            .collect(Collectors.toMap(VentaDetalleEntidad::getProductoId,VentaDetalleEntidad::getCantidad,BigDecimal::add));
+        inventario.descontarVenta(empresaId,usuarioId,permitidas,venta.getSucursalId(),cantidades,venta.getFolio());
+        venta.setCajaSesionId(sesion.getId()); venta.setEstado("PAGADA"); ventas.save(venta);
+        var pago=new PagoVentaEntidad(); pago.setEmpresaId(empresaId);pago.setVentaId(ventaId);pago.setCajaSesionId(sesion.getId());
+        pago.setMonto(venta.getTotal());pago.setMetodoPago(codigo);pago.setReferencia(limpiar(referencia));
+        pago.setRegistradoPorUsuarioId(usuarioId);pago.setRegistradoEn(LocalDateTime.now());pago=pagos.save(pago);
+        if(METODO_PAGO_EFECTIVO.equals(codigo)) registrarIngresoEfectivo(empresaId,usuarioId,sesion.getId(),venta,pago);
+        comisiones.registrar(venta,filas);
+        return mapear(venta,pago,filas);
+    }
+
     private VentaDetalleEntidad detalleServicio(Long empresaId, Long ventaId, CitaEntidad cita, ServicioEntidad servicio, BigDecimal total) {
         VentaDetalleEntidad d = baseDetalle(empresaId, ventaId, "SERVICIO", servicio.getNombre(), BigDecimal.ONE, total, total);
         d.setServicioId(servicio.getId()); d.setCitaId(cita.getId()); return d;
     }
-    private VentaDetalleEntidad detalleProducto(Long empresaId, Long ventaId, ProductoEntidad producto, BigDecimal cantidad) {
-        BigDecimal total = producto.getPrecioBase().multiply(cantidad).setScale(2, RoundingMode.HALF_UP);
-        VentaDetalleEntidad d = baseDetalle(empresaId, ventaId, "PRODUCTO", producto.getNombre(), cantidad, producto.getPrecioBase(), total);
-        d.setProductoId(producto.getId()); d.setSku(producto.getSku()); return d;
+    private VentaDetalleEntidad detalleProducto(Long empresaId, Long ventaId, ProductoEntidad producto, BigDecimal cantidad, BigDecimal precioAplicado, BigDecimal precioLista) {
+        BigDecimal total = precioAplicado.multiply(cantidad).setScale(2, RoundingMode.HALF_UP);
+        VentaDetalleEntidad d = baseDetalle(empresaId, ventaId, "PRODUCTO", producto.getNombre(), cantidad, precioLista, total);
+        d.setProductoId(producto.getId()); d.setSku(producto.getSku());
+        d.setDescuento(precioLista.multiply(cantidad).setScale(2, RoundingMode.HALF_UP).subtract(total));
+        d.setCostoUnitarioHistorico(producto.getCosto()); return d;
+    }
+    private List<com.techprotech.agenda.modulos.productos.infraestructura.entidad.ReglaDescuentoProductoEntidad> reglasVigentes(Long empresaId) {
+        return descuentos.findByEmpresaIdOrderByPrioridadDescNombreAsc(empresaId).stream().filter(regla -> com.techprotech.agenda.modulos.productos.aplicacion.CalculadorDescuentosProductos.vigente(regla, java.time.LocalDate.now())).toList();
+    }
+    private BigDecimal precioProducto(ProductoEntidad producto, Long sucursalId, BigDecimal cantidad,
+            List<com.techprotech.agenda.modulos.productos.infraestructura.entidad.ReglaDescuentoProductoEntidad> reglas, ContextoPrecio contexto) {
+        return com.techprotech.agenda.modulos.productos.aplicacion.CalculadorDescuentosProductos.calcular(producto, contexto.zona(), sucursalId, cantidad, precioLista(producto, contexto), producto.getMoneda(), reglas).precio();
+    }
+    private record ContextoPrecio(com.techprotech.agenda.modulos.productos.infraestructura.entidad.ZonaPrecioProductoEntidad zona,
+            Map<Long, com.techprotech.agenda.modulos.productos.infraestructura.entidad.PrecioZonaProductoEntidad> precios) {}
+    private ContextoPrecio contextoPrecios(Long empresaId, Long sucursalId, Collection<Long> ids) {
+        var sede = sucursales.findByIdAndEmpresaIdAndActivaTrue(sucursalId, empresaId).orElseThrow(() -> badRequest("Sucursal no disponible"));
+        if (sede.getZonaPrecioId() == null) return new ContextoPrecio(null, Map.of());
+        var zona = zonas.findByIdAndEmpresaId(sede.getZonaPrecioId(), empresaId).filter(z -> z.isActiva()).orElseThrow(() -> badRequest("La zona de precio de la sucursal está inactiva o no pertenece al negocio"));
+        var precios = ids.isEmpty() ? Map.<Long, com.techprotech.agenda.modulos.productos.infraestructura.entidad.PrecioZonaProductoEntidad>of() : preciosZona.findByEmpresaIdAndProductoIdIn(empresaId, ids).stream().filter(p -> p.isActivo() && zona.getId().equals(p.getZonaPrecioId())).collect(Collectors.toMap(p -> p.getProductoId(), Function.identity()));
+        return new ContextoPrecio(zona, precios);
+    }
+    private BigDecimal precioLista(ProductoEntidad producto, ContextoPrecio contexto) {
+        var precio = contexto.precios().get(producto.getId());
+        if (precio == null) return producto.getPrecioBase();
+        if (!producto.getMoneda().equalsIgnoreCase(precio.getMoneda())) throw badRequest("La moneda del precio regional debe coincidir con la del producto para cobrar en Caja");
+        return precio.getPrecio();
     }
     private VentaDetalleEntidad baseDetalle(Long empresaId, Long ventaId, String tipo, String nombre, BigDecimal cantidad, BigDecimal precio, BigDecimal total) {
         VentaDetalleEntidad d = new VentaDetalleEntidad(); d.setEmpresaId(empresaId); d.setVentaId(ventaId); d.setTipoConcepto(tipo);
@@ -250,7 +380,7 @@ public class ServicioVentasCaja {
                 venta.getMoneda(), venta.getSubtotal(), venta.getDescuentoTotal(), venta.getImpuestosTotal(), venta.getTotal(),
                 pago == null ? null : pago.getMetodoPago(), pago == null ? null : pago.getReferencia(), venta.getCreadaEn(), venta.getCanal(),
                 filas.stream().map(d -> new VentaResponse.DetalleVentaResponse(d.getId(), d.getTipoConcepto(), d.getProductoId(), d.getServicioId(),
-                        d.getCitaId(), d.getSku(), d.getNombre(), d.getCantidad(), d.getPrecioUnitario(), d.getDescuento(), d.getImpuestos(), d.getTotal())).toList());
+                        d.getCitaId(), d.getSku(), d.getNombre(), d.getCantidad(), d.getPrecioUnitario(), d.getDescuento(), d.getImpuestos(), d.getTotal(), d.getCostoUnitarioHistorico())).toList());
     }
     private void validarSucursal(Long empresaId, List<Long> permitidas, Long sucursalId) {
         if (sucursalId == null) throw badRequest("Selecciona una sucursal");

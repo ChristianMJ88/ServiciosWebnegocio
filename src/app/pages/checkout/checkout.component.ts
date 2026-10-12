@@ -102,6 +102,8 @@ export class CheckoutComponent implements OnInit, OnDestroy {
           this.branches.set(branches);
           this.addressConfig.set(addressConfig);
           this.form.controls.countryCode.setValue(addressConfig.regionPredeterminada);
+          const requestedBranch=Number(this.route.snapshot.queryParamMap.get('sucursalId'));
+          if(requestedBranch && branches.some(branch=>branch.id===requestedBranch)) this.form.controls.branchId.setValue(requestedBranch);
           if (branches.length === 1 && !this.form.controls.branchId.value) this.form.controls.branchId.setValue(branches[0].id);
           this.selectInitialDelivery(config);
           this.loading.set(false);

@@ -74,7 +74,10 @@ public class ServicioConsultaDisponibilidad {
             Long prestadorId,
             LocalDate fecha
     ) {
-        Long empresa = empresaId != null ? empresaId : 1L;
+        if (empresaId == null) {
+            throw new ResponseStatusException(BAD_REQUEST, "La empresa es obligatoria");
+        }
+        Long empresa = empresaId;
         if (fecha == null) {
             throw new ResponseStatusException(BAD_REQUEST, "La fecha es obligatoria");
         }

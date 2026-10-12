@@ -154,6 +154,7 @@ function renderSitemap(slugs, marketingOrigin, products = [], landingSlugs = [])
     `  <url><loc>${marketingOrigin}/registro</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>`,
     ...[...new Set(landingSlugs)].filter(slug => /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug))
       .map(slug => '  <url><loc>'+marketingOrigin+'/'+escapeHtml(slug)+'</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>'),
+    `  <url><loc>${marketingOrigin}/negocios</loc><changefreq>daily</changefreq><priority>0.8</priority></url>`,
     ...tenantUrls,
     ...storeUrls,
     ...productUrls

@@ -1,3 +1,4 @@
+import { AccessNoticeService } from './access-notice.service';
 import { Injectable, NgZone, computed, inject, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, catchError, finalize, map, shareReplay, tap, throwError } from 'rxjs';
@@ -54,7 +55,7 @@ export interface EmpresaAccesoApp {
 }
 
 export interface RespuestaAccesoApp {
-  estado: 'AUTENTICADO' | 'SELECCION_EMPRESA';
+  estado: 'AUTENTICADO' | 'SELECCION_EMPRESA' | 'CAMBIO_CONTRASENA';
   mensaje: string;
   empresas: EmpresaAccesoApp[] | null;
   sesion: RespuestaTokenJwt | null;
@@ -68,6 +69,7 @@ export class AuthService {
   private readonly ngZone = inject(NgZone);
   private readonly tenantContext = inject(TenantContextService);
   private readonly storageKey = 'agenda_sesion';
+  private readonly avisoAcceso = inject(AccessNoticeService);
   private readonly sesion = signal<SesionUsuario | null>(this.loadSession());
   private refreshEnCurso$: Observable<string> | null = null;
 
@@ -216,7 +218,7 @@ export class AuthService {
       );
   }
 
-  appLogin(payload: { correo: string; contrasena: string; empresaId?: number | null }): Observable<RespuestaAccesoApp> {
+  appLogin(payload: { correo: string; contrasena: string; empresaId?: number | null; nuevaContrasena?: string | null }): Observable<RespuestaAccesoApp> {
     if (!environment.apiBaseUrl) {
       return throwError(() => new Error('La autenticación todavía no está disponible en este entorno.'));
     }
@@ -225,7 +227,8 @@ export class AuthService {
       .post<RespuestaAccesoApp>(`${environment.apiBaseUrl}/auth/app-login`, {
         correo: payload.correo.trim().toLowerCase(),
         contrasena: payload.contrasena,
-        empresaId: payload.empresaId ?? null
+        empresaId: payload.empresaId ?? null,
+        nuevaContrasena: payload.nuevaContrasena ?? null
       })
       .pipe(
         tap(response => {
@@ -250,6 +253,7 @@ export class AuthService {
   }
 
   logout() {
+    this.avisoAcceso.limpiar();
     if (!environment.apiBaseUrl) {
       this.limpiarSesion();
       return;
@@ -321,6 +325,7 @@ export class AuthService {
   }
 
   private persistirSesionDesdeRespuesta(response: RespuestaTokenJwt, correoFallback?: string) {
+    this.avisoAcceso.limpiar();
     const payload = this.decodeJwtPayload(response.tokenAcceso);
     const sesion: SesionUsuario = {
       tokenAcceso: response.tokenAcceso,

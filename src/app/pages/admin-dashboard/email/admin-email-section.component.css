@@ -72,3 +72,38 @@
   .email-status { justify-content: flex-start; }
   .provider-grid { grid-template-columns: 1fr; }
 }
+
+:host { min-width: 0; }
+.section-stack { display: grid; gap: 16px; min-width: 0; }
+.email-onboarding-card { flex-direction: row; border-radius: 20px; }
+.email-onboarding-copy, .email-onboarding-actions, .workspace-card { min-width: 0; }
+.email-onboarding-actions { flex: 0 1 360px; }
+.provider-logo.gmail { background: #fff1f2; color: #be123c; }
+.provider-option:focus-visible, button:focus-visible { outline: 3px solid #249aca; outline-offset: 3px; }
+button { min-height: 44px; }
+.email-provider-note { padding: 16px; border-radius: 12px; background: #eff6ff; line-height: 1.6; }
+:host .entity-meta { overflow-wrap: anywhere; line-height: 1.6; }
+:host .entity-row { gap: 16px; }
+@media (max-width: 1100px) {
+  .email-onboarding-card { flex-direction: column; align-items: stretch; gap: 20px; }
+  .email-onboarding-actions { flex: none; min-width: 0; justify-content: flex-start; }
+  .email-status { justify-content: flex-start; }
+  .workspace-grid.two-columns { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 767px) {
+  .email-onboarding-card, .provider-picker { padding: 20px; }
+  .email-onboarding-copy h3 { font-size: 1.25rem; }
+  .email-onboarding-actions { display: grid; grid-template-columns: minmax(0, 1fr); }
+  .email-onboarding-actions button { width: 100%; white-space: normal; height: auto; padding-block: 12px; }
+  .provider-option { padding: 16px; gap: 12px; }
+  :host .entity-row { flex-wrap: wrap; }
+  :host .entity-main { min-width: 0; }
+  :host .entity-side { max-width: 100%; }
+  input, textarea { font-size: 16px; }
+  .form-actions { position: sticky; bottom: 0; z-index: 2; padding: 12px 0 calc(12px + env(safe-area-inset-bottom)); background: #fff; border-top: 1px solid #e5eaf0; }
+  .form-actions button { width: 100%; }
+}
+@media (prefers-reduced-motion: reduce) { .provider-option { transition: none; } }
+
+.email-onboarding-copy h1 { margin: 8px 0 12px; color: #fff; font-size: clamp(1.6rem, 3vw, 2rem); font-weight: 750; line-height: 1.2; }
+.email-onboarding-actions button i { margin-right: 8px; }

@@ -35,8 +35,10 @@ public class ControladorProductosAdmin {
     }
 
     @GetMapping("/catalogo")
-    public CatalogoProductosAdminResponse catalogo(@AuthenticationPrincipal UsuarioAutenticado usuario) {
-        return catalogo.obtenerCatalogo(usuario.empresaId());
+    public CatalogoProductosAdminResponse catalogo(@AuthenticationPrincipal UsuarioAutenticado usuario,
+            @RequestParam(defaultValue = "0") int pagina, @RequestParam(defaultValue = "25") int tamano,
+            @RequestParam(defaultValue = "") String busqueda, @RequestParam(required=false) Long sucursalId) {
+        return catalogo.obtenerCatalogo(usuario.empresaId(), org.springframework.data.domain.PageRequest.of(Math.max(0, pagina), Math.max(1, Math.min(100, tamano))), busqueda, sucursalId);
     }
 
     @GetMapping("/tienda")

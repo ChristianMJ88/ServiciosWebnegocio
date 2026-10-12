@@ -63,7 +63,7 @@
 
 .dashboard-kpi-strip {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 0.8rem;
 }
 
@@ -127,6 +127,8 @@
 .dashboard-kpi-card--accent {
   border-color: rgba(37, 99, 235, 0.25);
 }
+
+.dashboard-kpi-card--primary { grid-column: span 2; }
 
 .dashboard-kpi-label,
 .dashboard-kpi-helper {
@@ -401,6 +403,7 @@
   .dashboard-kpi-strip {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
+  .dashboard-kpi-card--primary { grid-column: 1 / -1; }
 
 }
 
@@ -508,4 +511,44 @@
 @media (max-width: 767.98px) {
   .dashboard-period-bar { align-items: stretch; flex-direction: column; }
   .dashboard-period-control { width: 100%; min-width: 0; }
+}
+
+.dashboard-service-details > summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  min-height: 44px;
+  cursor: pointer;
+  list-style: none;
+}
+.dashboard-service-details > summary::-webkit-details-marker { display: none; }
+.dashboard-service-details > summary > span { display: grid; gap: .3rem; min-width: 0; }
+.dashboard-service-details > summary strong { color: #172033; font-size: 1.1rem; }
+.dashboard-service-details > summary small { color: #64748b; line-height: 1.5; }
+.dashboard-service-details[open] > summary > i { transform: rotate(180deg); }
+.dashboard-period-control select,
+.dashboard-agenda-link { min-height: 44px; }
+.dashboard-appointment-pagination button { width: 44px; height: 44px; }
+.dashboard-kpi-value,
+.team-metric-value { font-variant-numeric: tabular-nums; }
+.dashboard-agenda-link:focus-visible,
+.dashboard-appointment:focus-visible,
+.dashboard-service-details > summary:focus-visible,
+.dashboard-period-control select:focus-visible,
+.dashboard-appointment-pagination button:focus-visible {
+  outline: 3px solid #2563eb;
+  outline-offset: 3px;
+}
+@media (min-width: 768px) and (max-width: 1200px) {
+  .dashboard-insights-grid { grid-template-columns: 1fr; }
+}
+@media (max-width: 767.98px) {
+  .dashboard-period-control select { font-size: 1rem; }
+  .dashboard-kpi-card { padding-top: 2.7rem; }
+  .dashboard-kpi-card--primary { padding-top: .75rem; padding-left: 3.25rem; }
+  .dashboard-kpi-card--primary .dashboard-kpi-icon { left: .75rem; right: auto; top: 50%; transform: translateY(-50%); }
+  .dashboard-kpi-helper { line-height: 1.4; }
+  .dashboard-appointment-copy strong,
+  .dashboard-appointment-copy small { white-space: normal; overflow-wrap: anywhere; }
 }

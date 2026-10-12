@@ -12,7 +12,11 @@ export interface ClienteAdmin {
   notas: string | null;
   totalCitas: number;
   ultimaCita: string | null;
+  ultimaVisita?: string | null;
+  citasAgendadas?: number;
 }
+export interface FiltroClientesAdmin { nombre?: string; telefono?: string; visitaDesde?: string; visitaHasta?: string; citas?: string; orden?: string; }
+export interface MetadatosClientesAdmin { ordenes: {valor:string;etiqueta:string}[]; citas: {valor:string;etiqueta:string}[]; ordenPredeterminado:string; citasPredeterminado:string; }
 export type GuardarCliente = Pick<ClienteAdmin, 'nombreCompleto' | 'correo' | 'telefono' | 'aceptaWhatsapp' | 'notas'>;
 export interface PaginaClientesAdmin {
   contenido: ClienteAdmin[];
@@ -25,10 +29,15 @@ export interface PaginaClientesAdmin {
 @Injectable({ providedIn: 'root' })
 export class ClientsService {
   private readonly http = inject(HttpClient);
-  listar(busqueda = '', pagina = 0, tamano = 25): Observable<PaginaClientesAdmin> {
-    let params = new HttpParams().set('pagina', pagina).set('tamano', tamano);
+  listar(busqueda = '', pagina = 0, tamano?: number, filtros: FiltroClientesAdmin = {}): Observable<PaginaClientesAdmin> {
+    let params = new HttpParams().set('pagina', pagina);
+    if (tamano !== undefined) params = params.set('tamano', tamano);
     if (busqueda.trim()) params = params.set('busqueda', busqueda.trim());
+    for (const [clave, valor] of Object.entries(filtros)) { if (valor?.trim()) params = params.set(clave, valor.trim()); }
     return this.http.get<PaginaClientesAdmin>(`${environment.apiBaseUrl}/admin/clientes`, { params });
+  }
+  metadatos(): Observable<MetadatosClientesAdmin> {
+    return this.http.get<MetadatosClientesAdmin>(`${environment.apiBaseUrl}/admin/clientes/metadatos`);
   }
   crear(payload: GuardarCliente): Observable<ClienteAdmin> {
     return this.http.post<ClienteAdmin>(`${environment.apiBaseUrl}/admin/clientes`, payload);

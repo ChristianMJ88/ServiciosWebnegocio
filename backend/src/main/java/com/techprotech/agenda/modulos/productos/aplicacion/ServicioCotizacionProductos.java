@@ -76,32 +76,7 @@ public class ServicioCotizacionProductos {
     private BigDecimal aplicarDescuentos(ProductoEntidad producto, ZonaPrecioProductoEntidad zona, Long sucursalId,
                                          BigDecimal cantidad, BigDecimal inicial, String moneda,
                                          List<ReglaDescuentoProductoEntidad> reglas) {
-        BigDecimal precio = inicial;
-        for (ReglaDescuentoProductoEntidad regla : reglas) {
-            if (!aplica(regla, producto, zona, sucursalId) || cantidad.compareTo(regla.getCantidadMinima()) < 0) continue;
-            if (!"PORCENTAJE".equals(regla.getTipoDescuento()) && !moneda.equalsIgnoreCase(regla.getMoneda())) continue;
-            precio = switch (regla.getTipoDescuento()) {
-                case "PORCENTAJE" -> precio.subtract(precio.multiply(regla.getValor()).divide(BigDecimal.valueOf(100), 4, RoundingMode.HALF_UP));
-                case "MONTO" -> precio.subtract(regla.getValor());
-                case "PRECIO_FIJO" -> regla.getValor();
-                default -> precio;
-            };
-            precio = precio.max(BigDecimal.ZERO).setScale(2, RoundingMode.HALF_UP);
-            if (!regla.isCombinable()) break;
-        }
-        return precio.setScale(2, RoundingMode.HALF_UP);
-    }
-
-    private boolean aplica(ReglaDescuentoProductoEntidad regla, ProductoEntidad producto,
-                           ZonaPrecioProductoEntidad zona, Long sucursalId) {
-        if (regla.getZonaPrecioId() != null && (zona == null || !regla.getZonaPrecioId().equals(zona.getId()))) return false;
-        if (regla.getSucursalId() != null && !regla.getSucursalId().equals(sucursalId)) return false;
-        return switch (regla.getAlcance()) {
-            case "GLOBAL" -> true;
-            case "PRODUCTO" -> Objects.equals(regla.getProductoId(), producto.getId());
-            case "CATEGORIA" -> Objects.equals(regla.getCategoriaId(), producto.getCategoriaId());
-            default -> false;
-        };
+        return CalculadorDescuentosProductos.calcular(producto,zona,sucursalId,cantidad,inicial,moneda,reglas).precio();
     }
 
     private ZonaPrecioProductoEntidad resolverZona(Long empresaId, String clave) {
@@ -113,9 +88,7 @@ public class ServicioCotizacionProductos {
     }
 
     private boolean vigente(ReglaDescuentoProductoEntidad regla) {
-        LocalDate hoy = LocalDate.now();
-        return regla.isActiva() && (regla.getFechaInicio() == null || !hoy.isBefore(regla.getFechaInicio()))
-                && (regla.getFechaFin() == null || !hoy.isAfter(regla.getFechaFin()));
+        return CalculadorDescuentosProductos.vigente(regla,LocalDate.now());
     }
 
     private ResponseStatusException error(HttpStatus estado, String mensaje) {

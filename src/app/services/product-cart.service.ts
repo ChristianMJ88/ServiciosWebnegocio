@@ -39,6 +39,12 @@ export class ProductCartService {
     this.persist();
   }
 
+  increase(productId: number): void {
+    this.itemsState.update(items => items.map(item => item.productoId === productId
+      ? { ...item, cantidad: item.cantidad + 1 } : item));
+    this.persist();
+  }
+
   decrease(productId: number): void {
     this.itemsState.update(items => items.flatMap(item => item.productoId !== productId
       ? [item]

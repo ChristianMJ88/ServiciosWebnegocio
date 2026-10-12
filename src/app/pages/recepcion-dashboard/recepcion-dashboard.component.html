@@ -161,6 +161,7 @@
       <div class="alert alert-success" role="status">{{ mensaje() }}</div>
     }
 
+    <details class="recepcion-day-summary"><summary><i class="bi bi-bar-chart" aria-hidden="true"></i> Resumen de la jornada</summary>
     <section class="recepcion-metric-grid">
       @for (metrica of metricas(); track metrica) {
         <article class="recepcion-metric-card">
@@ -169,6 +170,7 @@
         </article>
       }
     </section>
+    </details>
 
     @if (panelMovil()) {
       <nav class="recepcion-mobile-switcher" role="tablist" aria-label="Herramientas de recepción">

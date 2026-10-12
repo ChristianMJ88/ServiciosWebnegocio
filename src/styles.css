@@ -3,6 +3,7 @@
 @import 'bootstrap-icons/font/bootstrap-icons.css';
 @import './app/pages/admin-dashboard/site/admin-site-section.component.css';
 @import './app/pages/admin-dashboard/admin-shell.css';
+@import './app/shared/styles/operation-workspace.css';
 
 /* Global visual system */
 :root {

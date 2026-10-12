@@ -16,6 +16,7 @@ public class VentaDetalleEntidad {
     @Column(name = "producto_id") private Long productoId;
     @Column(name = "servicio_id") private Long servicioId;
     @Column(name = "cita_id") private Long citaId;
+    @Column(name="prestador_responsable_id") private Long prestadorResponsableId;
     @Column(length = 80) private String sku;
     @Column(nullable = false, length = 180) private String nombre;
     @Column(nullable = false, precision = 14, scale = 3) private BigDecimal cantidad;
@@ -23,4 +24,6 @@ public class VentaDetalleEntidad {
     @Column(nullable = false, precision = 12, scale = 2) private BigDecimal descuento;
     @Column(nullable = false, precision = 12, scale = 2) private BigDecimal impuestos;
     @Column(nullable = false, precision = 12, scale = 2) private BigDecimal total;
+    @Column(name = "costo_unitario_historico", precision = 12, scale = 2)
+    private BigDecimal costoUnitarioHistorico;
 }

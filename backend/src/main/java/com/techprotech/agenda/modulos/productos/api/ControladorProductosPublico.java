@@ -21,13 +21,13 @@ public class ControladorProductosPublico {
 
     @GetMapping("/{slug}")
     public CatalogoProductosPublicoResponse catalogo(@PathVariable String slug,
-                                                      @RequestParam(required = false) String zona) {
-        return servicio.obtener(slug, zona, null);
+                                                      @RequestParam(required = false) String zona, @RequestParam(required=false) Long sucursalId) {
+        return servicio.obtener(slug, zona, null, sucursalId);
     }
 
     @GetMapping("/{slug}/{productoSlug}")
     public CatalogoProductosPublicoResponse producto(@PathVariable String slug, @PathVariable String productoSlug,
-                                                     @RequestParam(required = false) String zona) {
-        return servicio.obtener(slug, zona, productoSlug);
+                                                     @RequestParam(required = false) String zona, @RequestParam(required=false) Long sucursalId) {
+        return servicio.obtener(slug, zona, productoSlug, sucursalId);
     }
 }

@@ -10,6 +10,13 @@ import java.util.List;
 import java.util.Optional;
 
 public interface CitaRepositorio extends JpaRepository<CitaEntidad, Long> {
+    interface ConteoEstadoPrestador {
+        String getEstado();
+        long getCantidad();
+    }
+
+    @Query("select c.estado as estado, count(c) as cantidad from CitaEntidad c where c.empresaId = :empresaId and c.prestadorId = :prestadorId and c.fin > :ahora group by c.estado order by c.estado")
+    List<ConteoEstadoPrestador> contarCitasFuturasPorEstado(Long empresaId, Long prestadorId, LocalDateTime ahora);
 
     @Query("""
             select c from CitaEntidad c

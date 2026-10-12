@@ -40,4 +40,6 @@ public class CheckoutOrdenDetalleEntidad {
   private BigDecimal impuestos;
   @Column(nullable = false, precision = 12, scale = 2)
   private BigDecimal total;
+    @Column(name = "costo_unitario_historico", precision = 12, scale = 2)
+    private BigDecimal costoUnitarioHistorico;
 }

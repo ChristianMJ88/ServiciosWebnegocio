@@ -28,6 +28,7 @@ public class ServicioConfiguracionTienda {
             nueva.setEmpresaId(empresaId);
             return nueva;
         });
+        entidad.setDiasNuevo(request.diasNuevo());
         entidad.setHabilitada(request.habilitada());
         entidad.setMenuMostrarProductos(request.menuMostrarProductos());
         entidad.setTitulo(texto(request.titulo()));
@@ -45,12 +46,12 @@ public class ServicioConfiguracionTienda {
         return new ConfiguracionTiendaResponse(
                 entidad.isHabilitada(), entidad.isMenuMostrarProductos(), entidad.getTitulo(), entidad.getDescripcion(),
                 entidad.getSeoTitulo(), entidad.getSeoDescripcion(), entidad.getTextoAgregar(),
-                entidad.isCarritoHabilitado(), entidad.isMostrarStock(), entidad.isPermitirPedidoWhatsapp()
+                entidad.isCarritoHabilitado(), entidad.isMostrarStock(), entidad.isPermitirPedidoWhatsapp(), entidad.getDiasNuevo()
         );
     }
 
     private ConfiguracionTiendaResponse predeterminada() {
-        return new ConfiguracionTiendaResponse(false, true, null, null, null, null, null, true, false, true);
+        return new ConfiguracionTiendaResponse(false, true, null, null, null, null, null, true, false, true,0);
     }
 
     private String texto(String valor) {

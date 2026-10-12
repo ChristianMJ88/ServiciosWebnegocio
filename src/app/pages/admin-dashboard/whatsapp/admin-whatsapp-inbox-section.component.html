@@ -27,6 +27,7 @@
               class="form-control"
               name="whatsappInboxSearch"
               type="search"
+              aria-label="Buscar conversaciones por teléfono, mensaje o estado"
               placeholder="Buscar por teléfono, mensaje o estado"
               [(ngModel)]="filtro">
           </div>
@@ -47,6 +48,7 @@
                 type="button"
                 class="list-group-item list-group-item-action whatsapp-conversation-item"
                 [class.active]="conversacion.telefono === conversacionSeleccionada?.telefono"
+                [attr.aria-pressed]="conversacion.telefono === conversacionSeleccionada?.telefono"
                 (click)="seleccionarConversacion(conversacion.telefono)">
                 <span class="whatsapp-avatar">{{ conversacion.iniciales }}</span>
                 <span class="whatsapp-conversation-copy">
@@ -80,10 +82,6 @@
               <h3>{{ telefonoVisible(conversacion.telefono) }}</h3>
               <p>{{ conversacion.entrantes }} recibidos · {{ conversacion.salientes }} enviados</p>
             </div>
-            <span class="badge rounded-pill text-bg-success ms-auto">
-              <i class="bi bi-shield-check me-1" aria-hidden="true"></i>
-              Sesión 24h
-            </span>
           </header>
           <div class="whatsapp-thread-body" aria-label="Historial de mensajes">
             @for (mensaje of conversacion.mensajes; track trackByMensaje($index, mensaje)) {
@@ -101,12 +99,9 @@
                   <div class="whatsapp-bubble-meta">
                     <time>{{ mensaje.creadoEn | date:'dd/MM HH:mm':'':'es-MX' }}</time>
                     <span>{{ estadoVisible(mensaje) }}</span>
-                    @if (!esEntrante(mensaje) && !tieneError(mensaje)) {
-                      <i class="bi bi-check2-all" aria-hidden="true"></i>
-                    }
                   </div>
                   @if (mensaje.contentSid) {
-                    <small>Content SID: {{ mensaje.contentSid }}</small>
+                    <details class="whatsapp-message-details"><summary>Detalles de plantilla</summary><small>Content SID: {{ mensaje.contentSid }}</small></details>
                   }
                   @if (mensaje.detalleErrorProveedor) {
                     <small class="text-danger">{{ mensaje.detalleErrorProveedor }}</small>
@@ -130,6 +125,7 @@
               <textarea
                 class="form-control"
                 name="whatsappInboxReply"
+                aria-label="Escribir respuesta de WhatsApp"
                 [(ngModel)]="borrador"
                 rows="2"
                 maxlength="1600"
@@ -137,6 +133,7 @@
               <button
                 class="btn btn-primary whatsapp-send-button"
                 type="submit"
+                aria-label="Enviar mensaje"
                 [disabled]="enviando || !borrador.trim()">
                 <i class="bi bi-send-fill me-1" aria-hidden="true"></i>
                 {{ enviando ? 'Enviando...' : 'Enviar' }}

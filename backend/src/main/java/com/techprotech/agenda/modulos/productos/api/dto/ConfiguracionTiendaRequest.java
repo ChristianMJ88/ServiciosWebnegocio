@@ -12,6 +12,7 @@ public record ConfiguracionTiendaRequest(
         @Size(max = 40) String textoAgregar,
         boolean carritoHabilitado,
         boolean mostrarStock,
-        boolean permitirPedidoWhatsapp
+        boolean permitirPedidoWhatsapp,
+        @jakarta.validation.constraints.Min(0) int diasNuevo
 ) {
 }

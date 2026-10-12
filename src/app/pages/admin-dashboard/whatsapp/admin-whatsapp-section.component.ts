@@ -45,10 +45,34 @@ import { MetaEmbeddedSignupService } from './meta-embedded-signup.service';
   styleUrls: ['./admin-whatsapp-section.component.css']
 })
 export class AdminWhatsappSectionComponent implements OnInit, OnDestroy {
+  @Input() nombreEmpresa = '';
+  @Output() refresh = new EventEmitter<void>();
   private readonly adminService = inject(AdminService);
   private readonly embeddedSignup = inject(MetaEmbeddedSignupService);
 
   vistaActiva: 'estado' | 'configuracion' | 'plantillas' | 'actividad' = 'estado';
+  filtroPlantilla = '';
+  tipoPlantilla = '';
+  ordenPlantilla = 'asc';
+  bibliotecaFiltrada: PlantillaWhatsappAdmin[] | null = null;
+  buscandoPlantillas = false;
+  errorBiblioteca: string | null = null;
+
+  get tiposBiblioteca(): string[] {
+    return [...new Set(this.plantillasWhatsapp.map(p => p.tipoPlantilla).filter((tipo): tipo is string => !!tipo))].sort();
+  }
+
+  async filtrarBiblioteca(limpiar = false): Promise<void> {
+    if (limpiar) { this.filtroPlantilla = ''; this.tipoPlantilla = ''; this.ordenPlantilla = 'asc'; }
+    this.buscandoPlantillas = true;
+    this.errorBiblioteca = null;
+    try {
+      this.bibliotecaFiltrada = await firstValueFrom(this.adminService.getPlantillasWhatsapp({
+        buscar: this.filtroPlantilla, tipo: this.tipoPlantilla, orden: this.ordenPlantilla
+      }));
+    } catch { this.errorBiblioteca = 'No fue posible consultar las plantillas. Intenta nuevamente.'; }
+    finally { this.buscandoPlantillas = false; }
+  }
   onboardingTechProvider: OnboardingWhatsappResponse | null = null;
   telefonoOnboarding = '';
   displayNameOnboarding = '';

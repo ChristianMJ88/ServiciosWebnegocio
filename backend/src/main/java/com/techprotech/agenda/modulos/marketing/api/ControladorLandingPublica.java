@@ -8,5 +8,6 @@ public class ControladorLandingPublica {
  private final ServicioLandingMarketing servicio;
  public ControladorLandingPublica(ServicioLandingMarketing servicio){this.servicio=servicio;}
  @GetMapping("/indice") public List<String> indice(){return servicio.indice();}
+ @GetMapping("/navegacion") public List<com.techprotech.agenda.modulos.marketing.api.dto.EnlaceLandingPublicaDto> navegacion(){return servicio.navegacion();}
  @GetMapping("/{slug}") public LandingMarketingDto obtener(@PathVariable String slug){return servicio.publica(slug);}
 }

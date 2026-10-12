@@ -1,4 +1,5 @@
 :host { display: block; min-width: 0; }
+.metric-card { flex-direction: row; }
 .section-stack { gap: 1rem; }
 .metric-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: .75rem; }
 .metric-card { display: flex; align-items: center; gap: .75rem; min-height: 76px; padding: .8rem .9rem; border: 1px solid #e5eaf0; border-radius: 13px; background: #fff; box-shadow: 0 4px 14px rgba(15, 23, 42, .035); }
@@ -60,4 +61,24 @@
   .contacto-row__side { grid-template-columns: 1fr; }
   .contacto-row__side a { width: 100%; }
   .metric-card > i { width: 30px; height: 30px; }
+}
+
+.contacto-row__message-detail { min-width: 0; }
+.contacto-row__message-detail summary { display: flex; align-items: center; justify-content: space-between; gap: .5rem; min-height: 44px; color: #1d4ed8; font-size: .85rem; font-weight: 650; cursor: pointer; list-style: none; }
+.contacto-row__message-detail summary::-webkit-details-marker { display: none; }
+.contacto-row__message-detail[open] summary i { transform: rotate(180deg); }
+.contacto-row__message-detail .contacto-row__message { display: block; overflow: visible; min-height: 0; font-size: .85rem; line-height: 1.6; overflow-wrap: anywhere; }
+.contacts-search, .contacts-filter { min-height: 44px; }
+.contacts-search input, .contacts-filter select { min-height: 44px; font-size: .9rem; }
+.contacto-row__field select, .contacto-row__side a { min-height: 44px; font-size: .85rem; }
+.contacts-pagination { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .75rem; margin-top: 1rem; padding-top: 1rem; border-top: 1px solid #e5eaf0; }
+.contacts-pagination button { min-height: 44px; }
+.contacto-row__message-detail summary:focus-visible, .contacto-row__field select:focus-visible { outline: 3px solid #2563eb; outline-offset: 3px; }
+.contacts-search:focus-within, .contacts-filter:focus-within { outline: 3px solid #2563eb; outline-offset: 3px; }
+@media (max-width: 767.98px) {
+  .contacts-search input, .contacts-filter select, .contacto-row__field select { font-size: 1rem; }
+  .contacto-row__header { flex-wrap: wrap; }
+  .contacto-row__header .entity-title, .contacto-row__header .entity-meta, .contacto-row__subject { white-space: normal; overflow-wrap: anywhere; }
+  .contacto-row__header .entity-meta { max-width: none; font-size: .8rem; }
+  .contacto-row__details { font-size: .8rem; line-height: 1.5; }
 }

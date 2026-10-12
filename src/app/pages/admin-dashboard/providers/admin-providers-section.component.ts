@@ -1,5 +1,7 @@
+import { AccountAccessSecurityComponent } from '../shared/account-access-security.component';
+import { AdminWorkspaceComponent } from '../shared/admin-workspace.component';
 
-import { Component, EventEmitter, Input, OnInit, Output, inject, signal } from '@angular/core';
+import { Component, EventEmitter, Input, OnChanges, SimpleChanges, OnInit, Output, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
@@ -9,7 +11,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
-import { ConfiguracionMediaAdmin, EncuadreFotoColaborador, GuardarPrestadorPayload, PrestadorAdmin, ServicioAdmin, SucursalAdmin } from '../../../core/admin/admin.service';
+import { ImpactoPrestador, ConfiguracionMediaAdmin, EncuadreFotoColaborador, GuardarPrestadorPayload, PrestadorAdmin, ServicioAdmin, SucursalAdmin } from '../../../core/admin/admin.service';
 import { AdminProvidersFacade } from './admin-providers.facade';
 import { construirUrlRetrato } from './admin-providers.forms';
 import { finalize } from 'rxjs';
@@ -17,7 +19,7 @@ import { finalize } from 'rxjs';
 @Component({
   selector: 'app-admin-providers-section',
   standalone: true,
-  imports: [
+  imports: [AccountAccessSecurityComponent, AdminWorkspaceComponent,
     FormsModule,
     MatButtonModule,
     MatCardModule,
@@ -31,7 +33,7 @@ import { finalize } from 'rxjs';
   templateUrl: './admin-providers-section.component.html',
   styleUrls: ['./admin-providers-section.component.css']
 })
-export class AdminProvidersSectionComponent implements OnInit {
+export class AdminProvidersSectionComponent implements OnInit, OnChanges {
   private readonly facade = inject(AdminProvidersFacade);
   @Input({ required: true }) prestadorEditandoId!: number | null;
   @Input({ required: true }) formularioPrestador!: GuardarPrestadorPayload;
@@ -41,6 +43,7 @@ export class AdminProvidersSectionComponent implements OnInit {
   @Input({ required: true }) prestadores!: PrestadorAdmin[];
 
   @Output() clearEdit = new EventEmitter<void>();
+  @Output() securityChanged = new EventEmitter<void>();
   @Output() save = new EventEmitter<void>();
   @Output() branchChange = new EventEmitter<number>();
   @Output() serviceToggle = new EventEmitter<{ servicioId: number; checked: boolean }>();
@@ -56,6 +59,23 @@ export class AdminProvidersSectionComponent implements OnInit {
     { valor: 'CENTRO', etiqueta: 'Centro', icono: 'bi-bullseye' },
     { valor: 'SUPERIOR', etiqueta: 'Superior', icono: 'bi-arrow-up' }
   ];
+
+  readonly impacto = signal<ImpactoPrestador | null>(null);
+  readonly errorImpacto = signal('');
+  readonly cargandoImpacto = signal(false);
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes['prestadorEditandoId']) this.consultarImpacto();
+  }
+  consultarImpacto(): void {
+    this.impacto.set(null); this.errorImpacto.set('');
+    const id = this.prestadorEditandoId;
+    if (!id) { this.cargandoImpacto.set(false); return; }
+    this.cargandoImpacto.set(true);
+    this.facade.impacto(id).subscribe({
+      next: resultado => { if (this.prestadorEditandoId === id) { this.impacto.set(resultado); this.cargandoImpacto.set(false); } },
+      error: () => { if (this.prestadorEditandoId === id) { this.errorImpacto.set('No se pudo consultar la agenda. Revisa las citas antes de inactivar.'); this.cargandoImpacto.set(false); } }
+    });
+  }
 
   ngOnInit(): void {
     this.facade.cargarConfiguracionMedia().subscribe({

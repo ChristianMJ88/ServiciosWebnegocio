@@ -61,7 +61,7 @@
             @if (tenantActivo()) {
               <a [routerLink]="bookingLink()" class="footer-link">Agendar</a>
             } @else {
-              <a [attr.href]="showcaseHref()" class="footer-link">Empresas</a>
+              <a [attr.href]="directoryHref()" class="footer-link">Negocios</a>
             }
           </li>
           <li>
@@ -82,7 +82,7 @@
             <li><a [attr.href]="featuresHref()" class="footer-link">Agenda y reservas</a></li>
             <li><a [attr.href]="featuresHref()" class="footer-link">Paneles por rol</a></li>
             <li><a [attr.href]="showcaseHref()" class="footer-link">Web pública por empresa</a></li>
-            <li><a [attr.href]="reviewsHref()" class="footer-link">Reseñas y referencias</a></li>
+            <li><a [attr.href]="reviewsHref()" class="footer-link">Preguntas frecuentes</a></li>
           </ul>
         </div>
       }

@@ -1,19 +1,20 @@
 <section class="section-stack">
-  <div class="workspace-grid two-columns">
+  <app-admin-workspace [editando]="sucursalEditandoId" [separado]="true" tituloLista="Sucursales" tituloFormulario="Nueva sucursal">
     <mat-card class="workspace-card form-card">
       <div class="section-header">
         <div>
           <div class="section-eyebrow">Configuración</div>
           <h3>{{ sucursalEditandoId ? 'Editar sucursal' : 'Nueva sucursal' }}</h3>
+          <p class="branch-form-intro">Registra los datos del local, su ubicación y su estado. El horario de reservas se administra por separado en Disponibilidad.</p>
         </div>
         @if (sucursalEditandoId) {
           <button mat-stroked-button type="button" (click)="clearEdit.emit()">
-            Limpiar formulario
+            Cancelar edición
           </button>
         }
       </div>
 
-      <form class="admin-form-grid admin-form-shell" (ngSubmit)="save.emit()">
+      <form #branchForm="ngForm" class="admin-form-grid admin-form-shell" (ngSubmit)="branchForm.valid && save.emit()">
         <div class="form-block-title full-width">Información general</div>
 
         <mat-form-field appearance="outline" class="full-width">
@@ -28,14 +29,26 @@
 
         <mat-form-field appearance="outline">
           <mat-label>Teléfono</mat-label>
-          <input matInput name="sucursalTelefono" [(ngModel)]="formularioSucursal.telefono" maxlength="20">
+          <input matInput type="tel" autocomplete="tel" name="sucursalTelefono" [(ngModel)]="formularioSucursal.telefono" maxlength="20">
         </mat-form-field>
 
         <mat-form-field appearance="outline">
           <mat-label>Zona horaria</mat-label>
           <input matInput name="sucursalZonaHoraria" [(ngModel)]="formularioSucursal.zonaHoraria" required maxlength="60">
+          <mat-hint>La zona horaria del local se utiliza para sus citas y horarios.</mat-hint>
         </mat-form-field>
 
+        <div class="form-block-title full-width">Ubicación para el directorio</div>
+        @if(addressConfig()?.autocompleteHabilitado && addressConfig()?.browserApiKey){<app-google-address-autocomplete class="full-width" [config]="addressConfig()!" (addressSelected)="aplicarDireccion($event)"></app-google-address-autocomplete>}
+        <mat-form-field appearance="outline"><mat-label>Municipio o ciudad</mat-label><input matInput name="municipio" [(ngModel)]="formularioSucursal.municipio" maxlength="100"></mat-form-field>
+        <mat-form-field appearance="outline"><mat-label>Estado o región</mat-label><input matInput name="estadoRegion" [(ngModel)]="formularioSucursal.estadoRegion" maxlength="100"></mat-form-field>
+        <mat-form-field appearance="outline"><mat-label>País (código ISO, dos letras)</mat-label><input matInput name="paisCodigo" [(ngModel)]="formularioSucursal.paisCodigo" maxlength="2" pattern="[A-Z]{2}"></mat-form-field>
+        <mat-form-field appearance="outline"><mat-label>Código postal</mat-label><input matInput name="codigoPostal" [(ngModel)]="formularioSucursal.codigoPostal" maxlength="12"></mat-form-field>
+        <div class="full-width branch-schedule-note">
+          <strong>Horario de atención y reservas</strong>
+          <p>Se administra en Disponibilidad → Horarios. El sitio público utiliza esas mismas reglas de la sucursal. La disponibilidad del prestador y las excepciones también intervienen al reservar.</p>
+          <a mat-stroked-button href="/admin/reglas">Configurar horario semanal</a>
+        </div>
         <div class="form-block-title full-width">Estado operativo</div>
 
         <mat-slide-toggle name="sucursalActiva" [(ngModel)]="formularioSucursal.activa">
@@ -43,11 +56,14 @@
         </mat-slide-toggle>
 
         <div class="form-actions">
-          <button mat-flat-button color="primary" type="submit" [disabled]="guardandoSucursal">
-            {{ sucursalEditandoId ? 'Actualizar sucursal' : 'Crear sucursal' }}
+          <button mat-flat-button color="primary" type="submit" [disabled]="guardandoSucursal || branchForm.invalid">
+            {{ guardandoSucursal ? 'Guardando…' : sucursalEditandoId ? 'Actualizar sucursal' : 'Crear sucursal' }}
           </button>
         </div>
       </form>
+      @if (sucursalEditandoId) {
+        <app-branch-price-zone [sucursalId]="sucursalEditandoId" />
+      }
     </mat-card>
 
     <mat-card class="workspace-card list-card">
@@ -56,26 +72,32 @@
           <div class="section-eyebrow">Operación</div>
           <h3>Sucursales registradas</h3>
         </div>
+        <span class="branch-count">Registradas: {{ sucursales.length }}</span>
       </div>
 
-      <div class="entity-list">
-        @for (sucursal of sucursales; track sucursal) {
-          <article class="entity-row">
+      <div class="entity-list branch-list">
+        @for (sucursal of sucursales; track sucursal.id) {
+          <article class="entity-row branch-card">
             <div class="entity-main">
-              <div class="entity-title">{{ sucursal.nombre }}</div>
-              <div class="entity-meta">{{ sucursal.zonaHoraria }}</div>
+              <div class="branch-card-heading">
+                <span class="branch-avatar"><i class="bi bi-shop" aria-hidden="true"></i></span>
+                <div class="entity-title branch-name">{{ sucursal.nombre }}</div>
+              </div>
+              <div class="entity-meta"><i class="bi bi-clock" aria-hidden="true"></i> {{ sucursal.zonaHoraria }}</div>
               @if (sucursal.direccion) {
-                <div class="entity-meta">{{ sucursal.direccion }}</div>
+                <div class="entity-meta"><i class="bi bi-geo-alt" aria-hidden="true"></i> {{ sucursal.direccion }}</div>
               }
-              <div class="entity-meta">{{ sucursal.telefono || 'Sin teléfono' }}</div>
+              <div class="entity-meta"><i class="bi bi-telephone" aria-hidden="true"></i> {{ sucursal.telefono || 'Sin teléfono' }}</div>
             </div>
             <div class="entity-side">
               <span class="status-pill" [class.is-active]="sucursal.activa">{{ sucursal.activa ? 'Activa' : 'Inactiva' }}</span>
-              <button mat-stroked-button type="button" (click)="editBranch.emit(sucursal)">Editar</button>
+              <button mat-stroked-button type="button" [attr.aria-label]="'Editar ' + sucursal.nombre" (click)="editBranch.emit(sucursal)">Editar</button>
             </div>
           </article>
+        } @empty {
+          <div class="branch-empty"><i class="bi bi-shop" aria-hidden="true"></i><h3>Agrega tu primera sucursal</h3><p>Abre Nueva sucursal para registrar su ubicación y datos de contacto.</p></div>
         }
       </div>
     </mat-card>
-  </div>
+  </app-admin-workspace>
 </section>

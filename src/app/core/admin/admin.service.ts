@@ -41,6 +41,7 @@ export interface MetadatosDisponibilidadAdmin {
   intervaloMinimoMinutos: number;
 }
 
+export interface HorarioComercial {dia:number;apertura:string;cierre:string;}
 export interface SucursalAdmin {
   id: number;
   nombre: string;
@@ -48,6 +49,10 @@ export interface SucursalAdmin {
   telefono: string | null;
   zonaHoraria: string;
   activa: boolean;
+  municipio?: string | null;
+  estadoRegion?: string | null;
+  paisCodigo?: string | null;
+  codigoPostal?: string | null;
 }
 
 export interface GuardarSucursalPayload {
@@ -56,6 +61,10 @@ export interface GuardarSucursalPayload {
   telefono: string | null;
   zonaHoraria: string;
   activa: boolean;
+  municipio?: string | null;
+  estadoRegion?: string | null;
+  paisCodigo?: string | null;
+  codigoPostal?: string | null;
 }
 
 export interface ServicioAdmin {
@@ -172,7 +181,14 @@ export interface ImportarCatalogoSugeridoResponse {
   mensaje: string;
 }
 
+export interface ImpactoPrestador {
+  usuarioId: number;
+  citasFuturas: Array<{ estado: string; cantidad: number }>;
+}
+
 export interface PrestadorAdmin {
+  bloqueado: boolean;
+  nombreUsuario?: string | null;
   usuarioId: number;
   sucursalId: number;
   sucursalNombre: string;
@@ -189,6 +205,7 @@ export interface PrestadorAdmin {
 }
 
 export interface GuardarPrestadorPayload {
+  nombreUsuario?: string | null;
   sucursalId: number;
   correo: string;
   contrasenaTemporal: string | null;
@@ -205,6 +222,8 @@ export interface GuardarPrestadorPayload {
 export type EncuadreFotoColaborador = 'ROSTRO' | 'AUTOMATICO' | 'CENTRO' | 'SUPERIOR';
 
 export interface UsuarioInternoAdmin {
+  bloqueado: boolean;
+  nombreUsuario?: string | null;
   usuarioId: number;
   sucursalId: number | null;
   sucursalNombre: string | null;
@@ -279,6 +298,7 @@ export interface PermisoAdmin {
 }
 
 export interface GuardarUsuarioInternoPayload {
+  nombreUsuario?: string | null;
   sucursalId: number | null;
   sucursalIds: number[];
   correo: string;
@@ -831,6 +851,7 @@ export interface GuardarConfiguracionWhatsappPayload {
 }
 
 export interface PlantillaWhatsappAdmin {
+  cuerpo?: string | null;
   sid: string;
   nombre: string;
   idioma: string | null;
@@ -1166,6 +1187,10 @@ export class AdminService {
     return this.http.patch<UsuarioInternoAdmin>(`${environment.apiBaseUrl}/admin/usuarios-internos/${id}`, payload);
   }
 
+  invitarPrestador(payload: GuardarPrestadorPayload) {
+    return this.http.post<InvitacionUsuarioAdmin>(`${environment.apiBaseUrl}/admin/prestadores/invitaciones`,payload);
+  }
+
   crearPrestador(payload: GuardarPrestadorPayload): Observable<PrestadorAdmin> {
     return this.http.post<PrestadorAdmin>(`${environment.apiBaseUrl}/admin/prestadores`, payload);
   }
@@ -1184,6 +1209,14 @@ export class AdminService {
 
   crearReglaDisponibilidad(payload: GuardarReglaDisponibilidadPayload): Observable<ReglaDisponibilidadAdmin> {
     return this.http.post<ReglaDisponibilidadAdmin>(`${environment.apiBaseUrl}/admin/disponibilidad/reglas`, payload);
+  }
+
+  guardarHorarioSemanal(horario: GuardarReglaDisponibilidadPayload, diasSemana: number[], reemplazar: boolean): Observable<ReglaDisponibilidadAdmin[]> {
+    return this.http.post<ReglaDisponibilidadAdmin[]>(`${environment.apiBaseUrl}/admin/disponibilidad/reglas/semana`, {horario,diasSemana,reemplazar});
+  }
+
+  eliminarReglaDisponibilidad(id: number): Observable<void> {
+    return this.http.delete<void>(`${environment.apiBaseUrl}/admin/disponibilidad/reglas/${id}`);
   }
 
   actualizarReglaDisponibilidad(id: number, payload: GuardarReglaDisponibilidadPayload): Observable<ReglaDisponibilidadAdmin> {
@@ -1316,6 +1349,10 @@ export class AdminService {
     return this.http.post<ArchivoMediaAdmin>(`${environment.apiBaseUrl}/admin/catalogo/media/imagenes`, formulario);
   }
 
+  getImpactoPrestador(id: number): Observable<ImpactoPrestador> {
+    return this.http.get<ImpactoPrestador>(`${environment.apiBaseUrl}/admin/prestadores/${id}/impacto`);
+  }
+
   getConfiguracionMediaPrestadores(): Observable<ConfiguracionMediaAdmin> {
     return this.http.get<ConfiguracionMediaAdmin>(`${environment.apiBaseUrl}/admin/prestadores/media/configuracion`);
   }
@@ -1366,8 +1403,8 @@ export class AdminService {
     return this.http.patch<ConfiguracionWhatsappAdmin>(`${environment.apiBaseUrl}/admin/configuracion-whatsapp`, payload);
   }
 
-  getPlantillasWhatsapp(): Observable<PlantillaWhatsappAdmin[]> {
-    return this.http.get<PlantillaWhatsappAdmin[]>(`${environment.apiBaseUrl}/admin/configuracion-whatsapp/plantillas`);
+  getPlantillasWhatsapp(filtros?: { buscar: string; tipo: string; orden: string }): Observable<PlantillaWhatsappAdmin[]> {
+    return this.http.get<PlantillaWhatsappAdmin[]>(`${environment.apiBaseUrl}/admin/configuracion-whatsapp/plantillas`, { params: filtros });
   }
 
   getPlantillasWhatsappEmpresa(): Observable<PlantillaWhatsappEmpresaAdmin[]> {

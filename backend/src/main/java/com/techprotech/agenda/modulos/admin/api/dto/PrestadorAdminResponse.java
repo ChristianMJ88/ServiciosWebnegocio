@@ -16,6 +16,8 @@ public record PrestadorAdminResponse(
         String colorAgenda,
         boolean activo,
         List<Long> servicioIds,
-        List<String> servicioNombres
-) {
+        List<String> servicioNombres,
+        String nombreUsuario,
+        boolean bloqueado
+) implements AccesoUsuarioCreadoResponse {
 }

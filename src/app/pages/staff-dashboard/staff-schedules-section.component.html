@@ -4,13 +4,15 @@
       <div class="staff-section-header">
         <div>
           <div class="staff-eyebrow">Disponibilidad base</div>
-          <h3>{{ reglaEditandoId() ? 'Editar horario' : 'Nuevo horario base' }}</h3>
+          <h3>{{ reglaEditandoId() ? 'Editar horario' : 'Configurar mi semana' }}</h3>
         </div>
       </div>
 
-      <form class="staff-form-grid staff-form-shell" (ngSubmit)="save.emit()">
+      <p class="helper-text">Envía tu propuesta al administrador. Tu horario vigente se conserva hasta que autorice el cambio.</p>
+      <form class="staff-form-grid staff-form-shell" (ngSubmit)="guardar()">
         <div class="form-block-title full-width">Disponibilidad</div>
 
+        @if (reglaEditandoId()) {
         <mat-form-field appearance="outline">
           <mat-label>Día</mat-label>
           <mat-select name="staffReglaDiaSemana" [(ngModel)]="formularioRegla().diaSemana">
@@ -19,6 +21,28 @@
             }
           </mat-select>
         </mat-form-field>
+
+        } @else {
+          <div class="weekly-selector full-width">
+            <div class="weekly-selector__header"><strong>¿Qué días atenderás?</strong><div>
+              <button mat-button type="button" (click)="seleccionarTodos()">Toda la semana</button>
+              <button mat-button type="button" (click)="diasSeleccionados.set([])">Limpiar</button>
+            </div></div>
+            <p>Selecciona varios días y captura el horario una sola vez. La reserva también respetará los horarios de tu sucursal, los servicios asignados y los bloqueos.</p>
+            <div class="weekly-days">
+              @for (dia of diasSemana(); track dia.value) {
+                <button type="button" [attr.aria-pressed]="diasSeleccionados().includes(dia.value)" (click)="seleccionarDia(dia.value)">
+                  <strong>{{dia.label}}</strong><span>
+                    @for (regla of reglasDelDia(dia.value); track regla.id) {<span>{{regla.horaInicio.slice(0, 5)}}–{{regla.horaFin.slice(0, 5)}}</span>}
+                    @empty {<span>Sin reglas</span>}
+                  </span>
+                </button>
+              }
+            </div>
+            <label class="weekly-replace"><input type="checkbox" name="reemplazarSemana" [(ngModel)]="reemplazar"> Reemplazar los intervalos seleccionados con esta misma vigencia</label>
+            @if (reemplazar) {<p class="weekly-warning">Se conservan los demás días, otras vigencias y los bloqueos.</p>}
+          </div>
+        }
 
         <mat-form-field appearance="outline">
           <mat-label>Inicio</mat-label>
@@ -32,7 +56,7 @@
 
         <mat-form-field appearance="outline">
           <mat-label>Intervalo</mat-label>
-          <input matInput type="number" min="5" step="5" name="staffReglaIntervalo" [(ngModel)]="formularioRegla().intervaloMinutos" required>
+          <input matInput type="number" [min]="intervaloMinimoMinutos()" [step]="intervaloMinimoMinutos()" name="staffReglaIntervalo" [(ngModel)]="formularioRegla().intervaloMinutos" required>
         </mat-form-field>
 
         <div class="form-block-title full-width">Vigencia</div>
@@ -48,8 +72,8 @@
         </mat-form-field>
 
         <div class="staff-form-actions">
-          <button mat-flat-button color="primary" type="submit" [disabled]="guardandoRegla()">
-            {{ reglaEditandoId() ? 'Actualizar horario' : 'Guardar horario' }}
+          <button mat-flat-button color="primary" type="submit" [disabled]="guardandoRegla() || (!reglaEditandoId() && !diasSeleccionados().length)">
+            Enviar solicitud de horario
           </button>
           @if (reglaEditandoId()) {
             <button mat-stroked-button type="button" (click)="cancelEdit.emit()">
@@ -63,7 +87,7 @@
     <mat-card class="staff-workspace-card">
       <div class="staff-section-header">
         <div>
-          <div class="staff-eyebrow">Horarios activos</div>
+          <div class="staff-eyebrow">Horarios registrados</div>
           <h3>Configuración actual</h3>
         </div>
       </div>
@@ -72,7 +96,7 @@
         @for (regla of reglas(); track regla) {
           <article class="staff-entity-card">
             <div>
-              <div class="staff-entity-title">{{ etiquetaDiaSemana()(regla.diaSemana) }} · {{ regla.horaInicio }} - {{ regla.horaFin }}</div>
+              <div class="staff-entity-title">{{ etiquetaDiaSemana()(regla.diaSemana) }} · {{ regla.horaInicio.slice(0, 5) }}–{{ regla.horaFin.slice(0, 5) }}</div>
               <div class="staff-entity-meta">Intervalo {{ regla.intervaloMinutos }} min</div>
               @if (regla.vigenteDesde || regla.vigenteHasta) {
                 <div class="staff-entity-meta">

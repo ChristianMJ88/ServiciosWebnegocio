@@ -10,6 +10,7 @@ public record ConfiguracionTiendaResponse(
         String textoAgregar,
         boolean carritoHabilitado,
         boolean mostrarStock,
-        boolean permitirPedidoWhatsapp
+        boolean permitirPedidoWhatsapp,
+        int diasNuevo
 ) {
 }

@@ -1,4 +1,4 @@
-:host {
+app-staff-dashboard {
   --staff-sidebar-expanded: 290px;
   --staff-sidebar-collapsed: 76px;
   --staff-sidebar-mobile: min(320px, calc(100vw - 2rem));
@@ -96,7 +96,7 @@
   min-width: 0;
 }
 
-.staff-submenu.show {
+.staff-submenu.is-expanded {
   display: grid;
   gap: 0.25rem;
 }
@@ -2110,7 +2110,7 @@
 }
 
 @media (max-width: 991.98px) {
-  :host {
+  app-staff-dashboard {
     --staff-sidebar-mobile: min(320px, calc(100vw - 2rem));
   }
 
@@ -2169,7 +2169,7 @@
 }
 
 @media (max-width: 767.98px) {
-  :host {
+  app-staff-dashboard {
     --staff-sidebar-mobile: min(300px, calc(100vw - 1.2rem));
   }
 
@@ -2333,4 +2333,36 @@
   .staff-agenda-mobile-hint {
     font-size: 0.8rem;
   }
+}
+app-staff-dashboard .staff-schedule-success {
+  padding: 1rem;
+  border: 1px solid #a7f3d0;
+  border-radius: 14px;
+  color: #065f46;
+  background: #ecfdf5;
+  line-height: 1.5;
+}
+
+/* Staff owns navigation layout; Material owns drawer behavior. */
+.staff-shell button, .staff-shell input, .staff-shell textarea { font-family: var(--staff-font); }
+app-staff-dashboard .mat-mdc-form-field, app-staff-dashboard .mat-mdc-select { font-family: var(--staff-font); }
+@media (max-width: 767.98px) {
+  .staff-content-header { padding: 1rem; gap: .75rem; }
+  .staff-content-header-actions { flex-direction: row; align-items: center; }
+  .staff-content-header-actions .staff-btn { width: auto; min-height: 44px; }
+}
+.staff-menu-toggle { display: flex; align-items: center; gap: .6rem; min-height: 48px; }
+.staff-menu-count { margin-left: auto; border-radius: 999px; padding: .2rem .5rem; }
+.staff-menu-chevron { flex: 0 0 auto; }
+.staff-layout.is-compact .staff-sidebar { padding: 1rem .5rem; }
+.staff-layout.is-compact .staff-nav-item { min-height: 52px; width: 100%; gap: 0; }
+.staff-layout.is-compact .staff-nav-icon { width: 36px; min-width: 36px; height: 36px; }
+.staff-layout .staff-drawer.mat-drawer { transition: none; }
+.staff-layout:not(.is-compact) .mat-drawer-content { margin-left: var(--staff-sidebar-expanded) !important; }
+@media (max-width: 991.98px) {
+  .staff-layout:not(.is-compact) .mat-drawer-content { margin-left: 0 !important; }
+  .staff-nav-item { min-height: 56px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .staff-submenu, .staff-nav-item, .staff-menu-chevron, .staff-layout .mat-drawer-content { transition: none; }
 }

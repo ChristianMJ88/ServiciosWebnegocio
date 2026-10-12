@@ -25,8 +25,9 @@ export class FooterComponent {
   readonly bookingLink = computed(() => this.tenantActivo() ? this.tenantContext.routeFor('agendar') : '/');
   readonly contactLink = computed(() => this.tenantActivo() ? this.tenantContext.routeFor('contacto') : '/acceso');
   readonly accessHref = computed(() => this.platformHost.appUrl('/acceso'));
-  readonly featuresHref = computed(() => this.platformHost.marketingUrl('/#funcionalidades'));
-  readonly showcaseHref = computed(() => this.platformHost.marketingUrl('/#empresas'));
-  readonly reviewsHref = computed(() => this.platformHost.marketingUrl('/#resenas'));
+  readonly directoryHref = computed(() => this.platformHost.marketingUrl('/negocios'));
+  readonly featuresHref = computed(() => this.platformHost.marketingUrl('/#producto'));
+  readonly showcaseHref = computed(() => this.platformHost.marketingUrl('/#demostracion'));
+  readonly reviewsHref = computed(() => this.platformHost.marketingUrl('/#faq'));
   readonly registerHref = computed(() => this.platformHost.marketingUrl('/registro'));
 }

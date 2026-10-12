@@ -1,4 +1,4 @@
-import { Component, effect, input, OnDestroy, output, signal } from '@angular/core';
+import { Component, effect, input, OnDestroy, output, signal, untracked } from '@angular/core';
 import { GrupoSidebarAdminView, PanelOperativoAdmin, SeccionAdmin } from '../admin-dashboard.config';
 import { RouterLink } from '@angular/router';
 
@@ -14,9 +14,12 @@ export class AdminSidebarComponent implements OnDestroy {
   readonly panelesOperativos = input<readonly PanelOperativoAdmin[]>([]);
   readonly seccionActiva = input.required<SeccionAdmin>();
   readonly compacto = input(false);
+  readonly movil = input(false);
   readonly inicialesEmpresa = input.required<string>();
   readonly nombreEmpresa = input.required<string>();
   readonly seleccionar = output<SeccionAdmin>();
+  readonly contraer = output<void>();
+  readonly ocultar = output<void>();
 
   private readonly gruposExpandidos = signal<ReadonlySet<string>>(new Set());
   readonly grupoFlyout = signal<GrupoSidebarAdminView | null>(null);
@@ -26,13 +29,18 @@ export class AdminSidebarComponent implements OnDestroy {
   constructor() {
     effect(() => {
       const grupoActivo = this.grupos().find(grupo => grupo.modulos.includes(this.seccionActiva()));
-      if (grupoActivo && !this.gruposExpandidos().has(grupoActivo.id)) {
+      if (grupoActivo && !untracked(this.gruposExpandidos).has(grupoActivo.id)) {
         this.gruposExpandidos.update(actuales => new Set([...actuales, grupoActivo.id]));
       }
     });
   }
 
   alternarGrupo(grupoId: string): void {
+    if (this.compacto()) {
+      const grupo = this.grupos().find(item => item.id === grupoId);
+      this.grupoFlyout.set(this.grupoFlyout()?.id === grupoId ? null : grupo ?? null);
+      return;
+    }
     this.gruposExpandidos.update(actuales => {
       const siguientes = new Set(actuales);
       siguientes.has(grupoId) ? siguientes.delete(grupoId) : siguientes.add(grupoId);

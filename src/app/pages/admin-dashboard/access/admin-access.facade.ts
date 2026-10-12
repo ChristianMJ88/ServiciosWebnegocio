@@ -11,7 +11,7 @@ export class AdminAccessFacade {
     const payload = construirPayloadUsuarioInterno(formulario);
     return id
       ? this.adminService.actualizarUsuarioInterno(id, payload)
-      : this.adminService.invitarUsuarioInterno(payload);
+      : payload.nombreUsuario ? this.adminService.crearUsuarioInterno(payload) : this.adminService.invitarUsuarioInterno(payload);
   }
 
   guardarRol(id: number | null, clonarDesdeId: number | null, formulario: GuardarRolInternoPayload) {

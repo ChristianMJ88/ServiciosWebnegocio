@@ -21,6 +21,7 @@ export interface StoreProduct {
   controlaInventario: boolean;
   disponible: boolean;
   existencia: number | null;
+  nuevo?: boolean;
 }
 export interface PublicProductCatalog {
   empresaId: number;
@@ -31,14 +32,17 @@ export interface PublicProductCatalog {
   zonas: StoreZone[];
   categorias: StoreCategory[];
   productos: StoreProduct[];
+  sucursales: {id:number;nombre:string}[];
+  sucursalSeleccionadaId: number | null;
 }
 
 @Injectable({ providedIn: 'root' })
 export class ProductStoreService {
   private readonly http = inject(HttpClient);
 
-  catalog(slug: string, zone?: string | null, productSlug?: string | null): Observable<PublicProductCatalog> {
+  catalog(slug: string, zone?: string | null, productSlug?: string | null, branchId?: string | null): Observable<PublicProductCatalog> {
     let params = new HttpParams();
+    if (branchId) params=params.set('sucursalId',branchId);
     if (zone) params = params.set('zona', zone);
     const path = productSlug
       ? `/publico/productos/sitio/${encodeURIComponent(slug)}/${encodeURIComponent(productSlug)}`

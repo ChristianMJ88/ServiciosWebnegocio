@@ -10,7 +10,7 @@ import java.util.List;
 public record UsuarioInternoAdminRequest(
         Long sucursalId,
         List<Long> sucursalIds,
-        @Email @NotBlank @Pattern(regexp = "^[A-Za-z0-9.!#$%&'*+/=?^_`{|}~-]+@[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?(?:\\.[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?)+$", message = "El correo debe incluir un dominio válido") String correo,
+        @Email @Size(max=150) String correo,
         @Size(min = 8, max = 100) String contrasenaTemporal,
         @NotBlank @Size(max = 150) String nombreCompleto,
         @Size(max = 30) String telefono,
@@ -18,6 +18,8 @@ public record UsuarioInternoAdminRequest(
         Long rolEmpresaId,
         List<String> permisosDirectos,
         boolean activo,
-        @Size(max = 500) String notas
+        @Size(max = 500) String notas,
+        @Pattern(regexp="[a-zA-Z0-9._-]{3,80}") String nombreUsuario
 ) {
+ public UsuarioInternoAdminRequest(Long sucursalId,List<Long> sucursalIds,String correo,String contrasenaTemporal,String nombreCompleto,String telefono,String puesto,Long rolEmpresaId,List<String> permisosDirectos,boolean activo,String notas){this(sucursalId,sucursalIds,correo,contrasenaTemporal,nombreCompleto,telefono,puesto,rolEmpresaId,permisosDirectos,activo,notas,null);}
 }

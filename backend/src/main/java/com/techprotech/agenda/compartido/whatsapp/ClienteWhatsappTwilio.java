@@ -433,7 +433,8 @@ public class ClienteWhatsappTwilio {
             categoria = primerTexto(approvalsWhatsapp.path("category"));
         }
         String tipoPlantilla = resolverTipoPlantilla(contenido.path("types"));
-        return new PlantillaTwilioWhatsapp(sid, nombre, idioma, categoria, estado, tipoPlantilla);
+        String cuerpo = contenido.path("types").path(tipoPlantilla).path("body").asText(null);
+        return new PlantillaTwilioWhatsapp(sid, nombre, idioma, categoria, estado, tipoPlantilla, cuerpo);
     }
 
     private String resolverTipoPlantilla(JsonNode types) {
@@ -517,8 +518,12 @@ public class ClienteWhatsappTwilio {
             String idioma,
             String categoria,
             String estado,
-            String tipoPlantilla
+            String tipoPlantilla,
+            String cuerpo
     ) {
+        public PlantillaTwilioWhatsapp(String sid, String nombre, String idioma, String categoria, String estado, String tipoPlantilla) {
+            this(sid, nombre, idioma, categoria, estado, tipoPlantilla, null);
+        }
     }
 
     public record SubcuentaTwilioProvisionada(

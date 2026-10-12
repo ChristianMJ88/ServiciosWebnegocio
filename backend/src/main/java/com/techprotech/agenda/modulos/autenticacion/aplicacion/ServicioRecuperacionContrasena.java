@@ -80,8 +80,11 @@ public class ServicioRecuperacionContrasena {
       throw new ResponseStatusException(HttpStatus.GONE, "El enlace expiró");
     UsuarioEntidad usuario = usuarios.findByIdAndEmpresaId(r.getUsuarioId(), r.getEmpresaId())
       .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "El usuario no existe"));
+    if (!usuario.isHabilitado() || usuario.isBloqueado())
+      throw new ResponseStatusException(HttpStatus.FORBIDDEN, "El acceso está suspendido; contacta al administrador");
+    usuario.invalidarSesiones();
     usuario.setContrasenaHash(encoder.encode(request.contrasena()));
-    usuario.setBloqueado(false);
+
     usuario.setIntentosLoginFallidos(0);
     usuario.setLoginBloqueadoHasta(null);
     usuarios.save(usuario);

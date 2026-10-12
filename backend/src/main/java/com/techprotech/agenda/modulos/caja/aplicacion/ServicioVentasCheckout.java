@@ -26,16 +26,19 @@ public class ServicioVentasCheckout {
     private final VentaRepositorio ventas;
     private final VentaDetalleRepositorio detallesVenta;
     private final PagoVentaRepositorio pagos;
+    private final com.techprotech.agenda.modulos.productos.aplicacion.ServicioComisionesDevengadas comisiones;
 
     public ServicioVentasCheckout(CheckoutOrdenRepositorio ordenes, CheckoutOrdenDetalleRepositorio detallesCheckout,
                                   IntentoPagoCheckoutRepositorio intentos, VentaRepositorio ventas,
-                                  VentaDetalleRepositorio detallesVenta, PagoVentaRepositorio pagos) {
+                                  VentaDetalleRepositorio detallesVenta, PagoVentaRepositorio pagos,
+                                  com.techprotech.agenda.modulos.productos.aplicacion.ServicioComisionesDevengadas comisiones) {
         this.ordenes = ordenes;
         this.detallesCheckout = detallesCheckout;
         this.intentos = intentos;
         this.ventas = ventas;
         this.detallesVenta = detallesVenta;
         this.pagos = pagos;
+        this.comisiones = comisiones;
     }
 
     @Transactional
@@ -66,7 +69,7 @@ public class ServicioVentasCheckout {
         List<CheckoutOrdenDetalleEntidad> origen = detallesCheckout
                 .findByEmpresaIdAndCheckoutOrdenIdOrderByIdAsc(empresaId, ordenId);
         Long ventaId = venta.getId();
-        detallesVenta.saveAll(origen.stream().map(item -> detalle(empresaId, ventaId, item)).toList());
+        var filas=detallesVenta.saveAll(origen.stream().map(item -> detalle(empresaId, ventaId, item)).toList());
 
         PagoVentaEntidad pago = new PagoVentaEntidad();
         pago.setEmpresaId(empresaId);
@@ -77,6 +80,7 @@ public class ServicioVentasCheckout {
         pago.setReferencia(intento.getReferenciaExterna());
         pago.setRegistradoEn(LocalDateTime.now());
         pagos.save(pago);
+        comisiones.registrar(venta, filas);
     }
 
     private VentaDetalleEntidad detalle(Long empresaId, Long ventaId, CheckoutOrdenDetalleEntidad item) {
@@ -85,6 +89,7 @@ public class ServicioVentasCheckout {
         detalle.setVentaId(ventaId);
         detalle.setTipoConcepto(item.getTipoConcepto());
         detalle.setProductoId(item.getProductoId());
+        detalle.setCostoUnitarioHistorico(item.getCostoUnitarioHistorico());
         detalle.setServicioId(item.getServicioId());
         detalle.setCitaId(item.getCitaId());
         detalle.setNombre(item.getNombre());

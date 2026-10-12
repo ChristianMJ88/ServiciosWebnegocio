@@ -34,6 +34,7 @@ public record VentaResponse(
             BigDecimal precioUnitario,
             BigDecimal descuento,
             BigDecimal impuestos,
-            BigDecimal total
+            BigDecimal total,
+            BigDecimal costoUnitarioHistorico
     ) {}
 }

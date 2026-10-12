@@ -23,6 +23,19 @@ public interface ProductoRepositorio extends JpaRepository<ProductoEntidad, Long
     boolean existsByEmpresaIdAndSlug(Long empresaId, String slug);
     boolean existsByEmpresaIdAndSlugAndIdNot(Long empresaId, String slug, Long id);
     long countByEmpresaIdAndActivoTrue(Long empresaId);
+    long countByEmpresaId(Long empresaId);
+    long countByEmpresaIdAndActivoTrueAndVisiblePublicoTrue(Long empresaId);
+    @Query("""
+      select p from ProductoEntidad p
+      where p.empresaId = :empresaId and (:busqueda = '' or lower(p.nombre) like concat('%', :busqueda, '%')
+        or lower(p.sku) like concat('%', :busqueda, '%')
+        or p.categoriaId in (select c.id from CategoriaProductoEntidad c where c.empresaId = :empresaId and lower(c.nombre) like concat('%', :busqueda, '%'))
+        or p.proveedorId in (select v.id from ProveedorProductoEntidad v where v.empresaId = :empresaId and lower(v.nombre) like concat('%', :busqueda, '%')))
+      order by p.nombre, p.id
+      """)
+    org.springframework.data.domain.Page<ProductoEntidad> buscarPagina(@org.springframework.data.repository.query.Param("empresaId") Long empresaId,
+      @org.springframework.data.repository.query.Param("busqueda") String busqueda, org.springframework.data.domain.Pageable pageable);
+
 
     @Query(value = """
             SELECT sitio.slug AS sitioSlug, producto.slug AS productoSlug

@@ -2,6 +2,7 @@
   <mat-drawer-container
     class="admin-layout"
     [class.is-mobile]="panelMovil()"
+    [class.is-hidden]="sidebarOculto()"
     [class.is-rail]="!panelMovil() && !sidebarAbierto()"
     [hasBackdrop]="panelMovil()"
     [autosize]="true"
@@ -10,15 +11,18 @@
       class="admin-drawer"
       position="start"
       [mode]="panelMovil() ? 'over' : 'side'"
-      [opened]="panelMovil() ? sidebarAbierto() : true"
+      [opened]="!sidebarOculto() && (panelMovil() ? sidebarAbierto() : true)"
       [disableClose]="!panelMovil()">
       <app-admin-sidebar
         [grupos]="gruposSidebar()"
+        [movil]="panelMovil()"
         [panelesOperativos]="panelesOperativos()"
         [seccionActiva]="seccionActiva()"
         [compacto]="!panelMovil() && !sidebarAbierto()"
         [inicialesEmpresa]="inicialesEmpresa()"
         [nombreEmpresa]="nombreEmpresa()"
+        (contraer)="alternarSidebar()"
+        (ocultar)="ocultarSidebar()"
         (seleccionar)="seleccionarSeccion($event)" />
     </mat-drawer>
 
@@ -171,6 +175,7 @@
               (abrirPaso)="abrirPasoOnboarding($event)" />
           }
         }
+        @if (seccionActiva() !== 'productos' && seccionActiva() !== 'inventario' && seccionActiva() !== 'correo' && seccionActiva() !== 'whatsapp' && seccionActiva() !== 'comisiones') {
         <header class="content-header" [class.is-services-header]="seccionActiva() === 'servicios'">
           <div class="content-header-copy">
             <div class="content-header-meta">
@@ -191,7 +196,18 @@
               Actualizar
             </button>
           </div>
+          @if (seccionActiva() === 'servicios') {
+            <div class="catalog-header-guide">
+              <p>Organiza la oferta como la verá el cliente.</p>
+              <ol aria-label="Jerarquía del catálogo">
+                <li><span>1</span><strong>Grupo</strong></li>
+                <li><span>2</span><strong>Subgrupo</strong></li>
+                <li><span>3</span><strong>Servicio</strong></li>
+              </ol>
+            </div>
+          }
         </header>
+        }
 
         @if (error) {
           <div class="alert alert-danger admin-alert" role="alert">
@@ -262,6 +278,8 @@
     @if (seccionActiva() === 'correo') {
       @defer {
       <app-admin-email-section
+        [nombreEmpresa]="nombreEmpresa()"
+        (refresh)="recargar()"
         [formularioCorreo]="formularioCorreo"
         [guardandoCorreo]="guardandoCorreo"
         [configuracionCorreo]="configuracionCorreo()"
@@ -317,6 +335,8 @@
 @if (seccionActiva() === 'whatsapp') {
   @defer {
   <app-admin-whatsapp-section
+    [nombreEmpresa]="nombreEmpresa()"
+    (refresh)="recargar()"
     [formularioWhatsapp]="formularioWhatsapp"
     [formularioProvisionSubcuentaWhatsapp]="formularioProvisionSubcuentaWhatsapp"
     [formularioProvisionMessagingServiceWhatsapp]="formularioProvisionMessagingServiceWhatsapp"
@@ -463,7 +483,7 @@
 
 @if (seccionActiva() === 'productos') {
   @defer {
-    <app-admin-products-section />
+    <app-admin-products-section [nombreEmpresa]="nombreEmpresa()" (refresh)="recargar()" />
   } @placeholder {
     <section class="section-stack">
       <div class="workspace-card">
@@ -524,7 +544,7 @@
 }
 
 @if (seccionActiva() === 'comisiones') {
-  @defer { <app-admin-commissions-section /> }
+  @defer { <app-admin-commissions-section (refresh)="recargar()" /> }
   @placeholder { <section class="section-stack"><div class="workspace-card"><div class="section-header"><div><div class="section-eyebrow">Comercial</div><h3>Preparando comisiones</h3></div></div></div></section> }
 }
 
@@ -574,7 +594,7 @@
     </mat-card>
     @if (subseccionUsuariosActiva() === 'usuarios') {
       @defer {
-      <app-admin-users-access-section
+      <app-admin-users-access-section (securityChanged)="recargar()"
         [usuarioInternoEditandoId]="usuarioInternoEditandoId"
         [formularioUsuarioInterno]="formularioUsuarioInterno"
         [sucursales]="sucursales()"
@@ -667,7 +687,7 @@
 
 @if (seccionActiva() === 'prestadores') {
   @defer {
-  <app-admin-providers-section
+  <app-admin-providers-section (securityChanged)="recargar()"
     [prestadorEditandoId]="prestadorEditandoId"
     [formularioPrestador]="formularioPrestador"
     [sucursales]="sucursales()"
@@ -696,20 +716,23 @@
 
 @if (seccionActiva() === 'reglas') {
   @defer {
+  <app-admin-schedule-requests (resolved)="recargar()" />
   <app-admin-rules-section
     [reglaEditandoId]="reglaEditandoId"
     [formularioRegla]="formularioRegla"
     [guardandoRegla]="guardandoRegla"
     [sujetosRegla]="sujetosRegla"
+    [prestadores]="prestadores()" [sucursales]="sucursales()"
+    (configureSubject)="configurarHorarioSujeto($event)"
     [tiposSujeto]="tiposSujeto()"
     [diasSemana]="diasSemana()"
     [intervaloMinimoMinutos]="intervaloMinimoMinutos()"
     [reglasDisponibilidad]="reglasDisponibilidad()"
     [diasSemanaTexto]="diasSemanaTexto()"
     (clearEdit)="cancelarEdicionRegla()"
-    (save)="guardarRegla()"
+    (save)="guardarRegla($event)"
     (typeChange)="cambiarTipoSujetoRegla($event)"
-    (editRule)="editarRegla($event)" />
+    (deleteRule)="eliminarRegla($event)" (editRule)="editarRegla($event)" />
   } @placeholder {
   <section class="section-stack">
     <div class="workspace-card">

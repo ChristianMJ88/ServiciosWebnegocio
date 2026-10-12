@@ -5,5 +5,6 @@ public interface ServicioLandingMarketing {
  LandingMarketingDto publica(String slug);
  List<LandingMarketingDto> listar();
  List<String> indice();
+ List<com.techprotech.agenda.modulos.marketing.api.dto.EnlaceLandingPublicaDto> navegacion();
  LandingMarketingDto guardar(String slug,LandingMarketingDto solicitud,Long usuarioId);
 }

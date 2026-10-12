@@ -19,6 +19,8 @@ public record UsuarioInternoAdminResponse(
         List<String> permisosDirectos,
         List<String> permisosEfectivos,
         boolean activo,
-        String notas
-) {
+        String notas,
+        String nombreUsuario,
+        boolean bloqueado
+) implements AccesoUsuarioCreadoResponse {
 }

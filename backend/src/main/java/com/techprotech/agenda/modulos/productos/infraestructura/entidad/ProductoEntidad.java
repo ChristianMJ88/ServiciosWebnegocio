@@ -62,4 +62,6 @@ public class ProductoEntidad {
     private LocalDateTime creadoEn;
     @Column(name = "actualizado_en", insertable = false, updatable = false)
     private LocalDateTime actualizadoEn;
+    @Column(name="nuevo_desde") private java.time.LocalDate nuevoDesde;
+    @Column(name="nuevo_hasta") private java.time.LocalDate nuevoHasta;
 }

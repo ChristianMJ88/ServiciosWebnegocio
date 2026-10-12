@@ -5,12 +5,13 @@ import { Router } from '@angular/router';
 import { gsap } from 'gsap';
 import { PlatformHostService } from '../../core/platform/platform-host.service';
 import { SeoService } from '../../core/seo/seo.service';
+import { PublicDiscoveryComponent } from '../../shared/components/public-discovery/public-discovery.component';
 import { PlanPublicoFluora, PublicPlansService } from '../../core/platform/public-plans.service';
 
 @Component({
   selector: 'app-fluora-home',
   standalone: true,
-  imports: [],
+  imports: [PublicDiscoveryComponent],
   templateUrl: './fluora-home.component.html',
   styleUrl: './fluora-home.component.css'
 })

@@ -1,4 +1,6 @@
+import { AccountAccessSecurityComponent } from '../shared/account-access-security.component';
 
+import { AdminWorkspaceComponent } from '../shared/admin-workspace.component';
 import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
@@ -19,7 +21,7 @@ import {
 @Component({
   selector: 'app-admin-users-access-section',
   standalone: true,
-  imports: [
+  imports: [AccountAccessSecurityComponent, AdminWorkspaceComponent,
     FormsModule,
     MatButtonModule,
     MatCardModule,
@@ -30,7 +32,8 @@ import {
     MatSelectModule,
     MatSlideToggleModule
 ],
-  templateUrl: './admin-users-access-section.component.html'
+  templateUrl: './admin-users-access-section.component.html',
+  styleUrl: './admin-users-access-section.component.css'
 })
 export class AdminUsersAccessSectionComponent {
   @Input({ required: true }) usuarioInternoEditandoId!: number | null;
@@ -60,6 +63,7 @@ export class AdminUsersAccessSectionComponent {
   @Input({ required: true }) rolInternoDeUsuario!: (usuario: UsuarioInternoAdmin) => RolInternoAdmin | null;
   @Input({ required: true }) permisoDirectoUsuarioSeleccionado!: (codigo: string) => boolean;
 
+  @Output() securityChanged = new EventEmitter<void>();
   @Output() save = new EventEmitter<void>();
   @Output() clearEdit = new EventEmitter<void>();
   @Output() branchScopeChange = new EventEmitter<number[]>();

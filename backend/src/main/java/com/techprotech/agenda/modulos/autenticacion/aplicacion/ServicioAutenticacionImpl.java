@@ -124,7 +124,13 @@ public class ServicioAutenticacionImpl implements ServicioAutenticacion {
     @Transactional
     public RespuestaAccesoApp iniciarSesionApp(IniciarSesionAppRequest request) {
         String correoNormalizado = request.correo().trim().toLowerCase();
-        List<UsuarioEntidad> coincidencias = usuarioRepositorio.findByCorreoOrderByEmpresaIdAsc(correoNormalizado);
+        List<UsuarioEntidad> coincidencias;
+        if(correoNormalizado.contains("/")) {
+            String[] identificador=correoNormalizado.split("/",2);
+            coincidencias=empresaRepositorio.findBySlug(identificador[0])
+                .flatMap(e->usuarioRepositorio.findByEmpresaIdAndNombreUsuario(e.getId(),identificador[1]))
+                .map(List::of).orElse(List.of());
+        } else coincidencias = usuarioRepositorio.findByCorreoOrderByEmpresaIdAsc(correoNormalizado);
         if (coincidencias.isEmpty()) {
             throw new ResponseStatusException(UNAUTHORIZED, "Credenciales invalidas");
         }
@@ -156,11 +162,11 @@ public class ServicioAutenticacionImpl implements ServicioAutenticacion {
                     .filter(usuario -> usuario.getEmpresaId().equals(request.empresaId()))
                     .findFirst()
                     .orElseThrow(() -> new ResponseStatusException(FORBIDDEN, "No tienes acceso a la empresa seleccionada"));
-            return autenticarUsuarioApp(usuarioSeleccionado);
+            return autenticarUsuarioAppConCambio(usuarioSeleccionado,request);
         }
 
         if (usuariosDisponibles.size() == 1) {
-            return autenticarUsuarioApp(usuariosDisponibles.get(0));
+            return autenticarUsuarioAppConCambio(usuariosDisponibles.get(0),request);
         }
 
         return new RespuestaAccesoApp(
@@ -186,9 +192,8 @@ public class ServicioAutenticacionImpl implements ServicioAutenticacion {
         UsuarioEntidad usuario = usuarioRepositorio.findByIdAndEmpresaId(usuarioId, empresaId)
                 .orElseThrow(() -> new ResponseStatusException(UNAUTHORIZED, "La sesion ya no es valida"));
 
-        if (!usuario.isHabilitado() || usuario.isBloqueado()) {
-            throw new ResponseStatusException(FORBIDDEN, "El usuario no tiene acceso habilitado");
-        }
+        String motivo = com.techprotech.agenda.seguridad.jwt.EstadoSesionUsuario.motivoNoDisponible(usuario, servicioTokenJwt.obtenerVersionSesion(tokenPlano));
+        if (motivo != null) throw new com.techprotech.agenda.compartido.exception.SesionNoDisponibleException(motivo);
 
         TokenActualizacionEntidad tokenGuardado = buscarTokenVigente(usuarioId, tokenPlano)
                 .orElseThrow(() -> new ResponseStatusException(UNAUTHORIZED, "El token de actualizacion ya no es valido"));
@@ -293,6 +298,7 @@ public class ServicioAutenticacionImpl implements ServicioAutenticacion {
     }
 
     private boolean esClientePendienteActivacion(UsuarioEntidad usuario) {
+        if (usuario.isBloqueado() || usuario.getVersionSesion() > 0) return false;
         return !usuario.isHabilitado() || passwordEncoder.matches(CONTRASENA_LEGACY_CITA, usuario.getContrasenaHash());
     }
 
@@ -307,6 +313,17 @@ public class ServicioAutenticacionImpl implements ServicioAutenticacion {
         if (!empresaRepositorio.existsById(empresaId)) {
             throw new ResponseStatusException(NOT_FOUND, "La empresa indicada no existe");
         }
+    }
+
+    private RespuestaAccesoApp autenticarUsuarioAppConCambio(UsuarioEntidad usuario,IniciarSesionAppRequest request) {
+        if(usuario.isRequiereCambioContrasena()) {
+            if(request.nuevaContrasena()==null) return new RespuestaAccesoApp("CAMBIO_CONTRASENA","Debes crear tu contraseña personal antes de ingresar.",null,null);
+            if(passwordEncoder.matches(request.nuevaContrasena(),usuario.getContrasenaHash())) throw new ResponseStatusException(org.springframework.http.HttpStatus.BAD_REQUEST,"La nueva contraseña debe ser diferente de la temporal");
+            usuario.setContrasenaHash(passwordEncoder.encode(request.nuevaContrasena()));
+            usuario.setRequiereCambioContrasena(false);
+            usuarioRepositorio.save(usuario);
+        }
+        return autenticarUsuarioApp(usuario);
     }
 
     private RespuestaAccesoApp autenticarUsuarioApp(UsuarioEntidad usuario) {
@@ -330,23 +347,26 @@ public class ServicioAutenticacionImpl implements ServicioAutenticacion {
     }
 
     private RespuestaTokenJwt emitirTokens(UsuarioEntidad usuario, List<String> roles) {
+        if(usuario.isRequiereCambioContrasena()) throw new ResponseStatusException(FORBIDDEN,"Debes cambiar tu contraseña temporal desde el acceso principal");
         List<String> permisos = servicioRolesEmpresa.obtenerPermisosUsuario(usuario.getEmpresaId(), usuario.getId());
         List<Long> sucursalesPermitidas = servicioRolesEmpresa.obtenerSucursalesPermitidas(usuario.getEmpresaId(), usuario.getId());
         EmpresaEntidad empresa = empresaRepositorio.findById(usuario.getEmpresaId())
                 .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "La empresa indicada no existe"));
         String tokenAcceso = servicioTokenJwt.generarTokenAcceso(
-                usuario.getCorreo(),
+                usuario.getCorreo()!=null ? usuario.getCorreo() : usuario.getNombreUsuario(),
                 usuario.getId(),
                 usuario.getEmpresaId(),
                 empresa.getSlug(),
                 roles,
                 permisos,
-                sucursalesPermitidas
+                sucursalesPermitidas,
+                usuario.getVersionSesion()
         );
         String tokenActualizacion = servicioTokenJwt.generarTokenActualizacion(
-                usuario.getCorreo(),
+                usuario.getCorreo()!=null ? usuario.getCorreo() : usuario.getNombreUsuario(),
                 usuario.getId(),
-                usuario.getEmpresaId()
+                usuario.getEmpresaId(),
+                usuario.getVersionSesion()
         );
 
         TokenActualizacionEntidad token = new TokenActualizacionEntidad();

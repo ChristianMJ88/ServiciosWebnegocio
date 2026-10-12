@@ -5,6 +5,7 @@ const { logger } = require('firebase-functions');
 const { defineString } = require('firebase-functions/params');
 const { renderNotFound, renderSitemap, renderTenantHtml } = require('./seo-renderer');
 const { renderLandingHtml } = require('./landing-renderer');
+const { renderDirectoryHtml } = require('./directory-renderer');
 const appOriginParam = defineString('FLUORA_APP_ORIGIN');
 const { copyUpstreamHeaders } = require('./proxy-headers');
 
@@ -192,6 +193,31 @@ exports.landingPage = onRequest(
   }catch(error){
    logger.error('No fue posible cargar la landing',{error});
    response.status(503).set('Cache-Control','no-store').set('Retry-After','60').send('Página temporalmente no disponible');
+  }
+ }
+);
+
+exports.directoryPage = onRequest(
+ {region:'us-central1',memory:'256MiB',timeoutSeconds:15,maxInstances:10},
+ async(request,response)=>{
+  const {apiBaseUrl,marketingOrigin}=runtimeConfig();
+  try {
+   const url=new URL(request.originalUrl || request.url,marketingOrigin);
+   const params=new URLSearchParams();
+   for(const key of ['q','ubicacion','categoria','cursor']){
+    if(url.searchParams.has(key))params.set(key,url.searchParams.get(key));
+   }
+   const [upstream,template]=await Promise.all([
+    fetch(`${apiBaseUrl}/publico/marketplace?${params}`,{headers:{Accept:'application/json'},signal:AbortSignal.timeout(8000)}),
+    loadCurrentTemplate(marketingOrigin)
+   ]);
+   if(!upstream.ok){response.status(upstream.status===400?400:503).set('Cache-Control','no-store').send(renderNotFound('directorio',marketingOrigin));return;}
+   const directory=await upstream.json();
+   response.status(200).set('Content-Type','text/html; charset=utf-8').set('Cache-Control','no-store')
+    .send(renderDirectoryHtml(template,directory,marketingOrigin,params));
+  }catch(error){
+   logger.error('No fue posible renderizar el directorio.',{error});
+   response.status(503).set('Retry-After','60').set('Cache-Control','no-store').send(renderNotFound('directorio',marketingOrigin));
   }
  }
 );

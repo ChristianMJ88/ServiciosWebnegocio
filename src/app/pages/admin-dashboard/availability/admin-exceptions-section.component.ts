@@ -1,3 +1,4 @@
+import { AdminWorkspaceComponent } from '../shared/admin-workspace.component';
 
 import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { FormsModule } from '@angular/forms';
@@ -12,7 +13,7 @@ import { SujetoDisponibilidadOption } from './admin-availability.types';
 @Component({
   selector: 'app-admin-exceptions-section',
   standalone: true,
-  imports: [
+  imports: [AdminWorkspaceComponent,
     FormsModule,
     MatButtonModule,
     MatCardModule,

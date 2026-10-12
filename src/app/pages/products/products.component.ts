@@ -1,5 +1,7 @@
+import { A11yModule } from '@angular/cdk/a11y';
+import { DOCUMENT } from '@angular/common';
 import { CommonModule } from '@angular/common';
-import { Component, DestroyRef, OnInit, computed, inject, signal } from '@angular/core';
+import { Component, DestroyRef, OnInit, computed, effect, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
@@ -20,7 +22,7 @@ interface CategorySection {
 @Component({
   selector: 'app-products',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, MoneyDisplayPipe],
+  imports: [A11yModule, CommonModule, FormsModule, RouterLink, MoneyDisplayPipe],
   templateUrl: './products.component.html',
   styleUrl: './products.component.css'
 })
@@ -41,6 +43,23 @@ export class ProductsComponent implements OnInit {
   readonly categoryId = signal<number | null>(null);
   readonly cartOpen = signal(false);
   readonly onlineCheckout = signal(false);
+  readonly addedProduct = signal<string | null>(null);
+  private readonly document = inject(DOCUMENT);
+  private feedbackTimer: ReturnType<typeof setTimeout> | undefined;
+
+  constructor() {
+    effect(onCleanup => {
+      if (!this.cartOpen()) return;
+      const body = this.document.body;
+      const view = this.document.defaultView;
+      const scrollY = view?.scrollY ?? 0;
+      const previous = { overflow: body.style.overflow, position: body.style.position, top: body.style.top, width: body.style.width };
+      Object.assign(body.style, { overflow: 'hidden', position: 'fixed', top: `-${scrollY}px`, width: '100%' });
+      onCleanup(() => { Object.assign(body.style, previous); view?.scrollTo(0, scrollY); });
+    });
+    this.destroyRef.onDestroy(() => { clearTimeout(this.feedbackTimer); });
+  }
+
   readonly productSlug = signal<string | null>(null);
   readonly detailProduct = computed(() => this.catalog()?.productos[0] ?? null);
   readonly isDetail = computed(() => Boolean(this.productSlug()));
@@ -81,7 +100,7 @@ export class ProductsComponent implements OnInit {
   ngOnInit(): void {
     combineLatest([this.route.paramMap, this.route.queryParamMap]).pipe(takeUntilDestroyed(this.destroyRef)).subscribe(([params, query]) => {
       this.productSlug.set(params.get('productoSlug'));
-      this.load(query.get('zona'));
+      this.load(query.get('zona'),query.get('sucursalId'));
     });
   }
 
@@ -89,8 +108,19 @@ export class ProductsComponent implements OnInit {
     void this.router.navigate([], { relativeTo: this.route, queryParams: { zona: zone || null }, queryParamsHandling: 'merge' });
   }
 
+  selectBranch(branch: string): void { void this.router.navigate([], {relativeTo:this.route,queryParams:{sucursalId:branch || null},queryParamsHandling:'merge'}); }
+  storeQuery(): {zona:string|null;sucursalId:number|null} { return {zona:this.catalog()?.zonaSeleccionada?.clave ?? null,sucursalId:this.catalog()?.sucursalSeleccionadaId ?? null}; }
   selectCategory(id: number | null): void { this.categoryId.set(id); }
-  add(product: StoreProduct): void { this.cart.add(product); if (typeof window !== 'undefined' && window.innerWidth < 700) this.cartOpen.set(true); }
+  add(product: StoreProduct): void {
+    if (!product.disponible) return;
+    this.cart.add(product);
+    this.addedProduct.set(product.nombre);
+    clearTimeout(this.feedbackTimer);
+    this.feedbackTimer = setTimeout(() => this.addedProduct.set(null), 3500);
+  }
+  increase(productId: number): void {
+    this.cart.increase(productId);
+  }
   decrease(productId: number): void { this.cart.decrease(productId); }
   remove(productId: number): void { this.cart.remove(productId); }
 
@@ -110,12 +140,12 @@ export class ProductsComponent implements OnInit {
     return this.tenantContext.whatsappHref(message);
   }
 
-  private load(zone: string | null): void {
+  private load(zone: string | null, branch: string | null): void {
     const slug = this.tenantContext.slug();
     if (!slug) return;
     this.loading.set(true);
     this.error.set(null);
-    this.store.catalog(slug, zone, this.productSlug()).pipe(finalize(() => this.loading.set(false))).subscribe({
+    this.store.catalog(slug, zone, this.productSlug(),branch).pipe(finalize(() => this.loading.set(false))).subscribe({
       next: catalog => {
         this.catalog.set(catalog);
         this.cart.connect(catalog.empresaId);

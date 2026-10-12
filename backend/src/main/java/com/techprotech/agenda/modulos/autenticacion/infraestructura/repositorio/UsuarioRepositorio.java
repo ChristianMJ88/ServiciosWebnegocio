@@ -9,6 +9,13 @@ import java.util.Optional;
 
 public interface UsuarioRepositorio extends JpaRepository<UsuarioEntidad, Long> {
 
+    @org.springframework.data.jpa.repository.Lock(jakarta.persistence.LockModeType.PESSIMISTIC_WRITE)
+    @org.springframework.data.jpa.repository.Query("select u from UsuarioEntidad u where u.id = :id and u.empresaId = :empresaId")
+    Optional<UsuarioEntidad> bloquearPorIdYEmpresa(@org.springframework.data.repository.query.Param("id") Long id,
+            @org.springframework.data.repository.query.Param("empresaId") Long empresaId);
+
+    Optional<UsuarioEntidad> findByEmpresaIdAndNombreUsuario(Long empresaId, String nombreUsuario);
+
     Optional<UsuarioEntidad> findByEmpresaIdAndCorreo(Long empresaId, String correo);
 
     List<UsuarioEntidad> findByCorreoOrderByEmpresaIdAsc(String correo);

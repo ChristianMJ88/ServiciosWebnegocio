@@ -23,8 +23,19 @@ public class UsuarioEntidad {
     @Column(name = "empresa_id", nullable = false)
     private Long empresaId;
 
-    @Column(nullable = false, length = 150)
+    @Column(length = 150)
     private String correo;
+
+    @Column(name="nombre_usuario", length=80)
+    private String nombreUsuario;
+
+    @Column(name="requiere_cambio_contrasena", nullable=false)
+    private boolean requiereCambioContrasena;
+
+    @Column(name = "version_sesion", nullable = false)
+    private long versionSesion;
+
+    public void invalidarSesiones() { versionSesion++; }
 
     @Column(name = "correo_verificado_en")
     private LocalDateTime correoVerificadoEn;

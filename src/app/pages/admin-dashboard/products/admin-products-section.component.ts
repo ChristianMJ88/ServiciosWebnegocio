@@ -1,5 +1,5 @@
 import { CommonModule, getCurrencySymbol } from '@angular/common';
-import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { Component, EventEmitter, Input, Output, OnInit, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -9,11 +9,14 @@ import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { Observable, finalize, forkJoin } from 'rxjs';
 import {
   CatalogoProductosAdmin, CategoriaProductoAdmin, CategoriaProductoPayload, ConfiguracionTiendaAdmin, ProductoAdmin, ProductoPayload,
-  ProductsAdminService, ProveedorProductoAdmin, ProveedorProductoPayload, ZonaPrecioProductoAdmin, ZonaPrecioProductoPayload
+  RevisionImportacionProductos, ProductsAdminService, ProveedorProductoAdmin, ProveedorProductoPayload, ZonaPrecioProductoAdmin, ZonaPrecioProductoPayload
 } from './products-admin.service';
 import { AdminProductDiscountsComponent } from './admin-product-discounts.component';
+import { AdminService, SucursalAdmin } from '../../../core/admin/admin.service';
 
-type VistaProductos = 'productos' | 'categorias' | 'proveedores' | 'zonas' | 'descuentos' | 'tienda';
+import { AdminProductProfitabilityComponent } from './admin-product-profitability.component';
+
+type VistaProductos = 'productos' | 'categorias' | 'proveedores' | 'zonas' | 'descuentos' | 'tienda' | 'rentabilidad';
 type CategoriaForm = CategoriaProductoPayload & { id: number | null };
 type ProveedorForm = ProveedorProductoPayload & { id: number | null };
 type ZonaForm = ZonaPrecioProductoPayload & { id: number | null };
@@ -22,12 +25,15 @@ type ProductoForm = ProductoPayload & { id: number | null };
 @Component({
   selector: 'app-admin-products-section',
   standalone: true,
-  imports: [CommonModule, FormsModule, MatButtonModule, MatFormFieldModule, MatInputModule, MatSelectModule, MatSlideToggleModule, AdminProductDiscountsComponent],
+  imports: [CommonModule, FormsModule, MatButtonModule, MatFormFieldModule, MatInputModule, MatSelectModule, MatSlideToggleModule, AdminProductDiscountsComponent, AdminProductProfitabilityComponent],
   providers: [ProductsAdminService],
   templateUrl: './admin-products-section.component.html',
   styleUrl: './admin-products-section.component.css'
 })
 export class AdminProductsSectionComponent implements OnInit {
+  @Input() nombreEmpresa = '';
+  @Output() refresh = new EventEmitter<void>();
+  actualizar(): void { this.cargar(); this.refresh.emit(); }
   private readonly service = inject(ProductsAdminService);
   readonly catalogo = signal<CatalogoProductosAdmin | null>(null);
   readonly configuracionTienda = signal<ConfiguracionTiendaAdmin | null>(null);
@@ -43,17 +49,40 @@ export class AdminProductsSectionComponent implements OnInit {
   readonly formularioProveedor = signal<ProveedorForm | null>(null);
   readonly formularioZona = signal<ZonaForm | null>(null);
 
-  readonly productosFiltrados = computed(() => {
-    const termino = this.busqueda().trim().toLocaleLowerCase('es-MX');
-    const productos = this.catalogo()?.productos ?? [];
-    if (!termino) return productos;
-    return productos.filter(item => [item.nombre, item.sku, item.categoriaNombre, item.proveedorNombre]
-      .some(valor => valor?.toLocaleLowerCase('es-MX').includes(termino)));
-  });
-  readonly totalActivos = computed(() => this.catalogo()?.productos.filter(item => item.activo).length ?? 0);
-  readonly totalPublicados = computed(() => this.catalogo()?.productos.filter(item => item.activo && item.visiblePublico).length ?? 0);
+  readonly revisionImportacion = signal<RevisionImportacionProductos | null>(null);
+  readonly procesandoImportacion = signal(false);
+  archivoImportacion: File | null = null;
+  descargarPlantilla(): void {
+    this.service.plantilla().subscribe({next: blob => { const url=URL.createObjectURL(blob); const enlace=document.createElement('a'); enlace.href=url; enlace.download='productos.xlsx'; enlace.click(); URL.revokeObjectURL(url); },error: e => this.error.set(e?.error?.detail || 'No fue posible descargar la plantilla.')});
+  }
+  seleccionarImportacion(event: Event): void { this.archivoImportacion=(event.target as HTMLInputElement).files?.[0] ?? null; this.revisionImportacion.set(null); }
+  revisarImportacion(): void {
+    if(!this.archivoImportacion || this.procesandoImportacion()) return;
+    this.procesandoImportacion.set(true); this.error.set(null);
+    this.service.revisarImportacion(this.archivoImportacion).pipe(finalize(()=>this.procesandoImportacion.set(false))).subscribe({next: revision=>this.revisionImportacion.set(revision),error:e=>this.error.set(e?.error?.detail || e?.error?.message || 'No fue posible revisar el Excel.')});
+  }
+  confirmarImportacion(): void {
+    if(!this.archivoImportacion || !this.revisionImportacion()?.puedeImportar || this.procesandoImportacion()) return;
+    this.procesandoImportacion.set(true); this.error.set(null);
+    this.service.importar(this.archivoImportacion).pipe(finalize(()=>this.procesandoImportacion.set(false))).subscribe({next:r=>{this.revisionImportacion.set(null);this.archivoImportacion=null;this.pagina.set(0);this.busqueda.set('');this.cargar(`${r.creados} productos importados.`);},error:e=>this.error.set(e?.error?.detail || e?.error?.message || 'No fue posible importar; no se guardó el lote.')});
+  }
+  readonly pagina = signal(0);
+  readonly productosFiltrados = computed(() => this.catalogo()?.productos ?? []);
+  readonly totalActivos = computed(() => this.catalogo()?.totalActivos ?? 0);
+  readonly totalPublicados = computed(() => this.catalogo()?.totalPublicados ?? 0);
+  buscarProductos(): void { this.pagina.set(0); this.cargar(); }
+  cambiarPagina(pagina: number): void {
+    if (this.cargando() || pagina < 0 || pagina >= (this.catalogo()?.totalPaginas ?? 0)) return;
+    this.pagina.set(pagina); this.cargar();
+  }
 
-  ngOnInit(): void { this.cargar(); }
+  readonly sucursalesPrecio = signal<SucursalAdmin[]>([]);
+  sucursalPrecioId: number | null = null;
+  private readonly adminSucursales=inject(AdminService);
+  ngOnInit(): void {
+    this.adminSucursales.getSucursales().subscribe({next:sedes=>{this.sucursalesPrecio.set(sedes);this.sucursalPrecioId=sedes.length===1?sedes[0].id:null;this.cargar();},error:()=>this.cargar()});
+  }
+  cambiarSucursalPrecio():void {this.pagina.set(0);this.cargar();}
 
   seleccionarVista(vista: VistaProductos): void {
     this.vista.set(vista);
@@ -66,7 +95,7 @@ export class AdminProductsSectionComponent implements OnInit {
       id: null, categoriaId: null, proveedorId: null, mediaId: null, sku: '', codigoBarras: null, nombre: '', slug: '',
       descripcion: null, imagenUrl: null, precioBase: 0, costo: null, moneda, tasaImpuesto: 0, controlaInventario: true,
       pesoKg: null, largoCm: null, anchoCm: null, altoCm: null,
-      stockMinimo: 0, visiblePublico: false, activo: true, preciosZona: (this.catalogo()?.zonasPrecio ?? []).filter(zona => zona.activa)
+      nuevoDesde: null, nuevoHasta: null, stockMinimo: 0, visiblePublico: false, activo: true, preciosZona: (this.catalogo()?.zonasPrecio ?? []).filter(zona => zona.activa)
         .map(zona => ({ zonaPrecioId: zona.id, zonaNombre: zona.nombre, precio: 0, moneda, activo: false }))
     });
   }
@@ -80,7 +109,7 @@ export class AdminProductsSectionComponent implements OnInit {
       imagenUrl: item.imagenUrl, precioBase: item.precioBase, costo: item.costo, moneda, tasaImpuesto: item.tasaImpuesto,
       pesoKg: item.pesoKg, largoCm: item.largoCm, anchoCm: item.anchoCm, altoCm: item.altoCm,
       controlaInventario: item.controlaInventario, stockMinimo: item.stockMinimo, visiblePublico: item.visiblePublico,
-      activo: item.activo, preciosZona: (this.catalogo()?.zonasPrecio ?? []).filter(zona => zona.activa).map(zona => ({
+      activo: item.activo, nuevoDesde: item.nuevoDesde, nuevoHasta: item.nuevoHasta, preciosZona: (this.catalogo()?.zonasPrecio ?? []).filter(zona => zona.activa).map(zona => ({
         ...(existentes.get(zona.id) ?? { zonaPrecioId: zona.id, precio: 0, moneda, activo: false }), zonaNombre: zona.nombre
       }))
     });
@@ -91,7 +120,7 @@ export class AdminProductsSectionComponent implements OnInit {
     if (!form || !form.nombre.trim() || !form.sku.trim() || !form.moneda.trim() || this.guardando()) return;
     const { id, ...resto } = form;
     const payload: ProductoPayload = {
-      ...resto,
+      ...resto, nuevoDesde: resto.nuevoDesde || null, nuevoHasta: resto.nuevoHasta || null,
       preciosZona: resto.preciosZona.filter(precio => precio.activo).map(precio => ({
         zonaPrecioId: precio.zonaPrecioId,
         precio: precio.precio,
@@ -164,11 +193,11 @@ export class AdminProductsSectionComponent implements OnInit {
   private cargar(mensaje?: string): void {
     this.cargando.set(true);
     forkJoin({
-      catalogo: this.service.obtenerCatalogo(),
+      catalogo: this.service.obtenerCatalogo(this.pagina(), this.busqueda(), this.sucursalPrecioId),
       tienda: this.service.obtenerConfiguracionTienda()
     }).pipe(finalize(() => this.cargando.set(false))).subscribe({
       next: ({ catalogo, tienda }) => {
-        this.catalogo.set(catalogo);
+        this.catalogo.set(catalogo); this.pagina.set(catalogo.pagina);
         this.configuracionTienda.set(tienda);
         this.cancelarFormularios();
         if (mensaje) this.mensaje.set(mensaje);

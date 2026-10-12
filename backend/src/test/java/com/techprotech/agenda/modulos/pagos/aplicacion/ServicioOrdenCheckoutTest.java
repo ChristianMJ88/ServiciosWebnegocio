@@ -79,7 +79,18 @@ class ServicioOrdenCheckoutTest {
         });
         servicio = new ServicioOrdenCheckout(configuracion, sitios, sucursales, cotizador, citas, servicios,
                 usuarios, pagosCita, detallesVenta, ordenes, detalles, new PropiedadesCheckout(20, 3), direcciones,
-                cotizacionesEnvio,mock(com.techprotech.agenda.modulos.plataforma.aplicacion.ServicioCapacidadesEmpresa.class));
+                cotizacionesEnvio,mock(com.techprotech.agenda.modulos.plataforma.aplicacion.ServicioCapacidadesEmpresa.class), productosCostos());
+    }
+
+    private com.techprotech.agenda.modulos.productos.infraestructura.repositorio.ProductoRepositorio productosCostos() {
+        var repo = mock(com.techprotech.agenda.modulos.productos.infraestructura.repositorio.ProductoRepositorio.class);
+        lenient().when(repo.findByIdAndEmpresaId(any(), any())).thenAnswer(i -> {
+            var producto = new com.techprotech.agenda.modulos.productos.infraestructura.entidad.ProductoEntidad();
+            producto.setId(i.getArgument(0)); producto.setEmpresaId(i.getArgument(1));
+            producto.setCosto(new BigDecimal("35.00"));
+            return java.util.Optional.of(producto);
+        });
+        return repo;
     }
 
     @Test
@@ -95,6 +106,11 @@ class ServicioOrdenCheckoutTest {
 
         OrdenCheckoutResponse respuesta = servicio.crear("nail-art", "carrito-123", request);
 
+        verify(detalles).saveAll(argThat(items -> {
+            var item = items.iterator().next();
+            return item.getEmpresaId().equals(25L) && item.getProductoId().equals(12L)
+                && new BigDecimal("35.00").equals(item.getCostoUnitarioHistorico());
+        }));
         assertThat(respuesta.total()).isEqualByComparingTo("160.00");
         assertThat(respuesta.descuentoTotal()).isEqualByComparingTo("40.00");
         assertThat(respuesta.estado()).isEqualTo("PENDIENTE_PAGO");

@@ -10,12 +10,13 @@
   <div class="agenda-operations__toolbar">
     <div class="agenda-operations__toolbar-main">
       @if (viewOptions().length > 1) {
-        <div class="agenda-operations__view-switcher">
+        <div class="agenda-operations__view-switcher" role="group" aria-label="Vista de la agenda">
           @for (option of viewOptions(); track option) {
             <button
               type="button"
               class="agenda-operations__view-button"
               [class.is-active]="viewMode() === option.id"
+              [attr.aria-pressed]="viewMode() === option.id"
               (click)="onViewModeChange(option.id)">
               {{ option.label }}
             </button>

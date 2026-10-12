@@ -142,6 +142,7 @@ export interface ProductoCaja {
 export interface CatalogoVentaCaja { productos: ProductoCaja[]; }
 export interface ProductoVentaPayload { productoId: number; cantidad: number; }
 export interface RegistrarVentaPayload {
+  ventaPendienteId?: number | null;
   sucursalId: number;
   citaId: number | null;
   clienteId: number | null;
@@ -251,6 +252,15 @@ export class CajaService {
     });
   }
 
+  cotizarProductos(sucursalId: number, productos: { productoId: number; cantidad: number }[]): Observable<{ subtotal: number; descuento: number; total: number; lineas: { productoId: number; precioUnitario: number; total: number }[] }> {
+    return this.http.post<{ subtotal: number; descuento: number; total: number; lineas: { productoId: number; precioUnitario: number; total: number }[] }>(`${environment.apiBaseUrl}/caja/ventas/cotizacion`, { sucursalId, productos });
+  }
+  ventasPendientesStaff(sucursalId:number,pagina=0) {
+    return this.http.get<{content:{venta:VentaCaja;clienteNombre:string;clienteTelefono:string}[];totalPages:number;totalElements:number}>(`${environment.apiBaseUrl}/caja/ventas/pendientes-staff`,{params:{sucursalId,pagina}});
+  }
+  cobrarVentaStaff(ventaId:number,metodoPago:string,referencia:string|null) {
+    return this.http.post<VentaCaja>(`${environment.apiBaseUrl}/caja/ventas/${ventaId}/cobrar`,{metodoPago,referencia});
+  }
   registrarVenta(payload: RegistrarVentaPayload): Observable<VentaCaja> {
     return this.http.post<VentaCaja>(`${environment.apiBaseUrl}/caja/ventas`, payload);
   }

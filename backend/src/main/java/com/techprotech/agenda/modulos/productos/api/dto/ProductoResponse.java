@@ -28,5 +28,7 @@ public record ProductoResponse(
         BigDecimal stockMinimo,
         boolean visiblePublico,
         boolean activo,
-        List<PrecioZonaProductoResponse> preciosZona
+        List<PrecioZonaProductoResponse> preciosZona,
+        java.time.LocalDate nuevoDesde, java.time.LocalDate nuevoHasta,
+        BigDecimal precioConDescuento, String descuento
 ) {}

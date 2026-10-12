@@ -21,11 +21,16 @@ public class ControladorInvitacionesUsuario {
         return servicio.invitar(usuario.empresaId(), usuario.usuarioId(), request);
     }
 
+    @PostMapping("/admin/prestadores/invitaciones")
+    @PreAuthorize("hasAuthority('PRESTADORES_GESTIONAR')")
+    public InvitacionUsuarioResponse invitarPrestador(@AuthenticationPrincipal UsuarioAutenticado usuario,
+        @Valid @RequestBody PrestadorAdminRequest request) {return servicio.invitarPrestador(usuario.empresaId(),usuario.usuarioId(),request);}
+
     @GetMapping("/publico/invitaciones/usuario")
     public DetalleInvitacionUsuarioResponse consultar(@RequestParam String token) { return servicio.consultar(token); }
 
     @PostMapping("/publico/invitaciones/usuario/aceptar")
-    public UsuarioInternoAdminResponse aceptar(@Valid @RequestBody AceptarInvitacionUsuarioRequest request) {
+    public com.techprotech.agenda.modulos.admin.api.dto.AccesoUsuarioCreadoResponse aceptar(@Valid @RequestBody AceptarInvitacionUsuarioRequest request) {
         return servicio.aceptar(request);
     }
 }

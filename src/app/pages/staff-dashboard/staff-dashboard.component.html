@@ -33,19 +33,19 @@
               @if (!sidebarCompacto() || panelMovil()) {
                 <button
                   type="button"
-                  class="staff-menu-toggle d-flex align-items-center gap-2"
+                  class="staff-menu-toggle"
                   (click)="alternarGrupoSidebar(grupo.id)"
                   [attr.aria-expanded]="grupoSidebarExpandido(grupo.id)"
                   >
                   <span class="staff-menu-icon" aria-hidden="true">
-                    <i class="bi" [ngClass]="grupo.icono === 'agenda' ? 'bi-calendar2-week' : 'bi-clock-history'"></i>
+                    <i class="bi" [ngClass]="grupo.icono === 'agenda' ? 'bi-calendar2-week' : grupo.icono === 'ventas' ? 'bi-bag-check' : 'bi-clock-history'"></i>
                   </span>
                   <span class="staff-menu-title">{{ grupo.titulo }}</span>
-                  <span class="badge rounded-pill staff-menu-count ms-auto">{{ grupo.modulosVisibles.length }}</span>
+                  <span class="staff-menu-count">{{ grupo.modulosVisibles.length }}</span>
                   <i class="bi bi-chevron-down staff-menu-chevron" [class.is-open]="grupoSidebarExpandido(grupo.id)" aria-hidden="true"></i>
                 </button>
               }
-              <div class="staff-submenu" [class.show]="grupoSidebarExpandido(grupo.id) || (sidebarCompacto() && !panelMovil())">
+              <div class="staff-submenu" [class.is-expanded]="grupoSidebarExpandido(grupo.id) || (sidebarCompacto() && !panelMovil())">
                 @for (modulo of grupo.modulosVisibles; track modulo) {
                   <button
                     type="button"
@@ -57,10 +57,12 @@
                     [matTooltip]="sidebarCompacto() && !panelMovil() ? modulo.titulo : ''"
                     matTooltipPosition="right">
                     <span class="staff-nav-icon" aria-hidden="true">
-                      @switch (modulo.icono) {
+                      @switch ((modulo.id === 'ventas' || modulo.id === 'registrarVenta') ? 'ventas' : modulo.id === 'reporteVentas' ? 'reporte' : modulo.icono) {
                         @case ('agenda') {
                           <i class="bi bi-calendar-check"></i>
                         }
+                        @case ('ventas') {<i class="bi bi-bag-check"></i>}
+                        @case ('reporte') {<i class="bi bi-bar-chart"></i>}
                         @case ('horario') {
                           <i class="bi bi-clock"></i>
                         }
@@ -200,6 +202,7 @@
       }
 
       <main class="staff-body">
+        @if (seccionActiva() !== 'ventas' && seccionActiva() !== 'reporteVentas' && seccionActiva() !== 'registrarVenta') {
         <header class="staff-content-header">
           <div class="staff-content-header-copy">
             <div class="content-header-meta">
@@ -218,6 +221,7 @@
             </button>
           </div>
         </header>
+        }
 
         @if (error) {
           <div class="alert alert-danger staff-alert" role="alert">
@@ -267,15 +271,17 @@
       }
 
       @if (seccionActiva() === 'horarios') {
+        @if (mensajeHorario()) {<p class="staff-schedule-success" role="status">{{ mensajeHorario() }}</p>}
         @defer {
         <app-staff-schedules-section
           [reglaEditandoId]="reglaEditandoId"
           [guardandoRegla]="guardandoRegla"
           [formularioRegla]="formularioRegla"
           [diasSemana]="diasSemana"
+          [intervaloMinimoMinutos]="intervaloMinimoMinutos"
           [reglas]="reglas()"
           [etiquetaDiaSemana]="etiquetaDiaSemana.bind(this)"
-          (save)="guardarRegla()"
+          (save)="guardarRegla($event)"
           (cancelEdit)="cancelarEdicionRegla()"
           (editRule)="editarRegla($event)" />
         } @placeholder {
@@ -294,6 +300,7 @@
     }
 
     @if (seccionActiva() === 'bloqueos') {
+      @if (mensajeBloqueo()) {<p class="staff-schedule-success" role="status">{{ mensajeBloqueo() }}</p>}
       @defer {
       <app-staff-blocks-section
         [excepcionEditandoId]="excepcionEditandoId"
@@ -318,6 +325,9 @@
       </section>
     }
   }
+@if (seccionActiva() === 'registrarVenta') {<app-staff-sale-register />}
+@if (seccionActiva() === 'ventas') {<app-staff-sales-section />}
+@if (seccionActiva() === 'reporteVentas') {<app-staff-sales-section [reporte]="true" />}
 </main>
     </mat-drawer-content>
   </mat-drawer-container>

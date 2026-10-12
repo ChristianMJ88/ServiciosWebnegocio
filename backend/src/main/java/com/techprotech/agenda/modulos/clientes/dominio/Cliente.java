@@ -10,6 +10,12 @@ public record Cliente(
         boolean aceptaWhatsapp,
         String notas,
         long totalCitas,
-        LocalDateTime ultimaCita
+        LocalDateTime ultimaCita,
+        LocalDateTime ultimaVisita,
+        long citasAgendadas
 ) {
+    public Cliente(Long id, String nombreCompleto, String correo, String telefono, boolean aceptaWhatsapp,
+                   String notas, long totalCitas, LocalDateTime ultimaCita) {
+        this(id, nombreCompleto, correo, telefono, aceptaWhatsapp, notas, totalCitas, ultimaCita, null, 0);
+    }
 }

@@ -1,6 +1,8 @@
 package com.techprotech.agenda.modulos.marketplace.infraestructura.repositorio;
 import com.techprotech.agenda.modulos.marketplace.api.dto.NegocioDirectorioResponse;
 import com.techprotech.agenda.modulos.marketplace.api.dto.ServicioDirectorioResponse;
+import com.techprotech.agenda.modulos.marketplace.api.dto.SucursalDirectorioResponse;
+import com.techprotech.agenda.modulos.sucursales.aplicacion.HorarioComercial;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 import java.util.List;
@@ -27,9 +29,9 @@ public class DirectorioRepositorio {
       AND EXISTS (SELECT 1 FROM servicio_sucursal ss JOIN sucursal b ON b.id=ss.sucursal_id AND b.empresa_id=ss.empresa_id
        WHERE ss.servicio_id=s.id AND ss.empresa_id=s.empresa_id AND ss.activo=true AND b.activa=true))
     OR EXISTS (SELECT 1 FROM sucursal b WHERE b.empresa_id=c.empresa_id AND b.activa=true
-      AND b.direccion LIKE ? ESCAPE '!'))
+      AND CONCAT_WS(' ',b.direccion,b.municipio,b.estado_region,b.pais_codigo,b.codigo_postal) LIKE ? ESCAPE '!'))
    AND (?='' OR c.direccion LIKE ? ESCAPE '!' OR EXISTS
-    (SELECT 1 FROM sucursal b WHERE b.empresa_id=c.empresa_id AND b.activa=true AND b.direccion LIKE ? ESCAPE '!'))
+    (SELECT 1 FROM sucursal b WHERE b.empresa_id=c.empresa_id AND b.activa=true AND CONCAT_WS(' ',b.direccion,b.municipio,b.estado_region,b.pais_codigo,b.codigo_postal) LIKE ? ESCAPE '!'))
    AND (?='' OR EXISTS (SELECT 1 FROM servicio s JOIN grupo_servicio g ON g.id=s.grupo_id AND g.empresa_id=s.empresa_id
     WHERE s.empresa_id=c.empresa_id AND s.activo=true AND s.visible_publico=true AND g.activo=true AND g.nombre LIKE ? ESCAPE '!'
      AND EXISTS (SELECT 1 FROM servicio_sucursal ss JOIN sucursal b ON b.id=ss.sucursal_id AND b.empresa_id=ss.empresa_id
@@ -39,6 +41,39 @@ public class DirectorioRepositorio {
     rs.getString("nombre_comercial"),rs.getString("descripcion_corta"),rs.getString("logo_url"),
     rs.getString("direccion"),rs.getString("telefono"),rs.getString("hero_imagen_url"),List.of()),
     cursor,patron,patron,patron,patron,ubicacion,patron(ubicacion),patron(ubicacion),categoria,patron(categoria),limite);
+ }
+ public Map<Long,List<SucursalDirectorioResponse>> sucursales(List<Long> empresas){
+  if(empresas.isEmpty())return Map.of();
+  var resultado=new HashMap<Long,List<SucursalDirectorioResponse>>();
+  String marcadores=String.join(",",Collections.nCopies(empresas.size(),"?"));
+  var empresaDeSucursal=new HashMap<Long,Long>();
+  var sedes=new java.util.LinkedHashMap<Long,SucursalDirectorioResponse>();
+  var horarios=new HashMap<Long,List<HorarioComercial>>();
+  jdbc.query("SELECT b.*,r.dia_semana,r.hora_inicio,r.hora_fin,r.vigente_desde,r.vigente_hasta FROM sucursal b "
+   +"LEFT JOIN regla_disponibilidad r ON r.empresa_id=b.empresa_id AND r.tipo_sujeto='SUCURSAL' AND r.sujeto_id=b.id "
+   +"WHERE b.activa=true AND b.empresa_id IN ("+marcadores+") ORDER BY b.empresa_id,b.id,r.dia_semana,r.hora_inicio",rs->{
+   long id=rs.getLong("id");
+   empresaDeSucursal.put(id,rs.getLong("empresa_id"));
+   sedes.putIfAbsent(id,new SucursalDirectorioResponse(id,rs.getString("nombre"),rs.getString("direccion"),rs.getString("municipio"),rs.getString("estado_region"),
+    rs.getString("pais_codigo"),rs.getString("codigo_postal"),rs.getString("zona_horaria"),List.of()));
+   var dia=rs.getObject("dia_semana");
+   if(dia!=null){
+    var fecha=java.time.LocalDate.now(java.time.ZoneId.of(rs.getString("zona_horaria")));
+    var desde=rs.getObject("vigente_desde",java.time.LocalDate.class);
+    var hasta=rs.getObject("vigente_hasta",java.time.LocalDate.class);
+    if((desde==null||!fecha.isBefore(desde))&&(hasta==null||!fecha.isAfter(hasta))){
+     var h=new HorarioComercial(((Number)dia).intValue(),rs.getTime("hora_inicio").toLocalTime().toString(),rs.getTime("hora_fin").toLocalTime().toString());
+     var lista=horarios.computeIfAbsent(id,k->new ArrayList<>());if(!lista.contains(h))lista.add(h);
+    }
+   }
+  },empresas.toArray());
+  for(var sede:sedes.values()){
+   var completa=new SucursalDirectorioResponse(sede.id(),sede.nombre(),sede.direccion(),sede.municipio(),sede.estadoRegion(),sede.paisCodigo(),sede.codigoPostal(),sede.zonaHoraria(),List.copyOf(horarios.getOrDefault(sede.id(),List.of())));
+   // Empresa del registro proviene de la consulta, no del cliente.
+   // Se agrupa abajo mediante el mapa de ids que conserva el aislamiento del lote.
+   resultado.computeIfAbsent(empresaDeSucursal.get(sede.id()),k->new ArrayList<>()).add(completa);
+  }
+  return resultado;
  }
  public Map<Long,List<ServicioDirectorioResponse>> servicios(List<Long> empresas){
   return servicios(empresas,"","");

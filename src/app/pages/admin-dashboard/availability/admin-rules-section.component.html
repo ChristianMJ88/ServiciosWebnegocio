@@ -1,19 +1,27 @@
 <section class="section-stack">
-  <div class="workspace-grid two-columns">
+  @if (reglaPorEliminar; as regla) {
+    <mat-card class="workspace-card" role="alert">
+      <h3>¿Eliminar este horario?</h3>
+      <p>{{ regla.sujetoNombre }} · {{ diasSemanaTexto[regla.diaSemana] }} · {{ regla.horaInicio.slice(0,5) }}–{{ regla.horaFin.slice(0,5) }}. Este intervalo dejará de ofrecer disponibilidad. Las citas existentes se conservan.</p>
+      <div class="form-actions"><button mat-stroked-button type="button" (click)="reglaPorEliminar=null">Cancelar</button><button mat-flat-button color="warn" type="button" [disabled]="guardandoRegla" (click)="deleteRule.emit(regla); reglaPorEliminar=null">Eliminar horario</button></div>
+    </mat-card>
+  }
+
+  <app-admin-workspace #workspace [editando]="reglaEditandoId" [separado]="true" tituloLista="Horarios" tituloFormulario="Configurar">
     <mat-card class="workspace-card form-card">
       <div class="section-header">
         <div>
           <div class="section-eyebrow">Disponibilidad base</div>
-          <h3>{{ reglaEditandoId ? 'Editar horario base' : 'Nueva regla' }}</h3>
+          <h3>{{ reglaEditandoId ? 'Editar horario base' : 'Configurar horario semanal' }}</h3>
         </div>
         @if (reglaEditandoId) {
           <button mat-stroked-button type="button" (click)="clearEdit.emit()">
-            Limpiar formulario
+            Cancelar edición
           </button>
         }
       </div>
 
-      <form class="admin-form-grid admin-form-shell" (ngSubmit)="save.emit()">
+      <form class="admin-form-grid admin-form-shell" (ngSubmit)="guardar()">
         <div class="form-block-title full-width">Asignación</div>
 
         <mat-form-field appearance="outline">
@@ -26,7 +34,7 @@
         </mat-form-field>
 
         <mat-form-field appearance="outline">
-          <mat-label>Sujeto</mat-label>
+          <mat-label>Sucursal o prestador</mat-label>
           <mat-select name="reglaSujetoId" [(ngModel)]="formularioRegla.sujetoId" required>
             @for (sujeto of sujetosRegla; track sujeto) {
               <mat-option [value]="sujeto.id">
@@ -38,14 +46,17 @@
 
         <div class="form-block-title full-width">Disponibilidad</div>
 
-        <mat-form-field appearance="outline">
-          <mat-label>Día</mat-label>
-          <mat-select name="reglaDiaSemana" [(ngModel)]="formularioRegla.diaSemana">
-            @for (dia of diasSemana; track dia.valor) {
-              <mat-option [value]="dia.valor">{{ dia.etiqueta }}</mat-option>
-            }
-          </mat-select>
-        </mat-form-field>
+        @if(reglaEditandoId){
+         <mat-form-field appearance="outline"><mat-label>Día</mat-label><mat-select name="reglaDiaSemana" [(ngModel)]="formularioRegla.diaSemana">@for(dia of diasSemana;track dia.valor){<mat-option [value]="dia.valor">{{dia.etiqueta}}</mat-option>}</mat-select></mat-form-field>
+        }@else{
+         <div class="weekly-selector full-width">
+          <div class="weekly-selector__header"><strong>¿A qué días aplicarás este horario?</strong><div><button mat-button type="button" (click)="seleccionarTodos()">Toda la semana</button><button mat-button type="button" (click)="diasSeleccionados=[]">Limpiar</button></div></div>
+          <p>Selecciona varios días y captura la apertura y el cierre una sola vez.</p>
+          <div class="weekly-days">@for(dia of diasSemana;track dia.valor){<button type="button" [attr.aria-pressed]="diasSeleccionados.includes(dia.valor)" (click)="seleccionarDia(dia.valor)"><strong>{{dia.etiqueta}}</strong><span>@for(regla of reglasDelDia(dia.valor);track regla.id){<span>{{regla.horaInicio.slice(0, 5)}}–{{regla.horaFin.slice(0, 5)}}</span>}@empty{<span>Sin reglas</span>}</span></button>}</div>
+          <label class="weekly-replace"><input type="checkbox" name="reemplazarDias" [(ngModel)]="reemplazar"> Reemplazar los intervalos de los días seleccionados con esta misma vigencia</label>
+          @if(reemplazar){<p class="weekly-warning">Al guardar se sustituirán los intervalos de esos días para este sujeto y esta vigencia. Los demás días y las excepciones se conservan.</p>}
+         </div>
+        }
 
         <mat-form-field appearance="outline">
           <mat-label>Hora inicio</mat-label>
@@ -58,7 +69,7 @@
         </mat-form-field>
 
         <mat-form-field appearance="outline">
-          <mat-label>Intervalo</mat-label>
+          <mat-label>Intervalo entre horarios (minutos)</mat-label>
           <input matInput type="number" [min]="intervaloMinimoMinutos" [step]="intervaloMinimoMinutos" name="reglaIntervalo" [(ngModel)]="formularioRegla.intervaloMinutos" required>
         </mat-form-field>
 
@@ -73,8 +84,8 @@
         </mat-form-field>
 
         <div class="form-actions">
-          <button mat-flat-button color="primary" type="submit" [disabled]="guardandoRegla">
-            {{ reglaEditandoId ? 'Actualizar regla' : 'Crear regla' }}
+          <button mat-flat-button color="primary" type="submit" [disabled]="guardandoRegla || (!reglaEditandoId && diasSeleccionados.length===0)">
+            {{ reglaEditandoId ? 'Actualizar horario' : 'Aplicar a ' + diasSeleccionados.length + (diasSeleccionados.length === 1 ? ' día' : ' días') }}
           </button>
         </div>
       </form>
@@ -84,29 +95,19 @@
       <div class="section-header">
         <div>
           <div class="section-eyebrow">Capacidad operativa</div>
-          <h3>Reglas configuradas</h3>
+          <h3>Horarios por sucursal y prestador</h3>
         </div>
       </div>
 
+      <p class="schedule-explanation">La reserva cruza el horario de la sucursal con el del prestador y aplica las excepciones. Los días sin reglas no ofrecen disponibilidad.</p>
       <div class="entity-list">
-        @for (regla of reglasDisponibilidad; track regla) {
-          <article class="entity-row">
-            <div class="entity-main">
-              <div class="entity-meta">{{ regla.tipoSujeto }} · {{ regla.sujetoNombre }}</div>
-              <div class="entity-title">{{ diasSemanaTexto[regla.diaSemana] || ('Día ' + regla.diaSemana) }} · {{ regla.horaInicio }} - {{ regla.horaFin }}</div>
-              <div class="entity-meta">Intervalo {{ regla.intervaloMinutos }} min</div>
-              @if (regla.vigenteDesde || regla.vigenteHasta) {
-                <div class="entity-meta">
-                  Vigencia: {{ regla.vigenteDesde || 'sin inicio' }} a {{ regla.vigenteHasta || 'sin fin' }}
-                </div>
-              }
-            </div>
-            <div class="entity-side">
-              <button mat-stroked-button type="button" (click)="editRule.emit(regla)">Editar</button>
-            </div>
-          </article>
-        }
+       @for(grupo of grupos;track grupo.clave){<details class="weekly-group"><summary><strong>{{grupo.nombre}}</strong><span>{{grupo.reglas.length ? grupo.reglas.length + ' intervalos' : 'Sin horarios configurados'}} · {{ etiquetaTipo(grupo.tipoSujeto) }}</span></summary>
+        @if(grupo.reglas.length===0){<div class="weekly-group__day"><p>Sin horarios configurados. No se ofrecen citas con este horario base.</p><button mat-stroked-button type="button" (click)="configureSubject.emit({tipoSujeto:grupo.tipoSujeto,sujetoId:grupo.sujetoId}); workspace.vista.set('formulario')">Configurar horario</button></div>}
+        @for(dia of (grupo.reglas.length ? diasSemana : []);track dia.valor){<div class="weekly-group__day"><strong>{{dia.etiqueta}}</strong><div>
+         @for(regla of grupo.reglas;track regla.id){@if(regla.diaSemana===dia.valor){<article class="entity-row"><div class="entity-main"><div class="entity-title">{{regla.horaInicio.slice(0, 5)}}–{{regla.horaFin.slice(0, 5)}}</div><div class="entity-meta">Intervalo {{regla.intervaloMinutos}} min · {{regla.vigenteDesde || 'Sin inicio'}} a {{regla.vigenteHasta || 'sin fin'}}</div></div><button mat-stroked-button type="button" [attr.aria-label]="'Editar horario de ' + grupo.nombre + ' · ' + dia.etiqueta" (click)="editRule.emit(regla)">Editar</button><button mat-button color="warn" type="button" [disabled]="guardandoRegla" (click)="reglaPorEliminar=regla">Eliminar</button></article>}}
+        </div></div>}
+       </details>}@empty{<p>Aún no hay horarios configurados.</p>}
       </div>
     </mat-card>
-  </div>
+  </app-admin-workspace>
 </section>

@@ -1,3 +1,4 @@
+import { AdminWorkspaceComponent } from '../shared/admin-workspace.component';
 
 import { Component, EventEmitter, Input, OnInit, Output, inject, signal } from '@angular/core';
 import { CdkDragDrop, DragDropModule, moveItemInArray, transferArrayItem } from '@angular/cdk/drag-drop';
@@ -37,7 +38,7 @@ type GrupoServicioVista = GrupoServicioAdmin & {
 @Component({
   selector: 'app-admin-services-section',
   standalone: true,
-  imports: [
+  imports: [AdminWorkspaceComponent,
     FormsModule,
     DragDropModule,
     MatButtonModule,
@@ -90,6 +91,7 @@ export class AdminServicesSectionComponent implements OnInit {
 
   readonly orderStep = 10;
   activeForm: 'sugerencias' | 'grupo' | 'subgrupo' | 'servicio' = 'servicio';
+  vistaCatalogo: 'activos' | 'archivados' | 'todos' = 'activos';
   collapsedGroupIds = new Set<number>();
   collapsedSubgroupIds = new Set<number>();
   readonly configuracionMedia = signal<ConfiguracionMediaAdmin | null>(null);
@@ -190,7 +192,7 @@ export class AdminServicesSectionComponent implements OnInit {
     const subgruposOrdenados = [...this.subgruposServicio].sort(this.ordenarPorOrdenPublico);
     const serviciosOrdenados = [...this.servicios].sort(this.ordenarPorOrdenPublico);
 
-    return gruposOrdenados.map(grupo => ({
+    const estructura = gruposOrdenados.map(grupo => ({
       ...grupo,
       subgrupos: subgruposOrdenados
         .filter(subgrupo => subgrupo.grupoId === grupo.id)
@@ -200,6 +202,16 @@ export class AdminServicesSectionComponent implements OnInit {
         })),
       serviciosSinSubgrupo: serviciosOrdenados.filter(servicio => servicio.grupoId === grupo.id && !servicio.subgrupoId)
     }));
+    if (this.vistaCatalogo === 'todos') return estructura;
+    if (this.vistaCatalogo === 'activos') return estructura.filter(g => g.activo).map(g => ({
+      ...g, subgrupos: g.subgrupos.filter(s => s.activo).map(s => ({...s, servicios: s.servicios.filter(v => v.activo)})),
+      serviciosSinSubgrupo: g.serviciosSinSubgrupo.filter(s => s.activo)
+    }));
+    return estructura.map(g => ({...g,
+      subgrupos: g.subgrupos.map(s => ({...s, servicios: s.servicios.filter(v => !g.activo || !s.activo || !v.activo)}))
+        .filter(s => !g.activo || !s.activo || s.servicios.length > 0),
+      serviciosSinSubgrupo: g.serviciosSinSubgrupo.filter(s => !g.activo || !s.activo)
+    })).filter(g => !g.activo || g.subgrupos.length > 0 || g.serviciosSinSubgrupo.length > 0);
   }
 
   get totalSubgrupos(): number {
@@ -212,7 +224,7 @@ export class AdminServicesSectionComponent implements OnInit {
 
   get serviciosSinGrupo(): ServicioAdmin[] {
     return [...this.servicios]
-      .filter(servicio => !servicio.grupoId)
+      .filter(servicio => !servicio.grupoId && (this.vistaCatalogo === 'todos' || servicio.activo === (this.vistaCatalogo === 'activos')))
       .sort(this.ordenarPorOrdenPublico);
   }
 
@@ -256,6 +268,16 @@ export class AdminServicesSectionComponent implements OnInit {
 
   toggleGroupCollapse(groupId: number) {
     this.toggleSetValue(this.collapsedGroupIds, groupId);
+  }
+
+  contraerCatalogo(): void {
+    this.collapsedGroupIds = new Set(this.gruposServicio.map(grupo => grupo.id));
+    this.collapsedSubgroupIds = new Set(this.subgruposServicio.map(subgrupo => subgrupo.id));
+  }
+
+  expandirCatalogo(): void {
+    this.collapsedGroupIds = new Set<number>();
+    this.collapsedSubgroupIds = new Set<number>();
   }
 
   isSubgroupCollapsed(subgroupId: number): boolean {

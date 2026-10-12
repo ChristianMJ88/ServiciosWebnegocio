@@ -1,7 +1,7 @@
 <section class="section-stack">
   @if (error()) { <div class="alert alert-danger">{{ error() }}</div> }
   @if (mensaje()) { <div class="alert alert-success">{{ mensaje() }}</div> }
-  <div class="workspace-grid two-columns">
+  <app-admin-workspace [separado]="true" [editando]="editandoId" tituloLista="Clientes" tituloFormulario="Nuevo cliente">
     <mat-card class="workspace-card form-card">
       <div class="section-header"><div><div class="section-eyebrow">Relación con clientes</div><h3>{{ editandoId ? 'Editar cliente' : 'Nuevo cliente' }}</h3></div></div>
       <form class="admin-form-grid admin-form-shell" (ngSubmit)="guardar()">
@@ -15,10 +15,32 @@
     </mat-card>
     <mat-card class="workspace-card list-card">
       <div class="section-header"><div><div class="section-eyebrow">Directorio</div><h3>Clientes del negocio</h3></div></div>
-      <div class="client-search"><mat-form-field appearance="outline"><mat-label>Buscar</mat-label><input matInput [(ngModel)]="filtro" (keyup.enter)="buscar()"></mat-form-field><button mat-stroked-button type="button" (click)="buscar()">Buscar</button></div>
+      <div class="client-search"><mat-form-field appearance="outline"><mat-label>Buscar cliente</mat-label><input matInput [(ngModel)]="filtro" placeholder="Nombre, teléfono o correo" (keyup.enter)="buscar()"></mat-form-field><button mat-stroked-button type="button" (click)="buscar()" [disabled]="cargando()">Buscar</button></div>
+      @if (metadatos(); as opciones) {
+        <div class="client-order"><mat-form-field appearance="outline"><mat-label>Ordenar por</mat-label><mat-select [ngModel]="filtros.orden || opciones.ordenPredeterminado" (ngModelChange)="filtros.orden=$event; buscar()" [disabled]="cargando()">@for (opcion of opciones.ordenes; track opcion.valor) { <mat-option [value]="opcion.valor">{{ opcion.etiqueta }}</mat-option> }</mat-select></mat-form-field></div>
+        <details class="client-filters">
+          <summary><i class="bi bi-sliders" aria-hidden="true"></i> Filtros del directorio <i class="bi bi-chevron-down" aria-hidden="true"></i></summary>
+          <div class="admin-form-grid">
+            <mat-form-field appearance="outline"><mat-label>Última visita desde</mat-label><input matInput type="date" [(ngModel)]="filtros.visitaDesde"></mat-form-field>
+            <mat-form-field appearance="outline"><mat-label>Última visita hasta</mat-label><input matInput type="date" [(ngModel)]="filtros.visitaHasta"></mat-form-field>
+            <mat-form-field appearance="outline" class="full-width"><mat-label>Citas próximas</mat-label><mat-select [ngModel]="filtros.citas || opciones.citasPredeterminado" (ngModelChange)="filtros.citas=$event">@for (opcion of opciones.citas; track opcion.valor) { <mat-option [value]="opcion.valor">{{ opcion.etiqueta }}</mat-option> }</mat-select></mat-form-field>
+            <p class="helper-text full-width">La última visita considera citas finalizadas. Las citas próximas consideran reservas pendientes o confirmadas.</p>
+            <div class="form-actions"><button mat-flat-button type="button" (click)="buscar()" [disabled]="cargando()">Aplicar filtros</button><button mat-stroked-button type="button" (click)="limpiarFiltros()" [disabled]="cargando()">Limpiar filtros</button></div>
+          </div>
+        </details>
+      }
       @if (cargando()) { <p class="helper-text">Cargando clientes…</p> }
-      <div class="entity-list">@for (cliente of clientes(); track cliente.id) {<article class="entity-row"><div class="entity-main"><div class="entity-title">{{ cliente.nombreCompleto }}</div><div class="entity-meta">{{ cliente.correo }} · {{ cliente.telefono }}</div><div class="entity-meta">{{ cliente.totalCitas }} cita(s) @if(cliente.ultimaCita){ · Última: {{ cliente.ultimaCita | date:'mediumDate' }} }</div></div><div class="entity-side"><button mat-stroked-button type="button" (click)="editar(cliente)">Editar</button></div></article>} @empty { @if(!cargando()){<p class="helper-text">No hay clientes que coincidan.</p>} }</div>
-      @if (totalPaginas() > 1) {<div class="form-actions"><button mat-stroked-button type="button" (click)="paginaAnterior()" [disabled]="pagina() === 0 || cargando()">Anterior</button><span class="helper-text">Página {{ pagina() + 1 }} de {{ totalPaginas() }} · {{ totalElementos() }} clientes</span><button mat-stroked-button type="button" (click)="paginaSiguiente()" [disabled]="pagina() + 1 >= totalPaginas() || cargando()">Siguiente</button></div>}
+      <div class="entity-list">@for (cliente of clientes(); track cliente.id) {<article class="entity-row"><div class="entity-main"><div class="entity-title">{{ cliente.nombreCompleto }}</div><div class="entity-meta">{{ cliente.correo }} · {{ cliente.telefono }}</div><div class="entity-meta">{{ cliente.totalCitas }} cita(s) @if(cliente.ultimaVisita){ · Última visita: {{ cliente.ultimaVisita | date:'mediumDate' }} }</div>@if(cliente.citasAgendadas){<span class="client-upcoming">{{ cliente.citasAgendadas }} cita(s) próximas</span>}</div><div class="entity-side"><button mat-stroked-button type="button" (click)="editar(cliente)">Editar</button></div></article>} @empty { @if(!cargando()){<p class="helper-text">No hay clientes que coincidan.</p>} }</div>
+      @if (totalElementos() > 0) {
+        <nav class="client-pagination" aria-label="Paginación de clientes" [attr.aria-busy]="cargando()">
+          <p class="client-pagination-summary" role="status" aria-live="polite">{{ inicioPagina() }}–{{ finPagina() }} de {{ totalElementos() }} clientes</p>
+          <div class="client-pagination-controls">
+            <button mat-stroked-button type="button" (click)="paginaAnterior()" [disabled]="pagina() === 0 || cargando()" aria-label="Página anterior de clientes"><i class="bi bi-chevron-left" aria-hidden="true"></i> Anterior</button>
+            <span>Página <strong>{{ pagina() + 1 }}</strong> de {{ totalPaginas() }}</span>
+            <button mat-stroked-button type="button" (click)="paginaSiguiente()" [disabled]="pagina() + 1 >= totalPaginas() || cargando()" aria-label="Página siguiente de clientes">Siguiente <i class="bi bi-chevron-right" aria-hidden="true"></i></button>
+          </div>
+        </nav>
+      }
     </mat-card>
-  </div>
+  </app-admin-workspace>
 </section>

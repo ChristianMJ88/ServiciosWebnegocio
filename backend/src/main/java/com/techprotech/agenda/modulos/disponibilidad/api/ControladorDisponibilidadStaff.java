@@ -24,10 +24,36 @@ import java.util.List;
 @PreAuthorize("hasAuthority('STAFF_PANEL_ACCESO')")
 public class ControladorDisponibilidadStaff {
 
+    private final com.techprotech.agenda.modulos.disponibilidad.aplicacion.ServicioSolicitudesHorario solicitudes;
     private final ServicioGestionDisponibilidad servicioGestionDisponibilidad;
+    private final com.techprotech.agenda.modulos.disponibilidad.aplicacion.ServicioHorarioSemanal horarioSemanal;
 
-    public ControladorDisponibilidadStaff(ServicioGestionDisponibilidad servicioGestionDisponibilidad) {
+    public ControladorDisponibilidadStaff(ServicioGestionDisponibilidad servicioGestionDisponibilidad,
+            com.techprotech.agenda.modulos.disponibilidad.aplicacion.ServicioHorarioSemanal horarioSemanal, com.techprotech.agenda.modulos.disponibilidad.aplicacion.ServicioSolicitudesHorario solicitudes) {
+        this.solicitudes = solicitudes;
         this.servicioGestionDisponibilidad = servicioGestionDisponibilidad;
+        this.horarioSemanal = horarioSemanal;
+    }
+
+    @GetMapping("/metadatos")
+    @PreAuthorize("hasAuthority('STAFF_DISPONIBILIDAD_GESTIONAR')")
+    public com.techprotech.agenda.modulos.disponibilidad.api.dto.MetadatosDisponibilidadResponse metadatos() {
+        return com.techprotech.agenda.modulos.disponibilidad.aplicacion.CatalogosDisponibilidad.metadatos();
+    }
+
+    @PostMapping("/reglas/semana")
+    @PreAuthorize("hasAuthority('STAFF_DISPONIBILIDAD_GESTIONAR')")
+    public List<ReglaDisponibilidadResponse> guardarSemana(@AuthenticationPrincipal UsuarioAutenticado usuario,
+            @Valid @RequestBody com.techprotech.agenda.modulos.disponibilidad.api.dto.HorarioSemanalRequest request) {
+        return horarioSemanal.guardarStaff(usuario.empresaId(), usuario.usuarioId(), request);
+    }
+
+    @PostMapping("/solicitudes-horario")
+    @PreAuthorize("hasAuthority('STAFF_DISPONIBILIDAD_GESTIONAR')")
+    public com.techprotech.agenda.modulos.disponibilidad.api.dto.SolicitudHorarioResponse solicitar(
+        @AuthenticationPrincipal UsuarioAutenticado usuario,
+        @Valid @RequestBody com.techprotech.agenda.modulos.disponibilidad.api.dto.SolicitudHorarioRequest request) {
+        return solicitudes.solicitar(usuario.empresaId(), usuario.usuarioId(), request);
     }
 
     @GetMapping("/reglas")

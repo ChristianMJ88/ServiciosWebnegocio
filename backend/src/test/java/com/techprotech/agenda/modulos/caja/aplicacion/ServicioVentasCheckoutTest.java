@@ -32,7 +32,7 @@ class ServicioVentasCheckoutTest {
         VentaDetalleRepositorio detallesVenta = mock(VentaDetalleRepositorio.class);
         PagoVentaRepositorio pagos = mock(PagoVentaRepositorio.class);
         ServicioVentasCheckout servicio = new ServicioVentasCheckout(
-                ordenes, detallesCheckout, intentos, ventas, detallesVenta, pagos);
+                ordenes, detallesCheckout, intentos, ventas, detallesVenta, pagos, mock(com.techprotech.agenda.modulos.productos.aplicacion.ServicioComisionesDevengadas.class));
 
         CheckoutOrdenEntidad orden = new CheckoutOrdenEntidad();
         orden.setId(3L); orden.setPublicId("orden-publica"); orden.setEmpresaId(25L); orden.setSucursalId(1L);
@@ -40,6 +40,7 @@ class ServicioVentasCheckoutTest {
         orden.setDescuentoTotal(BigDecimal.ZERO); orden.setImpuestosTotal(BigDecimal.ZERO); orden.setTotal(new BigDecimal("185.00"));
         CheckoutOrdenDetalleEntidad linea = new CheckoutOrdenDetalleEntidad();
         linea.setTipoConcepto("PRODUCTO"); linea.setProductoId(8L); linea.setNombre("Producto");
+        linea.setCostoUnitarioHistorico(new BigDecimal("100.00"));
         linea.setCantidad(BigDecimal.ONE); linea.setPrecioUnitario(new BigDecimal("185.00"));
         linea.setDescuento(BigDecimal.ZERO); linea.setImpuestos(BigDecimal.ZERO); linea.setTotal(new BigDecimal("185.00"));
         IntentoPagoCheckoutEntidad intento = new IntentoPagoCheckoutEntidad();
@@ -59,7 +60,8 @@ class ServicioVentasCheckoutTest {
                 && venta.getCheckoutOrdenId().equals(3L)));
         verify(detallesVenta).saveAll(argThat(items -> {
             VentaDetalleEntidad detalle = items.iterator().next();
-            return detalle.getProductoId().equals(8L) && detalle.getVentaId().equals(40L);
+            return detalle.getProductoId().equals(8L) && detalle.getVentaId().equals(40L)
+                && new BigDecimal("100.00").equals(detalle.getCostoUnitarioHistorico());
         }));
         verify(pagos).save(argThat(pago -> "MERCADO_PAGO".equals(pago.getMetodoPago())
                 && pago.getCajaSesionId() == null && pago.getRegistradoPorUsuarioId() == null
@@ -75,7 +77,7 @@ class ServicioVentasCheckoutTest {
         VentaDetalleRepositorio detallesVenta = mock(VentaDetalleRepositorio.class);
         PagoVentaRepositorio pagos = mock(PagoVentaRepositorio.class);
         ServicioVentasCheckout servicio = new ServicioVentasCheckout(
-                ordenes, detallesCheckout, intentos, ventas, detallesVenta, pagos);
+                ordenes, detallesCheckout, intentos, ventas, detallesVenta, pagos, mock(com.techprotech.agenda.modulos.productos.aplicacion.ServicioComisionesDevengadas.class));
         CheckoutOrdenEntidad orden = new CheckoutOrdenEntidad();
         orden.setId(3L); orden.setEmpresaId(25L); orden.setEstado("PAGADA");
         when(ordenes.bloquearPorEmpresaEId(25L, 3L)).thenReturn(Optional.of(orden));

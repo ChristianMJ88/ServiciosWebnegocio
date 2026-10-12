@@ -293,3 +293,26 @@ a.sidebar-flyout-item {
   width: 18px;
   text-align: center;
 }
+
+/* Navigation presentation is independent of tenant permissions. */
+.admin-sidebar { height: 100dvh; padding: 1.1rem .85rem; background: linear-gradient(165deg,#111e32,#162c3e); color: #eaf2fa; }
+.sidebar-brand { padding: .5rem .6rem 1.2rem; border-bottom: 1px solid #ffffff14; }
+.sidebar-brand-mark { border-radius: 16px; background: linear-gradient(140deg,#398be8,#1fae9b); box-shadow: 0 6px 20px #0002; }
+.sidebar-view-controls { display: flex; gap: .45rem; padding: .8rem 0; }
+.sidebar-view-controls button { display: flex; align-items: center; justify-content: center; gap: .5rem; flex: 1; min-height: 40px; border: 1px solid #ffffff18; border-radius: 10px; color: #bfcedc; background: #ffffff06; font: inherit; font-size: .78rem; cursor: pointer; }
+.sidebar-nav-panel { overflow-y: auto; scrollbar-width: thin; scrollbar-color: #ffffff30 transparent; }
+.sidebar-nav { gap: .4rem; }
+.sidebar-menu-toggle { min-height: 46px; padding: .7rem .8rem; border-radius: 11px; color: #aabbcd; background: transparent; font-size: .75rem; font-weight: 700; letter-spacing: .05em; }
+.sidebar-menu-toggle > i:first-child { width: 22px; font-size: 1.1rem; text-align: center; flex-shrink: 0; }
+.sidebar-menu-chevron { margin-left: auto; }
+.sidebar-submenu { padding: .35rem 0 .55rem .55rem; }
+.sidebar-nav-item { min-height: 46px; padding: .55rem .75rem; margin-bottom: .2rem; border-radius: 12px; color: #d7e3ee; background: transparent; font-size: .88rem; }
+.sidebar-nav-icon { width: 30px; height: 30px; display: grid; place-items: center; flex-shrink: 0; border-radius: 9px; background: #ffffff08; }
+.sidebar-nav-item.active-nav-item { color: #fff; background: linear-gradient(100deg,#287acb40,#21ad9630); box-shadow: inset 3px 0 #54cdbd; }
+.sidebar-menu-toggle:hover,.sidebar-nav-item:hover,.sidebar-view-controls button:hover { background-color: #ffffff0c; color: #fff; }
+.admin-sidebar button:focus-visible,.admin-sidebar a:focus-visible { outline: 2px solid #69d5ca; outline-offset: 2px; }
+.admin-sidebar.is-rail { padding: 1rem .5rem; }
+.admin-sidebar.is-rail .sidebar-view-controls { flex-direction: column; }
+.admin-sidebar.is-rail .sidebar-menu-toggle { justify-content: center; min-height: 48px; }
+.sidebar-flyout { max-height: calc(100dvh - 2rem); overflow-y: auto; }
+@media (prefers-reduced-motion: reduce) { .admin-sidebar * { transition: none !important; } }

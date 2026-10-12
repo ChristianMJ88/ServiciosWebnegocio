@@ -247,3 +247,8 @@ aplicacion:
 
 server:
   port: 8080
+
+productos:
+  importacion:
+    max-filas: ${PRODUCTOS_IMPORTACION_MAX_FILAS:500}
+    max-bytes: ${PRODUCTOS_IMPORTACION_MAX_BYTES:5242880}

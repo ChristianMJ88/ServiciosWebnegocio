@@ -3,6 +3,12 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
 
+export interface MetadatosDisponibilidadStaff {
+  diasSemana: {valor: number; etiqueta: string}[];
+  tiposBloqueo: {valor: string; etiqueta: string}[];
+  intervaloMinimoMinutos: number;
+}
+
 export interface CitaStaff {
   id: number;
   estado: string;
@@ -77,6 +83,18 @@ export interface GuardarExcepcionDisponibilidadStaffPayload {
 })
 export class StaffService {
   private readonly http = inject(HttpClient);
+
+  getMetadatosDisponibilidad(): Observable<MetadatosDisponibilidadStaff> {
+    return this.http.get<MetadatosDisponibilidadStaff>(`${environment.apiBaseUrl}/staff/disponibilidad/metadatos`);
+  }
+
+  solicitarHorario(reglaId: number | null, horario: GuardarReglaDisponibilidadStaffPayload, diasSemana: number[], reemplazar: boolean): Observable<unknown> {
+    return this.http.post(`${environment.apiBaseUrl}/staff/disponibilidad/solicitudes-horario`, {reglaId, propuesta: {horario, diasSemana, reemplazar}});
+  }
+
+  guardarHorarioSemanal(horario: GuardarReglaDisponibilidadStaffPayload, diasSemana: number[], reemplazar: boolean): Observable<unknown> {
+    return this.http.post(`${environment.apiBaseUrl}/staff/disponibilidad/reglas/semana`, {horario, diasSemana, reemplazar});
+  }
 
   getPerfil(): Observable<PerfilStaff> {
     return this.http.get<PerfilStaff>(`${environment.apiBaseUrl}/staff/perfil`);

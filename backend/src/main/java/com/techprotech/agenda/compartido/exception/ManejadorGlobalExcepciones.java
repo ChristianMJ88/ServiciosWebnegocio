@@ -22,6 +22,12 @@ public class ManejadorGlobalExcepciones {
 
     private static final Logger log = LoggerFactory.getLogger(ManejadorGlobalExcepciones.class);
 
+    @ExceptionHandler(SesionNoDisponibleException.class)
+    public ResponseEntity<ErrorApi> manejarSesionNoDisponible(SesionNoDisponibleException ex) {
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ErrorApi(
+                "SESION_NO_DISPONIBLE", ex.getReason(), OffsetDateTime.now()));
+    }
+
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<Map<String, Object>> manejarValidacion(MethodArgumentNotValidException ex) {
         Map<String, String> errores = new HashMap<>();

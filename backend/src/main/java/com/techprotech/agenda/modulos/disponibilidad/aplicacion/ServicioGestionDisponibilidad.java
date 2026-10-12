@@ -85,6 +85,7 @@ public class ServicioGestionDisponibilidad {
         validarRegla(request);
         String nombreSujeto = validarSujeto(empresaId, tipoSujeto, request.sujetoId());
 
+        validarCruce(empresaId, tipoSujeto, request.sujetoId(), null, request);
         ReglaDisponibilidadEntidad regla = new ReglaDisponibilidadEntidad();
         regla.setEmpresaId(empresaId);
         regla.setTipoSujeto(tipoSujeto);
@@ -101,6 +102,7 @@ public class ServicioGestionDisponibilidad {
 
         ReglaDisponibilidadEntidad regla = reglaDisponibilidadRepositorio.findByIdAndEmpresaId(reglaId, empresaId)
                 .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "La regla no existe para la empresa"));
+        validarCruce(empresaId, tipoSujeto, request.sujetoId(), reglaId, request);
         regla.setTipoSujeto(tipoSujeto);
         regla.setSujetoId(request.sujetoId());
         aplicarRegla(regla, request);
@@ -109,6 +111,7 @@ public class ServicioGestionDisponibilidad {
 
     @Transactional
     public ReglaDisponibilidadResponse guardarReglaStaff(Long empresaId, Long prestadorId, Long reglaId, ReglaDisponibilidadRequest request) {
+        exigirSolicitudSiHayHorario(empresaId, prestadorId);
         validarRegla(request);
         validarSujeto(empresaId, "PRESTADOR", prestadorId);
 
@@ -117,11 +120,35 @@ public class ServicioGestionDisponibilidad {
                 : reglaDisponibilidadRepositorio.findByIdAndEmpresaIdAndTipoSujetoAndSujetoId(reglaId, empresaId, "PRESTADOR", prestadorId)
                 .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "La regla no existe para el staff autenticado"));
 
+        validarCruce(empresaId, "PRESTADOR", prestadorId, reglaId, request);
         regla.setEmpresaId(empresaId);
         regla.setTipoSujeto("PRESTADOR");
         regla.setSujetoId(prestadorId);
         aplicarRegla(regla, request);
         return mapearRegla(reglaDisponibilidadRepositorio.save(regla), "Mi agenda");
+    }
+
+    public void exigirSolicitudSiHayHorario(Long empresaId, Long prestadorId) {
+        if (!reglaDisponibilidadRepositorio.findByEmpresaIdAndTipoSujetoAndSujetoIdOrderByDiaSemanaAscHoraInicioAsc(empresaId,"PRESTADOR",prestadorId).isEmpty())
+            throw new ResponseStatusException(org.springframework.http.HttpStatus.CONFLICT,"Solicita autorización del administrador para cambiar tus horarios");
+    }
+
+    @Transactional
+    public void eliminarReglaAdmin(Long empresaId, Long reglaId) {
+        var regla = reglaDisponibilidadRepositorio.findByIdAndEmpresaId(reglaId, empresaId)
+            .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "La regla no existe para la empresa"));
+        reglaDisponibilidadRepositorio.delete(regla);
+    }
+
+    private void validarCruce(Long empresaId, String tipo, Long sujetoId, Long excluirId, ReglaDisponibilidadRequest request) {
+        var existentes = reglaDisponibilidadRepositorio.findByEmpresaIdAndTipoSujetoAndSujetoIdOrderByDiaSemanaAscHoraInicioAsc(empresaId, tipo, sujetoId);
+        boolean cruza = existentes.stream().anyMatch(r -> !java.util.Objects.equals(r.getId(), excluirId)
+            && r.getDiaSemana() == request.diaSemana()
+            && (r.getVigenteDesde() == null || request.vigenteHasta() == null || !r.getVigenteDesde().isAfter(request.vigenteHasta()))
+            && (request.vigenteDesde() == null || r.getVigenteHasta() == null || !request.vigenteDesde().isAfter(r.getVigenteHasta()))
+            && r.getHoraInicio().isBefore(request.horaFin()) && request.horaInicio().isBefore(r.getHoraFin()));
+        if (cruza) throw new ResponseStatusException(org.springframework.http.HttpStatus.CONFLICT,
+            "El horario se superpone con otro intervalo del mismo día y vigencia. Edita el existente o utiliza Reemplazar.");
     }
 
     @Transactional
@@ -167,6 +194,13 @@ public class ServicioGestionDisponibilidad {
         excepcion.setSujetoId(prestadorId);
         aplicarExcepcion(excepcion, request);
         return mapearExcepcion(excepcionDisponibilidadRepositorio.save(excepcion), "Mi agenda");
+    }
+
+    public String validarReglaAdmin(Long empresaId, ReglaDisponibilidadRequest request) {
+        String tipo=normalizarTipoSujeto(request.tipoSujeto());
+        validarRegla(request);
+        validarSujeto(empresaId,tipo,request.sujetoId());
+        return tipo;
     }
 
     private void aplicarRegla(ReglaDisponibilidadEntidad regla, ReglaDisponibilidadRequest request) {

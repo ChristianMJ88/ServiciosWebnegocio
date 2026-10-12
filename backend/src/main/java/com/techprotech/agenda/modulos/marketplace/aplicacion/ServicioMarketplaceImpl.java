@@ -30,7 +30,8 @@ public class ServicioMarketplaceImpl implements ServicioMarketplace {
    if(disponible(candidato.empresaId()))resultados.add(candidato);
   Long siguiente=candidatos.size()>24?candidatos.get(23).empresaId():null;
   var servicios=directorio.servicios(resultados.stream().map(NegocioDirectorioResponse::empresaId).toList(),texto.trim(),categoria.trim());
-  return new DirectorioResponse(resultados.stream().map(n->n.conServicios(servicios.getOrDefault(n.empresaId(),java.util.List.of()))).toList(),siguiente);
+  var sucursales=directorio.sucursales(resultados.stream().map(NegocioDirectorioResponse::empresaId).toList());
+  return new DirectorioResponse(resultados.stream().map(n->n.conSucursales(sucursales.getOrDefault(n.empresaId(),java.util.List.of())).conServicios(servicios.getOrDefault(n.empresaId(),java.util.List.of()))).toList(),siguiente);
  }
  @Transactional(readOnly=true)
  public ParticipacionMarketplaceResponse obtener(Long empresaId){

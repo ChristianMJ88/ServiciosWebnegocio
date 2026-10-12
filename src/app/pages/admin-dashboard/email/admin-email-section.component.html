@@ -1,16 +1,15 @@
 <section class="section-stack">
   <mat-card class="workspace-card email-onboarding-card">
     <div class="email-onboarding-copy">
-      <div class="section-eyebrow">Correo de confirmaciones</div>
+      <div class="section-eyebrow">Canales · {{ nombreEmpresa() }}</div>
+      <h1>Correo</h1>
       @if (configuracionCorreo()?.proveedor && configuracionCorreo()?.habilitado) {
-        <h3>Tu correo está conectado</h3>
         <p>
           Los mensajes salen con la identidad de este negocio mediante
           {{ configuracionCorreo()?.proveedor === 'GRAPH' ? 'Microsoft 365' : (configuracionCorreo()?.proveedor === 'GMAIL' ? 'Gmail' : 'tu servidor de correo') }}.
           Si el proveedor presenta una falla, Fluora protege la entrega con su canal canónico.
         </p>
       } @else {
-        <h3>Fluora administra tus confirmaciones</h3>
         <p>
           El negocio ya puede enviar confirmaciones con el canal seguro de Fluora. Puedes conectar
           un correo propio cuando quieras para personalizar el remitente.
@@ -18,6 +17,7 @@
       }
     </div>
     <div class="email-onboarding-actions">
+      <button mat-stroked-button type="button" (click)="refresh.emit()"><i class="bi bi-arrow-clockwise" aria-hidden="true"></i> Actualizar</button>
       <span class="email-status" [class.is-custom]="!!configuracionCorreo()?.proveedor && !!configuracionCorreo()?.habilitado">
         <span class="email-status-dot"></span>
         {{ configuracionCorreo()?.proveedor && configuracionCorreo()?.habilitado ? 'Correo propio activo' : 'Correo Fluora activo' }}
@@ -29,6 +29,9 @@
         <button mat-stroked-button type="button" (click)="solicitarUsoPlataforma()" [disabled]="guardandoCorreo()">
           {{ confirmandoUsoPlataforma() ? 'Confirmar y eliminar conexión propia' : 'Usar correo de Fluora' }}
         </button>
+        @if (confirmandoUsoPlataforma()) {
+          <button mat-button type="button" (click)="confirmandoUsoPlataforma.set(false)">Cancelar</button>
+        }
       }
       <button mat-button type="button" (click)="alternarAvanzado()">
         {{ mostrarAvanzado() ? 'Ocultar configuración avanzada' : 'Configuración avanzada' }}
@@ -44,6 +47,7 @@
           <h3>¿Desde dónde quieres enviar?</h3>
           <p class="helper-text mb-0">La configuración se guarda sólo para este negocio.</p>
         </div>
+        <button mat-stroked-button type="button" (click)="mostrandoOpciones.set(false)">Cancelar</button>
       </div>
       <div class="provider-grid">
         <button class="provider-option" type="button" (click)="seleccionarProveedor('GRAPH')">
@@ -62,17 +66,17 @@
     </mat-card>
   }
 
-  <div class="workspace-grid two-columns">
+  <div class="workspace-grid" [class.two-columns]="mostrarAvanzado()">
     @if (mostrarAvanzado()) {
     <mat-card class="workspace-card form-card">
       <div class="section-header">
         <div>
           <div class="section-eyebrow">Entrega transaccional</div>
-          <h3>Configuración de correo del tenant</h3>
+          <h3>Configuración de correo del negocio</h3>
         </div>
       </div>
 
-      <form class="admin-form-grid admin-form-shell" (ngSubmit)="save.emit()">
+      <form #emailForm="ngForm" class="admin-form-grid admin-form-shell" (ngSubmit)="emailForm.valid && save.emit()">
         <div class="form-block-title full-width">Proveedor</div>
 
         <mat-form-field appearance="outline" class="full-width">
@@ -87,7 +91,7 @@
         <div class="form-block-title full-width">Identidad de envío</div>
 
         <mat-slide-toggle name="correoHabilitado" [(ngModel)]="formularioCorreo().habilitado" class="full-width">
-          Habilitar confirmaciones por correo para este tenant
+          Habilitar confirmaciones por correo para este negocio
         </mat-slide-toggle>
 
         <mat-form-field appearance="outline">
@@ -141,7 +145,7 @@
           <div class="helper-text full-width">
             Si dejas client secret o PEM vacíos, se conserva el secreto actual guardado.
           </div>
-        } @else {
+        } @else if (formularioCorreo().proveedor === 'SMTP') {
           <div class="form-block-title full-width">SMTP</div>
 
           <mat-form-field appearance="outline">
@@ -175,11 +179,13 @@
           <div class="helper-text full-width">
             Si dejas la contraseña vacía, se conserva la configurada actualmente.
           </div>
+        } @else if (formularioCorreo().proveedor === 'GMAIL') {
+          <div class="helper-text full-width email-provider-note">La autorización de Gmail se gestiona desde Agregar correo → Gmail o Google Workspace. No requiere completar los campos SMTP.</div>
         }
 
         <div class="form-actions">
-          <button mat-flat-button color="primary" type="submit" [disabled]="guardandoCorreo()">
-            Guardar configuración
+          <button mat-flat-button color="primary" type="submit" [disabled]="guardandoCorreo() || emailForm.invalid">
+            {{ guardandoCorreo() ? 'Guardando…' : 'Guardar configuración' }}
           </button>
         </div>
       </form>
@@ -189,8 +195,8 @@
     <mat-card class="workspace-card list-card">
       <div class="section-header">
         <div>
-          <div class="section-eyebrow">Estado del tenant</div>
-          <h3>Salud de configuración</h3>
+          <div class="section-eyebrow">Estado del negocio</div>
+          <h3>Configuración registrada</h3>
         </div>
       </div>
 
@@ -225,11 +231,11 @@
               </div>
               <div class="entity-side">
                 <span class="status-pill" [class.is-active]="config.graphClientSecretCifrado">
-                  {{ config.graphClientSecretCifrado ? 'Cifrado' : 'Legacy' }}
+                  {{ !config.graphClientSecretConfigurado ? 'No configurado' : config.graphClientSecretCifrado ? 'Cifrado' : 'Sin cifrar' }}
                 </span>
               </div>
             </article>
-          } @else {
+          } @else if (config.proveedor === 'SMTP') {
             <article class="entity-row">
               <div class="entity-main">
                 <div class="entity-title">Secreto SMTP</div>
@@ -247,7 +253,7 @@
               </div>
               <div class="entity-side">
                 <span class="status-pill" [class.is-active]="config.smtpPasswordCifrada">
-                  {{ config.smtpPasswordCifrada ? 'Cifrado' : 'Legacy' }}
+                  {{ !config.smtpPasswordConfigurada ? 'No configurado' : config.smtpPasswordCifrada ? 'Cifrado' : 'Sin cifrar' }}
                 </span>
               </div>
             </article>
@@ -270,7 +276,7 @@
               </div>
               <div class="entity-side">
                 <span class="status-pill" [class.is-active]="config.graphPrivateKeyCifrada">
-                  {{ config.graphPrivateKeyCifrada ? 'Cifrada' : 'Legacy' }}
+                  {{ !config.graphPrivateKeyConfigurada ? 'No configurada' : config.graphPrivateKeyCifrada ? 'Cifrada' : 'Sin cifrar' }}
                 </span>
               </div>
             </article>
@@ -305,7 +311,7 @@
                 </span>
               </div>
             </article>
-          } @else {
+          } @else if (config.proveedor === 'SMTP') {
             <article class="entity-row">
               <div class="entity-main">
                 <div class="entity-title">Resumen técnico</div>

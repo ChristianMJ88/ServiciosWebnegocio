@@ -858,7 +858,8 @@ public class ServicioAdminCitas {
                                 plantilla.idioma(),
                                 plantilla.categoria(),
                                 plantilla.estado(),
-                                plantilla.tipoPlantilla()
+                                plantilla.tipoPlantilla(),
+                                plantilla.cuerpo()
                         )
                 );
             }
@@ -2134,8 +2135,8 @@ public class ServicioAdminCitas {
         List<Long> sucursalesPermitidas = validarSucursalesPermitidasUsuarioInterno(empresaId, request.sucursalIds(), request.sucursalId());
         List<String> permisosDirectos = normalizarPermisosDirectosUsuario(request.permisosDirectos(), rolEmpresa);
 
-        String correoNormalizado = request.correo().trim().toLowerCase();
-        usuarioRepositorio.findByEmpresaIdAndCorreo(empresaId, correoNormalizado)
+        String correoNormalizado = (request.correo()==null || request.correo().isBlank() ? null : request.correo().trim().toLowerCase());
+        (correoNormalizado==null ? java.util.Optional.<UsuarioEntidad>empty() : usuarioRepositorio.findByEmpresaIdAndCorreo(empresaId, correoNormalizado))
                 .ifPresent(usuario -> {
                     throw new ResponseStatusException(CONFLICT, "Ya existe un usuario con ese correo en la empresa");
                 });
@@ -2147,7 +2148,9 @@ public class ServicioAdminCitas {
         UsuarioEntidad usuario = new UsuarioEntidad();
         usuario.setEmpresaId(empresaId);
         usuario.setCorreo(correoNormalizado);
+        configurarNombreUsuario(usuario,request.nombreUsuario());
         usuario.setContrasenaHash(passwordEncoder.encode(request.contrasenaTemporal()));
+        usuario.setRequiereCambioContrasena(request.nombreUsuario()!=null || usuario.getNombreUsuario()!=null);
         usuario.setHabilitado(request.activo());
         usuario.setBloqueado(false);
         usuario = usuarioRepositorio.save(usuario);
@@ -2178,8 +2181,8 @@ public class ServicioAdminCitas {
         validarSucursalUsuarioInterno(empresaId, request.sucursalId());
         validarSucursalesPermitidasUsuarioInterno(empresaId, request.sucursalIds(), request.sucursalId());
         normalizarPermisosDirectosUsuario(request.permisosDirectos(), rolEmpresa);
-        String correoNormalizado = request.correo().trim().toLowerCase();
-        usuarioRepositorio.findByEmpresaIdAndCorreo(empresaId, correoNormalizado).ifPresent(usuario -> {
+        String correoNormalizado = (request.correo()==null || request.correo().isBlank() ? null : request.correo().trim().toLowerCase());
+        (correoNormalizado==null ? java.util.Optional.<UsuarioEntidad>empty() : usuarioRepositorio.findByEmpresaIdAndCorreo(empresaId, correoNormalizado)).ifPresent(usuario -> {
             throw new ResponseStatusException(CONFLICT, "Ya existe un usuario con ese correo en la empresa");
         });
     }
@@ -2209,19 +2212,23 @@ public class ServicioAdminCitas {
         List<String> permisosDirectosActuales = servicioRolesEmpresa.obtenerPermisosDirectosUsuario(empresaId, usuarioId);
         String snapshotAntes = snapshotUsuarioInterno(usuario, perfil, rolActual, sucursalesActuales, permisosDirectosActuales);
 
-        String correoNormalizado = request.correo().trim().toLowerCase();
-        usuarioRepositorio.findByEmpresaIdAndCorreo(empresaId, correoNormalizado)
+        String correoNormalizado = (request.correo()==null || request.correo().isBlank() ? null : request.correo().trim().toLowerCase());
+        (correoNormalizado==null ? java.util.Optional.<UsuarioEntidad>empty() : usuarioRepositorio.findByEmpresaIdAndCorreo(empresaId, correoNormalizado))
                 .filter(existente -> !existente.getId().equals(usuarioId))
                 .ifPresent(existente -> {
                     throw new ResponseStatusException(CONFLICT, "Ya existe otro usuario con ese correo en la empresa");
                 });
 
         usuario.setCorreo(correoNormalizado);
+        configurarNombreUsuario(usuario,request.nombreUsuario());
         if (request.contrasenaTemporal() != null && !request.contrasenaTemporal().isBlank()) {
             usuario.setContrasenaHash(passwordEncoder.encode(request.contrasenaTemporal()));
+        usuario.setRequiereCambioContrasena(request.nombreUsuario()!=null || usuario.getNombreUsuario()!=null);
         }
+        if (usuario.isHabilitado() != request.activo() || (request.contrasenaTemporal() != null && !request.contrasenaTemporal().isBlank())) usuario.invalidarSesiones();
+        if (!request.activo() && usuarioId.equals(usuarioActorId)) throw new ResponseStatusException(CONFLICT, "No puedes inactivar tu propio acceso");
         usuario.setHabilitado(request.activo());
-        usuario.setBloqueado(false);
+
         usuarioRepositorio.save(usuario);
 
         aplicarUsuarioInterno(perfil, request);
@@ -2254,7 +2261,7 @@ public class ServicioAdminCitas {
         SucursalEntidad sucursal = sucursalRepositorio.findByIdAndEmpresaId(request.sucursalId(), empresaId)
                 .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "La sucursal indicada no existe para la empresa"));
 
-        usuarioRepositorio.findByEmpresaIdAndCorreo(empresaId, request.correo().trim().toLowerCase())
+        (request.correo()==null || request.correo().isBlank() ? java.util.Optional.<UsuarioEntidad>empty() : usuarioRepositorio.findByEmpresaIdAndCorreo(empresaId, request.correo().trim().toLowerCase()))
                 .ifPresent(usuario -> {
                     throw new ResponseStatusException(CONFLICT, "Ya existe un usuario con ese correo en la empresa");
                 });
@@ -2263,9 +2270,11 @@ public class ServicioAdminCitas {
 
         UsuarioEntidad usuario = new UsuarioEntidad();
         usuario.setEmpresaId(empresaId);
-        usuario.setCorreo(request.correo().trim().toLowerCase());
+        usuario.setCorreo((request.correo()==null || request.correo().isBlank() ? null : request.correo().trim().toLowerCase()));
+        configurarNombreUsuario(usuario,request.nombreUsuario());
         usuario.setContrasenaHash(passwordEncoder.encode(request.contrasenaTemporal()));
-        usuario.setHabilitado(true);
+        usuario.setRequiereCambioContrasena(request.nombreUsuario()!=null || usuario.getNombreUsuario()!=null);
+        usuario.setHabilitado(request.activo());
         usuario.setBloqueado(false);
         usuario = usuarioRepositorio.save(usuario);
 
@@ -2292,8 +2301,8 @@ public class ServicioAdminCitas {
         SucursalEntidad sucursal = sucursalRepositorio.findByIdAndEmpresaId(request.sucursalId(), empresaId)
                 .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "La sucursal indicada no existe para la empresa"));
 
-        String correoNormalizado = request.correo().trim().toLowerCase();
-        usuarioRepositorio.findByEmpresaIdAndCorreo(empresaId, correoNormalizado)
+        String correoNormalizado = (request.correo()==null || request.correo().isBlank() ? null : request.correo().trim().toLowerCase());
+        (correoNormalizado==null ? java.util.Optional.<UsuarioEntidad>empty() : usuarioRepositorio.findByEmpresaIdAndCorreo(empresaId, correoNormalizado))
                 .filter(existente -> !existente.getId().equals(prestadorId))
                 .ifPresent(existente -> {
                     throw new ResponseStatusException(CONFLICT, "Ya existe otro usuario con ese correo en la empresa");
@@ -2302,11 +2311,14 @@ public class ServicioAdminCitas {
         Map<Long, ServicioEntidad> serviciosSeleccionados = validarServiciosAsignados(empresaId, request.sucursalId(), request.servicioIds());
 
         usuario.setCorreo(correoNormalizado);
+        configurarNombreUsuario(usuario,request.nombreUsuario());
         if (request.contrasenaTemporal() != null && !request.contrasenaTemporal().isBlank()) {
             usuario.setContrasenaHash(passwordEncoder.encode(request.contrasenaTemporal()));
+        usuario.setRequiereCambioContrasena(request.nombreUsuario()!=null || usuario.getNombreUsuario()!=null);
         }
+        if (usuario.isHabilitado() != request.activo() || (request.contrasenaTemporal() != null && !request.contrasenaTemporal().isBlank())) usuario.invalidarSesiones();
         usuario.setHabilitado(request.activo());
-        usuario.setBloqueado(false);
+
         usuarioRepositorio.save(usuario);
 
         aplicarPrestador(prestador, request);
@@ -2322,6 +2334,10 @@ public class ServicioAdminCitas {
         sucursal.setTelefono(request.telefono() != null ? request.telefono().trim() : null);
         sucursal.setZonaHoraria(request.zonaHoraria().trim());
         sucursal.setActiva(request.activa());
+        if(request.municipio()!=null) sucursal.setMunicipio(com.techprotech.agenda.modulos.sucursales.aplicacion.NormalizadorUbicacion.texto(request.municipio()));
+        if(request.estadoRegion()!=null) sucursal.setEstadoRegion(com.techprotech.agenda.modulos.sucursales.aplicacion.NormalizadorUbicacion.texto(request.estadoRegion()));
+        if(request.paisCodigo()!=null) sucursal.setPaisCodigo(com.techprotech.agenda.modulos.sucursales.aplicacion.NormalizadorUbicacion.texto(request.paisCodigo()));
+        if(request.codigoPostal()!=null) sucursal.setCodigoPostal(com.techprotech.agenda.modulos.sucursales.aplicacion.NormalizadorUbicacion.texto(request.codigoPostal()));
     }
 
     private ConfiguracionCorreoAdminResponse mapearConfiguracionCorreo(ConfiguracionCorreoEmpresaEntidad configuracion) {
@@ -2868,7 +2884,8 @@ public class ServicioAdminCitas {
                 sucursal.getDireccion(),
                 sucursal.getTelefono(),
                 sucursal.getZonaHoraria(),
-                sucursal.isActiva()
+                sucursal.isActiva(), sucursal.getMunicipio(), sucursal.getEstadoRegion(), sucursal.getPaisCodigo(),
+                sucursal.getCodigoPostal()
         );
     }
 
@@ -3662,8 +3679,10 @@ public class ServicioAdminCitas {
                 permisosRolOrdenados,
                 permisosDirectosOrdenados,
                 combinarPermisos(permisosRolOrdenados, permisosDirectosOrdenados),
-                usuario.isHabilitado() && !usuario.isBloqueado(),
-                perfil.getNotas()
+                usuario.isHabilitado(),
+                perfil.getNotas(),
+                usuario.getNombreUsuario(),
+                usuario.isBloqueado()
         );
     }
 
@@ -3794,8 +3813,26 @@ public class ServicioAdminCitas {
                 prestador.getColorAgenda(),
                 prestador.isActivo(),
                 serviciosAsignados.stream().map(ServicioEntidad::getId).toList(),
-                serviciosAsignados.stream().map(ServicioEntidad::getNombre).toList()
+                serviciosAsignados.stream().map(ServicioEntidad::getNombre).toList(),
+                usuario.getNombreUsuario(),
+                usuario.isBloqueado()
         );
+    }
+
+    public void validarInvitacionPrestador(Long empresaId,PrestadorAdminRequest request) {
+        sucursalRepositorio.findByIdAndEmpresaId(request.sucursalId(),empresaId).orElseThrow(() -> new ResponseStatusException(NOT_FOUND,"Sucursal no disponible"));
+        if(usuarioRepositorio.existsByEmpresaIdAndCorreo(empresaId,request.correo().trim().toLowerCase())) throw new ResponseStatusException(CONFLICT,"La persona ya tiene una cuenta en este negocio");
+        validarServiciosAsignados(empresaId,request.sucursalId(),request.servicioIds());
+        if(request.activo()) capacidadesEmpresa.exigirLimite(empresaId,"PRESTADORES_MAX",prestadorServicioRepositorio.countActivosByEmpresaId(empresaId));
+    }
+
+    private void configurarNombreUsuario(UsuarioEntidad usuario,String nombre) {
+        String normalizado=nombre==null || nombre.isBlank() ? usuario.getNombreUsuario() : nombre.trim().toLowerCase(java.util.Locale.ROOT);
+        if(usuario.getCorreo()==null && normalizado==null) throw new ResponseStatusException(BAD_REQUEST,"Debes indicar un correo o un nombre de usuario");
+        if(normalizado!=null) usuarioRepositorio.findByEmpresaIdAndNombreUsuario(usuario.getEmpresaId(),normalizado)
+            .filter(u -> !java.util.Objects.equals(u.getId(),usuario.getId()))
+            .ifPresent(u -> {throw new ResponseStatusException(CONFLICT,"El nombre de usuario ya existe en este negocio");});
+        usuario.setNombreUsuario(normalizado);
     }
 
     private long contarEstado(List<CitaEntidad> citas, String estado) {

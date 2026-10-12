@@ -72,9 +72,10 @@
                 <span><i class="bi bi-calendar3"></i>{{ contacto.creadaEn | date:'d MMM, HH:mm':'':'es-MX' }}</span>
                 <span><i class="bi bi-broadcast"></i>{{ contacto.canal }}</span>
               </div>
-              <div class="contacto-row__message">
-                {{ contacto.mensaje }}
-              </div>
+              <details class="contacto-row__message-detail">
+                <summary>Leer mensaje completo <i class="bi bi-chevron-down" aria-hidden="true"></i></summary>
+                <div class="contacto-row__message">{{ contacto.mensaje }}</div>
+              </details>
             </div>
             <div class="entity-side contacto-row__side">
               <label class="contacto-row__field">
@@ -97,11 +98,11 @@
       </div>
     }
     @if (totalPaginas() > 1) {
-      <div class="form-actions">
+      <nav class="form-actions contacts-pagination" aria-label="Paginación de contactos">
         <button mat-stroked-button type="button" (click)="pageChange.emit(pagina() - 1)" [disabled]="pagina() === 0">Anterior</button>
         <span class="helper-text">Página {{ pagina() + 1 }} de {{ totalPaginas() }}</span>
         <button mat-stroked-button type="button" (click)="pageChange.emit(pagina() + 1)" [disabled]="pagina() + 1 >= totalPaginas()">Siguiente</button>
-      </div>
+      </nav>
     }
   </mat-card>
 </section>

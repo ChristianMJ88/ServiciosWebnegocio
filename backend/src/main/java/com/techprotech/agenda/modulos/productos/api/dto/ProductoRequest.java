@@ -28,5 +28,6 @@ public record ProductoRequest(
         @NotNull @DecimalMin("0.0") BigDecimal stockMinimo,
         boolean visiblePublico,
         boolean activo,
-        List<@Valid PrecioZonaProductoRequest> preciosZona
+        List<@Valid PrecioZonaProductoRequest> preciosZona,
+        java.time.LocalDate nuevoDesde, java.time.LocalDate nuevoHasta
 ) {}

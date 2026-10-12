@@ -6,7 +6,8 @@ public record SucursalAdminResponse(
         String direccion,
         String telefono,
         String zonaHoraria,
-        boolean activa
+        boolean activa,
+        String municipio, String estadoRegion, String paisCodigo, String codigoPostal
 
 ) {
 }

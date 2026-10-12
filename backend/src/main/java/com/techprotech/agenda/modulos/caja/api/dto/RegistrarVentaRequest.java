@@ -16,8 +16,12 @@ public record RegistrarVentaRequest(
         @Valid @Size(max = 100) List<ProductoVentaRequest> productos,
         @NotBlank String metodoPago,
         @Size(max = 120) String referencia,
-        @Size(max = 500) String observaciones
+        @Size(max = 500) String observaciones,
+        Long ventaPendienteId
 ) {
+    public RegistrarVentaRequest(Long sucursalId,Long citaId,Long clienteId,List<ProductoVentaRequest> productos,String metodoPago,String referencia,String observaciones) {
+        this(sucursalId,citaId,clienteId,productos,metodoPago,referencia,observaciones,null);
+    }
     public record ProductoVentaRequest(
             @NotNull Long productoId,
             @NotNull @DecimalMin("0.001") BigDecimal cantidad

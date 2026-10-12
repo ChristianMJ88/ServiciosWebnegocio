@@ -191,13 +191,15 @@
     </div>
   }
 
-  <mat-card class="workspace-card">
-    <div class="section-header">
-      <div>
-        <div class="section-eyebrow">Analítica comercial</div>
-        <h3>Rendimiento por servicio</h3>
-      </div>
-    </div>
+  <details class="workspace-card dashboard-service-details">
+    <summary>
+      <span>
+        <span class="section-eyebrow">Analítica comercial</span>
+        <strong>Rendimiento por servicio</strong>
+        <small>Consulta el detalle de citas e ingresos del periodo</small>
+      </span>
+      <i class="bi bi-chevron-down" aria-hidden="true"></i>
+    </summary>
 
     <div class="report-grid">
       @for (reporte of reporteServicios(); track reporte) {
@@ -221,7 +223,9 @@
             </div>
           </div>
         </mat-card>
+      } @empty {
+        <p class="dashboard-priority-empty">No hay datos por servicio para el periodo seleccionado.</p>
       }
     </div>
-  </mat-card>
+  </details>
 </section>

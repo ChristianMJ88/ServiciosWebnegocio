@@ -1,5 +1,5 @@
 import { Injectable, inject } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import { ArchivoMediaAdmin } from '../../../core/admin/admin.service';
@@ -11,11 +11,11 @@ export interface PrecioZonaProductoAdmin { id?: number; zonaPrecioId: number; zo
 export interface ProductoAdmin {
   id: number; categoriaId: number | null; categoriaNombre: string | null; proveedorId: number | null; proveedorNombre: string | null;
   mediaId: number | null; sku: string; codigoBarras: string | null; nombre: string; slug: string; descripcion: string | null;
-  imagenUrl: string | null; precioBase: number; costo: number | null; moneda: string; tasaImpuesto: number; controlaInventario: boolean;
+  imagenUrl: string | null; precioBase: number; precioConDescuento?: number; descuento?: string | null; costo: number | null; moneda: string; tasaImpuesto: number; controlaInventario: boolean;
   pesoKg: number | null; largoCm: number | null; anchoCm: number | null; altoCm: number | null;
-  stockMinimo: number; visiblePublico: boolean; activo: boolean; preciosZona: PrecioZonaProductoAdmin[];
+  nuevoDesde: string | null; nuevoHasta: string | null; stockMinimo: number; visiblePublico: boolean; activo: boolean; preciosZona: PrecioZonaProductoAdmin[];
 }
-export interface CatalogoProductosAdmin { monedaPredeterminada: string; categorias: CategoriaProductoAdmin[]; proveedores: ProveedorProductoAdmin[]; zonasPrecio: ZonaPrecioProductoAdmin[]; productos: ProductoAdmin[]; }
+export interface CatalogoProductosAdmin { monedaPredeterminada: string; categorias: CategoriaProductoAdmin[]; proveedores: ProveedorProductoAdmin[]; zonasPrecio: ZonaPrecioProductoAdmin[]; productos: ProductoAdmin[]; pagina: number; tamano: number; totalElementos: number; totalPaginas: number; totalActivos: number; totalPublicados: number; totalProductos: number; }
 export interface ConfiguracionTiendaAdmin {
   habilitada: boolean;
   menuMostrarProductos: boolean;
@@ -27,18 +27,24 @@ export interface ConfiguracionTiendaAdmin {
   carritoHabilitado: boolean;
   mostrarStock: boolean;
   permitirPedidoWhatsapp: boolean;
+  diasNuevo: number;
 }
 export type CategoriaProductoPayload = Omit<CategoriaProductoAdmin, 'id'>;
 export type ProveedorProductoPayload = Omit<ProveedorProductoAdmin, 'id'>;
 export type ZonaPrecioProductoPayload = Omit<ZonaPrecioProductoAdmin, 'id'>;
 export type ProductoPayload = Omit<ProductoAdmin, 'id' | 'categoriaNombre' | 'proveedorNombre'>;
 
+export interface RevisionImportacionProductos { total: number; puedeImportar: boolean; filas: {fila:number; sku:string; nombre:string; errores:string[]}[]; }
+
 @Injectable()
 export class ProductsAdminService {
   private readonly http = inject(HttpClient);
   private readonly base = `${environment.apiBaseUrl}/admin/productos`;
 
-  obtenerCatalogo(): Observable<CatalogoProductosAdmin> { return this.http.get<CatalogoProductosAdmin>(`${this.base}/catalogo`); }
+  plantilla() { return this.http.get(`${this.base}/importacion/plantilla`, {responseType:'blob'}); }
+  revisarImportacion(archivo: File) { const body=new FormData(); body.append('archivo', archivo); return this.http.post<RevisionImportacionProductos>(`${this.base}/importacion/revision`,body); }
+  importar(archivo: File) { const body=new FormData(); body.append('archivo', archivo); return this.http.post<{creados:number}>(`${this.base}/importacion`,body); }
+  obtenerCatalogo(pagina = 0, busqueda = '', sucursalId: number | null = null): Observable<CatalogoProductosAdmin> { let params = new HttpParams().set('pagina', pagina).set('busqueda', busqueda); if(sucursalId !== null) params=params.set('sucursalId',sucursalId); return this.http.get<CatalogoProductosAdmin>(`${this.base}/catalogo`, {params}); }
   obtenerConfiguracionTienda(): Observable<ConfiguracionTiendaAdmin> { return this.http.get<ConfiguracionTiendaAdmin>(`${this.base}/tienda`); }
   actualizarConfiguracionTienda(payload: ConfiguracionTiendaAdmin): Observable<ConfiguracionTiendaAdmin> {
     return this.http.put<ConfiguracionTiendaAdmin>(`${this.base}/tienda`, payload);

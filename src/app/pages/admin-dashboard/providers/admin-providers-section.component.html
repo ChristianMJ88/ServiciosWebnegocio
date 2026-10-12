@@ -1,5 +1,5 @@
 <section class="section-stack">
-  <div class="workspace-grid two-columns">
+  <app-admin-workspace [editando]="prestadorEditandoId" [separado]="true" tituloLista="Prestadores" tituloFormulario="Nuevo prestador">
     <mat-card class="workspace-card form-card">
       <div class="section-header">
         <div>
@@ -8,12 +8,12 @@
         </div>
         @if (prestadorEditandoId) {
           <button mat-stroked-button type="button" (click)="clearEdit.emit()">
-            Limpiar formulario
+            Cancelar edición
           </button>
         }
       </div>
 
-      <form class="admin-form-grid admin-form-shell" (ngSubmit)="save.emit()">
+      <form #providerForm="ngForm" class="admin-form-grid admin-form-shell" (ngSubmit)="providerForm.valid && save.emit()">
         <div class="form-block-title full-width">Identidad</div>
 
         <div class="provider-media-field full-width">
@@ -95,24 +95,26 @@
           <input matInput name="prestadorNombreMostrar" [(ngModel)]="formularioPrestador.nombreMostrar" required maxlength="150">
         </mat-form-field>
 
+<mat-form-field appearance="outline" subscriptSizing="dynamic" class="full-width"><mat-label>Usuario de acceso sin correo (opcional)</mat-label><input matInput name="nombreUsuario" [(ngModel)]="formularioPrestador.nombreUsuario" maxlength="80" autocomplete="off"><mat-hint>Déjalo vacío para enviar una invitación por correo. Con usuario, entrega una contraseña temporal que deberá cambiar al ingresar.</mat-hint></mat-form-field>
         <mat-form-field appearance="outline">
           <mat-label>Correo</mat-label>
-          <input matInput type="email" name="prestadorCorreo" [(ngModel)]="formularioPrestador.correo" required maxlength="150">
+          <input matInput type="email" name="prestadorCorreo" [(ngModel)]="formularioPrestador.correo" [required]="!formularioPrestador.nombreUsuario" maxlength="150">
         </mat-form-field>
 
-        <mat-form-field appearance="outline">
+        @if(formularioPrestador.nombreUsuario) {<mat-form-field appearance="outline">
           <mat-label>Contraseña temporal</mat-label>
           <input
             matInput
             type="password"
             name="prestadorPassword"
             [(ngModel)]="formularioPrestador.contrasenaTemporal"
-            [required]="!prestadorEditandoId">
+            [required]="!prestadorEditandoId && !!formularioPrestador.nombreUsuario">
           <mat-hint>
-            {{ prestadorEditandoId ? 'Opcional al editar.' : 'Define una contraseña temporal.' }}
+            {{ prestadorEditandoId ? 'Opcional al editar.' : formularioPrestador.nombreUsuario ? 'Debe cambiarla al primer ingreso.' : 'La invitación permitirá crear su contraseña.' }}
           </mat-hint>
         </mat-form-field>
 
+        }
         <div class="form-block-title full-width">Perfil operativo</div>
 
         <mat-form-field appearance="outline">
@@ -124,6 +126,20 @@
           Prestador activo
         </mat-slide-toggle>
 
+        @if (prestadorEditandoId && !formularioPrestador.activo) {
+          <aside class="provider-impact full-width" role="status">
+            <strong>Antes de inactivar</strong>
+            <p>Dejará de ofrecer disponibilidad para nuevas reservas y perderá acceso. Sus citas e historial se conservarán.</p>
+            @if (cargandoImpacto()) { <p>Consultando agenda…</p> }
+            @if (errorImpacto()) { <p>{{ errorImpacto() }}</p><button mat-stroked-button type="button" (click)="consultarImpacto()">Reintentar consulta</button> }
+            @if (impacto(); as resumen) {
+              @if (resumen.citasFuturas.length) {
+                <p>Citas futuras registradas, por estado. Revisa las que requieren atención antes de guardar:</p>
+                <ul>@for (estado of resumen.citasFuturas; track estado.estado) { <li>{{ estado.estado }}: <strong>{{ estado.cantidad }}</strong></li> }</ul>
+              } @else { <p>No tiene citas futuras registradas.</p> }
+            }
+          </aside>
+        }
         <mat-form-field appearance="outline" class="full-width">
           <mat-label>Biografía</mat-label>
           <textarea matInput rows="3" name="prestadorBiografia" [(ngModel)]="formularioPrestador.biografia" maxlength="500"></textarea>
@@ -149,8 +165,8 @@
         </div>
 
         <div class="form-actions">
-          <button mat-flat-button color="primary" type="submit" [disabled]="guardandoPrestador || !sucursales.length">
-            {{ prestadorEditandoId ? 'Actualizar prestador' : 'Crear prestador' }}
+          <button mat-flat-button color="primary" type="submit" [disabled]="guardandoPrestador || subiendoFoto() || providerForm.invalid || !sucursales.length">
+            {{ prestadorEditandoId ? 'Actualizar prestador' : formularioPrestador.nombreUsuario ? 'Crear prestador' : 'Enviar invitación' }}
           </button>
         </div>
       </form>
@@ -164,9 +180,9 @@
         </div>
       </div>
 
-      <div class="entity-list">
-        @for (prestador of prestadores; track prestador) {
-          <article class="entity-row">
+      <div class="entity-list provider-catalog">
+        @for (prestador of prestadores; track prestador.usuarioId) {
+          <article class="entity-row provider-record">
             <div class="provider-list-photo" [style.--provider-color]="prestador.colorAgenda || '#315dcc'">
               @if (prestador.fotoUrl) {
                 <img [src]="vistaPreviaPrestador(prestador)" [alt]="'Foto de ' + prestador.nombreMostrar">
@@ -177,23 +193,26 @@
             <div class="entity-main">
               <div class="entity-meta">{{ prestador.sucursalNombre }}</div>
               <div class="entity-title">{{ prestador.nombreMostrar }}</div>
-              <div class="entity-meta">{{ prestador.correo }}</div>
+              <div class="entity-meta">{{ prestador.correo || prestador.nombreUsuario }}</div>
               @if (prestador.biografia) {
                 <div class="entity-meta">{{ prestador.biografia }}</div>
               }
+              <details class="provider-services"><summary>{{ prestador.servicioNombres.length }} servicios asignados</summary>
               <mat-chip-set>
                 @for (nombre of prestador.servicioNombres; track nombre) {
                   <mat-chip>{{ nombre }}</mat-chip>
                 }
               </mat-chip-set>
+              </details>
             </div>
             <div class="entity-side">
+              <app-account-access-security [usuarioId]="prestador.usuarioId" [bloqueado]="prestador.bloqueado" [prestador]="true" (changed)="securityChanged.emit()" />
               <span class="status-pill" [class.is-active]="prestador.activo">{{ prestador.activo ? 'Activo' : 'Inactivo' }}</span>
-              <button mat-stroked-button type="button" (click)="editProvider.emit(prestador)">Editar</button>
+              <button mat-stroked-button type="button" [attr.aria-label]="'Editar ' + prestador.nombreMostrar" (click)="editProvider.emit(prestador)">Editar</button>
             </div>
           </article>
-        }
+        } @empty {<p class="helper-text">Aún no hay prestadores. Abre Nuevo prestador para registrar quién atiende tus servicios.</p>}
       </div>
     </mat-card>
-  </div>
+  </app-admin-workspace>
 </section>

@@ -15,6 +15,7 @@ export interface MarketingLanding {
 @Injectable({providedIn:'root'})
 export class LandingMarketingService {
  private readonly http=inject(HttpClient);
+ navegacion(){return this.http.get<{slug:string;titulo:string;descripcion:string}[]>(environment.apiBaseUrl+'/publico/marketing/landings/navegacion');}
  publica(slug:string){return this.http.get<MarketingLanding>(environment.apiBaseUrl+'/publico/marketing/landings/'+encodeURIComponent(slug));}
  listar(){return this.http.get<MarketingLanding[]>(environment.apiBaseUrl+'/plataforma/marketing/landings');}
  guardar(landing:MarketingLanding){return this.http.put<MarketingLanding>(environment.apiBaseUrl+'/plataforma/marketing/landings/'+encodeURIComponent(landing.slug),landing);}

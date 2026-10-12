@@ -22,6 +22,8 @@ public class InvitacionUsuarioEmpresaEntidad {
     private String nombreCompleto;
     @Column(length = 30)
     private String telefono;
+    @Column(name="prestador_json", columnDefinition="LONGTEXT")
+    private String prestadorJson;
     @Column(length = 80)
     private String puesto;
     @Column(name = "rol_empresa_id")

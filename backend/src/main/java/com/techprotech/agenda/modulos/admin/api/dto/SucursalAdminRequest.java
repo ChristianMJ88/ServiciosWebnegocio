@@ -9,6 +9,10 @@ public record SucursalAdminRequest(
         @Size(max = 255) String direccion,
         @Pattern(regexp = "^$|^[0-9+ ]{10,15}$") String telefono,
         @NotBlank @Size(max = 60) String zonaHoraria,
-        boolean activa
+        boolean activa,
+        @Size(max = 100) String municipio,
+        @Size(max = 100) String estadoRegion,
+        @Pattern(regexp = "^$|^[A-Z]{2}$") String paisCodigo,
+        @Size(max = 12) String codigoPostal
 ) {
 }

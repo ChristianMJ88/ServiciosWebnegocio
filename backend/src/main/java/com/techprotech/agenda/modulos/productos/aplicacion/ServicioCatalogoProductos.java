@@ -28,6 +28,8 @@ public class ServicioCatalogoProductos {
     private final ServicioMediaEmpresa servicioMedia;
     private final ServicioParametrosSistema parametros;
     private final ServicioCapacidadesEmpresa capacidadesEmpresa;
+    private final ReglaDescuentoProductoRepositorio descuentos;
+    private final com.techprotech.agenda.modulos.sucursales.infraestructura.repositorio.SucursalRepositorio sucursales;
 
     public ServicioCatalogoProductos(
             CategoriaProductoRepositorio categorias,
@@ -37,7 +39,9 @@ public class ServicioCatalogoProductos {
             PrecioZonaProductoRepositorio precios,
             ServicioMediaEmpresa servicioMedia,
             ServicioParametrosSistema parametros,
-            ServicioCapacidadesEmpresa capacidadesEmpresa
+            ServicioCapacidadesEmpresa capacidadesEmpresa,
+            ReglaDescuentoProductoRepositorio descuentos,
+            com.techprotech.agenda.modulos.sucursales.infraestructura.repositorio.SucursalRepositorio sucursales
     ) {
         this.categorias = categorias;
         this.proveedores = proveedores;
@@ -47,17 +51,32 @@ public class ServicioCatalogoProductos {
         this.servicioMedia = servicioMedia;
         this.parametros = parametros;
         this.capacidadesEmpresa = capacidadesEmpresa;
+        this.descuentos = descuentos;
+        this.sucursales = sucursales;
     }
 
     @Transactional(readOnly = true)
     public CatalogoProductosAdminResponse obtenerCatalogo(Long empresaId) {
+        return obtenerCatalogo(empresaId, null, "");
+    }
+
+    @Transactional(readOnly = true)
+    public CatalogoProductosAdminResponse obtenerCatalogo(Long empresaId, org.springframework.data.domain.Pageable pageable, String busqueda) {
+        return obtenerCatalogo(empresaId,pageable,busqueda,null);
+    }
+    @Transactional(readOnly = true)
+    public CatalogoProductosAdminResponse obtenerCatalogo(Long empresaId, org.springframework.data.domain.Pageable pageable, String busqueda, Long sucursalId) {
+        Long zonaId = sucursalId == null ? null : sucursales.findByIdAndEmpresaId(sucursalId,empresaId).orElseThrow(()-> new ResponseStatusException(HttpStatus.NOT_FOUND,"Sucursal no encontrada para el negocio")).getZonaPrecioId();
         List<CategoriaProductoEntidad> listaCategorias = categorias.findByEmpresaIdOrderByOrdenAscNombreAsc(empresaId);
         List<ProveedorProductoEntidad> listaProveedores = proveedores.findByEmpresaIdOrderByNombreAsc(empresaId);
         List<ZonaPrecioProductoEntidad> listaZonas = zonas.findByEmpresaIdOrderByPrioridadAscNombreAsc(empresaId);
-        List<ProductoEntidad> listaProductos = productos.findByEmpresaIdOrderByNombreAsc(empresaId);
+        var pagina = pageable == null ? null : productos.buscarPagina(empresaId,
+                busqueda == null ? "" : busqueda.trim().toLowerCase(java.util.Locale.ROOT), pageable);
+        List<ProductoEntidad> listaProductos = pagina == null ? productos.findByEmpresaIdOrderByNombreAsc(empresaId) : pagina.getContent();
         Map<Long, CategoriaProductoEntidad> categoriaPorId = listaCategorias.stream().collect(Collectors.toMap(CategoriaProductoEntidad::getId, Function.identity()));
         Map<Long, ProveedorProductoEntidad> proveedorPorId = listaProveedores.stream().collect(Collectors.toMap(ProveedorProductoEntidad::getId, Function.identity()));
         Map<Long, ZonaPrecioProductoEntidad> zonaPorId = listaZonas.stream().collect(Collectors.toMap(ZonaPrecioProductoEntidad::getId, Function.identity()));
+        var reglas = reglasVigentes(empresaId);
         Map<Long, List<PrecioZonaProductoEntidad>> preciosPorProducto = listaProductos.isEmpty()
                 ? Map.of()
                 : precios.findByEmpresaIdAndProductoIdIn(empresaId, listaProductos.stream().map(ProductoEntidad::getId).toList())
@@ -73,8 +92,11 @@ public class ServicioCatalogoProductos {
                 listaZonas.stream().map(this::mapearZona).toList(),
                 listaProductos.stream().map(producto -> mapearProducto(
                         producto, categoriaPorId, proveedorPorId, zonaPorId,
-                        preciosPorProducto.getOrDefault(producto.getId(), List.of())
-                )).toList()
+                        preciosPorProducto.getOrDefault(producto.getId(), List.of()), reglas, sucursalId, zonaId
+                )).toList(),
+                pagina == null ? 0 : pagina.getNumber(), pagina == null ? listaProductos.size() : pagina.getSize(),
+                pagina == null ? listaProductos.size() : pagina.getTotalElements(), pagina == null ? 1 : pagina.getTotalPages(),
+                productos.countByEmpresaIdAndActivoTrue(empresaId), productos.countByEmpresaIdAndActivoTrueAndVisiblePublicoTrue(empresaId), productos.countByEmpresaId(empresaId)
         );
     }
 
@@ -152,8 +174,17 @@ public class ServicioCatalogoProductos {
     }
 
     private ProductoResponse obtenerProducto(Long empresaId, Long id) {
-        return obtenerCatalogo(empresaId).productos().stream().filter(item -> item.id().equals(id)).findFirst()
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Producto no encontrado"));
+        return mapearProducto(producto(empresaId, id),
+                categorias.findByEmpresaIdOrderByOrdenAscNombreAsc(empresaId).stream().collect(Collectors.toMap(CategoriaProductoEntidad::getId, Function.identity())),
+                proveedores.findByEmpresaIdOrderByNombreAsc(empresaId).stream().collect(Collectors.toMap(ProveedorProductoEntidad::getId, Function.identity())),
+                zonas.findByEmpresaIdOrderByPrioridadAscNombreAsc(empresaId).stream().collect(Collectors.toMap(ZonaPrecioProductoEntidad::getId, Function.identity())),
+                precios.findByEmpresaIdAndProductoIdIn(empresaId, List.of(id)), reglasVigentes(empresaId), null, null);
+    }
+
+    void validarProductoImportacion(Long empresaId, ProductoRequest request) {
+        var entidad = new ProductoEntidad();
+        entidad.setEmpresaId(empresaId);
+        aplicarProducto(empresaId, entidad, request);
     }
 
     private void aplicarCategoria(Long empresaId, CategoriaProductoEntidad entidad, CategoriaProductoRequest request) {
@@ -223,6 +254,10 @@ public class ServicioCatalogoProductos {
         entidad.setCategoriaId(request.categoriaId());
         entidad.setProveedorId(request.proveedorId());
         entidad.setMediaId(request.mediaId());
+        if ((request.nuevoDesde()==null)!=(request.nuevoHasta()==null)
+                || (request.nuevoDesde()!=null && request.nuevoDesde().isAfter(request.nuevoHasta())))
+            throw error("Selecciona ambas fechas de Nuevo y revisa su orden");
+        entidad.setNuevoDesde(request.nuevoDesde()); entidad.setNuevoHasta(request.nuevoHasta());
         entidad.setSku(sku);
         entidad.setCodigoBarras(texto(request.codigoBarras()));
         entidad.setNombre(request.nombre().trim());
@@ -296,7 +331,7 @@ public class ServicioCatalogoProductos {
     private ProductoResponse mapearProducto(ProductoEntidad e, Map<Long, CategoriaProductoEntidad> categoriaPorId,
                                              Map<Long, ProveedorProductoEntidad> proveedorPorId,
                                              Map<Long, ZonaPrecioProductoEntidad> zonaPorId,
-                                             List<PrecioZonaProductoEntidad> listaPrecios) {
+                                             List<PrecioZonaProductoEntidad> listaPrecios, List<ReglaDescuentoProductoEntidad> reglas, Long sucursalId, Long zonaId) {
         CategoriaProductoEntidad categoria = categoriaPorId.get(e.getCategoriaId());
         ProveedorProductoEntidad proveedor = proveedorPorId.get(e.getProveedorId());
         List<PrecioZonaProductoResponse> preciosZona = listaPrecios.stream()
@@ -305,12 +340,22 @@ public class ServicioCatalogoProductos {
                         Optional.ofNullable(zonaPorId.get(precio.getZonaPrecioId())).map(ZonaPrecioProductoEntidad::getNombre).orElse(null),
                         precio.getPrecio(), precio.getMoneda(), precio.isActivo()))
                 .toList();
+        var zona = zonaId == null ? null : zonaPorId.get(zonaId);
+        if(zonaId != null && (zona == null || !zona.isActiva())) throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"La zona de la sucursal está inactiva o no pertenece al negocio");
+        var regional = listaPrecios.stream().filter(p->p.isActivo() && zonaId != null && zonaId.equals(p.getZonaPrecioId())).findFirst().orElse(null);
+        var lista = regional == null ? e.getPrecioBase() : regional.getPrecio();
+        var monedaPrecio = regional == null ? e.getMoneda() : regional.getMoneda();
+        if(!e.getMoneda().equalsIgnoreCase(monedaPrecio)) throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"La moneda del precio regional debe coincidir con la del producto");
+        var descuento = CalculadorDescuentosProductos.calcular(e, zona, sucursalId, java.math.BigDecimal.ONE, lista, monedaPrecio, reglas);
         return new ProductoResponse(e.getId(), e.getCategoriaId(), categoria == null ? null : categoria.getNombre(),
                 e.getProveedorId(), proveedor == null ? null : proveedor.getNombre(), e.getMediaId(), e.getSku(),
                 e.getCodigoBarras(), e.getNombre(), e.getSlug(), e.getDescripcion(), e.getImagenUrl(), e.getPrecioBase(),
                 e.getCosto(), e.getPesoKg(), e.getLargoCm(), e.getAnchoCm(), e.getAltoCm(), e.getMoneda(),
                 e.getTasaImpuesto(), e.isControlaInventario(), e.getStockMinimo(),
-                e.isVisiblePublico(), e.isActivo(), preciosZona);
+                e.isVisiblePublico(), e.isActivo(), preciosZona,e.getNuevoDesde(),e.getNuevoHasta(), descuento.precio(), descuento.etiqueta());
+    }
+    private List<ReglaDescuentoProductoEntidad> reglasVigentes(Long empresaId) {
+        return descuentos.findByEmpresaIdOrderByPrioridadDescNombreAsc(empresaId).stream().filter(regla -> CalculadorDescuentosProductos.vigente(regla, java.time.LocalDate.now())).toList();
     }
 
     private String texto(String valor) { return valor == null || valor.isBlank() ? null : valor.trim(); }
@@ -318,7 +363,7 @@ public class ServicioCatalogoProductos {
         String normalizado = texto(valor);
         return normalizado == null ? null : normalizado.toUpperCase(Locale.ROOT).replaceAll("[^A-Z0-9_-]", "-").replaceAll("-+", "-");
     }
-    private String slug(String valor) {
+    String slug(String valor) {
         String sinAcentos = Normalizer.normalize(valor.trim().toLowerCase(Locale.ROOT), Normalizer.Form.NFD).replaceAll("\\p{M}", "");
         String resultado = sinAcentos.replaceAll("[^a-z0-9]+", "-").replaceAll("(^-|-$)", "");
         if (resultado.isBlank()) throw error("No fue posible generar un slug válido");

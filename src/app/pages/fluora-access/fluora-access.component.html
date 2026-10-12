@@ -24,15 +24,22 @@
         <h1 id="access-title">Qué gusto verte</h1>
         <p>Inicia sesión para continuar con tu día.</p>
       </div>
+      @if (avisoAcceso.mensaje(); as aviso) {
+        <div class="fluora-access__session-notice" role="alert">
+          <strong>Tu sesión se cerró</strong>
+          <p>{{ aviso }}</p>
+          <button type="button" (click)="avisoAcceso.limpiar()" aria-label="Cerrar aviso de sesión">Entendido</button>
+        </div>
+      }
       <form [formGroup]="form" (ngSubmit)="iniciarSesion()" class="fluora-access__form" novalidate [attr.aria-busy]="loading()">
         <div class="fluora-access__field">
-          <label for="correo">Correo electrónico</label>
+          <label for="correo">Correo o negocio/usuario</label>
           <div class="fluora-access__input-group" [class.fluora-access__input-group--invalid]="(touched() || form.controls.correo.touched) && form.controls.correo.invalid">
             <i class="bi bi-envelope" aria-hidden="true"></i>
-            <input id="correo" type="email" formControlName="correo" placeholder="tu@empresa.com" autocomplete="username" inputmode="email" autocapitalize="none" spellcheck="false" [attr.aria-invalid]="(touched() || form.controls.correo.touched) && form.controls.correo.invalid" [attr.aria-describedby]="(touched() || form.controls.correo.touched) && form.controls.correo.invalid ? 'correo-error' : null">
+            <input id="correo" type="text" formControlName="correo" placeholder="Correo o negocio/usuario" autocomplete="username" inputmode="text" autocapitalize="none" spellcheck="false" [attr.aria-invalid]="(touched() || form.controls.correo.touched) && form.controls.correo.invalid" [attr.aria-describedby]="(touched() || form.controls.correo.touched) && form.controls.correo.invalid ? 'correo-error' : null">
           </div>
           @if ((touched() || form.controls.correo.touched) && form.controls.correo.invalid) {
-            <p id="correo-error" class="fluora-access__validation" role="status">Escribe un correo electrónico válido.</p>
+            <p id="correo-error" class="fluora-access__validation" role="status">Escribe tu correo o el negocio y nombre de usuario.</p>
           }
         </div>
         <div class="fluora-access__field">
@@ -50,8 +57,12 @@
         @if (error) {
           <div class="fluora-access__alert" role="alert">{{ error }}</div>
         }
+        @if(cambioContrasena()) {
+          <label for="nuevaContrasena">Nueva contraseña personal</label><input id="nuevaContrasena" type="password" formControlName="nuevaContrasena" autocomplete="new-password">
+          <label for="confirmarContrasena">Confirmar nueva contraseña</label><input id="confirmarContrasena" type="password" formControlName="confirmarContrasena" autocomplete="new-password">
+        }
         <button type="submit" class="fluora-access__submit" [disabled]="loading()">
-          <span>{{ loading() ? 'Iniciando sesión…' : 'Iniciar sesión' }}</span>
+          <span>{{ loading() ? 'Iniciando sesión…' : cambioContrasena() ? 'Cambiar contraseña e ingresar' : 'Iniciar sesión' }}</span>
           <i class="bi" [class.bi-arrow-right]="!loading()" [class.bi-hourglass-split]="loading()" aria-hidden="true"></i>
         </button>
       </form>

@@ -30,12 +30,13 @@ public class ServicioCatalogoProductosPublico {
     private final PrecioZonaProductoRepositorio preciosZona;
     private final ReglaDescuentoProductoRepositorio descuentos;
     private final ProductoExistenciaRepositorio existencias;
+    private final com.techprotech.agenda.modulos.sucursales.infraestructura.repositorio.SucursalRepositorio sucursales;
 
     public ServicioCatalogoProductosPublico(EmpresaSitioConfigRepositorio sitios,
             ServicioConfiguracionTienda configuracionTienda, ProductoRepositorio productos,
             CategoriaProductoRepositorio categorias, ZonaPrecioProductoRepositorio zonasPrecios,
             PrecioZonaProductoRepositorio preciosZona, ReglaDescuentoProductoRepositorio descuentos,
-            ProductoExistenciaRepositorio existencias) {
+            ProductoExistenciaRepositorio existencias, com.techprotech.agenda.modulos.sucursales.infraestructura.repositorio.SucursalRepositorio sucursales) {
         this.sitios = sitios;
         this.configuracionTienda = configuracionTienda;
         this.productos = productos;
@@ -43,17 +44,26 @@ public class ServicioCatalogoProductosPublico {
         this.zonasPrecios = zonasPrecios;
         this.preciosZona = preciosZona;
         this.descuentos = descuentos;
-        this.existencias = existencias;
+        this.existencias = existencias; this.sucursales=sucursales;
     }
 
     @Transactional(readOnly = true)
     public CatalogoProductosPublicoResponse obtener(String slug, String claveZona, String slugProducto) {
+        return obtener(slug,claveZona,slugProducto,null);
+    }
+    @Transactional(readOnly = true)
+    public CatalogoProductosPublicoResponse obtener(String slug, String claveZona, String slugProducto, Long sucursalId) {
         EmpresaSitioConfigEntidad sitio = sitios.findBySlug(slug.trim().toLowerCase(Locale.ROOT))
                 .filter(EmpresaSitioConfigEntidad::isPublicado)
                 .orElseThrow(() -> noEncontrado("No existe un sitio publicado para ese tenant"));
         ConfiguracionTiendaResponse tienda = configuracionTienda.obtener(sitio.getEmpresaId());
         if (!tienda.habilitada()) throw noEncontrado("La tienda no está publicada");
 
+        var sedes=sucursales.findByEmpresaIdAndActivaTrue(sitio.getEmpresaId());
+        Long seleccionada=sucursalId;
+        if(seleccionada==null && sedes.size()==1) seleccionada=sedes.get(0).getId();
+        final Long sede=seleccionada;
+        if(sede!=null && sedes.stream().noneMatch(s->s.getId().equals(sede))) throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"Sucursal no válida");
         List<ZonaPrecioProductoEntidad> zonas = zonasPrecios.findByEmpresaIdOrderByPrioridadAscNombreAsc(sitio.getEmpresaId())
                 .stream().filter(ZonaPrecioProductoEntidad::isActiva).toList();
         ZonaPrecioProductoEntidad zona = resolverZona(zonas, claveZona);
@@ -69,14 +79,14 @@ public class ServicioCatalogoProductosPublico {
                 .collect(Collectors.toMap(CategoriaProductoEntidad::getId, Function.identity()));
         List<Long> productoIds = listaProductos.stream().map(ProductoEntidad::getId).toList();
         Map<Long, PrecioZonaProductoEntidad> precioPorProducto = precioPorProducto(sitio.getEmpresaId(), productoIds, zona);
-        Map<Long, BigDecimal> existenciaPorProducto = existenciasPorProducto(sitio.getEmpresaId(), productoIds);
+        Map<Long, BigDecimal> existenciaPorProducto = existenciasPorProducto(sitio.getEmpresaId(), productoIds, sede);
         List<ReglaDescuentoProductoEntidad> reglas = descuentos.findByEmpresaIdOrderByPrioridadDescNombreAsc(sitio.getEmpresaId())
                 .stream().filter(this::vigente).toList();
 
         List<CatalogoProductosPublicoResponse.ProductoPublico> publicados = listaProductos.stream()
                 .filter(item -> item.getCategoriaId() == null || categoriaPorId.containsKey(item.getCategoriaId()))
                 .map(item -> mapearProducto(item, categoriaPorId.get(item.getCategoriaId()), precioPorProducto.get(item.getId()),
-                        reglas, zona, existenciaPorProducto.getOrDefault(item.getId(), BigDecimal.ZERO), tienda.mostrarStock()))
+                        reglas, zona, existenciaPorProducto.getOrDefault(item.getId(), BigDecimal.ZERO), tienda.mostrarStock(), sede, tienda.diasNuevo()))
                 .toList();
 
         return new CatalogoProductosPublicoResponse(
@@ -84,7 +94,7 @@ public class ServicioCatalogoProductosPublico {
                 zona == null ? null : mapearZona(zona), zonas.stream().map(this::mapearZona).toList(),
                 listaCategorias.stream().map(item -> new CatalogoProductosPublicoResponse.CategoriaPublica(
                         item.getId(), item.getCategoriaPadreId(), item.getNombre(), item.getSlug(), item.getDescripcion())).toList(),
-                publicados
+                publicados, sede, sedes.stream().map(s->new CatalogoProductosPublicoResponse.SucursalPublica(s.getId(),s.getNombre())).toList()
         );
     }
 
@@ -99,58 +109,23 @@ public class ServicioCatalogoProductosPublico {
     private CatalogoProductosPublicoResponse.ProductoPublico mapearProducto(
             ProductoEntidad producto, CategoriaProductoEntidad categoria, PrecioZonaProductoEntidad precioZona,
             List<ReglaDescuentoProductoEntidad> reglas, ZonaPrecioProductoEntidad zona, BigDecimal existencia,
-            boolean mostrarStock) {
+            boolean mostrarStock, Long sucursalId, int diasNuevo) {
         BigDecimal precioBase = precioZona == null ? producto.getPrecioBase() : precioZona.getPrecio();
         String moneda = precioZona == null ? producto.getMoneda() : precioZona.getMoneda();
-        ResultadoDescuento resultado = aplicarDescuentos(producto, precioBase, moneda, reglas, zona);
+        var resultado = CalculadorDescuentosProductos.calcular(producto,zona,sucursalId,BigDecimal.ONE,precioBase,moneda,reglas);
         boolean disponible = !producto.isControlaInventario() || existencia.compareTo(BigDecimal.ZERO) > 0;
         return new CatalogoProductosPublicoResponse.ProductoPublico(
                 producto.getId(), producto.getCategoriaId(), categoria == null ? null : categoria.getNombre(),
                 producto.getNombre(), producto.getSlug(), producto.getDescripcion(), producto.getImagenUrl(),
                 resultado.precio(), resultado.precio().compareTo(precioBase) < 0 ? precioBase : null, moneda,
                 resultado.etiqueta(), producto.isControlaInventario(), disponible,
-                mostrarStock && producto.isControlaInventario() ? existencia.max(BigDecimal.ZERO) : null
+                mostrarStock && producto.isControlaInventario() ? existencia.max(BigDecimal.ZERO) : null,
+                PoliticaNovedadProductos.esNuevo(producto,diasNuevo,LocalDate.now())
         );
     }
 
-    private ResultadoDescuento aplicarDescuentos(ProductoEntidad producto, BigDecimal precioInicial, String moneda,
-                                                  List<ReglaDescuentoProductoEntidad> reglas,
-                                                  ZonaPrecioProductoEntidad zona) {
-        BigDecimal precio = precioInicial;
-        List<String> aplicados = new ArrayList<>();
-        for (ReglaDescuentoProductoEntidad regla : reglas) {
-            if (!aplica(regla, producto, zona) || regla.getCantidadMinima().compareTo(BigDecimal.ONE) > 0) continue;
-            if (!"PORCENTAJE".equals(regla.getTipoDescuento())
-                    && !Objects.equals(moneda, regla.getMoneda())) continue;
-            precio = switch (regla.getTipoDescuento()) {
-                case "PORCENTAJE" -> precio.subtract(precio.multiply(regla.getValor()).divide(BigDecimal.valueOf(100), 4, RoundingMode.HALF_UP));
-                case "MONTO" -> precio.subtract(regla.getValor());
-                case "PRECIO_FIJO" -> regla.getValor();
-                default -> precio;
-            };
-            precio = precio.max(BigDecimal.ZERO).setScale(2, RoundingMode.HALF_UP);
-            aplicados.add(regla.getNombre());
-            if (!regla.isCombinable()) break;
-        }
-        return new ResultadoDescuento(precio, aplicados.isEmpty() ? null : String.join(" + ", aplicados));
-    }
-
-    private boolean aplica(ReglaDescuentoProductoEntidad regla, ProductoEntidad producto, ZonaPrecioProductoEntidad zona) {
-        if (regla.getZonaPrecioId() != null && (zona == null || !regla.getZonaPrecioId().equals(zona.getId()))) return false;
-        if (regla.getSucursalId() != null) return false;
-        return switch (regla.getAlcance()) {
-            case "GLOBAL" -> true;
-            case "PRODUCTO" -> Objects.equals(regla.getProductoId(), producto.getId());
-            case "CATEGORIA" -> Objects.equals(regla.getCategoriaId(), producto.getCategoriaId());
-            default -> false;
-        };
-    }
-
     private boolean vigente(ReglaDescuentoProductoEntidad regla) {
-        LocalDate hoy = LocalDate.now();
-        return regla.isActiva()
-                && (regla.getFechaInicio() == null || !hoy.isBefore(regla.getFechaInicio()))
-                && (regla.getFechaFin() == null || !hoy.isAfter(regla.getFechaFin()));
+        return CalculadorDescuentosProductos.vigente(regla,LocalDate.now());
     }
 
     private Map<Long, PrecioZonaProductoEntidad> precioPorProducto(Long empresaId, List<Long> ids,
@@ -162,9 +137,10 @@ public class ServicioCatalogoProductosPublico {
                 .collect(Collectors.toMap(PrecioZonaProductoEntidad::getProductoId, Function.identity()));
     }
 
-    private Map<Long, BigDecimal> existenciasPorProducto(Long empresaId, List<Long> ids) {
+    private Map<Long, BigDecimal> existenciasPorProducto(Long empresaId, List<Long> ids, Long sucursalId) {
         if (ids.isEmpty()) return Map.of();
         return existencias.findByIdEmpresaIdAndIdProductoIdIn(empresaId, ids).stream()
+                .filter(item -> sucursalId==null || sucursalId.equals(item.getId().getSucursalId()))
                 .collect(Collectors.groupingBy(item -> item.getId().getProductoId(),
                         Collectors.reducing(BigDecimal.ZERO,
                                 item -> item.getExistencia().subtract(item.getReservado()), BigDecimal::add)));

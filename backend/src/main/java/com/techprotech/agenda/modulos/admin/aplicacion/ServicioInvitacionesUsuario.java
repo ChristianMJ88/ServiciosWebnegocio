@@ -73,6 +73,7 @@ public class ServicioInvitacionesUsuario {
 
     @Transactional
     public InvitacionUsuarioResponse invitar(Long empresaId, Long actorId, UsuarioInternoAdminRequest request) {
+        if(request.correo()==null || request.correo().isBlank() || request.nombreUsuario()!=null) throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"La invitación requiere correo");
         var actor = usuarios.findByIdAndEmpresaId(actorId, empresaId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "La cuenta administradora no existe"));
         if (actor.getCorreoVerificadoEn() == null) {
@@ -119,6 +120,24 @@ public class ServicioInvitacionesUsuario {
         return respuesta(invitacion);
     }
 
+    @Transactional
+    public InvitacionUsuarioResponse invitarPrestador(Long empresaId,Long actorId,PrestadorAdminRequest request) {
+        var actor=usuarios.findByIdAndEmpresaId(actorId,empresaId).orElseThrow();
+        if(actor.getCorreoVerificadoEn()==null) throw new ResponseStatusException(HttpStatus.PRECONDITION_REQUIRED,"Confirma tu correo antes de invitar personal");
+        if(request.correo()==null || request.correo().isBlank() || request.nombreUsuario()!=null) throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"La invitación requiere correo y no debe incluir nombre de usuario");
+        admin.validarInvitacionPrestador(empresaId,request);
+        var empresa=empresas.findById(empresaId).orElseThrow();
+        String correo=request.correo().trim().toLowerCase();
+        var ahora=LocalDateTime.now();
+        invitaciones.findByEmpresaIdAndCorreoAndEstado(empresaId,correo,"PENDIENTE").forEach(i->{i.setEstado("CANCELADA");i.setCanceladaEn(ahora);invitaciones.save(i);});
+        var i=new InvitacionUsuarioEmpresaEntidad();
+        i.setEmpresaId(empresaId);i.setCorreo(correo);i.setNombreCompleto(request.nombreMostrar());i.setSucursalId(request.sucursalId());
+        var propuesta=new PrestadorAdminRequest(request.sucursalId(),correo,null,request.nombreMostrar(),request.biografia(),request.fotoUrl(),request.fotoEncuadre(),request.fotoZoom(),request.colorAgenda(),request.activo(),request.servicioIds());
+        try{i.setPrestadorJson(objectMapper.writeValueAsString(propuesta));}catch(Exception ex){throw new IllegalStateException(ex);}
+        String token=generarToken();i.setTokenHash(hash(token));i.setEstado("PENDIENTE");i.setExpiraEn(ahora.plusHours(horasVigencia));i.setCreadaPorUsuarioId(actorId);i.setCreadoEn(ahora);i.setActualizadoEn(ahora);
+        i=invitaciones.save(i);enviarCorreo(empresa,i,token);return respuesta(i);
+    }
+
     @Transactional(readOnly = true)
     public DetalleInvitacionUsuarioResponse consultar(String token) {
         InvitacionUsuarioEmpresaEntidad invitacion = validarVigencia(invitaciones.findFirstByTokenHash(hash(token))
@@ -129,7 +148,7 @@ public class ServicioInvitacionesUsuario {
     }
 
     @Transactional
-    public UsuarioInternoAdminResponse aceptar(AceptarInvitacionUsuarioRequest request) {
+    public com.techprotech.agenda.modulos.admin.api.dto.AccesoUsuarioCreadoResponse aceptar(AceptarInvitacionUsuarioRequest request) {
         InvitacionUsuarioEmpresaEntidad invitacion = resolverVigente(request.token());
         PerfilRegistroSocial perfilSocial = null;
         if (request.registroSocialToken() != null && !request.registroSocialToken().isBlank()) {
@@ -137,6 +156,14 @@ public class ServicioInvitacionesUsuario {
             if (!invitacion.getCorreo().equalsIgnoreCase(perfilSocial.correo())) {
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "La cuenta social no corresponde al correo invitado");
             }
+        }
+        if(invitacion.getPrestadorJson()!=null) {
+            try {
+                var p=objectMapper.readValue(invitacion.getPrestadorJson(),PrestadorAdminRequest.class);
+                var creado=admin.crearPrestador(invitacion.getEmpresaId(),new PrestadorAdminRequest(p.sucursalId(),p.correo(),request.contrasena(),p.nombreMostrar(),p.biografia(),p.fotoUrl(),p.fotoEncuadre(),p.fotoZoom(),p.colorAgenda(),p.activo(),p.servicioIds()));
+                if(perfilSocial!=null) {var identidad=new UsuarioIdentidadExternaEntidad();identidad.setUsuarioId(creado.usuarioId());identidad.setProveedor(perfilSocial.proveedor());identidad.setSubjectProveedor(perfilSocial.subject());identidad.setCorreoVerificado(perfilSocial.correo());identidad.setCreadoEn(LocalDateTime.now());identidades.save(identidad);}
+                invitacion.setEstado("ACEPTADA");invitacion.setAceptadaEn(LocalDateTime.now());invitacion.setActualizadoEn(LocalDateTime.now());invitaciones.save(invitacion);return creado;
+            } catch(com.fasterxml.jackson.core.JsonProcessingException ex){throw new IllegalStateException(ex);}
         }
         UsuarioInternoAdminRequest alta = new UsuarioInternoAdminRequest(
                 invitacion.getSucursalId(), listaLong(invitacion.getSucursalIdsJson()), invitacion.getCorreo(),

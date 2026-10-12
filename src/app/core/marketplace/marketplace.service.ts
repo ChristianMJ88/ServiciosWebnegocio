@@ -3,7 +3,8 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { environment } from '../../../environments/environment';
 export interface DirectoryService {id:number;nombre:string;categoria:string|null;precio:number;moneda:string;duracionMinutos:number;}
 export interface DirectoryFilters {ubicacion:string;categoria:string;}
-export interface DirectoryBusiness { empresaId:number; slug:string; nombre:string; descripcion:string|null; imagenUrl:string|null; direccion:string|null; telefono:string|null; portadaUrl?:string|null;servicios?:DirectoryService[]; }
+export interface DirectoryBranch {id:number;nombre:string;direccion:string|null;municipio:string|null;estadoRegion:string|null;paisCodigo:string|null;codigoPostal:string|null;zonaHoraria:string;horariosComerciales:{dia:number;apertura:string;cierre:string}[];}
+export interface DirectoryBusiness { empresaId:number; slug:string; nombre:string; descripcion:string|null; imagenUrl:string|null; direccion:string|null; telefono:string|null; portadaUrl?:string|null;servicios?:DirectoryService[];sucursales?:DirectoryBranch[]; }
 export interface DirectoryPage { negocios:DirectoryBusiness[]; siguienteCursor:number|null; }
 export interface DirectoryParticipation { participante:boolean; disponible:boolean; }
 @Injectable({providedIn:'root'})

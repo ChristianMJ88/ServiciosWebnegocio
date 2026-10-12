@@ -17,7 +17,9 @@ import org.springframework.web.bind.annotation.*;
 @RequiereModulo(COMISIONES)
 public class ControladorComisionesAdmin {
     private final ServicioComisiones servicio;
-    public ControladorComisionesAdmin(ServicioComisiones servicio){this.servicio=servicio;}
+    private final com.techprotech.agenda.modulos.productos.aplicacion.ServicioComisionesDevengadas devengadas;
+    public ControladorComisionesAdmin(ServicioComisiones servicio,com.techprotech.agenda.modulos.productos.aplicacion.ServicioComisionesDevengadas devengadas){this.servicio=servicio;this.devengadas=devengadas;}
+    @GetMapping("/ganancias") public java.util.List<com.techprotech.agenda.modulos.productos.aplicacion.ServicioComisionesDevengadas.Ganancia> ganancias(@AuthenticationPrincipal UsuarioAutenticado usuario){return devengadas.resumen(usuario.empresaId());}
     @GetMapping public CatalogoComisionesResponse obtener(@AuthenticationPrincipal UsuarioAutenticado usuario){return servicio.catalogo(usuario.empresaId());}
     @PostMapping public ReglaComisionResponse crear(@AuthenticationPrincipal UsuarioAutenticado usuario,@Valid @RequestBody ReglaComisionRequest request){return servicio.crear(usuario.empresaId(),request);}
     @PatchMapping("/{id}") public ReglaComisionResponse actualizar(@AuthenticationPrincipal UsuarioAutenticado usuario,@PathVariable Long id,@Valid @RequestBody ReglaComisionRequest request){return servicio.actualizar(usuario.empresaId(),id,request);}

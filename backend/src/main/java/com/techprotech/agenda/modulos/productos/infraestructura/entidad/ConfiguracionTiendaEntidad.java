@@ -39,4 +39,5 @@ public class ConfiguracionTiendaEntidad {
     private boolean permitirPedidoWhatsapp = true;
     @Column(name = "actualizado_en", insertable = false, updatable = false)
     private LocalDateTime actualizadoEn;
+    @Column(name="dias_nuevo",nullable=false) private int diasNuevo;
 }

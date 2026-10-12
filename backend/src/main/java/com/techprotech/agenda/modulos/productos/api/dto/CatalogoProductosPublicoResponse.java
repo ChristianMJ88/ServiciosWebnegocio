@@ -11,8 +11,9 @@ public record CatalogoProductosPublicoResponse(
         ZonaPublica zonaSeleccionada,
         List<ZonaPublica> zonas,
         List<CategoriaPublica> categorias,
-        List<ProductoPublico> productos
+        List<ProductoPublico> productos, Long sucursalSeleccionadaId, List<SucursalPublica> sucursales
 ) {
+    public record SucursalPublica(Long id,String nombre) {}
     public record ZonaPublica(Long id, String nombre, String clave) {}
     public record CategoriaPublica(Long id, Long categoriaPadreId, String nombre, String slug, String descripcion) {}
     public record ProductoPublico(
@@ -29,6 +30,6 @@ public record CatalogoProductosPublicoResponse(
             String descuento,
             boolean controlaInventario,
             boolean disponible,
-            BigDecimal existencia
+            BigDecimal existencia, boolean nuevo
     ) {}
 }

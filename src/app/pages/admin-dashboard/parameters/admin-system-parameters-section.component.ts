@@ -13,9 +13,14 @@ import { ParametroSistemaAdmin, SystemParametersService } from '../../../core/ad
 export class AdminSystemParametersSectionComponent implements OnInit {
   private readonly service = inject(SystemParametersService); readonly parametros = signal<ParametroSistemaAdmin[]>([]);
   readonly error = signal(''); readonly guardando = signal<string | null>(null); valores: Record<string, string> = {};
+  busqueda = '';
   ngOnInit(): void { this.cargar(); }
   cargar(): void { this.service.listar().subscribe({next: ps => { this.parametros.set(ps); this.valores = Object.fromEntries(ps.map(p => [p.clave, p.valor])); }, error: e => this.error.set(e?.error?.message || 'No se pudieron cargar los parámetros.')}); }
-  categorias(): string[] { return [...new Set(this.parametros().map(p => p.categoria))]; }
+  parametrosCategoria(categoria: string): ParametroSistemaAdmin[] {
+    const texto = this.busqueda.trim().toLocaleLowerCase();
+    return this.parametros().filter(p => p.categoria === categoria && (!texto || `${p.nombre} ${p.descripcion} ${p.categoria}`.toLocaleLowerCase().includes(texto)));
+  }
+  categorias(): string[] { return [...new Set(this.parametros().map(p => p.categoria))].filter(categoria => this.parametrosCategoria(categoria).length > 0); }
   guardar(p: ParametroSistemaAdmin): void { this.guardando.set(p.clave); this.service.guardar(p.clave, this.valores[p.clave]).subscribe({next: v => { this.reemplazar(v); this.guardando.set(null); }, error: e => { this.error.set(e?.error?.message || 'No se pudo guardar el parámetro.'); this.guardando.set(null); }}); }
   restablecer(p: ParametroSistemaAdmin): void { this.service.restablecer(p.clave).subscribe({next: v => { this.valores[v.clave] = v.valor; this.reemplazar(v); }, error: e => this.error.set(e?.error?.message || 'No se pudo restablecer el parámetro.')}); }
   private reemplazar(p: ParametroSistemaAdmin): void { this.parametros.update(lista => lista.map(actual => actual.clave === p.clave ? p : actual)); }

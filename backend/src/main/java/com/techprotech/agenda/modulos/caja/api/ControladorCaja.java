@@ -54,11 +54,30 @@ public class ControladorCaja {
         return servicioVentas.catalogo(usuario.empresaId(), usuario.sucursalesPermitidas(), sucursalId);
     }
 
+    @PostMapping("/ventas/cotizacion")
+    @PreAuthorize("hasAuthority('CAJA_COBRAR')")
+    public com.techprotech.agenda.modulos.caja.api.dto.CotizacionCajaResponse cotizarVenta(
+            @AuthenticationPrincipal UsuarioAutenticado usuario,
+            @Valid @RequestBody com.techprotech.agenda.modulos.caja.api.dto.CotizacionCajaRequest request) {
+        return servicioVentas.cotizarProductos(usuario.empresaId(), usuario.sucursalesPermitidas(), request);
+    }
     @PostMapping("/ventas")
     @PreAuthorize("hasAuthority('CAJA_COBRAR')")
     public VentaResponse registrarVenta(@AuthenticationPrincipal UsuarioAutenticado usuario,
                                         @Valid @RequestBody RegistrarVentaRequest request) {
         return servicioVentas.registrar(usuario.empresaId(), usuario.usuarioId(), usuario.sucursalesPermitidas(), request);
+    }
+
+    @GetMapping("/ventas/pendientes-staff")
+    @PreAuthorize("hasAuthority('CAJA_ACCESO')")
+    public org.springframework.data.domain.Page<com.techprotech.agenda.modulos.caja.aplicacion.ServicioVentasCaja.PendienteStaff> pendientesStaff(@AuthenticationPrincipal UsuarioAutenticado u,@RequestParam Long sucursalId,@RequestParam(defaultValue="0") int pagina) {
+        return servicioVentas.pendientesStaff(u.empresaId(),u.sucursalesPermitidas(),sucursalId,pagina);
+    }
+    public record CobrarVentaStaffRequest(@jakarta.validation.constraints.NotBlank String metodoPago,@jakarta.validation.constraints.Size(max=120) String referencia) {}
+    @PostMapping("/ventas/{ventaId}/cobrar")
+    @PreAuthorize("hasAuthority('CAJA_COBRAR')")
+    public VentaResponse cobrarStaff(@AuthenticationPrincipal UsuarioAutenticado u,@PathVariable Long ventaId,@Valid @RequestBody CobrarVentaStaffRequest r) {
+        return servicioVentas.cobrarPendiente(u.empresaId(),u.usuarioId(),u.sucursalesPermitidas(),ventaId,r.metodoPago(),r.referencia());
     }
 
     @GetMapping("/ventas")

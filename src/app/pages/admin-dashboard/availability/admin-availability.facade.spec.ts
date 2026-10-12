@@ -7,6 +7,7 @@ import { crearFormularioExcepcion, crearFormularioRegla } from './admin-availabi
 
 describe('AdminAvailabilityFacade', () => {
   const adminService = {
+    guardarHorarioSemanal: vi.fn(),
     crearReglaDisponibilidad: vi.fn(),
     actualizarReglaDisponibilidad: vi.fn(),
     crearExcepcionDisponibilidad: vi.fn(),
@@ -46,5 +47,14 @@ describe('AdminAvailabilityFacade', () => {
 
     expect(adminService.crearExcepcionDisponibilidad).toHaveBeenCalledOnce();
     expect(adminService.actualizarExcepcionDisponibilidad).toHaveBeenCalledWith(9, expect.any(Object));
+  });
+
+  it('guarda varios días con una sola operación del backend', async () => {
+    adminService.guardarHorarioSemanal.mockReturnValue(of([]));
+    await firstValueFrom(facade.guardarRegla(null, crearFormularioRegla(), {
+      diasSemana: [1, 2, 3, 4, 5], reemplazar: false
+    }));
+    expect(adminService.guardarHorarioSemanal).toHaveBeenCalledWith(expect.any(Object), [1, 2, 3, 4, 5], false);
+    expect(adminService.crearReglaDisponibilidad).not.toHaveBeenCalled();
   });
 });

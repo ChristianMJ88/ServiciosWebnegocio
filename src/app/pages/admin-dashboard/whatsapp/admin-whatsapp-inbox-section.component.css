@@ -77,3 +77,35 @@
   .whatsapp-send-button { font-size:0; }
   .whatsapp-send-button i { margin:0 !important; font-size:.9rem; }
 }
+
+.whatsapp-panel-summary { font-size: .78rem; line-height: 1.5; }
+.whatsapp-icon-button, .whatsapp-mobile-back { width: 44px; height: 44px; flex: none; }
+.whatsapp-search .form-control { min-height: 44px; font-size: .9rem; }
+.whatsapp-conversation-copy strong { font-size: .9rem; }
+.whatsapp-conversation-copy small, .whatsapp-conversation-copy time { font-size: .78rem; }
+.whatsapp-bubble p { font-size: .9rem; line-height: 1.6; }
+.whatsapp-bubble small { overflow-wrap: anywhere; }
+.whatsapp-message-details { margin-top: 8px; }
+.whatsapp-message-details summary { color: var(--wa-muted); cursor: pointer; font-size: .75rem; padding-block: 8px; }
+.whatsapp-quick-replies .btn { min-height: 44px; font-size: .8rem; }
+.whatsapp-send-button { min-height: 44px; }
+.whatsapp-icon-button:focus-visible, .whatsapp-mobile-back:focus-visible, .whatsapp-conversation-item:focus-visible { outline: 3px solid var(--wa-green-dark); outline-offset: -3px; }
+.whatsapp-thread-body { background: #efeae2; background-image: radial-gradient(#ded6ca 1px, transparent 1px); background-size: 20px 20px; }
+.whatsapp-message.is-outbound .whatsapp-bubble { background: #d9fdd3; }
+@media (max-width: 767.98px) {
+  .whatsapp-search .form-control, .whatsapp-composer .form-control { font-size: 16px; }
+  .whatsapp-composer { padding-bottom: calc(.75rem + env(safe-area-inset-bottom)); }
+  .whatsapp-thread-header h3 { font-size: 1rem; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .whatsapp-thread-panel { transition: none; }
+  .whatsapp-thread-body { scroll-behavior: auto; }
+}
+
+@media (max-width: 767.98px) {
+  .whatsapp-inbox-shell { height: max(320px, calc(100dvh - 300px)); }
+}
+
+@media (max-width: 479.98px) {
+  .whatsapp-composer .input-group > .form-control { width: 100%; min-width: 0; }
+}

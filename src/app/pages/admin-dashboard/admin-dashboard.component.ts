@@ -76,6 +76,7 @@ import { reemplazarContacto, resumirContactos } from './contacts/admin-contacts.
 import { AdminEmailSectionComponent } from './email/admin-email-section.component';
 import { AdminExceptionsSectionComponent } from './availability/admin-exceptions-section.component';
 import { AdminProvidersSectionComponent } from './providers/admin-providers-section.component';
+import { AdminScheduleRequestsComponent } from './availability/admin-schedule-requests.component';
 import { AdminRulesSectionComponent } from './availability/admin-rules-section.component';
 import { AdminSiteSectionComponent } from './site/admin-site-section.component';
 import { AdminServicesSectionComponent } from './catalog/admin-services-section.component';
@@ -207,6 +208,7 @@ type NotificacionAdmin = {
     AdminExceptionsSectionComponent,
     AdminProvidersSectionComponent,
     AdminRulesSectionComponent,
+    AdminScheduleRequestsComponent,
     AdminSiteSectionComponent,
     AdminServicesSectionComponent,
     AdminProductsSectionComponent,
@@ -228,7 +230,7 @@ type NotificacionAdmin = {
     AdminWhatsappSectionComponent
   ],
   templateUrl: './admin-dashboard.component.html',
-  styleUrls: ['./admin-dashboard.component.css'],
+  styleUrls: ['./admin-dashboard.component.css', './shared/admin-workspace-theme.css'],
   encapsulation: ViewEncapsulation.None
 })
 export class AdminDashboardComponent implements OnInit {
@@ -285,6 +287,7 @@ export class AdminDashboardComponent implements OnInit {
   readonly formularioUsuarioInternoRevision = signal(0);
   readonly panelMovil = signal(false);
   readonly sidebarAbierto = signal(true);
+  readonly sidebarOculto = signal(false);
   readonly perfilConfigAbierto = signal(false);
   readonly perfilUsuarioLocal = signal<PerfilUsuarioLocal>({
     nombre: '',
@@ -382,7 +385,7 @@ export class AdminDashboardComponent implements OnInit {
     if (!correo) {
       return null;
     }
-    return this.usuariosInternos().find(usuario => usuario.correo.trim().toLowerCase() === correo) ?? null;
+    return this.usuariosInternos().find(usuario => (usuario.correo || usuario.nombreUsuario || '').trim().toLowerCase() === correo) ?? null;
   });
   readonly nombreUsuarioAdmin = computed(() =>
     this.perfilRegistrado()?.nombreCompleto?.trim()
@@ -504,6 +507,7 @@ export class AdminDashboardComponent implements OnInit {
       [
         usuario.nombreCompleto,
         usuario.correo,
+        usuario.nombreUsuario,
         usuario.rolNombre,
         usuario.rolCodigo,
         usuario.puesto,
@@ -911,7 +915,13 @@ export class AdminDashboardComponent implements OnInit {
   }
 
   alternarSidebar() {
+    this.sidebarOculto.set(false);
     this.sidebarAbierto.update(valor => !valor);
+  }
+
+  ocultarSidebar() {
+    this.sidebarOculto.set(true);
+    this.sidebarAbierto.set(false);
   }
 
   cerrarSidebar() {
@@ -2292,6 +2302,12 @@ export class AdminDashboardComponent implements OnInit {
     this.actualizarSujetosExcepcion();
   }
 
+  configurarHorarioSujeto(sujeto: {tipoSujeto:string;sujetoId:number}) {
+    this.cancelarEdicionRegla();
+    this.formularioRegla = {...this.formularioRegla, ...sujeto};
+    this.actualizarSujetosRegla();
+  }
+
   editarRegla(regla: ReglaDisponibilidadAdmin) {
     this.reglaEditandoId = regla.id;
     this.formularioRegla = crearFormularioRegla(0, regla);
@@ -2306,11 +2322,20 @@ export class AdminDashboardComponent implements OnInit {
     this.actualizarSujetosRegla();
   }
 
-  guardarRegla() {
+  eliminarRegla(regla: ReglaDisponibilidadAdmin) {
+    this.guardandoRegla = true;
+    this.error = '';
+    this.availabilityFacade.eliminarRegla(regla.id).pipe(finalize(() => this.guardandoRegla = false)).subscribe({
+      next: () => { if (this.reglaEditandoId === regla.id) this.cancelarEdicionRegla(); this.recargar(); },
+      error: err => this.error = err?.error?.mensaje || 'No se pudo eliminar el horario.'
+    });
+  }
+
+  guardarRegla(semana?: {diasSemana:number[];reemplazar:boolean}) {
     this.guardandoRegla = true;
     this.error = '';
     this.mensajeExito = '';
-    this.availabilityFacade.guardarRegla(this.reglaEditandoId, this.formularioRegla)
+    this.availabilityFacade.guardarRegla(this.reglaEditandoId, this.formularioRegla,semana)
       .pipe(finalize(() => this.guardandoRegla = false))
       .subscribe({
         next: () => {

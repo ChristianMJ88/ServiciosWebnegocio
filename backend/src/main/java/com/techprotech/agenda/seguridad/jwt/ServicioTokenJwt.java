@@ -31,6 +31,11 @@ public class ServicioTokenJwt {
             Collection<String> permisos,
             Collection<Long> sucursalesPermitidas
     ) {
+        return generarTokenAcceso(sujeto, usuarioId, empresaId, empresaSlug, roles, permisos, sucursalesPermitidas, 0);
+    }
+
+    public String generarTokenAcceso(String sujeto, Long usuarioId, Long empresaId, String empresaSlug,
+            Collection<String> roles, Collection<String> permisos, Collection<Long> sucursalesPermitidas, long versionSesion) {
         Instant ahora = Instant.now();
         return Jwts.builder()
                 .subject(sujeto)
@@ -40,6 +45,7 @@ public class ServicioTokenJwt {
                 .claim("usuarioId", usuarioId)
                 .claim("empresaId", empresaId)
                 .claim("empresaSlug", empresaSlug)
+                .claim("versionSesion", versionSesion)
                 .claim("ambito", "TENANT")
                 .claim("roles", roles)
                 .claim("permisos", permisos)
@@ -66,6 +72,10 @@ public class ServicioTokenJwt {
     }
 
     public String generarTokenActualizacion(String sujeto, Long usuarioId, Long empresaId) {
+        return generarTokenActualizacion(sujeto, usuarioId, empresaId, 0);
+    }
+
+    public String generarTokenActualizacion(String sujeto, Long usuarioId, Long empresaId, long versionSesion) {
         Instant ahora = Instant.now();
         return Jwts.builder()
                 .subject(sujeto)
@@ -74,8 +84,14 @@ public class ServicioTokenJwt {
                 .expiration(Date.from(ahora.plus(propiedadesJwt.diasRefresh(), ChronoUnit.DAYS)))
                 .claim("usuarioId", usuarioId)
                 .claim("empresaId", empresaId)
+                .claim("versionSesion", versionSesion)
                 .signWith(claveFirma())
                 .compact();
+    }
+
+    public long obtenerVersionSesion(String token) {
+        Number version = obtenerClaims(token).get("versionSesion", Number.class);
+        return version == null ? 0 : version.longValue();
     }
 
     public boolean esValido(String token) {

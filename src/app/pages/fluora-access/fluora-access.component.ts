@@ -6,6 +6,7 @@ import { finalize } from 'rxjs/operators';
 import { AuthService, EmpresaAccesoApp } from '../../core/auth/auth.service';
 import { PlatformHostService } from '../../core/platform/platform-host.service';
 import { OnboardingService } from '../../core/onboarding/onboarding.service';
+import { AccessNoticeService } from '../../core/auth/access-notice.service';
 
 @Component({
   selector: 'app-fluora-access',
@@ -21,6 +22,7 @@ export class FluoraAccessComponent implements OnInit {
   private readonly onboardingService = inject(OnboardingService);
   private readonly route = inject(ActivatedRoute);
   readonly platformHost = inject(PlatformHostService);
+  readonly avisoAcceso = inject(AccessNoticeService);
 
   readonly touched = signal(false);
   readonly mostrarContrasena = signal(false);
@@ -34,8 +36,11 @@ export class FluoraAccessComponent implements OnInit {
   readonly codigoAccesoSocial = signal<string | null>(null);
   empresas = signal<EmpresaAccesoApp[]>([]);
   error = '';
+  readonly cambioContrasena = signal(false);
   readonly form = this.fb.group({
-    correo: ['', [Validators.required, Validators.email]],
+    correo: ['', [Validators.required]],
+    nuevaContrasena: [''],
+    confirmarContrasena: [''],
     contrasena: ['', [Validators.required, Validators.minLength(8)]]
   });
 
@@ -90,6 +95,7 @@ export class FluoraAccessComponent implements OnInit {
       .pipe(finalize(() => this.loading.set(false)))
       .subscribe({
         next: response => {
+          if (response.estado === 'CAMBIO_CONTRASENA') { this.cambioContrasena.set(true); this.error=response.mensaje; return; }
           if (response.estado === 'SELECCION_EMPRESA' && response.empresas?.length) {
             this.empresas.set(response.empresas);
             return;
@@ -108,6 +114,7 @@ export class FluoraAccessComponent implements OnInit {
   }
 
   iniciarSesion(empresaId?: number) {
+    if(this.cambioContrasena() && (!this.form.value.nuevaContrasena || this.form.value.nuevaContrasena !== this.form.value.confirmarContrasena)) {this.error='Confirma tu nueva contraseña.';return;}
     this.touched.set(true);
     if (this.form.invalid) {
       return;
@@ -120,11 +127,13 @@ export class FluoraAccessComponent implements OnInit {
       .appLogin({
         correo: this.form.value.correo ?? '',
         contrasena: this.form.value.contrasena ?? '',
-        empresaId
+        empresaId,
+        nuevaContrasena: this.cambioContrasena() ? this.form.value.nuevaContrasena : null
       })
       .pipe(finalize(() => this.loading.set(false)))
       .subscribe({
         next: response => {
+          if (response.estado === 'CAMBIO_CONTRASENA') { this.cambioContrasena.set(true); this.error=response.mensaje; return; }
           if (response.estado === 'SELECCION_EMPRESA' && response.empresas?.length) {
             this.empresas.set(response.empresas);
             return;

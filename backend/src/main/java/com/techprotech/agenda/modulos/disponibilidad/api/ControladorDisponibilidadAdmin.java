@@ -30,32 +30,32 @@ import java.util.stream.IntStream;
 @PreAuthorize("hasAuthority('PANEL_ADMIN_ACCESO')")
 public class ControladorDisponibilidadAdmin {
 
+    private final com.techprotech.agenda.modulos.disponibilidad.aplicacion.ServicioSolicitudesHorario solicitudes;
     private final ServicioGestionDisponibilidad servicioGestionDisponibilidad;
+    private final com.techprotech.agenda.modulos.disponibilidad.aplicacion.ServicioHorarioSemanal horarioSemanal;
 
-    public ControladorDisponibilidadAdmin(ServicioGestionDisponibilidad servicioGestionDisponibilidad) {
+    public ControladorDisponibilidadAdmin(ServicioGestionDisponibilidad servicioGestionDisponibilidad, com.techprotech.agenda.modulos.disponibilidad.aplicacion.ServicioHorarioSemanal horarioSemanal, com.techprotech.agenda.modulos.disponibilidad.aplicacion.ServicioSolicitudesHorario solicitudes) {
+        this.solicitudes = solicitudes;
         this.servicioGestionDisponibilidad = servicioGestionDisponibilidad;
+        this.horarioSemanal = horarioSemanal;
     }
 
     @GetMapping("/metadatos")
     @PreAuthorize("hasAuthority('PRESTADORES_GESTIONAR')")
     public MetadatosDisponibilidadResponse metadatos() {
-        return new MetadatosDisponibilidadResponse(
-                CatalogosDisponibilidad.TIPOS_SUJETO.stream()
-                        .map(opcion -> new MetadatosDisponibilidadResponse.OpcionTextoResponse(opcion.valor(), opcion.etiqueta()))
-                        .toList(),
-                IntStream.rangeClosed(1, 7)
-                        .mapToObj(dia -> new MetadatosDisponibilidadResponse.OpcionNumeroResponse(dia, nombreDia(dia)))
-                        .toList(),
-                CatalogosDisponibilidad.TIPOS_BLOQUEO.stream()
-                        .map(opcion -> new MetadatosDisponibilidadResponse.OpcionTextoResponse(opcion.valor(), opcion.etiqueta()))
-                        .toList(),
-                CatalogosDisponibilidad.INTERVALO_MINIMO_MINUTOS
-        );
+        return CatalogosDisponibilidad.metadatos();
     }
 
-    private String nombreDia(int dia) {
-        String nombre = DayOfWeek.of(dia).getDisplayName(TextStyle.FULL, Locale.forLanguageTag("es-MX"));
-        return Character.toUpperCase(nombre.charAt(0)) + nombre.substring(1);
+    @GetMapping("/solicitudes-horario")
+    @PreAuthorize("hasAuthority('PRESTADORES_GESTIONAR')")
+    public List<com.techprotech.agenda.modulos.disponibilidad.api.dto.SolicitudHorarioResponse> pendientes(@AuthenticationPrincipal UsuarioAutenticado usuario) {
+        return solicitudes.pendientes(usuario.empresaId());
+    }
+    @PostMapping("/solicitudes-horario/{id}/resolver")
+    @PreAuthorize("hasAuthority('PRESTADORES_GESTIONAR')")
+    public void resolver(@AuthenticationPrincipal UsuarioAutenticado usuario, @PathVariable Long id,
+        @Valid @RequestBody com.techprotech.agenda.modulos.disponibilidad.api.dto.ResolverHorarioRequest request) {
+        solicitudes.resolver(usuario.empresaId(), usuario.usuarioId(), id, request);
     }
 
     @GetMapping("/reglas")
@@ -73,6 +73,13 @@ public class ControladorDisponibilidadAdmin {
         return servicioGestionDisponibilidad.crearReglaAdmin(usuario.empresaId(), request);
     }
 
+    @PostMapping("/reglas/semana")
+    @PreAuthorize("hasAuthority('PRESTADORES_GESTIONAR')")
+    public List<ReglaDisponibilidadResponse> guardarSemana(@AuthenticationPrincipal UsuarioAutenticado usuario,
+       @Valid @RequestBody com.techprotech.agenda.modulos.disponibilidad.api.dto.HorarioSemanalRequest request){
+        return horarioSemanal.guardar(usuario.empresaId(),request);
+    }
+
     @PatchMapping("/reglas/{id}")
     @PreAuthorize("hasAuthority('PRESTADORES_GESTIONAR')")
     public ReglaDisponibilidadResponse actualizarRegla(
@@ -81,6 +88,12 @@ public class ControladorDisponibilidadAdmin {
             @Valid @RequestBody ReglaDisponibilidadRequest request
     ) {
         return servicioGestionDisponibilidad.actualizarReglaAdmin(usuario.empresaId(), id, request);
+    }
+
+    @org.springframework.web.bind.annotation.DeleteMapping("/reglas/{id}")
+    @PreAuthorize("hasAuthority('PRESTADORES_GESTIONAR')")
+    public void eliminarRegla(@AuthenticationPrincipal UsuarioAutenticado usuario, @PathVariable Long id) {
+        servicioGestionDisponibilidad.eliminarReglaAdmin(usuario.empresaId(), id);
     }
 
     @GetMapping("/excepciones")

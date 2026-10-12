@@ -1,5 +1,5 @@
 
-import { Component, input, output } from '@angular/core';
+import { Component, input, output, effect, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
@@ -15,7 +15,8 @@ import {
   selector: 'app-staff-schedules-section',
   standalone: true,
   imports: [FormsModule, MatButtonModule, MatCardModule, MatFormFieldModule, MatInputModule, MatSelectModule],
-  templateUrl: './staff-schedules-section.component.html'
+  templateUrl: './staff-schedules-section.component.html',
+  styleUrls: ['./staff-schedules-section.component.css']
 })
 export class StaffSchedulesSectionComponent {
   readonly reglaEditandoId = input<number | null>(null);
@@ -25,7 +26,25 @@ export class StaffSchedulesSectionComponent {
   readonly reglas = input<ReglaDisponibilidadStaff[]>([]);
   readonly etiquetaDiaSemana = input.required<(dia: number) => string>();
 
-  readonly save = output<void>();
+  readonly intervaloMinimoMinutos = input.required<number>();
+  readonly diasSeleccionados = signal<number[]>([]);
+  reemplazar = false;
+
+  constructor() {
+    effect(() => {
+      const dia = this.formularioRegla().diaSemana;
+      this.diasSeleccionados.set(dia ? [dia] : []);
+      this.reemplazar = false;
+    });
+  }
+
+  seleccionarDia(dia: number) {
+    this.diasSeleccionados.update(dias => dias.includes(dia) ? dias.filter(valor => valor !== dia) : [...dias, dia]);
+  }
+  seleccionarTodos() { this.diasSeleccionados.set(this.diasSemana().map(dia => dia.value)); }
+  reglasDelDia(dia: number) { return this.reglas().filter(regla => regla.diaSemana === dia); }
+  guardar() { this.save.emit({diasSemana: this.diasSeleccionados(), reemplazar: this.reemplazar}); }
+  readonly save = output<{diasSemana: number[]; reemplazar: boolean}>();
   readonly cancelEdit = output<void>();
   readonly editRule = output<ReglaDisponibilidadStaff>();
 }

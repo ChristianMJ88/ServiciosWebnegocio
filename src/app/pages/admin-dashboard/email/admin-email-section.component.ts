@@ -34,6 +34,8 @@ import {
   styleUrls: ['./admin-email-section.component.css']
 })
 export class AdminEmailSectionComponent {
+  readonly nombreEmpresa = input('');
+  readonly refresh = output<void>();
   readonly formularioCorreo = input.required<GuardarConfiguracionCorreoPayload>();
   readonly guardandoCorreo = input(false);
   readonly configuracionCorreo = input<ConfiguracionCorreoAdmin | null>(null);

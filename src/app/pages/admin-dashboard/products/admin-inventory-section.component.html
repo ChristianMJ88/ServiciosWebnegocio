@@ -1,94 +1,1015 @@
-<section class="inventory-shell">
+<section class="inventory-shell" aria-labelledby="inventory-title">
+  <!-- ENCABEZADO PRINCIPAL (HERO) -->
   <header class="inventory-hero">
-    <div>
-      <span class="inventory-kicker">Control operativo</span>
-      <h2>Inventario por sucursal</h2>
-      <p>Consulta existencias, registra movimientos y transfiere productos con trazabilidad.</p>
+    <div class="hero-content">
+      <div class="hero-kicker-row">
+        <span class="inventory-kicker">
+          <i class="bi bi-box-seam-fill"></i> Control de existencias
+        </span>
+        @if (catalogo(); as cat) {
+          <span class="health-badge" [class.is-good]="porcentajeSalud() >= 80" [class.is-warning]="porcentajeSalud() < 80 && porcentajeSalud() >= 50" [class.is-critical]="porcentajeSalud() < 50">
+            <i class="bi" [class.bi-shield-check]="porcentajeSalud() >= 80" [class.bi-shield-exclamation]="porcentajeSalud() < 80"></i>
+            {{ porcentajeSalud() }}% Stock Saludable
+          </span>
+        }
+      </div>
+      <h1 id="inventory-title">Inventario</h1>
+      <p>Consulta existencias por sucursal, registra entradas y salidas y revisa el historial de cada producto.</p>
     </div>
+
     <div class="hero-actions">
-      <button class="action-button secondary" type="button" (click)="abrirPanel('transferencia')" [disabled]="(catalogo()?.sucursales?.length ?? 0) < 2">
-        <i class="bi bi-arrow-left-right"></i><span>Transferir</span>
+      <button class="action-button secondary" type="button" (click)="cargar()" [disabled]="cargando()" title="Recargar datos de inventario">
+        <i class="bi bi-arrow-clockwise" [class.spin]="cargando()"></i>
+        <span class="d-none d-sm-inline">Actualizar</span>
       </button>
-      <button class="action-button primary" type="button" (click)="abrirPanel('ajuste')" [disabled]="!(catalogo()?.productos?.length) || !(catalogo()?.sucursales?.length)">
-        <i class="bi bi-plus-lg"></i><span>Registrar movimiento</span>
+
+      <button class="action-button secondary" type="button" (click)="exportarExistenciasCsv()" [disabled]="cargando() || !todasExistencias().length" title="Exportar existencias en formato CSV para Excel">
+        <i class="bi bi-download"></i>
+        <span>Exportar</span>
+      </button>
+
+      <button class="action-button transfer" type="button" (click)="abrirPanelTransferencia()" [disabled]="todasSucursales().length < 2 || !todasExistencias().length">
+        <i class="bi bi-arrow-left-right"></i>
+        <span>Transferir</span>
+      </button>
+
+      <button class="action-button primary" type="button" (click)="abrirPanelAjuste()" [disabled]="!todosProductos().length || !todasSucursales().length">
+        <i class="bi bi-plus-circle-fill"></i>
+        <span>Registrar movimiento</span>
       </button>
     </div>
   </header>
 
-  @if (error()) { <div class="inventory-alert error"><i class="bi bi-exclamation-circle"></i>{{ error() }}</div> }
-  @if (mensaje()) { <div class="inventory-alert success"><i class="bi bi-check-circle"></i>{{ mensaje() }}</div> }
+  <!-- ALERTAS DE ESTADO -->
+  @if (error()) {
+    <div class="inventory-alert error" role="alert">
+      <div class="alert-content">
+        <i class="bi bi-exclamation-triangle-fill"></i>
+        <span>{{ error() }}</span>
+      </div>
+      <button type="button" class="alert-close" (click)="error.set(null)" aria-label="Cerrar"><i class="bi bi-x"></i></button>
+    </div>
+  }
 
+  @if (mensaje()) {
+    <div class="inventory-alert success" role="status">
+      <div class="alert-content">
+        <i class="bi bi-check-circle-fill"></i>
+        <span>{{ mensaje() }}</span>
+      </div>
+      <button type="button" class="alert-close" (click)="mensaje.set(null)" aria-label="Cerrar"><i class="bi bi-x"></i></button>
+    </div>
+  }
+
+  <!-- MODAL / DRAWER DE REGISTRAR MOVIMIENTO (AJUSTE / ENTRADA / SALIDA) -->
   @if (panel() === 'ajuste') {
-    <form class="movement-panel" (ngSubmit)="guardarAjuste()">
-      <div class="panel-heading"><div><span>Nuevo movimiento</span><h3>Actualiza una existencia</h3></div><button type="button" class="icon-button" (click)="panel.set(null)" aria-label="Cerrar"><i class="bi bi-x-lg"></i></button></div>
-      <div class="form-grid">
-        <label>Producto<select name="ajusteProducto" [(ngModel)]="ajuste.productoId" required><option [ngValue]="null" disabled>Selecciona un producto</option>@for (item of catalogo()?.productos ?? []; track item.id) { <option [ngValue]="item.id">{{ item.nombre }} · {{ item.sku }}</option> }</select></label>
-        <label>Sucursal<select name="ajusteSucursal" [(ngModel)]="ajuste.sucursalId" required><option [ngValue]="null" disabled>Selecciona una sucursal</option>@for (item of catalogo()?.sucursales ?? []; track item.id) { <option [ngValue]="item.id">{{ item.nombre }}</option> }</select></label>
-        <label>Tipo de movimiento<select name="ajusteTipo" [(ngModel)]="ajuste.tipo" required>@for (item of catalogo()?.tiposMovimiento ?? []; track item.codigo) { <option [value]="item.codigo">{{ item.nombre }}</option> }</select><small>{{ ajuste.tipo === 'AJUSTE' ? 'Captura el total contado.' : 'Captura las unidades del movimiento.' }}</small></label>
-        <label>Cantidad<input name="ajusteCantidad" [(ngModel)]="ajuste.cantidad" type="number" [min]="ajuste.tipo === 'AJUSTE' ? 0 : 0.001" step="0.001" required></label>
-        <label>Referencia <span>(opcional)</span><input name="ajusteReferencia" [(ngModel)]="ajuste.referencia" maxlength="120" placeholder="Factura, compra o folio"></label>
-        <label class="wide">Notas <span>(opcional)</span><textarea name="ajusteNotas" [(ngModel)]="ajuste.notas" maxlength="500" rows="2" placeholder="Motivo o detalle para auditoría"></textarea></label>
-      </div>
-      <div class="panel-actions"><button type="button" class="text-button" (click)="panel.set(null)">Cancelar</button><button class="action-button primary" type="submit" [disabled]="guardando()">{{ guardando() ? 'Guardando…' : 'Registrar movimiento' }}</button></div>
-    </form>
-  }
+    <div class="inventory-dialog-backdrop" (click)="cerrarPanel()">
+      <div class="movement-modal" (click)="$event.stopPropagation()" cdkTrapFocus [cdkTrapFocusAutoCapture]="true" (keydown.escape)="cerrarPanel()" role="dialog" aria-modal="true" aria-labelledby="modal-ajuste-title">
+        <header class="inventory-dialog-header">
+          <div class="header-titles">
+            <span class="modal-kicker"><i class="bi bi-sliders2"></i> Operación de inventario</span>
+            <h3 id="modal-ajuste-title">Registrar Movimiento de Existencias</h3>
+          </div>
+          <button type="button" class="icon-close-button" (click)="cerrarPanel()" aria-label="Cerrar ventana" cdkFocusInitial>
+            <i class="bi bi-x-lg"></i>
+          </button>
+        </header>
 
-  @if (panel() === 'transferencia') {
-    <form class="movement-panel transfer" (ngSubmit)="guardarTransferencia()">
-      <div class="panel-heading"><div><span>Movimiento entre sedes</span><h3>Transferir existencia</h3></div><button type="button" class="icon-button" (click)="panel.set(null)" aria-label="Cerrar"><i class="bi bi-x-lg"></i></button></div>
-      <div class="form-grid">
-        <label>Producto<select name="transferProducto" [(ngModel)]="transferencia.productoId" required><option [ngValue]="null" disabled>Selecciona un producto</option>@for (item of catalogo()?.productos ?? []; track item.id) { <option [ngValue]="item.id">{{ item.nombre }} · {{ item.sku }}</option> }</select></label>
-        <label>Cantidad<input name="transferCantidad" [(ngModel)]="transferencia.cantidad" type="number" min="0.001" step="0.001" required></label>
-        <label>Sucursal de origen<select name="transferOrigen" [(ngModel)]="transferencia.sucursalOrigenId" required><option [ngValue]="null" disabled>Selecciona origen</option>@for (item of catalogo()?.sucursales ?? []; track item.id) { <option [ngValue]="item.id">{{ item.nombre }}</option> }</select></label>
-        <label>Sucursal de destino<select name="transferDestino" [(ngModel)]="transferencia.sucursalDestinoId" required><option [ngValue]="null" disabled>Selecciona destino</option>@for (item of catalogo()?.sucursales ?? []; track item.id) { <option [ngValue]="item.id" [disabled]="item.id === transferencia.sucursalOrigenId">{{ item.nombre }}</option> }</select></label>
-        <label>Referencia <span>(opcional)</span><input name="transferReferencia" [(ngModel)]="transferencia.referencia" maxlength="120" placeholder="Se generará si la dejas vacía"></label>
-        <label>Notas <span>(opcional)</span><input name="transferNotas" [(ngModel)]="transferencia.notas" maxlength="500" placeholder="Motivo de la transferencia"></label>
-      </div>
-      <div class="panel-actions"><button type="button" class="text-button" (click)="panel.set(null)">Cancelar</button><button class="action-button primary" type="submit" [disabled]="guardando()">{{ guardando() ? 'Transfiriendo…' : 'Confirmar transferencia' }}</button></div>
-    </form>
-  }
-
-  @if (cargando()) {
-    <div class="inventory-loading"><span></span><p>Preparando existencias…</p></div>
-  } @else if (!catalogo()?.productos?.length) {
-    <div class="empty-state"><i class="bi bi-box-seam"></i><h3>Aún no hay productos con inventario</h3><p>Activa el control de inventario en tus productos para administrarlos aquí.</p></div>
-  } @else {
-    <div class="metric-grid">
-      <article><div class="metric-icon violet"><i class="bi bi-boxes"></i></div><div><strong>{{ existenciasFiltradas().length }}</strong><span>registros visibles</span></div></article>
-      <article><div class="metric-icon blue"><i class="bi bi-stack"></i></div><div><strong>{{ totalUnidades() | number:'1.0-3' }}</strong><span>unidades disponibles</span></div></article>
-      <article><div class="metric-icon amber"><i class="bi bi-exclamation-triangle"></i></div><div><strong>{{ bajoStock() }}</strong><span>con stock bajo</span></div></article>
-      <article><div class="metric-icon rose"><i class="bi bi-slash-circle"></i></div><div><strong>{{ agotados() }}</strong><span>agotados</span></div></article>
-    </div>
-
-    <div class="inventory-toolbar">
-      <label class="search-control"><i class="bi bi-search"></i><input type="search" [ngModel]="busqueda()" (ngModelChange)="busqueda.set($event)" [ngModelOptions]="{standalone: true}" placeholder="Buscar producto o SKU"></label>
-      <label class="branch-control"><i class="bi bi-geo-alt"></i><select [ngModel]="sucursalFiltro()" (ngModelChange)="sucursalFiltro.set($event)" [ngModelOptions]="{standalone: true}"><option [ngValue]="null">Todas las sucursales</option>@for (item of catalogo()?.sucursales ?? []; track item.id) { <option [ngValue]="item.id">{{ item.nombre }}</option> }</select></label>
-    </div>
-
-    <div class="inventory-layout">
-      <div class="stock-panel">
-        <div class="section-title"><div><span>Existencias actuales</span><h3>Productos por sucursal</h3></div><small>{{ existenciasFiltradas().length }} resultados</small></div>
-        <div class="stock-list">
-          @for (item of existenciasFiltradas(); track item.productoId + '-' + item.sucursalId) {
-            <article class="stock-card" [class.low]="item.estado === 'BAJO'" [class.empty]="item.estado === 'AGOTADO'">
-              <div class="product-mark">{{ item.productoNombre.charAt(0) }}</div>
-              <div class="stock-main"><div class="product-heading"><div><h4>{{ item.productoNombre }}</h4><p>{{ item.sku }} <span>·</span> {{ item.sucursalNombre }}</p></div><span class="status-pill" [attr.data-status]="item.estado">{{ item.estado === 'DISPONIBLE' ? 'Disponible' : item.estado === 'BAJO' ? 'Stock bajo' : 'Agotado' }}</span></div>
-                <div class="stock-values"><div><strong>{{ item.disponible | number:'1.0-3' }}</strong><span>disponible</span></div><div><strong>{{ item.existencia | number:'1.0-3' }}</strong><span>existencia</span></div><div><strong>{{ item.reservado | number:'1.0-3' }}</strong><span>reservado</span></div><div><strong>{{ item.stockMinimo | number:'1.0-3' }}</strong><span>mínimo</span></div></div>
+        <form (ngSubmit)="guardarAjuste()" class="inventory-dialog-body">
+          <!-- TIPO DE MOVIMIENTO (TABS VISUALES) -->
+          <div class="movement-type-selector" role="group" aria-label="Tipo de movimiento">
+            <button type="button" class="type-btn entrada" [attr.aria-pressed]="ajuste.tipo === 'ENTRADA'" [class.active]="ajuste.tipo === 'ENTRADA'" (click)="setTipoAjuste('ENTRADA')">
+              <i class="bi bi-box-arrow-in-down"></i>
+              <div>
+                <strong>Entrada (+)</strong>
+                <small>Compra o devolución</small>
               </div>
-              <button type="button" class="quick-action" (click)="abrirPanel('ajuste', item)" aria-label="Registrar movimiento"><i class="bi bi-plus-lg"></i></button>
-            </article>
-          } @empty { <div class="inline-empty"><i class="bi bi-search"></i><p>No encontramos existencias con esos filtros.</p></div> }
+            </button>
+            <button type="button" class="type-btn salida" [attr.aria-pressed]="ajuste.tipo === 'SALIDA'" [class.active]="ajuste.tipo === 'SALIDA'" (click)="setTipoAjuste('SALIDA')">
+              <i class="bi bi-box-arrow-up-right"></i>
+              <div>
+                <strong>Salida (-)</strong>
+                <small>Merma, daño o consumo</small>
+              </div>
+            </button>
+            <button type="button" class="type-btn ajuste" [attr.aria-pressed]="ajuste.tipo === 'AJUSTE'" [class.active]="ajuste.tipo === 'AJUSTE'" (click)="setTipoAjuste('AJUSTE')">
+              <i class="bi bi-clipboard2-check"></i>
+              <div>
+                <strong>Conteo Físico (=)</strong>
+                <small>Auditoría / Ajuste total</small>
+              </div>
+            </button>
+          </div>
+
+          <!-- FORMULARIO GRID -->
+          <div class="form-grid">
+            <label class="form-field">
+              <span class="field-label">Producto *</span>
+              <div class="select-wrapper">
+                <i class="bi bi-box-seam"></i>
+                <select name="ajusteProducto" [(ngModel)]="ajuste.productoId" required>
+                  <option [ngValue]="null" disabled>Selecciona un producto</option>
+                  @for (item of todosProductos(); track item.id) {
+                    <option [ngValue]="item.id">{{ item.nombre }} (SKU: {{ item.sku }})</option>
+                  }
+                </select>
+              </div>
+            </label>
+
+            <label class="form-field">
+              <span class="field-label">Sucursal / Sede *</span>
+              <div class="select-wrapper">
+                <i class="bi bi-geo-alt"></i>
+                <select name="ajusteSucursal" [(ngModel)]="ajuste.sucursalId" required>
+                  <option [ngValue]="null" disabled>Selecciona una sucursal</option>
+                  @for (item of todasSucursales(); track item.id) {
+                    <option [ngValue]="item.id">{{ item.nombre }}</option>
+                  }
+                </select>
+              </div>
+            </label>
+
+            <!-- CALCULADORA DE STOCK / IMPACTO EN VIVO -->
+            @if (proyeccionAjuste(); as proy) {
+              <div class="stock-projection-card" [class.is-warning]="proy.esNegativo || proy.afectaReservas">
+                <div class="projection-step">
+                  <small>Existencia actual</small>
+                  <strong>{{ proy.anterior | number:'1.0-3' }}</strong>
+                </div>
+                <div class="projection-operator">
+                  <i class="bi" [class.bi-plus-lg]="ajuste.tipo === 'ENTRADA'" [class.bi-dash-lg]="ajuste.tipo === 'SALIDA'" [class.bi-arrow-right]="ajuste.tipo === 'AJUSTE'"></i>
+                  <span>{{ ajuste.cantidad | number:'1.0-3' }}</span>
+                </div>
+                <div class="projection-step result">
+                  <small>Nueva existencia</small>
+                  <strong [class.text-danger]="proy.esNegativo">{{ proy.nueva | number:'1.0-3' }}</strong>
+                </div>
+                <div class="projection-step available">
+                  <small>Disponible neto</small>
+                  <strong [class.text-danger]="proy.nuevoDisponible < 0">{{ proy.nuevoDisponible | number:'1.0-3' }}</strong>
+                </div>
+                @if (proy.afectaReservas) {
+                  <div class="projection-alert">
+                    <i class="bi bi-shield-slash"></i>
+                    <span>¡Alerta! Hay {{ proy.reservado | number:'1.0-3' }} unidades reservadas en pedidos o citas activas.</span>
+                  </div>
+                }
+              </div>
+            }
+
+            <div class="form-field full-width">
+              <div class="field-label-row">
+                <span class="field-label">{{ ajuste.tipo === 'AJUSTE' ? 'Existencia física contada *' : 'Cantidad de unidades *' }}</span>
+                <!-- BOTONES DE CANTIDAD RÁPIDA -->
+                <div class="quick-qty-chips">
+                  <button type="button" (click)="sumarCantidadAjuste(1)">+1</button>
+                  <button type="button" (click)="sumarCantidadAjuste(5)">+5</button>
+                  <button type="button" (click)="sumarCantidadAjuste(10)">+10</button>
+                  <button type="button" (click)="sumarCantidadAjuste(50)">+50</button>
+                </div>
+              </div>
+              <div class="input-wrapper">
+                <input
+                  name="ajusteCantidad"
+                  [(ngModel)]="ajuste.cantidad"
+                  type="number"
+                  [min]="ajuste.tipo === 'AJUSTE' ? 0 : 0.001"
+                  step="0.001"
+                  required
+                  placeholder="0.00"
+                />
+              </div>
+            </div>
+
+            <label class="form-field">
+              <span class="field-label">Referencia o Folio <small class="text-muted">(opcional)</small></span>
+              <div class="input-wrapper">
+                <i class="bi bi-receipt"></i>
+                <input name="ajusteReferencia" [(ngModel)]="ajuste.referencia" maxlength="120" placeholder="Ej. Factura F-8492, Devolución #12, Remisión" />
+              </div>
+            </label>
+
+            <label class="form-field">
+              <span class="field-label">Motivo o Notas <small class="text-muted">(para auditoría)</small></span>
+              <div class="input-wrapper">
+                <i class="bi bi-card-text"></i>
+                <input name="ajusteNotas" [(ngModel)]="ajuste.notas" maxlength="500" placeholder="Ej. Reabastecimiento de proveedor, producto roto, etc." />
+              </div>
+            </label>
+          </div>
+
+          <footer class="inventory-dialog-footer">
+            <button type="button" class="btn-cancel" (click)="cerrarPanel()">Cancelar</button>
+            <button type="submit" class="btn-submit" [disabled]="guardando() || !ajuste.productoId || !ajuste.sucursalId || (ajuste.tipo !== 'AJUSTE' && ajuste.cantidad <= 0)">
+              @if (guardando()) {
+                <span class="spinner-border spinner-border-sm"></span> Guardando…
+              } @else {
+                <i class="bi bi-check2-circle"></i> Confirmar Movimiento
+              }
+            </button>
+          </footer>
+        </form>
+      </div>
+    </div>
+  }
+
+  <!-- MODAL DE TRANSFERENCIA ENTRE SUCURSALES -->
+  @if (panel() === 'transferencia') {
+    <div class="inventory-dialog-backdrop" (click)="cerrarPanel()">
+      <div class="movement-modal transfer-modal" (click)="$event.stopPropagation()" cdkTrapFocus [cdkTrapFocusAutoCapture]="true" (keydown.escape)="cerrarPanel()" role="dialog" aria-modal="true" aria-labelledby="modal-transfer-title">
+        <header class="inventory-dialog-header">
+          <div class="header-titles">
+            <span class="modal-kicker"><i class="bi bi-arrow-left-right"></i> Logística entre sedes</span>
+            <h3 id="modal-transfer-title">Transferir Existencias</h3>
+          </div>
+          <button type="button" class="icon-close-button" (click)="cerrarPanel()" aria-label="Cerrar ventana" cdkFocusInitial>
+            <i class="bi bi-x-lg"></i>
+          </button>
+        </header>
+
+        <form (ngSubmit)="guardarTransferencia()" class="inventory-dialog-body">
+          <div class="form-grid">
+            <label class="form-field full-width">
+              <span class="field-label">Producto a transferir *</span>
+              <div class="select-wrapper">
+                <i class="bi bi-box-seam"></i>
+                <select name="transferProducto" [(ngModel)]="transferencia.productoId" required>
+                  <option [ngValue]="null" disabled>Selecciona el producto</option>
+                  @for (item of todosProductos(); track item.id) {
+                    <option [ngValue]="item.id">{{ item.nombre }} (SKU: {{ item.sku }})</option>
+                  }
+                </select>
+              </div>
+            </label>
+
+            <!-- SELECTORES ORIGEN Y DESTINO CON ENLACE VISUAL -->
+            <div class="transfer-branch-connector full-width">
+              <label class="form-field">
+                <span class="field-label">Sucursal de Origen *</span>
+                <div class="select-wrapper">
+                  <i class="bi bi-geo-alt-fill text-danger"></i>
+                  <select name="transferOrigen" [(ngModel)]="transferencia.sucursalOrigenId" required>
+                    <option [ngValue]="null" disabled>Selecciona origen</option>
+                    @for (item of todasSucursales(); track item.id) {
+                      <option [ngValue]="item.id">{{ item.nombre }}</option>
+                    }
+                  </select>
+                </div>
+                @if (existenciaOrigenTransferencia(); as orig) {
+                  <small class="branch-stock-hint">
+                    Disponible en origen: <strong>{{ orig.disponible | number:'1.0-3' }}</strong>
+                  </small>
+                }
+              </label>
+
+              <div class="transfer-arrow-icon">
+                <i class="bi bi-arrow-right-circle-fill"></i>
+              </div>
+
+              <label class="form-field">
+                <span class="field-label">Sucursal de Destino *</span>
+                <div class="select-wrapper">
+                  <i class="bi bi-geo-alt-fill text-success"></i>
+                  <select name="transferDestino" [(ngModel)]="transferencia.sucursalDestinoId" required>
+                    <option [ngValue]="null" disabled>Selecciona destino</option>
+                    @for (item of todasSucursales(); track item.id) {
+                      <option [ngValue]="item.id" [disabled]="item.id === transferencia.sucursalOrigenId">{{ item.nombre }}</option>
+                    }
+                  </select>
+                </div>
+              </label>
+            </div>
+
+            <div class="form-field full-width">
+              <div class="field-label-row">
+                <span class="field-label">Cantidad a transferir *</span>
+                <div class="quick-qty-chips">
+                  <button type="button" (click)="sumarCantidadTransferencia(1)">+1</button>
+                  <button type="button" (click)="sumarCantidadTransferencia(5)">+5</button>
+                  <button type="button" (click)="sumarCantidadTransferencia(10)">+10</button>
+                </div>
+              </div>
+              <div class="input-wrapper">
+                <input
+                  name="transferCantidad"
+                  [(ngModel)]="transferencia.cantidad"
+                  type="number"
+                  min="0.001"
+                  step="0.001"
+                  required
+                  placeholder="0.00"
+                />
+              </div>
+            </div>
+
+            <label class="form-field">
+              <span class="field-label">Referencia / Guía <small class="text-muted">(opcional)</small></span>
+              <div class="input-wrapper">
+                <i class="bi bi-receipt"></i>
+                <input name="transferReferencia" [(ngModel)]="transferencia.referencia" maxlength="120" placeholder="Ej. Guía TR-109, Traspaso vehicular" />
+              </div>
+            </label>
+
+            <label class="form-field">
+              <span class="field-label">Notas de traslado <small class="text-muted">(opcional)</small></span>
+              <div class="input-wrapper">
+                <i class="bi bi-card-text"></i>
+                <input name="transferNotas" [(ngModel)]="transferencia.notas" maxlength="500" placeholder="Ej. Solicitado por alta demanda" />
+              </div>
+            </label>
+          </div>
+
+          <footer class="inventory-dialog-footer">
+            <button type="button" class="btn-cancel" (click)="cerrarPanel()">Cancelar</button>
+            <button
+              type="submit"
+              class="btn-submit btn-transfer"
+              [disabled]="
+                guardando() ||
+                !transferencia.productoId ||
+                !transferencia.sucursalOrigenId ||
+                !transferencia.sucursalDestinoId ||
+                transferencia.sucursalOrigenId === transferencia.sucursalDestinoId ||
+                transferencia.cantidad <= 0
+              "
+            >
+              @if (guardando()) {
+                <span class="spinner-border spinner-border-sm"></span> Procesando…
+              } @else {
+                <i class="bi bi-send-check-fill"></i> Confirmar Traslado
+              }
+            </button>
+          </footer>
+        </form>
+      </div>
+    </div>
+  }
+
+  <!-- MODAL DE HISTORIAL KÁRDEX DEL PRODUCTO -->
+  @if (panel() === 'kardex' && productoKardex(); as prod) {
+    <div class="inventory-dialog-backdrop" (click)="cerrarPanel()">
+      <div class="movement-modal kardex-modal" (click)="$event.stopPropagation()" cdkTrapFocus [cdkTrapFocusAutoCapture]="true" (keydown.escape)="cerrarPanel()" role="dialog" aria-modal="true" aria-labelledby="modal-kardex-title">
+        <header class="inventory-dialog-header">
+          <div class="header-titles">
+            <span class="modal-kicker"><i class="bi bi-clock-history"></i> Kárdex Específico</span>
+            <h3 id="modal-kardex-title">{{ prod.productoNombre }}</h3>
+            <p class="kardex-subtitle">
+              SKU: <strong>{{ prod.sku }}</strong> · Sede: <strong>{{ prod.sucursalNombre }}</strong> · Stock Actual: <strong>{{ prod.disponible | number:'1.0-3' }} disp.</strong>
+            </p>
+          </div>
+          <button type="button" class="icon-close-button" (click)="cerrarPanel()" aria-label="Cerrar ventana" cdkFocusInitial>
+            <i class="bi bi-x-lg"></i>
+          </button>
+        </header>
+
+        <div class="inventory-dialog-body">
+          <div class="kardex-timeline">
+            @for (mov of movimientosKardexProducto(); track mov.id) {
+              <div class="kardex-item">
+                <div class="kardex-icon" [class.positive]="esIncremento(mov)" [class.negative]="!esIncremento(mov)">
+                  <i class="bi" [class.bi-arrow-down-left]="esIncremento(mov)" [class.bi-arrow-up-right]="!esIncremento(mov)"></i>
+                </div>
+                <div class="kardex-info">
+                  <div class="kardex-head">
+                    <strong>{{ etiquetaMovimiento(mov.tipo) }}</strong>
+                    <span class="kardex-delta" [class.positive]="esIncremento(mov)" [class.negative]="!esIncremento(mov)">
+                      {{ esIncremento(mov) ? '+' : '' }}{{ mov.cantidad | number:'1.0-3' }}
+                    </span>
+                  </div>
+                  <div class="kardex-transition">
+                    <span>Anterior: {{ mov.existenciaAnterior | number:'1.0-3' }}</span>
+                    <i class="bi bi-arrow-right"></i>
+                    <span>Nuevo: {{ mov.existenciaNueva | number:'1.0-3' }}</span>
+                  </div>
+                  <div class="kardex-meta">
+                    <small><i class="bi bi-calendar-event"></i> {{ mov.creadoEn | date:'d MMM y, HH:mm' }}</small>
+                    @if (mov.referencia) {
+                      <small><i class="bi bi-hash"></i> {{ mov.referencia }}</small>
+                    }
+                    @if (mov.notas) {
+                      <small class="kardex-notes"><i class="bi bi-chat-left-quote"></i> {{ mov.notas }}</small>
+                    }
+                  </div>
+                </div>
+              </div>
+            } @empty {
+              <div class="inline-empty">
+                <i class="bi bi-journal-text"></i>
+                <p>No se encontraron movimientos recientes registrados para este producto en esta sucursal.</p>
+              </div>
+            }
+          </div>
+        </div>
+
+        <footer class="inventory-dialog-footer">
+          <button type="button" class="btn-cancel" (click)="cerrarPanel()">Cerrar</button>
+          <button type="button" class="btn-submit" (click)="abrirPanelAjuste(prod)">
+            <i class="bi bi-plus-lg"></i> Registrar Nuevo Movimiento
+          </button>
+        </footer>
+      </div>
+    </div>
+  }
+
+  <!-- ESTADO DE CARGA -->
+  @if (cargando() && !catalogo()) {
+    <div class="inventory-loading-card">
+      <div class="pulse-loader">
+        <i class="bi bi-boxes"></i>
+      </div>
+      <h3>Sincronizando inventario central…</h3>
+      <p>Cargando existencias por sucursal, reservas activas y trazabilidad de movimientos.</p>
+    </div>
+  } @else if (!todosProductos().length) {
+    <!-- ESTADO VACÍO (SIN PRODUCTOS CON CONTROL DE INVENTARIO) -->
+    <div class="inventory-empty-card">
+      <div class="empty-icon-wrap">
+        <i class="bi bi-box-seam"></i>
+      </div>
+      <h3>Aún no hay productos con control de inventario</h3>
+      <p>Para gestionar existencias, activa la opción <strong>"Controlar inventario"</strong> en tus productos desde la sección de Productos.</p>
+    </div>
+  } @else {
+    <!-- KPI DASHBOARD INTERACTIVO (TARJETAS DE MÉTRICAS) -->
+    <section class="metrics-dashboard" aria-label="Métricas de Inventario">
+      <article role="button" tabindex="0" (keydown.enter)="$any($event.target).click()" (keydown.space)="$event.preventDefault(); $any($event.target).click()" class="metric-card" (click)="setFiltroEstado('TODOS')" [class.active]="estadoFiltro() === 'TODOS'">
+        <div class="metric-icon-box purple">
+          <i class="bi bi-boxes"></i>
+        </div>
+        <div class="metric-info">
+          <span class="metric-label">SKUs Monitoreados</span>
+          <strong class="metric-value">{{ totalSkus() }}</strong>
+          <small class="metric-sub">{{ todasExistencias().length }} sedes/artículos</small>
+        </div>
+      </article>
+
+      <article role="button" tabindex="0" (keydown.enter)="$any($event.target).click()" (keydown.space)="$event.preventDefault(); $any($event.target).click()" class="metric-card" (click)="setFiltroEstado('DISPONIBLE')" [class.active]="estadoFiltro() === 'DISPONIBLE'">
+        <div class="metric-icon-box blue">
+          <i class="bi bi-stack"></i>
+        </div>
+        <div class="metric-info">
+          <span class="metric-label">Unidades Disponibles</span>
+          <strong class="metric-value text-blue">{{ totalUnidadesDisponibles() | number:'1.0-3' }}</strong>
+          <small class="metric-sub">{{ totalUnidadesFisicas() | number:'1.0-3' }} físicas · {{ totalUnidadesReservadas() | number:'1.0-3' }} reservadas</small>
+        </div>
+      </article>
+
+      <article role="button" tabindex="0" (keydown.enter)="$any($event.target).click()" (keydown.space)="$event.preventDefault(); $any($event.target).click()" class="metric-card" (click)="setFiltroEstado('BAJO')" [class.active]="estadoFiltro() === 'BAJO'">
+        <div class="metric-icon-box amber">
+          <i class="bi bi-exclamation-triangle-fill"></i>
+        </div>
+        <div class="metric-info">
+          <span class="metric-label">Stock Bajo</span>
+          <strong class="metric-value text-amber">{{ bajoStockCount() }}</strong>
+          <small class="metric-sub">Requieren reposición</small>
+        </div>
+      </article>
+
+      <article role="button" tabindex="0" (keydown.enter)="$any($event.target).click()" (keydown.space)="$event.preventDefault(); $any($event.target).click()" class="metric-card" (click)="setFiltroEstado('AGOTADO')" [class.active]="estadoFiltro() === 'AGOTADO'">
+        <div class="metric-icon-box rose">
+          <i class="bi bi-slash-circle-fill"></i>
+        </div>
+        <div class="metric-info">
+          <span class="metric-label">Agotados / Quiebre</span>
+          <strong class="metric-value text-rose">{{ agotadosCount() }}</strong>
+          <small class="metric-sub">Sin existencia para venta</small>
+        </div>
+      </article>
+    </section>
+
+    <!-- NAVEGACIÓN POR PESTAÑAS (TABS PRO) -->
+    <nav class="inventory-tabs-nav" aria-label="Pestañas de inventario">
+      <button type="button" class="tab-btn" [attr.aria-pressed]="tabActivo() === 'existencias'" [class.active]="tabActivo() === 'existencias'" (click)="cambiarTab('existencias')">
+        <i class="bi bi-boxes"></i>
+        <span>Existencias</span>
+        <span class="tab-badge">{{ existenciasFiltradas().length }}</span>
+      </button>
+
+      <button type="button" class="tab-btn" [attr.aria-pressed]="tabActivo() === 'movimientos'" [class.active]="tabActivo() === 'movimientos'" (click)="cambiarTab('movimientos')">
+        <i class="bi bi-clock-history"></i>
+        <span>Movimientos</span>
+        <span class="tab-badge">{{ todosMovimientos().length }}</span>
+      </button>
+
+      <button type="button" class="tab-btn" [attr.aria-pressed]="tabActivo() === 'reposicion'" [class.active]="tabActivo() === 'reposicion'" (click)="cambiarTab('reposicion')">
+        <i class="bi bi-cart-plus"></i>
+        <span>Reposición</span>
+        @if (productosParaReposicion().length > 0) {
+          <span class="tab-badge alert">{{ productosParaReposicion().length }}</span>
+        }
+      </button>
+    </nav>
+
+    <!-- ========================================================= -->
+    <!-- TAB 1: CONTROL DE EXISTENCIAS -->
+    <!-- ========================================================= -->
+    @if (tabActivo() === 'existencias') {
+      <div class="tab-content-area">
+        <!-- BARRA DE HERRAMIENTAS Y FILTROS -->
+        <div class="inventory-toolbar">
+          <div class="search-box">
+            <i class="bi bi-search"></i>
+            <input
+              type="search"
+              [ngModel]="busqueda()"
+              (ngModelChange)="busqueda.set($event)"
+              placeholder="Buscar por producto, SKU o sucursal…"
+              aria-label="Buscar producto o SKU"
+            />
+            @if (busqueda()) {
+              <button type="button" class="clear-search" (click)="busqueda.set('')" aria-label="Limpiar búsqueda">
+                <i class="bi bi-x-circle-fill"></i>
+              </button>
+            }
+          </div>
+
+          <div class="toolbar-filters">
+            <!-- FILTRO SUCURSAL -->
+            <div class="filter-dropdown">
+              <i class="bi bi-geo-alt"></i>
+              <select [ngModel]="sucursalFiltro()" (ngModelChange)="sucursalFiltro.set($event)" aria-label="Filtrar por sucursal">
+                <option [ngValue]="null">Todas las sucursales ({{ todasSucursales().length }})</option>
+                @for (suc of todasSucursales(); track suc.id) {
+                  <option [ngValue]="suc.id">{{ suc.nombre }}</option>
+                }
+              </select>
+            </div>
+
+            <!-- FILTRO ESTADO CHIPS -->
+            <div class="filter-dropdown">
+              <i class="bi bi-funnel"></i>
+              <select [ngModel]="estadoFiltro()" (ngModelChange)="estadoFiltro.set($event)" aria-label="Filtrar por estado">
+                <option value="TODOS">Todos los estados</option>
+                <option value="DISPONIBLE">Disponibles</option>
+                <option value="BAJO">Stock bajo</option>
+                <option value="AGOTADO">Agotados</option>
+                <option value="CON_RESERVA">Con reservas</option>
+              </select>
+            </div>
+
+            <!-- ORDENAMIENTO -->
+            <div class="filter-dropdown">
+              <i class="bi bi-sort-down"></i>
+              <select [ngModel]="ordenFiltro()" (ngModelChange)="ordenFiltro.set($event)" aria-label="Ordenar listado">
+                <option value="urgente">Más urgente primero</option>
+                <option value="disponible_desc">Mayor disponible</option>
+                <option value="disponible_asc">Menor disponible</option>
+                <option value="nombre_asc">Nombre (A - Z)</option>
+                <option value="nombre_desc">Nombre (Z - A)</option>
+                <option value="sku">SKU</option>
+              </select>
+            </div>
+
+            <!-- MODO DE VISTA (GRID / TABLE) -->
+            <div class="view-switch" role="group" aria-label="Modo de visualización">
+              <button
+                type="button"
+                class="view-btn"
+                [class.active]="modoVista() === 'grid'"
+                (click)="setModoVista('grid')"
+                title="Vista Cuadrícula de Tarjetas"
+                aria-label="Vista Cuadrícula"
+              >
+                <i class="bi bi-grid-fill"></i>
+              </button>
+              <button
+                type="button"
+                class="view-btn"
+                [class.active]="modoVista() === 'table'"
+                (click)="setModoVista('table')"
+                title="Vista Tabla de Datos Pro"
+                aria-label="Vista Tabla"
+              >
+                <i class="bi bi-table"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- LAYOUT PRINCIPAL DE EXISTENCIAS -->
+        <div class="inventory-main-layout">
+          <div class="stock-display-container">
+            <!-- VISTA 1: GRID DE TARJETAS PRO -->
+            @if (modoVista() === 'grid') {
+              <div class="cards-grid">
+                @for (item of existenciasFiltradas(); track item.productoId + '-' + item.sucursalId) {
+                  <article class="stock-card-pro" [class.is-low]="item.estado === 'BAJO'" [class.is-empty]="item.estado === 'AGOTADO'">
+                    <header class="card-header">
+                      <div class="product-identity">
+                        <div class="product-avatar-badge" [class.badge-low]="item.estado === 'BAJO'" [class.badge-empty]="item.estado === 'AGOTADO'">
+                          {{ item.productoNombre.charAt(0).toUpperCase() }}
+                        </div>
+                        <div class="product-text-details">
+                          <h4 class="product-title" [title]="item.productoNombre">{{ item.productoNombre }}</h4>
+                          <span class="product-meta-sub">
+                            <span class="sku-tag">SKU: {{ item.sku }}</span>
+                            <span class="dot">·</span>
+                            <span class="branch-tag"><i class="bi bi-geo-alt"></i> {{ item.sucursalNombre }}</span>
+                          </span>
+                        </div>
+                      </div>
+
+                      <span class="status-pill-pro" [attr.data-status]="item.estado">
+                        @if (item.estado === 'DISPONIBLE') {
+                          <i class="bi bi-check-circle-fill"></i> En stock
+                        } @else if (item.estado === 'BAJO') {
+                          <i class="bi bi-exclamation-triangle-fill"></i> Stock bajo
+                        } @else {
+                          <i class="bi bi-slash-circle-fill"></i> Agotado
+                        }
+                      </span>
+                    </header>
+
+                    <!-- BARRA VISUAL DE PROGRESO DE STOCK -->
+                    <div class="stock-level-bar-wrap">
+                      <div class="stock-level-labels">
+                        <small>Nivel de inventario</small>
+                        <small class="level-indicator">{{ item.disponible | number:'1.0-3' }} / min {{ item.stockMinimo | number:'1.0-3' }}</small>
+                      </div>
+                      <div class="stock-progress-track">
+                        <div
+                          class="stock-progress-fill"
+                          [class.fill-good]="item.estado === 'DISPONIBLE'"
+                          [class.fill-warn]="item.estado === 'BAJO'"
+                          [class.fill-danger]="item.estado === 'AGOTADO'"
+                          [style.width.%]="calcularPorcentajeProgreso(item)"
+                        ></div>
+                      </div>
+                    </div>
+
+                    <!-- MÉTRICAS EN GRID DENTRO DE LA TARJETA -->
+                    <div class="card-metrics-grid">
+                      <div class="card-metric main-metric">
+                        <small>Disponible</small>
+                        <strong class="metric-val highlight" [class.text-danger]="item.disponible <= 0">{{ item.disponible | number:'1.0-3' }}</strong>
+                      </div>
+                      <div class="card-metric">
+                        <small>Físico</small>
+                        <strong class="metric-val">{{ item.existencia | number:'1.0-3' }}</strong>
+                      </div>
+                      <div class="card-metric">
+                        <small>Reservado</small>
+                        <strong class="metric-val" [class.text-amber]="item.reservado > 0">{{ item.reservado | number:'1.0-3' }}</strong>
+                      </div>
+                      <div class="card-metric">
+                        <small>Mínimo</small>
+                        <strong class="metric-val">{{ item.stockMinimo | number:'1.0-3' }}</strong>
+                      </div>
+                    </div>
+
+                    <!-- ACCIONES RÁPIDAS DE LA TARJETA -->
+                    <footer class="card-quick-actions">
+                      <button type="button" class="btn-quick entrada" (click)="abrirPanelAjuste(item, 'ENTRADA')" title="Registrar Entrada rápida">
+                        <i class="bi bi-plus-lg"></i> Entrada
+                      </button>
+                      <button type="button" class="btn-quick salida" (click)="abrirPanelAjuste(item, 'SALIDA')" [disabled]="item.disponible <= 0" title="Registrar Salida / Merma">
+                        <i class="bi bi-dash-lg"></i> Salida
+                      </button>
+                      <button type="button" class="btn-quick transfer" (click)="abrirPanelTransferencia(item)" [disabled]="todasSucursales().length < 2 || item.disponible <= 0" title="Transferir a otra sucursal">
+                        <i class="bi bi-arrow-left-right"></i>
+                      </button>
+                      <button type="button" class="btn-quick kardex" (click)="verKardex(item)" title="Ver historial de movimientos">
+                        <i class="bi bi-clock-history"></i>
+                      </button>
+                    </footer>
+                  </article>
+                } @empty {
+                  <div class="empty-results-box">
+                    <i class="bi bi-search"></i>
+                    <h4>No se encontraron existencias con los filtros aplicados</h4>
+                    <p>Intenta ajustar el término de búsqueda, la sucursal o el estado seleccionado.</p>
+                    <button type="button" class="btn-reset-filters" (click)="limpiarFiltros()">Limpiar filtros</button>
+                  </div>
+                }
+              </div>
+            }
+
+            <!-- VISTA 2: DATA GRID / TABLA PRO -->
+            @if (modoVista() === 'table') {
+              <div class="table-responsive-wrapper">
+                <table class="data-table-pro">
+                  <thead>
+                    <tr>
+                      <th>Producto & SKU</th>
+                      <th>Sucursal</th>
+                      <th>Estado</th>
+                      <th class="text-end">Físico</th>
+                      <th class="text-end">Reservado</th>
+                      <th class="text-end">Disponible</th>
+                      <th class="text-end">Mínimo</th>
+                      <th class="text-center">Acciones</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    @for (item of existenciasFiltradas(); track item.productoId + '-' + item.sucursalId) {
+                      <tr [class.row-low]="item.estado === 'BAJO'" [class.row-empty]="item.estado === 'AGOTADO'">
+                        <td class="product-cell">
+                          <strong>{{ item.productoNombre }}</strong>
+                          <span class="sku-hint">SKU: {{ item.sku }}</span>
+                        </td>
+                        <td>
+                          <span class="branch-pill"><i class="bi bi-geo-alt"></i> {{ item.sucursalNombre }}</span>
+                        </td>
+                        <td>
+                          <span class="status-pill-pro" [attr.data-status]="item.estado">
+                            @if (item.estado === 'DISPONIBLE') {
+                              <i class="bi bi-check-circle-fill"></i> En stock
+                            } @else if (item.estado === 'BAJO') {
+                              <i class="bi bi-exclamation-triangle-fill"></i> Stock bajo
+                            } @else {
+                              <i class="bi bi-slash-circle-fill"></i> Agotado
+                            }
+                          </span>
+                        </td>
+                        <td class="text-end font-monospace">{{ item.existencia | number:'1.0-3' }}</td>
+                        <td class="text-end font-monospace" [class.text-amber]="item.reservado > 0">{{ item.reservado | number:'1.0-3' }}</td>
+                        <td class="text-end font-monospace highlight-cell" [class.text-danger]="item.disponible <= 0">
+                          <strong>{{ item.disponible | number:'1.0-3' }}</strong>
+                        </td>
+                        <td class="text-end font-monospace text-muted">{{ item.stockMinimo | number:'1.0-3' }}</td>
+                        <td class="text-center actions-cell">
+                          <div class="table-action-btns">
+                            <button type="button" class="tbl-btn entrada" (click)="abrirPanelAjuste(item, 'ENTRADA')" title="Entrada">
+                              <i class="bi bi-plus-lg"></i>
+                            </button>
+                            <button type="button" class="tbl-btn salida" (click)="abrirPanelAjuste(item, 'SALIDA')" [disabled]="item.disponible <= 0" title="Salida">
+                              <i class="bi bi-dash-lg"></i>
+                            </button>
+                            <button type="button" class="tbl-btn transfer" (click)="abrirPanelTransferencia(item)" [disabled]="todasSucursales().length < 2 || item.disponible <= 0" title="Transferir">
+                              <i class="bi bi-arrow-left-right"></i>
+                            </button>
+                            <button type="button" class="tbl-btn kardex" (click)="verKardex(item)" title="Historial">
+                              <i class="bi bi-clock-history"></i>
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    } @empty {
+                      <tr>
+                        <td colspan="8" class="text-center py-5">
+                          <div class="empty-results-box">
+                            <i class="bi bi-search"></i>
+                            <h4>No hay existencias con estos criterios</h4>
+                            <button type="button" class="btn-reset-filters" (click)="limpiarFiltros()">Limpiar filtros</button>
+                          </div>
+                        </td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+            }
+          </div>
+
+          <!-- PANEL LATERAL DE TRAZABILIDAD RÁPIDA -->
+          <details class="quick-timeline-sidebar"><summary class="recent-summary"><i class="bi bi-clock-history"></i> Actividad reciente <i class="bi bi-chevron-down"></i></summary>
+            <div class="sidebar-header">
+              <div class="sidebar-title">
+                <span class="kicker-tag">Auditoría</span>
+                <h3>Movimientos Recientes</h3>
+              </div>
+              <button type="button" class="btn-link-action" (click)="cambiarTab('movimientos')">Ver todos</button>
+            </div>
+
+            <div class="mini-timeline">
+              @for (mov of movimientosRecientes(); track mov.id) {
+                <article class="mini-mov-item">
+                  <div class="mini-icon" [class.positive]="esIncremento(mov)" [class.negative]="!esIncremento(mov)">
+                    <i class="bi" [class.bi-arrow-down-left]="esIncremento(mov)" [class.bi-arrow-up-right]="!esIncremento(mov)"></i>
+                  </div>
+                  <div class="mini-details">
+                    <div class="mini-row">
+                      <strong class="prod-name" [title]="mov.productoNombre">{{ mov.productoNombre }}</strong>
+                      <span class="qty-badge" [class.positive]="esIncremento(mov)" [class.negative]="!esIncremento(mov)">
+                        {{ esIncremento(mov) ? '+' : '' }}{{ mov.cantidad | number:'1.0-3' }}
+                      </span>
+                    </div>
+                    <span class="meta-row">{{ etiquetaMovimiento(mov.tipo) }} · {{ mov.sucursalNombre }}</span>
+                    <small class="time-row">
+                      {{ mov.creadoEn | date:'d MMM, HH:mm' }}
+                      @if (mov.referencia) {
+                        · <span class="ref-badge">{{ mov.referencia }}</span>
+                      }
+                    </small>
+                  </div>
+                </article>
+              } @empty {
+                <div class="inline-empty compact">
+                  <i class="bi bi-clock-history"></i>
+                  <p>Aún no hay movimientos recientes registrados.</p>
+                </div>
+              }
+            </div>
+          </details>
         </div>
       </div>
+    }
 
-      <aside class="movement-history">
-        <div class="section-title"><div><span>Trazabilidad</span><h3>Movimientos recientes</h3></div></div>
-        <div class="timeline">
-          @for (item of movimientosVisibles(); track item.id) {
-            <article class="movement-item"><div class="movement-icon" [class.negative]="!esIncremento(item)"><i class="bi" [class.bi-arrow-down-left]="esIncremento(item)" [class.bi-arrow-up-right]="!esIncremento(item)"></i></div><div><div class="movement-heading"><strong>{{ item.productoNombre }}</strong><b [class.negative]="!esIncremento(item)">{{ esIncremento(item) ? '+' : '' }}{{ item.cantidad | number:'1.0-3' }}</b></div><p>{{ etiquetaMovimiento(item.tipo) }} · {{ item.sucursalNombre }}</p><small>{{ item.creadoEn | date:'d MMM, HH:mm' }}@if (item.referencia) { · {{ item.referencia }} }</small></div></article>
-          } @empty { <div class="inline-empty compact"><i class="bi bi-clock-history"></i><p>Los movimientos aparecerán aquí.</p></div> }
+    <!-- ========================================================= -->
+    <!-- TAB 2: KÁRDEX & MOVIMIENTOS -->
+    <!-- ========================================================= -->
+    @if (tabActivo() === 'movimientos') {
+      <div class="tab-content-area">
+        <!-- BARRA DE FILTROS DE MOVIMIENTOS -->
+        <div class="inventory-toolbar">
+          <div class="search-box">
+            <i class="bi bi-search"></i>
+            <input
+              type="search"
+              [ngModel]="busquedaMovimientos()"
+              (ngModelChange)="busquedaMovimientos.set($event)"
+              placeholder="Buscar por producto, referencia, folio o notas…"
+              aria-label="Buscar movimientos"
+            />
+            @if (busquedaMovimientos()) {
+              <button type="button" class="clear-search" (click)="busquedaMovimientos.set('')" aria-label="Limpiar búsqueda">
+                <i class="bi bi-x-circle-fill"></i>
+              </button>
+            }
+          </div>
+
+          <div class="toolbar-filters">
+            <div class="filter-dropdown">
+              <i class="bi bi-funnel"></i>
+              <select [ngModel]="tipoMovimientoFiltro()" (ngModelChange)="tipoMovimientoFiltro.set($event)" aria-label="Filtrar por tipo">
+                <option [ngValue]="null">Todos los tipos de movimiento</option>
+                <option value="ENTRADA">Entradas de mercancía</option>
+                <option value="SALIDA">Salidas / Mermas</option>
+                <option value="AJUSTE">Conteos físicos</option>
+                <option value="TRANSFERENCIA">Transferencias entre sedes</option>
+              </select>
+            </div>
+
+            <div class="filter-dropdown">
+              <i class="bi bi-geo-alt"></i>
+              <select [ngModel]="sucursalMovimientoFiltro()" (ngModelChange)="sucursalMovimientoFiltro.set($event)" aria-label="Filtrar por sucursal">
+                <option [ngValue]="null">Todas las sucursales</option>
+                @for (suc of todasSucursales(); track suc.id) {
+                  <option [ngValue]="suc.id">{{ suc.nombre }}</option>
+                }
+              </select>
+            </div>
+
+            <button type="button" class="action-button secondary" (click)="exportarMovimientosCsv()" [disabled]="!movimientosFiltrados().length">
+              <i class="bi bi-file-earmark-spreadsheet"></i>
+              <span>Exportar Kárdex</span>
+            </button>
+          </div>
         </div>
-      </aside>
-    </div>
+
+        <!-- TABLA COMPLETA DE KÁRDEX -->
+        <div class="table-responsive-wrapper responsive-records">
+          <table class="data-table-pro">
+            <thead>
+              <tr>
+                <th>Fecha y Hora</th>
+                <th>Tipo</th>
+                <th>Producto</th>
+                <th>Sucursal</th>
+                <th class="text-end">Cantidad</th>
+                <th class="text-end">Anterior ➔ Nuevo</th>
+                <th>Referencia / Folio</th>
+                <th>Notas</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (mov of movimientosFiltrados(); track mov.id) {
+                <tr>
+                  <td data-label="Fecha" class="text-nowrap">
+                    <strong>{{ mov.creadoEn | date:'d MMM y' }}</strong>
+                    <small class="d-block text-muted">{{ mov.creadoEn | date:'HH:mm:ss' }}</small>
+                  </td>
+                  <td data-label="Tipo">
+                    <span class="mov-badge" [class.badge-in]="mov.tipo === 'ENTRADA' || mov.tipo === 'TRANSFERENCIA_ENTRADA'" [class.badge-out]="mov.tipo === 'SALIDA' || mov.tipo === 'TRANSFERENCIA_SALIDA'" [class.badge-adj]="mov.tipo === 'AJUSTE'">
+                      <i class="bi" [class.bi-box-arrow-in-down]="mov.tipo === 'ENTRADA' || mov.tipo === 'TRANSFERENCIA_ENTRADA'" [class.bi-box-arrow-up-right]="mov.tipo === 'SALIDA' || mov.tipo === 'TRANSFERENCIA_SALIDA'" [class.bi-clipboard2-check]="mov.tipo === 'AJUSTE'"></i>
+                      {{ etiquetaMovimiento(mov.tipo) }}
+                    </span>
+                  </td>
+                  <td data-label="Producto" class="product-cell">
+                    <strong>{{ mov.productoNombre }}</strong>
+                  </td>
+                  <td data-label="Sucursal">
+                    <span class="branch-pill"><i class="bi bi-geo-alt"></i> {{ mov.sucursalNombre }}</span>
+                  </td>
+                  <td data-label="Cantidad" class="text-end font-monospace">
+                    <strong [class.text-success]="esIncremento(mov)" [class.text-danger]="!esIncremento(mov)">
+                      {{ esIncremento(mov) ? '+' : '' }}{{ mov.cantidad | number:'1.0-3' }}
+                    </strong>
+                  </td>
+                  <td data-label="Existencias" class="text-end font-monospace text-nowrap">
+                    <span class="text-muted">{{ mov.existenciaAnterior | number:'1.0-3' }}</span>
+                    <i class="bi bi-arrow-right mx-1 text-muted"></i>
+                    <strong>{{ mov.existenciaNueva | number:'1.0-3' }}</strong>
+                  </td>
+                  <td data-label="Referencia">
+                    @if (mov.referencia) {
+                      <span class="ref-badge">{{ mov.referencia }}</span>
+                    } @else {
+                      <span class="text-muted">—</span>
+                    }
+                  </td>
+                  <td data-label="Notas">
+                    <span class="text-muted notes-cell">{{ mov.notas || '—' }}</span>
+                  </td>
+                </tr>
+              } @empty {
+                <tr>
+                  <td colspan="8" class="text-center py-5">
+                    <div class="empty-results-box">
+                      <i class="bi bi-journal-x"></i>
+                      <h4>No se encontraron movimientos registrados con esos filtros</h4>
+                    </div>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </div>
+    }
+
+    <!-- ========================================================= -->
+    <!-- TAB 3: SUGERENCIAS DE REPOSICIÓN -->
+    <!-- ========================================================= -->
+    @if (tabActivo() === 'reposicion') {
+      <div class="tab-content-area">
+        <header class="section-subhero">
+          <div>
+            <span class="inventory-kicker alert"><i class="bi bi-lightning-charge-fill"></i> Asistente de Reabastecimiento</span>
+            <h3>Productos en Riesgo de Quiebre o Stock Crítico</h3>
+            <p>Calculado automáticamente comparando existencias disponibles con los umbrales mínimos configurados.</p>
+          </div>
+          <button type="button" class="action-button secondary" (click)="exportarReposicionCsv()" [disabled]="!productosParaReposicion().length">
+            <i class="bi bi-file-earmark-arrow-down"></i>
+            <span>Descargar Lista de Compras</span>
+          </button>
+        </header>
+
+        <div class="table-responsive-wrapper">
+          <table class="data-table-pro">
+            <thead>
+              <tr>
+                <th>Producto & SKU</th>
+                <th>Sucursal</th>
+                <th>Estado</th>
+                <th class="text-end">Disponible Actual</th>
+                <th class="text-end">Stock Mínimo</th>
+                <th class="text-end">Déficit</th>
+                <th class="text-end">Sugerido a Reordenar</th>
+                <th class="text-center">Acción Directa</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (item of productosParaReposicion(); track item.productoId + '-' + item.sucursalId) {
+                <tr [class.row-empty]="item.estado === 'AGOTADO'" [class.row-low]="item.estado === 'BAJO'">
+                  <td class="product-cell">
+                    <strong>{{ item.productoNombre }}</strong>
+                    <span class="sku-hint">SKU: {{ item.sku }}</span>
+                  </td>
+                  <td>
+                    <span class="branch-pill"><i class="bi bi-geo-alt"></i> {{ item.sucursalNombre }}</span>
+                  </td>
+                  <td>
+                    <span class="status-pill-pro" [attr.data-status]="item.estado">
+                      @if (item.estado === 'AGOTADO') {
+                        <i class="bi bi-slash-circle-fill"></i> Agotado
+                      } @else {
+                        <i class="bi bi-exclamation-triangle-fill"></i> Stock bajo
+                      }
+                    </span>
+                  </td>
+                  <td class="text-end font-monospace" [class.text-danger]="item.disponible <= 0">
+                    <strong>{{ item.disponible | number:'1.0-3' }}</strong>
+                  </td>
+                  <td class="text-end font-monospace text-muted">{{ item.stockMinimo | number:'1.0-3' }}</td>
+                  <td class="text-end font-monospace text-danger">
+                    <strong>-{{ item.unidadesFaltantes | number:'1.0-3' }}</strong>
+                  </td>
+                  <td class="text-end font-monospace highlight-cell text-success">
+                    <strong>+{{ item.sugeridoReposicion | number:'1.0-3' }} u.</strong>
+                  </td>
+                  <td class="text-center">
+                    <button type="button" class="btn-restock-action" (click)="reabastecerSugerido(item)">
+                      <i class="bi bi-cart-plus-fill"></i>
+                      <span>Pedir / Reabastecer (+{{ item.sugeridoReposicion }})</span>
+                    </button>
+                  </td>
+                </tr>
+              } @empty {
+                <tr>
+                  <td colspan="8" class="text-center py-5">
+                    <div class="empty-results-box success">
+                      <i class="bi bi-shield-check"></i>
+                      <h4>¡Todo en orden! No hay productos con déficit de stock</h4>
+                      <p>Todas las existencias se encuentran por encima de sus umbrales mínimos establecidos.</p>
+                    </div>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </div>
+    }
   }
 </section>

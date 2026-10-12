@@ -1,18 +1,30 @@
-import { HttpInterceptorFn } from '@angular/common/http';
+import { HttpErrorResponse, HttpInterceptorFn } from '@angular/common/http';
 import { inject } from '@angular/core';
 import { catchError, switchMap, throwError } from 'rxjs';
 import { SubscriptionAccessService } from '../subscription/subscription-access.service';
 import { AuthService } from './auth.service';
 import { environment } from '../../../environments/environment';
 import { PlatformAuthService } from '../platform/platform-auth.service';
+import { AccessNoticeService } from './access-notice.service';
+import { Router } from '@angular/router';
 
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
   const authService = inject(AuthService);
   const subscriptionAccess = inject(SubscriptionAccessService);
   const platformAuth = inject(PlatformAuthService);
+  const aviso = inject(AccessNoticeService);
+  const router = inject(Router);
+  const mostrarAvisoDelBackend = (error: HttpErrorResponse): boolean => {
+    if (error.error?.codigo !== 'SESION_NO_DISPONIBLE' || typeof error.error?.mensaje !== 'string') return false;
+    aviso.mostrar(error.error.mensaje);
+    authService.limpiarSesion();
+    void router.navigate(['/acceso']);
+    return true;
+  };
   const esRutaPlataforma = req.url.includes('/plataforma/');
   const token = esRutaPlataforma ? platformAuth.token() : authService.getTokenAcceso();
   const esRutaAuth = req.url.includes('/auth/iniciar-sesion')
+    || req.url.includes('/auth/app-login')
     || req.url.includes('/auth/registrar-cliente')
     || req.url.includes('/auth/refrescar-token')
     || req.url.includes('/auth/cerrar-sesion');
@@ -38,6 +50,7 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
         if (error.status === 401 && !esRutaAuth) platformAuth.cerrar();
         return throwError(() => error);
       }
+      if (mostrarAvisoDelBackend(error)) return throwError(() => error);
       if (error.status !== 401 || esRutaAuth || omitirRefresh || !authService.autenticado()) {
         return throwError(() => error);
       }
@@ -51,7 +64,7 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
           })
         )),
         catchError(refreshError => {
-          authService.limpiarSesion();
+          if (!mostrarAvisoDelBackend(refreshError)) authService.limpiarSesion();
           return throwError(() => refreshError);
         })
       );

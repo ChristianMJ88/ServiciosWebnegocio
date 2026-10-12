@@ -15,6 +15,13 @@
     </div>
   </div>
 
+  <div class="sidebar-view-controls" aria-label="Vista del menú">
+    @if (!movil()) {
+      <button type="button" (click)="contraer.emit()" [attr.aria-label]="compacto() ? 'Expandir menú' : 'Contraer menú'" [title]="compacto() ? 'Expandir menú' : 'Contraer menú'"><i class="bi bi-layout-sidebar" aria-hidden="true"></i>@if (!compacto()) { <span>Compactar</span> }</button>
+    }
+    <button type="button" (click)="ocultar.emit()" aria-label="Ocultar menú" title="Ocultar menú"><i class="bi bi-x-lg" aria-hidden="true"></i>@if (!compacto()) { <span>Ocultar</span> }</button>
+  </div>
+
   <div class="sidebar-nav-panel">
     <nav class="sidebar-nav" aria-label="Secciones administrativas">
       @for (grupo of grupos(); track grupo.id) {
@@ -27,6 +34,8 @@
             (mouseleave)="programarCierreFlyout()"
             (focus)="mostrarFlyout(grupo, $event)"
             [attr.aria-expanded]="compacto() ? grupoFlyout()?.id === grupo.id : grupoExpandido(grupo.id)"
+            [attr.aria-label]="grupo.titulo"
+            [title]="compacto() ? grupo.titulo : ''"
             [attr.aria-controls]="compacto() ? 'sidebar-flyout-' + grupo.id : 'sidebar-group-' + grupo.id">
             <i [class]="grupo.iconClass" aria-hidden="true"></i>
             @if (!compacto()) {

@@ -21,6 +21,10 @@ public class ServicioLandingMarketingImpl implements ServicioLandingMarketing {
  }
  @Transactional(readOnly=true) public List<LandingMarketingDto> listar(){return repo.findAll().stream().map(this::dto).toList();}
  @Transactional(readOnly=true) public List<String> indice(){return repo.findAllByPublicadoTrueOrderBySlugAsc().stream().map(LandingMarketingEntidad::getSlug).toList();}
+ @Transactional(readOnly=true) public List<com.techprotech.agenda.modulos.marketing.api.dto.EnlaceLandingPublicaDto> navegacion(){
+  return repo.findAllByPublicadoTrueOrderBySlugAsc().stream().map(this::dto)
+   .map(d->new com.techprotech.agenda.modulos.marketing.api.dto.EnlaceLandingPublicaDto(d.slug(),d.etiqueta(),d.descripcion())).toList();
+ }
  @Transactional public LandingMarketingDto guardar(String slug,LandingMarketingDto s,Long usuarioId){
   if(!slug.equals(s.slug()))throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"El slug no coincide");
   validarImagen(s.imagenUrl());

@@ -19,7 +19,9 @@ export const crearFormularioSucursal = (sucursal?: SucursalAdmin): GuardarSucurs
   direccion: sucursal?.direccion ?? '',
   telefono: sucursal?.telefono ?? '',
   zonaHoraria: sucursal?.zonaHoraria ?? 'America/Mexico_City',
-  activa: sucursal?.activa ?? true
+  activa: sucursal?.activa ?? true,
+  municipio: sucursal?.municipio ?? '', estadoRegion: sucursal?.estadoRegion ?? '',
+  paisCodigo: sucursal?.paisCodigo ?? '', codigoPostal: sucursal?.codigoPostal ?? ''
 });
 
 export const construirPayloadSucursal = (formulario: GuardarSucursalPayload): GuardarSucursalPayload => ({

@@ -58,6 +58,7 @@ public class ServicioOrdenCheckout {
     private final ServicioValidacionDirecciones direcciones;
     private final ServicioCotizacionesEnvio cotizacionesEnvio;
     private final ServicioCapacidadesEmpresa capacidades;
+    private final com.techprotech.agenda.modulos.productos.infraestructura.repositorio.ProductoRepositorio productos;
 
     public ServicioOrdenCheckout(ServicioConfiguracionCheckout configuracionCheckout,
                                  EmpresaSitioConfigRepositorio sitios, SucursalRepositorio sucursales,
@@ -67,7 +68,8 @@ public class ServicioOrdenCheckout {
                                  CheckoutOrdenRepositorio ordenes, CheckoutOrdenDetalleRepositorio detalles,
                                  PropiedadesCheckout propiedades, ServicioValidacionDirecciones direcciones,
                                  ServicioCotizacionesEnvio cotizacionesEnvio,
-                                 ServicioCapacidadesEmpresa capacidades) {
+                                 ServicioCapacidadesEmpresa capacidades,
+                                 com.techprotech.agenda.modulos.productos.infraestructura.repositorio.ProductoRepositorio productos) {
         this.configuracionCheckout = configuracionCheckout;
         this.sitios = sitios;
         this.sucursales = sucursales;
@@ -83,6 +85,7 @@ public class ServicioOrdenCheckout {
         this.direcciones = direcciones;
         this.cotizacionesEnvio = cotizacionesEnvio;
         this.capacidades=capacidades;
+        this.productos=productos;
     }
 
     @Transactional
@@ -229,6 +232,11 @@ public class ServicioOrdenCheckout {
     private CheckoutOrdenDetalleEntidad entidadDetalle(Long ordenId, Long empresaId, Linea linea) {
         CheckoutOrdenDetalleEntidad detalle = new CheckoutOrdenDetalleEntidad();
         detalle.setCheckoutOrdenId(ordenId); detalle.setEmpresaId(empresaId); detalle.setTipoConcepto(linea.tipo());
+        if (linea.productoId() != null) {
+            var producto = productos.findByIdAndEmpresaId(linea.productoId(), empresaId)
+                .orElseThrow(() -> error(HttpStatus.CONFLICT, "Producto no encontrado en la empresa"));
+            detalle.setCostoUnitarioHistorico(producto.getCosto());
+        }
         detalle.setProductoId(linea.productoId()); detalle.setServicioId(linea.servicioId()); detalle.setCitaId(linea.citaId());
         detalle.setNombre(linea.nombre()); detalle.setCantidad(linea.cantidad()); detalle.setPrecioListaUnitario(linea.precioLista());
         detalle.setPrecioUnitario(linea.precio()); detalle.setDescuento(linea.descuento()); detalle.setImpuestos(linea.impuestos());

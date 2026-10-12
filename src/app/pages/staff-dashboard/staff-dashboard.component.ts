@@ -1,3 +1,7 @@
+import { environment } from '../../../environments/environment';
+import { StaffSaleRegisterComponent } from './staff-sale-register.component';
+import { HttpClient } from '@angular/common/http';
+import { StaffSalesSectionComponent } from './staff-sales-section.component';
 import { CommonModule } from '@angular/common';
 import { ChangeDetectorRef, Component, DestroyRef, NgZone, OnInit, ViewEncapsulation, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -39,8 +43,8 @@ import { StaffAgendaSectionComponent } from './staff-agenda-section.component';
 import { StaffSchedulesSectionComponent } from './staff-schedules-section.component';
 import { StaffBlocksSectionComponent } from './staff-blocks-section.component';
 
-type SeccionStaff = 'agenda' | 'horarios' | 'bloqueos';
-type ModuloStaffDef = { id: SeccionStaff; titulo: string; descripcion: string; icono: string; permiso: string };
+type SeccionStaff = 'agenda' | 'horarios' | 'bloqueos' | 'ventas' | 'reporteVentas' | 'registrarVenta';
+type ModuloStaffDef = { id: SeccionStaff; titulo: string; descripcion: string; icono: string; permiso?: string };
 type GrupoSidebarStaff = { id: string; titulo: string; icono: string; modulos: SeccionStaff[] };
 
 @Component({
@@ -60,7 +64,9 @@ type GrupoSidebarStaff = { id: string; titulo: string; icono: string; modulos: S
     UserAvatarComponent,
     StaffAgendaSectionComponent,
     StaffSchedulesSectionComponent,
-    StaffBlocksSectionComponent
+    StaffBlocksSectionComponent,
+    StaffSalesSectionComponent,
+    StaffSaleRegisterComponent
   ],
   templateUrl: './staff-dashboard.component.html',
   styleUrls: ['./staff-dashboard.component.css'],
@@ -68,6 +74,8 @@ type GrupoSidebarStaff = { id: string; titulo: string; icono: string; modulos: S
 })
 export class StaffDashboardComponent implements OnInit {
   private readonly staffService = inject(StaffService);
+  private readonly http = inject(HttpClient);
+  readonly modulosVentas = signal<ModuloStaffDef[]>([]);
   private readonly authService = inject(AuthService);
   private readonly userProfileService = inject(UserProfileService);
   private readonly router = inject(Router);
@@ -93,21 +101,15 @@ export class StaffDashboardComponent implements OnInit {
   readonly perfilStaff = signal<PerfilStaff | null>(null);
   readonly gruposSidebarAbiertos = signal<Record<string, boolean>>({
     operacion: true,
+    ventas: true,
     disponibilidad: false
   });
   readonly agenda = signal<CitaStaff[]>([]);
   readonly reglas = signal<ReglaDisponibilidadStaff[]>([]);
   readonly excepciones = signal<ExcepcionDisponibilidadStaff[]>([]);
-  readonly diasSemana = [
-    { value: 1, label: 'Lunes' },
-    { value: 2, label: 'Martes' },
-    { value: 3, label: 'Miércoles' },
-    { value: 4, label: 'Jueves' },
-    { value: 5, label: 'Viernes' },
-    { value: 6, label: 'Sábado' },
-    { value: 7, label: 'Domingo' }
-  ];
-  readonly tiposBloqueo = ['BLOQUEO', 'DESCANSO', 'VACACIONES', 'HORARIO_ESPECIAL'];
+  diasSemana: {value: number; label: string}[] = [];
+  tiposBloqueo: {valor: string; etiqueta: string}[] = [];
+  intervaloMinimoMinutos = 0;
   readonly moduloStaffFallback: ModuloStaffDef = {
     id: 'agenda',
     titulo: 'Panel Staff',
@@ -122,10 +124,11 @@ export class StaffDashboardComponent implements OnInit {
   ];
   readonly gruposSidebarBase: GrupoSidebarStaff[] = [
     { id: 'operacion', titulo: 'Operación', icono: 'agenda', modulos: ['agenda'] },
+    { id: 'ventas', titulo: 'Ventas', icono: 'ventas', modulos: ['registrarVenta', 'ventas', 'reporteVentas'] },
     { id: 'disponibilidad', titulo: 'Disponibilidad', icono: 'horario', modulos: ['horarios', 'bloqueos'] }
   ];
   readonly modulosStaff = computed(() =>
-    this.modulosStaffBase.filter(modulo => this.authService.tienePermiso(modulo.permiso))
+    [...this.modulosStaffBase.filter(modulo => !!modulo.permiso && this.authService.tienePermiso(modulo.permiso)), ...this.modulosVentas()]
   );
   readonly gruposSidebar = computed(() => {
     const modulosDisponibles = new Map(this.modulosStaff().map(modulo => [modulo.id, modulo]));
@@ -331,6 +334,8 @@ export class StaffDashboardComponent implements OnInit {
   });
 
   error = '';
+  readonly mensajeHorario = signal('');
+  readonly mensajeBloqueo = signal('');
   guardandoRegla = false;
   guardandoExcepcion = false;
   reglaEditandoId: number | null = null;
@@ -339,10 +344,10 @@ export class StaffDashboardComponent implements OnInit {
   formularioRegla: GuardarReglaDisponibilidadStaffPayload = {
     tipoSujeto: 'PRESTADOR',
     sujetoId: 0,
-    diaSemana: 1,
-    horaInicio: '09:00',
-    horaFin: '18:00',
-    intervaloMinutos: 15,
+    diaSemana: this.diasSemana[0]?.value ?? 0,
+    horaInicio: '',
+    horaFin: '',
+    intervaloMinutos: this.intervaloMinimoMinutos,
     vigenteDesde: null,
     vigenteHasta: null
   };
@@ -353,11 +358,14 @@ export class StaffDashboardComponent implements OnInit {
     fechaExcepcion: '',
     horaInicio: null,
     horaFin: null,
-    tipoBloqueo: 'BLOQUEO',
+    tipoBloqueo: this.tiposBloqueo[0]?.valor ?? '',
     motivo: null
   };
 
   ngOnInit(): void {
+    this.http.get<ModuloStaffDef[]>(environment.apiBaseUrl + '/staff/ventas/modulos')
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({ next: modulos => this.modulosVentas.set(modulos), error: () => this.modulosVentas.set([]) });
     this.actualizarVistaEnZona(() => {
       this.userProfileService.cargar();
       this.sincronizarSidebarConViewport(this.breakpointObserver.isMatched('(max-width: 991px)'));
@@ -448,15 +456,17 @@ export class StaffDashboardComponent implements OnInit {
   }
 
   alternarCompactoSidebar() {
-    if (this.panelMovil()) {
-      this.sidebarAbierto.update(valor => !valor);
-      return;
-    }
-    this.sidebarCompacto.update(valor => !valor);
+    this.actualizarVistaEnZona(() => {
+      if (this.panelMovil()) {
+        this.sidebarAbierto.update(valor => !valor);
+      } else {
+        this.sidebarCompacto.update(valor => !valor);
+      }
+    });
   }
 
   cerrarSidebar() {
-    this.sidebarAbierto.set(false);
+    this.actualizarVistaEnZona(() => this.sidebarAbierto.set(false));
   }
 
   tituloSeccionActual(): string {
@@ -609,6 +619,7 @@ export class StaffDashboardComponent implements OnInit {
       this.error = '';
     });
     forkJoin({
+      metadatos: this.cargarStaffSi(this.puedeGestionarDisponibilidad(), this.staffService.getMetadatosDisponibilidad(), null),
       perfil: this.staffService.getPerfil().pipe(catchError(() => of(null as PerfilStaff | null))),
       agenda: this.cargarStaffSi(this.puedeVerAgenda(), this.staffService.getAgenda(desde, hasta), [] as CitaStaff[]),
       reglas: this.cargarStaffSi(this.puedeGestionarDisponibilidad(), this.staffService.getReglasDisponibilidad(), [] as ReglaDisponibilidadStaff[]),
@@ -616,8 +627,15 @@ export class StaffDashboardComponent implements OnInit {
     })
       .pipe(finalize(() => this.actualizarVistaEnZona(() => this.loading.set(false))))
       .subscribe({
-        next: ({ perfil, agenda, reglas, excepciones }) => {
+        next: ({ perfil, agenda, reglas, excepciones, metadatos }) => {
           this.actualizarVistaEnZona(() => {
+            if (metadatos) {
+              this.diasSemana = metadatos.diasSemana.map(dia => ({value: dia.valor, label: dia.etiqueta}));
+              this.tiposBloqueo = metadatos.tiposBloqueo;
+              this.intervaloMinimoMinutos = metadatos.intervaloMinimoMinutos;
+              if (!this.reglaEditandoId && !this.formularioRegla.diaSemana) this.cancelarEdicionRegla();
+              if (!this.excepcionEditandoId && !this.formularioExcepcion.tipoBloqueo) this.cancelarEdicionExcepcion();
+            }
             this.perfilStaff.set(perfil);
             this.agenda.set(agenda);
             this.reglas.set(reglas);
@@ -659,20 +677,21 @@ export class StaffDashboardComponent implements OnInit {
     this.formularioRegla = {
       tipoSujeto: 'PRESTADOR',
       sujetoId: 0,
-      diaSemana: 1,
-      horaInicio: '09:00',
-      horaFin: '18:00',
-      intervaloMinutos: 15,
+      diaSemana: this.diasSemana[0]?.value ?? 0,
+      horaInicio: '',
+      horaFin: '',
+      intervaloMinutos: this.intervaloMinimoMinutos,
       vigenteDesde: null,
       vigenteHasta: null
     };
   }
 
-  guardarRegla() {
+  guardarRegla(semana: {diasSemana: number[]; reemplazar: boolean}) {
     if (!this.puedeGestionarDisponibilidad()) {
       return;
     }
     this.guardandoRegla = true;
+    this.mensajeHorario.set('');
     this.error = '';
     const payload: GuardarReglaDisponibilidadStaffPayload = {
       ...this.formularioRegla,
@@ -680,14 +699,14 @@ export class StaffDashboardComponent implements OnInit {
       vigenteHasta: this.normalizarTexto(this.formularioRegla.vigenteHasta)
     };
 
-    const operacion = this.reglaEditandoId
-      ? this.staffService.actualizarReglaDisponibilidad(this.reglaEditandoId, payload)
-      : this.staffService.crearReglaDisponibilidad(payload);
+    const operacion = this.staffService.solicitarHorario(this.reglaEditandoId, payload,
+      this.reglaEditandoId ? [payload.diaSemana] : semana.diasSemana, semana.reemplazar);
 
     operacion
       .pipe(finalize(() => this.guardandoRegla = false))
       .subscribe({
         next: () => {
+          this.mensajeHorario.set('Solicitud enviada al administrador. Tu horario vigente no cambia hasta que sea aprobada.');
           this.cancelarEdicionRegla();
           this.recargar();
         },
@@ -715,6 +734,7 @@ export class StaffDashboardComponent implements OnInit {
   }
 
   cancelarEdicionExcepcion() {
+    this.error = '';
     this.excepcionEditandoId = null;
     this.formularioExcepcion = {
       tipoSujeto: 'PRESTADOR',
@@ -722,7 +742,7 @@ export class StaffDashboardComponent implements OnInit {
       fechaExcepcion: '',
       horaInicio: null,
       horaFin: null,
-      tipoBloqueo: 'BLOQUEO',
+      tipoBloqueo: this.tiposBloqueo[0]?.valor ?? '',
       motivo: null
     };
   }
@@ -732,6 +752,7 @@ export class StaffDashboardComponent implements OnInit {
       return;
     }
     this.guardandoExcepcion = true;
+    this.mensajeBloqueo.set('');
     this.error = '';
     const payload: GuardarExcepcionDisponibilidadStaffPayload = {
       ...this.formularioExcepcion,
@@ -745,14 +766,17 @@ export class StaffDashboardComponent implements OnInit {
       : this.staffService.crearExcepcionDisponibilidad(payload);
 
     operacion
-      .pipe(finalize(() => this.guardandoExcepcion = false))
+      .pipe(finalize(() => this.actualizarVistaEnZona(() => this.guardandoExcepcion = false)))
       .subscribe({
         next: () => {
+          this.mensajeBloqueo.set('Bloqueo guardado. Las citas existentes no se cancelan automáticamente.');
           this.cancelarEdicionExcepcion();
           this.recargar();
         },
         error: err => {
-          this.error = err?.error?.mensaje || err?.message || 'No se pudo guardar la excepción.';
+          this.actualizarVistaEnZona(() => {
+            this.error = err?.error?.mensaje || err?.message || 'No se pudo guardar la excepción.';
+          });
         }
       });
   }

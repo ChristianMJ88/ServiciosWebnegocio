@@ -7,7 +7,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 public interface ServicioClientes {
-    Page<Cliente> listar(Long empresaId, String busqueda, Pageable pageable);
+    Page<Cliente> listar(Long empresaId, FiltroClientes filtro, Pageable pageable);
     Cliente crear(Long empresaId, DatosCliente datos);
     Cliente actualizar(Long empresaId, Long clienteId, DatosCliente datos);
 

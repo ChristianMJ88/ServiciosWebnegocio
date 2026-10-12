@@ -297,8 +297,12 @@ public class ControladorAdminCitas {
     @GetMapping("/configuracion-whatsapp/plantillas")
     @PreAuthorize("hasAuthority('WHATSAPP_CONFIGURAR')")
     @RequiereModulo(WHATSAPP)
-    public List<PlantillaWhatsappAdminResponse> plantillasWhatsapp(@AuthenticationPrincipal UsuarioAutenticado usuario) {
-        return servicioAdminCitas.listarPlantillasWhatsapp(usuario.empresaId());
+    public List<PlantillaWhatsappAdminResponse> plantillasWhatsapp(@AuthenticationPrincipal UsuarioAutenticado usuario,
+            @RequestParam(required = false) String buscar,
+            @RequestParam(required = false) String tipo,
+            @RequestParam(defaultValue = "asc") String orden) {
+        return com.techprotech.agenda.modulos.admin.aplicacion.FiltroPlantillasWhatsapp.filtrar(
+                servicioAdminCitas.listarPlantillasWhatsapp(usuario.empresaId()), buscar, tipo, orden);
     }
 
     @GetMapping("/configuracion-whatsapp/plantillas-empresa")

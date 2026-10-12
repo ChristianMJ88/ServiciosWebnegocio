@@ -86,8 +86,8 @@ export class SeoService {
     this.setCanonical(this.platformHost.marketingUrl('/negocios'));
     this.title.setTitle('Directorio de negocios | Fluora');
     this.meta.updateTag({name:'description',content:'Encuentra negocios y servicios. Consulta sus datos públicos y agenda directamente con cada negocio.'});
-    // Public directory indexing will be enabled together with server rendering and the sitemap.
-    this.meta.updateTag({name:'robots',content:'noindex, follow'});
+    // Las variantes de búsqueda mantienen el canonical del directorio.
+    this.meta.updateTag({name:'robots',content:this.document.location?.search ? 'noindex, follow' : 'index, follow'});
   }
 
   applyProductCatalog(config: TenantSiteConfig, catalog: {

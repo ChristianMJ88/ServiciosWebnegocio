@@ -1,19 +1,22 @@
-<section class="products-admin" aria-labelledby="products-title">
+<section class="products-admin" [class.is-editing]="formularioProducto() || formularioCategoria() || formularioProveedor() || formularioZona()" aria-labelledby="products-title">
   <header class="products-hero">
     <div>
-      <span class="section-eyebrow">Catálogo comercial</span>
-      <h2 id="products-title">Productos</h2>
+      <span class="section-eyebrow">Catálogo comercial · {{ nombreEmpresa }}</span>
+      <h1 id="products-title">Productos</h1>
       <p>Administra artículos, proveedores y precios regionales desde un catálogo independiente por empresa.</p>
     </div>
+    <div class="products-header-actions">
+    @if (vista() !== 'rentabilidad') { <button type="button" mat-stroked-button (click)="actualizar()" [disabled]="cargando() || guardando()"><i class="bi bi-arrow-clockwise" aria-hidden="true"></i> Actualizar</button> }
     @if (vista() === 'productos') { <button type="button" mat-flat-button color="primary" (click)="nuevoProducto()"><i class="bi bi-plus-lg"></i> Nuevo producto</button> }
     @if (vista() === 'categorias') { <button type="button" mat-flat-button color="primary" (click)="nuevaCategoria()"><i class="bi bi-plus-lg"></i> Nueva categoría</button> }
     @if (vista() === 'proveedores') { <button type="button" mat-flat-button color="primary" (click)="nuevoProveedor()"><i class="bi bi-plus-lg"></i> Nuevo proveedor</button> }
     @if (vista() === 'zonas') { <button type="button" mat-flat-button color="primary" (click)="nuevaZona()"><i class="bi bi-plus-lg"></i> Nueva zona</button> }
+    </div>
   </header>
 
   @if (catalogo(); as datos) {
     <div class="product-stats" aria-label="Resumen del catálogo">
-      <article><span><i class="bi bi-box-seam"></i></span><div><small>Productos</small><strong>{{ datos.productos.length }}</strong></div></article>
+      <article><span><i class="bi bi-box-seam"></i></span><div><small>Productos</small><strong>{{ datos.totalProductos }}</strong></div></article>
       <article><span><i class="bi bi-check-circle"></i></span><div><small>Activos</small><strong>{{ totalActivos() }}</strong></div></article>
       <article><span><i class="bi bi-shop-window"></i></span><div><small>Publicados</small><strong>{{ totalPublicados() }}</strong></div></article>
       <article><span><i class="bi bi-geo-alt"></i></span><div><small>Zonas de precio</small><strong>{{ datos.zonasPrecio.length }}</strong></div></article>
@@ -27,6 +30,7 @@
     <button type="button" [class.is-active]="vista() === 'zonas'" (click)="seleccionarVista('zonas')"><i class="bi bi-geo"></i> Precios por zona</button>
     <button type="button" [class.is-active]="vista() === 'descuentos'" (click)="seleccionarVista('descuentos')"><i class="bi bi-tags"></i> Descuentos</button>
     <button type="button" [class.is-active]="vista() === 'tienda'" (click)="seleccionarVista('tienda')"><i class="bi bi-shop-window"></i> Tienda pública</button>
+    <button type="button" [class.is-active]="vista() === 'rentabilidad'" (click)="seleccionarVista('rentabilidad')"><i class="bi bi-graph-up"></i> Rentabilidad</button>
   </nav>
 
   @if (mensaje()) { <div class="products-message is-success" role="status"><i class="bi bi-check-circle"></i>{{ mensaje() }}</div> }
@@ -35,6 +39,7 @@
   @if (cargando()) {
     <div class="products-state"><span class="products-spinner"></span>Cargando catálogo…</div>
   } @else if (catalogo(); as datos) {
+    @if (vista() === 'rentabilidad') { <app-admin-product-profitability /> }
     @if (vista() === 'productos') {
       @if (formularioProducto(); as form) {
         <form class="editor-card product-editor" (ngSubmit)="guardarProducto()">
@@ -49,6 +54,9 @@
             </aside>
             <div class="editor-fields">
               <mat-form-field appearance="outline" class="span-2"><mat-label>Nombre</mat-label><input matInput [(ngModel)]="form.nombre" name="productoNombre" maxlength="180" required></mat-form-field>
+              <mat-form-field appearance="outline"><mat-label>Nuevo desde (opcional)</mat-label><input matInput type="date" [(ngModel)]="form.nuevoDesde" name="nuevoDesde"></mat-form-field>
+              <mat-form-field appearance="outline"><mat-label>Nuevo hasta (opcional)</mat-label><input matInput type="date" [(ngModel)]="form.nuevoHasta" name="nuevoHasta"></mat-form-field>
+              <p>Con ambas fechas, esta vigencia reemplaza la duración automática de la tienda. Sin fechas se usa la configuración del negocio.</p>
               <mat-form-field appearance="outline"><mat-label>SKU</mat-label><input matInput [(ngModel)]="form.sku" name="productoSku" maxlength="80" required></mat-form-field>
               <mat-form-field appearance="outline"><mat-label>Código de barras</mat-label><input matInput [(ngModel)]="form.codigoBarras" name="productoCodigo" maxlength="80"></mat-form-field>
               <mat-form-field appearance="outline"><mat-label>Categoría</mat-label><mat-select [(ngModel)]="form.categoriaId" name="productoCategoria"><mat-option [value]="null">Sin categoría</mat-option>@for (categoria of datos.categorias; track categoria.id) {<mat-option [value]="categoria.id">{{ categoria.nombre }}</mat-option>}</mat-select></mat-form-field>
@@ -76,30 +84,50 @@
         </form>
       }
 
-      <div class="catalog-toolbar"><label><i class="bi bi-search"></i><input type="search" [ngModel]="busqueda()" (ngModelChange)="busqueda.set($event)" placeholder="Buscar por nombre, SKU, categoría o proveedor" aria-label="Buscar productos"></label><span>{{ productosFiltrados().length }} resultados</span></div>
+      @if (!formularioProducto()) {
+        <mat-form-field appearance="outline"><mat-label>Precios para la sucursal</mat-label><mat-select [(ngModel)]="sucursalPrecioId" (ngModelChange)="cambiarSucursalPrecio()"><mat-option [value]="null">Precio general</mat-option>@for (sede of sucursalesPrecio(); track sede.id) { <mat-option [value]="sede.id">{{ sede.nombre }}</mat-option> }</mat-select><mat-hint>El backend aplica los descuentos y la zona de la sucursal para una unidad.</mat-hint></mat-form-field>
+        <details class="product-import">
+          <summary><i class="bi bi-file-earmark-spreadsheet" aria-hidden="true"></i> Importar productos desde Excel</summary>
+          <p>Descarga la plantilla de tu empresa, completa los datos y revisa los errores antes de confirmar. Sólo crea productos nuevos; no modifica existencias.</p>
+          <div class="product-import-actions"><button mat-stroked-button type="button" (click)="descargarPlantilla()">1. Descargar plantilla</button><label>2. Elegir Excel <input type="file" accept=".xlsx" (change)="seleccionarImportacion($event)" [disabled]="procesandoImportacion()"></label><button mat-flat-button type="button" (click)="revisarImportacion()" [disabled]="!archivoImportacion || procesandoImportacion()">3. Revisar archivo</button></div>
+          @if (revisionImportacion(); as revision) {
+            <p role="status">{{ revision.total }} filas revisadas. {{ revision.puedeImportar ? 'Archivo listo para importar.' : 'Corrige los errores y vuelve a seleccionar el archivo.' }}</p>
+            <div class="import-preview">@for (fila of revision.filas; track fila.fila) {<div class="import-row"><strong>Fila {{ fila.fila }} · {{ fila.sku }} · {{ fila.nombre }}</strong>@for (errorFila of fila.errores; track $index) {<p>{{ errorFila }}</p>}</div>}
+            </div><button mat-flat-button type="button" (click)="confirmarImportacion()" [disabled]="!revision.puedeImportar || procesandoImportacion()">{{ procesandoImportacion() ? 'Procesando…' : 'Confirmar importación' }}</button>
+          }
+        </details>
+      }
+      <div class="catalog-toolbar"><label><i class="bi bi-search"></i><input type="search" [ngModel]="busqueda()" (ngModelChange)="busqueda.set($event)" (keyup.enter)="buscarProductos()" placeholder="Buscar por nombre, SKU, categoría o proveedor" aria-label="Buscar productos"></label><button mat-stroked-button type="button" (click)="buscarProductos()" [disabled]="cargando()">Buscar</button><span>{{ datos.totalElementos }} resultados</span></div>
       <div class="product-grid">
         @for (producto of productosFiltrados(); track producto.id) {
           <article class="product-card" [class.is-inactive]="!producto.activo" (click)="editarProducto(producto)" tabindex="0" (keydown.enter)="editarProducto(producto)">
             <div class="product-card__image">@if (producto.imagenUrl) {<img [src]="producto.imagenUrl" [alt]="producto.nombre">} @else {<i class="bi bi-box-seam"></i>}<span [class.is-public]="producto.visiblePublico && producto.activo">{{ !producto.activo ? 'Inactivo' : producto.visiblePublico ? 'Publicado' : 'Interno' }}</span></div>
-            <div class="product-card__body"><small>{{ producto.categoriaNombre || 'Sin categoría' }}</small><h3>{{ producto.nombre }}</h3><p>{{ producto.descripcion || 'Sin descripción comercial.' }}</p><div><span>SKU {{ producto.sku }}</span><strong>{{ producto.precioBase | currency:producto.moneda:'symbol':'1.2-2':'es-MX' }}</strong></div></div>
+            <div class="product-card__body"><small>{{ producto.categoriaNombre || 'Sin categoría' }}</small><h3>{{ producto.nombre }}</h3><p>{{ producto.descripcion || 'Sin descripción comercial.' }}</p><div><span>SKU {{ producto.sku }}</span><strong>@if (producto.descuento) { <del>{{ producto.precioBase | currency:producto.moneda:'symbol':'1.2-2':'es-MX' }}</del> } {{ (producto.precioConDescuento ?? producto.precioBase) | currency:producto.moneda:'symbol':'1.2-2':'es-MX' }}</strong></div>@if (producto.descuento) { <small>{{ producto.descuento }} · Precio aplicable para una unidad</small> }</div>
           </article>
-        } @empty { <div class="products-state span-all"><i class="bi bi-box-seam"></i><strong>Aún no hay productos</strong><span>Crea el primer artículo de este tenant.</span><button type="button" mat-flat-button color="primary" (click)="nuevoProducto()">Crear producto</button></div> }
+        } @empty { <div class="products-state span-all"><i class="bi bi-box-seam"></i><strong>No hay productos en esta búsqueda</strong><span>Cambia la búsqueda o crea un producto.</span><button type="button" mat-flat-button color="primary" (click)="nuevoProducto()">Crear producto</button></div> }
       </div>
+      @if (!formularioProducto() && datos.totalPaginas > 0) {
+        <nav class="product-pagination" aria-label="Paginación de productos">
+          <button mat-stroked-button (click)="cambiarPagina(datos.pagina - 1)" [disabled]="cargando() || datos.pagina === 0">Anterior</button>
+          <span role="status">Página {{ datos.pagina + 1 }} de {{ datos.totalPaginas }} · {{ datos.totalElementos }} productos</span>
+          <button mat-stroked-button (click)="cambiarPagina(datos.pagina + 1)" [disabled]="cargando() || datos.pagina + 1 >= datos.totalPaginas">Siguiente</button>
+        </nav>
+      }
     }
 
     @if (vista() === 'categorias') {
       @if (formularioCategoria(); as form) { <form class="editor-card compact-editor" (ngSubmit)="guardarCategoria()"><header><div><span class="editor-icon"><i class="bi bi-diagram-3"></i></span><div><small>Categorías</small><h3>{{ form.id ? 'Editar categoría' : 'Nueva categoría' }}</h3></div></div></header><div class="editor-fields"><mat-form-field appearance="outline"><mat-label>Nombre</mat-label><input matInput [(ngModel)]="form.nombre" name="categoriaNombre" required maxlength="120"></mat-form-field><mat-form-field appearance="outline"><mat-label>Categoría superior</mat-label><mat-select [(ngModel)]="form.categoriaPadreId" name="categoriaPadre"><mat-option [value]="null">Nivel principal</mat-option>@for (categoria of datos.categorias; track categoria.id) {@if (categoria.id !== form.id) {<mat-option [value]="categoria.id">{{ categoria.nombre }}</mat-option>}}</mat-select></mat-form-field><mat-form-field appearance="outline" class="span-2"><mat-label>Descripción</mat-label><textarea matInput [(ngModel)]="form.descripcion" name="categoriaDescripcion" rows="2" maxlength="500"></textarea></mat-form-field><label class="inline-toggle span-2"><span><strong>Categoría activa</strong><small>Puede asignarse a productos del tenant.</small></span><mat-slide-toggle [(ngModel)]="form.activa" name="categoriaActiva"></mat-slide-toggle></label></div><footer><button type="button" mat-button (click)="cancelarFormularios()">Cancelar</button><button type="submit" mat-flat-button color="primary" [disabled]="guardando()">Guardar categoría</button></footer></form> }
-      <div class="support-grid">@for (item of datos.categorias; track item.id) {<article class="support-card" (click)="editarCategoria(item)" tabindex="0"><span><i class="bi bi-folder2"></i></span><div><small>{{ item.categoriaPadreId ? 'Subcategoría' : 'Categoría principal' }}</small><h3>{{ item.nombre }}</h3><p>{{ item.descripcion || 'Sin descripción.' }}</p></div><em [class.is-active]="item.activa">{{ item.activa ? 'Activa' : 'Inactiva' }}</em></article>} @empty {<div class="products-state span-all">Crea categorías para ordenar el catálogo.</div>}</div>
+      <div class="support-grid">@for (item of datos.categorias; track item.id) {<article class="support-card" (click)="editarCategoria(item)" (keydown.enter)="editarCategoria(item)" (keydown.space)="$event.preventDefault(); editarCategoria(item)" role="button" tabindex="0"><span><i class="bi bi-folder2"></i></span><div><small>{{ item.categoriaPadreId ? 'Subcategoría' : 'Categoría principal' }}</small><h3>{{ item.nombre }}</h3><p>{{ item.descripcion || 'Sin descripción.' }}</p></div><em [class.is-active]="item.activa">{{ item.activa ? 'Activa' : 'Inactiva' }}</em></article>} @empty {<div class="products-state span-all">Crea categorías para ordenar el catálogo.</div>}</div>
     }
 
     @if (vista() === 'proveedores') {
       @if (formularioProveedor(); as form) { <form class="editor-card compact-editor" (ngSubmit)="guardarProveedor()"><header><div><span class="editor-icon"><i class="bi bi-truck"></i></span><div><small>Abastecimiento</small><h3>{{ form.id ? 'Editar proveedor' : 'Nuevo proveedor' }}</h3></div></div></header><div class="editor-fields"><mat-form-field appearance="outline"><mat-label>Nombre</mat-label><input matInput [(ngModel)]="form.nombre" name="proveedorNombre" required maxlength="160"></mat-form-field><mat-form-field appearance="outline"><mat-label>Clave interna</mat-label><input matInput [(ngModel)]="form.clave" name="proveedorClave" maxlength="60"></mat-form-field><mat-form-field appearance="outline"><mat-label>Contacto</mat-label><input matInput [(ngModel)]="form.contacto" name="proveedorContacto" maxlength="160"></mat-form-field><mat-form-field appearance="outline"><mat-label>Correo</mat-label><input matInput type="email" [(ngModel)]="form.correo" name="proveedorCorreo" maxlength="180"></mat-form-field><mat-form-field appearance="outline"><mat-label>Teléfono</mat-label><input matInput [(ngModel)]="form.telefono" name="proveedorTelefono" maxlength="30"></mat-form-field><mat-form-field appearance="outline"><mat-label>Sitio web</mat-label><input matInput type="url" [(ngModel)]="form.sitioWeb" name="proveedorWeb" maxlength="500"></mat-form-field><label class="inline-toggle span-2"><span><strong>Proveedor activo</strong><small>Disponible al editar productos.</small></span><mat-slide-toggle [(ngModel)]="form.activo" name="proveedorActivo"></mat-slide-toggle></label></div><footer><button type="button" mat-button (click)="cancelarFormularios()">Cancelar</button><button type="submit" mat-flat-button color="primary" [disabled]="guardando()">Guardar proveedor</button></footer></form> }
-      <div class="support-grid">@for (item of datos.proveedores; track item.id) {<article class="support-card" (click)="editarProveedor(item)" tabindex="0"><span><i class="bi bi-truck"></i></span><div><small>{{ item.clave || 'Sin clave' }}</small><h3>{{ item.nombre }}</h3><p>{{ item.contacto || item.correo || 'Sin contacto registrado.' }}</p></div><em [class.is-active]="item.activo">{{ item.activo ? 'Activo' : 'Inactivo' }}</em></article>} @empty {<div class="products-state span-all">Registra proveedores para relacionarlos con tus productos.</div>}</div>
+      <div class="support-grid">@for (item of datos.proveedores; track item.id) {<article class="support-card" (click)="editarProveedor(item)" (keydown.enter)="editarProveedor(item)" (keydown.space)="$event.preventDefault(); editarProveedor(item)" role="button" tabindex="0"><span><i class="bi bi-truck"></i></span><div><small>{{ item.clave || 'Sin clave' }}</small><h3>{{ item.nombre }}</h3><p>{{ item.contacto || item.correo || 'Sin contacto registrado.' }}</p></div><em [class.is-active]="item.activo">{{ item.activo ? 'Activo' : 'Inactivo' }}</em></article>} @empty {<div class="products-state span-all">Registra proveedores para relacionarlos con tus productos.</div>}</div>
     }
 
     @if (vista() === 'zonas') {
       @if (formularioZona(); as form) { <form class="editor-card compact-editor" (ngSubmit)="guardarZona()"><header><div><span class="editor-icon"><i class="bi bi-geo"></i></span><div><small>Regionalización</small><h3>{{ form.id ? 'Editar zona' : 'Nueva zona de precio' }}</h3></div></div></header><div class="editor-fields"><mat-form-field appearance="outline"><mat-label>Nombre</mat-label><input matInput [(ngModel)]="form.nombre" name="zonaNombre" required maxlength="120"></mat-form-field><mat-form-field appearance="outline"><mat-label>Clave</mat-label><input matInput [(ngModel)]="form.clave" name="zonaClave" maxlength="60"><mat-hint>Se genera desde el nombre si se deja vacía.</mat-hint></mat-form-field><mat-form-field appearance="outline" class="span-2"><mat-label>Descripción o cobertura</mat-label><textarea matInput [(ngModel)]="form.descripcion" name="zonaDescripcion" rows="2" maxlength="500"></textarea></mat-form-field><mat-form-field appearance="outline"><mat-label>Prioridad</mat-label><input matInput type="number" min="0" [(ngModel)]="form.prioridad" name="zonaPrioridad"></mat-form-field><label class="inline-toggle"><span><strong>Zona activa</strong><small>Disponible para definir precios.</small></span><mat-slide-toggle [(ngModel)]="form.activa" name="zonaActiva"></mat-slide-toggle></label></div><footer><button type="button" mat-button (click)="cancelarFormularios()">Cancelar</button><button type="submit" mat-flat-button color="primary" [disabled]="guardando()">Guardar zona</button></footer></form> }
-      <div class="support-grid">@for (item of datos.zonasPrecio; track item.id) {<article class="support-card" (click)="editarZona(item)" tabindex="0"><span><i class="bi bi-geo-alt"></i></span><div><small>{{ item.clave }}</small><h3>{{ item.nombre }}</h3><p>{{ item.descripcion || 'Cobertura por definir.' }}</p></div><em [class.is-active]="item.activa">{{ item.activa ? 'Activa' : 'Inactiva' }}</em></article>} @empty {<div class="products-state span-all">Crea zonas para manejar precios regionales sin duplicar productos.</div>}</div>
+      <div class="support-grid">@for (item of datos.zonasPrecio; track item.id) {<article class="support-card" (click)="editarZona(item)" (keydown.enter)="editarZona(item)" (keydown.space)="$event.preventDefault(); editarZona(item)" role="button" tabindex="0"><span><i class="bi bi-geo-alt"></i></span><div><small>{{ item.clave }}</small><h3>{{ item.nombre }}</h3><p>{{ item.descripcion || 'Cobertura por definir.' }}</p></div><em [class.is-active]="item.activa">{{ item.activa ? 'Activa' : 'Inactiva' }}</em></article>} @empty {<div class="products-state span-all">Crea zonas para manejar precios regionales sin duplicar productos.</div>}</div>
     }
     @if (vista() === 'descuentos') { <app-admin-product-discounts /> }
     @if (vista() === 'tienda' && configuracionTienda(); as tienda) {
@@ -114,6 +142,7 @@
             <label><span><i class="bi bi-globe2"></i><strong>Publicar tienda</strong><small>Habilita el catálogo en la página pública del tenant.</small></span><mat-slide-toggle [(ngModel)]="tienda.habilitada" name="tiendaHabilitada"></mat-slide-toggle></label>
             <label><span><i class="bi bi-menu-button-wide"></i><strong>Mostrar en el menú</strong><small>Agrega Productos a la navegación pública.</small></span><mat-slide-toggle [(ngModel)]="tienda.menuMostrarProductos" name="tiendaMenu"></mat-slide-toggle></label>
             <label><span><i class="bi bi-bag"></i><strong>Habilitar carrito</strong><small>Permite reunir varios productos antes de solicitar el pedido.</small></span><mat-slide-toggle [(ngModel)]="tienda.carritoHabilitado" name="tiendaCarrito"></mat-slide-toggle></label>
+            <mat-form-field appearance="outline"><mat-label>Días como Nuevo desde el registro</mat-label><input matInput type="number" [(ngModel)]="tienda.diasNuevo" name="diasNuevo" min="0"><mat-hint>0 desactiva la etiqueta automática. Cada producto puede tener su propia vigencia.</mat-hint></mat-form-field>
             <label><span><i class="bi bi-boxes"></i><strong>Mostrar existencias</strong><small>Publica las unidades disponibles cuando el producto controla inventario.</small></span><mat-slide-toggle [(ngModel)]="tienda.mostrarStock" name="tiendaStock"></mat-slide-toggle></label>
             <label><span><i class="bi bi-whatsapp"></i><strong>Pedido por WhatsApp</strong><small>Genera un mensaje con el resumen del carrito.</small></span><mat-slide-toggle [(ngModel)]="tienda.permitirPedidoWhatsapp" name="tiendaWhatsapp"></mat-slide-toggle></label>
           </section>

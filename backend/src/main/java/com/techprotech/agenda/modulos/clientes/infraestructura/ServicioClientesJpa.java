@@ -7,6 +7,7 @@ import com.techprotech.agenda.modulos.clientes.infraestructura.repositorio.Clien
 import com.techprotech.agenda.modulos.autenticacion.infraestructura.repositorio.UsuarioRepositorio;
 import com.techprotech.agenda.modulos.citas.infraestructura.repositorio.CitaRepositorio;
 import com.techprotech.agenda.modulos.clientes.aplicacion.ServicioClientes;
+import com.techprotech.agenda.modulos.clientes.aplicacion.FiltroClientes;
 import com.techprotech.agenda.modulos.clientes.dominio.Cliente;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -41,12 +42,12 @@ public class ServicioClientesJpa implements ServicioClientes {
 
     @Override
     @Transactional(readOnly = true)
-    public Page<Cliente> listar(Long empresaId, String busqueda, Pageable pageable) {
-        String filtro = busqueda == null ? "" : busqueda.trim().toLowerCase(Locale.ROOT);
-        return clientes.buscarResumenes(empresaId, filtro, pageable)
+    public Page<Cliente> listar(Long empresaId, FiltroClientes filtro, Pageable pageable) {
+        return clientes.buscarResumenes(empresaId, filtro.busqueda(), filtro.nombre(), filtro.telefono(),
+                filtro.visitaDesde(), filtro.visitaHasta(), filtro.citas().name(), filtro.orden().name(), java.time.LocalDateTime.now(), pageable)
                 .map(cliente -> new Cliente(
                         cliente.getId(), cliente.getNombreCompleto(), cliente.getCorreo(), cliente.getTelefono(),
-                        cliente.getAceptaWhatsapp(), cliente.getNotas(), cliente.getTotalCitas(), cliente.getUltimaCita()
+                        cliente.getAceptaWhatsapp(), cliente.getNotas(), cliente.getTotalCitas(), cliente.getUltimaCita(), cliente.getUltimaVisita(), cliente.getCitasAgendadas()
                 ));
     }
 
@@ -54,7 +55,7 @@ public class ServicioClientesJpa implements ServicioClientes {
     @Transactional
     public Cliente crear(Long empresaId, DatosCliente datos) {
         String correo = normalizarCorreo(datos.correo());
-        if (usuarios.existsByEmpresaIdAndCorreo(empresaId, correo)) {
+        if (correo != null && usuarios.existsByEmpresaIdAndCorreo(empresaId, correo)) {
             throw new ResponseStatusException(CONFLICT, "Ya existe un usuario con ese correo en el negocio");
         }
         UsuarioEntidad usuario = new UsuarioEntidad();
@@ -107,6 +108,6 @@ public class ServicioClientesJpa implements ServicioClientes {
     }
 
     private String normalizarCorreo(String correo) {
-        return correo.trim().toLowerCase(Locale.ROOT);
+        return correo == null || correo.isBlank() ? null : correo.trim().toLowerCase(Locale.ROOT);
     }
 }

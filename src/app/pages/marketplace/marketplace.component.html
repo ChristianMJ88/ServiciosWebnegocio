@@ -13,6 +13,12 @@
    <div class="business__identity">@if(b.imagenUrl){<img [src]="b.imagenUrl" [alt]="b.nombre" loading="lazy">}@else{<span class="business__initial" aria-hidden="true">{{b.nombre.slice(0,1)}}</span>}<h2><a [href]="site(b)">{{b.nombre}}</a></h2></div>
    @if(b.descripcion){<p>{{b.descripcion}}</p>}
    @if(b.direccion){<div class="business__detail"><span>Dirección</span><p>{{b.direccion}}</p></div>}
+   @for(branch of b.sucursales;track branch.id){
+    @if(branch.municipio || branch.horariosComerciales.length){<details class="business__detail"><summary>{{branch.nombre}} @if(branch.municipio){ · {{branch.municipio}}}</summary>
+     @if(branch.municipio){<p>{{branch.municipio}} · {{branch.estadoRegion}} {{branch.codigoPostal}}</p>}
+     @if(branch.horariosComerciales.length){<p>Horario habitual · {{branch.zonaHoraria}}</p>@for(h of branch.horariosComerciales;track $index){<p>{{dayName(h.dia)}} · {{h.apertura}}–{{h.cierre}}</p>}}
+    </details>}
+   }
    @if(b.telefono){<div class="business__detail"><span>Contacto</span><a [href]="'tel:'+b.telefono">{{b.telefono}}</a></div>}
    @if(b.servicios?.length){<div class="business__services"><span class="business__services-label">Explora sus servicios</span>@for(service of b.servicios;track service.id){<a class="business__service" [href]="site(b)+'/servicios'"><div><strong>{{service.nombre}}</strong><span>@if(service.categoria){{{service.categoria}} · }{{service.duracionMinutos}} min</span></div><b>{{service.precio|appMoney:service.moneda}}</b></a>}</div>}
    <footer><a [href]="site(b)+'/servicios'">Ver servicios</a><a class="business__book" [href]="site(b)+'/agendar'">Agendar <span aria-hidden="true">↗</span></a></footer>

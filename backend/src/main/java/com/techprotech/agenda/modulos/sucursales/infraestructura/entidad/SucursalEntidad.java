@@ -33,7 +33,12 @@ public class SucursalEntidad {
 
     @Column(name = "zona_horaria", nullable = false, length = 60)
     private String zonaHoraria;
+    @Column(name="zona_precio_id") private Long zonaPrecioId;
 
+    @Column(length=100) private String municipio;
+    @Column(name="estado_region",length=100) private String estadoRegion;
+    @Column(name="pais_codigo",length=2) private String paisCodigo;
+    @Column(name="codigo_postal",length=12) private String codigoPostal;
     @Column(nullable = false)
     private boolean activa;
 

@@ -1,8 +1,11 @@
 <section class="section-stack whatsapp-admin-section" [ngClass]="'whatsapp-view-' + vistaActiva">
   <mat-card class="workspace-card whatsapp-connect-card">
     <div class="whatsapp-connect-copy">
-      <div class="section-eyebrow">Conexión automatizada</div>
-      <h3>{{ estadoOnboardingActivo() ? 'WhatsApp conectado' : 'Agrega WhatsApp a tu negocio' }}</h3>
+      <div class="whatsapp-heading-row">
+        <div><div class="section-eyebrow">Canales · {{ nombreEmpresa }}</div><h1>WhatsApp</h1></div>
+        <button mat-stroked-button type="button" (click)="refresh.emit()"><i class="bi bi-arrow-clockwise" aria-hidden="true"></i> Actualizar</button>
+      </div>
+      <h3>{{ estadoOnboardingActivo() ? 'Número conectado' : 'Conecta el número de tu negocio' }}</h3>
       <p>
         @if (estadoOnboardingActivo()) {
           El número {{ onboardingTechProvider?.telefonoE164 }} está conectado mediante la cuenta empresarial del negocio.
@@ -16,7 +19,7 @@
       <div class="whatsapp-connect-form">
         <mat-form-field appearance="outline">
           <mat-label>Número con código de país</mat-label>
-          <input matInput [(ngModel)]="telefonoOnboarding" name="telefonoOnboarding" placeholder="+525512345678">
+          <input matInput type="tel" autocomplete="tel" [(ngModel)]="telefonoOnboarding" name="telefonoOnboarding">
         </mat-form-field>
         <mat-form-field appearance="outline">
           <mat-label>Nombre visible del negocio</mat-label>
@@ -64,7 +67,7 @@
       <div class="section-header">
         <div>
           <div class="section-eyebrow">Canal conversacional</div>
-          <h3>Configuración de WhatsApp por tenant</h3>
+          <h3>Configuración de WhatsApp del negocio</h3>
         </div>
       </div>
 
@@ -103,7 +106,7 @@
           <input matInput name="whatsappSubaccountSid" [(ngModel)]="formularioWhatsapp.subaccountSid" maxlength="80">
         </mat-form-field>
 
-        <div class="form-block-title full-width">Provisionamiento guiado</div>
+        <details class="wa-config-group full-width"><summary>Provisionamiento y conexión avanzada</summary><div class="admin-form-grid">
 
         <mat-form-field appearance="outline" class="full-width">
           <mat-label>Friendly name de la subcuenta</mat-label>
@@ -175,6 +178,7 @@
           </button>
         </div>
 
+        </div></details>
         <div class="form-block-title full-width">Remitente y mensajería</div>
 
         <mat-form-field appearance="outline">
@@ -197,7 +201,7 @@
           <input matInput name="whatsappStatusCallbackUrl" [(ngModel)]="formularioWhatsapp.statusCallbackUrl" maxlength="255">
         </mat-form-field>
 
-        <div class="form-block-title full-width">Meta y sender</div>
+        <details class="wa-config-group full-width"><summary>Datos de Meta y del remitente</summary><div class="admin-form-grid">
 
         <mat-form-field appearance="outline">
           <mat-label>Business display name</mat-label>
@@ -234,7 +238,8 @@
           <input matInput name="whatsappBusinessManagerId" [(ngModel)]="formularioWhatsapp.metaBusinessManagerId" maxlength="100">
         </mat-form-field>
 
-        <div class="form-block-title full-width">Plantillas activas</div>
+        </div></details>
+        <details class="wa-config-group full-width"><summary>Asignación de plantillas para cada mensaje</summary><div class="admin-form-grid">
 
         <mat-form-field appearance="outline">
           <mat-label>SID plantilla solicitud de confirmación</mat-label>
@@ -301,6 +306,7 @@
           La plantilla de solicitud de confirmación se usa al registrar la cita y debe pedir al cliente que responda para confirmar su asistencia. La de cita reprogramada pendiente se usa cuando la cita cambia de fecha y vuelve a estado pendiente. La de recordar confirmar se usa cuando la cita sigue pendiente y se acerca la fecha. La de cancelación se reserva para mensajes iniciados por el negocio. La de espacio disponible walk-in debe ser creada por cada empresa según su operación y aprobada por Meta antes de usarla desde recepción. El menú de bienvenida debe ser un `ContentSid` con tipo `twilio/list-picker`, se envía solo dentro de la ventana activa de 24 horas y conviene usar payloads como `MENU_AGENDAR`, `MENU_SERVICIOS`, `MENU_HORARIOS`, `MENU_UBICACION`, `MENU_MIS_CITAS` y `MENU_PROMOCIONES`. Los SIDs genéricos list picker se usan para listas dinámicas de sucursales, servicios y horarios con formato `1=HX...,2=HX...,3=HX...`.
         </div>
 
+        </div></details>
         <div class="form-actions">
           <button mat-flat-button color="primary" type="submit" [disabled]="guardandoWhatsapp">
             Guardar configuración
@@ -561,15 +567,17 @@
 
   </mat-card>
 
-  <div class="workspace-grid two-columns whatsapp-module-grid">
-    <mat-card class="workspace-card form-card whatsapp-pane whatsapp-pane--plantillas">
+  <div class="workspace-grid whatsapp-module-grid">
+    <mat-card class="workspace-card list-card whatsapp-pane whatsapp-pane--plantillas wa-template-workspace">
       <div class="section-header">
         <div>
-          <div class="section-eyebrow">Validación rápida</div>
-          <h3>Prueba de plantilla</h3>
+          <div class="section-eyebrow">Biblioteca de WhatsApp</div>
+          <h3>Plantillas y vista previa</h3>
         </div>
       </div>
 
+      <details class="wa-config-group wa-test-panel">
+      <summary>Enviar una prueba de plantilla</summary>
       <form class="admin-form-grid admin-form-shell" (ngSubmit)="testTemplate.emit()">
         <mat-form-field appearance="outline">
           <mat-label>Teléfono destino</mat-label>
@@ -609,16 +617,17 @@
           </button>
         </div>
       </form>
-    </mat-card>
+      </details>
 
-    <mat-card class="workspace-card list-card whatsapp-pane whatsapp-pane--plantillas">
-      <div class="section-header">
-        <div>
-          <div class="section-eyebrow">Biblioteca</div>
-          <h3>Plantillas detectadas</h3>
-        </div>
-      </div>
-
+      <form class="wa-library-filters" (ngSubmit)="filtrarBiblioteca()">
+        <label>Buscar<input type="search" name="buscarPlantillas" [(ngModel)]="filtroPlantilla" placeholder="Nombre o texto del mensaje"></label>
+        <label>Tipo<select name="tipoPlantillaFiltro" [(ngModel)]="tipoPlantilla"><option value="">Todos</option>@for (tipo of tiposBiblioteca; track tipo) { <option [value]="tipo">{{ tipo }}</option> }</select></label>
+        <label>Orden<select name="ordenPlantilla" [(ngModel)]="ordenPlantilla"><option value="asc">Nombre A–Z</option><option value="desc">Nombre Z–A</option></select></label>
+        <button mat-flat-button type="submit" [disabled]="buscandoPlantillas">{{ buscandoPlantillas ? 'Buscando…' : 'Aplicar' }}</button>
+        <button mat-stroked-button type="button" (click)="filtrarBiblioteca(true)" [disabled]="buscandoPlantillas">Limpiar</button>
+      </form>
+      @if (errorBiblioteca) { <p role="alert">{{ errorBiblioteca }}</p> }
+      <p class="helper-text">{{ (bibliotecaFiltrada ?? plantillasWhatsapp).length }} resultados</p>
       @if (!plantillasWhatsapp.length) {
         <div class="agenda-empty">
           Aún no hay plantillas cargadas desde el backend.
@@ -626,20 +635,24 @@
       }
 
       @if (plantillasWhatsapp.length) {
-        <div class="entity-list">
-          @for (plantilla of plantillasWhatsapp; track plantilla) {
-            <article class="entity-row">
-              <div class="entity-main">
-                <div class="entity-title">{{ plantilla.nombre }}</div>
-                <div class="entity-meta">{{ plantilla.sid }}</div>
-                <div class="entity-meta">{{ plantilla.idioma || 'Idioma no definido' }} · {{ plantilla.categoria || 'Sin categoría' }}</div>
+        <div class="wa-preview-grid">
+          @for (plantilla of bibliotecaFiltrada ?? plantillasWhatsapp; track plantilla.sid) {
+            <article class="wa-preview-card">
+              <header><strong>{{ plantilla.nombre }}</strong><span>{{ plantilla.estado || 'Sin estado' }}</span></header>
+              <div class="wa-chat-preview" aria-label="Vista previa del texto de la plantilla">
+                <div class="wa-message-bubble">
+                  @if (plantilla.cuerpo) {
+                    <p class="wa-message-excerpt">{{ plantilla.cuerpo }}</p>
+                  } @else {
+                    <p class="wa-preview-unavailable">El proveedor no devolvió el texto de esta plantilla.</p>
+                  }
+                  <small>Vista previa · las variables se completan al enviar</small>
+                </div>
               </div>
-              <div class="entity-side">
-                <span class="status-pill" [class.is-active]="(plantilla.estado || '').toLowerCase() === 'approved'">
-                  {{ plantilla.estado || 'Sin estado' }}
-                </span>
-              </div>
+              <details class="wa-preview-meta"><summary>Ver mensaje completo y detalles</summary>@if (plantilla.cuerpo) { <p class="wa-full-message">{{ plantilla.cuerpo }}</p> }<p>{{ plantilla.sid }}</p><p>{{ plantilla.idioma || 'Idioma no definido' }} · {{ plantilla.categoria || 'Sin categoría' }}</p><p>{{ plantilla.tipoPlantilla }}</p></details>
             </article>
+          } @empty {
+            <p class="agenda-empty">No hay plantillas que coincidan con los filtros.</p>
           }
         </div>
       }

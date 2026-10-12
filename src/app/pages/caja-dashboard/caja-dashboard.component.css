@@ -3,6 +3,8 @@
   --caja-ink: #17231f; --caja-muted: #68736e; --caja-line: rgba(28, 55, 47, 0.11);
   --caja-surface: rgba(255, 255, 255, 0.92); --caja-brand: #176b5b; --caja-brand-dark: #0f4f43;
   --caja-accent: #d9994b; --caja-shadow: 0 14px 42px rgba(27, 49, 42, 0.08);
+  font-family: var(--bs-body-font-family, system-ui, sans-serif);
+  --mdc-typography-font-family: var(--bs-body-font-family, system-ui, sans-serif);
   min-height: 100dvh; color: var(--caja-ink);
   background: radial-gradient(circle at 8% 0%, rgba(216,153,75,.12), transparent 25rem),
     radial-gradient(circle at 92% 4%, rgba(23,107,91,.1), transparent 28rem), #f3f6f4;
@@ -19,3 +21,5 @@
 @media (prefers-reduced-motion: reduce) {
   .caja-shell *, .caja-shell *::before, .caja-shell *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; animation-duration: .01ms !important; }
 }
+
+.caja-shell ::ng-deep .mat-mdc-button-base,.caja-shell ::ng-deep .mat-mdc-form-field,.caja-shell ::ng-deep .mdc-floating-label,.caja-shell ::ng-deep .mat-mdc-select-value,.caja-shell ::ng-deep .mdc-button__label{font-family:var(--bs-body-font-family,system-ui,sans-serif)}

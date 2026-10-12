@@ -14,7 +14,7 @@
 
 ## Preparación, todavía sin medición externa activa
 
-No se instaló un proveedor ni se configuraron IDs reales. `__FLUORA_MARKETING_TRACKING__.enabled` tiene valor inicial `false`. El adaptador `dataLayer` necesita además consentimiento explícito mediante `setConsent(true)`; falta conectar la interfaz de consentimiento y configurar GA4/GTM/Google Ads antes de activar la medición. No se conservan ni reenvían eventos anteriores al consentimiento.
+No se instaló un proveedor ni se configuraron IDs reales. `__FLUORA_MARKETING_TRACKING__.enabled` tiene valor inicial `false`. El adaptador `dataLayer` necesita además consentimiento explícito mediante `setConsent(true)`; falta conectar la interfaz de consentimiento y configurar 1|2activar la medición. No se conservan ni reenvían eventos anteriores al consentimiento.
 
 Al configurar etiquetas no habilitar vistas automáticas que copien URL completa o query strings: el acceso social utiliza tokens en los parámetros. Usar exclusivamente los campos permitidos del contrato. No enviar términos ni contenido libre a las etiquetas. Configurar los identificadores reales mediante el mecanismo de runtime existente, sin valores ficticios en código.
 

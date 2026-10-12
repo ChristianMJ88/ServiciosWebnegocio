@@ -12,7 +12,7 @@ import java.math.BigDecimal;
 
 public record PrestadorAdminRequest(
         @NotNull Long sucursalId,
-        @Email @NotBlank String correo,
+        @Email String correo,
         @Size(min = 8, max = 100) String contrasenaTemporal,
         @NotBlank @Size(max = 150) String nombreMostrar,
         @Size(max = 500) String biografia,
@@ -21,6 +21,8 @@ public record PrestadorAdminRequest(
         @DecimalMin("1.00") @DecimalMax("2.00") BigDecimal fotoZoom,
         @Size(max = 20) String colorAgenda,
         boolean activo,
-        List<Long> servicioIds
+        List<Long> servicioIds,
+        @jakarta.validation.constraints.Pattern(regexp="[a-zA-Z0-9._-]{3,80}") String nombreUsuario
 ) {
+ public PrestadorAdminRequest(Long sucursalId,String correo,String contrasenaTemporal,String nombreMostrar,String biografia,String fotoUrl,String fotoEncuadre,BigDecimal fotoZoom,String colorAgenda,boolean activo,List<Long> servicioIds){this(sucursalId,correo,contrasenaTemporal,nombreMostrar,biografia,fotoUrl,fotoEncuadre,fotoZoom,colorAgenda,activo,servicioIds,null);}
 }

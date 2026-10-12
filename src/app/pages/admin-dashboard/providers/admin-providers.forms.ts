@@ -13,6 +13,7 @@ export function crearFormularioPrestador(
   return {
     sucursalId: prestador?.sucursalId ?? sucursalId,
     correo: prestador?.correo ?? '',
+    nombreUsuario: prestador?.nombreUsuario ?? null,
     contrasenaTemporal: '',
     nombreMostrar: prestador?.nombreMostrar ?? '',
     biografia: prestador?.biografia ?? '',
@@ -29,6 +30,7 @@ export function construirPayloadPrestador(formulario: GuardarPrestadorPayload): 
   return {
     ...formulario,
     correo: formulario.correo.trim().toLowerCase(),
+    nombreUsuario: normalizarTextoOpcional(formulario.nombreUsuario),
     contrasenaTemporal: normalizarTextoOpcional(formulario.contrasenaTemporal),
     biografia: normalizarTextoOpcional(formulario.biografia),
     fotoUrl: normalizarTextoOpcional(formulario.fotoUrl),
