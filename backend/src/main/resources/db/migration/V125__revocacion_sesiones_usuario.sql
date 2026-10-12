@@ -1,0 +1,1 @@
+ALTER TABLE usuario ADD COLUMN version_sesion BIGINT NOT NULL DEFAULT 0;

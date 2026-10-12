@@ -1,0 +1,9 @@
+:host{display:block;padding:clamp(1rem,4vw,3rem);color:#eef2ff}
+.discovery{max-width:1200px;margin:0 auto;padding:clamp(1.25rem,4vw,3rem);border:1px solid #ffffff16;border-radius:24px;background:#121a2d}
+.discovery__eyebrow{font-size:.75rem;letter-spacing:.12em;color:#9be8d7}.discovery h2{max-width:28ch;font-size:clamp(1.6rem,3vw,2.4rem);line-height:1.2;margin:.7rem 0 1.5rem}
+.discovery a{display:flex;flex-direction:column;gap:.75rem;padding:1.4rem;border:1px solid #ffffff1f;border-radius:18px;text-decoration:none;color:inherit;background:#1a2437;transition:transform .2s,box-shadow .2s}
+.discovery a span{color:#b9c7db;line-height:1.6}.discovery a strong{font-size:1.05rem}.discovery a b{margin-top:auto;font-size:.8rem;color:#9be8d7}
+.discovery .discovery__directory{flex-direction:row;align-items:center;justify-content:space-between;margin-bottom:2rem;background:linear-gradient(120deg,#192c3f,#163937)}.discovery__directory div{display:grid;gap:.5rem}.discovery__directory>span{font-size:1.7rem}
+.discovery__grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr));gap:1rem}.discovery h3{font-size:1.15rem;margin-bottom:1rem}
+.discovery a:hover{transform:translateY(-3px);box-shadow:0 10px 28px #0002}.discovery a:focus-visible{outline:3px solid #9be8d7;outline-offset:4px}
+@media(prefers-reduced-motion:reduce){.discovery a{transition:none;transform:none}}

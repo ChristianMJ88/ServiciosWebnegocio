@@ -1,0 +1,23 @@
+:host { display:block; min-width:0; }
+:host .access-user-list { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,360px),1fr)); gap:16px; }
+:host .access-user-card { display:flex; flex-direction:column; align-items:stretch; gap:16px; padding:20px; border:1px solid #dce5ef; border-radius:18px; background:#fff; }
+:host .access-user-card .entity-title { font-size:1.08rem; margin-bottom:8px; overflow-wrap:anywhere; }
+:host .access-user-card .entity-meta { line-height:1.6; margin-top:6px; overflow-wrap:anywhere; }
+:host .access-user-card .entity-row-head { display:block; }
+:host .access-user-card .entity-side { display:flex; flex-direction:row; justify-content:space-between; align-items:center; gap:12px; padding-top:14px; border-top:1px solid #e4ebf3; }
+:host .access-user-details { margin-top:12px; }
+:host .access-user-details summary { min-height:44px; display:flex; align-items:center; color:#315dcc; cursor:pointer; font-weight:600; }
+:host .access-user-details summary::before { content:'+'; margin-right:8px; }
+:host .access-user-details[open] summary::before { content:'−'; }
+:host .users-access-summary { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; }
+:host .users-access-stat { display:grid; gap:8px; padding:14px; background:#f4f7fc; border-radius:12px; }
+:host button { min-height:44px; }
+:host summary:focus-visible,:host button:focus-visible { outline:3px solid #719de0; outline-offset:3px; }
+@media(max-width:767px) {
+ :host .access-user-card { padding:16px; }
+ :host .form-actions { position:sticky; bottom:0; background:#fff; border-top:1px solid #e4ebf3; padding:12px 0 calc(12px + env(safe-area-inset-bottom)); z-index:2; width:100%; }
+ :host .form-actions button { width:100%; }
+ :host input,:host textarea { font-size:16px; }
+}
+:host .users-list-toolbar { display:flex; align-items:flex-start; gap:12px; margin-bottom:16px; }
+:host .users-search-field { flex:1; min-width:0; align-self:flex-start; height:auto; max-height:90px; }

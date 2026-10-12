@@ -1,0 +1,86 @@
+/* Shared visual foundations for cashier and reception. Business rules remain in their services. */
+:root {
+  --operation-brand: #176b5b;
+  --operation-brand-dark: #0f4f43;
+  --operation-ink: #17231f;
+  --operation-muted: #68736e;
+  --operation-line: rgba(28,55,47,.12);
+  --operation-background: #f3f6f4;
+  --operation-surface: #fff;
+  --operation-radius: 20px;
+  --operation-shadow: 0 8px 28px rgba(27,49,42,.06);
+  --operation-font: Inter,"Segoe UI",system-ui,sans-serif;
+}
+:is(.caja-shell,.recepcion-shell) {
+  --caja-brand: var(--operation-brand);
+  --caja-brand-dark: var(--operation-brand-dark);
+  --caja-ink: var(--operation-ink);
+  --caja-muted: var(--operation-muted);
+  --caja-line: var(--operation-line);
+  --caja-surface: var(--operation-surface);
+  --caja-shadow: var(--operation-shadow);
+  color: var(--operation-ink)!important;
+  background: var(--operation-background)!important;
+  font-family: var(--operation-font)!important;
+}
+:is(.caja-shell,.recepcion-shell) :is(.mat-mdc-button-base,.mdc-button__label,.mat-mdc-select-value,.mdc-floating-label,.mat-mdc-input-element,.form-control,.form-select,button,input,select,textarea) {
+  font-family: var(--operation-font)!important;
+}
+:is(.caja-shell,.recepcion-shell) :is(.mat-mdc-unelevated-button.mat-primary,.btn-primary) {
+  background: var(--operation-brand-dark)!important;
+  border-color: var(--operation-brand-dark)!important;
+  color: #fff!important;
+  border-radius: 12px!important;
+  box-shadow: none!important;
+  min-height: 44px;
+}
+:is(.caja-shell,.recepcion-shell) :is(.mat-mdc-unelevated-button.mat-primary,.btn-primary):disabled {
+  background: #e1e7e4!important;border-color:#e1e7e4!important;color:#78847e!important;
+}
+:is(.caja-shell,.recepcion-shell) :is(.btn-outline-primary,.mat-mdc-outlined-button.mat-primary) {
+  color:var(--operation-brand-dark)!important;border-color:var(--operation-line)!important;background:#fff!important;
+}
+:is(.caja-shell,.recepcion-shell) :is(.btn-outline-primary,.mat-mdc-outlined-button.mat-primary):hover:not(:disabled) {
+  background:#edf7f3!important;border-color:var(--operation-brand)!important;
+}
+:is(.caja-shell,.recepcion-shell) :is(.caja-card,.recepcion-card,.recepcion-hero,.recepcion-metric-card) {
+  background:var(--operation-surface)!important;border:1px solid var(--operation-line)!important;
+  border-radius:var(--operation-radius)!important;box-shadow:var(--operation-shadow)!important;
+}
+:is(.caja-shell,.recepcion-shell) :is(.caja-card-heading h2,.recepcion-card-heading h2) {
+  color:var(--operation-ink)!important;font-size:1.08rem!important;font-weight:750!important;letter-spacing:-.015em!important;
+}
+.recepcion-shell :is(.recepcion-brand-mark,.recepcion-user-avatar) {background:var(--operation-brand-dark)!important;box-shadow:none!important}
+.recepcion-shell :is(.recepcion-eyebrow,.recepcion-card-kicker,.recepcion-brand-eyebrow) {color:var(--operation-brand)!important}
+.recepcion-shell :is(.recepcion-toolbar,.recepcion-mobile-switcher) {background:rgba(255,255,255,.96)!important;border-color:var(--operation-line)!important;box-shadow:0 6px 20px rgba(27,49,42,.04)!important}
+.recepcion-shell .recepcion-mobile-switcher__button.is-active {background:var(--operation-brand-dark)!important;color:#fff!important;border-color:var(--operation-brand-dark)!important;box-shadow:none!important}
+.recepcion-shell .recepcion-appointment-card {border:1px solid var(--operation-line)!important;border-left:4px solid var(--operation-brand)!important;border-radius:16px!important;background:#fff!important;box-shadow:none!important;padding:16px!important}
+.recepcion-shell .recepcion-appointment-meta {color:var(--operation-muted)!important;gap:8px 16px!important}
+.recepcion-shell :is(.recepcion-top-pill,.recepcion-context-static) {background:#f5f8f6!important;border-color:var(--operation-line)!important;color:var(--operation-muted)!important}
+.recepcion-shell :is(.recepcion-appointment-actions button,.recepcion-mobile-switcher__button) {min-height:44px!important;border-radius:12px!important}
+.recepcion-shell :is(.form-control,.form-select) {min-height:44px!important;border-radius:12px!important;border-color:var(--operation-line)!important}
+.recepcion-shell :is(.form-control,.form-select):focus {border-color:var(--operation-brand)!important;box-shadow:0 0 0 3px rgba(23,107,91,.12)!important}
+.recepcion-shell .recepcion-day-summary {margin:12px 0 18px;border:1px solid var(--operation-line);border-radius:14px;background:#fff}
+.recepcion-day-summary>summary {display:flex;align-items:center;gap:8px;padding:12px 16px;min-height:44px;cursor:pointer;font-weight:650;color:var(--operation-brand-dark)}
+.recepcion-day-summary>summary:after {content:'⌄';margin-left:auto}
+.recepcion-day-summary[open]>summary:after {transform:rotate(180deg)}
+.recepcion-day-summary .recepcion-metric-grid {margin:0!important;padding:0 12px 12px!important}
+body:has(.caja-shell,.recepcion-shell) .cdk-overlay-container :is(.mat-mdc-option,.mat-mdc-menu-item,.mat-mdc-select-panel) {font-family:var(--operation-font)!important}
+body:has(.caja-shell,.recepcion-shell) .cdk-overlay-container .mat-mdc-option.mdc-list-item--selected:not(.mdc-list-item--disabled) {color:var(--operation-brand-dark)!important;background:#edf7f3!important}
+@media(max-width:767px) {
+  :is(.caja-shell,.recepcion-shell) :is(.caja-card,.recepcion-card,.recepcion-hero) {border-radius:17px!important}
+  .recepcion-shell .recepcion-body {padding:.75rem .75rem calc(6.5rem + env(safe-area-inset-bottom))!important}
+  .recepcion-shell .recepcion-hero {padding:16px!important}
+  .recepcion-shell .recepcion-top-copy h1 {font-size:1.2rem!important;margin-bottom:4px!important}
+  .recepcion-shell .recepcion-top-copy p {display:none}
+  .recepcion-shell .recepcion-top-meta {display:none}
+  .recepcion-shell .recepcion-context-inline {gap:12px!important;margin-top:12px!important}
+  .recepcion-shell .recepcion-context-field {min-width:0!important}
+  .recepcion-shell .recepcion-mobile-switcher {position:fixed!important;inset:auto 0 0!important;z-index:40!important;margin:0!important;padding:8px 12px calc(8px + env(safe-area-inset-bottom))!important;border-radius:0!important;border-top:1px solid var(--operation-line)!important}
+  .recepcion-shell .recepcion-appointment-actions {display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:8px!important}
+  .recepcion-shell .recepcion-appointment-meta {display:grid!important;grid-template-columns:1fr!important}
+}
+
+.caja-shell .caja-card-heading:has(> .caja-card-kicker){flex-direction:column;align-items:flex-start;gap:4px}
+.caja-shell :is(.point-payment-note,.point-payment-note.is-manual){background:#f5f8f6;border-color:var(--operation-line);color:var(--operation-brand-dark)}
+.caja-shell :is(.point-payment-note small,.point-payment-note.is-manual small){color:var(--operation-muted)}

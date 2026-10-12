@@ -1,0 +1,5 @@
+<section class="discovery" aria-labelledby="discover-title">
+ <span class="discovery__eyebrow">EXPLORA FLUORA</span><h2 id="discover-title">Un lugar para encontrar y hacer crecer negocios</h2>
+ <a class="discovery__directory" [href]="directoryHref"><div><strong>Encuentra un negocio</strong><span>Consulta servicios y reserva directamente con negocios del directorio.</span></div><span aria-hidden="true">↗</span></a>
+ @if(links().length){<h3>Fluora para tu negocio</h3><div class="discovery__grid">@for(landing of links();track landing.slug){<a [href]="href(landing.slug)"><strong>{{landing.titulo}}</strong><span>{{landing.descripcion}}</span><b aria-hidden="true">Conocer más ↗</b></a>}</div>}
+</section>
