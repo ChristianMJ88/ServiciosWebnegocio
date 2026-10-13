@@ -32,8 +32,7 @@
       </div>
     }
     <form class="recepcion-quick-form" (ngSubmit)="saveAppointment.emit()">
-      <section class="recepcion-form-section">
-        <div class="recepcion-form-section-title"><span>1</span><strong>Servicio y fecha</strong></div>
+      <details class="recepcion-form-section recepcion-guided-step" open><summary class="recepcion-form-section-title"><span>1</span><strong>Servicio y fecha</strong></summary>
         <div class="recepcion-form-grid">
           @if (sucursales.length > 1) {
             <div class="recepcion-field">
@@ -65,9 +64,8 @@
               [(ngModel)]="formularioCita.fechaWalkIn" (ngModelChange)="walkInDateChange.emit($event)" required>
           </div>
         </div>
-      </section>
-      <section class="recepcion-form-section">
-        <div class="recepcion-form-section-title"><span>2</span><strong>Datos del cliente</strong></div>
+      </details>
+      <details class="recepcion-form-section recepcion-guided-step"><summary class="recepcion-form-section-title"><span>2</span><strong>Datos del cliente</strong></summary>
         <div class="recepcion-form-grid">
           <div class="recepcion-field recepcion-field-wide">
             <label class="form-label" for="nombreCliente">Nombre completo</label>
@@ -85,9 +83,8 @@
               [(ngModel)]="formularioCita.correoCliente" placeholder="cliente@email.com" required>
           </div>
         </div>
-      </section>
-      <section class="recepcion-form-section">
-        <div class="recepcion-form-section-title"><span>3</span><strong>Horario</strong></div>
+      </details>
+      <details class="recepcion-form-section recepcion-guided-step"><summary class="recepcion-form-section-title"><span>3</span><strong>Horario</strong></summary>
         <div class="recepcion-slot-panel">
           <div class="recepcion-slot-toolbar">
             <div>
@@ -108,9 +105,10 @@
           </div>
           @if (franjasDisponibles.length) {
             <div class="recepcion-slot-list">
-              @for (franja of franjasDisponibles; track franja.inicio) {
-                <button type="button" class="recepcion-slot-chip" [class.active]="formularioCita.inicio === franja.inicio"
-                  (click)="slotSelected.emit(franja)">{{ franja.hora }}</button>
+              @for (franja of franjasDisponibles; track franja.inicio + ':' + franja.prestadorId) {
+                <button type="button" class="recepcion-slot-chip" [class.active]="formularioCita.inicio === franja.inicio && formularioCita.prestadorId === franja.prestadorId"
+                  [attr.aria-pressed]="formularioCita.inicio === franja.inicio && formularioCita.prestadorId === franja.prestadorId"
+                  (click)="slotSelected.emit(franja)"><strong>{{ franja.hora }}</strong><small>{{ franja.prestadorNombre }}</small></button>
               }
             </div>
           } @else if (formularioCita.servicioId && !loadingFranjas) {
@@ -119,7 +117,7 @@
             </div>
           }
         </div>
-      </section>
+      </details>
       @if (formularioCita.servicioId && !franjasDisponibles.length && !loadingFranjas) {
         <div class="recepcion-waitlist-panel">
           <div class="recepcion-waitlist-copy">
@@ -137,14 +135,14 @@
           </button>
         </div>
       }
-      <section class="recepcion-form-section">
-        <div class="recepcion-form-section-title"><span>4</span><strong>Notas</strong></div>
+      <details class="recepcion-optional-notes">
+        <summary>Notas internas (opcional)</summary>
         <div class="recepcion-field">
           <label class="form-label" for="notasCita">Notas</label>
           <textarea id="notasCita" class="form-control" rows="3" name="notasCita"
             [(ngModel)]="formularioCita.notas" placeholder="Indicaciones internas para recepción"></textarea>
         </div>
-      </section>
+      </details>
       <div class="recepcion-form-actions">
         <button class="btn btn-primary" type="submit" [disabled]="guardando">
           @if (guardando) {

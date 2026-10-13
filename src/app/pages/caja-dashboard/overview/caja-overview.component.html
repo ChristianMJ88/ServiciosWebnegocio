@@ -26,13 +26,23 @@
 </header>
 @if (error) { <div class="alert alert-danger" role="alert">{{ error }}</div> }
 @if (mensaje) { <div class="alert alert-success" role="status">{{ mensaje }}</div> }
-<details class="caja-turn-summary"><summary><i class="bi bi-bar-chart"></i> Resumen del turno <span>Consultar importes</span></summary>
-<section class="caja-metric-grid">
-  @for (metrica of metricas; track metrica.label) {
-    <mat-card class="caja-metric-card" [class.primary]="metrica.accent === 'primary'">
-      <span>{{ metrica.label }}</span>
-      <strong>@if (metrica.format === 'money') { {{ metrica.value | appMoney:'MXN':2:2 }} } @else { {{ metrica.value }} }</strong>
-    </mat-card>
-  }
-</section>
+<details class="caja-turn-summary">
+  <summary>
+    <i class="bi bi-graph-up-arrow" aria-hidden="true"></i>
+    Resumen del turno
+    <span>Indicadores del periodo activo</span>
+  </summary>
+  <section class="caja-metric-grid">
+    @for (metrica of metricas; track metrica.label) {
+      <mat-card class="caja-metric-card"
+        [class.primary]="metrica.accent === 'primary'"
+        [class.soft]="metrica.accent === 'soft'">
+        <span>{{ metrica.label }}</span>
+        <strong>
+          @if (metrica.format === 'money') { {{ metrica.value | appMoney:'MXN':2:2 }} }
+          @else { {{ metrica.value }} }
+        </strong>
+      </mat-card>
+    }
+  </section>
 </details>

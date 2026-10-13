@@ -1,4 +1,4 @@
-import { Component, signal, ElementRef, ViewChild, inject, OnInit, computed, DestroyRef } from '@angular/core';
+import { Component, signal, ElementRef, ViewChild, inject, OnInit, computed, DestroyRef, effect, untracked } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { BreakpointObserver } from '@angular/cdk/layout';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -6,6 +6,7 @@ import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } 
 import { ActivatedRoute, Router } from '@angular/router';
 import {
   AppointmentService,
+  CotizacionCitas,
   ConsultaFranjasRequest,
   CrearCitaBackendRequest,
   CrearCitasMultiplesBackendRequest,
@@ -61,7 +62,7 @@ interface OpcionHorarioServicio {
   standalone: true,
   imports: [CommonModule, FormsModule, ReactiveFormsModule, BookingCalendarComponent, ReservationCartComponent, MoneyDisplayPipe],
   templateUrl: './booking.component.html',
-  styleUrls: ['./booking.component.css']
+  styleUrls: ['./booking.component.css', './booking-experience.css']
 })
 export class BookingComponent implements OnInit {
   private readonly mobileBreakpoint = '(max-width: 767.98px)';
@@ -77,6 +78,11 @@ export class BookingComponent implements OnInit {
   private readonly cart = inject(ReservationCartService);
   private queryHydrated = false;
   private availabilityVersion = 0;
+  private quoteVersion = 0;
+  readonly promocionId = signal<number | null>(null);
+  readonly cotizacion = signal<CotizacionCitas | null>(null);
+  readonly cotizando = signal(false);
+  readonly errorCotizacion = signal('');
   readonly serviceSearch = signal('');
   selectionNotice = '';
   @ViewChild('dateSection') dateSection?: ElementRef<HTMLElement>;
@@ -117,6 +123,13 @@ export class BookingComponent implements OnInit {
   selectedItineraryId = signal<string | null>(null);
   branches = signal<SucursalCatalogo[]>([]);
   services = signal<ServicioCatalogo[]>([]);
+  private readonly actualizarCotizacion = effect(() => {
+    const servicios = this.selectedServices();
+    const itinerario = this.selectedItinerary();
+    const fecha = this.selectedDate();
+    const promocion = this.promocionId();
+    untracked(() => this.cotizarReserva(servicios, itinerario, fecha, promocion));
+  });
   errorMessage = '';
   readonly availableGroups = computed(() => {
     const groups = new Map<number, { id: number; nombre: string; total: number }>();
@@ -408,7 +421,29 @@ export class BookingComponent implements OnInit {
   }
 
   private saveCart(): void {
-    this.cart.save(this.tenantContext.empresaId(), Number(this.bookingForm.value.branchId) || null, this.selectedServices());
+    this.cart.save(this.tenantContext.empresaId(), Number(this.bookingForm.value.branchId) || null, this.selectedServices(), this.promocionId());
+  }
+
+  private cotizarReserva(servicios: ServicioCatalogo[], itinerario: ItinerarioReserva | null,
+      fecha: string | null, promocionId: number | null): void {
+    const version = ++this.quoteVersion;
+    this.cotizacion.set(null); this.errorCotizacion.set(''); this.cotizando.set(false);
+    const empresaId = this.tenantContext.empresaId();
+    const sucursalId = Number(this.bookingForm.value.branchId);
+    if (!empresaId || !sucursalId || !servicios.length) return;
+    this.cotizando.set(true);
+    this.appointmentService.cotizarCitas({empresaId,sucursalId,promocionId,
+      items: servicios.map(servicio => ({servicioId:servicio.id, fecha,
+        inicio: itinerario?.items.find(item => item.servicio.id===servicio.id)?.slot.inicio
+          ?? null}))
+    }).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+      next: resultado => { if(version!==this.quoteVersion) return; this.cotizacion.set(resultado); this.cotizando.set(false); },
+      error: error => { if(version!==this.quoteVersion) return; this.cotizando.set(false); this.errorCotizacion.set(error?.error?.mensaje || error?.error?.message || 'No pudimos confirmar el precio. Intenta de nuevo antes de reservar.'); }
+    });
+  }
+
+  reintentarCotizacion(): void {
+    this.cotizarReserva(this.selectedServices(),this.selectedItinerary(),this.selectedDate(),this.promocionId());
   }
 
   continueBooking(): void {
@@ -418,8 +453,10 @@ export class BookingComponent implements OnInit {
   }
 
   cartActionLabel(): string {
-    return this.selectedItinerary() ? 'Completar datos' : this.selectedDate() ? 'Elegir horario' : 'Elegir fecha';
+    return this.selectedItinerary() ? 'Revisar y reservar' : this.selectedDate() ? 'Elegir mi horario' : 'Elegir mi fecha';
   }
+
+  precioCotizado(servicioId: number) { return this.cotizacion()?.lineas.find(linea => linea.servicioId === servicioId); }
 
   addSelectedService() {
     const service = this.selectedService;
@@ -670,6 +707,7 @@ export class BookingComponent implements OnInit {
     const itinerary = this.selectedItinerary();
     const empresaId = this.tenantContext.empresaId();
     if (!empresaId) { this.errorMessage = 'No se pudo identificar el negocio. Recarga la página para continuar.'; return; }
+    if (this.cotizando() || !this.cotizacion()) { this.errorMessage = 'Espera a que confirmemos el precio de tu reserva.'; return; }
     if (this.bookingForm.invalid || !this.selectedDate() || !itinerary || !this.selectedSlot) {
       this.bookingForm.markAllAsTouched();
       return;
@@ -686,6 +724,7 @@ export class BookingComponent implements OnInit {
       ? this.appointmentService.bookAppointment({
           empresaId,
           sucursalId: Number(this.bookingForm.value.branchId),
+          promocionId: this.cotizacion()?.promocion?.id ?? null,
           servicioId: singleItem.servicio.id,
           prestadorId: singleItem.slot.prestadorId,
           nombreCliente: this.bookingForm.value.name.trim(),
@@ -697,6 +736,7 @@ export class BookingComponent implements OnInit {
       : this.appointmentService.bookMultipleAppointments({
           empresaId,
           sucursalId: Number(this.bookingForm.value.branchId),
+          promocionId: this.cotizacion()?.promocion?.id ?? null,
           nombreCliente: this.bookingForm.value.name.trim(),
           telefonoCliente: phone,
           correoCliente: this.bookingForm.value.email.trim(),
@@ -735,8 +775,9 @@ export class BookingComponent implements OnInit {
 
           if (response?.id || response?.total) {
             const appointmentIds = response?.id
-              ? [Number(response.id)]
-              : (response?.citas ?? []).map((cita: { id: number }) => Number(cita.id)).filter(Boolean);
+              ? (response.precio === 0 ? [] : [Number(response.id)])
+              : (response?.citas ?? []).filter((cita: {precio?:number}) => cita.precio !== 0)
+                  .map((cita: { id: number }) => Number(cita.id)).filter(Boolean);
             if (appointmentIds.length && await this.continuarAlPago(empresaId, appointmentIds)) return;
             this.handleSuccess(response?.mensaje || 'Tu cita fue registrada correctamente.');
           } else {
@@ -746,6 +787,7 @@ export class BookingComponent implements OnInit {
         error: (err) => {
           console.error('Error al agendar cita:', err);
           this.errorMessage = err?.message || 'No se pudo completar la reserva.';
+          if (err?.status === 409) this.reintentarCotizacion();
         }
       });
   }
@@ -948,7 +990,7 @@ export class BookingComponent implements OnInit {
   }
 
   selectedServicesPriceTotal(): number {
-    return this.selectedServices().reduce((total, service) => total + service.precio, 0);
+    return this.cotizacion()?.total ?? 0;
   }
 
   private sincronizarSemanaMovil(date: string) {
@@ -979,16 +1021,12 @@ export class BookingComponent implements OnInit {
     const staffMap = this.staffByService();
 
     const walk = (index: number, previousEnd: string | null, items: ItinerarioReservaItem[]) => {
-      if (itineraries.length >= 18) {
-        return;
-      }
-
       if (index >= selectedServices.length) {
         const inicio = items[0]?.slot.inicio ?? '';
         const fin = items[items.length - 1]?.slot.fin ?? '';
         const staffIds = new Set(items.map(item => item.slot.prestadorId).filter(Boolean));
         itineraries.push({
-          id: items.map(item => `${item.servicio.id}-${item.slot.inicio}`).join('|'),
+          id: items.map(item => `${item.servicio.id}-${item.slot.inicio}-${item.slot.prestadorId}`).join('|'),
           items: [...items],
           inicio,
           fin,
@@ -998,7 +1036,7 @@ export class BookingComponent implements OnInit {
           }, 0),
           usaMultiplesStaff: staffIds.size > 1
         });
-        return;
+        return true;
       }
 
       const service = selectedServices[index];
@@ -1016,9 +1054,13 @@ export class BookingComponent implements OnInit {
 
         const staff = (staffMap[service.id] ?? []).find(item => item.usuarioId === slot.prestadorId) ?? null;
         items.push({ servicio: service, slot, staff });
-        walk(index + 1, slot.fin, items);
+        const completed = walk(index + 1, slot.fin, items);
         items.pop();
+        // Keep a complete route for every starting slot without expanding
+        // every possible staff combination at the expense of later hours.
+        if (completed && index > 0) return true;
       }
+      return false;
     };
 
     walk(0, null, []);
@@ -1043,6 +1085,8 @@ export class BookingComponent implements OnInit {
     const query = this.route.snapshot.queryParamMap;
     const params = query.get('servicios') ?? query.get('servicio');
     const draft = this.cart.read(this.tenantContext.empresaId());
+    const promo = query.has('promocion') ? Number(query.get('promocion')) : draft?.promocionId;
+    this.promocionId.set(promo && Number.isSafeInteger(promo) && promo>0 ? promo : null);
     const tokens = params !== null
       ? params.split(',').map(token => token.trim().toLowerCase()).filter(Boolean)
       : (draft?.serviceIds ?? []).map(String);

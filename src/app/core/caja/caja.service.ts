@@ -38,13 +38,14 @@ export interface CajaSesion {
   montoContado: number | null;
   diferencia: number | null;
   observaciones: string | null;
-  abiertaPorUsuarioId: number;
   abiertaEn: string;
-  cerradaPorUsuarioId: number | null;
   cerradaEn: string | null;
 }
 
 export interface CitaPorCobrar {
+  precioLista?: number;
+  descuento?: number;
+  promocionTitulo?: string | null;
   citaId: number;
   clienteNombre: string;
   clienteTelefono: string | null;
@@ -67,7 +68,6 @@ export interface PagoCita {
   metodoPago: string;
   referencia: string | null;
   observaciones: string | null;
-  registradoPorUsuarioId: number;
   registradoEn: string;
 }
 
@@ -81,7 +81,6 @@ export interface MovimientoCaja {
   concepto: string;
   referencia: string | null;
   observaciones: string | null;
-  registradoPorUsuarioId: number;
   registradoEn: string;
 }
 

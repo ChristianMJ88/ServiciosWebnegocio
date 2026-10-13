@@ -18,7 +18,12 @@ public record CrearCitaRequest(
         @Email @NotBlank String correoCliente,
         @NotBlank @Pattern(regexp = "^[0-9+ ]{10,15}$") String telefonoCliente,
         @NotNull @Future OffsetDateTime inicio,
-        @Size(max = 500) String notas
+        @Size(max = 500) String notas,
+        Long promocionId
 ) {
+    public CrearCitaRequest(Long empresaId, Long sucursalId, Long servicioId, Long prestadorId,
+            String nombreCliente, String correoCliente, String telefonoCliente, OffsetDateTime inicio, String notas) {
+        this(empresaId,sucursalId,servicioId,prestadorId,nombreCliente,correoCliente,telefonoCliente,inicio,notas,null);
+    }
 }
 

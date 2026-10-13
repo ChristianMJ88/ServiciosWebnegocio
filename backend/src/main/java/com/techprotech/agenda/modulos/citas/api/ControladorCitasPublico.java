@@ -18,9 +18,22 @@ import org.springframework.web.bind.annotation.RestController;
 public class ControladorCitasPublico {
 
     private final ServicioCitas servicioCitas;
+    private final com.techprotech.agenda.modulos.citas.aplicacion.ServicioCotizacionCitas cotizador;
+    private final com.techprotech.agenda.modulos.plataforma.aplicacion.ServicioCapacidadesEmpresa capacidades;
 
-    public ControladorCitasPublico(ServicioCitas servicioCitas) {
+    public ControladorCitasPublico(ServicioCitas servicioCitas,
+            com.techprotech.agenda.modulos.citas.aplicacion.ServicioCotizacionCitas cotizador,
+            com.techprotech.agenda.modulos.plataforma.aplicacion.ServicioCapacidadesEmpresa capacidades) {
         this.servicioCitas = servicioCitas;
+        this.cotizador = cotizador;
+        this.capacidades = capacidades;
+    }
+
+    @PostMapping("/cotizar")
+    public com.techprotech.agenda.modulos.citas.api.dto.ResultadoCotizacionCitas cotizar(
+            @Valid @RequestBody com.techprotech.agenda.modulos.citas.api.dto.CotizarCitasRequest request) {
+        capacidades.exigirSuscripcion(request.empresaId());
+        return cotizador.cotizar(request.empresaId(),request.sucursalId(),request.promocionId(),request.items());
     }
 
     @PostMapping

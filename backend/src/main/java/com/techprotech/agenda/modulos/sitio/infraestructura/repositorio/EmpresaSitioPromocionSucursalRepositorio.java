@@ -8,4 +8,6 @@ import java.util.List;
 public interface EmpresaSitioPromocionSucursalRepositorio extends JpaRepository<EmpresaSitioPromocionSucursalEntidad, Long> {
     List<EmpresaSitioPromocionSucursalEntidad> findByEmpresaId(Long empresaId);
     void deleteByEmpresaId(Long empresaId);
+    void deleteByEmpresaIdAndPromocionId(Long empresaId, Long promocionId);
+    List<EmpresaSitioPromocionSucursalEntidad> findByEmpresaIdAndPromocionId(Long empresaId, Long promocionId);
 }

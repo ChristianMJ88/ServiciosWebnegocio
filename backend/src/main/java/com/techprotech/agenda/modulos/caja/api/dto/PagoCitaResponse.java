@@ -11,7 +11,6 @@ public record PagoCitaResponse(
         String metodoPago,
         String referencia,
         String observaciones,
-        Long registradoPorUsuarioId,
         LocalDateTime registradoEn
 ) {
 }

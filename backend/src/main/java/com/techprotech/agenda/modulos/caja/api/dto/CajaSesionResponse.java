@@ -13,9 +13,7 @@ public record CajaSesionResponse(
         BigDecimal montoContado,
         BigDecimal diferencia,
         String observaciones,
-        Long abiertaPorUsuarioId,
         LocalDateTime abiertaEn,
-        Long cerradaPorUsuarioId,
         LocalDateTime cerradaEn
 ) {
 }

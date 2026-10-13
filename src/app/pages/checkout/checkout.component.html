@@ -155,7 +155,7 @@
             <div class="summary-items">
               @for (item of cart.items(); track item.productoId) {<article>@if (item.imagenUrl) {<img [src]="item.imagenUrl" [alt]="item.nombre">} @else {<span><i class="bi bi-box-seam"></i></span>}<div><strong>{{ item.nombre }}</strong><small>{{ item.cantidad }} × {{ item.precio | appMoney:item.moneda:2:2 }}</small></div><b>{{ item.precio * item.cantidad | appMoney:item.moneda:2:2 }}</b></article>}
               @if (hasAppointments() && !order()) {<article><span><i class="bi bi-calendar2-check"></i></span><div><strong>{{ appointmentIds().length === 1 ? 'Servicio reservado' : 'Servicios reservados' }}</strong><small>El servidor calculará el anticipo o pago total.</small></div></article>}
-              @for (detail of order()?.detalles ?? []; track $index) {@if (detail.tipo === 'SERVICIO') {<article><span><i class="bi bi-calendar2-check"></i></span><div><strong>{{ detail.nombre }}</strong><small>Importe requerido para confirmar</small></div><b>{{ detail.total | appMoney:order()!.moneda:2:2 }}</b></article>}}
+              @for (detail of order()?.detalles ?? []; track $index) {@if (detail.tipo === 'SERVICIO') {<article><span><i class="bi bi-calendar2-check"></i></span><div><strong>{{ detail.nombre }}</strong><small>Importe de este cobro</small></div><b>{{ detail.total | appMoney:order()!.moneda:2:2 }}</b></article>}}
             </div>
             <footer>
               @if ((order()?.costoEnvio ?? deliveryCost()) > 0) {<div class="summary-shipping"><span>Entrega</span><b>{{ (order()?.costoEnvio ?? deliveryCost()) | appMoney:(order()?.moneda ?? cart.currency()):2:2 }}</b></div>}

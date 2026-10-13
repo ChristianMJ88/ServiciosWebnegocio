@@ -9,13 +9,15 @@ import { ScrollRevealDirective } from '../../shared/directives/scroll-reveal.dir
 import { MoneyDisplayPipe } from '../../shared/pipes/money-display.pipe';
 import { PublicSectionHeadingComponent } from '../../shared/ui/public-section-heading/public-section-heading.component';
 import { PublicTeamCardComponent } from '../../shared/ui/public-team-card/public-team-card.component';
+import { PublicRailControlsComponent } from '../../shared/ui/public-touch-navigation/public-rail-controls.component';
+import { PublicSectionNavigationComponent } from '../../shared/ui/public-touch-navigation/public-section-navigation.component';
 
 @Component({
   selector: 'app-home',
   standalone: true,
-  imports: [RouterLink, CommonModule, ScrollRevealDirective, MoneyDisplayPipe, PublicSectionHeadingComponent, PublicTeamCardComponent],
+  imports: [RouterLink, CommonModule, ScrollRevealDirective, MoneyDisplayPipe, PublicSectionHeadingComponent, PublicTeamCardComponent, PublicRailControlsComponent, PublicSectionNavigationComponent],
   templateUrl: './home.component.html',
-  styleUrls: ['./home.component.css']
+  styleUrls: ['./home.component.css', './home-touch-navigation.css']
 })
 export class HomeComponent implements OnInit {
   readonly tenantContext = inject(TenantContextService);
@@ -114,8 +116,8 @@ export class HomeComponent implements OnInit {
     return item.imagenUrl || this.tenantContext.heroImagenUrl();
   }
 
-  parametrosPromocion(item: TenantPromotion): { servicios: string } | null {
-    return item.servicioIds.length ? { servicios: item.servicioIds.join(',') } : null;
+  parametrosPromocion(item: TenantPromotion): { servicios?: string; promocion: number } {
+    return { promocion: item.id, ...(item.servicioIds.length ? { servicios: item.servicioIds.join(',') } : {}) };
   }
 
   iconoBeneficio(icono: string): string {

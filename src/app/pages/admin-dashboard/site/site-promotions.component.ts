@@ -89,6 +89,7 @@ export class SitePromotionsComponent implements OnInit {
     this.limpiarEstado();
     this.facade.guardar({
       promociones: this.promociones().map((item, orden) => ({
+        id: item.id,
         titulo: item.titulo.trim(), descripcion: item.descripcion?.trim() || null,
         mediaId: item.mediaId, imagenUrl: item.imagenUrl?.trim() || null, fechaInicio: item.fechaInicio || null,
         fechaFin: item.fechaFin || null, tipoDescuento: item.tipoDescuento,

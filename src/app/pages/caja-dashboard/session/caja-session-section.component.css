@@ -1,47 +1,60 @@
-:host {
-  display: block;
-}
+:host { display: block; }
 
+/* ── Card emphasis (apertura/cierre) ────────────────────────── */
 .caja-card-emphasis {
-  background: linear-gradient(180deg, rgba(255, 252, 246, 0.96), rgba(249, 244, 236, 0.96));
+  background: linear-gradient(160deg, rgba(255,252,246,.97), rgba(248,244,236,.97));
 }
 
+/* ── Info notice ────────────────────────────────────────────── */
 .caja-inline-note {
+  display: flex;
+  align-items: flex-start;
+  gap: .6rem;
   margin-bottom: 1rem;
-  padding: 0.85rem 1rem;
+  padding: .9rem 1rem;
   border-radius: 16px;
-  background: rgba(233, 178, 106, 0.16);
+  background: rgba(233,178,106,.15);
+  border: 1px solid rgba(196,138,56,.18);
   color: #6c5640;
+  font-size: .9rem;
+  line-height: 1.5;
 }
 
+/* ── Session info tiles ─────────────────────────────────────── */
 .caja-session-summary {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.9rem;
-  margin-bottom: 0.9rem;
+  gap: .8rem;
+  margin-bottom: 1rem;
 }
+
+.caja-session-summary > div {
+  padding: .88rem 1rem;
+  border: 1px solid rgba(28,55,47,.09);
+  border-left: 3px solid rgba(23,107,91,.28);
+  border-radius: 14px;
+  background: linear-gradient(145deg, rgba(241,247,244,.96), rgba(248,251,249,.98));
+  transition: border-left-color .18s ease;
+}
+
+.caja-session-summary > div:hover { border-left-color: var(--caja-brand); }
 
 .caja-session-summary strong {
   display: block;
-  margin-top: 0.2rem;
-  font-size: 1.05rem;
+  margin-top: .22rem;
+  color: var(--caja-ink);
+  font-size: 1.08rem;
+  letter-spacing: -.015em;
 }
 
+/* ── Responsive ─────────────────────────────────────────────── */
 @media (max-width: 767px) {
   .caja-session-summary {
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 0.55rem;
-  }
-
-  .caja-session-summary > div {
-    padding: 0.75rem;
-    border-radius: 13px;
-    background: #f5f8f6;
+    gap: .55rem;
   }
 }
 
 @media (max-width: 390px) {
-  .caja-session-summary {
-    grid-template-columns: 1fr;
-  }
+  .caja-session-summary { grid-template-columns: 1fr; }
 }

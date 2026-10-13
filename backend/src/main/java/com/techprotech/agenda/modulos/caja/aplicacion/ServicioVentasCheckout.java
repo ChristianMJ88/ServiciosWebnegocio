@@ -94,7 +94,7 @@ public class ServicioVentasCheckout {
         detalle.setCitaId(item.getCitaId());
         detalle.setNombre(item.getNombre());
         detalle.setCantidad(item.getCantidad());
-        detalle.setPrecioUnitario(item.getPrecioUnitario());
+        detalle.setPrecioUnitario("SERVICIO".equals(item.getTipoConcepto()) ? item.getPrecioListaUnitario() : item.getPrecioUnitario());
         detalle.setDescuento(item.getDescuento());
         detalle.setImpuestos(item.getImpuestos());
         detalle.setTotal(item.getTotal());

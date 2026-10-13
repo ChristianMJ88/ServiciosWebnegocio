@@ -1,93 +1,79 @@
-:host {
-  display: block;
-}
+:host { display: block; }
 
 .caja-card-payment {
-  border-color: rgba(31, 112, 97, 0.14);
-  box-shadow: 0 20px 36px rgba(31, 46, 43, 0.1);
+  border-color: rgba(31,112,97,.15);
+  box-shadow: 0 20px 40px rgba(31,46,43,.1);
 }
 
+/* ── Appointment list toolbar ───────────────────────────────── */
 .caja-list-toolbar {
   display: flex;
   justify-content: space-between;
   align-items: center;
   gap: 1rem;
-  margin-bottom: 0.7rem;
-  padding: 0.7rem 0.85rem;
-  border-radius: 16px;
-  background: rgba(231, 225, 214, 0.52);
+  margin-bottom: .75rem;
+  padding: .72rem .9rem;
+  border-radius: 14px;
+  background: rgba(228,222,212,.45);
   color: #6c6259;
-  font-size: 0.92rem;
+  font-size: .9rem;
 }
 
-.caja-list-toolbar strong {
-  color: #2f312d;
-  font-size: 0.95rem;
-}
+.caja-list-toolbar strong { color: #2f312d; font-size: .92rem; }
 
-.caja-payment-result {
-  grid-column: 1 / -1;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 0.9rem 1rem;
-  border-radius: 16px;
-  background: rgba(31, 112, 97, 0.08);
-  color: #245247;
-}
-
-.caja-payment-result span {
-  color: #5f665f;
-  font-size: 0.9rem;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-}
-
-.caja-payment-result strong {
-  font-size: 1.35rem;
-}
-
+/* ── Appointments list ──────────────────────────────────────── */
 .caja-appointments {
   display: flex;
   flex-direction: column;
-  gap: 0.8rem;
+  gap: .72rem;
   max-height: 760px;
   overflow: auto;
-  padding-right: 0.15rem;
+  padding-right: .15rem;
 }
 
+/* ── Appointment card ───────────────────────────────────────── */
 .caja-appointment-card {
   position: relative;
   width: 100%;
-  padding: 0.95rem 1rem;
-  border: 1px solid rgba(110, 93, 77, 0.12);
+  padding: .95rem 1rem .95rem 1.35rem;
+  border: 1px solid rgba(110,93,77,.12);
   border-radius: 20px;
-  background: rgba(255, 253, 249, 0.94);
+  background: rgba(255,253,249,.95);
   text-align: left;
-  transition: transform 120ms ease, box-shadow 120ms ease, border-color 120ms ease;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.52);
+  transition: transform 130ms ease, box-shadow 130ms ease, border-color 130ms ease;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.55);
 }
 
 .caja-appointment-card::before {
   content: "";
   position: absolute;
-  left: 0.85rem;
-  top: 0.9rem;
-  bottom: 0.9rem;
+  left: .75rem;
+  top: .9rem;
+  bottom: .9rem;
   width: 3px;
   border-radius: 999px;
-  background: rgba(31, 112, 97, 0.14);
+  background: rgba(31,112,97,.18);
+  transition: background .15s ease;
+}
+
+/* Status-based left accent */
+.caja-appointment-card.status-pending::before {
+  background: linear-gradient(180deg, #d98c3c, #c47b2a);
+}
+.caja-appointment-card.status-partial::before {
+  background: linear-gradient(180deg, #e9b26a, #d49a50);
 }
 
 .caja-appointment-card:hover,
 .caja-appointment-card.active {
   transform: translateY(-1px);
-  border-color: rgba(31, 112, 97, 0.32);
-  box-shadow: 0 18px 32px rgba(43, 41, 37, 0.09);
+  border-color: rgba(31,112,97,.3);
+  box-shadow: 0 16px 32px rgba(43,41,37,.09);
 }
 
 .caja-appointment-card.active {
-  background: linear-gradient(180deg, rgba(255, 252, 246, 1), rgba(243, 248, 245, 0.92));
+  background: linear-gradient(180deg, rgba(255,252,246,1), rgba(242,248,245,.94));
+  border-color: rgba(31,112,97,.28);
 }
 
 .caja-appointment-card.active::before,
@@ -95,13 +81,23 @@
   background: linear-gradient(180deg, #1f7061, #145043);
 }
 
+.caja-appointment-card.status-pending.active::before,
+.caja-appointment-card.status-pending:hover::before {
+  background: linear-gradient(180deg, #c47b2a, #a66022);
+}
+
+.caja-appointment-card.status-partial.active::before,
+.caja-appointment-card.status-partial:hover::before {
+  background: linear-gradient(180deg, #d49a50, #be8338);
+}
+
+/* ── Appointment internals ──────────────────────────────────── */
 .caja-appointment-head,
 .caja-appointment-meta,
 .caja-appointment-money {
   display: flex;
   justify-content: space-between;
-  gap: 0.75rem;
-  padding-left: 0.55rem;
+  gap: .75rem;
 }
 
 .caja-appointment-head span,
@@ -113,84 +109,137 @@
 
 .caja-appointment-head {
   align-items: flex-start;
-  margin-bottom: 0.65rem;
+  margin-bottom: .6rem;
 }
 
 .caja-appointment-meta {
-  margin-bottom: 0.75rem;
-  font-size: 0.89rem;
+  margin-bottom: .72rem;
+  font-size: .88rem;
   flex-wrap: wrap;
 }
 
-.caja-appointment-money {
-  gap: 1rem;
-}
+.caja-appointment-money { gap: 1rem; }
+.caja-appointment-money div { min-width: 0; }
+.caja-appointment-money strong { display: block; font-size: 1rem; }
 
-.caja-appointment-money div {
-  min-width: 0;
-}
-
-.caja-appointment-money strong {
-  display: block;
-  font-size: 1rem;
-}
-
+/* ── Status badge ───────────────────────────────────────────── */
 .caja-table-badge {
   display: inline-flex;
   align-items: center;
-  padding: 0.45rem 0.7rem;
+  padding: .42rem .72rem;
   border-radius: 999px;
-  background: rgba(101, 91, 81, 0.09);
+  border: 1px solid transparent;
+  background: rgba(101,91,81,.09);
   color: #64584f;
-  font-size: 0.82rem;
-  font-weight: 600;
+  font-size: .8rem;
+  font-weight: 650;
+  white-space: nowrap;
 }
 
 .caja-table-badge.is-partial {
-  background: rgba(233, 178, 106, 0.2);
+  background: rgba(233,178,106,.22);
+  border-color: rgba(196,138,56,.2);
   color: #7a5a27;
 }
 
+.caja-table-badge.is-pending {
+  background: rgba(217,153,75,.18);
+  border-color: rgba(196,138,56,.24);
+  color: #7a4f1a;
+}
+
+/* ── Payment context panel ──────────────────────────────────── */
 .caja-payment-context {
   display: flex;
   flex-direction: column;
-  gap: 0.25rem;
-  margin-bottom: 0.9rem;
-  padding: 0.95rem 1rem;
-  border: 1px solid rgba(31, 112, 97, 0.14);
+  gap: .28rem;
+  margin-bottom: 1rem;
+  padding: 1rem 1.1rem;
+  border: 1px solid rgba(31,112,97,.16);
   border-radius: 18px;
-  background: linear-gradient(180deg, rgba(242, 246, 244, 0.95), rgba(255, 252, 246, 0.96));
+  background: linear-gradient(160deg, rgba(241,247,244,.97), rgba(255,252,246,.96));
 }
 
-.caja-payment-context strong {
-  display: block;
-}
+.caja-payment-context strong { display: block; }
 
 .caja-payment-highlight {
   display: flex;
   flex-direction: column;
-  gap: 0.15rem;
-  margin-top: 0.45rem;
-  padding-top: 0.55rem;
-  border-top: 1px dashed rgba(110, 93, 77, 0.18);
+  gap: .15rem;
+  margin-top: .5rem;
+  padding-top: .6rem;
+  border-top: 1px dashed rgba(110,93,77,.18);
 }
 
 .caja-payment-highlight small {
   color: #6f6358;
+  font-size: .7rem;
+  font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.06em;
+  letter-spacing: .08em;
 }
 
 .caja-payment-highlight strong {
-  font-size: 1.4rem;
+  font-size: 1.55rem;
+  font-weight: 800;
   color: #184b42;
+  letter-spacing: -.03em;
+  line-height: 1.05;
 }
 
-.point-divider{grid-column:1/-1;display:flex;align-items:center;gap:.7rem;color:#7a7068;font-size:.78rem;text-transform:uppercase;letter-spacing:.06em}.point-divider::before,.point-divider::after{content:"";height:1px;flex:1;background:rgba(110,93,77,.14)}
-.manual-card-note{display:flex;gap:.65rem;align-items:flex-start;padding:.75rem;border:1px solid #ddd6fe;border-radius:14px;background:#f7f5ff;color:#5b3f91}.manual-card-note strong,.manual-card-note small{display:block}.manual-card-note small{margin-top:.12rem;color:#75658c}
-.point-action{display:flex;align-items:center;justify-content:space-between;gap:.8rem;padding:.8rem;border:1px solid #bae6fd;border-radius:16px;background:#f0f9ff}.point-action>span{display:flex;align-items:center;gap:.65rem;color:#075985}.point-action>span>i{display:grid;place-items:center;width:36px;height:36px;border-radius:11px;background:#dff3ff;font-size:1.05rem}.point-action strong,.point-action small{display:block}.point-action small{margin-top:.12rem;color:#527083}.point-status{display:flex;align-items:center;gap:.65rem;margin:.75rem 0;padding:.8rem;border:1px solid #bae6fd;border-radius:14px;background:#f0f9ff}.point-status>span{width:11px;height:11px;border-radius:50%;background:#0ea5e9;box-shadow:0 0 0 6px rgba(14,165,233,.12)}.point-status.approved{border-color:#a7f3d0;background:#ecfdf5}.point-status.approved>span{background:#10b981;box-shadow:0 0 0 6px rgba(16,185,129,.12)}.point-status div{display:grid;min-width:0}.point-status small{color:#64748b}.point-status button{margin-left:auto;border:0;background:transparent;color:#b42318;font-weight:700}.point-error{margin:.65rem 0;padding:.72rem;border-radius:12px;background:#fff1f2;color:#9f1239}
-.point-status__actions{display:flex!important;grid-auto-flow:column;gap:.4rem;margin-left:auto}.point-status__actions button{margin-left:0}.point-status__actions button.simulate{padding:.48rem .7rem;border-radius:9px;background:#0369a1;color:#fff}.point-status__actions button:disabled{opacity:.6;cursor:wait}
+/* ── Change result ──────────────────────────────────────────── */
+.caja-payment-result {
+  grid-column: 1 / -1;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: .9rem 1.1rem;
+  border-radius: 16px;
+  background: rgba(31,112,97,.08);
+  border: 1px solid rgba(31,112,97,.1);
+  color: #245247;
+}
 
+.caja-payment-result span {
+  color: #5f665f;
+  font-size: .85rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .05em;
+}
+
+.caja-payment-result strong { font-size: 1.4rem; letter-spacing: -.02em; }
+
+/* ── Point integration ──────────────────────────────────────── */
+.point-divider { grid-column: 1/-1; display: flex; align-items: center; gap: .7rem; color: #7a7068; font-size: .78rem; text-transform: uppercase; letter-spacing: .06em; }
+.point-divider::before, .point-divider::after { content: ""; height: 1px; flex: 1; background: rgba(110,93,77,.14); }
+
+.manual-card-note { display: flex; gap: .65rem; align-items: flex-start; padding: .8rem; border: 1px solid #ddd6fe; border-radius: 14px; background: #f7f5ff; color: #5b3f91; }
+.manual-card-note strong, .manual-card-note small { display: block; }
+.manual-card-note small { margin-top: .12rem; color: #75658c; }
+
+.point-action { display: flex; align-items: center; justify-content: space-between; gap: .8rem; padding: .85rem 1rem; border: 1px solid #bae6fd; border-radius: 16px; background: #f0f9ff; }
+.point-action > span { display: flex; align-items: center; gap: .65rem; color: #075985; }
+.point-action > span > i { display: grid; place-items: center; width: 36px; height: 36px; border-radius: 11px; background: #dff3ff; font-size: 1.05rem; }
+.point-action strong, .point-action small { display: block; }
+.point-action small { margin-top: .12rem; color: #527083; }
+
+.point-status { display: flex; align-items: center; gap: .65rem; margin: .75rem 0; padding: .85rem 1rem; border: 1px solid #bae6fd; border-radius: 14px; background: #f0f9ff; }
+.point-status > span { width: 11px; height: 11px; border-radius: 50%; background: #0ea5e9; box-shadow: 0 0 0 5px rgba(14,165,233,.14); flex-shrink: 0; }
+.point-status.approved { border-color: #a7f3d0; background: #ecfdf5; }
+.point-status.approved > span { background: #10b981; box-shadow: 0 0 0 5px rgba(16,185,129,.14); }
+.point-status div { display: grid; min-width: 0; }
+.point-status small { color: #64748b; }
+.point-status button { margin-left: auto; border: 0; background: transparent; color: #b42318; font-weight: 700; }
+
+.point-status__actions { display: flex !important; grid-auto-flow: column; gap: .4rem; margin-left: auto; }
+.point-status__actions button { margin-left: 0; }
+.point-status__actions button.simulate { padding: .48rem .72rem; border-radius: 9px; background: #0369a1; color: #fff; }
+.point-status__actions button:disabled { opacity: .6; cursor: wait; }
+
+.point-error { margin: .65rem 0; padding: .72rem .9rem; border-radius: 12px; background: #fff1f2; color: #9f1239; border: 1px solid rgba(159,18,57,.12); }
+
+/* ── Responsive ─────────────────────────────────────────────── */
 @media (max-width: 767px) {
   .caja-appointment-head,
   .caja-appointment-meta,
@@ -200,9 +249,19 @@
     flex-direction: column;
     align-items: flex-start;
   }
-
-  .caja-payment-result {
-    gap: 0.35rem;
-  }
-  .point-action,.point-status{align-items:stretch;flex-direction:column}.point-action button,.point-status button{width:100%;margin-left:0}
+  .caja-payment-result { gap: .35rem; }
+  .point-action, .point-status { align-items: stretch; flex-direction: column; }
+  .point-action button, .point-status button { width: 100%; margin-left: 0; }
+}
+.caja-promotion-breakdown {
+  display: grid;
+  gap: .5rem;
+  padding-block: .75rem;
+  border-block: 1px solid var(--mat-sys-outline-variant, #e2e8f0);
+}
+.caja-promotion-breakdown > span {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: .5rem;
 }

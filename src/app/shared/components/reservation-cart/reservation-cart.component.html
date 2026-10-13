@@ -5,17 +5,26 @@
     <ul class="cart-items">
       @for (service of services(); track service.id) {
         <li>
-          <div><strong>{{ service.nombre }}</strong><span>{{ service.duracionMinutos }} min · {{ service.precio | appMoney:service.moneda:2:2 }}</span></div>
+          <div><strong>{{ service.nombre }}</strong><span>{{ service.duracionMinutos }} min · @if (priceLine(service.id); as line) { @if(line.descuento > 0) { <s>{{ line.precioLista | appMoney:service.moneda:2:2 }}</s> } {{ line.precioNeto | appMoney:service.moneda:2:2 }} } @else { {{ service.precio | appMoney:service.moneda:2:2 }} }</span></div>
           <button type="button" class="cart-remove" [attr.aria-label]="'Quitar ' + service.nombre" (click)="remove.emit(service.id)"><i class="bi bi-x-lg" aria-hidden="true"></i></button>
         </li>
       }
     </ul>
     <dl class="cart-details">
+      @if (quote(); as currentQuote) {
+        @if(currentQuote.descuentoTotal > 0) {
+          <div><dt>Precio original</dt><dd><s>{{ currentQuote.subtotalLista | appMoney:currentQuote.moneda:2:2 }}</s></dd></div>
+          <div><dt>Descuento</dt><dd>−{{ currentQuote.descuentoTotal | appMoney:currentQuote.moneda:2:2 }}</dd></div>
+        }
+        @if (currentQuote.anticipoTotal < currentQuote.total) {
+          <div><dt>Anticipo</dt><dd>{{ currentQuote.anticipoTotal | appMoney:currentQuote.moneda:2:2 }}</dd></div>
+        }
+      }
       <div><dt>Tiempo estimado</dt><dd>{{ duration() }} min</dd></div>
       @if (date()) { <div><dt>Fecha</dt><dd>{{ date() }}</dd></div> }
       @if (time()) { <div><dt>Horario</dt><dd>{{ time() }}</dd></div> }
       @for (total of totals(); track total.currency) {
-        <div class="cart-total"><dt>Total {{ total.currency }}</dt><dd>{{ total.amount | appMoney:total.currency:2:2 }}</dd></div>
+        <div class="cart-total"><dt>Total {{ total.currency }}</dt><dd>@if(pricePending()) { Calculando… } @else { {{ total.amount | appMoney:total.currency:2:2 }} }</dd></div>
       }
     </dl>
     <p class="cart-note">El horario se confirma al completar la reserva.</p>
@@ -29,7 +38,7 @@
 <div class="cart-dock">
   <button type="button" class="cart-dock-summary" aria-haspopup="dialog" (click)="open()">
     <span>Tu cita · {{ services().length }} servicio{{ services().length === 1 ? '' : 's' }} <i class="bi bi-chevron-up" aria-hidden="true"></i></span>
-    <strong aria-live="polite">@for (total of totals(); track total.currency) { <span>{{ total.amount | appMoney:total.currency:2:2 }}</span> } @empty { Elige tus servicios }</strong>
+    <strong aria-live="polite">@if(pricePending()) { Calculando… } @else { @for (total of totals(); track total.currency) { <span>{{ total.amount | appMoney:total.currency:2:2 }}</span> } @empty { Elige tus servicios } }</strong>
   </button>
   <button type="button" class="cart-continue" [disabled]="disabled() || !services().length" (click)="continue()">{{ actionLabel() }} <i class="bi bi-arrow-right" aria-hidden="true"></i></button>
 </div>

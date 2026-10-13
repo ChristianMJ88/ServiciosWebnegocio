@@ -29,6 +29,7 @@ export interface ConsultaFranjasRequest {
 }
 
 export interface CrearCitaBackendRequest {
+  promocionId?: number | null;
   empresaId: number;
   sucursalId: number;
   servicioId: number;
@@ -47,6 +48,7 @@ export interface CrearCitaMultipleItemBackendRequest {
 }
 
 export interface CrearCitasMultiplesBackendRequest {
+  promocionId?: number | null;
   empresaId: number;
   sucursalId: number;
   nombreCliente: string;
@@ -57,7 +59,7 @@ export interface CrearCitasMultiplesBackendRequest {
 }
 
 export interface CitasMultiplesCreadasResponse {
-  citas: Array<{ id: number; mensaje?: string | null }>;
+  citas: Array<{ id: number; mensaje?: string | null; precio?: number; precioLista?: number; descuento?: number }>;
   total: number;
   mensaje: string;
 }
@@ -70,6 +72,17 @@ interface FranjaDisponibleBackendResponse {
   sucursalId: number;
 }
 
+export interface CotizacionCitas {
+  moneda: string; subtotalLista: number; descuentoTotal: number; total: number; anticipoTotal: number;
+  promocion: { id: number; titulo: string; tipoDescuento: string; valorDescuento: number; moneda: string } | null;
+  motivoNoAplicada: string | null;
+  lineas: Array<{ servicioId: number; nombre: string; precioLista: number; descuento: number; precioNeto: number; anticipo: number; promocionAplicada: boolean }>;
+}
+export interface CotizarCitasPayload {
+  empresaId: number; sucursalId: number; promocionId: number | null;
+  items: Array<{servicioId: number; inicio: string | null; fecha?: string | null}>;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -79,6 +92,10 @@ export class AppointmentService {
   private readonly RETRY_COUNT = 3;
 
   constructor(private http: HttpClient) {}
+
+  cotizarCitas(payload: CotizarCitasPayload): Observable<CotizacionCitas> {
+    return this.http.post<CotizacionCitas>(`${this.apiUrl}/publico/citas/cotizar`, payload);
+  }
 
   getAvailableSlots(request: ConsultaFranjasRequest): Observable<FranjaDisponible[]> {
     let params = new HttpParams()
@@ -109,7 +126,7 @@ export class AppointmentService {
       timeout(this.TIMEOUT_DURATION),
       catchError(err => {
         console.error('Error al crear cita en backend:', err);
-        return throwError(() => new Error(this.resolveBackendErrorMessage(err)));
+        return throwError(() => Object.assign(new Error(this.resolveBackendErrorMessage(err)), {status:err.status}));
       })
     );
   }
@@ -119,7 +136,7 @@ export class AppointmentService {
       timeout(this.TIMEOUT_DURATION),
       catchError(err => {
         console.error('Error al crear citas múltiples en backend:', err);
-        return throwError(() => new Error(this.resolveBackendErrorMessage(err)));
+        return throwError(() => Object.assign(new Error(this.resolveBackendErrorMessage(err)), {status:err.status}));
       })
     );
   }
@@ -166,7 +183,7 @@ export class AppointmentService {
       return errorBody.mensaje;
     }
 
-    return 'No se pudo crear la cita en el backend.';
+    return errorBody?.message || 'No se pudo crear la cita en el backend.';
   }
 
   private formatHour(isoDateTime: string): string {

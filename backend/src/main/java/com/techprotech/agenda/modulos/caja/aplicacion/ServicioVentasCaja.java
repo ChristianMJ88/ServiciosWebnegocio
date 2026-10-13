@@ -29,6 +29,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.Set;
 
 import static com.techprotech.agenda.modulos.caja.aplicacion.CatalogosCaja.*;
 
@@ -164,6 +165,7 @@ public class ServicioVentasCaja {
         CitaEntidad cita = null;
         ServicioEntidad servicio = null;
         BigDecimal pendienteServicio = CERO;
+        BigDecimal pagadoServicio = CERO;
         if (request.citaId() != null) {
             cita = citas.findByIdAndEmpresaId(request.citaId(), empresaId)
                     .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "La cita no existe para la empresa"));
@@ -172,6 +174,7 @@ public class ServicioVentasCaja {
                 throw new ResponseStatusException(HttpStatus.CONFLICT, "La cita aún no está lista para cobro");
             BigDecimal pagado = seguro(pagosCita.sumarPagadoPorCita(empresaId, cita.getId()))
                     .add(seguro(detalles.sumarServiciosPagadosPorCita(empresaId, cita.getId())));
+            pagadoServicio = pagado;
             pendienteServicio = cita.getPrecio().subtract(pagado).max(BigDecimal.ZERO).setScale(2, RoundingMode.HALF_UP);
             if (pendienteServicio.signum() == 0) throw new ResponseStatusException(HttpStatus.CONFLICT, "La cita ya está pagada");
             servicio = servicios.findByIdAndEmpresaId(cita.getServicioId(), empresaId)
@@ -193,6 +196,7 @@ public class ServicioVentasCaja {
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
         BigDecimal netoProductos = cantidades.entrySet().stream().map(item -> preciosAplicados.get(item.getKey()).multiply(item.getValue()).setScale(2, RoundingMode.HALF_UP)).reduce(BigDecimal.ZERO, BigDecimal::add);
         BigDecimal descuentoTotal = subtotalProductos.setScale(2, RoundingMode.HALF_UP).subtract(netoProductos);
+        if (cita != null) descuentoTotal = descuentoTotal.add(com.techprotech.agenda.modulos.citas.aplicacion.DesglosePrecioCita.paraCobro(cita,pendienteServicio,pagadoServicio).descuento());
         BigDecimal total = pendienteServicio.add(netoProductos).setScale(2, RoundingMode.HALF_UP);
 
         VentaEntidad venta = new VentaEntidad();
@@ -204,7 +208,7 @@ public class ServicioVentasCaja {
         venta = ventas.save(venta);
 
         List<VentaDetalleEntidad> filas = new ArrayList<>();
-        if (cita != null) filas.add(detalleServicio(empresaId, venta.getId(), cita, servicio, pendienteServicio));
+        if (cita != null) filas.add(detalleServicio(empresaId, venta.getId(), cita, servicio, pendienteServicio, pagadoServicio));
         for (Map.Entry<Long, BigDecimal> item : cantidades.entrySet())
             filas.add(detalleProducto(empresaId, venta.getId(), productosVenta.get(item.getKey()), item.getValue(), preciosAplicados.get(item.getKey()), precioLista(productosVenta.get(item.getKey()), contexto)));
         if (staff) filas.forEach(fila -> fila.setPrestadorResponsableId(usuarioId));
@@ -273,24 +277,68 @@ public class ServicioVentasCaja {
         ventas.save(venta);
     }
 
+    /**
+     * Lista las últimas 50 ventas con batch-loading.
+     * Antes: 1 + N*2 queries (101 para 50 ventas). Ahora: 3 queries fijas.
+     */
     @Transactional(readOnly = true)
     public List<VentaResponse> listar(Long empresaId, List<Long> sucursalesPermitidas, Long sucursalId) {
         validarSucursal(empresaId, sucursalesPermitidas, sucursalId);
-        return ventas.findTop50ByEmpresaIdAndSucursalIdOrderByCreadaEnDesc(empresaId, sucursalId).stream().map(venta -> {
-            PagoVentaEntidad pago = pagos.findByEmpresaIdAndVentaIdOrderByRegistradoEnDesc(empresaId, venta.getId()).stream().findFirst().orElse(null);
-            return mapear(venta, pago, detalles.findByEmpresaIdAndVentaIdOrderByIdAsc(empresaId, venta.getId()));
-        }).toList();
+        List<VentaEntidad> lista = ventas.findTop50ByEmpresaIdAndSucursalIdOrderByCreadaEnDesc(empresaId, sucursalId);
+        if (lista.isEmpty()) return List.of();
+
+        Set<Long> ventaIds = lista.stream().map(VentaEntidad::getId).collect(Collectors.toSet());
+
+        // Query batch: seleccionar el pago más reciente con desempate por ID.
+        Map<Long, PagoVentaEntidad> pagoPorVenta = pagos.findByEmpresaIdAndVentaIdIn(empresaId, ventaIds)
+                .stream().collect(Collectors.toMap(PagoVentaEntidad::getVentaId, Function.identity(), (a, b) -> Comparator.comparing(PagoVentaEntidad::getRegistradoEn)
+                        .thenComparing(PagoVentaEntidad::getId).compare(a,b) >= 0 ? a : b));
+
+        // Query batch: todos los detalles de las ventas
+        Map<Long, List<VentaDetalleEntidad>> detallesPorVenta = detalles.findByEmpresaIdAndVentaIdIn(empresaId, ventaIds)
+                .stream().collect(Collectors.groupingBy(VentaDetalleEntidad::getVentaId));
+
+        return lista.stream()
+                .map(venta -> mapear(
+                        venta,
+                        pagoPorVenta.get(venta.getId()),
+                        detallesPorVenta.getOrDefault(venta.getId(), List.of())
+                ))
+                .toList();
     }
 
-    public record PendienteStaff(VentaResponse venta,String clienteNombre,String clienteTelefono) {}
-    @Transactional(readOnly=true)
-    public org.springframework.data.domain.Page<PendienteStaff> pendientesStaff(Long empresaId,List<Long> permitidas,Long sucursalId,int pagina) {
-        validarSucursal(empresaId,permitidas,sucursalId);
-        if(pagina<0) throw badRequest("La página no es válida");
-        var lista=ventas.findByEmpresaIdAndSucursalIdAndEstadoAndCanalOrderByCreadaEnAsc(empresaId,sucursalId,"POR_COBRAR","STAFF",org.springframework.data.domain.PageRequest.of(pagina,20));
-        return lista.map(v->{
-            var cliente=clientes.findByClienteIdAndEmpresaId(v.getClienteId(),empresaId).orElse(null);
-            return new PendienteStaff(mapear(v,null,detalles.findByEmpresaIdAndVentaIdOrderByIdAsc(empresaId,v.getId())),cliente==null?"":cliente.getNombreCompleto(),cliente==null?"":cliente.getTelefono());
+    public record PendienteStaff(VentaResponse venta, String clienteNombre, String clienteTelefono) {}
+
+    @Transactional(readOnly = true)
+    public org.springframework.data.domain.Page<PendienteStaff> pendientesStaff(Long empresaId, List<Long> permitidas, Long sucursalId, int pagina) {
+        validarSucursal(empresaId, permitidas, sucursalId);
+        if (pagina < 0) throw badRequest("La página no es válida");
+        var pagina20 = org.springframework.data.domain.PageRequest.of(pagina, 20);
+        var lista = ventas.findByEmpresaIdAndSucursalIdAndEstadoAndCanalOrderByCreadaEnAsc(empresaId, sucursalId, "POR_COBRAR", "STAFF", pagina20);
+
+        if (lista.isEmpty()) return lista.map(v -> new PendienteStaff(null, "", ""));
+
+        // Batch-load detalles y clientes para la página actual
+        Set<Long> ventaIds = lista.stream().map(VentaEntidad::getId).collect(Collectors.toSet());
+        Map<Long, List<VentaDetalleEntidad>> detallesPorVenta = detalles.findByEmpresaIdAndVentaIdIn(empresaId, ventaIds)
+                .stream().collect(Collectors.groupingBy(VentaDetalleEntidad::getVentaId));
+
+        Set<Long> clienteIds = lista.stream().filter(v -> v.getClienteId() != null)
+                .map(VentaEntidad::getClienteId).collect(Collectors.toSet());
+        Map<Long, com.techprotech.agenda.modulos.clientes.infraestructura.entidad.ClienteEntidad> clientePorId =
+                clienteIds.isEmpty() ? Map.of() : clientes.findByEmpresaIdAndUsuarioIdIn(empresaId, clienteIds).stream()
+                        .collect(Collectors.toMap(
+                                com.techprotech.agenda.modulos.clientes.infraestructura.entidad.ClienteEntidad::getUsuarioId,
+                                Function.identity()
+                        ));
+
+        return lista.map(v -> {
+            var cliente = v.getClienteId() != null ? clientePorId.get(v.getClienteId()) : null;
+            return new PendienteStaff(
+                    mapear(v, null, detallesPorVenta.getOrDefault(v.getId(), List.of())),
+                    cliente == null ? "" : cliente.getNombreCompleto(),
+                    cliente == null ? "" : cliente.getTelefono()
+            );
         });
     }
 
@@ -332,8 +380,10 @@ public class ServicioVentasCaja {
         return mapear(venta,pago,filas);
     }
 
-    private VentaDetalleEntidad detalleServicio(Long empresaId, Long ventaId, CitaEntidad cita, ServicioEntidad servicio, BigDecimal total) {
-        VentaDetalleEntidad d = baseDetalle(empresaId, ventaId, "SERVICIO", servicio.getNombre(), BigDecimal.ONE, total, total);
+    private VentaDetalleEntidad detalleServicio(Long empresaId, Long ventaId, CitaEntidad cita, ServicioEntidad servicio, BigDecimal total, BigDecimal pagado) {
+        var desglose = com.techprotech.agenda.modulos.citas.aplicacion.DesglosePrecioCita.paraCobro(cita,total,pagado);
+        VentaDetalleEntidad d = baseDetalle(empresaId, ventaId, "SERVICIO", servicio.getNombre(), BigDecimal.ONE, desglose.precioLista(), total);
+        d.setDescuento(desglose.descuento());
         d.setServicioId(servicio.getId()); d.setCitaId(cita.getId()); return d;
     }
     private VentaDetalleEntidad detalleProducto(Long empresaId, Long ventaId, ProductoEntidad producto, BigDecimal cantidad, BigDecimal precioAplicado, BigDecimal precioLista) {

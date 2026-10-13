@@ -1,25 +1,86 @@
 :host { display: block; }
+
 .caja-shell {
-  --caja-ink: #17231f; --caja-muted: #68736e; --caja-line: rgba(28, 55, 47, 0.11);
-  --caja-surface: rgba(255, 255, 255, 0.92); --caja-brand: #176b5b; --caja-brand-dark: #0f4f43;
-  --caja-accent: #d9994b; --caja-shadow: 0 14px 42px rgba(27, 49, 42, 0.08);
+  /* ── Design tokens ──────────────────────────────────────────── */
+  --caja-ink: #17231f;
+  --caja-muted: #68736e;
+  --caja-line: rgba(28, 55, 47, 0.11);
+  --caja-surface: rgba(255, 255, 255, 0.93);
+  --caja-brand: #176b5b;
+  --caja-brand-dark: #0f4f43;
+  --caja-accent: #d9994b;
+  --caja-shadow: 0 14px 42px rgba(27, 49, 42, 0.08);
+
   font-family: var(--bs-body-font-family, system-ui, sans-serif);
   --mdc-typography-font-family: var(--bs-body-font-family, system-ui, sans-serif);
-  min-height: 100dvh; color: var(--caja-ink);
-  background: radial-gradient(circle at 8% 0%, rgba(216,153,75,.12), transparent 25rem),
-    radial-gradient(circle at 92% 4%, rgba(23,107,91,.1), transparent 28rem), #f3f6f4;
-}
-.caja-body { max-width: 1560px; margin: 0 auto; padding: 1.25rem 1.5rem 2.5rem; }
-.caja-shell ::ng-deep .mat-mdc-stroked-button:not(:disabled),
-.caja-shell ::ng-deep .mat-mdc-button:not(:disabled),
-.caja-shell ::ng-deep .mat-mdc-unelevated-button:not(:disabled) { border-radius: 12px; }
-.caja-shell ::ng-deep .mat-mdc-unelevated-button.mat-primary:not(:disabled) {
-  background: linear-gradient(135deg, var(--caja-brand), var(--caja-brand-dark));
-  box-shadow: 0 8px 20px rgba(23,107,91,.2);
-}
-@media (max-width: 767px) { .caja-body { padding: .75rem .75rem calc(6.5rem + env(safe-area-inset-bottom)); } }
-@media (prefers-reduced-motion: reduce) {
-  .caja-shell *, .caja-shell *::before, .caja-shell *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; animation-duration: .01ms !important; }
+  min-height: 100dvh;
+  color: var(--caja-ink);
+
+  /* Subtle radial gradient background — professional and non-distracting */
+  background:
+    radial-gradient(ellipse 55% 38% at 4% 0%, rgba(216, 153, 75, .09), transparent),
+    radial-gradient(ellipse 55% 40% at 96% 3%, rgba(23, 107, 91, .08), transparent),
+    #f3f6f4;
 }
 
-.caja-shell ::ng-deep .mat-mdc-button-base,.caja-shell ::ng-deep .mat-mdc-form-field,.caja-shell ::ng-deep .mdc-floating-label,.caja-shell ::ng-deep .mat-mdc-select-value,.caja-shell ::ng-deep .mdc-button__label{font-family:var(--bs-body-font-family,system-ui,sans-serif)}
+/* ── Layout container ───────────────────────────────────────── */
+.caja-body {
+  max-width: 1560px;
+  margin: 0 auto;
+  padding: 1.25rem 1.5rem 2.5rem;
+}
+
+/* ── Global Material overrides ──────────────────────────────── */
+.caja-shell ::ng-deep .mat-mdc-stroked-button:not(:disabled),
+.caja-shell ::ng-deep .mat-mdc-button:not(:disabled),
+.caja-shell ::ng-deep .mat-mdc-unelevated-button:not(:disabled) {
+  border-radius: 12px;
+}
+
+.caja-shell ::ng-deep .mat-mdc-unelevated-button.mat-primary:not(:disabled) {
+  background: linear-gradient(135deg, var(--caja-brand), var(--caja-brand-dark));
+  box-shadow: 0 6px 18px rgba(23, 107, 91, .22);
+  transition: box-shadow .18s ease, transform .12s ease;
+}
+
+.caja-shell ::ng-deep .mat-mdc-unelevated-button.mat-primary:not(:disabled):hover {
+  box-shadow: 0 10px 26px rgba(23, 107, 91, .3);
+  transform: translateY(-1px);
+}
+
+.caja-shell ::ng-deep .mat-mdc-unelevated-button.mat-primary:not(:disabled):active {
+  transform: translateY(0);
+}
+
+/* ── Font family normalization ──────────────────────────────── */
+.caja-shell ::ng-deep .mat-mdc-button-base,
+.caja-shell ::ng-deep .mat-mdc-form-field,
+.caja-shell ::ng-deep .mdc-floating-label,
+.caja-shell ::ng-deep .mat-mdc-select-value,
+.caja-shell ::ng-deep .mdc-button__label {
+  font-family: var(--bs-body-font-family, system-ui, sans-serif);
+}
+
+/* ── Loading bar ────────────────────────────────────────────── */
+.caja-shell ::ng-deep .mat-mdc-progress-bar {
+  --mdc-linear-progress-active-indicator-color: var(--caja-brand);
+  --mdc-linear-progress-track-color: rgba(23, 107, 91, .12);
+}
+
+/* ── Responsive ─────────────────────────────────────────────── */
+@media (max-width: 767px) {
+  .caja-body {
+    padding: .75rem .75rem calc(6.5rem + env(safe-area-inset-bottom));
+  }
+}
+
+/* ── Reduced motion ─────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  .caja-shell *,
+  .caja-shell *::before,
+  .caja-shell *::after {
+    scroll-behavior: auto !important;
+    transition-duration: .01ms !important;
+    animation-duration: .01ms !important;
+  }
+}

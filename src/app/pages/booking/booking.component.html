@@ -7,10 +7,16 @@
             <div class="booking-hero__intro">
               <span class="badge rounded-pill booking-hero__badge mb-3">Agenda en línea</span>
               <span class="booking-hero__brand d-block mb-2">{{ tenantContext.nombreComercial() }}</span>
-              <h1 class="display-5 fw-bold booking-hero__title mb-3">Reserva tu cita.</h1>
+              <h1 class="display-5 fw-bold booking-hero__title mb-3">Tu próxima cita<br><span>empieza aquí.</span></h1>
               <p class="booking-hero__lead mb-0">
-                Agrega tus servicios y elige cuándo venir. Tu cita, a tu manera.
+                Elige tus servicios, encuentra tu horario y completa tu reserva.
               </p>
+              <ol class="booking-progress" aria-label="Progreso de tu reserva">
+                <li class="is-current"><span>1</span>Servicios</li>
+                <li [class.is-current]="hasCatalogSelection()"><span>2</span>Fecha</li>
+                <li [class.is-current]="!!selectedDate()"><span>3</span>Horario</li>
+                <li [class.is-current]="!!selectedItinerary()"><span>4</span>Datos</li>
+              </ol>
             </div>
           </div>
         </div>
@@ -50,6 +56,13 @@
                 </div>
 
                 <div class="booking-flow">
+                  @if (cotizacion()?.promocion; as promocion) {
+                    <div class="booking-promotion-notice" role="status"><i class="bi bi-tag" aria-hidden="true"></i><div><strong>Promoción aplicada</strong><span>{{ promocion.titulo }}</span></div></div>
+                  }
+                  @if (cotizacion()?.motivoNoAplicada; as motivo) {
+                    <div class="booking-promotion-notice" role="status"><i class="bi bi-info-circle" aria-hidden="true"></i><div><strong>Precio normal</strong><span>{{ motivo }}. Puedes continuar sin esta promoción.</span></div></div>
+                  }
+                  @if (errorCotizacion()) { <div class="alert booking-alert-danger" role="alert"><p>{{ errorCotizacion() }}</p><button type="button" class="btn btn-outline-primary" (click)="reintentarCotizacion()">Reintentar cotización</button></div> }
                   @if (errorMessage && !submitted()) {
                     <div class="mb-3">
                       <div class="alert booking-alert booking-alert-danger" role="alert">
@@ -129,7 +142,7 @@
                             @for (service of filteredServices(); track service.id) {
                               <article class="booking-service" [class.is-selected]="isServiceSelected(service.id)">
                                 <div class="booking-service__copy">@if (serviceCategoryLabel(service)) { <small>{{ serviceCategoryLabel(service) }}</small> }<h3>{{ service.nombre }}</h3>@if (service.descripcion) { <p>{{ service.descripcion }}</p> }<span>{{ service.duracionMinutos }} min</span></div>
-                                <div class="booking-service__action"><strong>{{ service.precio | appMoney:service.moneda:2:2 }}</strong><button type="button" [attr.aria-pressed]="isServiceSelected(service.id)" [attr.aria-label]="(isServiceSelected(service.id) ? 'Quitar ' : 'Agregar ') + service.nombre" (click)="toggleService(service)"><i class="bi" [class.bi-plus-lg]="!isServiceSelected(service.id)" [class.bi-check2]="isServiceSelected(service.id)" aria-hidden="true"></i>{{ isServiceSelected(service.id) ? 'Agregado' : 'Agregar' }}</button></div>
+                                <div class="booking-service__action">@if(precioCotizado(service.id); as precio) { @if(precio.descuento > 0) { <s>{{ precio.precioLista | appMoney:service.moneda:2:2 }}</s> } <strong>{{ precio.precioNeto | appMoney:service.moneda:2:2 }}</strong> } @else { <strong>{{ service.precio | appMoney:service.moneda:2:2 }}</strong> }<button type="button" [attr.aria-pressed]="isServiceSelected(service.id)" [attr.aria-label]="(isServiceSelected(service.id) ? 'Quitar ' : 'Agregar ') + service.nombre" (click)="toggleService(service)"><i class="bi" [class.bi-plus-lg]="!isServiceSelected(service.id)" [class.bi-check2]="isServiceSelected(service.id)" aria-hidden="true"></i>{{ isServiceSelected(service.id) ? 'Agregado' : 'Agregar' }}</button></div>
                               </article>
                             } @empty {
                               <p class="booking-inline-note" role="status">{{ serviceSearch() ? 'No encontramos servicios con ese nombre. Prueba otra búsqueda.' : 'No hay servicios disponibles en esta selección.' }}</p>
@@ -299,6 +312,7 @@
                                       <button
                                         type="button"
                                         class="time-option-card"
+                                        [attr.aria-pressed]="selectedItinerary()?.id === option.itinerary.id"
                                         [class.is-active]="selectedItinerary()?.id === option.itinerary.id"
                                         (click)="selectStartOption(option)">
                                         <strong>{{ option.hora }}</strong>
@@ -423,7 +437,7 @@
                                       }
                                     </div>
                                     <div class="itinerary-card__footer">
-                                      <span>{{ itinerary.totalPrecio | appMoney:(selectedServices()[0]?.moneda || 'MXN'):2:2 }}</span>
+                                      <span>@if(cotizacion(); as precio) { {{ precio.total | appMoney:precio.moneda:2:2 }} } @else { Calculando… }</span>
                                       @if (itinerary.usaMultiplesStaff) {
                                         <small>Atención combinada</small>
                                       }
@@ -479,7 +493,7 @@
                             </div>
                             <div class="booking-summary-grid__item">
                               <div class="small booking-meta-label">Total</div>
-                              <div class="booking-meta-value fw-semibold">{{ selectedItinerary()?.totalPrecio | appMoney:(selectedServices()[0]?.moneda || 'MXN'):2:2 }}</div>
+                              <div class="booking-meta-value fw-semibold">@if(cotizacion(); as precio) { {{ precio.total | appMoney:precio.moneda:2:2 }} } @else { Calculando… }</div>
                             </div>
                           </div>
                         </div>
@@ -493,7 +507,7 @@
                                 </div>
                                 <div class="booking-itinerary-summary__side text-end">
                                   <strong>{{ item.slot.hora }}</strong>
-                                  <span>{{ item.servicio.precio | appMoney:item.servicio.moneda:2:2 }}</span>
+                                  <span>@if(precioCotizado(item.servicio.id); as precio) { @if(precio.descuento > 0) { <s>{{ precio.precioLista | appMoney:item.servicio.moneda:2:2 }}</s> } {{ precio.precioNeto | appMoney:item.servicio.moneda:2:2 }} } @else { Calculando… }</span>
                                 </div>
                               </article>
                             }
@@ -553,9 +567,9 @@
                           </div>
                         </div>
                         <div class="d-grid mt-4">
-                          <button type="submit" [disabled]="bookingForm.invalid || isSubmitting()" class="btn btn-primary rounded-pill shadow-lg py-3">
+                          <button type="submit" [disabled]="bookingForm.invalid || isSubmitting() || cotizando() || !cotizacion()" class="btn btn-primary rounded-pill shadow-lg py-3">
                             @if (!isSubmitting()) {
-                              <span>Confirmar reserva</span>
+                              <span>Reservar mi cita <i class="bi bi-arrow-right ms-2" aria-hidden="true"></i></span>
                             }
                             @if (isSubmitting()) {
                               <span class="spinner-border spinner-border-sm me-2"></span>
@@ -596,14 +610,14 @@
 
           <div class="col-lg-4 col-xl-4 booking-cart-column">
             <aside class="booking-aside">
-              <app-reservation-cart [services]="selectedServices()" [branch]="selectedBranch?.nombre || ''" [date]="selectedDate() ? (selectedDate() | date:'dd MMM':'':'es') || '' : ''" [time]="selectedSlot?.hora ? selectedSlot!.hora + ' – ' + itineraryEndHour(selectedItinerary()) : ''" [actionLabel]="cartActionLabel()" [disabled]="isSubmitting() || loadingCatalog()" (remove)="removeSelectedService($event)" (proceed)="continueBooking()" />
+              <app-reservation-cart [services]="selectedServices()" [branch]="selectedBranch?.nombre || ''" [date]="selectedDate() ? (selectedDate() | date:'dd MMM':'':'es') || '' : ''" [time]="selectedSlot?.hora ? selectedSlot!.hora + ' – ' + itineraryEndHour(selectedItinerary()) : ''" [actionLabel]="cartActionLabel()" [quote]="cotizacion()" [pricePending]="cotizando()" [disabled]="isSubmitting() || loadingCatalog() || cotizando() || !cotizacion()" (remove)="removeSelectedService($event)" (proceed)="continueBooking()" />
               @if (tenantContext.whatsappHabilitado()) {
               <div class="booking-aside__card booking-aside__contact">
                 <span class="booking-aside__label">Ayuda rápida</span>
-                <h3 class="h5 booking-section-title mb-2">¿Necesitas ayuda para decidir?</h3>
-                <p>Si quieres orientación sobre el servicio o prefieres apoyo para elegir horario, te atendemos por WhatsApp.</p>
+                <h3 class="h5 booking-section-title mb-2">Te ayudamos a elegir</h3>
+                <p>Resuelve tus dudas sobre los servicios antes de reservar.</p>
                 <a [href]="tenantContext.whatsappHref()" target="_blank" rel="noreferrer" class="btn btn-outline-primary rounded-pill w-100">
-                  Escribir por WhatsApp
+                  Consultar por WhatsApp
                 </a>
               </div>
               }

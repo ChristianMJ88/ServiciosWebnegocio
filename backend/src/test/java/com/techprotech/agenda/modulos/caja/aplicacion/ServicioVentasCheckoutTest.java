@@ -88,4 +88,16 @@ class ServicioVentasCheckoutTest {
         verify(ventas, never()).save(any());
         verifyNoInteractions(detallesCheckout, intentos, detallesVenta, pagos);
     }
+    @Test void conservaElDescuentoDelAnticipoAlProyectarServicioEnVentaDetalle() {
+        var ordenes=mock(CheckoutOrdenRepositorio.class);var origen=mock(CheckoutOrdenDetalleRepositorio.class);var intentos=mock(IntentoPagoCheckoutRepositorio.class);
+        var ventas=mock(VentaRepositorio.class);var detalles=mock(VentaDetalleRepositorio.class);var pagos=mock(PagoVentaRepositorio.class);
+        var servicio=new ServicioVentasCheckout(ordenes,origen,intentos,ventas,detalles,pagos,mock(com.techprotech.agenda.modulos.productos.aplicacion.ServicioComisionesDevengadas.class));
+        var orden=new CheckoutOrdenEntidad();orden.setId(3L);orden.setPublicId("prueba");orden.setEmpresaId(25L);orden.setEstado("PAGADA");orden.setSucursalId(2L);orden.setMoneda("MXN");orden.setSubtotal(new BigDecimal("150"));orden.setDescuentoTotal(new BigDecimal("50"));orden.setTotal(new BigDecimal("100"));
+        var intento=new IntentoPagoCheckoutEntidad();intento.setId(9L);intento.setImporte(new BigDecimal("100"));
+        var linea=new CheckoutOrdenDetalleEntidad();linea.setTipoConcepto("SERVICIO");linea.setServicioId(10L);linea.setCitaId(90L);linea.setCantidad(BigDecimal.ONE);linea.setPrecioListaUnitario(new BigDecimal("150"));linea.setPrecioUnitario(new BigDecimal("100"));linea.setDescuento(new BigDecimal("50"));linea.setTotal(new BigDecimal("100"));
+        when(ordenes.bloquearPorEmpresaEId(25L,3L)).thenReturn(Optional.of(orden));when(intentos.findFirstByEmpresaIdAndCheckoutOrdenIdAndEstadoOrderByIdDesc(25L,3L,"APROBADO")).thenReturn(Optional.of(intento));
+        when(ventas.save(any())).thenAnswer(i->{VentaEntidad v=i.getArgument(0);v.setId(40L);return v;});when(origen.findByEmpresaIdAndCheckoutOrdenIdOrderByIdAsc(25L,3L)).thenReturn(List.of(linea));
+        servicio.proyectar(25L,3L);
+        verify(detalles).saveAll(argThat(items->{var fila=items.iterator().next();return fila.getPrecioUnitario().compareTo(new BigDecimal("150"))==0 && fila.getDescuento().compareTo(new BigDecimal("50"))==0 && fila.getTotal().compareTo(new BigDecimal("100"))==0;}));
+    }
 }

@@ -1,4 +1,5 @@
-<main class="home-page">
+<main class="home-page" #homePage>
+  <app-public-section-navigation [root]="homePage" />
   @if (tenantContext.bloqueInicioHabilitado('PORTADA')) {
   <section
     class="home-hero"
@@ -123,7 +124,8 @@
         [description]="tenantContext.bloqueInicio('SERVICIOS_DESTACADOS')?.descripcion || tenantContext.inicioDescripcionServicios()" />
 
       @if (destacados().length) {
-        <div class="services-feature-grid" [class.services-feature-grid--carousel]="vistaDestacados() === 'CARRUSEL'" [class.services-feature-grid--list]="vistaDestacados() === 'LISTA'" [class.services-feature-grid--single]="destacados().length === 1" [class.services-feature-grid--pair]="destacados().length === 2">
+        <app-public-rail-controls [target]="servicesRail" />
+        <div #servicesRail class="services-feature-grid home-touch-rail" [class.services-feature-grid--carousel]="vistaDestacados() === 'CARRUSEL'" [class.services-feature-grid--list]="vistaDestacados() === 'LISTA'" [class.services-feature-grid--single]="destacados().length === 1" [class.services-feature-grid--pair]="destacados().length === 2">
           @for (item of destacados(); track item.tipo + '-' + item.referenciaId; let i = $index) {
             <article class="service-feature">
               <div class="service-feature__media">
@@ -182,7 +184,8 @@
         [eyebrow]="tenantContext.bloqueInicio('EQUIPO')?.etiqueta"
         [title]="tenantContext.bloqueInicio('EQUIPO')?.titulo || tenantContext.nombreComercial()"
         [description]="tenantContext.bloqueInicio('EQUIPO')?.descripcion" />
-      <div class="team-grid" [class.team-grid--single]="tenantContext.equipo().length === 1" [class.team-grid--pair]="tenantContext.equipo().length === 2">
+      <app-public-rail-controls [target]="teamRail" />
+      <div #teamRail class="team-grid home-touch-rail" [class.team-grid--single]="tenantContext.equipo().length === 1" [class.team-grid--pair]="tenantContext.equipo().length === 2">
         @for (member of tenantContext.equipo(); track member.id; let i = $index) {
           <app-public-team-card
             appScrollReveal="up"
@@ -203,7 +206,8 @@
         [eyebrow]="tenantContext.bloqueInicio('BENEFICIOS')?.etiqueta"
         [title]="tenantContext.bloqueInicio('BENEFICIOS')?.titulo || tenantContext.nombreComercial()"
         [description]="tenantContext.bloqueInicio('BENEFICIOS')?.descripcion" />
-      <div class="benefits-grid" [class.benefits-grid--single]="tenantContext.beneficios().length === 1" [class.benefits-grid--pair]="tenantContext.beneficios().length === 2">
+      <app-public-rail-controls [target]="benefitsRail" />
+      <div #benefitsRail class="benefits-grid home-touch-rail" [class.benefits-grid--single]="tenantContext.beneficios().length === 1" [class.benefits-grid--pair]="tenantContext.beneficios().length === 2">
         @for (item of tenantContext.beneficios(); track item.id; let i = $index) {
           <article class="benefit-public-card" appScrollReveal="up" [revealDelay]="70 * (i + 1)">
             <span class="benefit-public-card__number">{{ numeroBeneficio(i) }}</span>
@@ -234,7 +238,8 @@
         </div>
       }
       @if (tenantContext.resenas()!.resenas.length) {
-        <div class="reviews-public-grid" [class.reviews-public-grid--single]="tenantContext.resenas()!.resenas.length === 1" [class.reviews-public-grid--pair]="tenantContext.resenas()!.resenas.length === 2">
+        <app-public-rail-controls [target]="reviewsRail" />
+        <div #reviewsRail class="reviews-public-grid home-touch-rail" [class.reviews-public-grid--single]="tenantContext.resenas()!.resenas.length === 1" [class.reviews-public-grid--pair]="tenantContext.resenas()!.resenas.length === 2">
           @for (item of tenantContext.resenas()!.resenas; track item.id; let i = $index) {
             <article class="review-public-card" [class.review-public-card--featured]="item.destacada" appScrollReveal="up" [revealDelay]="60 * (i + 1)">
               <div class="review-public-card__quote"><i class="bi bi-quote"></i></div>
@@ -318,8 +323,9 @@
         [eyebrow]="tenantContext.bloqueInicio('GALERIA')?.etiqueta"
         [title]="tenantContext.bloqueInicio('GALERIA')?.titulo || tenantContext.galeria()?.titulo || tenantContext.nombreComercial()"
         [description]="tenantContext.bloqueInicio('GALERIA')?.descripcion || tenantContext.galeria()?.descripcion" />
-      <div
-        class="gallery-public"
+      <app-public-rail-controls [target]="galleryRail" />
+      <div #galleryRail
+        class="gallery-public home-touch-rail"
         [class.gallery-public--single]="tenantContext.galeria()!.imagenes.length === 1"
         [class.gallery-public--pair]="tenantContext.galeria()!.imagenes.length === 2"
         [class.gallery-public--mosaic]="tenantContext.galeria()?.vista === 'MOSAICO'"
@@ -358,7 +364,8 @@
         [eyebrow]="tenantContext.bloqueInicio('PROMOCIONES')?.etiqueta"
         [title]="tenantContext.bloqueInicio('PROMOCIONES')?.titulo || tenantContext.nombreComercial()"
         [description]="tenantContext.bloqueInicio('PROMOCIONES')?.descripcion" />
-      <div class="promotions-grid" [class.promotions-grid--single]="tenantContext.promociones().length === 1">
+      <app-public-rail-controls [target]="promotionsRail" />
+      <div #promotionsRail class="promotions-grid home-touch-rail" [class.promotions-grid--single]="tenantContext.promociones().length === 1">
         @for (item of tenantContext.promociones(); track item.id; let i = $index) {
           <article class="promotion-public-card" appScrollReveal="up" [revealDelay]="70 * (i + 1)">
             <div class="promotion-public-card__media">

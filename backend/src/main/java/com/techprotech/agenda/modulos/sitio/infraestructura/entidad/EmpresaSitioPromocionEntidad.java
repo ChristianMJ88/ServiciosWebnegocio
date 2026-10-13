@@ -42,4 +42,6 @@ public class EmpresaSitioPromocionEntidad {
     private boolean activa;
     @Column(nullable = false)
     private int orden;
+    @Column(name = "eliminada_en")
+    private java.time.LocalDateTime eliminadaEn;
 }

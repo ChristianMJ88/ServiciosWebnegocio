@@ -429,6 +429,11 @@ public class ServicioRecepcion {
 
         ZonedDateTime ahora = ZonedDateTime.now(zona);
 
+        Map<Long, String> nombresPrestadores = prestadorServicioRepositorio
+                .findBySucursalIdInOrderByNombreMostrarAsc(List.of(sucursalId)).stream()
+                .collect(Collectors.toMap(prestador -> prestador.getUsuarioId(),
+                        prestador -> prestador.getNombreMostrar(), (primero, segundo) -> primero));
+
         return franjas.stream()
                 .map(franja -> {
                     OffsetDateTime inicio = OffsetDateTime.parse(franja.inicio());
@@ -441,11 +446,11 @@ public class ServicioRecepcion {
                             franja.servicioId(),
                             franja.sucursalId(),
                             inicio,
-                            fin
+                            fin,
+                            nombresPrestadores.get(franja.prestadorId())
                     );
                 })
                 .filter(franja -> !franja.inicioAt().atZoneSameInstant(zona).isBefore(ahora))
-                .limit(8)
                 .toList();
     }
 

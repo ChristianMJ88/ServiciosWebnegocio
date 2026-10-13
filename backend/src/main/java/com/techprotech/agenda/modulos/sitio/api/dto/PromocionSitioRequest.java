@@ -20,5 +20,13 @@ public record PromocionSitioRequest(
         boolean activa,
         @Min(0) int orden,
         List<Long> servicioIds,
-        List<Long> sucursalIds
-) {}
+        List<Long> sucursalIds,
+        Long id
+) {
+    public PromocionSitioRequest(String titulo, String descripcion, Long mediaId, String imagenUrl,
+            LocalDate fechaInicio, LocalDate fechaFin, String tipoDescuento, BigDecimal valorDescuento,
+            String moneda, String textoBoton, boolean activa, int orden, List<Long> servicioIds, List<Long> sucursalIds) {
+        this(titulo, descripcion, mediaId, imagenUrl, fechaInicio, fechaFin, tipoDescuento, valorDescuento,
+                moneda, textoBoton, activa, orden, servicioIds, sucursalIds, null);
+    }
+}

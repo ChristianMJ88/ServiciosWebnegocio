@@ -10,6 +10,7 @@ public record FranjaRecepcionDisponibleResponse(
         Long servicioId,
         Long sucursalId,
         OffsetDateTime inicioAt,
-        OffsetDateTime finAt
+        OffsetDateTime finAt,
+        String prestadorNombre
 ) {
 }

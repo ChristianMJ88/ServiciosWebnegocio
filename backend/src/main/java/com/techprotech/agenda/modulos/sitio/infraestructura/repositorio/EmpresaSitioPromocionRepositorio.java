@@ -7,5 +7,5 @@ import java.util.List;
 
 public interface EmpresaSitioPromocionRepositorio extends JpaRepository<EmpresaSitioPromocionEntidad, Long> {
     List<EmpresaSitioPromocionEntidad> findByEmpresaIdOrderByOrdenAsc(Long empresaId);
-    void deleteByEmpresaId(Long empresaId);
+    java.util.Optional<EmpresaSitioPromocionEntidad> findByIdAndEmpresaId(Long id, Long empresaId);
 }

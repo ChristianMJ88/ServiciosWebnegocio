@@ -148,8 +148,8 @@
         }
 
         <div class="recepcion-context-field">
-          <label>Fecha</label>
-          <input class="form-control form-control-sm" type="date" [ngModel]="fechaAgenda()" (ngModelChange)="cambiarFecha($event)" />
+          <label for="recepcionFechaAgenda">Fecha</label>
+          <input id="recepcionFechaAgenda" class="form-control form-control-sm" type="date" [ngModel]="fechaAgenda()" (ngModelChange)="cambiarFecha($event)" />
         </div>
       </div>
     </header>

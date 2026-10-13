@@ -472,7 +472,7 @@ export interface PromocionSitioAdmin {
 }
 
 export interface ActualizarPromocionesSitioPayload {
-  promociones: Array<Omit<PromocionSitioAdmin, 'id' | 'vigente'>>;
+  promociones: Array<Omit<PromocionSitioAdmin, 'id' | 'vigente'> & { id?: number | null }>;
 }
 
 export interface GaleriaImagenSitioAdmin {

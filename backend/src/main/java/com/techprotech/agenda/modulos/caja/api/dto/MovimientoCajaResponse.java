@@ -13,7 +13,6 @@ public record MovimientoCajaResponse(
         String concepto,
         String referencia,
         String observaciones,
-        Long registradoPorUsuarioId,
         LocalDateTime registradoEn
 ) {
 }

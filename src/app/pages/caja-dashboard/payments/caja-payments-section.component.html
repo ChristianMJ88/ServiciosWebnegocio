@@ -18,10 +18,14 @@
           @for (cita of citas; track cita.citaId) {
             <button type="button" class="caja-appointment-card"
               [class.active]="citaSeleccionadaId === cita.citaId"
+              [class.status-pending]="cita.estadoPago === 'PENDIENTE'"
+              [class.status-partial]="cita.estadoPago === 'PARCIAL'"
               (click)="selectAppointment.emit(cita.citaId)">
               <div class="caja-appointment-head">
                 <div><strong>{{ cita.clienteNombre }}</strong><span>{{ cita.servicioNombre }} · {{ cita.sucursalNombre }}</span></div>
-                <span class="caja-table-badge">{{ cita.estadoPago }}</span>
+                <span class="caja-table-badge"
+                  [class.is-partial]="cita.estadoPago === 'PARCIAL'"
+                  [class.is-pending]="cita.estadoPago === 'PENDIENTE'">{{ cita.estadoPago }}</span>
               </div>
               <div class="caja-appointment-meta">
                 <span>{{ cita.inicio | date:'dd/MM/yyyy HH:mm':'':'es-MX' }}</span>
@@ -50,7 +54,16 @@
           <strong>{{ cita.clienteNombre }}</strong>
           <span>{{ cita.servicioNombre }} · {{ cita.sucursalNombre }}</span>
           <span>{{ cita.inicio | date:'dd/MM/yyyy HH:mm':'':'es-MX' }}</span>
-          <div class="caja-payment-highlight"><small>Saldo pendiente</small><strong>{{ cita.pendiente | appMoney:'MXN':2:2 }}</strong></div>
+@if (cita.descuento && cita.descuento > 0) {
+  <div class="caja-promotion-breakdown">
+    @if (cita.promocionTitulo) {<strong>{{ cita.promocionTitulo }}</strong>}
+    <span>Precio original <del>{{ cita.precioLista | appMoney:cita.moneda:2:2 }}</del></span>
+    <span>Descuento <strong>−{{ cita.descuento | appMoney:cita.moneda:2:2 }}</strong></span>
+    <small>El descuento está incluido en el precio de la cita.</small>
+  </div>
+}
+<div class="caja-payment-highlight">
+<small>Saldo pendiente</small><strong>{{ cita.pendiente | appMoney:'MXN':2:2 }}</strong></div>
         </div>
         <form class="caja-form-grid" (ngSubmit)="savePayment.emit()">
           <mat-form-field appearance="outline"><mat-label>Monto</mat-label><input matInput type="number" min="0.01" step="0.01" name="montoPago" [(ngModel)]="formularioPago.monto" required></mat-form-field>

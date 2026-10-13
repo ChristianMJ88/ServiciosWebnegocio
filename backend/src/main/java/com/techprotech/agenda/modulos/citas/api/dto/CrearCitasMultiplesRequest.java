@@ -17,6 +17,11 @@ public record CrearCitasMultiplesRequest(
         @Email @NotBlank String correoCliente,
         @NotBlank @Pattern(regexp = "^[0-9+ ]{10,15}$") String telefonoCliente,
         @Size(max = 500) String notas,
-        @NotEmpty @Size(max = 20) List<@Valid CrearCitaMultipleItemRequest> items
+        @NotEmpty @Size(max = 20) List<@Valid CrearCitaMultipleItemRequest> items,
+        Long promocionId
 ) {
+    public CrearCitasMultiplesRequest(Long empresaId,Long sucursalId,String nombreCliente,String correoCliente,
+            String telefonoCliente,String notas,List<CrearCitaMultipleItemRequest> items) {
+        this(empresaId,sucursalId,nombreCliente,correoCliente,telefonoCliente,notas,items,null);
+    }
 }

@@ -2,6 +2,7 @@ import { Component, ElementRef, ViewChild, computed, input, output } from '@angu
 import { NgTemplateOutlet } from '@angular/common';
 import { ServicioCatalogo } from '../../../services/booking-data.service';
 import { MoneyDisplayPipe } from '../../pipes/money-display.pipe';
+import { CotizacionCitas } from '../../../services/appointment.service';
 
 @Component({
   selector: 'app-reservation-cart',
@@ -17,10 +18,14 @@ export class ReservationCartComponent {
   readonly time = input('');
   readonly actionLabel = input('Elegir fecha');
   readonly disabled = input(false);
+  readonly quote = input<CotizacionCitas | null>(null);
+  readonly pricePending = input(false);
   readonly remove = output<number>();
   readonly proceed = output<void>();
   @ViewChild('sheet') private sheet?: ElementRef<HTMLDialogElement>;
   readonly totals = computed(() => {
+    const quote = this.quote();
+    if (quote) return [{currency:quote.moneda,amount:quote.total}];
     const totals = new Map<string, number>();
     for (const service of this.services()) {
       const currency = service.moneda || 'MXN';
@@ -30,6 +35,7 @@ export class ReservationCartComponent {
   });
   readonly duration = computed(() => this.services().reduce((total, service) =>
     total + service.duracionMinutos + service.bufferAntesMinutos + service.bufferDespuesMinutos, 0));
+  priceLine(serviceId: number) { return this.quote()?.lineas.find(linea => linea.servicioId===serviceId); }
 
   open(): void { this.sheet?.nativeElement.showModal(); }
   close(): void { this.sheet?.nativeElement.close(); }

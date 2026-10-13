@@ -10,6 +10,7 @@ h2 { font-size: 1.5rem; margin: .3rem 0 1rem; }
 .cart-items li > div { min-width: 0; display: grid; gap: .35rem; }
 .cart-items strong { font-size: .9rem; overflow-wrap: anywhere; }
 .cart-items span, .cart-note { font-size: .8rem; color: #596775; }
+.cart-items s { margin-right: .4rem; }
 .cart-remove, .cart-close { display: grid; place-items: center; width: 44px; height: 44px; flex: 0 0 44px; border: 0; border-radius: 50%; background: #f2f5f7; color: #344351; }
 .cart-details { display: grid; gap: .8rem; margin: 1.25rem 0; }
 .cart-details > div { display: flex; gap: 1rem; justify-content: space-between; align-items: baseline; }

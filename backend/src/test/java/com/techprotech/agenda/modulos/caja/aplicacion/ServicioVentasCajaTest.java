@@ -27,8 +27,8 @@ import static org.mockito.Mockito.*;
 
 class ServicioVentasCajaTest {
     @org.junit.jupiter.params.ParameterizedTest
-    @org.junit.jupiter.params.provider.ValueSource(booleans={false,true})
-    void registraServicioYProductosComoUnaVentaYDescuentaInventario(boolean regional) {
+    @org.junit.jupiter.params.provider.CsvSource({"false,false","true,false","false,true","true,true"})
+    void registraServicioYProductosComoUnaVentaYDescuentaInventario(boolean regional, boolean promocion) {
         VentaRepositorio ventas = mock(VentaRepositorio.class);
         VentaDetalleRepositorio detalles = mock(VentaDetalleRepositorio.class);
         PagoVentaRepositorio pagos = mock(PagoVentaRepositorio.class);
@@ -54,6 +54,7 @@ class ServicioVentasCajaTest {
         CajaSesionEntidad sesion = new CajaSesionEntidad(); sesion.setId(8L); sesion.setEmpresaId(1L); sesion.setSucursalId(5L); sesion.setEstado("ABIERTA");
         CitaEntidad cita = new CitaEntidad(); cita.setId(10L); cita.setEmpresaId(1L); cita.setSucursalId(5L); cita.setServicioId(20L);
         cita.setClienteId(30L); cita.setPrecio(new BigDecimal("100.00")); cita.setMoneda("MXN"); cita.setEstado("FINALIZADA"); cita.setCheckInEn(LocalDateTime.now());
+        cita.setPrecioLista(new BigDecimal(promocion?"125.00":"100.00"));cita.setDescuento(new BigDecimal(promocion?"25.00":"0.00"));
         ServicioEntidad conceptoServicio = new ServicioEntidad(); conceptoServicio.setId(20L); conceptoServicio.setEmpresaId(1L); conceptoServicio.setNombre("Manicure");
         ProductoEntidad producto = new ProductoEntidad(); producto.setId(40L); producto.setEmpresaId(1L); producto.setActivo(true);
         producto.setControlaInventario(true); producto.setNombre("Crema"); producto.setSku("CREMA-1"); producto.setPrecioBase(new BigDecimal("50.00")); producto.setMoneda("MXN"); producto.setCosto(new BigDecimal("20.00"));
@@ -89,7 +90,8 @@ class ServicioVentasCajaTest {
                 List.of(new RegistrarVentaRequest.ProductoVentaRequest(40L, new BigDecimal("2"))), "TARJETA", "AUTH-1", null));
 
         assertThat(response.total()).isEqualByComparingTo(regional?"208.00":"190.00");
-        assertThat(response.descuentoTotal()).isEqualByComparingTo(regional?"12.00":"10.00");
+        assertThat(response.descuentoTotal()).isEqualByComparingTo(new BigDecimal(regional?"12.00":"10.00").add(new BigDecimal(promocion?"25.00":"0.00")));
+        assertThat(response.detalles().get(0).descuento()).isEqualByComparingTo(promocion?"25.00":"0.00");
         assertThat(response.detalles().get(1).descuento()).isEqualByComparingTo(regional?"12.00":"10.00");
         assertThat(response.detalles()).extracting(item -> item.tipoConcepto()).containsExactly("SERVICIO", "PRODUCTO");
         assertThat(response.detalles().get(1).costoUnitarioHistorico()).isEqualByComparingTo("20.00");

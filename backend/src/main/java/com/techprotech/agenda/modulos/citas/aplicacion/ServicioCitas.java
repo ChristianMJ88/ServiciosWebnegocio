@@ -76,6 +76,8 @@ public class ServicioCitas {
     private final ServicioOutboxCorreoCitas servicioOutboxCorreoCitas;
     private final ServicioOutboxWhatsappCitas servicioOutboxWhatsappCitas;
     private final ServicioCapacidadesEmpresa capacidades;
+    private final ServicioCotizacionCitas cotizador;
+    private final com.fasterxml.jackson.databind.ObjectMapper objectMapper;
 
     public ServicioCitas(
             ServicioConsultaDisponibilidad servicioConsultaDisponibilidad,
@@ -94,7 +96,9 @@ public class ServicioCitas {
             ServicioCorreoCitas servicioCorreoCitas,
             ServicioOutboxCorreoCitas servicioOutboxCorreoCitas,
             ServicioOutboxWhatsappCitas servicioOutboxWhatsappCitas,
-            ServicioCapacidadesEmpresa capacidades
+            ServicioCapacidadesEmpresa capacidades,
+            ServicioCotizacionCitas cotizador,
+            com.fasterxml.jackson.databind.ObjectMapper objectMapper
     ) {
         this.servicioConsultaDisponibilidad = servicioConsultaDisponibilidad;
         this.sucursalRepositorio = sucursalRepositorio;
@@ -113,6 +117,8 @@ public class ServicioCitas {
         this.servicioOutboxCorreoCitas = servicioOutboxCorreoCitas;
         this.servicioOutboxWhatsappCitas = servicioOutboxWhatsappCitas;
         this.capacidades=capacidades;
+        this.cotizador=cotizador;
+        this.objectMapper=objectMapper;
     }
 
     @Transactional
@@ -159,6 +165,10 @@ public class ServicioCitas {
             throw new ResponseStatusException(CONFLICT, "Existe un conflicto de horario para el prestador");
         }
 
+        var cotizacion = cotizador.cotizarPrecio(empresaId, request.sucursalId(), request.promocionId(),
+                List.of(new com.techprotech.agenda.modulos.citas.api.dto.CotizarCitasRequest.ItemCotizacion(request.servicioId(),request.inicio())));
+        if (request.promocionId()!=null && cotizacion.promocion()==null) throw new ResponseStatusException(CONFLICT,cotizacion.motivoNoAplicada());
+
         Long clienteId = resolverOCrearCliente(
                 empresaId,
                 request.nombreCliente(),
@@ -175,7 +185,7 @@ public class ServicioCitas {
         cita.setEstado("PENDIENTE");
         cita.setInicio(inicio);
         cita.setFin(fin);
-        cita.setPrecio(servicio.getPrecio());
+        aplicarCotizacion(cita,cotizacion,0,request.promocionId());
         cita.setMoneda(servicio.getMoneda());
         cita.setNotas(request.notas());
         cita.setCreadaPorUsuarioId(clienteId);
@@ -213,7 +223,8 @@ public class ServicioCitas {
                 finRespuesta,
                 resolverMensajeRespuesta(empresaId, correoConfirmacionProgramado),
                 correoConfirmacionProgramado,
-                false
+                false,
+                cita.getPrecioLista(), cita.getDescuento(), cita.getPrecio()
         );
     }
 
@@ -242,7 +253,7 @@ public class ServicioCitas {
                     request.sucursalId(),
                     item.servicioId(),
                     item.prestadorId(),
-                    item.inicio().toLocalDate()
+                    item.inicio().atZoneSameInstant(zona).toLocalDate()
             );
 
             FranjaDisponibleResponse franja = franjas.stream()
@@ -277,14 +288,17 @@ public class ServicioCitas {
             }
         }
 
+        var cotizacion = cotizador.cotizarPrecio(empresaId,request.sucursalId(),request.promocionId(),
+                rangos.stream().map(r -> new com.techprotech.agenda.modulos.citas.api.dto.CotizarCitasRequest.ItemCotizacion(r.servicioId(),r.inicio())).toList());
+        if (request.promocionId()!=null && cotizacion.promocion()==null) throw new ResponseStatusException(CONFLICT,cotizacion.motivoNoAplicada());
         Long clienteId = resolverOCrearCliente(
                 empresaId,
                 request.nombreCliente(),
                 request.correoCliente(),
                 request.telefonoCliente()
         );
-
         List<CitaCreadaResponse> citas = new ArrayList<>();
+        int indiceCotizacion = 0;
         for (RangoReservaValidado rango : rangos) {
             ServicioEntidad servicio = servicioRepositorio.findByIdAndEmpresaIdAndActivoTrue(rango.servicioId(), empresaId)
                     .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "El servicio no existe o no esta activo"));
@@ -298,7 +312,7 @@ public class ServicioCitas {
             cita.setEstado("PENDIENTE");
             cita.setInicio(rango.inicio().toLocalDateTime());
             cita.setFin(rango.fin().toLocalDateTime());
-            cita.setPrecio(servicio.getPrecio());
+            aplicarCotizacion(cita,cotizacion,indiceCotizacion++,request.promocionId());
             cita.setMoneda(servicio.getMoneda());
             cita.setNotas(request.notas());
             cita.setCreadaPorUsuarioId(clienteId);
@@ -328,7 +342,8 @@ public class ServicioCitas {
                     finRespuesta,
                     resolverMensajeRespuesta(empresaId, correoConfirmacionProgramado),
                     correoConfirmacionProgramado,
-                    false
+                    false,
+                    cita.getPrecioLista(), cita.getDescuento(), cita.getPrecio()
             ));
         }
 
@@ -347,6 +362,18 @@ public class ServicioCitas {
                 citas.size(),
                 "Las reservas fueron creadas correctamente sin choques de horario."
         );
+    }
+
+    private void aplicarCotizacion(CitaEntidad cita,
+            com.techprotech.agenda.modulos.citas.api.dto.ResultadoCotizacionCitas resultado, int indice, Long promocionId) {
+        if (promocionId != null && resultado.promocion()==null) throw new ResponseStatusException(CONFLICT,resultado.motivoNoAplicada());
+        var linea = resultado.lineas().get(indice);
+        cita.setPrecio(linea.precioNeto()); cita.setPrecioLista(linea.precioLista()); cita.setDescuento(linea.descuento());
+        if (linea.promocionAplicada()) {
+            cita.setPromocionId(resultado.promocion().id());
+            try { cita.setPromocionSnapshotJson(objectMapper.writeValueAsString(resultado.promocion())); }
+            catch (com.fasterxml.jackson.core.JsonProcessingException ex) { throw new IllegalStateException("No fue posible guardar el precio pactado",ex); }
+        }
     }
 
     private String resolverMensajeRespuesta(Long empresaId, boolean correoConfirmacionProgramado) {

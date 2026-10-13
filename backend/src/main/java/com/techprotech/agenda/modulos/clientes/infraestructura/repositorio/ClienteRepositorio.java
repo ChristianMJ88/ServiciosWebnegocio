@@ -14,7 +14,10 @@ public interface ClienteRepositorio extends JpaRepository<ClienteEntidad, Long> 
 
     @Query("select c from ClienteEntidad c join UsuarioEntidad u on u.id=c.usuarioId where u.empresaId=:empresaId and c.usuarioId=:clienteId")
     java.util.Optional<ClienteEntidad> findByClienteIdAndEmpresaId(Long clienteId,Long empresaId);
-    List<ClienteEntidad> findByAceptaWhatsappTrue();
+@Query("select c from ClienteEntidad c join UsuarioEntidad u on u.id=c.usuarioId where u.empresaId=:empresaId and c.usuarioId in :ids")
+List<ClienteEntidad> findByEmpresaIdAndUsuarioIdIn(@Param("empresaId") Long empresaId, @Param("ids") java.util.Collection<Long> ids);
+List<ClienteEntidad> findByAceptaWhatsappTrue();
+
 
     @Query("""
             select c from ClienteEntidad c

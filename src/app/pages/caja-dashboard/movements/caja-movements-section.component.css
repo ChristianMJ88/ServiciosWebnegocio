@@ -1,27 +1,35 @@
-:host {
-  display: block;
-}
+:host { display: block; }
 
+/* ── Last movement quick view ───────────────────────────────── */
 .caja-last-movement {
   display: flex;
   flex-direction: column;
-  gap: 0.25rem;
-  margin-bottom: 0.9rem;
+  gap: .2rem;
+  margin-bottom: 1rem;
+  padding: .85rem 1rem;
+  border-radius: 14px;
+  background: linear-gradient(145deg, rgba(241,247,244,.95), rgba(248,251,249,.97));
+  border: 1px solid rgba(28,55,47,.09);
+  border-left: 3px solid rgba(23,107,91,.3);
 }
 
-.caja-last-movement span {
-  color: #71665d;
-}
+.caja-last-movement span { color: var(--caja-muted); font-size: .88rem; }
+.caja-last-movement strong { display: block; font-size: 1rem; }
 
-.caja-last-movement strong {
-  display: block;
-}
-
+/* ── History amount cell ────────────────────────────────────── */
 .caja-history-amount {
   text-align: right;
+  flex-shrink: 0;
+}
+
+.caja-history-amount strong {
+  font-size: 1rem;
+  letter-spacing: -.015em;
 }
 
 .caja-history-amount small {
   display: block;
-  margin-top: 0.2rem;
+  margin-top: .22rem;
+  color: var(--caja-muted);
+  font-size: .76rem;
 }

@@ -189,39 +189,20 @@ public class ServicioOrdenCheckout {
             BigDecimal pendiente = cita.getPrecio().subtract(pagado).max(CERO).setScale(2, RoundingMode.HALF_UP);
             if (pendiente.signum() <= 0) throw error(HttpStatus.CONFLICT, "Una cita ya está pagada");
             ServicioEntidad servicio = serviciosPorId.get(cita.getServicioId());
-            BigDecimal cobrar = importeServicio(pendiente, config, servicio);
-            String nombre = servicio == null ? "Servicio reservado" : servicio.getNombre();
+            BigDecimal cobrar = pagado.signum()>0 ? pendiente : importeServicio(pendiente, config, servicio);
+            String concepto = pagado.signum() > 0 ? "Liquidar saldo" : cobrar.compareTo(pendiente) < 0 ? "Anticipo" : "Pago total";
+            String nombre = concepto + " · " + (servicio == null ? "Servicio reservado" : servicio.getNombre());
+            var desglose = com.techprotech.agenda.modulos.citas.aplicacion.DesglosePrecioCita.paraCobro(cita,cobrar,pagado);
             resultado.add(new Linea("SERVICIO", null, cita.getServicioId(), cita.getId(), nombre,
-                    BigDecimal.ONE, cobrar, cobrar, CERO, CERO, cobrar, cita.getMoneda()));
+                    BigDecimal.ONE, desglose.precioLista(), cobrar, desglose.descuento(), CERO, cobrar, cita.getMoneda()));
         }
         return resultado;
     }
 
     private BigDecimal importeServicio(BigDecimal pendiente, ConfiguracionCheckoutPublicaResponse config,
                                        ServicioEntidad servicio) {
-        String modalidad = config.modalidadServicios();
-        BigDecimal porcentaje = config.anticipoPorcentaje();
-        BigDecimal importe = config.anticipoImporte();
-        if (servicio != null && servicio.isRequiereAnticipo()) {
-            modalidad = "PORCENTAJE".equals(servicio.getAnticipoTipo())
-                    ? "ANTICIPO_PORCENTAJE" : "ANTICIPO_IMPORTE";
-            porcentaje = servicio.getAnticipoValor();
-            importe = servicio.getAnticipoValor();
-        }
-        BigDecimal resultado = switch (modalidad) {
-            case "ANTICIPO_PORCENTAJE" -> pendiente.multiply(valorRequerido(porcentaje, "porcentaje de anticipo"))
-                    .divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP);
-            case "ANTICIPO_IMPORTE" -> valorRequerido(importe, "importe de anticipo");
-            default -> pendiente;
-        };
-        return resultado.min(pendiente).max(CERO).setScale(2, RoundingMode.HALF_UP);
-    }
-
-    private BigDecimal valorRequerido(BigDecimal valor, String campo) {
-        if (valor == null || valor.signum() <= 0) {
-            throw error(HttpStatus.CONFLICT, "El servicio no tiene configurado correctamente el " + campo);
-        }
-        return valor;
+        return com.techprotech.agenda.modulos.citas.aplicacion.CalculadorAnticipoServicio.calcular(
+                pendiente,servicio,config.modalidadServicios(),config.anticipoPorcentaje(),config.anticipoImporte());
     }
 
     private void validarMoneda(List<Linea> lineas, String moneda) {

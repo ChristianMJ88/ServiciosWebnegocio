@@ -13,6 +13,9 @@ public record CitaCreadaResponse(
         OffsetDateTime fin,
         String mensaje,
         boolean correoConfirmacionProgramado,
-        boolean correoConfirmacionEnviado
+        boolean correoConfirmacionEnviado,
+        java.math.BigDecimal precioLista,
+        java.math.BigDecimal descuento,
+        java.math.BigDecimal precio
 ) {
 }

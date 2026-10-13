@@ -70,8 +70,8 @@ public class ControladorCaja {
 
     @GetMapping("/ventas/pendientes-staff")
     @PreAuthorize("hasAuthority('CAJA_ACCESO')")
-    public org.springframework.data.domain.Page<com.techprotech.agenda.modulos.caja.aplicacion.ServicioVentasCaja.PendienteStaff> pendientesStaff(@AuthenticationPrincipal UsuarioAutenticado u,@RequestParam Long sucursalId,@RequestParam(defaultValue="0") int pagina) {
-        return servicioVentas.pendientesStaff(u.empresaId(),u.sucursalesPermitidas(),sucursalId,pagina);
+    public com.techprotech.agenda.modulos.caja.api.dto.PaginaCajaResponse<com.techprotech.agenda.modulos.caja.aplicacion.ServicioVentasCaja.PendienteStaff> pendientesStaff(@AuthenticationPrincipal UsuarioAutenticado u,@RequestParam Long sucursalId,@RequestParam(defaultValue="0") int pagina) {
+        return com.techprotech.agenda.modulos.caja.api.dto.PaginaCajaResponse.de(servicioVentas.pendientesStaff(u.empresaId(),u.sucursalesPermitidas(),sucursalId,pagina));
     }
     public record CobrarVentaStaffRequest(@jakarta.validation.constraints.NotBlank String metodoPago,@jakarta.validation.constraints.Size(max=120) String referencia) {}
     @PostMapping("/ventas/{ventaId}/cobrar")

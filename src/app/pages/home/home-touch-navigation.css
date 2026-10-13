@@ -1,0 +1,40 @@
+.home-section { scroll-margin-top: 9rem; }
+.home-touch-rail { min-width: 0; }
+@media (max-width: 991.98px) {
+  :host ::ng-deep .home-page .section-heading { margin-bottom: 1rem; }
+  :host ::ng-deep .home-page .section-heading h2 { font-size: clamp(1.5rem,3vw,2rem); line-height: 1.25; }
+  .home-page .home-section { --section-space: 2rem; }
+  .home-page .home-section--space-compacto { --section-space: 1.5rem; }
+  .home-page .home-section--space-amplio { --section-space: 2.75rem; }
+  .home-page .home-touch-rail:not(.services-feature-grid--list) {
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: 82%;
+    grid-template-columns: none;
+    grid-template-rows: none;
+    justify-content: initial;
+    align-items: stretch;
+    gap: 1rem;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scroll-snap-type: x mandatory;
+    scroll-padding-inline: .25rem;
+    overscroll-behavior-x: contain;
+    padding: .25rem .25rem 1rem;
+    scrollbar-width: thin;
+  }
+  .home-page .home-touch-rail:not(.services-feature-grid--list) > * { scroll-snap-align: start; min-width: 0; max-width: none; width: auto; margin: 0; }
+  .home-page .home-touch-rail:has(> :only-child) { grid-auto-columns: 100%; }
+  .home-page .home-touch-rail .service-feature,
+  .home-page .home-touch-rail .gallery-public__item,
+  .home-page .home-touch-rail .promotion-public-card { display: flex; flex-direction: column; grid-column: auto; grid-row: auto; }
+  .home-page .home-touch-rail :is(.service-feature__media,.gallery-public__media,.promotion-public-card__media) { min-height: 0; height: auto; aspect-ratio: 4/3; }
+  .home-page .home-touch-rail .service-feature__body { flex: 1; }
+  .home-page .home-touch-rail .service-feature__actions { margin-top: auto; }
+  .home-page .home-touch-rail .benefit-public-card { display: flex; flex-direction: column; gap: .75rem; }
+  .home-page .trust-public-grid { grid-template-columns: repeat(2,minmax(0,1fr)); gap: .75rem; }
+  .home-page .home-hero--compact { min-height: 0; }
+}
+@media (min-width: 768px) and (max-width:991.98px) {
+  .home-page .home-touch-rail:not(.services-feature-grid--list) { grid-auto-columns: 46%; }
+}

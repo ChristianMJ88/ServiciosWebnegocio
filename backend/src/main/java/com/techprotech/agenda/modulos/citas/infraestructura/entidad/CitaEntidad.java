@@ -48,6 +48,15 @@ public class CitaEntidad {
   @Column(nullable = false, precision = 10, scale = 2)
   private BigDecimal precio;
 
+  @Column(name = "precio_lista", precision = 10, scale = 2)
+  private BigDecimal precioLista;
+  @Column(precision = 10, scale = 2, nullable = false)
+  private BigDecimal descuento = BigDecimal.ZERO;
+  @Column(name = "promocion_id")
+  private Long promocionId;
+  @Column(name = "promocion_snapshot_json", columnDefinition = "json")
+  private String promocionSnapshotJson;
+
   @Column(nullable = false, length = 10)
   private String moneda;
 

@@ -15,6 +15,9 @@ public record CitaPorCobrarResponse(
         BigDecimal pendiente,
         String moneda,
         String estadoCita,
-        String estadoPago
+        String estadoPago,
+        BigDecimal precioLista,
+        BigDecimal descuento,
+        String promocionTitulo
 ) {
 }

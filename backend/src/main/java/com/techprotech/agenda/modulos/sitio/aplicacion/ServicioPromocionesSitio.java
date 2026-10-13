@@ -81,14 +81,28 @@ public class ServicioPromocionesSitio {
         validarPromociones(empresaId, promociones);
         String antes = serializar(mapearAdmin(empresaId));
 
-        promocionServicioRepositorio.deleteByEmpresaId(empresaId);
-        promocionSucursalRepositorio.deleteByEmpresaId(empresaId);
-        promocionRepositorio.deleteByEmpresaId(empresaId);
-        promocionRepositorio.flush();
+        Set<Long> recibidos = promociones.stream().map(PromocionSitioRequest::id)
+                .filter(java.util.Objects::nonNull).collect(Collectors.toSet());
+        long cantidadIds = promociones.stream().filter(item -> item.id() != null).count();
+        if (cantidadIds != recibidos.size()) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "No repitas una promoción en la lista");
+        // Validate IDs before changing any row; never accept ownership from the client.
+        for (Long id : recibidos) {
+            var existente = promocionRepositorio.findByIdAndEmpresaId(id, empresaId)
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "La promoción no pertenece al negocio"));
+            if (existente.getEliminadaEn() != null) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "La promoción fue eliminada");
+        }
+        for (var existente : promocionRepositorio.findByEmpresaIdOrderByOrdenAsc(empresaId)) {
+            if (existente.getEliminadaEn() == null && !recibidos.contains(existente.getId())) {
+                existente.setEliminadaEn(java.time.LocalDateTime.now());
+                existente.setActiva(false);
+                promocionRepositorio.save(existente);
+            }
+        }
 
         for (int orden = 0; orden < promociones.size(); orden++) {
             PromocionSitioRequest requestItem = promociones.get(orden);
-            EmpresaSitioPromocionEntidad promocion = new EmpresaSitioPromocionEntidad();
+            EmpresaSitioPromocionEntidad promocion = requestItem.id() == null ? new EmpresaSitioPromocionEntidad()
+                    : promocionRepositorio.findByIdAndEmpresaId(requestItem.id(), empresaId).orElseThrow();
             promocion.setEmpresaId(empresaId);
             promocion.setTitulo(requestItem.titulo().trim());
             promocion.setDescripcion(normalizar(requestItem.descripcion()));
@@ -103,6 +117,10 @@ public class ServicioPromocionesSitio {
             promocion.setActiva(requestItem.activa());
             promocion.setOrden(orden);
             promocion = promocionRepositorio.saveAndFlush(promocion);
+            promocionServicioRepositorio.deleteByEmpresaIdAndPromocionId(empresaId, promocion.getId());
+            promocionSucursalRepositorio.deleteByEmpresaIdAndPromocionId(empresaId, promocion.getId());
+            promocionServicioRepositorio.flush();
+            promocionSucursalRepositorio.flush();
             guardarRelaciones(empresaId, promocion.getId(), requestItem);
         }
 
@@ -113,7 +131,6 @@ public class ServicioPromocionesSitio {
 
     @Transactional
     public List<PromocionSitioPublicaResponse> obtenerParaSitioPublico(Long empresaId) {
-        LocalDate hoy = LocalDate.now();
         Map<Long, ServicioEntidad> servicios = servicioRepositorio.findByEmpresaIdOrderByNombreAsc(empresaId).stream()
                 .filter(servicio -> servicio.isActivo() && servicio.isVisiblePublico())
                 .collect(Collectors.toMap(ServicioEntidad::getId, Function.identity()));
@@ -124,7 +141,11 @@ public class ServicioPromocionesSitio {
         Map<Long, List<Long>> sucursalesPorPromocion = agruparSucursales(empresaId);
 
         return promocionRepositorio.findByEmpresaIdOrderByOrdenAsc(empresaId).stream()
-                .filter(promocion -> promocion.isActiva() && vigente(promocion, hoy))
+                .filter(promocion -> promocion.getEliminadaEn() == null && promocion.isActiva())
+                .filter(promocion -> sucursales.values().stream()
+                        .filter(sucursal -> sucursalesPorPromocion.getOrDefault(promocion.getId(),List.of()).isEmpty()
+                                || sucursalesPorPromocion.get(promocion.getId()).contains(sucursal.getId()))
+                        .anyMatch(sucursal -> vigente(promocion,LocalDate.now(java.time.ZoneId.of(sucursal.getZonaHoraria())))))
                 .map(promocion -> {
                     List<Long> servicioIds = serviciosPorPromocion.getOrDefault(promocion.getId(), List.of()).stream()
                             .filter(servicios::containsKey).toList();
@@ -192,6 +213,7 @@ public class ServicioPromocionesSitio {
         Map<Long, List<Long>> servicios = agruparServicios(empresaId);
         Map<Long, List<Long>> sucursales = agruparSucursales(empresaId);
         return promocionRepositorio.findByEmpresaIdOrderByOrdenAsc(empresaId).stream()
+                .filter(promocion -> promocion.getEliminadaEn() == null)
                 .map(promocion -> new PromocionSitioAdminResponse(
                         promocion.getId(), promocion.getTitulo(), promocion.getDescripcion(), promocion.getMediaId(), promocion.getImagenUrl(),
                         promocion.getFechaInicio(), promocion.getFechaFin(), promocion.getTipoDescuento().name(),

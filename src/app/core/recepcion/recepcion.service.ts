@@ -44,6 +44,7 @@ export interface OpcionRecepcion {
 }
 
 export interface FranjaRecepcionDisponible {
+  prestadorNombre?: string | null;
   inicio: string;
   fin: string;
   hora: string;

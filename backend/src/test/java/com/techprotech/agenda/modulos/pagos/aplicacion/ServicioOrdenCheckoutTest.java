@@ -46,6 +46,8 @@ class ServicioOrdenCheckoutTest {
     private CheckoutOrdenDetalleRepositorio detalles;
     private ServicioOrdenCheckout servicio;
     private ServicioCotizacionesEnvio cotizacionesEnvio;
+    private PagoCitaRepositorio pagosCita;
+    private VentaDetalleRepositorio detallesVenta;
 
     @BeforeEach
     void preparar() {
@@ -56,8 +58,8 @@ class ServicioOrdenCheckoutTest {
         citas = mock(CitaRepositorio.class);
         servicios = mock(ServicioRepositorio.class);
         usuarios = mock(UsuarioRepositorio.class);
-        PagoCitaRepositorio pagosCita = mock(PagoCitaRepositorio.class);
-        VentaDetalleRepositorio detallesVenta = mock(VentaDetalleRepositorio.class);
+        pagosCita = mock(PagoCitaRepositorio.class);
+        detallesVenta = mock(VentaDetalleRepositorio.class);
         ordenes = mock(CheckoutOrdenRepositorio.class);
         detalles = mock(CheckoutOrdenDetalleRepositorio.class);
         cotizacionesEnvio = mock(ServicioCotizacionesEnvio.class);
@@ -211,5 +213,24 @@ class ServicioOrdenCheckoutTest {
         return new ConfiguracionCheckoutPublicaResponse(true, "MERCADO_PAGO", "PRUEBA", "public-key",
                 true, false, false, true, true, true, true, false, BigDecimal.ZERO, false, BigDecimal.ZERO,
                 false, "PAGO_COMPLETO", null, null, "MXN");
+    }
+
+    @Test void anticipaCienSobreDoscientosNetosYNoDuplicaDescuentoEnSaldo() {
+        UsuarioEntidad cliente = new UsuarioEntidad();cliente.setId(70L);
+        when(usuarios.findByEmpresaIdAndCorreo(25L,"cliente@test.mx")).thenReturn(Optional.of(cliente));
+        CitaEntidad cita=new CitaEntidad();cita.setId(91L);cita.setEmpresaId(25L);cita.setClienteId(70L);cita.setSucursalId(3L);cita.setServicioId(12L);cita.setEstado("PENDIENTE");cita.setMoneda("MXN");
+        cita.setPrecio(new BigDecimal("200"));cita.setPrecioLista(new BigDecimal("250"));cita.setDescuento(new BigDecimal("50"));
+        when(citas.findAllById(List.of(91L))).thenReturn(List.of(cita));
+        ServicioEntidad concepto=new ServicioEntidad();concepto.setId(12L);concepto.setNombre("Servicio");concepto.setRequiereAnticipo(true);concepto.setAnticipoTipo("PORCENTAJE");concepto.setAnticipoValor(new BigDecimal("50"));
+        when(servicios.findByEmpresaIdAndIdIn(eq(25L),any())).thenReturn(List.of(concepto));
+        when(cotizador.cotizar(25L,3L,null,java.util.Map.of())).thenReturn(new ServicioCotizacionProductos.ResultadoCotizacion(null,List.of()));
+        var request=new CrearOrdenCheckoutRequest(3L,null,"cliente@test.mx","Cliente prueba","2220000000","RECOGE_EN_SUCURSAL",null,null,List.of(),List.of(91L));
+        var anticipo=servicio.crear("nail-art","anticipo-con-oferta",request);
+        assertThat(anticipo.total()).isEqualByComparingTo("100");assertThat(anticipo.descuentoTotal()).isEqualByComparingTo("50");
+        when(pagosCita.sumarPagadoPorCita(25L,91L)).thenReturn(new BigDecimal("100"));
+        var saldo=servicio.crear("nail-art","saldo-con-oferta",request);
+        assertThat(saldo.total()).isEqualByComparingTo("100");assertThat(saldo.descuentoTotal()).isZero();
+        verify(detalles).saveAll(argThat(items -> ((List<CheckoutOrdenDetalleEntidad>) items).getFirst().getNombre().startsWith("Anticipo ·")));
+        verify(detalles).saveAll(argThat(items -> ((List<CheckoutOrdenDetalleEntidad>) items).getFirst().getNombre().startsWith("Liquidar saldo ·")));
     }
 }
