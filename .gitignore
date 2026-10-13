@@ -47,3 +47,7 @@ backend/.env
 
 # Firebase CLI local deployment cache
 .firebase/
+
+# Qodana (configuración local, no versionar)
+qodana.yaml
+.github/workflows/qodana_code_quality.yml
