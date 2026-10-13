@@ -1,0 +1,4 @@
+package com.techprotech.agenda.modulos.disponibilidad.infraestructura.repositorio;
+import com.techprotech.agenda.modulos.disponibilidad.infraestructura.entidad.EmpresaConfiguracionReservasEntidad;
+import org.springframework.data.jpa.repository.JpaRepository;
+public interface EmpresaConfiguracionReservasRepositorio extends JpaRepository<EmpresaConfiguracionReservasEntidad,Long> {}

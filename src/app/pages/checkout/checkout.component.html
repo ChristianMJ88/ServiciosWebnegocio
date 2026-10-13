@@ -15,12 +15,17 @@
 
       @if (payment(); as result) {
         <section class="payment-result" [class.is-approved]="result.estadoPago === 'APROBADO'">
+          @if(result.estadoOrden === 'PAGADA_CON_INCIDENCIA') {<p role="alert">El pago fue registrado. Tu reserva requiere revisión del negocio y aún no está confirmada. Comunícate con el negocio para reprogramar o revisar la operación.</p>}
           <div class="payment-result__summary">
             <i class="bi" [class.bi-check-circle-fill]="result.estadoPago === 'APROBADO'" [class.bi-hourglass-split]="result.estadoPago !== 'APROBADO'"></i>
             <div><span>Estado del pago</span><h2>{{ result.estadoPago === 'APROBADO' ? 'Pago aprobado' : 'Pago en proceso' }}</h2><p>{{ result.detalleRespuesta || 'Estamos confirmando la operación con Mercado Pago.' }}</p><strong>{{ result.importe | appMoney:result.moneda:2:2 }}</strong>@if (result.estadoPago === 'APROBADO') {<p class="payment-result__next"><i class="bi bi-box-seam"></i><span><b>¿Qué sigue?</b>{{ postPaymentMessage() }}</span></p>}</div>
           </div>
           @if (result.accionUrl || result.estadoPago !== 'APROBADO') {
             <div class="payment-result__actions">
+              @if(result.estadoPago === 'RECHAZADO' && result.estadoOrden === 'PENDIENTE_PAGO') {
+                <button type="button" (click)="retryPayment()">Intentar otro pago</button>
+                <span>Tu apartado se conserva hasta su vencimiento.</span>
+              }
               @if (result.accionUrl) {
                 <a [href]="result.accionUrl" target="_blank" rel="noopener"><i class="bi bi-box-arrow-up-right"></i> Ver instrucciones de pago</a>
               }
@@ -118,6 +123,7 @@
             </form>
 
             @if (order()) {
+              @if (hasAppointments() && (order()!.estado === 'PENDIENTE_PAGO' || order()!.estado === 'PAGO_EN_PROCESO')) {<p role="status">Tu cita espera la aprobación del pago. Consulta el estado del pago antes de confirmar tu reserva.</p>}
               <div class="payment-divider"><span></span><b>2</b><span></span></div>
               <div class="step-heading"><b>2</b><div><span>Pago protegido</span><h2>Elige cómo pagar</h2><p>Los métodos disponibles provienen de la cuenta de Mercado Pago conectada por este negocio.</p></div></div>
               <div class="payment-methods" role="radiogroup" aria-label="Método de pago">

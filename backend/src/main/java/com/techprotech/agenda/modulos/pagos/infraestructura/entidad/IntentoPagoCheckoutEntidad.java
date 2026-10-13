@@ -12,6 +12,8 @@ import java.time.LocalDateTime;
 @Entity
 @Table(name = "intento_pago_checkout")
 public class IntentoPagoCheckoutEntidad {
+    @Column(name="pago_expira_en") private java.time.LocalDateTime pagoExpiraEn;
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;

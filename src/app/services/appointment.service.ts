@@ -1,9 +1,14 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable, map, of, throwError } from 'rxjs';
 import { timeout, retry, catchError } from 'rxjs/operators';
+import { TenantContextService } from '../core/tenant/tenant-context.service';
 import { environment } from '../../environments/environment';
 
+export interface DiasDisponibles {
+  hoyLocal: string; reservaHasta: string; dias: string[];
+  configuracion: { anticipacionMinimaMinutos:number; ventanaReservaDias:number; liberacionSinConfirmacionHoras:number; minutosApartadoPago:number };
+}
 export interface FranjaDisponible {
   inicio: string;
   fin: string;
@@ -58,8 +63,21 @@ export interface CrearCitasMultiplesBackendRequest {
   items: CrearCitaMultipleItemBackendRequest[];
 }
 
+export interface CitaCreadaBackendResponse {
+  id: number;
+  estado: string;
+  mensaje: string;
+  precio: number;
+  precioLista: number;
+  descuento: number;
+  requierePago: boolean;
+  importeRequerido: number;
+  politicaCobro: string;
+  pagoExpiraEn: string | null;
+  confirmacionExpiraEn: string | null;
+}
 export interface CitasMultiplesCreadasResponse {
-  citas: Array<{ id: number; mensaje?: string | null; precio?: number; precioLista?: number; descuento?: number }>;
+  citas: CitaCreadaBackendResponse[];
   total: number;
   mensaje: string;
 }
@@ -73,13 +91,16 @@ interface FranjaDisponibleBackendResponse {
 }
 
 export interface CotizacionCitas {
+  requierePago?:boolean; importeRequeridoTotal?:number; requierePagoProductos?:boolean; avisoProductos?:string|null;
+  productos?:{productoId:number;nombre:string;cantidad:number;precioListaUnitario:number;precioUnitario:number;descuento:number;total:number;moneda:string}[];
   moneda: string; subtotalLista: number; descuentoTotal: number; total: number; anticipoTotal: number;
   promocion: { id: number; titulo: string; tipoDescuento: string; valorDescuento: number; moneda: string } | null;
   motivoNoAplicada: string | null;
-  lineas: Array<{ servicioId: number; nombre: string; precioLista: number; descuento: number; precioNeto: number; anticipo: number; promocionAplicada: boolean }>;
+  lineas: Array<{ servicioId: number; nombre: string; precioLista: number; descuento: number; precioNeto: number; anticipo: number; promocionAplicada: boolean; politicaCobro?:string; importeRequerido?:number; saldoEnNegocio?:number }>;
 }
 export interface CotizarCitasPayload {
   empresaId: number; sucursalId: number; promocionId: number | null;
+  productos?:{productoId:number;cantidad:number}[];
   items: Array<{servicioId: number; inicio: string | null; fecha?: string | null}>;
 }
 
@@ -87,6 +108,8 @@ export interface CotizarCitasPayload {
   providedIn: 'root'
 })
 export class AppointmentService {
+  private readonly tenant = inject(TenantContextService);
+  private publicHeaders() { return { 'X-Tenant-Slug': this.tenant.slug() ?? '' }; }
   private readonly apiUrl = environment.apiBaseUrl;
   private readonly TIMEOUT_DURATION = 15000;
   private readonly RETRY_COUNT = 3;
@@ -94,9 +117,16 @@ export class AppointmentService {
   constructor(private http: HttpClient) {}
 
   cotizarCitas(payload: CotizarCitasPayload): Observable<CotizacionCitas> {
-    return this.http.post<CotizacionCitas>(`${this.apiUrl}/publico/citas/cotizar`, payload);
+    return this.http.post<CotizacionCitas>(`${this.apiUrl}/publico/citas/cotizar`, payload, {headers:this.publicHeaders()});
   }
 
+getAvailableDays(sucursalId:number,servicioIds:number[],desde?:string,hasta?:string,prestadorIds?:(number|null)[]): Observable<DiasDisponibles> {
+  let params=new HttpParams().set('sucursalId',sucursalId).set('servicioIds',servicioIds.join(','));
+  if(desde) params=params.set('desde',desde);
+  if(hasta) params=params.set('hasta',hasta);
+  if(prestadorIds) params=params.set('prestadorIds',prestadorIds.map(id => id ?? 0).join(','));
+  return this.http.get<DiasDisponibles>(`${this.apiUrl}/publico/disponibilidad/dias`,{params,headers:this.publicHeaders()});
+}
   getAvailableSlots(request: ConsultaFranjasRequest): Observable<FranjaDisponible[]> {
     let params = new HttpParams()
       .set('empresaId', request.empresaId)
@@ -109,7 +139,7 @@ export class AppointmentService {
     }
 
     return this.http
-      .get<FranjaDisponibleBackendResponse[]>(`${this.apiUrl}/publico/disponibilidad/franjas`, { params })
+      .get<FranjaDisponibleBackendResponse[]>(`${this.apiUrl}/publico/disponibilidad/franjas`, { params, headers: this.publicHeaders() })
       .pipe(
         map(response => response.map(slot => this.mapBackendSlot(slot))),
         timeout(this.TIMEOUT_DURATION),
@@ -121,8 +151,8 @@ export class AppointmentService {
       );
   }
 
-  bookAppointment(data: CrearCitaBackendRequest): Observable<any> {
-    return this.http.post(`${this.apiUrl}/publico/citas`, data).pipe(
+  bookAppointment(data: CrearCitaBackendRequest): Observable<CitaCreadaBackendResponse> {
+    return this.http.post<CitaCreadaBackendResponse>(`${this.apiUrl}/publico/citas`, data, {headers:this.publicHeaders()}).pipe(
       timeout(this.TIMEOUT_DURATION),
       catchError(err => {
         console.error('Error al crear cita en backend:', err);
@@ -132,7 +162,7 @@ export class AppointmentService {
   }
 
   bookMultipleAppointments(data: CrearCitasMultiplesBackendRequest): Observable<CitasMultiplesCreadasResponse> {
-    return this.http.post<CitasMultiplesCreadasResponse>(`${this.apiUrl}/publico/citas/multiples`, data).pipe(
+    return this.http.post<CitasMultiplesCreadasResponse>(`${this.apiUrl}/publico/citas/multiples`, data, {headers:this.publicHeaders()}).pipe(
       timeout(this.TIMEOUT_DURATION),
       catchError(err => {
         console.error('Error al crear citas múltiples en backend:', err);
@@ -150,11 +180,11 @@ export class AppointmentService {
       params = params.set('servicioId', servicioId);
     }
 
-    return this.http.get<PrestadorPublico[]>(`${this.apiUrl}/publico/servicios/prestadores`, { params }).pipe(
+    return this.http.get<PrestadorPublico[]>(`${this.apiUrl}/publico/servicios/prestadores`, { params, headers: this.publicHeaders() }).pipe(
       timeout(this.TIMEOUT_DURATION),
       catchError(err => {
         console.error('Error obteniendo staff público:', err);
-        return of([]);
+        return throwError(() => new Error('No pudimos cargar los profesionales disponibles. Intenta de nuevo.'));
       })
     );
   }

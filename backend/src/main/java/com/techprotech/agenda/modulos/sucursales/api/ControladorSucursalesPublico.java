@@ -13,15 +13,19 @@ import java.util.List;
 @RequestMapping("/api/v1/publico/sucursales")
 public class ControladorSucursalesPublico {
 
+    private final com.techprotech.agenda.modulos.sitio.aplicacion.ResolutorTenantPublico tenant;
+
     private final ServicioSucursales servicioSucursales;
 
-    public ControladorSucursalesPublico(ServicioSucursales servicioSucursales) {
+    public ControladorSucursalesPublico(ServicioSucursales servicioSucursales,
+            com.techprotech.agenda.modulos.sitio.aplicacion.ResolutorTenantPublico tenant) {
+        this.tenant = tenant;
         this.servicioSucursales = servicioSucursales;
     }
 
     @GetMapping
-    public List<SucursalPublicaResponse> listar(@RequestParam(required = false) Long empresaId) {
-        return servicioSucursales.listarPublicas(empresaId);
+    public List<SucursalPublicaResponse> listar(@org.springframework.web.bind.annotation.RequestHeader("X-Tenant-Slug") String slug, @RequestParam(required = false) Long empresaId) {
+        return servicioSucursales.listarPublicas(tenant.resolver(slug,empresaId));
     }
 }
 

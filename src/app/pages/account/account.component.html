@@ -76,7 +76,7 @@
                                 <div class="small text-light opacity-75 mt-1">Con {{ cita.prestadorNombre }}</div>
                               </div>
                               <span class="badge rounded-pill estado-badge" [ngClass]="'estado-' + cita.estado.toLowerCase()">
-                                {{ cita.estado }}
+                                {{ cita.estadoEtiqueta || cita.estado }}
                               </span>
                             </div>
                             <div class="agenda-meta-grid">

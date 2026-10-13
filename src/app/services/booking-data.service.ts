@@ -75,13 +75,13 @@ export class BookingDataService {
       return throwError(() => new Error('No hay un tenant activo para consultar sucursales'));
     }
     return this.http.get<SucursalCatalogo[]>(
-      `${environment.apiBaseUrl}/publico/sucursales?empresaId=${empresaObjetivo}`
+      `${environment.apiBaseUrl}/publico/sucursales?empresaId=${empresaObjetivo}`, {headers:{"X-Tenant-Slug":this.tenantContext.slug() ?? ""}}
     );
   }
 
   getServices(branchId: number): Observable<ServicioCatalogo[]> {
     return this.http.get<ServicioCatalogo[]>(
-      `${environment.apiBaseUrl}/publico/servicios?sucursalId=${branchId}`
+      `${environment.apiBaseUrl}/publico/servicios?sucursalId=${branchId}`, {headers:{"X-Tenant-Slug":this.tenantContext.slug() ?? ""}}
     );
   }
 

@@ -41,7 +41,8 @@ public class ServicioContactos {
 
     @Transactional
     public SolicitudContactoCreadaResponse crearSolicitud(CrearSolicitudContactoRequest request) {
-        Long empresaId = request.empresaId() != null ? request.empresaId() : 1L;
+        if (request.empresaId() == null) throw new org.springframework.web.server.ResponseStatusException(org.springframework.http.HttpStatus.BAD_REQUEST, "La empresa es obligatoria");
+        Long empresaId = request.empresaId();
         EmpresaEntidad empresa = empresaRepositorio.findById(empresaId)
                 .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "La empresa no existe"));
         ZoneId zonaEmpresa = ZoneId.of(empresa.getZonaHoraria());

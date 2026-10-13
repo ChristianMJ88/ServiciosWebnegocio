@@ -10,6 +10,12 @@ import java.util.List;
 import java.util.Optional;
 
 public interface PrestadorServicioRepositorio extends JpaRepository<PrestadorServicioEntidad, Long> {
+    @org.springframework.data.jpa.repository.Lock(jakarta.persistence.LockModeType.PESSIMISTIC_WRITE)
+    @Query("select p from PrestadorServicioEntidad p join UsuarioEntidad u on u.id=p.usuarioId where u.empresaId=:empresaId and p.usuarioId=:prestadorId")
+    Optional<PrestadorServicioEntidad> bloquearPorEmpresa(Long empresaId, Long prestadorId);
+    @Query("select p from PrestadorServicioEntidad p join UsuarioEntidad u on u.id=p.usuarioId " +
+            "where u.empresaId=:empresaId and u.habilitado=true and p.sucursalId=:sucursalId and p.activo=true order by p.nombreMostrar")
+    List<PrestadorServicioEntidad> findPublicosPorEmpresaYSucursal(@Param("empresaId") Long empresaId,@Param("sucursalId") Long sucursalId);
 
     Optional<PrestadorServicioEntidad> findByUsuarioIdAndSucursalIdAndActivoTrue(Long usuarioId, Long sucursalId);
 

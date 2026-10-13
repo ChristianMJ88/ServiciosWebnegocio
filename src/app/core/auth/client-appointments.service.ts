@@ -6,6 +6,8 @@ import { environment } from '../../../environments/environment';
 export interface CitaCliente {
   id: number;
   estado: string;
+  estadoEtiqueta?:string;
+  notificarEnAgenda?:boolean;
   sucursalId: number;
   servicioId: number;
   prestadorId: number;

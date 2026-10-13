@@ -17,6 +17,11 @@ import java.time.LocalDateTime;
 @Table(name = "cita")
 public class CitaEntidad {
 
+@Column(name="pago_expira_en") private LocalDateTime pagoExpiraEn;
+@Column(name="reserva_grupo_id",length=36) private String reservaGrupoId;
+@Column(name="politica_cobro",length=30) private String politicaCobro;
+@Column(name="importe_requerido",precision=10,scale=2) private BigDecimal importeRequerido;
+
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long id;
@@ -65,6 +70,10 @@ public class CitaEntidad {
 
   @Column(name = "creada_por_usuario_id", nullable = false)
   private Long creadaPorUsuarioId;
+
+  @Column(name = "creada_en", updatable = false)
+  @jakarta.persistence.Convert(converter = com.techprotech.agenda.compartido.tiempo.FechaUtcPersistencia.class)
+  private LocalDateTime creadaEn;
 
   @Column(name = "cancelada_en")
   private LocalDateTime canceladaEn;

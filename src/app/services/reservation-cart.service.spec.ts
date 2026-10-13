@@ -10,13 +10,13 @@ describe('Reservation draft boundaries', () => {
     cart.save(2, 20, [{ id: 7 }, { id: 8 }] as ServicioCatalogo[]);
     cart.clear(1);
     expect(cart.read(1)).toBeUndefined();
-    expect(cart.read(2)).toEqual({ branchId: 20, serviceIds: [7, 8] });
+    expect(cart.read(2)).toEqual({ branchId: 20, serviceIds: [7, 8], prestadores: {} });
     expect(cart.read(null)).toBeUndefined();
   });
 
   it('restores IDs after reload without mixing tenants', () => {
     new ReservationCartService().save(1, 10, [{ id: 7 }] as ServicioCatalogo[]);
-    expect(new ReservationCartService().read(1)).toEqual({ branchId: 10, serviceIds: [7] });
+    expect(new ReservationCartService().read(1)).toEqual({ branchId: 10, serviceIds: [7], prestadores: {} });
     expect(new ReservationCartService().read(2)).toBeUndefined();
   });
 
@@ -24,7 +24,16 @@ describe('Reservation draft boundaries', () => {
     const cart = new ReservationCartService();
     cart.save(1, 10, [{ id: 7, precio: 100 }] as ServicioCatalogo[]);
     cart.read(1)!.serviceIds.push(9);
-    expect(cart.read(1)).toEqual({ branchId: 10, serviceIds: [7] });
+    expect(cart.read(1)).toEqual({ branchId: 10, serviceIds: [7], prestadores: {} });
+  });
+
+  it('keeps professional choices isolated, copied and limited to selected services', () => {
+    const cart = new ReservationCartService();
+    cart.save(1,10,[{id:7} as ServicioCatalogo],null,{7:42,8:99});
+    cart.save(2,20,[{id:7} as ServicioCatalogo],null,{7:43});
+    cart.read(1)!.prestadores![7]=88;
+    expect(new ReservationCartService().read(1)?.prestadores).toEqual({7:42});
+    expect(cart.read(2)?.prestadores).toEqual({7:43});
   });
 });
 

@@ -4,6 +4,10 @@ import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { CitaCliente } from '../auth/client-appointments.service';
 
+export interface PoliticasCobroServicios {
+  opciones: {codigo:string;etiqueta:string}[];
+  predeterminado:{requiereAnticipo:boolean;anticipoTipo:string|null;anticipoValor:number|null};
+}
 export interface ResumenAdmin {
   totalCitas: number;
   pendientes: number;
@@ -1046,7 +1050,8 @@ export interface ResumenContactosAdmin {
 @Injectable({
   providedIn: 'root'
 })
-export class AdminService {
+export class AdminService {getPoliticasCobroServicios(): Observable<PoliticasCobroServicios> { return this.http.get<PoliticasCobroServicios>(`${environment.apiBaseUrl}/admin/servicios/politicas-cobro`); }
+
   private readonly http = inject(HttpClient);
 
   getResumen(periodo?: PeriodoReporteAdmin | null): Observable<ResumenAdmin> {

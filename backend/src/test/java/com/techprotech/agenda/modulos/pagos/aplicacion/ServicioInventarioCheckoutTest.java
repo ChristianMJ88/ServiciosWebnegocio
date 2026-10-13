@@ -87,4 +87,19 @@ class ServicioInventarioCheckoutTest {
         assertThat(orden.getInventarioEstado()).isEqualTo("PENDIENTE");
         verify(movimientos, never()).save(any());
     }
+
+    @Test void pagoTardioRecuperaStockLiberadoSinConsumirReservasAjenas() {
+        orden.setInventarioEstado("LIBERADO");existencia.setReservado(new BigDecimal("2"));
+        assertThat(servicio.confirmarSiDisponible(25L,40L)).isTrue();
+        assertThat(existencia.getExistencia()).isEqualByComparingTo("3");
+        assertThat(existencia.getReservado()).isEqualByComparingTo("2");
+        assertThat(orden.getInventarioEstado()).isEqualTo("CONFIRMADO");
+    }
+
+    @Test void faltanteTardioDevuelveIncidenciaSinMutarExistencias() {
+        orden.setInventarioEstado("LIBERADO");existencia.setReservado(new BigDecimal("4"));
+        assertThat(servicio.confirmarSiDisponible(25L,40L)).isFalse();
+        assertThat(existencia.getExistencia()).isEqualByComparingTo("5");
+        verify(existencias,never()).save(any());verifyNoInteractions(movimientos);
+    }
 }

@@ -45,7 +45,7 @@ public class ServicioVentasCheckout {
     public void proyectar(Long empresaId, Long ordenId) {
         CheckoutOrdenEntidad orden = ordenes.bloquearPorEmpresaEId(empresaId, ordenId)
                 .orElseThrow(() -> new IllegalStateException("Orden de checkout no encontrada"));
-        if (!"PAGADA".equals(orden.getEstado()) || ventas.existsByEmpresaIdAndCheckoutOrdenId(empresaId, ordenId)) return;
+        if (!java.util.Set.of("PAGADA", "PAGADA_CON_INCIDENCIA").contains(orden.getEstado()) || ventas.existsByEmpresaIdAndCheckoutOrdenId(empresaId, ordenId)) return;
         IntentoPagoCheckoutEntidad intento = intentos
                 .findFirstByEmpresaIdAndCheckoutOrdenIdAndEstadoOrderByIdDesc(empresaId, ordenId, "APROBADO")
                 .orElseThrow(() -> new IllegalStateException("La orden pagada no tiene un intento aprobado"));
@@ -62,7 +62,7 @@ public class ServicioVentasCheckout {
         venta.setDescuentoTotal(orden.getDescuentoTotal());
         venta.setImpuestosTotal(orden.getImpuestosTotal());
         venta.setTotal(orden.getTotal());
-        venta.setObservaciones("Venta creada desde el checkout público");
+        venta.setObservaciones(orden.isRequiereConciliacion() ? "Pago con incidencia: " + orden.getMotivoIncidencia() : "Venta creada desde el checkout público");
         venta.setCreadaEn(orden.getCreadaEn() == null ? LocalDateTime.now() : orden.getCreadaEn());
         venta = ventas.save(venta);
 

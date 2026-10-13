@@ -111,9 +111,14 @@ export class AccountComponent implements OnInit {
       return;
     }
 
+    const empresaId = this.authService.sesionActual()?.empresaId;
+    if (!empresaId) {
+      this.error = 'Renueva tu sesión para consultar los horarios.';
+      return;
+    }
     this.loadingFranjas.set(true);
     this.appointmentService.getAvailableSlots({
-      empresaId: this.authService.sesionActual()?.empresaId || 1,
+      empresaId,
       sucursalId: cita.sucursalId,
       servicioId: cita.servicioId,
       prestadorId: cita.prestadorId,

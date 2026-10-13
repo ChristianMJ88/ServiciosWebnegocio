@@ -10,7 +10,7 @@ import jakarta.validation.constraints.Size;
 import java.time.OffsetDateTime;
 
 public record CrearCitaRequest(
-        @NotNull Long empresaId,
+        Long empresaId,
         @NotNull Long sucursalId,
         @NotNull Long servicioId,
         Long prestadorId,

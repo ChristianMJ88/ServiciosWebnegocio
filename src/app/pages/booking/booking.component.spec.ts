@@ -58,6 +58,8 @@ describe('Public booking selection', () => {
     const cotizar = vi.fn(() => of(serverQuote));
     const reservar = vi.fn((_payload: any) => of({id:90,mensaje:'Registrada',precio:200}));
     const checkoutConfig=vi.fn(() => of({habilitado:false}));
+    const dias=vi.fn(() => of({hoyLocal:'2026-10-12',reservaHasta:'2026-11-12',dias:[] as string[],configuracion:{}}));
+    const consultarFranjas=vi.fn((_request: any) => slots);
     TestBed.configureTestingModule({ providers: [
       { provide: TenantContextService, useValue: { empresaId: () => 1, slug: () => 'pruebas' } },
       { provide: PublicCheckoutService, useValue: { config: checkoutConfig } },
@@ -67,12 +69,25 @@ describe('Public booking selection', () => {
         getBranches: () => of([{ id: 10 }, { id: 20 }]),
         getServices: (branch: number) => of(branch === 10 ? [service(1), service(2), service(3, 10, 'USD')] : [service(4, 20)])
       } },
-      { provide: AppointmentService, useValue: { getPublicStaff: () => of([]), getAvailableSlots: () => slots,
-        cotizarCitas: cotizar, bookAppointment: reservar } }
+      { provide: AppointmentService, useValue: { getPublicStaff: () => of([]), getAvailableSlots: consultarFranjas,
+        getAvailableDays: dias, cotizarCitas: cotizar, bookAppointment: reservar } }
     ] });
     const component = TestBed.runInInjectionContext(() => new BookingComponent());
-    return { component, slots, cart: TestBed.inject(ReservationCartService),cotizar,reservar,serverQuote,checkoutConfig };
+    return { component, slots, cart: TestBed.inject(ReservationCartService),cotizar,reservar,serverQuote,checkoutConfig,dias,consultarFranjas };
   }
+
+  it('uses backend days including Sunday and keeps the selected professional in days, slots and draft', () => {
+    const {component,dias,consultarFranjas,cart}=setup({sucursal:'10',servicios:'1'});
+    dias.mockImplementation(() => of({hoyLocal:'2026-10-12',reservaHasta:'2026-11-12',dias:['2026-10-18'],configuracion:{}}));
+    component.ngOnInit();TestBed.tick();
+    expect(component.selectedDate()).toBe('2026-10-18');
+    component.elegirPrestador(1,42);TestBed.tick();
+    expect(dias).toHaveBeenLastCalledWith(10,[1],undefined,undefined,[42]);
+    expect(consultarFranjas).toHaveBeenLastCalledWith(expect.objectContaining({prestadorId:42,fecha:'2026-10-18'}));
+    expect(cart.read(1)?.prestadores).toEqual({1:42});
+    component.elegirPrestador(1,null);TestBed.tick();
+    expect(consultarFranjas).toHaveBeenLastCalledWith(expect.objectContaining({prestadorId:null}));
+  });
 
 it('does not quote again when only unselected available slots change', () => {
   const { component, cotizar } = setup({ sucursal: '10', servicios: '1', promocion: '88' });
@@ -148,7 +163,7 @@ it('does not quote again when only unselected available slots change', () => {
     expect(component.selectedServices().map(item => item.id)).toEqual([2]);
     component.onBranchChange('20');
     expect(component.selectedServices()).toEqual([]);
-    expect(cart.read(1)).toEqual({ branchId: 20, serviceIds: [] });
+    expect(cart.read(1)).toEqual({ branchId: 20, serviceIds: [], prestadores: {} });
     expect(component.selectionNotice).toContain('Cambiaste de sucursal');
   });
 

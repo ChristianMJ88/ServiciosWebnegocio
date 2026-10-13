@@ -56,6 +56,8 @@ export interface FranjaRecepcionDisponible {
 }
 
 export interface CitaRecepcion {
+  estadoEtiqueta?:string;
+  notificarEnAgenda?:boolean;
   id: number;
   estado: string;
   sucursalId: number;

@@ -20,15 +20,17 @@ import static org.assertj.core.api.Assertions.*;
 class ServicioReprogramacionPrecioPactadoTest {
     @Test void reprogramarNoModificaPrecioNiSnapshotAunqueLaOfertaHayaTerminado() {
         var citas=mock(CitaRepositorio.class);var sucursales=mock(SucursalRepositorio.class);var disponibilidad=mock(ServicioConsultaDisponibilidad.class);
+        var prestadores=mock(PrestadorServicioRepositorio.class);
         var servicio=new ServicioCitasCliente(citas,mock(HistorialEstadoCitaRepositorio.class),sucursales,mock(ServicioRepositorio.class),
-            mock(PrestadorServicioRepositorio.class),disponibilidad,mock(ClienteRepositorio.class),mock(UsuarioRepositorio.class),
-            mock(ServicioOutboxWhatsappCitas.class),mock(ServicioOutboxCorreoCitas.class));
+            prestadores,disponibilidad,mock(ClienteRepositorio.class),mock(UsuarioRepositorio.class),
+            mock(ServicioOutboxWhatsappCitas.class),mock(ServicioOutboxCorreoCitas.class),mock(com.techprotech.agenda.modulos.disponibilidad.aplicacion.ServicioConfiguracionReservas.class));
         var cita=new CitaEntidad();cita.setId(90L);cita.setEmpresaId(1L);cita.setSucursalId(3L);cita.setServicioId(10L);cita.setPrestadorId(20L);cita.setClienteId(70L);cita.setEstado("CONFIRMADA");
         cita.setInicio(LocalDateTime.now().plusDays(10));cita.setFin(cita.getInicio().plusHours(1));cita.setMoneda("MXN");cita.setPrecio(new BigDecimal("200"));cita.setPrecioLista(new BigDecimal("250"));cita.setDescuento(new BigDecimal("50"));cita.setPromocionId(8L);cita.setPromocionSnapshotJson("{\"id\":8,\"titulo\":\"Oferta original\"}");
         when(citas.findByIdAndEmpresaIdAndClienteId(90L,1L,70L)).thenReturn(Optional.of(cita));
         var sucursal=new SucursalEntidad();sucursal.setZonaHoraria("America/Mexico_City");sucursal.setNombre("Sucursal");when(sucursales.findById(3L)).thenReturn(Optional.of(sucursal));
         var inicio=OffsetDateTime.now(ZoneId.of(sucursal.getZonaHoraria())).plusDays(30).withSecond(0).withNano(0);
         when(disponibilidad.obtenerFranjasDisponibles(1L,3L,10L,20L,inicio.toLocalDate())).thenReturn(List.of(new FranjaDisponibleResponse(inicio.toString(),inicio.plusHours(1).toString(),20L,10L,3L)));
+        when(prestadores.bloquearPorEmpresa(1L,20L)).thenReturn(Optional.of(new com.techprotech.agenda.modulos.prestadores.infraestructura.entidad.PrestadorServicioEntidad()));
         servicio.reprogramar(1L,70L,90L,inicio);
         assertThat(cita.getPrecio()).isEqualByComparingTo("200");assertThat(cita.getPrecioLista()).isEqualByComparingTo("250");assertThat(cita.getDescuento()).isEqualByComparingTo("50");assertThat(cita.getPromocionId()).isEqualTo(8L);assertThat(cita.getPromocionSnapshotJson()).contains("Oferta original");
     }

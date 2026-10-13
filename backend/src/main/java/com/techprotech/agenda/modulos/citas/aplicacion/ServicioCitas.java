@@ -77,6 +77,7 @@ public class ServicioCitas {
     private final ServicioOutboxWhatsappCitas servicioOutboxWhatsappCitas;
     private final ServicioCapacidadesEmpresa capacidades;
     private final ServicioCotizacionCitas cotizador;
+    private final ServicioPoliticaReservaPago politicaPago;
     private final com.fasterxml.jackson.databind.ObjectMapper objectMapper;
 
     public ServicioCitas(
@@ -98,7 +99,8 @@ public class ServicioCitas {
             ServicioOutboxWhatsappCitas servicioOutboxWhatsappCitas,
             ServicioCapacidadesEmpresa capacidades,
             ServicioCotizacionCitas cotizador,
-            com.fasterxml.jackson.databind.ObjectMapper objectMapper
+            com.fasterxml.jackson.databind.ObjectMapper objectMapper,
+            ServicioPoliticaReservaPago politicaPago
     ) {
         this.servicioConsultaDisponibilidad = servicioConsultaDisponibilidad;
         this.sucursalRepositorio = sucursalRepositorio;
@@ -117,17 +119,22 @@ public class ServicioCitas {
         this.servicioOutboxCorreoCitas = servicioOutboxCorreoCitas;
         this.servicioOutboxWhatsappCitas = servicioOutboxWhatsappCitas;
         this.capacidades=capacidades;
+        this.politicaPago=politicaPago;
         this.cotizador=cotizador;
         this.objectMapper=objectMapper;
     }
 
     @Transactional
     public CitaCreadaResponse crearCita(CrearCitaRequest request) {
-        return crearCita(request, true);
+        return crearCita(request, true, false);
     }
 
-    private CitaCreadaResponse crearCita(CrearCitaRequest request, boolean programarWhatsappConfirmacion) {
-        Long empresaId = request.empresaId() != null ? request.empresaId() : 1L;
+@Transactional
+public CitaCreadaResponse crearCitaPublica(CrearCitaRequest request) { return crearCita(request,true,true); }
+private CitaCreadaResponse crearCita(CrearCitaRequest request, boolean programarWhatsappConfirmacion, boolean publico) {
+
+        if (request.empresaId() == null) throw new org.springframework.web.server.ResponseStatusException(org.springframework.http.HttpStatus.BAD_REQUEST, "La empresa es obligatoria");
+        Long empresaId = request.empresaId();
         capacidades.exigirSuscripcion(empresaId);
         EmpresaEntidad empresa = empresaRepositorio.findById(empresaId)
                 .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "La empresa no existe"));
@@ -161,7 +168,9 @@ public class ServicioCitas {
         LocalDateTime inicio = OffsetDateTime.parse(franjaSeleccionada.inicio()).toLocalDateTime();
         LocalDateTime fin = OffsetDateTime.parse(franjaSeleccionada.fin()).toLocalDateTime();
 
-        if (!citaRepositorio.buscarConflictos(prestador.getUsuarioId(), inicio, fin, List.of("PENDIENTE", "CONFIRMADA")).isEmpty()) {
+        prestadorServicioRepositorio.bloquearPorEmpresa(empresaId, prestador.getUsuarioId())
+                .orElseThrow(() -> new ResponseStatusException(CONFLICT, "El prestador ya no está disponible"));
+        if (!citaRepositorio.buscarConflictosBloqueando(prestador.getUsuarioId(), inicio, fin, List.of("PENDIENTE", "PENDIENTE_PAGO", "CONFIRMADA")).isEmpty()) {
             throw new ResponseStatusException(CONFLICT, "Existe un conflicto de horario para el prestador");
         }
 
@@ -169,6 +178,8 @@ public class ServicioCitas {
                 List.of(new com.techprotech.agenda.modulos.citas.api.dto.CotizarCitasRequest.ItemCotizacion(request.servicioId(),request.inicio())));
         if (request.promocionId()!=null && cotizacion.promocion()==null) throw new ResponseStatusException(CONFLICT,cotizacion.motivoNoAplicada());
 
+        var politica = politicaServicio(cotizacion.lineas().getFirst().precioNeto(),servicio);
+        var plan = politicaPago.plan(empresaId,publico,List.of(politica.importeRequerido()));
         Long clienteId = resolverOCrearCliente(
                 empresaId,
                 request.nombreCliente(),
@@ -186,24 +197,26 @@ public class ServicioCitas {
         cita.setInicio(inicio);
         cita.setFin(fin);
         aplicarCotizacion(cita,cotizacion,0,request.promocionId());
+        politicaPago.aplicar(cita,plan,politica);
         cita.setMoneda(servicio.getMoneda());
         cita.setNotas(request.notas());
         cita.setCreadaPorUsuarioId(clienteId);
+        cita.setCreadaEn(LocalDateTime.now(java.time.ZoneOffset.UTC));
         cita = citaRepositorio.save(cita);
 
         HistorialEstadoCitaEntidad historial = new HistorialEstadoCitaEntidad();
         historial.setCitaId(cita.getId());
         historial.setEstadoAnterior(null);
-        historial.setEstadoNuevo("PENDIENTE");
+        historial.setEstadoNuevo(cita.getEstado());
         historial.setCambiadoPorUsuarioId(clienteId);
         historial.setMotivo("Creacion inicial de cita");
         historialEstadoCitaRepositorio.save(historial);
 
         OffsetDateTime inicioRespuesta = cita.getInicio().atZone(zona).toOffsetDateTime();
         OffsetDateTime finRespuesta = cita.getFin().atZone(zona).toOffsetDateTime();
-        boolean correoConfirmacionProgramado = servicioOutboxCorreoCitas.programarRegistrada(
+        boolean correoConfirmacionProgramado = !plan.requierePago() && servicioOutboxCorreoCitas.programarRegistrada(
                 empresaId, cita.getId(), cita.getInicio());
-        if (programarWhatsappConfirmacion) {
+        if (programarWhatsappConfirmacion && !plan.requierePago()) {
             servicioOutboxWhatsappCitas.programarConfirmacion(
                     empresaId,
                     cita.getId(),
@@ -221,16 +234,22 @@ public class ServicioCitas {
                 cita.getPrestadorId(),
                 inicioRespuesta,
                 finRespuesta,
-                resolverMensajeRespuesta(empresaId, correoConfirmacionProgramado),
+                mensajeReserva(cita,plan,correoConfirmacionProgramado),
                 correoConfirmacionProgramado,
                 false,
-                cita.getPrecioLista(), cita.getDescuento(), cita.getPrecio()
+                cita.getPrecioLista(), cita.getDescuento(), cita.getPrecio(),
+                plan.requierePago(), cita.getImporteRequerido(), cita.getPagoExpiraEn()==null?null:cita.getPagoExpiraEn().atOffset(java.time.ZoneOffset.UTC), cita.getPoliticaCobro(), politicaPago.limiteConfirmacion(cita,zona)
         );
     }
 
     @Transactional
-    public CitasMultiplesCreadasResponse crearCitasMultiples(CrearCitasMultiplesRequest request) {
-        Long empresaId = request.empresaId() != null ? request.empresaId() : 1L;
+public CitasMultiplesCreadasResponse crearCitasMultiples(CrearCitasMultiplesRequest request) { return crearCitasMultiples(request,false); }
+@Transactional
+public CitasMultiplesCreadasResponse crearCitasMultiplesPublicas(CrearCitasMultiplesRequest request) { return crearCitasMultiples(request,true); }
+private CitasMultiplesCreadasResponse crearCitasMultiples(CrearCitasMultiplesRequest request,boolean publico) {
+
+        if (request.empresaId() == null) throw new org.springframework.web.server.ResponseStatusException(org.springframework.http.HttpStatus.BAD_REQUEST, "La empresa es obligatoria");
+        Long empresaId = request.empresaId();
         capacidades.exigirSuscripcion(empresaId);
         EmpresaEntidad empresa = empresaRepositorio.findById(empresaId)
                 .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "La empresa no existe"));
@@ -288,9 +307,23 @@ public class ServicioCitas {
             }
         }
 
+        for (Long id : rangos.stream().map(RangoReservaValidado::prestadorId).distinct().sorted().toList()) {
+            prestadorServicioRepositorio.bloquearPorEmpresa(empresaId, id)
+                    .orElseThrow(() -> new ResponseStatusException(CONFLICT, "Un prestador ya no está disponible"));
+        }
+        for (var rango : rangos) {
+            if (!citaRepositorio.buscarConflictosBloqueando(rango.prestadorId(), rango.inicio().toLocalDateTime(), rango.fin().toLocalDateTime(), List.of("PENDIENTE", "PENDIENTE_PAGO", "CONFIRMADA")).isEmpty())
+                throw new ResponseStatusException(CONFLICT, "Uno de los horarios ya no está disponible");
+        }
         var cotizacion = cotizador.cotizarPrecio(empresaId,request.sucursalId(),request.promocionId(),
                 rangos.stream().map(r -> new com.techprotech.agenda.modulos.citas.api.dto.CotizarCitasRequest.ItemCotizacion(r.servicioId(),r.inicio())).toList());
         if (request.promocionId()!=null && cotizacion.promocion()==null) throw new ResponseStatusException(CONFLICT,cotizacion.motivoNoAplicada());
+var politicas=new java.util.ArrayList<PoliticaCobroServicio>();
+for(int i=0;i<rangos.size();i++) {
+    var servicioPolitica=servicioRepositorio.findByIdAndEmpresaIdAndActivoTrue(rangos.get(i).servicioId(),empresaId).orElseThrow();
+    politicas.add(politicaServicio(cotizacion.lineas().get(i).precioNeto(),servicioPolitica));
+}
+var plan=politicaPago.plan(empresaId,publico,politicas.stream().map(PoliticaCobroServicio::importeRequerido).toList());
         Long clienteId = resolverOCrearCliente(
                 empresaId,
                 request.nombreCliente(),
@@ -313,22 +346,24 @@ public class ServicioCitas {
             cita.setInicio(rango.inicio().toLocalDateTime());
             cita.setFin(rango.fin().toLocalDateTime());
             aplicarCotizacion(cita,cotizacion,indiceCotizacion++,request.promocionId());
+            politicaPago.aplicar(cita,plan,politicas.get(indiceCotizacion-1));
             cita.setMoneda(servicio.getMoneda());
             cita.setNotas(request.notas());
             cita.setCreadaPorUsuarioId(clienteId);
+        cita.setCreadaEn(LocalDateTime.now(java.time.ZoneOffset.UTC));
             cita = citaRepositorio.save(cita);
 
             HistorialEstadoCitaEntidad historial = new HistorialEstadoCitaEntidad();
             historial.setCitaId(cita.getId());
             historial.setEstadoAnterior(null);
-            historial.setEstadoNuevo("PENDIENTE");
+            historial.setEstadoNuevo(cita.getEstado());
             historial.setCambiadoPorUsuarioId(clienteId);
             historial.setMotivo("Creacion inicial de cita");
             historialEstadoCitaRepositorio.save(historial);
 
             OffsetDateTime inicioRespuesta = cita.getInicio().atZone(zona).toOffsetDateTime();
             OffsetDateTime finRespuesta = cita.getFin().atZone(zona).toOffsetDateTime();
-            boolean correoConfirmacionProgramado = servicioOutboxCorreoCitas.programarRegistrada(
+            boolean correoConfirmacionProgramado = !plan.requierePago() && servicioOutboxCorreoCitas.programarRegistrada(
                     empresaId, cita.getId(), cita.getInicio());
 
             citas.add(new CitaCreadaResponse(
@@ -340,14 +375,15 @@ public class ServicioCitas {
                     cita.getPrestadorId(),
                     inicioRespuesta,
                     finRespuesta,
-                    resolverMensajeRespuesta(empresaId, correoConfirmacionProgramado),
+                    mensajeReserva(cita,plan,correoConfirmacionProgramado),
                     correoConfirmacionProgramado,
                     false,
-                    cita.getPrecioLista(), cita.getDescuento(), cita.getPrecio()
+                    cita.getPrecioLista(), cita.getDescuento(), cita.getPrecio(),
+                plan.requierePago(), cita.getImporteRequerido(), cita.getPagoExpiraEn()==null?null:cita.getPagoExpiraEn().atOffset(java.time.ZoneOffset.UTC), cita.getPoliticaCobro(), politicaPago.limiteConfirmacion(cita,zona)
             ));
         }
 
-        if (!citas.isEmpty()) {
+        if (!citas.isEmpty() && !plan.requierePago()) {
             servicioOutboxWhatsappCitas.programarConfirmacion(
                     empresaId,
                     citas.getFirst().id(),
@@ -364,6 +400,19 @@ public class ServicioCitas {
         );
     }
 
+private String mensajeReserva(CitaEntidad cita,ServicioPoliticaReservaPago.PlanReserva plan,boolean correoProgramado) {
+    if(plan.requierePago()) return "Tu horario está apartado y pendiente de pago. Se confirmará cuando el pago sea aprobado.";
+    if(cita.getImporteRequerido()!=null && cita.getImporteRequerido().signum()>0) return "Tu cita está pendiente de confirmación. El anticipo se paga en el negocio.";
+    return "Tu cita está pendiente de confirmación. Confírmala desde el mensaje que te enviamos antes del plazo indicado o se liberará el horario.";
+}
+private PoliticaCobroServicio politicaServicio(java.math.BigDecimal neto,ServicioEntidad servicio) {
+    try { return PoliticaCobroServicio.resolver(neto,servicio); }
+    catch(ResponseStatusException ex) {
+        if(ex.getStatusCode()!=CONFLICT) throw ex;
+        LOGGER.warn("Servicio {} con anticipo inválido; reserva sin cobro automático",servicio.getId());
+        return new PoliticaCobroServicio("SIN_COBRO",java.math.BigDecimal.ZERO.setScale(2),neto);
+    }
+}
     private void aplicarCotizacion(CitaEntidad cita,
             com.techprotech.agenda.modulos.citas.api.dto.ResultadoCotizacionCitas resultado, int indice, Long promocionId) {
         if (promocionId != null && resultado.promocion()==null) throw new ResponseStatusException(CONFLICT,resultado.motivoNoAplicada());

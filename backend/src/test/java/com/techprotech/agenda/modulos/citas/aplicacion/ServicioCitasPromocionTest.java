@@ -49,10 +49,14 @@ class ServicioCitasPromocionTest {
     @Mock ServicioOutboxWhatsappCitas whatsapp;
     @Mock ServicioCapacidadesEmpresa capacidades;
     @Mock ServicioCotizacionCitas cotizador;
+    @Mock ServicioPoliticaReservaPago politicaPago;
     @Spy ObjectMapper mapper=new ObjectMapper();
     @InjectMocks ServicioCitas servicio;
     final OffsetDateTime inicio=OffsetDateTime.parse("2026-12-01T10:00:00-06:00");
-    @BeforeEach void preparar() {
+@BeforeEach void preparar() {
+    lenient().when(politicaPago.plan(eq(1L),anyBoolean(),any())).thenReturn(new ServicioPoliticaReservaPago.PlanReserva("grupo-prueba",false,null));
+    lenient().doCallRealMethod().when(politicaPago).aplicar(any(),any(),any());
+
         when(empresas.findById(1L)).thenReturn(Optional.of(new EmpresaEntidad()));
         var sucursal=new SucursalEntidad();sucursal.setZonaHoraria("America/Mexico_City");
         when(sucursales.findByIdAndEmpresaIdAndActivaTrue(3L,1L)).thenReturn(Optional.of(sucursal));
@@ -60,6 +64,7 @@ class ServicioCitasPromocionTest {
         when(servicios.findByIdAndEmpresaIdAndActivoTrue(10L,1L)).thenReturn(Optional.of(concepto));
         lenient().when(asignaciones.existsByEmpresaIdAndIdServicioIdAndIdSucursalIdAndActivoTrue(1L,10L,3L)).thenReturn(true);
         var prestador=new PrestadorServicioEntidad();prestador.setUsuarioId(20L);
+        lenient().when(prestadores.bloquearPorEmpresa(1L,20L)).thenReturn(Optional.of(prestador));
         lenient().when(prestadores.findByUsuarioIdAndSucursalIdAndActivoTrue(20L,3L)).thenReturn(Optional.of(prestador));
         lenient().when(ofertas.findByIdPrestadorIdAndIdServicioIdAndActivaTrue(20L,10L)).thenReturn(Optional.of(new AsignacionServicioPrestadorEntidad()));
         when(disponibilidad.obtenerFranjasDisponibles(1L,3L,10L,20L,inicio.toLocalDate())).thenReturn(List.of(new FranjaDisponibleResponse(inicio.toString(),inicio.plusHours(1).toString(),20L,10L,3L)));
@@ -74,6 +79,18 @@ class ServicioCitasPromocionTest {
             enviada&&!valida?"Promoción vencida":null,List.of(new ResultadoCotizacionCitas.LineaCotizacionCita(10L,"Servicio",new BigDecimal("250.00"),descuento,neto,neto,valida)));
     }
     private CrearCitaRequest request(Long promocionId) { return new CrearCitaRequest(1L,3L,10L,20L,"Cliente prueba","cliente@example.com","2220000000",inicio,null,promocionId); }
+    @Test void apartadoPublicoNoEnviaConfirmacionesAntesDelPago() {
+        var concepto=servicios.findByIdAndEmpresaIdAndActivoTrue(10L,1L).orElseThrow();
+        concepto.setRequiereAnticipo(true);concepto.setAnticipoTipo("PORCENTAJE");concepto.setAnticipoValor(new BigDecimal("50"));
+        when(cotizador.cotizarPrecio(eq(1L),eq(3L),isNull(),any())).thenReturn(resultado(false,false));
+        var limite=LocalDateTime.now(ZoneOffset.UTC).plusMinutes(15);
+        when(politicaPago.plan(eq(1L),eq(true),any())).thenReturn(new ServicioPoliticaReservaPago.PlanReserva("grupo-pago",true,limite));
+        var respuesta=servicio.crearCitaPublica(request(null));
+        assertThat(respuesta.estado()).isEqualTo("PENDIENTE_PAGO");
+        assertThat(respuesta.requierePago()).isTrue();
+        assertThat(respuesta.importeRequerido()).isEqualByComparingTo("125.00");
+        verifyNoInteractions(outbox,whatsapp);
+    }
     @Test void guardaPrecioNetoListaDescuentoYFotografiaDePromocion() {
         when(cotizador.cotizarPrecio(eq(1L),eq(3L),eq(8L),any())).thenReturn(resultado(true,true));
         var response=servicio.crearCita(request(8L));

@@ -49,12 +49,24 @@ public class ServicioOutboxCorreoCitas {
         return correoCliente;
     }
 
+public boolean programarNuevaCitaNegocio(Long empresaId,Long citaId,LocalDateTime inicioEsperado) {
+    return programar(empresaId,citaId,"CITA_REGISTRADA_NEGOCIO_EMAIL",inicioEsperado,LocalDateTime.now());
+}
+
     public boolean programarConfirmada(Long empresaId, Long citaId, LocalDateTime inicioEsperado) {
         return programar(empresaId, citaId, "CITA_CONFIRMADA_EMAIL", inicioEsperado, LocalDateTime.now());
     }
 
     public boolean programarReprogramada(Long empresaId, Long citaId, LocalDateTime inicioEsperado) {
         return programar(empresaId, citaId, "CITA_REPROGRAMADA_EMAIL", inicioEsperado, LocalDateTime.now());
+    }
+
+    public boolean programarApartadoVencido(Long empresaId, Long citaId, LocalDateTime inicioEsperado) {
+        return programar(empresaId, citaId, "CITA_APARTADO_VENCIDO_EMAIL", inicioEsperado, LocalDateTime.now());
+    }
+
+    public boolean programarIncidenciaPagoNegocio(Long empresaId, Long citaId, LocalDateTime inicioEsperado) {
+        return programar(empresaId, citaId, "CITA_PAGO_INCIDENCIA_NEGOCIO_EMAIL", inicioEsperado, LocalDateTime.now());
     }
 
     public boolean programarRecordatorioConfirmacion(Long empresaId, Long citaId, LocalDateTime inicioEsperado) {

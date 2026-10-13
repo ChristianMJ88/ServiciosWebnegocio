@@ -41,8 +41,9 @@ import java.util.stream.Collectors;
 @Service
 public class ServicioOrdenCheckout {
     private static final BigDecimal CERO = new BigDecimal("0.00");
-    private static final Set<String> ESTADOS_CITA_COBRABLES = Set.of("PENDIENTE", "CONFIRMADA");
+    private static final Set<String> ESTADOS_CITA_COBRABLES = Set.of("PENDIENTE", "PENDIENTE_PAGO", "CONFIRMADA");
 
+    private final java.time.Clock reloj;
     private final ServicioConfiguracionCheckout configuracionCheckout;
     private final EmpresaSitioConfigRepositorio sitios;
     private final SucursalRepositorio sucursales;
@@ -55,6 +56,7 @@ public class ServicioOrdenCheckout {
     private final CheckoutOrdenRepositorio ordenes;
     private final CheckoutOrdenDetalleRepositorio detalles;
     private final PropiedadesCheckout propiedades;
+    private final com.techprotech.agenda.modulos.disponibilidad.aplicacion.ServicioConfiguracionReservas reservas;
     private final ServicioValidacionDirecciones direcciones;
     private final ServicioCotizacionesEnvio cotizacionesEnvio;
     private final ServicioCapacidadesEmpresa capacidades;
@@ -69,7 +71,8 @@ public class ServicioOrdenCheckout {
                                  PropiedadesCheckout propiedades, ServicioValidacionDirecciones direcciones,
                                  ServicioCotizacionesEnvio cotizacionesEnvio,
                                  ServicioCapacidadesEmpresa capacidades,
-                                 com.techprotech.agenda.modulos.productos.infraestructura.repositorio.ProductoRepositorio productos) {
+                                 com.techprotech.agenda.modulos.productos.infraestructura.repositorio.ProductoRepositorio productos, com.techprotech.agenda.modulos.disponibilidad.aplicacion.ServicioConfiguracionReservas reservas, java.time.Clock reloj) {
+        this.reloj = reloj;
         this.configuracionCheckout = configuracionCheckout;
         this.sitios = sitios;
         this.sucursales = sucursales;
@@ -81,6 +84,7 @@ public class ServicioOrdenCheckout {
         this.detallesVenta = detallesVenta;
         this.ordenes = ordenes;
         this.detalles = detalles;
+        this.reservas=reservas;
         this.propiedades = propiedades;
         this.direcciones = direcciones;
         this.cotizacionesEnvio = cotizacionesEnvio;
@@ -108,7 +112,6 @@ public class ServicioOrdenCheckout {
         List<Long> citaIds = request.citaIds() == null ? List.of() : request.citaIds().stream().distinct().toList();
         if (cantidades.isEmpty() && citaIds.isEmpty()) throw error(HttpStatus.BAD_REQUEST, "Agrega productos o citas a la orden");
         if (!cantidades.isEmpty() && !config.permitirPagoProductos()) throw error(HttpStatus.CONFLICT, "El pago de productos no está habilitado");
-        if (!citaIds.isEmpty() && !config.permitirPagoServicios()) throw error(HttpStatus.CONFLICT, "El pago de servicios no está habilitado");
         BigDecimal costoEnvio = validarEntrega(sitio.getEmpresaId(), cantidades, request, config, !cantidades.isEmpty());
 
         ServicioCotizacionProductos.ResultadoCotizacion cotizacion = cotizadorProductos.cotizar(
@@ -152,7 +155,10 @@ public class ServicioOrdenCheckout {
         orden.setEnvioCotizacionId("ENVIO_NACIONAL".equals(request.modalidadEntrega())
                 ? texto(request.cotizacionEnvioId()) : null);
         orden.setTotal(total);
-        orden.setExpiraEn(LocalDateTime.now(ZoneOffset.UTC).plusMinutes(propiedades.minutosVigenciaOrden()));
+var vencimiento=LocalDateTime.now(reloj).plusMinutes(reservas.obtener(sitio.getEmpresaId()).minutosApartadoPago());
+if(!citaIds.isEmpty()) for(var cita:citas.findAllById(citaIds)) if(sitio.getEmpresaId().equals(cita.getEmpresaId()) && cita.getPagoExpiraEn()!=null && cita.getPagoExpiraEn().isBefore(vencimiento)) vencimiento=cita.getPagoExpiraEn();
+orden.setExpiraEn(vencimiento);
+
         orden = ordenes.save(orden);
         Long ordenId = orden.getId();
         detalles.saveAll(lineas.stream().map(linea -> entidadDetalle(ordenId, sitio.getEmpresaId(), linea)).toList());
@@ -179,17 +185,35 @@ public class ServicioOrdenCheckout {
         Map<Long, ServicioEntidad> serviciosPorId = servicios.findByEmpresaIdAndIdIn(empresaId,
                 encontradas.values().stream().map(CitaEntidad::getServicioId).collect(Collectors.toSet())).stream()
                 .collect(Collectors.toMap(ServicioEntidad::getId, Function.identity()));
-        List<Linea> resultado = new ArrayList<>();
-        for (Long id : ids) {
+var idsGrupo=new java.util.LinkedHashSet<Long>(ids);
+for(var cita:List.copyOf(encontradas.values())) if(cita.getReservaGrupoId()!=null) {
+    for(var miembro:citas.findByEmpresaIdAndReservaGrupoIdOrderByIdAsc(empresaId,cita.getReservaGrupoId())) {
+        if(!cita.getClienteId().equals(miembro.getClienteId())) throw error(HttpStatus.NOT_FOUND,"La reserva no está disponible");
+        encontradas.put(miembro.getId(),miembro); idsGrupo.add(miembro.getId());
+    }
+}
+if(idsGrupo.size()!=ids.size()) {
+    serviciosPorId=servicios.findByEmpresaIdAndIdIn(empresaId,encontradas.values().stream().map(CitaEntidad::getServicioId).collect(Collectors.toSet())).stream().collect(Collectors.toMap(ServicioEntidad::getId,Function.identity()));
+}
+List<Linea> resultado = new ArrayList<>();
+
+        for (Long id : idsGrupo) {
             CitaEntidad cita = encontradas.get(id);
             if (!sucursalId.equals(cita.getSucursalId())) throw error(HttpStatus.BAD_REQUEST, "Todas las citas deben pertenecer a la sucursal seleccionada");
             if (!ESTADOS_CITA_COBRABLES.contains(cita.getEstado().toUpperCase(Locale.ROOT))) throw error(HttpStatus.CONFLICT, "Una cita ya no está disponible para cobro");
+            ServicioEntidad servicio = serviciosPorId.get(cita.getServicioId());
+            boolean sinCobro=cita.getPoliticaCobro()!=null ? "SIN_COBRO".equals(cita.getPoliticaCobro()) : servicio!=null && !servicio.isRequiereAnticipo();
+            if(sinCobro || cita.getPrecio().signum()<=0) continue;
             BigDecimal pagado = seguro(pagosCita.sumarPagadoPorCita(empresaId, id))
                     .add(seguro(detallesVenta.sumarServiciosPagadosPorCita(empresaId, id)));
             BigDecimal pendiente = cita.getPrecio().subtract(pagado).max(CERO).setScale(2, RoundingMode.HALF_UP);
+            if (cita.getPrecio().signum()<=0 && "SIN_COBRO".equals(cita.getPoliticaCobro())) continue;
             if (pendiente.signum() <= 0) throw error(HttpStatus.CONFLICT, "Una cita ya está pagada");
-            ServicioEntidad servicio = serviciosPorId.get(cita.getServicioId());
-            BigDecimal cobrar = pagado.signum()>0 ? pendiente : importeServicio(pendiente, config, servicio);
+BigDecimal cobrar = pagado.signum()>0 ? pendiente : cita.getImporteRequerido()!=null ? cita.getImporteRequerido().min(pendiente) : importeServicio(pendiente, config, servicio);
+if(cobrar.signum()<=0) continue;
+if(!config.permitirPagoServicios()) throw error(HttpStatus.CONFLICT,"El pago de servicios no está habilitado");
+if("PENDIENTE_PAGO".equals(cita.getEstado()) && cita.getPagoExpiraEn()!=null && !cita.getPagoExpiraEn().isAfter(LocalDateTime.now(reloj))) throw error(HttpStatus.CONFLICT,"El apartado para pagar venció; elige un nuevo horario");
+
             String concepto = pagado.signum() > 0 ? "Liquidar saldo" : cobrar.compareTo(pendiente) < 0 ? "Anticipo" : "Pago total";
             String nombre = concepto + " · " + (servicio == null ? "Servicio reservado" : servicio.getNombre());
             var desglose = com.techprotech.agenda.modulos.citas.aplicacion.DesglosePrecioCita.paraCobro(cita,cobrar,pagado);
@@ -304,7 +328,7 @@ public class ServicioOrdenCheckout {
         orden.setGooglePlaceId(validacion.placeId());
         orden.setLatitud(validacion.latitud());
         orden.setLongitud(validacion.longitud());
-        orden.setDireccionValidadaEn(validacion.valida() ? LocalDateTime.now(ZoneOffset.UTC) : null);
+        orden.setDireccionValidadaEn(validacion.valida() ? LocalDateTime.now(reloj) : null);
     }
 
     private String texto(String valor) { return valor == null || valor.isBlank() ? null : valor.trim(); }

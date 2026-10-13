@@ -81,7 +81,7 @@ class ServicioOrdenCheckoutTest {
         });
         servicio = new ServicioOrdenCheckout(configuracion, sitios, sucursales, cotizador, citas, servicios,
                 usuarios, pagosCita, detallesVenta, ordenes, detalles, new PropiedadesCheckout(20, 3), direcciones,
-                cotizacionesEnvio,mock(com.techprotech.agenda.modulos.plataforma.aplicacion.ServicioCapacidadesEmpresa.class), productosCostos());
+                cotizacionesEnvio,mock(com.techprotech.agenda.modulos.plataforma.aplicacion.ServicioCapacidadesEmpresa.class), productosCostos(), new com.techprotech.agenda.modulos.disponibilidad.aplicacion.ServicioConfiguracionReservas(mock(com.techprotech.agenda.modulos.disponibilidad.infraestructura.repositorio.EmpresaConfiguracionReservasRepositorio.class),0,30,2,15,24), java.time.Clock.systemUTC());
     }
 
     private com.techprotech.agenda.modulos.productos.infraestructura.repositorio.ProductoRepositorio productosCostos() {

@@ -5,19 +5,27 @@
     <ul class="cart-items">
       @for (service of services(); track service.id) {
         <li>
-          <div><strong>{{ service.nombre }}</strong><span>{{ service.duracionMinutos }} min · @if (priceLine(service.id); as line) { @if(line.descuento > 0) { <s>{{ line.precioLista | appMoney:service.moneda:2:2 }}</s> } {{ line.precioNeto | appMoney:service.moneda:2:2 }} } @else { {{ service.precio | appMoney:service.moneda:2:2 }} }</span></div>
+          <div><strong>{{ service.nombre }}</strong><span>{{ service.duracionMinutos }} min · @if (priceLine(service.id); as line) { @if(line.descuento > 0) { <s>{{ line.precioLista | appMoney:service.moneda:2:2 }}</s> } {{ line.precioNeto | appMoney:service.moneda:2:2 }} } @else { {{ service.precio | appMoney:service.moneda:2:2 }} }</span>
+            @if(priceLine(service.id); as line) {
+              @if(line.politicaCobro === 'SIN_COBRO') {<small>Sin anticipo · pago en el negocio</small>}
+              @else if(line.importeRequerido !== undefined) {<small>{{line.politicaCobro === 'TOTAL' ? 'Pago total' : 'Anticipo'}}: {{line.importeRequerido | appMoney:service.moneda:2:2}}</small>}
+              @if(line.saldoEnNegocio !== undefined) {<small>Saldo en el negocio: {{line.saldoEnNegocio | appMoney:service.moneda:2:2}}</small>}
+            }
+          </div>
           <button type="button" class="cart-remove" [attr.aria-label]="'Quitar ' + service.nombre" (click)="remove.emit(service.id)"><i class="bi bi-x-lg" aria-hidden="true"></i></button>
         </li>
       }
     </ul>
+    @for(producto of quote()?.productos ?? [];track producto.productoId) {<div><strong>{{producto.nombre}}</strong><span>{{producto.cantidad}} · {{producto.total | appMoney:producto.moneda:2:2}}</span>@if(producto.descuento>0) {<small>Descuento: {{producto.descuento | appMoney:producto.moneda:2:2}}</small>}</div>}
+    @if(quote()?.avisoProductos) {<p role="status">{{quote()!.avisoProductos}}</p>}
     <dl class="cart-details">
       @if (quote(); as currentQuote) {
         @if(currentQuote.descuentoTotal > 0) {
           <div><dt>Precio original</dt><dd><s>{{ currentQuote.subtotalLista | appMoney:currentQuote.moneda:2:2 }}</s></dd></div>
           <div><dt>Descuento</dt><dd>−{{ currentQuote.descuentoTotal | appMoney:currentQuote.moneda:2:2 }}</dd></div>
         }
-        @if (currentQuote.anticipoTotal < currentQuote.total) {
-          <div><dt>Anticipo</dt><dd>{{ currentQuote.anticipoTotal | appMoney:currentQuote.moneda:2:2 }}</dd></div>
+        @if (currentQuote.anticipoTotal > 0 && currentQuote.anticipoTotal < currentQuote.total) {
+          <div><dt>{{currentQuote.requierePago ? 'A pagar ahora' : 'Anticipo en el negocio'}}</dt><dd>{{ currentQuote.anticipoTotal | appMoney:currentQuote.moneda:2:2 }}</dd></div>
         }
       }
       <div><dt>Tiempo estimado</dt><dd>{{ duration() }} min</dd></div>
@@ -27,7 +35,7 @@
         <div class="cart-total"><dt>Total {{ total.currency }}</dt><dd>@if(pricePending()) { Calculando… } @else { {{ total.amount | appMoney:total.currency:2:2 }} }</dd></div>
       }
     </dl>
-    <p class="cart-note">El horario se confirma al completar la reserva.</p>
+    <p class="cart-note">{{quote()?.requierePago ? 'Las citas con pago se confirman cuando el pago sea aprobado.' : 'Te enviaremos las instrucciones para confirmar tu cita.'}}</p>
   } @else {
     <div class="cart-empty"><i class="bi bi-calendar-plus" aria-hidden="true"></i><p>Empieza con un servicio</p><span>Puedes agregar varios a tu cita.</span></div>
   }

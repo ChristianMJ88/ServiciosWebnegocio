@@ -1,3 +1,4 @@
+import { AdminReservationSettingsComponent } from './admin-reservation-settings.component';
 import { AdminWorkspaceComponent } from '../shared/admin-workspace.component';
 
 import { Component, EventEmitter, Input, Output, OnChanges, SimpleChanges } from '@angular/core';
@@ -13,7 +14,7 @@ import { SujetoDisponibilidadOption } from './admin-availability.types';
 @Component({
   selector: 'app-admin-rules-section',
   standalone: true,
-  imports: [AdminWorkspaceComponent,
+  imports: [AdminWorkspaceComponent,AdminReservationSettingsComponent,
     FormsModule,
     MatButtonModule,
     MatCardModule,

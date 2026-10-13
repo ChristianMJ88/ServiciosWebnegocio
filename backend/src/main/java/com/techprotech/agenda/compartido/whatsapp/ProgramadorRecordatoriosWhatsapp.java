@@ -32,6 +32,9 @@ public class ProgramadorRecordatoriosWhatsapp {
     private final ConfiguracionWhatsappEmpresaRepositorio configuracionWhatsappEmpresaRepositorio;
     private final ServicioOutboxCorreoCitas servicioOutboxCorreoCitas;
     private final EmpresaRepositorio empresaRepositorio;
+    private final java.time.Clock reloj;
+    private final com.techprotech.agenda.modulos.disponibilidad.aplicacion.ServicioConfiguracionReservas reservas;
+    private final com.techprotech.agenda.modulos.sucursales.infraestructura.repositorio.SucursalRepositorio sucursales;
 
     public ProgramadorRecordatoriosWhatsapp(
             CitaRepositorio citaRepositorio,
@@ -42,7 +45,10 @@ public class ProgramadorRecordatoriosWhatsapp {
             HistorialEstadoCitaRepositorio historialEstadoCitaRepositorio,
             ConfiguracionWhatsappEmpresaRepositorio configuracionWhatsappEmpresaRepositorio,
             ServicioOutboxCorreoCitas servicioOutboxCorreoCitas,
-            EmpresaRepositorio empresaRepositorio
+            EmpresaRepositorio empresaRepositorio,
+            com.techprotech.agenda.modulos.disponibilidad.aplicacion.ServicioConfiguracionReservas reservas,
+            com.techprotech.agenda.modulos.sucursales.infraestructura.repositorio.SucursalRepositorio sucursales,
+            java.time.Clock reloj
     ) {
         this.citaRepositorio = citaRepositorio;
         this.clienteRepositorio = clienteRepositorio;
@@ -52,7 +58,7 @@ public class ProgramadorRecordatoriosWhatsapp {
         this.historialEstadoCitaRepositorio = historialEstadoCitaRepositorio;
         this.configuracionWhatsappEmpresaRepositorio = configuracionWhatsappEmpresaRepositorio;
         this.servicioOutboxCorreoCitas = servicioOutboxCorreoCitas;
-        this.empresaRepositorio = empresaRepositorio;
+        this.empresaRepositorio = empresaRepositorio; this.reservas=reservas; this.sucursales=sucursales;this.reloj=reloj;
     }
 
     @Scheduled(
@@ -144,13 +150,17 @@ public class ProgramadorRecordatoriosWhatsapp {
     }
 
     private void liberarPendientesSinConfirmacion(Long empresaId) {
-        LocalDateTime limite = LocalDateTime.now().plusHours(propiedadesWhatsapp.liberacionSinConfirmacionHorasAntes());
-
-        List<CitaEntidad> citas = citaRepositorio.findByEmpresaIdAndInicioBeforeAndEstadoOrderByInicioAsc(
-                empresaId,
-                limite,
-                "PENDIENTE"
-        );
+var politica = reservas.obtener(empresaId);
+List<CitaEntidad> citas = new java.util.ArrayList<>();
+for (var sucursal : sucursales.findByEmpresaIdOrderByNombreAsc(empresaId)) {
+    var zona = java.time.ZoneId.of(sucursal.getZonaHoraria());
+    var ahoraLocal = LocalDateTime.now(reloj.withZone(zona));
+    citas.addAll(citaRepositorio.findByEmpresaIdAndSucursalIdAndInicioBetweenAndEstadoInOrderByInicioAsc(
+            empresaId, sucursal.getId(), ahoraLocal.minusDays(1),
+            ahoraLocal.plusHours(politica.liberacionSinConfirmacionHoras()), List.of("PENDIENTE"))
+            .stream().filter(c -> com.techprotech.agenda.modulos.citas.aplicacion.PlazoConfirmacionCita.vencido(
+                    c.getInicio(), zona, politica.liberacionSinConfirmacionHoras(), c.getCreadaEn(), reloj)).toList());
+}
 
         for (CitaEntidad cita : citas) {
             String estadoAnterior = cita.getEstado();

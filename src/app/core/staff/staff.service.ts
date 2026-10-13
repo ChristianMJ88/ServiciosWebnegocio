@@ -12,6 +12,8 @@ export interface MetadatosDisponibilidadStaff {
 export interface CitaStaff {
   id: number;
   estado: string;
+  estadoEtiqueta?: string;
+  notificarEnAgenda?: boolean;
   sucursalNombre: string;
   servicioNombre: string;
   clienteNombre: string;

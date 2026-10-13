@@ -11,6 +11,31 @@
   @if (mensaje()) { <p class="payment-feedback is-success"><i class="bi bi-check-circle"></i>{{ mensaje() }}</p> }
   @if (error()) { <p class="payment-feedback is-error"><i class="bi bi-exclamation-circle"></i>{{ error() }}</p> }
 
+@if(incidencias().length) {
+  <details class="provider-card payment-incidents">
+    <summary>Pagos aprobados que requieren revisión · {{incidencias().length}}</summary>
+    <p>El cobro está registrado. Revisa la reserva o el inventario antes de coordinar la entrega, reprogramación o un reembolso.</p>
+    @for(incidencia of incidencias();track incidencia.ordenId) {
+      <article><strong>Orden {{incidencia.ordenId}}</strong><p>{{incidencia.motivo}}</p>
+        <span>{{incidencia.importe | currency:incidencia.moneda:'symbol-narrow':'1.2-2'}} · {{incidencia.creadaEn | date:'short'}}</span>
+        <details class="incident-resolution"><summary>Resolver incidencia</summary>
+          <label>Resultado<select [(ngModel)]="resoluciones[incidencia.ordenId].tipo">
+            <option value="">Selecciona el resultado</option>
+            @for(tipo of incidencia.resoluciones;track tipo) {<option [value]="tipo">{{tipo.replaceAll('_',' ') | titlecase}}</option>}
+          </select></label>
+          <label>Motivo y referencia<textarea maxlength="500" [(ngModel)]="resoluciones[incidencia.ordenId].motivo"></textarea></label>
+          @if(resoluciones[incidencia.ordenId].tipo==='REPROGRAMADA') {
+            @for(cita of resoluciones[incidencia.ordenId].citas;track cita.citaId) {
+              <label>Nuevo horario de cita {{cita.citaId}}<input type="datetime-local" [(ngModel)]="cita.inicio"></label>
+            }
+          }
+          <p>Un reembolso fuera del sistema registra una operación que ya realizaste; no envía dinero al cliente.</p>
+          <button type="button" class="btn btn-primary" [disabled]="procesando() || !resoluciones[incidencia.ordenId].tipo || !resoluciones[incidencia.ordenId].motivo.trim()" (click)="resolverIncidencia(incidencia)">Guardar resolución</button>
+        </details>
+      </article>
+    }
+  </details>
+}
   @if (cargando()) {
     <div class="payment-loading"><span></span><span></span><span></span><p>Consultando la conexión del negocio…</p></div>
   } @else {

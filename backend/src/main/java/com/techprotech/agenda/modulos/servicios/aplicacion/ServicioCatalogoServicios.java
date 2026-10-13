@@ -31,6 +31,7 @@ import static org.springframework.http.HttpStatus.NOT_FOUND;
 @Service
 public class ServicioCatalogoServicios {
 
+    private final com.techprotech.agenda.modulos.sitio.aplicacion.ResolutorTenantPublico tenant;
     private final ServicioRepositorio servicioRepositorio;
     private final ServicioSucursalRepositorio servicioSucursalRepositorio;
     private final GrupoServicioRepositorio grupoServicioRepositorio;
@@ -48,8 +49,10 @@ public class ServicioCatalogoServicios {
             PrestadorServicioRepositorio prestadorServicioRepositorio,
             AsignacionServicioPrestadorRepositorio asignacionServicioPrestadorRepositorio,
             EmpresaSitioConfigRepositorio empresaSitioConfigRepositorio,
-            TransformadorImagenCloudinary transformadorImagen
+            TransformadorImagenCloudinary transformadorImagen,
+            com.techprotech.agenda.modulos.sitio.aplicacion.ResolutorTenantPublico tenant
     ) {
+        this.tenant = tenant;
         this.servicioRepositorio = servicioRepositorio;
         this.servicioSucursalRepositorio = servicioSucursalRepositorio;
         this.grupoServicioRepositorio = grupoServicioRepositorio;
@@ -60,10 +63,11 @@ public class ServicioCatalogoServicios {
         this.transformadorImagen = transformadorImagen;
     }
 
-    public List<ServicioPublicoResponse> listarPorSucursal(Long sucursalId) {
-        Long sucursal = sucursalId != null ? sucursalId : 1L;
+    public List<ServicioPublicoResponse> listarPorSucursal(Long empresaId, Long sucursalId) {
+        tenant.validarSucursal(empresaId,sucursalId);
+        Long sucursal = sucursalId;
         return servicioRepositorio.findBySucursalIdAndActivoTrueOrderByOrdenPublicoAscNombreAsc(sucursal)
-                .stream()
+                .stream().filter(servicio -> empresaId.equals(servicio.getEmpresaId()))
                 .map(servicio -> mapearServicio(servicio, null, null, sucursal))
                 .toList();
     }
@@ -195,7 +199,8 @@ public class ServicioCatalogoServicios {
     }
 
     public List<PrestadorPublicoResponse> listarPrestadores(Long empresaId, Long sucursalId, Long servicioId) {
-        Long sucursalObjetivo = sucursalId != null ? sucursalId : 1L;
+        tenant.validarSucursal(empresaId,sucursalId);
+        Long sucursalObjetivo = sucursalId;
         final Set<Long> prestadoresHabilitados;
 
         if (servicioId != null) {
@@ -203,14 +208,14 @@ public class ServicioCatalogoServicios {
                     .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "El servicio no existe o no esta activo"));
 
             prestadoresHabilitados = new HashSet<>();
-            for (AsignacionServicioPrestadorEntidad asignacion : asignacionServicioPrestadorRepositorio.findByIdServicioIdAndActivaTrue(servicioId)) {
+            for (AsignacionServicioPrestadorEntidad asignacion : asignacionServicioPrestadorRepositorio.findActivasPorEmpresaYServicio(empresaId,servicioId)) {
                 prestadoresHabilitados.add(asignacion.getId().getPrestadorId());
             }
         } else {
             prestadoresHabilitados = null;
         }
 
-        return prestadorServicioRepositorio.findBySucursalIdInOrderByNombreMostrarAsc(List.of(sucursalObjetivo))
+        return prestadorServicioRepositorio.findPublicosPorEmpresaYSucursal(empresaId,sucursalObjetivo)
                 .stream()
                 .filter(PrestadorServicioEntidad::isActivo)
                 .filter(prestador -> prestadoresHabilitados == null || prestadoresHabilitados.contains(prestador.getUsuarioId()))

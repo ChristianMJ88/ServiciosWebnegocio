@@ -432,7 +432,8 @@
             <mat-slide-toggle name="servicioActivo" [(ngModel)]="formularioServicio.activo">
               Servicio activo
             </mat-slide-toggle>
-            <div class="form-block-title full-width">Anticipo</div>
+            <div class="form-block-title full-width">Cobro de la reserva</div>
+            @if(!servicioEditandoId && politicasCobro()) {<button mat-stroked-button type="button" (click)="aplicarPoliticaPredeterminada()">Usar política predeterminada del negocio</button>}
             <mat-slide-toggle name="servicioRequiereAnticipo" [(ngModel)]="formularioServicio.requiereAnticipo">
               Requiere anticipo
             </mat-slide-toggle>
@@ -440,12 +441,11 @@
               <mat-form-field appearance="outline">
                 <mat-label>Tipo de anticipo</mat-label>
                 <mat-select name="servicioAnticipoTipo" [(ngModel)]="formularioServicio.anticipoTipo">
-                  <mat-option value="FIJO">Fijo</mat-option>
-                  <mat-option value="PORCENTAJE">Porcentaje</mat-option>
+                  @for(opcion of politicasCobro()?.opciones ?? [];track opcion.codigo) {<mat-option [value]="opcion.codigo">{{opcion.etiqueta}}</mat-option>}
                 </mat-select>
               </mat-form-field>
             }
-            @if (formularioServicio.requiereAnticipo) {
+            @if (formularioServicio.requiereAnticipo && formularioServicio.anticipoTipo !== 'TOTAL') {
               <mat-form-field appearance="outline">
                 <mat-label>Valor del anticipo</mat-label>
                 <input matInput type="number" min="0" step="0.01" name="servicioAnticipoValor" [(ngModel)]="formularioServicio.anticipoValor">

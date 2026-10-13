@@ -15,17 +15,28 @@ public class LiberadorReservasCheckout {
 
     private final CheckoutOrdenRepositorio ordenes;
     private final ServicioInventarioCheckout inventario;
+    private final ServicioConfirmacionCitasCheckout citas;
+    private final ServicioRecuperacionPagosCheckout recuperacion;
+    private final java.time.Clock reloj;
+    private final com.techprotech.agenda.modulos.pagos.infraestructura.repositorio.IntentoPagoCheckoutRepositorio intentos;
 
-    public LiberadorReservasCheckout(CheckoutOrdenRepositorio ordenes, ServicioInventarioCheckout inventario) {
+    public LiberadorReservasCheckout(CheckoutOrdenRepositorio ordenes, ServicioInventarioCheckout inventario, ServicioConfirmacionCitasCheckout citas, com.techprotech.agenda.modulos.pagos.infraestructura.repositorio.IntentoPagoCheckoutRepositorio intentos, ServicioRecuperacionPagosCheckout recuperacion, java.time.Clock reloj) {
+        this.recuperacion=recuperacion; this.reloj=reloj;
+        this.citas=citas;this.intentos=intentos;
         this.ordenes = ordenes;
         this.inventario = inventario;
     }
 
     @Scheduled(fixedDelayString = "${aplicacion.pagos.checkout.intervalo-liberacion-ms:60000}")
     public void liberarExpiradas() {
+        recuperacion.recuperar();
+        citas.liberarCitasVencidas();
         ordenes.findTop100ByInventarioEstadoAndExpiraEnBeforeOrderByExpiraEnAsc(
-                "RESERVADO", LocalDateTime.now(ZoneOffset.UTC)).forEach(orden -> {
-            try {
+                "RESERVADO", LocalDateTime.now(reloj)).forEach(orden -> {
+try {
+    var intento=intentos.findFirstByEmpresaIdAndCheckoutOrdenIdOrderByIdDesc(orden.getEmpresaId(),orden.getId());
+    if ("PAGO_EN_PROCESO".equals(orden.getEstado())) return; // Lo gestiona la recuperación con consulta al proveedor.
+
                 inventario.expirar(orden.getEmpresaId(), orden.getId());
             } catch (RuntimeException ex) {
                 LOGGER.warn("No fue posible liberar la reserva de la orden de checkout {}", orden.getPublicId(), ex);

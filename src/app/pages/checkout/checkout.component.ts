@@ -263,6 +263,9 @@ export class CheckoutComponent implements OnInit, OnDestroy {
   }
 
   postPaymentMessage(): string {
+    if (this.payment()?.estadoOrden === 'PAGADA_CON_INCIDENCIA') {
+      return 'El pago está registrado y requiere revisión del negocio. La reserva aún no está confirmada.';
+    }
     if (this.hasAppointments() && !this.hasProducts()) {
       return 'Tu pago quedó registrado y la cita fue confirmada. El negocio ya tiene tu horario reservado.';
     }
@@ -331,6 +334,19 @@ export class CheckoutComponent implements OnInit, OnDestroy {
         },
         error: error => this.error.set(this.message(error, 'No pudimos actualizar el estado del pago.'))
       });
+  }
+
+  async retryPayment(): Promise<void> {
+    if (this.payment()?.estadoPago !== 'RECHAZADO' || this.payment()?.estadoOrden !== 'PENDIENTE_PAGO') return;
+    this.statusController?.unmount();
+    this.paymentController?.unmount();
+    this.paymentKey = this.key('pago');
+    this.payment.set(null);
+    this.error.set(null);
+    this.brickReady.set(false);
+    await new Promise(resolve => setTimeout(resolve));
+    const config = this.config(); const order = this.order();
+    if (config && order && this.selectedPaymentMethod() === 'CARD') await this.mountBrick(config, order);
   }
 
   paymentMethodIcon(type: string): string {

@@ -11,6 +11,7 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import {
+  PoliticasCobroServicios,
   CatalogoSugeridoAdmin,
   ConfiguracionMediaAdmin,
   GrupoServicioAdmin,
@@ -99,7 +100,13 @@ export class AdminServicesSectionComponent implements OnInit {
   readonly mensajeImagen = signal<string | null>(null);
   readonly errorImagen = signal<string | null>(null);
 
+  readonly politicasCobro=signal<PoliticasCobroServicios|null>(null);
+  aplicarPoliticaPredeterminada(): void {
+    const valores=this.politicasCobro()?.predeterminado;
+    if(valores && !this.servicioEditandoId) Object.assign(this.formularioServicio,valores);
+  }
   ngOnInit(): void {
+    this.facade.cargarPoliticasCobro().subscribe({next:datos=>this.politicasCobro.set(datos),error:()=>this.politicasCobro.set(null)});
     this.facade.cargarConfiguracionMedia().subscribe({
       next: configuracion => this.configuracionMedia.set(configuracion),
       error: () => this.configuracionMedia.set(null)

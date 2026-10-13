@@ -122,8 +122,15 @@ export interface ReporteLiberacion {
   procesadoEn: string | null;
 }
 
+export interface IncidenciaCheckout { ordenId:string; sucursalId:number; motivo:string; importe:number; moneda:string; creadaEn:string; citas:{citaId:number; inicio:string}[]; resoluciones:string[]; }
+
 @Injectable({ providedIn: 'root' })
 export class PaymentsAdminService {
+  resolverIncidencia(ordenId:string, request:{tipo:string; motivo:string; citas:{citaId:number; inicio:string}[]}): Observable<void> {
+    return this.http.post<void>(`${environment.apiBaseUrl}/admin/pagos/conciliaciones/incidencias/${encodeURIComponent(ordenId)}/resolver`,request);
+  }
+  incidencias(): Observable<IncidenciaCheckout[]> { return this.http.get<IncidenciaCheckout[]>(`${environment.apiBaseUrl}/admin/pagos/conciliaciones/incidencias`); }
+
   private readonly http = inject(HttpClient);
   private readonly baseUrl = `${environment.apiBaseUrl}/admin/pagos/mercado-pago/oauth`;
   private readonly configuracionUrl = `${environment.apiBaseUrl}/admin/pagos/configuracion`;

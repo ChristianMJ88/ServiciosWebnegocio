@@ -103,3 +103,11 @@
 @media (prefers-reduced-motion:reduce) {
   .booking-page .booking-service { transition: none; }
 }
+.booking-professionals { padding: 1rem; margin-block: .75rem; border: 1px solid var(--mat-sys-outline-variant, #e2e8f0); border-radius: 1rem; }
+.booking-professionals header { display: grid; gap: .4rem; margin-bottom: .75rem; }
+.booking-professionals__choices { display: flex; gap: .75rem; overflow-x: auto; scroll-snap-type: x proximity; padding-bottom: .5rem; }
+.booking-professionals__choices button, .booking-professional { display: grid; justify-items: start; align-content: start; gap: .5rem; padding: .75rem; border: 1px solid var(--mat-sys-outline-variant, #e2e8f0); border-radius: .875rem; background: transparent; color: inherit; }
+.booking-professionals__choices button { flex: 0 0 180px; min-height: 100px; text-align: left; scroll-snap-align: start; }
+.booking-professionals__choices button[aria-checked="true"] { border-color: var(--tenant-primary); background: color-mix(in srgb, var(--tenant-primary) 7%, transparent); }
+.booking-professionals img { width: 48px; height: 48px; object-fit: cover; border-radius: 50%; }
+.booking-professionals small { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }

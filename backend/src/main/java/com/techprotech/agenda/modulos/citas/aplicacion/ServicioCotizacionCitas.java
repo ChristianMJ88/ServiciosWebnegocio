@@ -28,12 +28,14 @@ public class ServicioCotizacionCitas {
     private final EmpresaSitioPromocionSucursalRepositorio sucursalesPromocion;
     private final EmpresaCheckoutConfigRepositorio checkout;
     private final Clock reloj;
+    private ServicioPoliticaReservaPago politicaPago;
     @Autowired
     public ServicioCotizacionCitas(SucursalRepositorio sucursales, ServicioRepositorio servicios,
             ServicioSucursalRepositorio asignaciones, EmpresaSitioPromocionRepositorio promociones,
             EmpresaSitioPromocionServicioRepositorio serviciosPromocion,
-            EmpresaSitioPromocionSucursalRepositorio sucursalesPromocion, EmpresaCheckoutConfigRepositorio checkout) {
+            EmpresaSitioPromocionSucursalRepositorio sucursalesPromocion, EmpresaCheckoutConfigRepositorio checkout, ServicioPoliticaReservaPago politicaPago) {
         this(sucursales,servicios,asignaciones,promociones,serviciosPromocion,sucursalesPromocion,checkout,Clock.systemUTC());
+        this.politicaPago=politicaPago;
     }
     ServicioCotizacionCitas(SucursalRepositorio sucursales, ServicioRepositorio servicios,
             ServicioSucursalRepositorio asignaciones, EmpresaSitioPromocionRepositorio promociones,
@@ -78,7 +80,7 @@ public class ServicioCotizacionCitas {
                 incluidos = serviciosPromocion.findByEmpresaIdAndPromocionId(empresaId,promocionId).stream().map(r -> r.getServicioId()).collect(Collectors.toSet());
             }
         }
-        var config = calcularAnticipo ? checkout.findById(empresaId).orElse(null) : null;
+        boolean online=calcularAnticipo && politicaPago!=null && politicaPago.puedeCobrarOnline(empresaId);
         List<LineaCotizacionCita> lineas = new ArrayList<>();
         Set<String> motivosLinea = new TreeSet<>();
         for (var item : items) {
@@ -91,25 +93,22 @@ public class ServicioCotizacionCitas {
                     ? "La promoción no incluye los servicios seleccionados" : !moneda.equalsIgnoreCase(promocion.getMoneda())
                     ? "La moneda de la promoción no coincide con la del servicio" : "La fecha de la cita queda fuera de la vigencia de la promoción");
             var precio = CalculadorPromocionServicios.calcular(servicio.getPrecio(),aplica?promocion.getTipoDescuento():null,aplica?promocion.getValorDescuento():null);
-            BigDecimal anticipo = precio.precioNeto();
-            if (config != null && config.isHabilitado() && config.isPermitirPagoServicios()) {
-                try {
-                    anticipo = CalculadorAnticipoServicio.calcular(precio.precioNeto(),servicio,
-                            config.getModalidadServicios(),config.getAnticipoPorcentaje(),config.getAnticipoImporte());
-                } catch (ResponseStatusException ex) {
-                    // Una vista previa no bloquea reservar por un anticipo inválido.
-                    // El checkout valida estrictamente la configuración antes de cobrar.
-                    if (ex.getStatusCode() != HttpStatus.CONFLICT) throw ex;
-                }
-            }
-            lineas.add(new LineaCotizacionCita(servicio.getId(),servicio.getNombre(),precio.precioLista(),precio.descuento(),precio.precioNeto(),anticipo,aplica));
+PoliticaCobroServicio politica;
+try { politica=PoliticaCobroServicio.resolver(precio.precioNeto(),servicio); }
+catch(ResponseStatusException ex) {
+    if(ex.getStatusCode()!=HttpStatus.CONFLICT) throw ex;
+    politica=new PoliticaCobroServicio("SIN_COBRO",BigDecimal.ZERO.setScale(2),precio.precioNeto());
+}
+BigDecimal anticipo=politica.importeRequerido();
+            lineas.add(new LineaCotizacionCita(servicio.getId(),servicio.getNombre(),precio.precioLista(),precio.descuento(),precio.precioNeto(),anticipo,aplica,politica.politica(),politica.importeRequerido(),politica.saldoEnNegocio()));
         }
         boolean aplicada = lineas.stream().anyMatch(LineaCotizacionCita::promocionAplicada);
         return new ResultadoCotizacionCitas(moneda,suma(lineas.stream().map(LineaCotizacionCita::precioLista).toList()),
                 suma(lineas.stream().map(LineaCotizacionCita::descuento).toList()),suma(lineas.stream().map(LineaCotizacionCita::precioNeto).toList()),
                 suma(lineas.stream().map(LineaCotizacionCita::anticipo).toList()),
                 aplicada ? new PromocionAplicada(promocion.getId(),promocion.getTitulo(),promocion.getTipoDescuento().name(),promocion.getValorDescuento(),promocion.getMoneda()) : null,
-                aplicada?null:motivo!=null?motivo:motivosLinea.isEmpty()?null:String.join(". ",motivosLinea),List.copyOf(lineas));
+                aplicada?null:motivo!=null?motivo:motivosLinea.isEmpty()?null:String.join(". ",motivosLinea),List.copyOf(lineas),
+                online && lineas.stream().anyMatch(l -> l.importeRequerido().signum()>0), suma(lineas.stream().map(LineaCotizacionCita::importeRequerido).toList()));
     }
     private static boolean vigente(EmpresaSitioPromocionEntidad p,LocalDate fecha) {
         return (p.getFechaInicio()==null || !fecha.isBefore(p.getFechaInicio())) && (p.getFechaFin()==null || !fecha.isAfter(p.getFechaFin()));

@@ -105,6 +105,14 @@ public class ServicioCorreoEventosCita {
         String color = sitio != null && colorValido(sitio.getColorPrimario()) ? sitio.getColorPrimario() : "#173b57";
         String urlSitio = sitio != null && tieneTexto(sitio.getSlug()) ? origenPublico + "/e/" + sitio.getSlug() : null;
 
+        if ("CITA_PAGO_INCIDENCIA_NEGOCIO_EMAIL".equals(evento)) {
+            String mensaje = "Se registró un pago aprobado relacionado con la cita #" + cita.getId()
+                    + ". La reserva requiere revisión: comprueba la incidencia en Pagos antes de reprogramar o decidir un reembolso. No se confirmó al cliente.";
+            clienteCorreo.enviar(configuracion, new MensajeCorreoSaliente(
+                    resolverCorreoNegocio(sitio, configuracion), "Pago aprobado con incidencia | " + nombreEmpresa,
+                    mensaje, "<p>" + org.springframework.web.util.HtmlUtils.htmlEscape(mensaje) + "</p>", configuracion.responderA(), List.of()));
+            return;
+        }
         if (esNotificacionNegocio(evento)) {
             enviarAlNegocio(configuracion, cita, servicio, sucursal, sitio, nombreEmpresa,
                     cliente.getNombreCompleto(), usuario.getCorreo(), zona, color, urlSitio);
@@ -134,6 +142,7 @@ public class ServicioCorreoEventosCita {
             case "CITA_CANCELADA_CLIENTE_EMAIL" -> new DatosEvento("Cancelaste tu cita | %s", "Cita cancelada", "Registramos correctamente la cancelación que solicitaste.");
             case "CITA_CANCELADA_NEGOCIO_EMAIL" -> new DatosEvento("Actualización importante de tu cita | %s", "Cita cancelada por el negocio", "El negocio tuvo que cancelar esta cita. Comunícate con la sucursal para reagendar.");
             case "CITA_LIBERADA_SIN_CONFIRMACION_EMAIL" -> new DatosEvento("Tu horario fue liberado | %s", "Cita liberada", "Como no recibimos tu confirmación a tiempo, el horario fue liberado.");
+            case "CITA_APARTADO_VENCIDO_EMAIL" -> new DatosEvento("Tu apartado venció | %s", "Apartado vencido sin pago", "Tu apartado venció sin pago; el horario quedó libre. Puedes consultar nuevamente la disponibilidad para reservar.");
             case "CITA_GRACIAS_VISITA_EMAIL" -> new DatosEvento("Gracias por tu visita | %s", "Gracias por visitarnos", "Agradecemos tu preferencia. Será un gusto atenderte nuevamente.");
             case "CITA_NO_ASISTIO_EMAIL" -> new DatosEvento("No pudimos atenderte en tu cita | %s", "No registramos tu asistencia", "Si todavía deseas el servicio, agenda una nueva fecha o comunícate con la sucursal.");
             default -> throw new IllegalArgumentException("Evento de correo no soportado: " + evento);

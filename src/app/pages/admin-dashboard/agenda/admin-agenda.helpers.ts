@@ -109,7 +109,7 @@ export function filtrarCitasPeriodo(citas: CitaCliente[], fecha: string, view: A
 
 export function resumirAgenda(citas: CitaCliente[]): ResumenAgenda {
   return {
-    total: citas.length,
+    total: citas.filter(cita=>cita.notificarEnAgenda !== false).length,
     pendientes: citas.filter(cita => cita.estado === 'PENDIENTE').length,
     confirmadas: citas.filter(cita => cita.estado === 'CONFIRMADA').length,
     colaboradores: new Set(citas.map(cita => cita.prestadorId)).size

@@ -8,6 +8,7 @@ import { crearFormularioPrestador } from './admin-providers.forms';
 describe('AdminProvidersFacade', () => {
   const adminService = {
     crearPrestador: vi.fn(),
+    invitarPrestador: vi.fn(),
     actualizarPrestador: vi.fn()
   };
   let facade: AdminProvidersFacade;
@@ -21,13 +22,13 @@ describe('AdminProvidersFacade', () => {
   });
 
   it('elige crear o actualizar según exista un id', async () => {
-    adminService.crearPrestador.mockReturnValue(of({ usuarioId: 1 }));
+    adminService.invitarPrestador.mockReturnValue(of({ usuarioId: 1 }));
     adminService.actualizarPrestador.mockReturnValue(of({ usuarioId: 8 }));
 
     await firstValueFrom(facade.guardar(null, crearFormularioPrestador()));
     await firstValueFrom(facade.guardar(8, crearFormularioPrestador()));
 
-    expect(adminService.crearPrestador).toHaveBeenCalledOnce();
+    expect(adminService.invitarPrestador).toHaveBeenCalledOnce();
     expect(adminService.actualizarPrestador).toHaveBeenCalledWith(8, expect.any(Object));
   });
 });

@@ -1,3 +1,4 @@
+import { ProductCartService } from '../../services/product-cart.service';
 import { Component, signal, ElementRef, ViewChild, inject, OnInit, computed, DestroyRef, effect, untracked } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { BreakpointObserver } from '@angular/cdk/layout';
@@ -6,6 +7,8 @@ import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } 
 import { ActivatedRoute, Router } from '@angular/router';
 import {
   AppointmentService,
+  CitaCreadaBackendResponse,
+  CitasMultiplesCreadasResponse,
   CotizacionCitas,
   ConsultaFranjasRequest,
   CrearCitaBackendRequest,
@@ -19,14 +22,13 @@ import {
   SucursalCatalogo
 } from '../../services/booking-data.service';
 import type { CalendarOptions, DateSelectArg } from '@fullcalendar/core';
-import { firstValueFrom, forkJoin } from 'rxjs';
+import { Observable, forkJoin } from 'rxjs';
 import { finalize } from 'rxjs/operators';
 import { TenantContextService } from '../../core/tenant/tenant-context.service';
 import { ReservationCartService } from '../../services/reservation-cart.service';
 import { ReservationCartComponent } from '../../shared/components/reservation-cart/reservation-cart.component';
 import { MoneyDisplayPipe } from '../../shared/pipes/money-display.pipe';
 import { BookingCalendarComponent } from './booking-calendar.component';
-import { PublicCheckoutService } from '../../services/public-checkout.service';
 import { AppointmentCheckoutDraftService } from '../../services/appointment-checkout-draft.service';
 
 interface ItinerarioReservaItem {
@@ -73,7 +75,7 @@ export class BookingComponent implements OnInit {
   private destroyRef = inject(DestroyRef);
   private route = inject(ActivatedRoute);
   private router = inject(Router);
-  private checkout = inject(PublicCheckoutService);
+  readonly productosCart=inject(ProductCartService);
   private checkoutDraft = inject(AppointmentCheckoutDraftService);
   private readonly cart = inject(ReservationCartService);
   private queryHydrated = false;
@@ -87,8 +89,19 @@ export class BookingComponent implements OnInit {
   selectionNotice = '';
   @ViewChild('dateSection') dateSection?: ElementRef<HTMLElement>;
   readonly tenantContext = inject(TenantContextService);
-  private readonly hoy = this.normalizarFecha(new Date());
-  private readonly fechaMaximaReserva = this.sumarDias(this.hoy, 30);
+readonly diasDisponibles=signal<string[]>([]);
+readonly diasMetadata=signal<import('../../services/appointment.service').DiasDisponibles|null>(null);
+readonly cargandoDias=signal(false);
+private diasVersion=0;
+// La fecha del navegador solo posiciona la vista antes de cargar; nunca habilita reservas.
+private get hoy(): Date { return this.diasMetadata() ? this.parsearFechaLocal(this.diasMetadata()!.hoyLocal) : this.normalizarFecha(new Date()); }
+private get fechaMaximaReserva(): Date { return this.diasMetadata() ? this.parsearFechaLocal(this.diasMetadata()!.reservaHasta) : this.hoy; }
+private readonly cargarDiasSeleccion=effect(() => {
+  const servicios=this.selectedServices();
+  this.prestadoresElegidos();
+  untracked(() => this.cargarDiasDisponibles(servicios.map(s => s.id)));
+});
+
 
   @ViewChild('hoursSection') hoursSection!: ElementRef;
   @ViewChild('dataSection') dataSection!: ElementRef;
@@ -111,6 +124,9 @@ export class BookingComponent implements OnInit {
   isMobile = signal(this.breakpointObserver.isMatched(this.mobileBreakpoint));
   schedulingMode = signal<'consecutive' | 'separated'>('consecutive');
   selectedDate = signal<string | null>(null);
+  readonly prestadoresElegidos=signal<Record<number,number|null>>({});
+  readonly errorStaff=signal('');
+  readonly confirmacionExpiraEn=signal<string|null>(null);
   selectedHour = signal<string | null>(null);
   selectedGroupId = signal<number | null>(null);
   selectedSubgroupId = signal<number | null>(null);
@@ -124,6 +140,7 @@ export class BookingComponent implements OnInit {
   branches = signal<SucursalCatalogo[]>([]);
   services = signal<ServicioCatalogo[]>([]);
   private readonly actualizarCotizacion = effect(() => {
+    this.productosCart.items();
     const servicios = this.selectedServices();
     const itinerario = this.selectedItinerary();
     const fecha = this.selectedDate();
@@ -305,20 +322,16 @@ export class BookingComponent implements OnInit {
       if (!this.hasCatalogSelection()) {
         return false;
       }
-      const today = new Date();
-      today.setHours(0,0,0,0);
-      const maxDate = new Date();
-      maxDate.setDate(today.getDate() + 30);
-
-      const day = selectInfo.start.getDay(); // Usar getDay() local
-      return selectInfo.start >= today && selectInfo.start <= maxDate && day !== 0;
+      return this.diasDisponibles().includes(this.formatearFechaLocal(selectInfo.start));
     },
+    datesSet: (arg) => { if(this.hasCatalogSelection()) this.cargarDiasDisponibles(this.selectedServices().map(s => s.id), arg.startStr.slice(0,10)); },
     select: (arg: DateSelectArg) => {
       this.onDateSelect(arg.startStr);
     }
   };
 
   ngOnInit(): void {
+    const empresa=this.tenantContext.empresaId(); if(empresa) this.productosCart.connect(empresa);
     this.loadBranches();
     this.breakpointObserver
       .observe(this.mobileBreakpoint)
@@ -356,6 +369,7 @@ export class BookingComponent implements OnInit {
     this.queryHydrated = true;
     this.serviceSearch.set('');
     this.staffByService.set({});
+    this.prestadoresElegidos.set({});
     this.resetAvailabilityFlow();
 
     if (branchId) {
@@ -421,7 +435,7 @@ export class BookingComponent implements OnInit {
   }
 
   private saveCart(): void {
-    this.cart.save(this.tenantContext.empresaId(), Number(this.bookingForm.value.branchId) || null, this.selectedServices(), this.promocionId());
+    this.cart.save(this.tenantContext.empresaId(), Number(this.bookingForm.value.branchId) || null, this.selectedServices(), this.promocionId(), this.prestadoresElegidos());
   }
 
   private cotizarReserva(servicios: ServicioCatalogo[], itinerario: ItinerarioReserva | null,
@@ -432,7 +446,7 @@ export class BookingComponent implements OnInit {
     const sucursalId = Number(this.bookingForm.value.branchId);
     if (!empresaId || !sucursalId || !servicios.length) return;
     this.cotizando.set(true);
-    this.appointmentService.cotizarCitas({empresaId,sucursalId,promocionId,
+    this.appointmentService.cotizarCitas({empresaId,sucursalId,promocionId,productos:this.productosCart.items().map(p=>({productoId:p.productoId,cantidad:p.cantidad})),
       items: servicios.map(servicio => ({servicioId:servicio.id, fecha,
         inicio: itinerario?.items.find(item => item.servicio.id===servicio.id)?.slot.inicio
           ?? null}))
@@ -493,6 +507,28 @@ export class BookingComponent implements OnInit {
     this.resetAvailabilityFlow();
   }
 
+private cargarDiasDisponibles(servicios:number[],desde?:string): void {
+  const version=++this.diasVersion;
+  const sucursal=Number(this.bookingForm.value.branchId);
+  if(!sucursal || !servicios.length) { this.diasDisponibles.set([]); this.cargandoDias.set(false); return; }
+  this.cargandoDias.set(true);
+  if(!desde) this.diasDisponibles.set([]);
+  this.appointmentService.getAvailableDays(sucursal,servicios,desde,undefined,servicios.map(id=>this.prestadoresElegidos()[id]??null)).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+    next: data => {
+      if(version!==this.diasVersion) return;
+      this.diasMetadata.set(data); this.diasDisponibles.update(actual => [...new Set([...actual,...data.dias])]);
+      this.cargandoDias.set(false);
+      if(!this.selectedDate() && data.dias.length) this.onDateSelect(data.dias[0]);
+      else if(!this.selectedDate() && !data.dias.length) {
+        const siguiente=this.sumarDias(this.parsearFechaLocal(desde ?? data.hoyLocal),31);
+        if(this.formatearFechaLocal(siguiente)<=data.reservaHasta) this.cargarDiasDisponibles(servicios,this.formatearFechaLocal(siguiente));
+        else this.errorMessage='No hay días disponibles en la ventana de reserva de este negocio.';
+      }
+    },
+    error: () => { if(version===this.diasVersion) { this.cargandoDias.set(false); this.errorMessage='No pudimos cargar los días disponibles. Intenta de nuevo.'; } }
+  });
+}
+
   onDateSelect(date: string) {
     const empresaId = this.tenantContext.empresaId();
     if (!empresaId || !this.hasCatalogSelection()) {
@@ -514,6 +550,7 @@ export class BookingComponent implements OnInit {
         empresaId,
         sucursalId: Number(this.bookingForm.value.branchId),
         servicioId: service.id,
+        prestadorId: this.prestadoresElegidos()[service.id] ?? null,
         fecha: date
       };
       return this.appointmentService.getAvailableSlots(request);
@@ -559,37 +596,6 @@ export class BookingComponent implements OnInit {
           this.availableItineraries.set([]);
         }
       });
-  }
-
-  private generateAvailableSlots(backendAvailable: FranjaDisponible[]) {
-    const slots: FranjaDisponible[] = [];
-    const selectedDateStr = this.selectedDate();
-    if (!selectedDateStr) {
-      return;
-    }
-
-    const now = new Date();
-    const year = now.getFullYear();
-    const month = String(now.getMonth() + 1).padStart(2, '0');
-    const day = String(now.getDate()).padStart(2, '0');
-    const todayStr = `${year}-${month}-${day}`;
-
-    const isToday = selectedDateStr === todayStr;
-
-    for (const slot of backendAvailable) {
-      if (isToday) {
-        const slotDate = new Date(slot.inicio);
-        const slotTime = slotDate.getHours() * 60 + slotDate.getMinutes();
-        const currentTime = now.getHours() * 60 + now.getMinutes();
-        if (slotTime < (currentTime - 30)) {
-          continue;
-        }
-      }
-
-      slots.push(slot);
-    }
-
-    this.availableSlots.set(slots);
   }
 
   selectHour(slot: FranjaDisponible) {
@@ -683,6 +689,7 @@ export class BookingComponent implements OnInit {
     }
 
     this.mobileWeekStart.set(propuesta);
+    this.cargarDiasDisponibles(this.selectedServices().map(s => s.id),this.formatearFechaLocal(propuesta));
   }
 
   private scrollToHours() {
@@ -713,6 +720,7 @@ export class BookingComponent implements OnInit {
       return;
     }
 
+    const pagarProductos=this.cotizacion()?.requierePagoProductos===true;
     this.isSubmitting.set(true);
     this.submitted.set(false);
     this.errorMessage = '';
@@ -720,7 +728,7 @@ export class BookingComponent implements OnInit {
     const phone = this.formatPhone(this.bookingForm.value.phone);
 
     const singleItem = itinerary.items.length === 1 ? itinerary.items[0] : null;
-    const request$ = singleItem
+    const request$: Observable<CitaCreadaBackendResponse | CitasMultiplesCreadasResponse> = singleItem
       ? this.appointmentService.bookAppointment({
           empresaId,
           sucursalId: Number(this.bookingForm.value.branchId),
@@ -773,12 +781,14 @@ export class BookingComponent implements OnInit {
             return;
           }
 
+          this.confirmacionExpiraEn.set(response?.confirmacionExpiraEn ?? response?.citas?.[0]?.confirmacionExpiraEn ?? null);
           if (response?.id || response?.total) {
             const appointmentIds = response?.id
               ? (response.precio === 0 ? [] : [Number(response.id)])
               : (response?.citas ?? []).filter((cita: {precio?:number}) => cita.precio !== 0)
                   .map((cita: { id: number }) => Number(cita.id)).filter(Boolean);
-            if (appointmentIds.length && await this.continuarAlPago(empresaId, appointmentIds)) return;
+            const requierePago=response?.requierePago===true || (response?.citas ?? []).some((cita:any)=>cita.requierePago===true);
+            if ((requierePago && appointmentIds.length || pagarProductos) && await this.continuarAlPago(empresaId, requierePago?appointmentIds:[])) return;
             this.handleSuccess(response?.mensaje || 'Tu cita fue registrada correctamente.');
           } else {
             this.errorMessage = response?.mensaje || 'Hubo un problema al procesar la cita.';
@@ -796,8 +806,6 @@ export class BookingComponent implements OnInit {
     const slug = this.tenantContext.slug();
     if (!slug) return false;
     try {
-      const config = await firstValueFrom(this.checkout.config(slug));
-      if (!config.habilitado || !config.permitirPagoServicios || !config.aceptarTarjeta) return false;
       this.checkoutDraft.save(empresaId, {
         appointmentIds,
         branchId: Number(this.bookingForm.value.branchId),
@@ -810,7 +818,8 @@ export class BookingComponent implements OnInit {
       });
       return true;
     } catch {
-      return false;
+      this.errorMessage = 'Tu reserva sigue pendiente de pago. No pudimos abrir el checkout; vuelve a abrir el pago para completarla.';
+      return true;
     }
   }
 
@@ -997,20 +1006,25 @@ export class BookingComponent implements OnInit {
     this.mobileWeekStart.set(this.inicioSemana(this.parsearFechaLocal(date)));
   }
 
-  private cargarStaffServicio(service: ServicioCatalogo) {
-    const empresaId = this.tenantContext.empresaId();
-    if (!empresaId) return;
-    this.appointmentService.getPublicStaff(
-      empresaId,
-      Number(this.bookingForm.value.branchId),
-      service.id
-    ).subscribe({
-      next: staff => {
-        this.staffByService.update(actual => ({ ...actual, [service.id]: staff }));
-      },
-      error: () => undefined
-    });
-  }
+elegirPrestador(servicioId:number,prestadorId:number|null): void {
+  this.resetAvailabilityFlow();
+  this.prestadoresElegidos.update(actual=>({...actual,[servicioId]:prestadorId}));
+  this.saveCart();
+}
+private cargarStaffServicio(service: ServicioCatalogo) {
+  const empresaId=this.tenantContext.empresaId();
+  const sucursalId=Number(this.bookingForm.value.branchId);
+  if(!empresaId || !Number.isSafeInteger(sucursalId) || sucursalId<=0) return;
+  this.appointmentService.getPublicStaff(empresaId,sucursalId,service.id).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+    next:staff=>{
+      if(Number(this.bookingForm.value.branchId)!==sucursalId || !this.selectedServices().some(s=>s.id===service.id)) return;
+      this.staffByService.update(actual=>({...actual,[service.id]:staff}));
+      const elegido=this.prestadoresElegidos()[service.id];
+      if(elegido && !staff.some(p=>p.usuarioId===elegido)) this.elegirPrestador(service.id,null);
+    },
+    error:()=>this.errorStaff.set('No pudimos cargar los profesionales. Puedes intentar de nuevo o elegir cualquier profesional disponible.')
+  });
+}
 
   private buildItineraries(
     selectedServices: ServicioCatalogo[],
@@ -1086,6 +1100,7 @@ export class BookingComponent implements OnInit {
     const params = query.get('servicios') ?? query.get('servicio');
     const draft = this.cart.read(this.tenantContext.empresaId());
     const promo = query.has('promocion') ? Number(query.get('promocion')) : draft?.promocionId;
+    this.prestadoresElegidos.set(params === null ? draft?.prestadores ?? {} : {});
     this.promocionId.set(promo && Number.isSafeInteger(promo) && promo>0 ? promo : null);
     const tokens = params !== null
       ? params.split(',').map(token => token.trim().toLowerCase()).filter(Boolean)
@@ -1102,9 +1117,7 @@ export class BookingComponent implements OnInit {
   }
 
   private esFechaReservable(fecha: Date): boolean {
-    const normalizada = this.normalizarFecha(fecha);
-    const dia = normalizada.getDay();
-    return normalizada >= this.hoy && normalizada <= this.fechaMaximaReserva && dia !== 0;
+    return this.diasDisponibles().includes(this.formatearFechaLocal(fecha));
   }
 
   private inicioSemana(fecha: Date): Date {

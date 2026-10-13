@@ -22,4 +22,9 @@ public record CitaClienteResponse(
         String clienteCorreo,
         String clienteTelefono
 ) {
+    @com.fasterxml.jackson.annotation.JsonProperty("notificarEnAgenda")
+    public boolean notificarEnAgenda() { return estado != null && java.util.Set.of("PENDIENTE","CONFIRMADA").contains(estado); }
+    @com.fasterxml.jackson.annotation.JsonProperty("estadoEtiqueta")
+    public String estadoEtiqueta() { return com.techprotech.agenda.modulos.citas.aplicacion.EtiquetasEstadoCita.de(estado); }
+
 }

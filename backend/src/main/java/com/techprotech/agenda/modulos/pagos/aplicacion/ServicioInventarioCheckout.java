@@ -65,31 +65,43 @@ public class ServicioInventarioCheckout {
         ordenes.save(orden);
     }
 
-    @Transactional
-    public void confirmar(Long empresaId, Long ordenId) {
-        CheckoutOrdenEntidad orden = bloquear(empresaId, ordenId);
-        if ("NO_APLICA".equals(orden.getInventarioEstado()) || "CONFIRMADO".equals(orden.getInventarioEstado())) return;
-        if (!"RESERVADO".equals(orden.getInventarioEstado())) throw conflicto("La orden no tiene inventario reservado");
-        List<CheckoutOrdenDetalleEntidad> lineas = productos(orden);
-        Map<Long, ProductoEntidad> catalogo = catalogo(empresaId, lineas);
-        for (CheckoutOrdenDetalleEntidad linea : lineas) {
-            ProductoEntidad producto = catalogo.get(linea.getProductoId());
-            if (producto == null || !producto.isControlaInventario()) continue;
-            ProductoExistenciaEntidad existencia = bloquearExistencia(empresaId, producto.getId(), orden.getSucursalId());
-            if (existencia.getReservado().compareTo(linea.getCantidad()) < 0
-                    || existencia.getExistencia().compareTo(linea.getCantidad()) < 0) {
-                throw conflicto("La reserva de " + producto.getNombre() + " ya no es suficiente");
-            }
-            BigDecimal anterior = existencia.getExistencia();
-            BigDecimal nueva = anterior.subtract(linea.getCantidad());
-            existencia.setExistencia(nueva);
-            existencia.setReservado(existencia.getReservado().subtract(linea.getCantidad()));
-            existencias.save(existencia);
-            movimientos.save(movimiento(orden, linea, anterior, nueva));
-        }
-        orden.setInventarioEstado("CONFIRMADO");
-        ordenes.save(orden);
+@Transactional
+public void confirmar(Long empresaId, Long ordenId) {
+    if (!confirmarSiDisponible(empresaId, ordenId)) throw conflicto("La orden no tiene inventario disponible");
+}
+
+/** Prevalida todas las existencias antes de mutar; un faltante no revierte el registro financiero. */
+@Transactional
+public boolean confirmarSiDisponible(Long empresaId, Long ordenId) {
+    CheckoutOrdenEntidad orden = bloquear(empresaId, ordenId);
+    if ("NO_APLICA".equals(orden.getInventarioEstado()) || "CONFIRMADO".equals(orden.getInventarioEstado())) return true;
+    boolean reservado = "RESERVADO".equals(orden.getInventarioEstado());
+    if (!reservado && !"LIBERADO".equals(orden.getInventarioEstado())) return false;
+    List<CheckoutOrdenDetalleEntidad> lineas = productos(orden);
+    Map<Long, ProductoEntidad> catalogo = catalogo(empresaId, lineas);
+    Map<Long, ProductoExistenciaEntidad> filas = new java.util.LinkedHashMap<>();
+    for (CheckoutOrdenDetalleEntidad linea : lineas) {
+        ProductoEntidad producto = catalogo.get(linea.getProductoId());
+        if (producto == null) return false;
+        if (!producto.isControlaInventario()) continue;
+        ProductoExistenciaEntidad existencia = bloquearExistencia(empresaId, producto.getId(), orden.getSucursalId());
+        BigDecimal disponible = reservado ? existencia.getExistencia() : existencia.getExistencia().subtract(existencia.getReservado());
+        if (disponible.compareTo(linea.getCantidad()) < 0 || reservado && existencia.getReservado().compareTo(linea.getCantidad()) < 0) return false;
+        filas.put(producto.getId(), existencia);
     }
+    for (CheckoutOrdenDetalleEntidad linea : lineas) {
+        ProductoExistenciaEntidad existencia = filas.get(linea.getProductoId());
+        if (existencia == null) continue;
+        BigDecimal anterior = existencia.getExistencia();
+        BigDecimal nueva = anterior.subtract(linea.getCantidad());
+        existencia.setExistencia(nueva);
+        if (reservado) existencia.setReservado(existencia.getReservado().subtract(linea.getCantidad()));
+        existencias.save(existencia);
+        movimientos.save(movimiento(orden, linea, anterior, nueva));
+    }
+    orden.setInventarioEstado("CONFIRMADO"); ordenes.save(orden);
+    return true;
+}
 
     @Transactional
     public void liberar(Long empresaId, Long ordenId) {
@@ -100,6 +112,7 @@ public class ServicioInventarioCheckout {
     @Transactional
     public void expirar(Long empresaId, Long ordenId) {
         CheckoutOrdenEntidad orden = bloquear(empresaId, ordenId);
+        if (List.of("PAGADA", "PAGADA_CON_INCIDENCIA").contains(orden.getEstado())) return;
         liberar(orden);
         if (!"PAGADA".equals(orden.getEstado())) orden.setEstado("EXPIRADA");
         ordenes.save(orden);

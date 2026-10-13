@@ -13,30 +13,49 @@ import java.time.LocalDate;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/v1/publico/disponibilidad/franjas")
+@RequestMapping("/api/v1/publico/disponibilidad")
 public class ControladorDisponibilidadPublico {
+
+    private final com.techprotech.agenda.modulos.sitio.aplicacion.ResolutorTenantPublico tenant;
 
     private final ServicioConsultaDisponibilidad servicioConsultaDisponibilidad;
 
-    public ControladorDisponibilidadPublico(ServicioConsultaDisponibilidad servicioConsultaDisponibilidad) {
+    public ControladorDisponibilidadPublico(ServicioConsultaDisponibilidad servicioConsultaDisponibilidad,
+            com.techprotech.agenda.modulos.sitio.aplicacion.ResolutorTenantPublico tenant) {
+        this.tenant = tenant;
         this.servicioConsultaDisponibilidad = servicioConsultaDisponibilidad;
     }
 
-    @GetMapping
+    @GetMapping("/franjas")
     public List<FranjaDisponibleResponse> listar(
+            @org.springframework.web.bind.annotation.RequestHeader("X-Tenant-Slug") String slug,
             @RequestParam(required = false) Long empresaId,
             @RequestParam @NotNull Long sucursalId,
             @RequestParam @NotNull Long servicioId,
             @RequestParam(required = false) Long prestadorId,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fecha
     ) {
+        Long empresa = tenant.resolver(slug,empresaId);
+        tenant.validarServicio(empresa,sucursalId,servicioId,prestadorId);
         return servicioConsultaDisponibilidad.obtenerFranjasDisponibles(
-                empresaId,
+                empresa,
                 sucursalId,
                 servicioId,
                 prestadorId,
                 fecha
         );
-    }
+    }@GetMapping("/dias")
+public com.techprotech.agenda.modulos.disponibilidad.aplicacion.DiasDisponiblesResponse dias(
+        @org.springframework.web.bind.annotation.RequestHeader("X-Tenant-Slug") String slug,
+        @RequestParam(required=false) Long empresaId,@RequestParam Long sucursalId,
+        @RequestParam List<Long> servicioIds,@RequestParam(required=false) List<Long> prestadorIds,
+        @RequestParam(required=false) @DateTimeFormat(iso=DateTimeFormat.ISO.DATE) LocalDate desde,
+        @RequestParam(required=false) @DateTimeFormat(iso=DateTimeFormat.ISO.DATE) LocalDate hasta) {
+    Long empresa=tenant.resolver(slug,empresaId);
+    if(prestadorIds!=null && prestadorIds.size()!=servicioIds.size()) throw new org.springframework.web.server.ResponseStatusException(org.springframework.http.HttpStatus.BAD_REQUEST,"Los prestadores deben corresponder a los servicios");
+    for(int i=0;i<servicioIds.size();i++) tenant.validarServicio(empresa,sucursalId,servicioIds.get(i),prestadorIds==null || prestadorIds.get(i)==0?null:prestadorIds.get(i));
+    return servicioConsultaDisponibilidad.obtenerDias(empresa,sucursalId,servicioIds,prestadorIds,desde,hasta);
+}
+
 }
 

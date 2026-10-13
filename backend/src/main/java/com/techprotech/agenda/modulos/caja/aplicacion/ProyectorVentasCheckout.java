@@ -19,7 +19,7 @@ public class ProyectorVentasCheckout {
 
     @Scheduled(fixedDelayString = "${aplicacion.pagos.checkout.intervalo-proyeccion-ventas-ms:15000}")
     public void ejecutar() {
-        ordenes.findTop100ByEstadoOrderByIdAsc("PAGADA").forEach(orden -> {
+        ordenes.buscarPagadasSinVenta(org.springframework.data.domain.PageRequest.of(0,100)).forEach(orden -> {
             try {
                 servicio.proyectar(orden.getEmpresaId(), orden.getId());
             } catch (RuntimeException ex) {

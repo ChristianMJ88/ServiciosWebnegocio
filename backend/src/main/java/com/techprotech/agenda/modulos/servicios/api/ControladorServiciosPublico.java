@@ -16,15 +16,19 @@ import java.util.List;
 @RequestMapping("/api/v1/publico/servicios")
 public class ControladorServiciosPublico {
 
+    private final com.techprotech.agenda.modulos.sitio.aplicacion.ResolutorTenantPublico tenant;
+
     private final ServicioCatalogoServicios servicioCatalogoServicios;
 
-    public ControladorServiciosPublico(ServicioCatalogoServicios servicioCatalogoServicios) {
+    public ControladorServiciosPublico(ServicioCatalogoServicios servicioCatalogoServicios,
+            com.techprotech.agenda.modulos.sitio.aplicacion.ResolutorTenantPublico tenant) {
+        this.tenant = tenant;
         this.servicioCatalogoServicios = servicioCatalogoServicios;
     }
 
     @GetMapping
-    public List<ServicioPublicoResponse> listar(@RequestParam(required = false) Long sucursalId) {
-        return servicioCatalogoServicios.listarPorSucursal(sucursalId);
+    public List<ServicioPublicoResponse> listar(@org.springframework.web.bind.annotation.RequestHeader("X-Tenant-Slug") String slug, @RequestParam Long sucursalId) {
+        return servicioCatalogoServicios.listarPorSucursal(tenant.resolver(slug,null),sucursalId);
     }
 
     @GetMapping("/sitio/{slug}")
@@ -34,10 +38,11 @@ public class ControladorServiciosPublico {
 
     @GetMapping("/prestadores")
     public List<PrestadorPublicoResponse> listarPrestadores(
+            @org.springframework.web.bind.annotation.RequestHeader("X-Tenant-Slug") String slug,
             @RequestParam Long empresaId,
             @RequestParam Long sucursalId,
             @RequestParam(required = false) Long servicioId
     ) {
-        return servicioCatalogoServicios.listarPrestadores(empresaId, sucursalId, servicioId);
+        return servicioCatalogoServicios.listarPrestadores(tenant.resolver(slug,empresaId), sucursalId, servicioId);
     }
 }

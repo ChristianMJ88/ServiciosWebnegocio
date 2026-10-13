@@ -10,6 +10,8 @@ public final class CalculadorAnticipoServicio {
     private CalculadorAnticipoServicio() {}
     public static BigDecimal calcular(BigDecimal neto, ServicioEntidad servicio, String modalidad,
                                        BigDecimal porcentaje, BigDecimal importe) {
+        if(servicio != null && !servicio.isRequiereAnticipo()) return BigDecimal.ZERO.setScale(2);
+        if(servicio != null && "TOTAL".equals(servicio.getAnticipoTipo())) return neto.setScale(2,RoundingMode.HALF_UP);
         if (servicio != null && servicio.isRequiereAnticipo()) {
             modalidad = "PORCENTAJE".equals(servicio.getAnticipoTipo()) ? "ANTICIPO_PORCENTAJE" : "ANTICIPO_IMPORTE";
             porcentaje = servicio.getAnticipoValor(); importe = servicio.getAnticipoValor();

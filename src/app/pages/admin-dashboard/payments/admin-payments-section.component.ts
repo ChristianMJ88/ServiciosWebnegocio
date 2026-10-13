@@ -3,7 +3,7 @@ import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 import { finalize, forkJoin } from 'rxjs';
-import { ConfiguracionCheckout, ConexionProveedorPago, MetodoPagoCheckout, PaymentsAdminService, TerminalPoint, WebhookMercadoPago } from './payments-admin.service';
+import { IncidenciaCheckout, ConfiguracionCheckout, ConexionProveedorPago, MetodoPagoCheckout, PaymentsAdminService, TerminalPoint, WebhookMercadoPago } from './payments-admin.service';
 import { AdminService, SucursalAdmin } from '../../../core/admin/admin.service';
 
 @Component({
@@ -18,6 +18,8 @@ export class AdminPaymentsSectionComponent implements OnInit {
   private readonly route = inject(ActivatedRoute);
   private readonly admin = inject(AdminService);
 
+  resoluciones: Record<string, {tipo:string; motivo:string; citas:{citaId:number; inicio:string}[]}> = {};
+  readonly incidencias = signal<IncidenciaCheckout[]>([]);
   readonly conexion = signal<ConexionProveedorPago | null>(null);
   readonly configuracion = signal<ConfiguracionCheckout | null>(null);
   readonly cargando = signal(true);
@@ -47,10 +49,13 @@ export class AdminPaymentsSectionComponent implements OnInit {
     forkJoin({
       conexion: this.servicio.estado(),
       configuracion: this.servicio.obtenerConfiguracion(),
-      webhook: this.servicio.webhook()
+      webhook: this.servicio.webhook(),
+      incidencias: this.servicio.incidencias()
     })
       .pipe(finalize(() => this.cargando.set(false))).subscribe({
       next: respuesta => {
+        this.incidencias.set(respuesta.incidencias);
+        this.resoluciones=Object.fromEntries(respuesta.incidencias.map(i => [i.ordenId,{tipo:'',motivo:'',citas:i.citas.map(c => ({...c}))}]));
         this.conexion.set(respuesta.conexion);
         this.configuracion.set(respuesta.configuracion);
         this.webhook.set(respuesta.webhook);
@@ -58,6 +63,17 @@ export class AdminPaymentsSectionComponent implements OnInit {
       },
       error: err => this.error.set(this.detalleError(err, 'No fue posible consultar el estado de pagos.'))
     });
+  }
+
+  resolverIncidencia(incidencia:IncidenciaCheckout):void {
+    const request=this.resoluciones[incidencia.ordenId];
+    if (!request?.tipo || !request.motivo.trim() || this.procesando()) return;
+    this.procesando.set(true); this.error.set(null);
+    this.servicio.resolverIncidencia(incidencia.ordenId,{...request,citas:request.tipo==='REPROGRAMADA'?request.citas:[]})
+      .pipe(finalize(() => this.procesando.set(false))).subscribe({
+        next:() => {this.mensaje.set('Incidencia resuelta y registrada en auditoría.');this.cargar();},
+        error:err => this.error.set(this.detalleError(err,'No fue posible resolver la incidencia.'))
+      });
   }
 
   async copiarWebhook(): Promise<void> {

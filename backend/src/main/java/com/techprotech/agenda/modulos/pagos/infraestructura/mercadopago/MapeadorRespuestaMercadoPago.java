@@ -22,7 +22,7 @@ class MapeadorRespuestaMercadoPago {
         EstadoPago estadoPago = estado(estado, detalle);
         return new ResultadoCobro(ProveedorPago.MERCADO_PAGO, texto(respuesta, "id"), referenciaPago(respuesta), estadoPago,
                 accion(respuesta), detalle == null ? estado : detalle, detalle,
-                fecha(respuesta.path("last_updated_date")), liquidacion(respuesta, estadoPago));
+                fecha(respuesta.path("last_updated_date")), liquidacion(respuesta, estadoPago), vencimiento(respuesta));
     }
 
     DesgloseLiquidacionPago liquidacion(JsonNode respuesta, EstadoPago estado) {
@@ -89,6 +89,13 @@ class MapeadorRespuestaMercadoPago {
     private String referenciaPago(JsonNode respuesta) {
         return texto(respuesta.path("transactions").path("payments").path(0), "id");
     }
+
+private OffsetDateTime vencimiento(JsonNode respuesta) {
+    var nodo=respuesta.path("transactions").path("payments").path(0).path("date_of_expiration");
+    if(nodo.isMissingNode() || nodo.isNull()) nodo=respuesta.path("date_of_expiration");
+    try { return nodo.isMissingNode() || nodo.isNull()?null:OffsetDateTime.parse(nodo.asText()); }
+    catch(java.time.format.DateTimeParseException ex) { return null; }
+}
 
     private OffsetDateTime fecha(JsonNode nodo) {
         try {

@@ -1405,6 +1405,10 @@ public class ServicioAdminCitas {
         CitaEntidad cita = citaRepositorio.findByIdAndEmpresaId(citaId, empresaId)
                 .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "La cita no existe para la empresa"));
 
+        if ("PENDIENTE_PAGO".equals(cita.getEstado())) {
+            throw new ResponseStatusException(CONFLICT, "La reserva está esperando pago. Gestiona el pago antes de modificar una cita del grupo");
+        }
+
         if (!List.of("CONFIRMADA", "FINALIZADA", "NO_ASISTIO", "CANCELADA").contains(nuevoEstado)) {
             throw new ResponseStatusException(BAD_REQUEST, "El estado solicitado no es valido para administracion");
         }
@@ -2951,7 +2955,7 @@ public class ServicioAdminCitas {
         servicio.setVisiblePublico(request.visiblePublico());
         servicio.setRequiereAnticipo(request.requiereAnticipo());
         servicio.setAnticipoTipo(request.requiereAnticipo() ? normalizarAnticipoTipo(request.anticipoTipo()) : null);
-        servicio.setAnticipoValor(request.requiereAnticipo() ? validarAnticipoValor(request.anticipoValor()) : null);
+        servicio.setAnticipoValor(request.requiereAnticipo() && !"TOTAL".equals(servicio.getAnticipoTipo()) ? validarAnticipoValor(request.anticipoValor()) : null);
         servicio.setActivo(request.activo());
     }
 
@@ -3146,8 +3150,8 @@ public class ServicioAdminCitas {
             throw new ResponseStatusException(BAD_REQUEST, "Debes indicar el tipo de anticipo");
         }
         String normalizado = tipo.toUpperCase(Locale.ROOT);
-        if (!Set.of("FIJO", "PORCENTAJE").contains(normalizado)) {
-            throw new ResponseStatusException(BAD_REQUEST, "El tipo de anticipo debe ser FIJO o PORCENTAJE");
+        if (!Set.of("FIJO", "PORCENTAJE", "TOTAL").contains(normalizado)) {
+            throw new ResponseStatusException(BAD_REQUEST, "El tipo de cobro debe ser FIJO, PORCENTAJE o TOTAL");
         }
         return normalizado;
     }

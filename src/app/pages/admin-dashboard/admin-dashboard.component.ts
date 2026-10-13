@@ -406,7 +406,7 @@ export class AdminDashboardComponent implements OnInit {
     const hoy = new Date(obtenerFechaLocalISO()).getTime();
     return this.citas().filter(cita => {
       const estado = cita.estado.toUpperCase();
-      return !['CANCELADA', 'FINALIZADA', 'NO_ASISTIO'].includes(estado)
+      return cita.notificarEnAgenda !== false && !['CANCELADA', 'FINALIZADA', 'NO_ASISTIO'].includes(estado)
         && new Date(cita.inicio.slice(0, 10)).getTime() >= hoy;
     });
   });
@@ -679,7 +679,7 @@ export class AdminDashboardComponent implements OnInit {
       return {
         id: cita.id,
         status: cita.estado,
-        statusLabel: formatAgendaStatusLabel(cita.estado),
+        statusLabel: cita.estadoEtiqueta ?? formatAgendaStatusLabel(cita.estado),
         title: cita.servicioNombre,
         subtitle: clienteNombre,
         compactLabel: clienteNombre,
@@ -703,7 +703,7 @@ export class AdminDashboardComponent implements OnInit {
           { label: 'Servicio', value: cita.servicioNombre },
           { label: 'Prestador', value: cita.prestadorNombre },
           { label: 'Sucursal', value: cita.sucursalNombre },
-          { label: 'Estado', value: formatAgendaStatusLabel(cita.estado) },
+          { label: 'Estado', value: cita.estadoEtiqueta ?? formatAgendaStatusLabel(cita.estado) },
           { label: 'Precio', value: this.formatearMonedaAgenda(cita.precio, cita.moneda) },
           { label: 'Contacto', value: cita.clienteTelefono || cita.clienteCorreo || 'Sin contacto' }
         ],

@@ -292,7 +292,7 @@ export class StaffDashboardComponent implements OnInit {
       return {
         id: cita.id,
         status: cita.estado,
-        statusLabel: formatAgendaStatusLabel(cita.estado),
+        statusLabel: cita.estadoEtiqueta ?? formatAgendaStatusLabel(cita.estado),
         title: cita.clienteNombre,
         subtitle: cita.servicioNombre,
         compactLabel: cita.clienteNombre,
@@ -316,7 +316,7 @@ export class StaffDashboardComponent implements OnInit {
           { label: 'Sucursal', value: cita.sucursalNombre },
           { label: 'Teléfono', value: cita.clienteTelefono || 'Sin teléfono' },
           { label: 'Correo', value: cita.clienteCorreo || 'Sin correo' },
-          { label: 'Estado', value: formatAgendaStatusLabel(cita.estado) },
+          { label: 'Estado', value: cita.estadoEtiqueta ?? formatAgendaStatusLabel(cita.estado) },
           { label: 'Horario', value: `${new Date(cita.inicio).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' })} - ${new Date(cita.fin).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' })}` }
         ],
         actions: this.construirAccionesAgendaStaff(cita.id, cita.estado, whatsappUrl)

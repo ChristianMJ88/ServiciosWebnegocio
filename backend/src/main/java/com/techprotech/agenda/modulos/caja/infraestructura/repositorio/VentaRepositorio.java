@@ -12,6 +12,7 @@ public interface VentaRepositorio extends JpaRepository<VentaEntidad, Long> {
     Optional<VentaEntidad> findConBloqueoByIdAndEmpresaId(Long id,Long empresaId);
     List<VentaEntidad> findTop50ByEmpresaIdAndSucursalIdOrderByCreadaEnDesc(Long empresaId, Long sucursalId);
     org.springframework.data.domain.Page<VentaEntidad> findByEmpresaIdAndSucursalIdAndEstadoAndCanalOrderByCreadaEnAsc(Long empresaId,Long sucursalId,String estado,String canal,org.springframework.data.domain.Pageable pageable);
+    Optional<VentaEntidad> findByEmpresaIdAndCheckoutOrdenId(Long empresaId, Long checkoutOrdenId);
     boolean existsByEmpresaIdAndCheckoutOrdenId(Long empresaId, Long checkoutOrdenId);
     Optional<VentaEntidad> findByIdAndEmpresaId(Long id, Long empresaId);
 }

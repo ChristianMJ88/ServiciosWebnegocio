@@ -18,7 +18,7 @@
                 <span>{{ cita.servicioNombre }} · {{ cita.prestadorNombre }}</span>
               </div>
               <span class="badge rounded-pill recepcion-status-badge" [class.has-checkin]="!!cita.checkInEn">
-                {{ etiquetaEstado(cita.estado) }}
+                {{ cita.estadoEtiqueta ?? etiquetaEstado(cita.estado) }}
               </span>
             </div>
             <div class="recepcion-appointment-meta">

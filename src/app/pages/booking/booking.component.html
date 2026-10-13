@@ -133,6 +133,25 @@
                             </div>
                           }
                         </div>
+@if(errorStaff()) {<p class="booking-inline-note" role="alert">{{errorStaff()}}</p>}
+@for(servicio of selectedServices(); track servicio.id) {
+  @if(staffByService()[servicio.id]; as profesionales) {
+    <section class="booking-professionals" [attr.aria-label]="'Profesional para '+servicio.nombre">
+      <header><strong>{{servicio.nombre}}</strong><small>¿Con quién deseas reservar?</small></header>
+      @if(profesionales.length===1) {
+        <div class="booking-professional">@if(profesionales[0].fotoUrl) {<img [src]="profesionales[0].fotoUrl" [alt]="profesionales[0].nombreMostrar">}<strong>{{profesionales[0].nombreMostrar}}</strong></div>
+      } @else {
+        <div class="booking-professionals__choices" role="radiogroup" [attr.aria-label]="servicio.nombre">
+          <button type="button" role="radio" [attr.aria-checked]="!prestadoresElegidos()[servicio.id]" (click)="elegirPrestador(servicio.id,null)"><i class="bi bi-people"></i><strong>Cualquier profesional disponible</strong></button>
+          @for(profesional of profesionales;track profesional.usuarioId) {
+            <button type="button" role="radio" [attr.aria-checked]="prestadoresElegidos()[servicio.id]===profesional.usuarioId" (click)="elegirPrestador(servicio.id,profesional.usuarioId)">@if(profesional.fotoUrl) {<img [src]="profesional.fotoUrl" [alt]="profesional.nombreMostrar">}<strong>{{profesional.nombreMostrar}}</strong>@if(profesional.biografia) {<small>{{profesional.biografia}}</small>}</button>
+          }
+        </div>
+      }
+    </section>
+  }
+}
+                        @if(cotizacion(); as presupuesto) { <p class="booking-inline-note" role="status">@if(presupuesto.requierePago) {Este servicio requiere pago para apartar tu horario: {{ presupuesto.importeRequeridoTotal | appMoney:presupuesto.moneda:2:2 }}. Tu cita se confirma al aprobarse el pago.} @else {Tu cita quedará pendiente de confirmación. @if(presupuesto.importeRequeridoTotal) {El anticipo de {{ presupuesto.importeRequeridoTotal | appMoney:presupuesto.moneda:2:2 }} se paga en el negocio.} @else {Este servicio no requiere anticipo.}}</p> }
                         <section class="booking-service-browser" [attr.aria-label]="catalogContext()">
                           <header class="booking-service-browser__header">
                             <div><span>Explorar</span><h3>{{ catalogContext() }}</h3></div>
@@ -167,7 +186,7 @@
                       <div class="booking-step-content">
                         @defer (when !isMobile()) {
                         <div class="calendar-container glass-effect d-none d-md-block">
-                          <app-booking-calendar [options]="calendarOptions"></app-booking-calendar>
+                          <app-booking-calendar [options]="calendarOptions" [selectedDate]="selectedDate()"></app-booking-calendar>
                         </div>
                         } @placeholder {
                         <div class="calendar-container glass-effect d-none d-md-block booking-calendar-placeholder">
@@ -569,7 +588,7 @@
                         <div class="d-grid mt-4">
                           <button type="submit" [disabled]="bookingForm.invalid || isSubmitting() || cotizando() || !cotizacion()" class="btn btn-primary rounded-pill shadow-lg py-3">
                             @if (!isSubmitting()) {
-                              <span>Reservar mi cita <i class="bi bi-arrow-right ms-2" aria-hidden="true"></i></span>
+                              <span>{{ cotizacion()?.requierePago ? 'Reservar y pagar' : 'Reservar cita' }} @if(cotizacion()?.requierePago) { {{ cotizacion()!.importeRequeridoTotal | appMoney:cotizacion()!.moneda:2:2 }} } <i class="bi bi-arrow-right ms-2" aria-hidden="true"></i></span>
                             }
                             @if (isSubmitting()) {
                               <span class="spinner-border spinner-border-sm me-2"></span>
@@ -592,7 +611,8 @@
                       <div class="d-flex align-items-center">
                         <i class="bi me-2 h4 mb-0 booking-accent" [class.bi-check-circle-fill]="submitted()" [class.bi-exclamation-octagon-fill]="!submitted()"></i>
                         @if (submitted()) {
-                          <strong class="booking-accent">Tu cita fue enviada con éxito.</strong>
+                          <strong class="booking-accent">Tu cita está pendiente de confirmación.</strong>
+                          @if(confirmacionExpiraEn()) {<span>Confírmala antes de {{confirmacionExpiraEn() | date:'medium'}} o el horario se liberará.</span>}
                         }
                         @if (!submitted() && errorMessage) {
                           <strong class="booking-section-title">Necesitamos que revises tu reserva.</strong>

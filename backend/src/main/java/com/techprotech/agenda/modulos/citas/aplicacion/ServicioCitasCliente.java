@@ -34,6 +34,7 @@ import static org.springframework.http.HttpStatus.NOT_FOUND;
 public class ServicioCitasCliente {
 
     private final CitaRepositorio citaRepositorio;
+    private final com.techprotech.agenda.modulos.disponibilidad.aplicacion.ServicioConfiguracionReservas reservas;
     private final HistorialEstadoCitaRepositorio historialEstadoCitaRepositorio;
     private final SucursalRepositorio sucursalRepositorio;
     private final ServicioRepositorio servicioRepositorio;
@@ -55,7 +56,8 @@ public class ServicioCitasCliente {
             UsuarioRepositorio usuarioRepositorio,
             ServicioOutboxWhatsappCitas servicioOutboxWhatsappCitas,
             ServicioOutboxCorreoCitas servicioOutboxCorreoCitas
-    ) {
+    , com.techprotech.agenda.modulos.disponibilidad.aplicacion.ServicioConfiguracionReservas reservas) {
+        this.reservas=reservas;
         this.citaRepositorio = citaRepositorio;
         this.historialEstadoCitaRepositorio = historialEstadoCitaRepositorio;
         this.sucursalRepositorio = sucursalRepositorio;
@@ -90,10 +92,12 @@ public class ServicioCitasCliente {
             throw new ResponseStatusException(BAD_REQUEST, "Solo se pueden confirmar citas pendientes");
         }
 
-        if (!cita.getInicio().isAfter(LocalDateTime.now())) {
+        var sucursalConfirmacion=sucursalRepositorio.findByIdAndEmpresaIdAndActivaTrue(cita.getSucursalId(),empresaId).orElseThrow(() -> new ResponseStatusException(NOT_FOUND,"La sucursal no está disponible"));
+        if (!cita.getInicio().isAfter(LocalDateTime.now(java.time.ZoneId.of(sucursalConfirmacion.getZonaHoraria())))) {
             throw new ResponseStatusException(BAD_REQUEST, "No se pueden confirmar citas pasadas o en curso");
         }
 
+        if(PlazoConfirmacionCita.vencido(cita.getInicio(),java.time.ZoneId.of(sucursalConfirmacion.getZonaHoraria()),reservas.obtener(empresaId).liberacionSinConfirmacionHoras(),cita.getCreadaEn(),java.time.Clock.systemUTC())) throw new ResponseStatusException(CONFLICT,"El plazo para confirmar la cita venció");
         cita.setEstado("CONFIRMADA");
         citaRepositorio.save(cita);
 
@@ -153,6 +157,8 @@ public class ServicioCitasCliente {
     public CitaClienteResponse reprogramar(Long empresaId, Long clienteId, Long citaId, OffsetDateTime nuevoInicio) {
         CitaEntidad cita = citaRepositorio.findByIdAndEmpresaIdAndClienteId(citaId, empresaId, clienteId)
                 .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "La cita no existe para el cliente autenticado"));
+        prestadorServicioRepositorio.bloquearPorEmpresa(empresaId, cita.getPrestadorId())
+                .orElseThrow(() -> new ResponseStatusException(CONFLICT, "El prestador ya no está disponible"));
 
         if (!List.of("PENDIENTE", "CONFIRMADA").contains(cita.getEstado())) {
             throw new ResponseStatusException(BAD_REQUEST, "Solo se pueden reprogramar citas pendientes o confirmadas");
@@ -181,8 +187,13 @@ public class ServicioCitasCliente {
                 .findFirst()
                 .orElseThrow(() -> new ResponseStatusException(CONFLICT, "La nueva franja ya no esta disponible"));
 
+        var inicioValidado=OffsetDateTime.parse(franja.inicio()).toLocalDateTime();
+        var finValidado=OffsetDateTime.parse(franja.fin()).toLocalDateTime();
+        if (citaRepositorio.buscarConflictosBloqueando(cita.getPrestadorId(),inicioValidado,finValidado,List.of("PENDIENTE","PENDIENTE_PAGO","CONFIRMADA"))
+                .stream().anyMatch(otra -> !cita.getId().equals(otra.getId())))
+            throw new ResponseStatusException(CONFLICT,"El nuevo horario ya está ocupado");
         String estadoAnterior = cita.getEstado();
-        cita.setInicio(OffsetDateTime.parse(franja.inicio()).toLocalDateTime());
+        cita.setInicio(inicioValidado);
         cita.setFin(OffsetDateTime.parse(franja.fin()).toLocalDateTime());
         cita.setEstado("PENDIENTE");
         citaRepositorio.save(cita);

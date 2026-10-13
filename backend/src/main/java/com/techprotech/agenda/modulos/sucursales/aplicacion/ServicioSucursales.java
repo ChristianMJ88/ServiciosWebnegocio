@@ -15,7 +15,8 @@ public class ServicioSucursales {
     }
 
     public List<SucursalPublicaResponse> listarPublicas(Long empresaId) {
-        Long empresa = empresaId != null ? empresaId : 1L;
+        if (empresaId == null) throw new org.springframework.web.server.ResponseStatusException(org.springframework.http.HttpStatus.BAD_REQUEST, "La empresa es obligatoria");
+        Long empresa = empresaId;
         return sucursalRepositorio.findByEmpresaIdAndActivaTrue(empresa)
                 .stream()
                 .map(sucursal -> new SucursalPublicaResponse(

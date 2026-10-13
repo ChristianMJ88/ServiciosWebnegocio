@@ -85,17 +85,11 @@ class ServicioCotizacionCitasTest {
     assertThat(r.total()).isEqualByComparingTo("250");
     verifyNoInteractions(checkout);
 }
-@Test void previewNoBloqueaConCheckoutDeshabilitadoOAnticipoInvalido() {
-    servicio.setRequiereAnticipo(true); servicio.setAnticipoValor(null);
-    var config=new com.techprotech.agenda.modulos.pagos.infraestructura.entidad.EmpresaCheckoutConfigEntidad();
-    when(checkout.findById(1L)).thenReturn(Optional.of(config));
-    assertThat(cotizar().anticipoTotal()).isEqualByComparingTo("200");
-    config.setHabilitado(true); config.setPermitirPagoServicios(true);
-    assertThat(cotizar().anticipoTotal()).isEqualByComparingTo("200");
-    servicio.setAnticipoTipo("PORCENTAJE"); servicio.setAnticipoValor(new BigDecimal("50"));
-    assertThat(cotizar().anticipoTotal()).isEqualByComparingTo("100");
-    config.setPermitirPagoServicios(false);
-    assertThat(cotizar().anticipoTotal()).isEqualByComparingTo("200");
-}
-
+    @Test void previewNoBloqueaConCheckoutDeshabilitadoOAnticipoInvalido() {
+        servicio.setRequiereAnticipo(true); servicio.setAnticipoValor(null);
+        assertThat(cotizar().anticipoTotal()).isZero();
+        servicio.setAnticipoTipo("PORCENTAJE"); servicio.setAnticipoValor(new BigDecimal("50"));
+        assertThat(cotizar().anticipoTotal()).isEqualByComparingTo("100");
+        assertThat(cotizar().requierePago()).isFalse();
+    }
 }

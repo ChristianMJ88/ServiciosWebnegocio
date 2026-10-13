@@ -8,6 +8,8 @@ import java.util.List;
 import java.util.Optional;
 
 public interface ExcepcionDisponibilidadRepositorio extends JpaRepository<ExcepcionDisponibilidadEntidad, Long> {
+    @org.springframework.data.jpa.repository.Query("select e from ExcepcionDisponibilidadEntidad e where e.empresaId=:empresaId and e.fechaExcepcion between :desde and :hasta and ((e.tipoSujeto='SUCURSAL' and e.sujetoId=:sucursalId) or (e.tipoSujeto='PRESTADOR' and e.sujetoId in :prestadores))")
+    List<ExcepcionDisponibilidadEntidad> buscarParaRango(Long empresaId, Long sucursalId, java.util.Collection<Long> prestadores, LocalDate desde, LocalDate hasta);
 
     List<ExcepcionDisponibilidadEntidad> findByEmpresaIdAndTipoSujetoAndSujetoIdAndFechaExcepcion(
             Long empresaId,

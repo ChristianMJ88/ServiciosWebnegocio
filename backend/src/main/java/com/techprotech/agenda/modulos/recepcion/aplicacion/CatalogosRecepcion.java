@@ -11,6 +11,8 @@ public final class CatalogosRecepcion {
     public static final List<String> ESTADOS_CITA_CANCELABLES = List.of("PENDIENTE", "CONFIRMADA");
     public static final List<Opcion> ESTADOS_CITA = List.of(
             new Opcion("PENDIENTE", "Pendiente"),
+            new Opcion("PENDIENTE_PAGO", "Apartada · esperando pago"),
+            new Opcion("LIBERADA_SIN_PAGO", "Liberada por falta de pago"),
             new Opcion("CONFIRMADA", "Confirmada"),
             new Opcion("FINALIZADA", "Finalizada"),
             new Opcion("CANCELADA", "Cancelada")

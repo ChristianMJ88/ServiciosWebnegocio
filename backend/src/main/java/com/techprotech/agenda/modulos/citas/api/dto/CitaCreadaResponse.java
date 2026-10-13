@@ -16,6 +16,11 @@ public record CitaCreadaResponse(
         boolean correoConfirmacionEnviado,
         java.math.BigDecimal precioLista,
         java.math.BigDecimal descuento,
-        java.math.BigDecimal precio
+        java.math.BigDecimal precio,
+        boolean requierePago,
+        java.math.BigDecimal importeRequerido,
+        OffsetDateTime pagoExpiraEn,
+        String politicaCobro,
+        OffsetDateTime confirmacionExpiraEn
 ) {
 }

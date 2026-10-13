@@ -18,7 +18,8 @@ import {
 } from './admin-catalog.helpers';
 
 @Injectable({ providedIn: 'root' })
-export class AdminCatalogFacade {
+export class AdminCatalogFacade {cargarPoliticasCobro() { return this.adminService.getPoliticasCobroServicios(); }
+
   private readonly adminService = inject(AdminService);
 
   cargarConfiguracionMedia() {

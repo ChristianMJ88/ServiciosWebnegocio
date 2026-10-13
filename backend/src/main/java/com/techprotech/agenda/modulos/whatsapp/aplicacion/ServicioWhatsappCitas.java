@@ -2483,6 +2483,8 @@ public class ServicioWhatsappCitas {
     private String estadoVisible(String estado) {
         return switch (estado == null ? "" : estado.toUpperCase(Locale.ROOT)) {
             case "PENDIENTE" -> "Pendiente de confirmación";
+            case "PENDIENTE_PAGO" -> "Apartada · esperando pago";
+            case "LIBERADA_SIN_PAGO" -> "Liberada por falta de pago";
             case "CONFIRMADA" -> "Confirmada";
             case "CANCELADA" -> "Cancelada";
             default -> capitalizar((estado == null ? "" : estado).toLowerCase(Locale.ROOT));

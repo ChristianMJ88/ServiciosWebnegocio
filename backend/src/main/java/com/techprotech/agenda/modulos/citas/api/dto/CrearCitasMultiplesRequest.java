@@ -11,7 +11,7 @@ import jakarta.validation.constraints.Size;
 import java.util.List;
 
 public record CrearCitasMultiplesRequest(
-        @NotNull Long empresaId,
+        Long empresaId,
         @NotNull Long sucursalId,
         @NotBlank @Size(min = 3, max = 150) String nombreCliente,
         @Email @NotBlank String correoCliente,

@@ -154,11 +154,11 @@ export class RecepcionDashboardComponent implements OnInit, AfterViewInit {
     ];
   });
   readonly totalNotificaciones = computed(() =>
-    this.citas().filter(cita => cita.estado === this.estadoCitaPendiente() || !cita.checkInEn).length
+    this.citas().filter(cita => cita.notificarEnAgenda !== false && (cita.estado === this.estadoCitaPendiente() || !cita.checkInEn)).length
   );
   readonly notificacionesRecepcion = computed(() => {
     const pendientes = this.citas().filter(cita => cita.estado === this.estadoCitaPendiente());
-    const sinCheckIn = this.citas().filter(cita => !cita.checkInEn);
+    const sinCheckIn = this.citas().filter(cita => cita.notificarEnAgenda !== false && !cita.checkInEn);
     return [
       pendientes.length ? { titulo: 'Citas pendientes', descripcion: `${pendientes.length} citas necesitan seguimiento.`, icono: 'bi-calendar-check', total: pendientes.length } : null,
       sinCheckIn.length ? { titulo: 'Check-in pendiente', descripcion: `${sinCheckIn.length} clientes aún no tienen check-in.`, icono: 'bi-person-check', total: sinCheckIn.length } : null
