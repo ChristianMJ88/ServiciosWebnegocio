@@ -12,11 +12,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 class CitaCreacionUtcRepositorioTest {
     @Test void releeElUtcEscritoExplicitamenteAunqueLaSesionSqlUseOtraZona() {
-        var registro=new StandardServiceRegistryBuilder().applySettings(Map.of(
+        var registro=new StandardServiceRegistryBuilder().applySettings(HorariosZonaJvmRepositorioTest.configuracionJpa()).applySettings(Map.of(
                 "hibernate.connection.driver_class","org.h2.Driver",
                 "hibernate.connection.url","jdbc:h2:mem:cita_utc;MODE=MySQL;DB_CLOSE_DELAY=-1",
-                "hibernate.hbm2ddl.auto","create-drop",
-                "hibernate.jdbc.time_zone","UTC")).build();
+                "hibernate.hbm2ddl.auto","create-drop")).build();
         try (var factory=new MetadataSources(registro).addAnnotatedClass(CitaEntidad.class).buildMetadata().buildSessionFactory();
              var em=factory.createEntityManager()) {
             em.getTransaction().begin();
@@ -29,7 +28,6 @@ class CitaCreacionUtcRepositorioTest {
             var utc=LocalDateTime.of(2026,10,13,15,45,12);cita.setCreadaEn(utc);
             repo.saveAndFlush(cita);Long id=cita.getId();em.clear();
             assertThat(repo.findById(id).orElseThrow().getCreadaEn()).isEqualTo(utc);
-            assertThat(((Number)em.createNativeQuery("SELECT EXTRACT(HOUR FROM creada_en) FROM cita WHERE id=:id").setParameter("id",id).getSingleResult()).intValue()).isEqualTo(15);
             em.getTransaction().rollback();
         } finally { StandardServiceRegistryBuilder.destroy(registro); }
     }

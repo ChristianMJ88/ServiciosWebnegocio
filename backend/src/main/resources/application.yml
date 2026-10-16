@@ -14,7 +14,8 @@ spring:
       ddl-auto: update
     properties:
       hibernate:
-        jdbc.time_zone: UTC
+        # LocalDate/LocalTime/LocalDateTime conservan el valor SQL; creada_en mantiene su converter UTC.
+        type.java_time_use_direct_jdbc: true
         format_sql: true
   flyway:
     enabled: true
