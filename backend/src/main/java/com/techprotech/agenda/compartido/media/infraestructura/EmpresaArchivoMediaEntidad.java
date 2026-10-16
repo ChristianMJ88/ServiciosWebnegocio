@@ -45,6 +45,6 @@ public class EmpresaArchivoMediaEntidad {
 
     @PrePersist
     void prepararCreacion() {
-        if (creadoEn == null) creadoEn = LocalDateTime.now();
+        if (creadoEn == null) creadoEn = LocalDateTime.now(java.time.ZoneOffset.UTC);
     }
 }

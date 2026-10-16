@@ -11,7 +11,7 @@ import static org.mockito.Mockito.*;
 class ProcesadorVencimientosSuscripcionTest {
     private final SuscripcionPlataformaRepositorio suscripciones=mock(SuscripcionPlataformaRepositorio.class);
     private final ServicioAvisosSuscripcion avisos=mock(ServicioAvisosSuscripcion.class);
-    private final ProcesadorVencimientosSuscripcion procesador=new ProcesadorVencimientosSuscripcion(suscripciones,avisos,25);
+    private final ProcesadorVencimientosSuscripcion procesador=new ProcesadorVencimientosSuscripcion(suscripciones,avisos,25, java.time.Clock.systemUTC());
 
     @Test void registraElAvisoSinCambiarLaPoliticaDeAcceso() {
         var s=new SuscripcionPlataformaEntidad();s.setEstado("GRACIA");s.setEmpresaId(3L);

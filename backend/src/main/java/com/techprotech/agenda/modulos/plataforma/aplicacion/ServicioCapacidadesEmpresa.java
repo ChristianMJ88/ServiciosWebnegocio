@@ -9,11 +9,11 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
-import java.time.ZoneOffset;
 import java.util.*;
 
 @Service
 public class ServicioCapacidadesEmpresa {
+    private final java.time.Clock reloj;
     private static final List<String> ESTADOS_CON_ACCESO=List.of("ACTIVA","PRUEBA","GRACIA");
     private final SuscripcionPlataformaRepositorio suscripciones;
     private final PlanPlataformaRepositorio planes;
@@ -23,14 +23,15 @@ public class ServicioCapacidadesEmpresa {
 
     public ServicioCapacidadesEmpresa(SuscripcionPlataformaRepositorio suscripciones,PlanPlataformaRepositorio planes,
             PlanModuloPlataformaRepositorio planModulos,PlanLimitePlataformaRepositorio planLimites,
-            SeccionAdminPlataformaRepositorio seccionesAdmin) {
+            SeccionAdminPlataformaRepositorio seccionesAdmin, java.time.Clock reloj) {
+        this.reloj = reloj;
         this.suscripciones=suscripciones;this.planes=planes;this.planModulos=planModulos;
         this.planLimites=planLimites;this.seccionesAdmin=seccionesAdmin;
     }
 
     @Transactional(readOnly=true)
     public CapacidadesEmpresaResponse obtener(Long empresaId) {
-        LocalDateTime ahora=LocalDateTime.now(ZoneOffset.UTC);
+        LocalDateTime ahora=LocalDateTime.now(reloj);
         SuscripcionPlataformaEntidad suscripcion=suscripciones
                 .findByEmpresaIdAndEstadoInOrderByCreadaEnDesc(empresaId,ESTADOS_CON_ACCESO).stream()
                 .filter(s->PoliticaVigenciaSuscripcion.estaVigente(s,ahora)).findFirst().orElse(null);

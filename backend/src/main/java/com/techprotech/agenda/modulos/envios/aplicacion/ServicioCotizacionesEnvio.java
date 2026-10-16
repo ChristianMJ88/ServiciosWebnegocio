@@ -21,13 +21,13 @@ import java.math.RoundingMode;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.time.LocalDateTime;
-import java.time.ZoneOffset;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Service
 public class ServicioCotizacionesEnvio {
+    private final java.time.Clock reloj;
     private final EmpresaSitioConfigRepositorio sitios;
     private final EmpresaEnvioConfigRepositorio configuraciones;
     private final SucursalEnvioOrigenRepositorio origenes;
@@ -46,7 +46,8 @@ public class ServicioCotizacionesEnvio {
                                      EnvioCotizacionRepositorio cotizaciones,
                                      ProveedorCotizacionesEnvio proveedor,
                                      ResolutorCredencialEnvio credenciales,
-                                     PropiedadesEnvia propiedades) {
+                                     PropiedadesEnvia propiedades, java.time.Clock reloj) {
+        this.reloj = reloj;
         this.sitios = sitios; this.configuraciones = configuraciones; this.origenes = origenes;
         this.productos = productos; this.cotizadorProductos = cotizadorProductos;
         this.cotizaciones = cotizaciones; this.proveedor = proveedor; this.credenciales = credenciales;
@@ -96,7 +97,7 @@ public class ServicioCotizacionesEnvio {
 
         String carritoHash = hashCarrito(cantidades);
         String destinoHash = hashDestino(request.direccion());
-        LocalDateTime expiraEn = LocalDateTime.now(ZoneOffset.UTC)
+        LocalDateTime expiraEn = LocalDateTime.now(reloj)
                 .plusMinutes(Math.max(1, propiedades.vigenciaCotizacionMinutos()));
         List<EnvioCotizacionEntidad> guardadas = opciones.stream().filter(item -> moneda.equalsIgnoreCase(item.moneda()))
                 .map(item -> entidad(sitio.getEmpresaId(), request.sucursalId(), config, carritoHash, destinoHash,
@@ -117,7 +118,7 @@ public class ServicioCotizacionesEnvio {
                 || !hashDestino(direccion).equals(cotizacion.getDestinoHash())) {
             throw error(HttpStatus.CONFLICT, "La tarifa ya no corresponde al carrito o a la dirección actual");
         }
-        if (cotizacion.getExpiraEn().isBefore(LocalDateTime.now(ZoneOffset.UTC))) {
+        if (cotizacion.getExpiraEn().isBefore(LocalDateTime.now(reloj))) {
             throw error(HttpStatus.CONFLICT, "La tarifa de envío expiró; solicita una nueva cotización");
         }
         return cotizacion.getCostoCliente();

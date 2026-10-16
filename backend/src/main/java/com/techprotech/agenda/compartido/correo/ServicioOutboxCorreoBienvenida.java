@@ -9,6 +9,7 @@ import java.util.List;
 
 @Service
 public class ServicioOutboxCorreoBienvenida {
+    private final java.time.Clock reloj;
 
     private final BandejaSalidaNotificacionRepositorio repositorio;
     private final ClienteCorreoSendgrid correoSendgrid;
@@ -17,8 +18,10 @@ public class ServicioOutboxCorreoBienvenida {
     public ServicioOutboxCorreoBienvenida(
             BandejaSalidaNotificacionRepositorio repositorio,
             ClienteCorreoSendgrid correoSendgrid,
-            ObjectMapper objectMapper
+            ObjectMapper objectMapper,
+            java.time.Clock reloj
     ) {
+        this.reloj = reloj;
         this.repositorio = repositorio;
         this.correoSendgrid = correoSendgrid;
         this.objectMapper = objectMapper;
@@ -42,7 +45,7 @@ public class ServicioOutboxCorreoBienvenida {
         salida.setCanal("EMAIL");
         salida.setPayloadJson(serializar(bienvenida));
         salida.setEstado("PENDIENTE");
-        salida.setProgramadaEn(LocalDateTime.now());
+        salida.setProgramadaEn(LocalDateTime.now(reloj));
         salida.setIntentos(0);
         repositorio.save(salida);
         return true;

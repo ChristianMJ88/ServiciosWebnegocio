@@ -1,5 +1,7 @@
 package com.techprotech.agenda.modulos.sitio.aplicacion;
 
+import java.time.Clock;
+import com.techprotech.agenda.compartido.tiempo.ZonaNegocio;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.techprotech.agenda.compartido.media.aplicacion.ServicioMediaEmpresa;
@@ -30,6 +32,8 @@ import java.util.stream.Collectors;
 
 @Service
 public class ServicioPromocionesSitio {
+    private final Clock reloj;
+    private final ZonaNegocio zonasNegocio;
     private final EmpresaSitioPromocionRepositorio promocionRepositorio;
     private final EmpresaSitioPromocionServicioRepositorio promocionServicioRepositorio;
     private final EmpresaSitioPromocionSucursalRepositorio promocionSucursalRepositorio;
@@ -49,8 +53,12 @@ public class ServicioPromocionesSitio {
             SucursalRepositorio sucursalRepositorio,
             AuditoriaConfiguracionEmpresaRepositorio auditoriaRepositorio,
             ObjectMapper objectMapper,
-            ServicioMediaEmpresa servicioMedia
+            ServicioMediaEmpresa servicioMedia,
+            Clock reloj,
+            ZonaNegocio zonasNegocio
     ) {
+        this.reloj = reloj;
+        this.zonasNegocio = zonasNegocio;
         this.promocionRepositorio = promocionRepositorio;
         this.promocionServicioRepositorio = promocionServicioRepositorio;
         this.promocionSucursalRepositorio = promocionSucursalRepositorio;
@@ -93,7 +101,7 @@ public class ServicioPromocionesSitio {
         }
         for (var existente : promocionRepositorio.findByEmpresaIdOrderByOrdenAsc(empresaId)) {
             if (existente.getEliminadaEn() == null && !recibidos.contains(existente.getId())) {
-                existente.setEliminadaEn(java.time.LocalDateTime.now());
+                existente.setEliminadaEn(java.time.LocalDateTime.now(reloj));
                 existente.setActiva(false);
                 promocionRepositorio.save(existente);
             }
@@ -137,6 +145,8 @@ public class ServicioPromocionesSitio {
         Map<Long, SucursalEntidad> sucursales = sucursalRepositorio.findByEmpresaIdOrderByNombreAsc(empresaId).stream()
                 .filter(SucursalEntidad::isActiva)
                 .collect(Collectors.toMap(SucursalEntidad::getId, Function.identity()));
+        var hoyPorSucursal = sucursales.values().stream().collect(Collectors.toMap(SucursalEntidad::getId,
+                sucursal -> LocalDate.now(reloj.withZone(zonasNegocio.de(empresaId, sucursal.getId())))));
         Map<Long, List<Long>> serviciosPorPromocion = agruparServicios(empresaId);
         Map<Long, List<Long>> sucursalesPorPromocion = agruparSucursales(empresaId);
 
@@ -145,7 +155,7 @@ public class ServicioPromocionesSitio {
                 .filter(promocion -> sucursales.values().stream()
                         .filter(sucursal -> sucursalesPorPromocion.getOrDefault(promocion.getId(),List.of()).isEmpty()
                                 || sucursalesPorPromocion.get(promocion.getId()).contains(sucursal.getId()))
-                        .anyMatch(sucursal -> vigente(promocion,LocalDate.now(java.time.ZoneId.of(sucursal.getZonaHoraria())))))
+                        .anyMatch(sucursal -> vigente(promocion,hoyPorSucursal.get(sucursal.getId()))))
                 .map(promocion -> {
                     List<Long> servicioIds = serviciosPorPromocion.getOrDefault(promocion.getId(), List.of()).stream()
                             .filter(servicios::containsKey).toList();
@@ -209,7 +219,7 @@ public class ServicioPromocionesSitio {
     }
 
     private List<PromocionSitioAdminResponse> mapearAdmin(Long empresaId) {
-        LocalDate hoy = LocalDate.now();
+        LocalDate hoy = LocalDate.now(reloj.withZone(zonasNegocio.de(empresaId, (Long) null)));
         Map<Long, List<Long>> servicios = agruparServicios(empresaId);
         Map<Long, List<Long>> sucursales = agruparSucursales(empresaId);
         return promocionRepositorio.findByEmpresaIdOrderByOrdenAsc(empresaId).stream()

@@ -1,5 +1,7 @@
 package com.techprotech.agenda.modulos.productos.aplicacion;
 
+import java.time.Clock;
+import com.techprotech.agenda.compartido.tiempo.ZonaNegocio;
 import com.techprotech.agenda.modulos.parametros.aplicacion.ServicioParametrosSistema;
 import com.techprotech.agenda.modulos.productos.api.dto.*;
 import com.techprotech.agenda.modulos.productos.infraestructura.entidad.*;
@@ -20,6 +22,8 @@ import java.util.stream.Collectors;
 
 @Service
 public class ServicioDescuentosProductos {
+    private final Clock reloj;
+    private final ZonaNegocio zonasNegocio;
     private static final Set<String> ALCANCES = Set.of("GLOBAL", "PRODUCTO", "CATEGORIA");
     private static final Set<String> TIPOS = Set.of("PORCENTAJE", "MONTO", "PRECIO_FIJO");
     private final ReglaDescuentoProductoRepositorio reglas;
@@ -31,7 +35,9 @@ public class ServicioDescuentosProductos {
 
     public ServicioDescuentosProductos(ReglaDescuentoProductoRepositorio reglas, ProductoRepositorio productos,
             CategoriaProductoRepositorio categorias, ZonaPrecioProductoRepositorio zonas,
-            SucursalRepositorio sucursales, ServicioParametrosSistema parametros) {
+            SucursalRepositorio sucursales, ServicioParametrosSistema parametros, Clock reloj, ZonaNegocio zonasNegocio) {
+        this.reloj = reloj;
+        this.zonasNegocio = zonasNegocio;
         this.reglas=reglas; this.productos=productos; this.categorias=categorias; this.zonas=zonas;
         this.sucursales=sucursales; this.parametros=parametros;
     }
@@ -89,7 +95,7 @@ public class ServicioDescuentosProductos {
                 e.getCategoriaId(),c.get(e.getCategoriaId()),e.getZonaPrecioId(),z.get(e.getZonaPrecioId()),e.getSucursalId(),s.get(e.getSucursalId()),
                 e.getTipoDescuento(),e.getValor(),e.getMoneda(),e.getCantidadMinima(),e.getFechaInicio(),e.getFechaFin(),e.getPrioridad(),e.isCombinable(),e.isActiva(),estado(e));
     }
-    private String estado(ReglaDescuentoProductoEntidad e){LocalDate hoy=LocalDate.now();if(!e.isActiva())return "INACTIVA";if(e.getFechaInicio()!=null&&hoy.isBefore(e.getFechaInicio()))return "PROGRAMADA";if(e.getFechaFin()!=null&&hoy.isAfter(e.getFechaFin()))return "EXPIRADA";return "VIGENTE";}
+    private String estado(ReglaDescuentoProductoEntidad e){LocalDate hoy=LocalDate.now(reloj.withZone(zonasNegocio.de(e.getEmpresaId(), e.getSucursalId())));if(!e.isActiva())return "INACTIVA";if(e.getFechaInicio()!=null&&hoy.isBefore(e.getFechaInicio()))return "PROGRAMADA";if(e.getFechaFin()!=null&&hoy.isAfter(e.getFechaFin()))return "EXPIRADA";return "VIGENTE";}
     private String moneda(Long empresaId){return parametros.listar(empresaId).stream().filter(x->"MONEDA_PREDETERMINADA".equals(x.clave())).map(x->x.valor()).findFirst().orElseThrow(()->new IllegalStateException("Falta el parámetro MONEDA_PREDETERMINADA"));}
     private <T> Map<Long,String> mapa(List<T> datos,Function<T,Long> id,Function<T,String> nombre){return datos.stream().collect(Collectors.toMap(id,nombre));}
     private List<CatalogoDescuentosProductoResponse.OpcionDescuento> opciones(Map<Long,String> mapa){return mapa.entrySet().stream().sorted(Map.Entry.comparingByValue()).map(x->new CatalogoDescuentosProductoResponse.OpcionDescuento(x.getKey(),x.getValue())).toList();}

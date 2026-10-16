@@ -28,7 +28,7 @@ class ServicioAutenticacionPlataformaTest {
         when(acceso.roles(3L)).thenReturn(List.of("ADMINISTRADOR_PLATAFORMA"));
         when(acceso.permisos(3L)).thenReturn(List.of("PLATAFORMA_ACCESO", "PLATAFORMA_TENANTS_VER"));
         when(tokens.generarTokenPlataforma(anyString(), eq(3L), anyList(), anyList())).thenReturn("jwt-plataforma");
-        ServicioAutenticacionPlataforma servicio = new ServicioAutenticacionPlataforma(usuarios, acceso, codificador, tokens);
+        ServicioAutenticacionPlataforma servicio = new ServicioAutenticacionPlataforma(usuarios, acceso, codificador, tokens, java.time.Clock.systemUTC());
 
         var respuesta = servicio.iniciar(new IniciarSesionPlataformaRequest(" ADMIN@refluora.com ", "secreto-seguro"));
 
@@ -49,7 +49,7 @@ class ServicioAutenticacionPlataformaTest {
         when(acceso.roles(4L)).thenReturn(List.of("ROL_SIN_ACCESO"));
         when(acceso.permisos(4L)).thenReturn(List.of("PLATAFORMA_TENANTS_VER"));
         ServicioAutenticacionPlataforma servicio = new ServicioAutenticacionPlataforma(
-                usuarios, acceso, codificador, mock(ServicioTokenJwt.class));
+                usuarios, acceso, codificador, mock(ServicioTokenJwt.class), java.time.Clock.systemUTC());
 
         assertThatThrownBy(() -> servicio.iniciar(
                 new IniciarSesionPlataformaRequest("operador@refluora.com", "secreto-seguro")))

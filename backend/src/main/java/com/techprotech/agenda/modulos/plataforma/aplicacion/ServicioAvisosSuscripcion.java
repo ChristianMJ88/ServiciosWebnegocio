@@ -13,12 +13,14 @@ import java.util.Locale;
 
 @Service
 public class ServicioAvisosSuscripcion {
+    private final java.time.Clock reloj;
     private final BandejaSalidaNotificacionRepositorio outbox;
     private final EmpresaRepositorio empresas;
     private final PlanPlataformaRepositorio planes;
     private final ObjectMapper mapper;
     public ServicioAvisosSuscripcion(BandejaSalidaNotificacionRepositorio outbox,EmpresaRepositorio empresas,
-            PlanPlataformaRepositorio planes,ObjectMapper mapper) {
+            PlanPlataformaRepositorio planes,ObjectMapper mapper, java.time.Clock reloj) {
+        this.reloj = reloj;
         this.outbox=outbox;this.empresas=empresas;this.planes=planes;this.mapper=mapper;
     }
     public void programar(SuscripcionPlataformaEntidad s,String tipo,String referencia,BigDecimal pagado) {
@@ -55,7 +57,7 @@ public class ServicioAvisosSuscripcion {
             var salida=new BandejaSalidaNotificacionEntidad();salida.setEmpresaId(s.getEmpresaId());salida.setTipoAgregado("SUSCRIPCION");
             salida.setAgregadoId(s.getId());salida.setTipoEvento("SUSCRIPCION_"+tipo+"_EMAIL");salida.setCanal("EMAIL");
             salida.setClaveDeduplicacion(clave);salida.setPayloadJson(mapper.writeValueAsString(payload));
-            salida.setEstado("PENDIENTE");salida.setProgramadaEn(LocalDateTime.now());salida.setIntentos(0);outbox.save(salida);
+            salida.setEstado("PENDIENTE");salida.setProgramadaEn(LocalDateTime.now(reloj));salida.setIntentos(0);outbox.save(salida);
         }catch(com.fasterxml.jackson.core.JsonProcessingException ex){throw new IllegalStateException("No se pudo preparar el aviso de suscripción",ex);}
     }
 }

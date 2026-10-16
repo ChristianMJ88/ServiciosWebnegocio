@@ -28,7 +28,7 @@ class ServicioStripeWebhookTest {
     @BeforeEach void preparar() {
         servicio=new ServicioStripePlataforma(new PropiedadesStripePlataforma(true,"PRUEBA","sk_test_fixture","whsec_fixture",null,null,null,null),
                 planes,suscripciones,mock(StripeClientePlataformaRepositorio.class),eventos,mock(EmpresaRepositorio.class),
-                mock(UsuarioRepositorio.class),mock(ServicioAuditoriaPlataforma.class),new ObjectMapper(),new ServicioPlanSuscripcionStripe(planes),avisos);
+                mock(UsuarioRepositorio.class),mock(ServicioAuditoriaPlataforma.class),new ObjectMapper(),new ServicioPlanSuscripcionStripe(planes),avisos, java.time.Clock.systemUTC());
         local=new SuscripcionPlataformaEntidad();local.setPlanId(4L);local.setEstado("ACTIVA");
         when(suscripciones.findByStripeSuscripcionId("sub_fixture")).thenReturn(Optional.of(local));
         when(eventos.save(any())).thenAnswer(i->i.getArgument(0));

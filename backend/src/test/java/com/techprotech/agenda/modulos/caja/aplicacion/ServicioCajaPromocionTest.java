@@ -26,7 +26,7 @@ class ServicioCajaPromocionTest {
         var sucursales=mock(SucursalRepositorio.class);
         var servicio=new ServicioCaja(mock(CajaSesionRepositorio.class),mock(PagoCitaRepositorio.class),
                 mock(PagoVentaRepositorio.class),mock(VentaDetalleRepositorio.class),mock(MovimientoCajaRepositorio.class),
-                citas,mock(ClienteRepositorio.class),mock(ServicioRepositorio.class),sucursales,new ObjectMapper());
+                citas,mock(ClienteRepositorio.class),mock(ServicioRepositorio.class),sucursales,new ObjectMapper(), java.time.Clock.systemUTC());
         var sucursal=new SucursalEntidad(); sucursal.setId(3L); sucursal.setNombre("Sucursal de prueba"); sucursal.setZonaHoraria("America/Mexico_City");
         when(sucursales.findAllById(any())).thenReturn(List.of(sucursal));
         var cita=new CitaEntidad(); cita.setId(10L); cita.setClienteId(20L); cita.setServicioId(30L);

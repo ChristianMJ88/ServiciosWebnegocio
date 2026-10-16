@@ -21,7 +21,6 @@ import java.security.MessageDigest;
 import java.security.SecureRandom;
 import java.time.Instant;
 import java.time.LocalDateTime;
-import java.time.ZoneOffset;
 import java.util.Base64;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -29,6 +28,7 @@ import java.util.UUID;
 
 @Service
 public class ServicioOAuthMercadoPago {
+    private final java.time.Clock reloj;
     private static final String CODIGO_PROVEEDOR = "MERCADO_PAGO";
     private static final String AMBIENTE_PRODUCCION = "PRODUCCION";
     private static final String AMBIENTE_PRUEBA = "PRUEBA";
@@ -50,8 +50,10 @@ public class ServicioOAuthMercadoPago {
             ProveedorPagoRepositorio proveedores,
             EmpresaProveedorPagoRepositorio conexiones,
             RestClient.Builder restClientBuilder,
-            ObjectMapper objectMapper
+            ObjectMapper objectMapper,
+            java.time.Clock reloj
     ) {
+        this.reloj = reloj;
         this.propiedades = propiedades;
         this.protector = protector;
         this.proveedores = proveedores;
@@ -64,7 +66,7 @@ public class ServicioOAuthMercadoPago {
         validarConfiguracionOAuth();
         String verifier = generarVerifier();
         String state = protector.encriptar(empresaId + "|" + usuarioId + "|"
-                + Instant.now().plusSeconds(600).getEpochSecond() + "|" + verifier + "|" + UUID.randomUUID());
+                + Instant.now(reloj).plusSeconds(600).getEpochSecond() + "|" + verifier + "|" + UUID.randomUUID());
         String url = UriComponentsBuilder.fromHttpUrl(AUTORIZACION)
                 .queryParam("response_type", "code")
                 .queryParam("client_id", propiedades.clientId())
@@ -94,7 +96,7 @@ public class ServicioOAuthMercadoPago {
             EmpresaProveedorPagoEntidad conexion = conexiones
                     .findByEmpresaIdAndProveedorPagoIdAndAmbiente(estado.empresaId(), proveedor.getId(), AMBIENTE_PRODUCCION)
                     .orElseGet(EmpresaProveedorPagoEntidad::new);
-            LocalDateTime ahora = LocalDateTime.now(ZoneOffset.UTC);
+            LocalDateTime ahora = LocalDateTime.now(reloj);
             conexion.setEmpresaId(estado.empresaId());
             conexion.setProveedorPagoId(proveedor.getId());
             conexion.setEstado("CONECTADO");
@@ -132,7 +134,7 @@ public class ServicioOAuthMercadoPago {
         EmpresaProveedorPagoEntidad conexion = conexiones
                 .findByEmpresaIdAndProveedorPagoIdAndAmbiente(empresaId, proveedor.getId(), AMBIENTE_PRUEBA)
                 .orElseGet(EmpresaProveedorPagoEntidad::new);
-        LocalDateTime ahora = LocalDateTime.now(ZoneOffset.UTC);
+        LocalDateTime ahora = LocalDateTime.now(reloj);
         conexion.setEmpresaId(empresaId);
         conexion.setProveedorPagoId(proveedor.getId());
         conexion.setEstado("CONECTADO");
@@ -160,7 +162,7 @@ public class ServicioOAuthMercadoPago {
         conexion.setTokenAccesoCifrado(null);
         conexion.setTokenActualizacionCifrado(null);
         conexion.setTokenExpiraEn(null);
-        conexion.setDesconectadoEn(LocalDateTime.now(ZoneOffset.UTC));
+        conexion.setDesconectadoEn(LocalDateTime.now(reloj));
         return respuesta(conexiones.save(conexion));
     }
 
@@ -177,7 +179,7 @@ public class ServicioOAuthMercadoPago {
             return protector.desencriptar(conexion.getTokenAccesoCifrado());
         }
         validarConfiguracionOAuth();
-        LocalDateTime margenRenovacion = LocalDateTime.now(ZoneOffset.UTC).plusDays(1);
+        LocalDateTime margenRenovacion = LocalDateTime.now(reloj).plusDays(1);
         if (conexion.getTokenExpiraEn() != null && conexion.getTokenExpiraEn().isAfter(margenRenovacion)) {
             return protector.desencriptar(conexion.getTokenAccesoCifrado());
         }
@@ -190,7 +192,7 @@ public class ServicioOAuthMercadoPago {
         JsonNode token = solicitarToken(body);
         String accessToken = requerido(token, "access_token");
         String refreshToken = requerido(token, "refresh_token");
-        LocalDateTime ahora = LocalDateTime.now(ZoneOffset.UTC);
+        LocalDateTime ahora = LocalDateTime.now(reloj);
         conexion.setTokenAccesoCifrado(protector.encriptar(accessToken));
         conexion.setTokenActualizacionCifrado(protector.encriptar(refreshToken));
         conexion.setTokenExpiraEn(ahora.plusSeconds(token.path("expires_in").asLong(15_552_000L)));
@@ -234,7 +236,7 @@ public class ServicioOAuthMercadoPago {
 
     private EstadoOAuth validarState(String state) {
         String[] partes = protector.desencriptar(state).split("\\|", 5);
-        if (partes.length != 5 || Long.parseLong(partes[2]) < Instant.now().getEpochSecond()) {
+        if (partes.length != 5 || Long.parseLong(partes[2]) < Instant.now(reloj).getEpochSecond()) {
             throw new IllegalArgumentException("El estado OAuth es inválido o expiró");
         }
         return new EstadoOAuth(Long.parseLong(partes[0]), Long.parseLong(partes[1]), partes[3]);

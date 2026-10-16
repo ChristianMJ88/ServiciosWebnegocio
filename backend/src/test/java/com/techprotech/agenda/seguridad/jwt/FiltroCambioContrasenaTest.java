@@ -30,7 +30,7 @@ class FiltroCambioContrasenaTest {
         when(usuarios.findByIdAndEmpresaId(20L,10L)).thenReturn(estado.equals("ausente") ? Optional.empty() : Optional.of(usuario));
         var request = new MockHttpServletRequest(); request.addHeader("Authorization", "Bearer token");
         var response = new MockHttpServletResponse();
-        new FiltroAutenticacionJwt(tokens, usuarios).doFilter(request, response, cadena);
+        new FiltroAutenticacionJwt(tokens, usuarios, java.time.Clock.systemUTC()).doFilter(request, response, cadena);
         assertEquals(401, response.getStatus()); verifyNoInteractions(cadena);
         var respuesta = new com.fasterxml.jackson.databind.ObjectMapper().readTree(response.getContentAsString());
         assertEquals("SESION_NO_DISPONIBLE", respuesta.get("codigo").asText());
@@ -52,7 +52,7 @@ class FiltroCambioContrasenaTest {
         var request = new MockHttpServletRequest();
         request.addHeader("Authorization", "Bearer token-anterior");
         var response = new MockHttpServletResponse();
-        new FiltroAutenticacionJwt(tokens, usuarios).doFilter(request, response, cadena);
+        new FiltroAutenticacionJwt(tokens, usuarios, java.time.Clock.systemUTC()).doFilter(request, response, cadena);
         assertEquals(401, response.getStatus());
         verifyNoInteractions(cadena);
     }

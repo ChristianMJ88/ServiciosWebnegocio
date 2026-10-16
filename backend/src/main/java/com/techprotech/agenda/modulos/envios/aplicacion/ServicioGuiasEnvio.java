@@ -19,13 +19,13 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.time.ZoneOffset;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Service
 public class ServicioGuiasEnvio {
+    private final java.time.Clock reloj;
     private final EnvioPedidoRepositorio envios;
     private final CheckoutOrdenRepositorio ordenes;
     private final CheckoutOrdenDetalleRepositorio detalles;
@@ -44,7 +44,8 @@ public class ServicioGuiasEnvio {
                               SucursalEnvioOrigenRepositorio origenes, ProductoRepositorio productos,
                               ResolutorCredencialEnvio credenciales, ServicioTrazabilidadEnvio trazabilidad,
                               ServicioOutboxCorreoEnvios notificaciones,
-                              List<ProveedorGuiasEnvio> proveedores, PlatformTransactionManager tx) {
+                              List<ProveedorGuiasEnvio> proveedores, PlatformTransactionManager tx, java.time.Clock reloj) {
+        this.reloj = reloj;
         this.envios = envios; this.ordenes = ordenes; this.detalles = detalles;
         this.configuraciones = configuraciones; this.origenes = origenes; this.productos = productos;
         this.credenciales = credenciales; this.trazabilidad = trazabilidad;
@@ -102,7 +103,7 @@ public class ServicioGuiasEnvio {
                 EnvioPedidoEntidad actual = envio(envio.getEmpresaId(), envio.getId());
                 actual.setEstado(estado);
                 actual.setEstadoRastreo(rastreo.estado());
-                actual.setRastreoActualizadoEn(LocalDateTime.now(ZoneOffset.UTC));
+                actual.setRastreoActualizadoEn(LocalDateTime.now(reloj));
                 actual.setUltimoError(null);
                 envios.save(actual);
                 trazabilidad.registrar(actual, "RASTREO", rastreo.descripcion(), rastreo.referenciaExterna());
@@ -114,7 +115,7 @@ public class ServicioGuiasEnvio {
             transaccion.executeWithoutResult(status -> {
                 EnvioPedidoEntidad actual = envio(envio.getEmpresaId(), envio.getId());
                 actual.setUltimoError(mensaje(ex));
-                actual.setRastreoActualizadoEn(LocalDateTime.now(ZoneOffset.UTC));
+                actual.setRastreoActualizadoEn(LocalDateTime.now(reloj));
                 envios.save(actual);
             });
         }
@@ -138,7 +139,7 @@ public class ServicioGuiasEnvio {
         String estado = normalizarEstado(estadoProveedor, estadoAnterior);
         envio.setEstado(estado);
         envio.setEstadoRastreo(estadoProveedor);
-        envio.setRastreoActualizadoEn(LocalDateTime.now(ZoneOffset.UTC));
+        envio.setRastreoActualizadoEn(LocalDateTime.now(reloj));
         envio.setUltimoError(null);
         envios.save(envio);
         String detalle = descripcion == null || descripcion.isBlank()
@@ -201,8 +202,8 @@ public class ServicioGuiasEnvio {
         envio.setEstadoRastreo(guia.estadoProveedor());
         envio.setMotivoBloqueo(null);
         envio.setUltimoError(null);
-        envio.setGuiaGeneradaEn(LocalDateTime.now(ZoneOffset.UTC));
-        envio.setRastreoActualizadoEn(LocalDateTime.now(ZoneOffset.UTC));
+        envio.setGuiaGeneradaEn(LocalDateTime.now(reloj));
+        envio.setRastreoActualizadoEn(LocalDateTime.now(reloj));
         envios.save(envio);
         trazabilidad.registrar(envio, "GUIA_GENERADA", "La guía fue generada correctamente",
                 "guia:" + guia.numeroGuia());

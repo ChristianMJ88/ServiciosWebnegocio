@@ -19,7 +19,7 @@ class ServicioComisionPlataformaTest {
     void devuelveCeroCuandoNoExisteUnaReglaActiva() {
         ReglaComisionPlataformaRepositorio reglas = mock(ReglaComisionPlataformaRepositorio.class);
         when(reglas.resolver(eq(2L), eq(7L), eq("MXN"), any())).thenReturn(List.of());
-        ServicioComisionPlataforma servicio = new ServicioComisionPlataforma(reglas, mock(ProveedorPagoRepositorio.class));
+        ServicioComisionPlataforma servicio = new ServicioComisionPlataforma(reglas, mock(ProveedorPagoRepositorio.class), java.time.Clock.systemUTC());
 
         assertThat(servicio.calcular(7L, 2L, new BigDecimal("500.00"), "MXN")).isEqualByComparingTo("0.00");
     }
@@ -31,7 +31,7 @@ class ServicioComisionPlataformaTest {
         regla.setTipo(TipoComisionPlataforma.PORCENTAJE); regla.setValor(new BigDecimal("5.0000"));
         regla.setImporteMaximo(new BigDecimal("20.00")); regla.setActiva(true);
         when(reglas.resolver(eq(2L), eq(7L), eq("MXN"), any())).thenReturn(List.of(regla));
-        ServicioComisionPlataforma servicio = new ServicioComisionPlataforma(reglas, mock(ProveedorPagoRepositorio.class));
+        ServicioComisionPlataforma servicio = new ServicioComisionPlataforma(reglas, mock(ProveedorPagoRepositorio.class), java.time.Clock.systemUTC());
 
         assertThat(servicio.calcular(7L, 2L, new BigDecimal("500.00"), "MXN")).isEqualByComparingTo("20.00");
     }
@@ -42,7 +42,7 @@ class ServicioComisionPlataformaTest {
         ReglaComisionPlataformaEntidad regla = new ReglaComisionPlataformaEntidad();
         regla.setTipo(TipoComisionPlataforma.MONTO_FIJO); regla.setValor(new BigDecimal("7.50")); regla.setActiva(true);
         when(reglas.resolver(eq(2L), eq(7L), eq("MXN"), any())).thenReturn(List.of(regla));
-        ServicioComisionPlataforma servicio = new ServicioComisionPlataforma(reglas, mock(ProveedorPagoRepositorio.class));
+        ServicioComisionPlataforma servicio = new ServicioComisionPlataforma(reglas, mock(ProveedorPagoRepositorio.class), java.time.Clock.systemUTC());
 
         assertThat(servicio.calcular(7L, 2L, new BigDecimal("500.00"), "MXN")).isEqualByComparingTo("7.50");
     }
@@ -50,7 +50,7 @@ class ServicioComisionPlataformaTest {
     @Test
     void laSimulacionUsaElMismoCalculoQueLosCobros() {
         ServicioComisionPlataforma servicio = new ServicioComisionPlataforma(
-                mock(ReglaComisionPlataformaRepositorio.class), mock(ProveedorPagoRepositorio.class));
+                mock(ReglaComisionPlataformaRepositorio.class), mock(ProveedorPagoRepositorio.class), java.time.Clock.systemUTC());
 
         assertThat(servicio.calcularConfiguracion(TipoComisionPlataforma.PORCENTAJE,
                 new BigDecimal("3.5000"), new BigDecimal("5.00"), new BigDecimal("50.00"),

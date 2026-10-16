@@ -30,12 +30,12 @@ class ServicioUtilidadRealizadaTest {
         var desde=LocalDate.of(2026,10,1);var hasta=LocalDate.of(2026,10,11);
         when(repo.consultar(77L,desde.atStartOfDay(),hasta.plusDays(1).atStartOfDay(),3L,"crema",PageRequest.of(0,25)))
             .thenReturn(new PageImpl<>(List.of()));
-        new ServicioUtilidadRealizada(repo).consultar(77L,desde,hasta,3L," Crema ",0);
+        new ServicioUtilidadRealizada(repo, com.techprotech.agenda.compartido.tiempo.TiempoPruebas.zonaUtc()).consultar(77L,desde,hasta,3L," Crema ",0);
         verify(repo).consultar(77L,desde.atStartOfDay(),hasta.plusDays(1).atStartOfDay(),3L,"crema",PageRequest.of(0,25));
     }
     @Test void rechazaPeriodoInvertidoAntesDeLeerVentas(){
         var repo=mock(RentabilidadVentasRepositorio.class);
-        assertThrows(org.springframework.web.server.ResponseStatusException.class,()->new ServicioUtilidadRealizada(repo)
+        assertThrows(org.springframework.web.server.ResponseStatusException.class,()->new ServicioUtilidadRealizada(repo, com.techprotech.agenda.compartido.tiempo.TiempoPruebas.zonaUtc())
             .consultar(77L,LocalDate.of(2026,10,11),LocalDate.of(2026,10,1),null,"",0));
         verifyNoInteractions(repo);
     }

@@ -25,6 +25,8 @@ import static org.springframework.http.HttpStatus.NOT_FOUND;
 
 @Service
 public class ServicioClientesJpa implements ServicioClientes {
+    private final java.time.Clock reloj;
+    private final com.techprotech.agenda.compartido.tiempo.ZonaNegocio zonasNegocio;
     private final ClienteRepositorio clientes;
     private final UsuarioRepositorio usuarios;
     private final CitaRepositorio citas;
@@ -32,7 +34,8 @@ public class ServicioClientesJpa implements ServicioClientes {
     private final PasswordEncoder passwordEncoder;
 
     public ServicioClientesJpa(ClienteRepositorio clientes, UsuarioRepositorio usuarios, CitaRepositorio citas,
-                               ServicioRolesEmpresa roles, PasswordEncoder passwordEncoder) {
+                               ServicioRolesEmpresa roles, PasswordEncoder passwordEncoder, java.time.Clock reloj, com.techprotech.agenda.compartido.tiempo.ZonaNegocio zonasNegocio) {
+        this.reloj = reloj; this.zonasNegocio = zonasNegocio;
         this.clientes = clientes;
         this.usuarios = usuarios;
         this.citas = citas;
@@ -44,7 +47,7 @@ public class ServicioClientesJpa implements ServicioClientes {
     @Transactional(readOnly = true)
     public Page<Cliente> listar(Long empresaId, FiltroClientes filtro, Pageable pageable) {
         return clientes.buscarResumenes(empresaId, filtro.busqueda(), filtro.nombre(), filtro.telefono(),
-                filtro.visitaDesde(), filtro.visitaHasta(), filtro.citas().name(), filtro.orden().name(), java.time.LocalDateTime.now(), pageable)
+                filtro.visitaDesde(), filtro.visitaHasta(), filtro.citas().name(), filtro.orden().name(), java.time.LocalDateTime.now(reloj.withZone(zonasNegocio.de(empresaId, (Long) null))), pageable)
                 .map(cliente -> new Cliente(
                         cliente.getId(), cliente.getNombreCompleto(), cliente.getCorreo(), cliente.getTelefono(),
                         cliente.getAceptaWhatsapp(), cliente.getNotas(), cliente.getTotalCitas(), cliente.getUltimaCita(), cliente.getUltimaVisita(), cliente.getCitasAgendadas()

@@ -15,12 +15,12 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
-import java.time.ZoneId;
 
 import static org.springframework.http.HttpStatus.NOT_FOUND;
 
 @Service
 public class ServicioContactos {
+    private final java.time.Clock reloj;
 
     private final SolicitudContactoRepositorio solicitudContactoRepositorio;
     private final EmpresaRepositorio empresaRepositorio;
@@ -31,8 +31,10 @@ public class ServicioContactos {
             SolicitudContactoRepositorio solicitudContactoRepositorio,
             EmpresaRepositorio empresaRepositorio,
             ServicioCorreoContactos servicioCorreoContactos,
-            ServicioOutboxCorreoContactos servicioOutboxCorreoContactos
+            ServicioOutboxCorreoContactos servicioOutboxCorreoContactos,
+            java.time.Clock reloj
     ) {
+        this.reloj = reloj;
         this.solicitudContactoRepositorio = solicitudContactoRepositorio;
         this.empresaRepositorio = empresaRepositorio;
         this.servicioCorreoContactos = servicioCorreoContactos;
@@ -45,10 +47,10 @@ public class ServicioContactos {
         Long empresaId = request.empresaId();
         EmpresaEntidad empresa = empresaRepositorio.findById(empresaId)
                 .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "La empresa no existe"));
-        ZoneId zonaEmpresa = ZoneId.of(empresa.getZonaHoraria());
 
         SolicitudContactoEntidad solicitud = new SolicitudContactoEntidad();
         solicitud.setEmpresaId(empresaId);
+        solicitud.setCreadaEn(LocalDateTime.now(reloj));
         solicitud.setNombreCompleto(request.nombreCompleto().trim());
         solicitud.setTelefono(normalizarOpcional(request.telefono()));
         solicitud.setCorreo(request.correo().trim().toLowerCase());
@@ -58,9 +60,8 @@ public class ServicioContactos {
         solicitud.setEstado("NUEVO");
         solicitud.setNotificacionCorreoProgramada(false);
         solicitud = solicitudContactoRepositorio.save(solicitud);
-        OffsetDateTime creadaEn = resolverFechaCreacion(solicitud, zonaEmpresa)
-                .atZone(zonaEmpresa)
-                .toOffsetDateTime();
+        OffsetDateTime creadaEn = resolverFechaCreacion(solicitud)
+                .atOffset(java.time.ZoneOffset.UTC);
 
         boolean correoNotificacionProgramado = servicioOutboxCorreoContactos.programarNotificacion(
                 empresaId,
@@ -90,11 +91,11 @@ public class ServicioContactos {
         );
     }
 
-    private LocalDateTime resolverFechaCreacion(SolicitudContactoEntidad solicitud, ZoneId zonaEmpresa) {
+    private LocalDateTime resolverFechaCreacion(SolicitudContactoEntidad solicitud) {
         if (solicitud.getCreadaEn() != null) {
             return solicitud.getCreadaEn();
         }
-        return LocalDateTime.now(zonaEmpresa);
+        return LocalDateTime.now(reloj);
     }
 
     private String resolverMensajeRespuesta(Long empresaId, boolean correoNotificacionProgramado) {

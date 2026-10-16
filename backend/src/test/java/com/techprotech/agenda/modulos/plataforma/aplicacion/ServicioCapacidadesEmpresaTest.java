@@ -34,7 +34,7 @@ class ServicioCapacidadesEmpresaTest {
 
     @BeforeEach
     void preparar() {
-        servicio=new ServicioCapacidadesEmpresa(suscripciones,planes,planModulos,planLimites,seccionesAdmin);
+        servicio=new ServicioCapacidadesEmpresa(suscripciones,planes,planModulos,planLimites,seccionesAdmin, java.time.Clock.systemUTC());
         suscripcion=new SuscripcionPlataformaEntidad();suscripcion.setId(8L);suscripcion.setEmpresaId(3L);
         suscripcion.setPlanId(4L);suscripcion.setEstado("PRUEBA");
         suscripcion.setPruebaHasta(LocalDateTime.now(ZoneOffset.UTC).plusDays(5));

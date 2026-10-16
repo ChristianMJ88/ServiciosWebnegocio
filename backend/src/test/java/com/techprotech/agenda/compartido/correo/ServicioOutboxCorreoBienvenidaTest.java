@@ -31,7 +31,7 @@ class ServicioOutboxCorreoBienvenidaTest {
                 RestClient.builder(),
                 new PropiedadesCorreoPlataforma(true, "SG.test", "no-reply@refluora.com", "Fluora", "contacto@refluora.com"));
         ServicioOutboxCorreoBienvenida servicio = new ServicioOutboxCorreoBienvenida(
-                repositorio, sendgrid, new ObjectMapper().findAndRegisterModules());
+                repositorio, sendgrid, new ObjectMapper().findAndRegisterModules(), java.time.Clock.systemUTC());
 
         assertTrue(servicio.programar(new BienvenidaEmpresaCorreo(
                 7L, "Estudio Aurora", "Ana Pérez", "ana@example.com", "estudio-aurora")));

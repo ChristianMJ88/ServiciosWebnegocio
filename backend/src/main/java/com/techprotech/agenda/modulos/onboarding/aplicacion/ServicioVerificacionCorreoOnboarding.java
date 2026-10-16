@@ -28,6 +28,7 @@ import static org.springframework.http.HttpStatus.TOO_MANY_REQUESTS;
 
 @Service
 public class ServicioVerificacionCorreoOnboarding {
+    private final java.time.Clock reloj;
     private static final Logger LOGGER = LoggerFactory.getLogger(ServicioVerificacionCorreoOnboarding.class);
     private final VerificacionCorreoOnboardingRepositorio repositorio;
     private final UsuarioRepositorio usuarioRepositorio;
@@ -44,7 +45,8 @@ public class ServicioVerificacionCorreoOnboarding {
             ClienteCorreoSuscripciones correo, ServicioIdentidadCorreoPlataforma identidades,
             ServicioOutboxCorreoBienvenida bienvenida, ServicioProteccionAcceso proteccionAcceso,
             @Value("${aplicacion.onboarding.verificacion-correo.url}") String url,
-            @Value("${aplicacion.onboarding.verificacion-correo.minutos-vigencia:30}") int minutos) {
+            @Value("${aplicacion.onboarding.verificacion-correo.minutos-vigencia:30}") int minutos, java.time.Clock reloj) {
+        this.reloj = reloj;
         this.repositorio=repo(repositorio); this.usuarioRepositorio=usuarioRepositorio; this.empresaRepositorio=empresaRepositorio; this.correo=correo; this.identidades=identidades;
         this.bienvenida=bienvenida; this.proteccionAcceso=proteccionAcceso; this.url=url; this.minutos=minutos;
     }
@@ -61,7 +63,7 @@ public class ServicioVerificacionCorreoOnboarding {
         String token=Base64.getUrlEncoder().withoutPadding().encodeToString(bytes);
         VerificacionCorreoOnboardingEntidad v=new VerificacionCorreoOnboardingEntidad();
         v.setEmpresaId(empresa.getId()); v.setUsuarioId(usuario.getId()); v.setCorreo(usuario.getCorreo()); v.setTokenHash(hash(token));
-        v.setEstado("PENDIENTE"); v.setCreadoEn(LocalDateTime.now()); v.setExpiraEn(LocalDateTime.now().plusMinutes(minutos)); repositorio.save(v);
+        v.setEstado("PENDIENTE"); v.setCreadoEn(LocalDateTime.now(reloj)); v.setExpiraEn(LocalDateTime.now(reloj).plusMinutes(minutos)); repositorio.save(v);
         String enlace=url+"?token="+token;
         String texto="Hola "+nombre+",\n\nConfirma tu correo para activar tu cuenta en "+empresa.getNombre()+": "+enlace+"\n\nEl enlace vence en "+minutos+" minutos.";
         try {
@@ -80,12 +82,12 @@ public class ServicioVerificacionCorreoOnboarding {
     @Transactional
     public ConfirmarCorreoOnboardingResponse confirmar(String token) {
         VerificacionCorreoOnboardingEntidad v=repositorio.buscarParaConfirmar(hash(token)).orElseThrow(()->new ResponseStatusException(NOT_FOUND,"Enlace de verificación no válido"));
-        if(!"PENDIENTE".equals(v.getEstado()) || v.getExpiraEn().isBefore(LocalDateTime.now())) throw new ResponseStatusException(NOT_FOUND,"Enlace de verificación expirado");
+        if(!"PENDIENTE".equals(v.getEstado()) || v.getExpiraEn().isBefore(LocalDateTime.now(reloj))) throw new ResponseStatusException(NOT_FOUND,"Enlace de verificación expirado");
         UsuarioEntidad u=usuarioRepositorio.findById(v.getUsuarioId()).orElseThrow(()->new ResponseStatusException(NOT_FOUND,"Cuenta no encontrada"));
         u.setHabilitado(true); u.setBloqueado(false); proteccionAcceso.limpiar(u);
-        u.setCorreoVerificadoEn(LocalDateTime.now());
+        u.setCorreoVerificadoEn(LocalDateTime.now(reloj));
         usuarioRepositorio.save(u);
-        v.setEstado("CONFIRMADA"); v.setConfirmadoEn(LocalDateTime.now()); repositorio.save(v);
+        v.setEstado("CONFIRMADA"); v.setConfirmadoEn(LocalDateTime.now(reloj)); repositorio.save(v);
         EmpresaEntidad empresa=empresaRepositorio.findById(v.getEmpresaId()).orElseThrow(()->new ResponseStatusException(NOT_FOUND,"Negocio no encontrado"));
         bienvenida.programar(new BienvenidaEmpresaCorreo(empresa.getId(),empresa.getNombre(),u.getCorreo(),u.getCorreo(),empresa.getSlug()));
         return new ConfirmarCorreoOnboardingResponse("Correo confirmado. Ya puedes iniciar sesión.","/acceso");
@@ -97,7 +99,7 @@ public class ServicioVerificacionCorreoOnboarding {
                 .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "Cuenta no encontrada"));
         if (usuario.getCorreoVerificadoEn() != null) return;
         repositorio.findFirstByEmpresaIdAndUsuarioIdOrderByCreadoEnDesc(empresaId, usuarioId).ifPresent(ultimo -> {
-            if (ultimo.getCreadoEn().isAfter(LocalDateTime.now().minusSeconds(60))) {
+            if (ultimo.getCreadoEn().isAfter(LocalDateTime.now(reloj).minusSeconds(60))) {
                 throw new ResponseStatusException(TOO_MANY_REQUESTS, "Espera un minuto antes de solicitar otro enlace");
             }
         });

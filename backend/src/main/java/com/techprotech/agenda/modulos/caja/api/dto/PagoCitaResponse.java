@@ -1,7 +1,7 @@
 package com.techprotech.agenda.modulos.caja.api.dto;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 
 public record PagoCitaResponse(
         Long id,
@@ -11,6 +11,6 @@ public record PagoCitaResponse(
         String metodoPago,
         String referencia,
         String observaciones,
-        LocalDateTime registradoEn
+        OffsetDateTime registradoEn
 ) {
 }

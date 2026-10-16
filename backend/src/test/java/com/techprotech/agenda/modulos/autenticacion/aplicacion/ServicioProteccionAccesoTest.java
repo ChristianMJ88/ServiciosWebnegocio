@@ -7,7 +7,7 @@ import static org.junit.jupiter.api.Assertions.*;
 class ServicioProteccionAccesoTest {
     @Test
     void limpiaBloqueoTrasAccesoValido() {
-        ServicioProteccionAcceso servicio = new ServicioProteccionAcceso(null, 5, 15);
+        ServicioProteccionAcceso servicio = new ServicioProteccionAcceso(null, 5, 15, java.time.Clock.systemUTC());
         UsuarioEntidad usuario = new UsuarioEntidad();
         usuario.setIntentosLoginFallidos(3);
         usuario.setLoginBloqueadoHasta(java.time.LocalDateTime.now().plusMinutes(10));

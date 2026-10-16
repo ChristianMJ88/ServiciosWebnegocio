@@ -11,7 +11,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 class MapeadorRespuestaMercadoPagoTest {
     private final ObjectMapper objectMapper = new ObjectMapper();
-    private final MapeadorRespuestaMercadoPago mapeador = new MapeadorRespuestaMercadoPago();
+    private final MapeadorRespuestaMercadoPago mapeador = new MapeadorRespuestaMercadoPago(java.time.Clock.systemUTC());
 
     @Test
     void exponeLaAccionDeTresDSCuandoMercadoPagoLaRequiere() throws Exception {

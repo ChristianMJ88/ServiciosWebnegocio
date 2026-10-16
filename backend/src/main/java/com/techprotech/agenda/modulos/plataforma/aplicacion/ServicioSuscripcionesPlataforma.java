@@ -12,13 +12,13 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.time.ZoneOffset;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Service
 public class ServicioSuscripcionesPlataforma {
+    private final java.time.Clock reloj;
     private static final List<String> ESTADOS_VIGENTES=List.of("ACTIVA","PRUEBA");
     private final ModuloPlataformaRepositorio modulos;
     private final PlanPlataformaRepositorio planes;
@@ -36,7 +36,8 @@ public class ServicioSuscripcionesPlataforma {
             PlanModuloPlataformaRepositorio planModulos, LimitePlataformaRepositorio limites,
             PlanLimitePlataformaRepositorio planLimites, SuscripcionPlataformaRepositorio suscripciones,
             EmpresaRepositorio empresas, ServicioAuditoriaPlataforma auditoria,
-            SeccionAdminPlataformaRepositorio seccionesAdmin,ModuloSeccionAdminPlataformaRepositorio moduloSecciones,ServicioAvisosSuscripcion avisos) {
+            SeccionAdminPlataformaRepositorio seccionesAdmin,ModuloSeccionAdminPlataformaRepositorio moduloSecciones,ServicioAvisosSuscripcion avisos, java.time.Clock reloj) {
+        this.reloj = reloj;
         this.modulos=modulos; this.planes=planes; this.planModulos=planModulos; this.limites=limites; this.planLimites=planLimites;
         this.suscripciones=suscripciones; this.empresas=empresas; this.auditoria=auditoria;
         this.seccionesAdmin=seccionesAdmin;this.moduloSecciones=moduloSecciones;
@@ -96,7 +97,7 @@ public class ServicioSuscripcionesPlataforma {
 
     @Transactional(readOnly=true)
     public List<PlanPlataformaResponse> planesPublicos() {
-        LocalDateTime ahora=LocalDateTime.now(ZoneOffset.UTC);
+        LocalDateTime ahora=LocalDateTime.now(reloj);
         Map<Long,ModuloPlataformaEntidad> catalogo=mapaModulos();
         return planes.findAllByOrderByActivoDescNombreAsc().stream()
                 .filter(PlanPlataformaEntidad::isActivo).filter(PlanPlataformaEntidad::isPublico)
@@ -150,7 +151,7 @@ public class ServicioSuscripcionesPlataforma {
         validarFechas(s);
         String correoFacturacion=suscripciones.findFirstByEmpresaIdOrderByCreadaEnDesc(s.empresaId())
                 .map(SuscripcionPlataformaEntidad::getCorreoFacturacion).orElse(null);
-        LocalDateTime ahora=LocalDateTime.now(ZoneOffset.UTC);
+        LocalDateTime ahora=LocalDateTime.now(reloj);
         List<SuscripcionPlataformaEntidad> anteriores=suscripciones.findByEmpresaIdAndEstadoIn(s.empresaId(),ESTADOS_VIGENTES);
         anteriores.forEach(anterior->{anterior.setEstado("REEMPLAZADA"); anterior.setTerminaEn(ahora);});
         suscripciones.saveAll(anteriores);
@@ -179,7 +180,7 @@ public class ServicioSuscripcionesPlataforma {
         PlanPlataformaEntidad plan=planes.findById(planId)
                 .filter(PlanPlataformaEntidad::isPublico).filter(this::estaVigente)
                 .orElseThrow(()->new ResponseStatusException(HttpStatus.BAD_REQUEST,"El plan seleccionado no está disponible"));
-        LocalDateTime ahora=LocalDateTime.now(ZoneOffset.UTC);
+        LocalDateTime ahora=LocalDateTime.now(reloj);
         SuscripcionPlataformaEntidad nueva=new SuscripcionPlataformaEntidad();
         boolean ofrecePrueba=plan.getDiasPrueba()>0;
         nueva.setEmpresaId(empresaId); nueva.setPlanId(plan.getId()); nueva.setEstado(ofrecePrueba?"PRUEBA":"PENDIENTE_PAGO"); nueva.setCiclo("MENSUAL");
@@ -241,7 +242,7 @@ public class ServicioSuscripcionesPlataforma {
     }
     private boolean estaVigente(PlanPlataformaEntidad plan) {
         if(!plan.isActivo()) return false;
-        LocalDateTime ahora=LocalDateTime.now(ZoneOffset.UTC);
+        LocalDateTime ahora=LocalDateTime.now(reloj);
         return (plan.getVigenteDesde()==null||!plan.getVigenteDesde().isAfter(ahora))
                 &&(plan.getVigenteHasta()==null||plan.getVigenteHasta().isAfter(ahora));
     }

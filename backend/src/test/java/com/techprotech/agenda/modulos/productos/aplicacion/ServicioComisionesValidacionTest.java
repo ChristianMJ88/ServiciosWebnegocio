@@ -13,7 +13,7 @@ import static org.assertj.core.api.Assertions.*;
 
 class ServicioComisionesValidacionTest {
     private final ReglaComisionRepositorio reglas=mock(ReglaComisionRepositorio.class);
-    private final ServicioComisiones servicio=new ServicioComisiones(reglas,mock(ServicioRepositorio.class),mock(ProductoRepositorio.class),mock(CategoriaProductoRepositorio.class),mock(PrestadorServicioRepositorio.class),mock(SucursalRepositorio.class),mock(ServicioParametrosSistema.class));
+    private final ServicioComisiones servicio=new ServicioComisiones(reglas,mock(ServicioRepositorio.class),mock(ProductoRepositorio.class),mock(CategoriaProductoRepositorio.class),mock(PrestadorServicioRepositorio.class),mock(SucursalRepositorio.class),mock(ServicioParametrosSistema.class), java.time.Clock.systemUTC(), com.techprotech.agenda.compartido.tiempo.TiempoPruebas.zonaUtc());
     private ReglaComisionRequest solicitud(String concepto,String alcance,Long producto,Long categoria) {
         return new ReglaComisionRequest("Prueba",null,concepto,alcance,null,producto,categoria,"PRESTADOR",null,"PORCENTAJE","NETO_DESCUENTOS",new BigDecimal("5"),null,null,null,0,true);
     }

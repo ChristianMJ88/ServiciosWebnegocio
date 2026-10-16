@@ -14,7 +14,7 @@ class ClienteCorreoDeleganteTest {
     @Test
     void usaSendgridCuandoFallaElProveedorDelTenant() {
         ClienteCorreoSmtp smtp = new ClienteCorreoSmtp(new MailProperties());
-        ClienteCorreoGraph graph = new ClienteCorreoGraph(RestClient.builder()) {
+        ClienteCorreoGraph graph = new ClienteCorreoGraph(RestClient.builder(), java.time.Clock.systemUTC()) {
             @Override
             public void enviar(ConfiguracionCorreoResolvida configuracion, MensajeCorreoSaliente mensaje) {
                 throw new MailSendException("Graph no disponible");
@@ -39,7 +39,7 @@ class ClienteCorreoDeleganteTest {
     @Test
     void usaSendgridDirectamenteParaElFallbackGlobal() {
         ClienteCorreoSmtp smtp = new ClienteCorreoSmtp(new MailProperties());
-        ClienteCorreoGraph graph = new ClienteCorreoGraph(RestClient.builder());
+        ClienteCorreoGraph graph = new ClienteCorreoGraph(RestClient.builder(), java.time.Clock.systemUTC());
         ClienteCorreoSendgridFalso sendgrid = new ClienteCorreoSendgridFalso();
         ClienteCorreoDelegante delegante = new ClienteCorreoDelegante(smtp, graph, sendgrid, null);
         ConfiguracionCorreoResolvida canonica = configuracion(ProveedorCorreo.SENDGRID, "no-reply@refluora.com");

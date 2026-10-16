@@ -33,6 +33,7 @@ public class ProgramadorRecordatoriosWhatsapp {
     private final ServicioOutboxCorreoCitas servicioOutboxCorreoCitas;
     private final EmpresaRepositorio empresaRepositorio;
     private final java.time.Clock reloj;
+    private final com.techprotech.agenda.compartido.tiempo.ZonaNegocio zonasNegocio;
     private final com.techprotech.agenda.modulos.disponibilidad.aplicacion.ServicioConfiguracionReservas reservas;
     private final com.techprotech.agenda.modulos.sucursales.infraestructura.repositorio.SucursalRepositorio sucursales;
 
@@ -48,8 +49,10 @@ public class ProgramadorRecordatoriosWhatsapp {
             EmpresaRepositorio empresaRepositorio,
             com.techprotech.agenda.modulos.disponibilidad.aplicacion.ServicioConfiguracionReservas reservas,
             com.techprotech.agenda.modulos.sucursales.infraestructura.repositorio.SucursalRepositorio sucursales,
-            java.time.Clock reloj
+            java.time.Clock reloj,
+            com.techprotech.agenda.compartido.tiempo.ZonaNegocio zonasNegocio
     ) {
+        this.zonasNegocio = zonasNegocio;
         this.citaRepositorio = citaRepositorio;
         this.clienteRepositorio = clienteRepositorio;
         this.bandejaSalidaNotificacionRepositorio = bandejaSalidaNotificacionRepositorio;
@@ -68,24 +71,26 @@ public class ProgramadorRecordatoriosWhatsapp {
     public void programarPendientes() {
         for (EmpresaEntidad empresa : empresaRepositorio.findAll()) {
             try {
-                programarPendientes(empresa.getId());
+                programarPendientes(empresa);
             } catch (Exception ex) {
                 LOGGER.error("No se pudieron programar recordatorios para la empresa {}", empresa.getId(), ex);
             }
         }
     }
 
-    private void programarPendientes(Long empresaId) {
-        LocalDateTime ahora = LocalDateTime.now();
-        LocalDateTime inicioVentana = ahora.plusHours(propiedadesWhatsapp.recordatorioHorasAntes());
-        LocalDateTime finVentana = inicioVentana.plusMinutes(propiedadesWhatsapp.ventanaRecordatorioMinutos());
-
-        List<CitaEntidad> citas = citaRepositorio.findByEmpresaIdAndInicioBetweenAndEstadoInOrderByInicioAsc(
-                empresaId,
-                inicioVentana,
-                finVentana,
-                List.of("PENDIENTE", "CONFIRMADA")
-        );
+    private void programarPendientes(EmpresaEntidad empresa) {
+        Long empresaId = empresa.getId();
+        // El instante de programación del outbox se unificará con sus consumidores en P2.
+        LocalDateTime ahora = LocalDateTime.now(reloj);
+        List<CitaEntidad> citas = new java.util.ArrayList<>();
+        for (var sucursal : sucursales.findByEmpresaIdOrderByNombreAsc(empresaId)) {
+            var zona = zonasNegocio.de(empresa, sucursal);
+            var inicioVentana = LocalDateTime.now(reloj.withZone(zona))
+                    .plusHours(propiedadesWhatsapp.recordatorioHorasAntes());
+            var finVentana = inicioVentana.plusMinutes(propiedadesWhatsapp.ventanaRecordatorioMinutos());
+            citas.addAll(citaRepositorio.findByEmpresaIdAndSucursalIdAndInicioBetweenAndEstadoInOrderByInicioAsc(
+                    empresaId, sucursal.getId(), inicioVentana, finVentana, List.of("PENDIENTE", "CONFIRMADA")));
+        }
 
         for (CitaEntidad cita : citas) {
             if ("PENDIENTE".equals(cita.getEstado())) {
@@ -153,7 +158,7 @@ public class ProgramadorRecordatoriosWhatsapp {
 var politica = reservas.obtener(empresaId);
 List<CitaEntidad> citas = new java.util.ArrayList<>();
 for (var sucursal : sucursales.findByEmpresaIdOrderByNombreAsc(empresaId)) {
-    var zona = java.time.ZoneId.of(sucursal.getZonaHoraria());
+    var zona = zonasNegocio.de(empresaId, sucursal.getId());
     var ahoraLocal = LocalDateTime.now(reloj.withZone(zona));
     citas.addAll(citaRepositorio.findByEmpresaIdAndSucursalIdAndInicioBetweenAndEstadoInOrderByInicioAsc(
             empresaId, sucursal.getId(), ahoraLocal.minusDays(1),

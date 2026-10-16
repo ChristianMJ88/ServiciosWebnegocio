@@ -30,7 +30,7 @@ class ServicioOutboxCorreoCitasTest {
                         new ProtectorSecretosCorreo(new PropiedadesCorreo(true, "SMTP", "fallback@agenda.local", "Agenda", null, null, null, null, null, null, null, "llave-prueba", 20, 60))
                 ),
                 new ObjectMapper().findAndRegisterModules()
-        );
+        , java.time.Clock.systemUTC());
 
         boolean programado = servicio.programarConfirmacion(1L, crearConfirmacion());
 
@@ -52,7 +52,7 @@ class ServicioOutboxCorreoCitasTest {
                         new ProtectorSecretosCorreo(new PropiedadesCorreo(false, "SMTP", "fallback@agenda.local", "Agenda", null, null, null, null, null, null, null, "llave-prueba", 20, 60))
                 ),
                 new ObjectMapper().findAndRegisterModules()
-        );
+        , java.time.Clock.systemUTC());
 
         boolean programado = servicio.programarConfirmacion(1L, crearConfirmacion());
 
@@ -72,7 +72,7 @@ class ServicioOutboxCorreoCitasTest {
                         new ProtectorSecretosCorreo(new PropiedadesCorreo(true, "SMTP", "fallback@agenda.local", "Agenda", null, null, null, null, null, null, null, "llave-prueba", 20, 60))
                 ),
                 new ObjectMapper().findAndRegisterModules()
-        );
+        , java.time.Clock.systemUTC());
 
         boolean programado = servicio.programarRegistrada(1L, 45L, LocalDateTime.parse("2026-03-25T10:00:00"));
 

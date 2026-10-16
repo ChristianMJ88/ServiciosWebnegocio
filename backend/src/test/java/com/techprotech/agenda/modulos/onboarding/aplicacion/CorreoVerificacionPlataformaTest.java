@@ -16,7 +16,7 @@ class CorreoVerificacionPlataformaTest {
   var identidades=mock(ServicioIdentidadCorreoPlataforma.class);
   when(correo.configuracion()).thenReturn(base);
   when(identidades.resolver(base,PropositoCorreoPlataforma.TRANSACCIONAL)).thenReturn(cfg);
-  var servicio=new ServicioVerificacionCorreoOnboarding(repo,mock(UsuarioRepositorio.class),mock(EmpresaRepositorio.class),correo,identidades,mock(ServicioOutboxCorreoBienvenida.class),mock(ServicioProteccionAcceso.class),"https://example.test/verificar",30);
+  var servicio=new ServicioVerificacionCorreoOnboarding(repo,mock(UsuarioRepositorio.class),mock(EmpresaRepositorio.class),correo,identidades,mock(ServicioOutboxCorreoBienvenida.class),mock(ServicioProteccionAcceso.class),"https://example.test/verificar",30, java.time.Clock.systemUTC());
   var empresa=new EmpresaEntidad();empresa.setId(8L);empresa.setNombre("Negocio de prueba");
   var usuario=new UsuarioEntidad();usuario.setId(45L);usuario.setCorreo("prueba@example.test");
   assertTrue(servicio.enviar(empresa,usuario,"Administrador"));

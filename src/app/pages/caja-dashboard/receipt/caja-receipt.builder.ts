@@ -20,7 +20,7 @@ export function construirComprobanteCaja(
     totalPagado: numeroSeguro(cita.pagado),
     pendiente: numeroSeguro(cita.pendiente),
     pagos: pagos.map(pago => ({
-      fecha: pago.registradoEn,
+      fecha: pago.registradoEn, // ISO con offset del backend; conservarlo hasta el DatePipe del comprobante.
       metodo: metodosPago.find(metodo => metodo.codigo === pago.metodoPago)?.etiqueta ?? pago.metodoPago,
       referencia: pago.referencia?.trim() || '-',
       monto: numeroSeguro(pago.monto)

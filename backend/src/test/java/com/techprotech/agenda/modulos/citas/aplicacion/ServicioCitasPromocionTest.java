@@ -31,6 +31,7 @@ import static org.assertj.core.api.Assertions.*;
 
 @ExtendWith(MockitoExtension.class)
 class ServicioCitasPromocionTest {
+    @org.mockito.Spy private java.time.Clock reloj = com.techprotech.agenda.compartido.tiempo.TiempoPruebas.relojUtc();
     @Mock ServicioConsultaDisponibilidad disponibilidad;
     @Mock SucursalRepositorio sucursales;
     @Mock ServicioRepositorio servicios;

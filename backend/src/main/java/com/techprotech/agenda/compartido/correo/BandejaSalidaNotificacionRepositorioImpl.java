@@ -6,6 +6,7 @@ import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.sql.Timestamp;
+import java.time.ZoneOffset;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -35,7 +36,8 @@ public class BandejaSalidaNotificacionRepositorioImpl implements BandejaSalidaNo
                 FOR UPDATE SKIP LOCKED
                 """)
                 .setParameter("canal", canal)
-                .setParameter("ahora", Timestamp.valueOf(ahora))
+                // Es un momento UTC: valueOf(LocalDateTime) lo reinterpretaría en la zona de la JVM.
+                .setParameter("ahora", Timestamp.from(ahora.toInstant(ZoneOffset.UTC)))
                 .setMaxResults(limite)
                 .getResultList();
 

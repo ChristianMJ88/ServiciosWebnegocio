@@ -36,7 +36,7 @@ class ServicioOAuthMercadoPagoPruebasTest {
         servicio = new ServicioOAuthMercadoPago(
                 new PropiedadesMercadoPago(true, "PRUEBA", "", "", "redirect", "frontend", "", "webhook",
                         "public-key-prueba", "access-token-prueba", "NEWLAND_N950__SBX0000001"),
-                protector, proveedores, conexiones, RestClient.builder(), new ObjectMapper());
+                protector, proveedores, conexiones, RestClient.builder(), new ObjectMapper(), java.time.Clock.systemUTC());
     }
 
     @Test

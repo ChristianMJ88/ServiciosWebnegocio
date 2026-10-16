@@ -10,17 +10,19 @@ import java.time.*;
 
 @Service
 public class ProcesadorVencimientosSuscripcion {
+    private final java.time.Clock reloj;
     private final SuscripcionPlataformaRepositorio suscripciones;
     private final ServicioAvisosSuscripcion avisos;
     private final int lote;
     public ProcesadorVencimientosSuscripcion(SuscripcionPlataformaRepositorio suscripciones,ServicioAvisosSuscripcion avisos,
-            @Value("${aplicacion.suscripciones.correo.lote:100}") int lote) {
+            @Value("${aplicacion.suscripciones.correo.lote:100}") int lote, java.time.Clock reloj) {
+        this.reloj = reloj;
         this.suscripciones=suscripciones;this.avisos=avisos;this.lote=lote;
     }
     @Scheduled(fixedDelayString="${aplicacion.suscripciones.correo.vencimientos-delay-ms:60000}")
     @Transactional
     public void procesar() {
-        var ahora=LocalDateTime.now(ZoneOffset.UTC);
+        var ahora=LocalDateTime.now(reloj);
         for(var s:suscripciones.findVencidasSinAvisar(ahora,PageRequest.of(0,lote))) {
             avisos.programar(s,"VENCIMIENTO",s.getEstado()+":"+s.getPruebaHasta()+":"+s.getGraciaHasta()+":"+s.getPeriodoActualHasta(),null);
             s.setAvisoVencimientoEn(ahora);suscripciones.save(s);

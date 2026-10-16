@@ -162,8 +162,8 @@ public class ControladorAdminCitas {
 
     @GetMapping("/reportes/periodos")
     @PreAuthorize("hasAuthority('REPORTES_ADMIN_VER')")
-    public List<PeriodoReporteAdminResponse> periodosReporte() {
-        return servicioAdminCitas.periodosReporte();
+    public List<PeriodoReporteAdminResponse> periodosReporte(@AuthenticationPrincipal UsuarioAutenticado usuario) {
+        return servicioAdminCitas.periodosReporte(usuario.empresaId());
     }
 
     @GetMapping("/roles-internos")

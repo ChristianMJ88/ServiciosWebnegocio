@@ -17,13 +17,15 @@ import java.util.Locale;
 
 @Service
 public class ServicioAutenticacionPlataforma {
+    private final java.time.Clock reloj;
     private final UsuarioPlataformaRepositorio usuarios;
     private final AccesoPlataformaRepositorio acceso;
     private final PasswordEncoder codificador;
     private final ServicioTokenJwt tokens;
 
     public ServicioAutenticacionPlataforma(UsuarioPlataformaRepositorio usuarios, AccesoPlataformaRepositorio acceso,
-                                           PasswordEncoder codificador, ServicioTokenJwt tokens) {
+                                           PasswordEncoder codificador, ServicioTokenJwt tokens, java.time.Clock reloj) {
+        this.reloj = reloj;
         this.usuarios = usuarios;
         this.acceso = acceso;
         this.codificador = codificador;
@@ -42,7 +44,7 @@ public class ServicioAutenticacionPlataforma {
         var roles = acceso.roles(usuario.getId());
         var permisos = acceso.permisos(usuario.getId());
         if (!permisos.contains("PLATAFORMA_ACCESO")) throw credencialesInvalidas();
-        usuario.setUltimoAccesoEn(LocalDateTime.now());
+        usuario.setUltimoAccesoEn(LocalDateTime.now(reloj));
         usuarios.save(usuario);
         String token = tokens.generarTokenPlataforma(correo, usuario.getId(), roles, permisos);
         return new SesionPlataformaResponse(token, "Bearer", usuario.getId(), usuario.getNombre(), correo, roles, permisos);

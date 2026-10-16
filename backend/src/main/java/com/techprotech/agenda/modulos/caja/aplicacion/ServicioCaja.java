@@ -1,5 +1,7 @@
 package com.techprotech.agenda.modulos.caja.aplicacion;
 
+import static com.techprotech.agenda.compartido.tiempo.MomentoUtc.de;
+
 import com.techprotech.agenda.modulos.clientes.infraestructura.entidad.ClienteEntidad;
 import com.techprotech.agenda.modulos.clientes.infraestructura.repositorio.ClienteRepositorio;
 import com.techprotech.agenda.modulos.caja.api.dto.AbrirCajaRequest;
@@ -55,6 +57,7 @@ import static com.techprotech.agenda.modulos.caja.aplicacion.CatalogosCaja.*;
 
 @Service
 public class ServicioCaja {
+    private final java.time.Clock reloj;
     private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(ServicioCaja.class);
 
     private final CajaSesionRepositorio cajaSesionRepositorio;
@@ -78,8 +81,10 @@ public class ServicioCaja {
             ClienteRepositorio clienteRepositorio,
             ServicioRepositorio servicioRepositorio,
             SucursalRepositorio sucursalRepositorio,
-            com.fasterxml.jackson.databind.ObjectMapper json
+            com.fasterxml.jackson.databind.ObjectMapper json,
+            java.time.Clock reloj
     ) {
+        this.reloj = reloj;
         this.cajaSesionRepositorio = cajaSesionRepositorio;
         this.pagoCitaRepositorio = pagoCitaRepositorio;
         this.pagoVentaRepositorio = pagoVentaRepositorio;
@@ -154,7 +159,7 @@ public class ServicioCaja {
         sesion.setMontoEsperado(request.montoInicial());
         sesion.setObservaciones(normalizarOpcional(request.observaciones()));
         sesion.setAbiertaPorUsuarioId(usuarioId);
-        sesion.setAbiertaEn(LocalDateTime.now());
+        sesion.setAbiertaEn(LocalDateTime.now(reloj));
         return mapearSesion(cajaSesionRepositorio.save(sesion));
     }
 
@@ -173,7 +178,7 @@ public class ServicioCaja {
         sesion.setDiferencia(request.montoContado().subtract(esperado));
         sesion.setEstado(ESTADO_SESION_CERRADA);
         sesion.setCerradaPorUsuarioId(usuarioId);
-        sesion.setCerradaEn(LocalDateTime.now());
+        sesion.setCerradaEn(LocalDateTime.now(reloj));
         if (normalizarOpcional(request.observaciones()) != null) {
             sesion.setObservaciones(normalizarOpcional(request.observaciones()));
         }
@@ -312,7 +317,7 @@ public class ServicioCaja {
             pago.setReferencia(normalizarOpcional(request.referencia()));
             pago.setObservaciones(normalizarOpcional(request.observaciones()));
             pago.setRegistradoPorUsuarioId(usuarioId);
-            pago.setRegistradoEn(LocalDateTime.now());
+            pago.setRegistradoEn(LocalDateTime.now(reloj));
             PagoCitaEntidad guardado = pagoCitaRepositorio.save(pago);
 
             if (METODO_PAGO_EFECTIVO.equals(guardado.getMetodoPago())) {
@@ -336,7 +341,10 @@ public class ServicioCaja {
                     .findByEmpresaIdAndCitaIdOrderByRegistradoEnDesc(empresaId, citaId).stream()
                     .map(this::mapearPago)
                     .toList());
-            resultado.addAll(pagoVentaRepositorio.findPagosConciliadosPorCita(empresaId, citaId));
+            resultado.addAll(pagoVentaRepositorio.findPagosConciliadosPorCita(empresaId, citaId).stream()
+                    .map(p -> new PagoCitaResponse(p.id(), p.citaId(), p.cajaSesionId(), p.monto(),
+                            p.metodoPago(), p.referencia(), p.observaciones(), de(p.registradoEn())))
+                    .toList());
             resultado.sort(java.util.Comparator.comparing(PagoCitaResponse::registradoEn,
                     java.util.Comparator.nullsLast(java.util.Comparator.reverseOrder())));
             return resultado;
@@ -488,7 +496,7 @@ public class ServicioCaja {
             movimiento.setReferencia(referencia);
             movimiento.setObservaciones(observaciones);
             movimiento.setRegistradoPorUsuarioId(usuarioId);
-            movimiento.setRegistradoEn(LocalDateTime.now());
+            movimiento.setRegistradoEn(LocalDateTime.now(reloj));
             return movimientoCajaRepositorio.save(movimiento);
         }
 
@@ -522,7 +530,7 @@ public class ServicioCaja {
         private boolean esDelDiaOperativo(CitaEntidad cita, Map<Long, String> zonaHorariaPorSucursal) {
             String zonaHoraria = zonaHorariaPorSucursal.getOrDefault(cita.getSucursalId(), "America/Mexico_City");
             ZoneId zoneId = ZoneId.of(zonaHoraria);
-            LocalDate hoy = LocalDate.now(zoneId);
+            LocalDate hoy = LocalDate.now(reloj.withZone(zoneId));
             return cita.getInicio().atZone(zoneId).toLocalDate().equals(hoy);
         }
 
@@ -537,8 +545,8 @@ public class ServicioCaja {
                     sesion.getMontoContado(),
                     sesion.getDiferencia(),
                     sesion.getObservaciones(),
-                    sesion.getAbiertaEn(),
-                    sesion.getCerradaEn()
+                    de(sesion.getAbiertaEn()),
+                    de(sesion.getCerradaEn())
             );
         }
 
@@ -557,7 +565,7 @@ public class ServicioCaja {
                     pago.getMetodoPago(),
                     pago.getReferencia(),
                     pago.getObservaciones(),
-                    pago.getRegistradoEn()
+                    de(pago.getRegistradoEn())
             );
         }
 
@@ -577,7 +585,7 @@ public class ServicioCaja {
                     movimiento.getConcepto(),
                     movimiento.getReferencia(),
                     movimiento.getObservaciones(),
-                    movimiento.getRegistradoEn()
+                    de(movimiento.getRegistradoEn())
             );
         }
 

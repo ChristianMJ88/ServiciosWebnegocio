@@ -9,9 +9,11 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.Instant;
 @Service
 public class ServicioAdquisicionEmpresaImpl implements ServicioAdquisicionEmpresa {
+    private final java.time.Clock reloj;
  private final AdquisicionEmpresaRepositorio repositorio;
  private final LandingMarketingRepositorio landings;
- public ServicioAdquisicionEmpresaImpl(AdquisicionEmpresaRepositorio repositorio,LandingMarketingRepositorio landings){this.repositorio=repositorio;this.landings=landings;}
+ public ServicioAdquisicionEmpresaImpl(AdquisicionEmpresaRepositorio repositorio,LandingMarketingRepositorio landings, java.time.Clock reloj){
+        this.reloj = reloj;this.repositorio=repositorio;this.landings=landings;}
  @Override @Transactional(propagation=Propagation.MANDATORY)
  public void registrar(Long empresaId,AtribucionAdquisicionRequest atribucion){
   if(atribucion==null)return;
@@ -24,7 +26,7 @@ public class ServicioAdquisicionEmpresaImpl implements ServicioAdquisicionEmpres
    entidad.setLandingVertical(vertical);entidad.setFirstLandingPath("/"+vertical);
   }
   if(entidad.getSource()==null&&entidad.getMedium()==null&&entidad.getCampaign()==null&&entidad.getContent()==null&&entidad.getTerm()==null&&entidad.getLandingVertical()==null)return;
-  entidad.setAcquiredAt(Instant.now());
+  entidad.setAcquiredAt(Instant.now(reloj));
   repositorio.save(entidad);
  }
  private String limpiar(String valor){return valor!=null&&valor.matches("[A-Za-z][A-Za-z0-9_-]{0,79}")&&!valor.matches(".*[0-9]{10,}.*")?valor:null;}

@@ -1,5 +1,7 @@
 package com.techprotech.agenda.modulos.citas.aplicacion;
 
+import java.time.Clock;
+import com.techprotech.agenda.compartido.tiempo.ZonaNegocio;
 import com.techprotech.agenda.compartido.correo.ServicioOutboxCorreoCitas;
 import com.techprotech.agenda.compartido.whatsapp.ServicioOutboxWhatsappCitas;
 import com.techprotech.agenda.modulos.citas.api.dto.CitaClienteResponse;
@@ -32,6 +34,8 @@ import static org.springframework.http.HttpStatus.NOT_FOUND;
 
 @Service
 public class ServicioCitasCliente {
+    private final Clock reloj;
+    private final ZonaNegocio zonasNegocio;
 
     private final CitaRepositorio citaRepositorio;
     private final com.techprotech.agenda.modulos.disponibilidad.aplicacion.ServicioConfiguracionReservas reservas;
@@ -55,8 +59,13 @@ public class ServicioCitasCliente {
             ClienteRepositorio clienteRepositorio,
             UsuarioRepositorio usuarioRepositorio,
             ServicioOutboxWhatsappCitas servicioOutboxWhatsappCitas,
-            ServicioOutboxCorreoCitas servicioOutboxCorreoCitas
-    , com.techprotech.agenda.modulos.disponibilidad.aplicacion.ServicioConfiguracionReservas reservas) {
+            ServicioOutboxCorreoCitas servicioOutboxCorreoCitas,
+            com.techprotech.agenda.modulos.disponibilidad.aplicacion.ServicioConfiguracionReservas reservas,
+            Clock reloj,
+            ZonaNegocio zonasNegocio
+    ) {
+        this.reloj = reloj;
+        this.zonasNegocio = zonasNegocio;
         this.reservas=reservas;
         this.citaRepositorio = citaRepositorio;
         this.historialEstadoCitaRepositorio = historialEstadoCitaRepositorio;
@@ -72,9 +81,11 @@ public class ServicioCitasCliente {
 
     @Transactional(readOnly = true)
     public List<CitaClienteResponse> listarMisCitas(Long empresaId, Long clienteId) {
+        var zonasPorSucursal = new java.util.HashMap<Long, ZoneId>();
         return citaRepositorio.findByEmpresaIdAndClienteIdOrderByInicioDesc(empresaId, clienteId)
                 .stream()
-                .map(this::mapearCita)
+                .map(cita -> mapearCita(cita, zonasPorSucursal.computeIfAbsent(cita.getSucursalId(),
+                        id -> zonasNegocio.de(empresaId, id))))
                 .toList();
     }
 
@@ -92,12 +103,13 @@ public class ServicioCitasCliente {
             throw new ResponseStatusException(BAD_REQUEST, "Solo se pueden confirmar citas pendientes");
         }
 
-        var sucursalConfirmacion=sucursalRepositorio.findByIdAndEmpresaIdAndActivaTrue(cita.getSucursalId(),empresaId).orElseThrow(() -> new ResponseStatusException(NOT_FOUND,"La sucursal no está disponible"));
-        if (!cita.getInicio().isAfter(LocalDateTime.now(java.time.ZoneId.of(sucursalConfirmacion.getZonaHoraria())))) {
+        sucursalRepositorio.findByIdAndEmpresaIdAndActivaTrue(cita.getSucursalId(),empresaId).orElseThrow(() -> new ResponseStatusException(NOT_FOUND,"La sucursal no está disponible"));
+        var zonaConfirmacion = zonasNegocio.de(empresaId, cita.getSucursalId());
+        if (!cita.getInicio().isAfter(LocalDateTime.now(reloj.withZone(zonaConfirmacion)))) {
             throw new ResponseStatusException(BAD_REQUEST, "No se pueden confirmar citas pasadas o en curso");
         }
 
-        if(PlazoConfirmacionCita.vencido(cita.getInicio(),java.time.ZoneId.of(sucursalConfirmacion.getZonaHoraria()),reservas.obtener(empresaId).liberacionSinConfirmacionHoras(),cita.getCreadaEn(),java.time.Clock.systemUTC())) throw new ResponseStatusException(CONFLICT,"El plazo para confirmar la cita venció");
+        if(PlazoConfirmacionCita.vencido(cita.getInicio(),zonaConfirmacion,reservas.obtener(empresaId).liberacionSinConfirmacionHoras(),cita.getCreadaEn(),reloj)) throw new ResponseStatusException(CONFLICT,"El plazo para confirmar la cita venció");
         cita.setEstado("CONFIRMADA");
         citaRepositorio.save(cita);
 
@@ -133,13 +145,13 @@ public class ServicioCitasCliente {
             throw new ResponseStatusException(BAD_REQUEST, "Solo se pueden cancelar citas pendientes o confirmadas");
         }
 
-        if (!cita.getInicio().isAfter(LocalDateTime.now())) {
+        if (!cita.getInicio().isAfter(LocalDateTime.now(reloj.withZone(zonasNegocio.de(cita.getEmpresaId(), cita.getSucursalId()))))) {
             throw new ResponseStatusException(BAD_REQUEST, "No se pueden cancelar citas pasadas o en curso");
         }
 
         String estadoAnterior = cita.getEstado();
         cita.setEstado("CANCELADA");
-        cita.setCanceladaEn(LocalDateTime.now());
+        cita.setCanceladaEn(LocalDateTime.now(reloj));
         cita.setMotivoCancelacion("Cancelada por cliente");
         citaRepositorio.save(cita);
 
@@ -164,14 +176,11 @@ public class ServicioCitasCliente {
             throw new ResponseStatusException(BAD_REQUEST, "Solo se pueden reprogramar citas pendientes o confirmadas");
         }
 
-        if (!cita.getInicio().isAfter(LocalDateTime.now())) {
+        if (!cita.getInicio().isAfter(LocalDateTime.now(reloj.withZone(zonasNegocio.de(cita.getEmpresaId(), cita.getSucursalId()))))) {
             throw new ResponseStatusException(BAD_REQUEST, "No se pueden reprogramar citas pasadas o en curso");
         }
 
-        String zonaHoraria = sucursalRepositorio.findById(cita.getSucursalId())
-                .map(SucursalEntidad::getZonaHoraria)
-                .orElse("America/Mexico_City");
-        ZoneId zona = ZoneId.of(zonaHoraria);
+        ZoneId zona = zonasNegocio.de(empresaId, cita.getSucursalId());
         OffsetDateTime nuevoInicioZonado = nuevoInicio.atZoneSameInstant(zona).toOffsetDateTime();
 
         List<FranjaDisponibleResponse> franjas = servicioConsultaDisponibilidad.obtenerFranjasDisponibles(
@@ -229,6 +238,10 @@ public class ServicioCitasCliente {
     }
 
     private CitaClienteResponse mapearCita(CitaEntidad cita) {
+        return mapearCita(cita, zonasNegocio.de(cita.getEmpresaId(), cita.getSucursalId()));
+    }
+
+    private CitaClienteResponse mapearCita(CitaEntidad cita, ZoneId zonaHoraria) {
         String sucursalNombre = sucursalRepositorio.findById(cita.getSucursalId())
                 .map(SucursalEntidad::getNombre)
                 .orElse("Sucursal");
@@ -237,15 +250,12 @@ public class ServicioCitasCliente {
                 .orElse("Servicio");
         var prestador = prestadorServicioRepositorio.findById(cita.getPrestadorId()).orElse(null);
         String prestadorNombre = prestador != null ? prestador.getNombreMostrar() : "Prestador";
-        String zonaHoraria = sucursalRepositorio.findById(cita.getSucursalId())
-                .map(SucursalEntidad::getZonaHoraria)
-                .orElse("America/Mexico_City");
         String clienteNombre = clienteRepositorio.findById(cita.getClienteId()).map(cliente -> cliente.getNombreCompleto()).orElse("Cliente");
         String clienteTelefono = clienteRepositorio.findById(cita.getClienteId()).map(cliente -> cliente.getTelefono()).orElse("");
         String clienteCorreo = usuarioRepositorio.findById(cita.getClienteId()).map(usuario -> usuario.getCorreo()).orElse("");
 
         boolean cancelable = List.of("PENDIENTE", "CONFIRMADA").contains(cita.getEstado())
-                && cita.getInicio().isAfter(LocalDateTime.now());
+                && cita.getInicio().isAfter(LocalDateTime.now(reloj.withZone(zonaHoraria)));
 
         return new CitaClienteResponse(
                 cita.getId(),
@@ -256,8 +266,8 @@ public class ServicioCitasCliente {
                 sucursalNombre,
                 servicioNombre,
                 prestadorNombre,
-                cita.getInicio().atZone(ZoneId.of(zonaHoraria)).toOffsetDateTime(),
-                cita.getFin().atZone(ZoneId.of(zonaHoraria)).toOffsetDateTime(),
+                cita.getInicio().atZone(zonaHoraria).toOffsetDateTime(),
+                cita.getFin().atZone(zonaHoraria).toOffsetDateTime(),
                 cita.getPrecio(),
                 cita.getMoneda(),
                 cita.getNotas(),

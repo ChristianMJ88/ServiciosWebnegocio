@@ -1,5 +1,7 @@
 package com.techprotech.agenda.modulos.productos.aplicacion;
 
+import java.time.Clock;
+import com.techprotech.agenda.compartido.tiempo.ZonaNegocio;
 import com.techprotech.agenda.modulos.productos.infraestructura.entidad.*;
 import com.techprotech.agenda.modulos.productos.infraestructura.repositorio.*;
 import org.springframework.http.HttpStatus;
@@ -16,6 +18,7 @@ import java.util.stream.Collectors;
 
 @Service
 public class ServicioCotizacionProductos {
+ private final Clock reloj; private final ZonaNegocio zonasNegocio;
     private final ProductoRepositorio productos;
     private final ZonaPrecioProductoRepositorio zonas;
     private final PrecioZonaProductoRepositorio preciosZona;
@@ -25,7 +28,7 @@ public class ServicioCotizacionProductos {
     public ServicioCotizacionProductos(ProductoRepositorio productos, ZonaPrecioProductoRepositorio zonas,
                                        PrecioZonaProductoRepositorio preciosZona,
                                        ReglaDescuentoProductoRepositorio descuentos,
-                                       ProductoExistenciaRepositorio existencias) {
+                                       ProductoExistenciaRepositorio existencias, Clock reloj, ZonaNegocio zonasNegocio) {this.reloj=reloj;this.zonasNegocio=zonasNegocio;
         this.productos = productos;
         this.zonas = zonas;
         this.preciosZona = preciosZona;
@@ -45,8 +48,9 @@ public class ServicioCotizacionProductos {
                 .filter(PrecioZonaProductoEntidad::isActivo)
                 .filter(item -> zona.getId().equals(item.getZonaPrecioId()))
                 .collect(Collectors.toMap(PrecioZonaProductoEntidad::getProductoId, Function.identity()));
+        var hoy = LocalDate.now(reloj.withZone(zonasNegocio.de(empresaId, sucursalId)));
         List<ReglaDescuentoProductoEntidad> reglas = descuentos.findByEmpresaIdOrderByPrioridadDescNombreAsc(empresaId)
-                .stream().filter(this::vigente).toList();
+                .stream().filter(regla -> CalculadorDescuentosProductos.vigente(regla, hoy)).toList();
         Map<Long, ProductoExistenciaEntidad> stock = existencias
                 .findByIdEmpresaIdAndIdSucursalIdIn(empresaId, List.of(sucursalId)).stream()
                 .collect(Collectors.toMap(item -> item.getId().getProductoId(), Function.identity()));
@@ -85,10 +89,6 @@ public class ServicioCotizacionProductos {
                 .filter(ZonaPrecioProductoEntidad::isActiva)
                 .filter(item -> item.getClave().equalsIgnoreCase(clave.trim()))
                 .findFirst().orElseThrow(() -> error(HttpStatus.BAD_REQUEST, "Zona de precio no válida"));
-    }
-
-    private boolean vigente(ReglaDescuentoProductoEntidad regla) {
-        return CalculadorDescuentosProductos.vigente(regla,LocalDate.now());
     }
 
     private ResponseStatusException error(HttpStatus estado, String mensaje) {

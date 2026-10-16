@@ -210,7 +210,7 @@ class ServicioAdminCitasCorreoTest {
                 new ObjectMapper(),
                 protector,
                 null
-        );
+        , java.time.Clock.systemUTC(), com.techprotech.agenda.compartido.tiempo.TiempoPruebas.zonaUtc());
     }
 
     private ConfiguracionCorreoEmpresaRepositorio crearRepositorio(Map<Long, ConfiguracionCorreoEmpresaEntidad> store) {

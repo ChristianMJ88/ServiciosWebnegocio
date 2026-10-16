@@ -11,10 +11,10 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDateTime;
-import java.time.ZoneOffset;
 
 @Service
 public class ServicioComisionPlataforma {
+    private final java.time.Clock reloj;
     private static final BigDecimal CERO = new BigDecimal("0.00");
     private static final BigDecimal CIEN = new BigDecimal("100");
 
@@ -22,7 +22,8 @@ public class ServicioComisionPlataforma {
     private final ProveedorPagoRepositorio proveedores;
 
     public ServicioComisionPlataforma(ReglaComisionPlataformaRepositorio reglas,
-                                      ProveedorPagoRepositorio proveedores) {
+                                      ProveedorPagoRepositorio proveedores, java.time.Clock reloj) {
+        this.reloj = reloj;
         this.reglas = reglas;
         this.proveedores = proveedores;
     }
@@ -30,7 +31,7 @@ public class ServicioComisionPlataforma {
     @Transactional(readOnly = true)
     public BigDecimal calcular(Long empresaId, Long proveedorId, BigDecimal importe, String moneda) {
         validar(empresaId, proveedorId, importe, moneda);
-        return reglas.resolver(proveedorId, empresaId, moneda.trim(), LocalDateTime.now(ZoneOffset.UTC)).stream()
+        return reglas.resolver(proveedorId, empresaId, moneda.trim(), LocalDateTime.now(reloj)).stream()
                 .findFirst().map(regla -> calcular(regla, importe)).orElse(CERO);
     }
 

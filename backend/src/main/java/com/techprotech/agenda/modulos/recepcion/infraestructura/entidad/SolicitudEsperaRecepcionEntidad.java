@@ -81,7 +81,7 @@ public class SolicitudEsperaRecepcionEntidad {
   @PrePersist
   void inicializarCamposAutomaticos() {
     if (creadaEn == null) {
-      creadaEn = LocalDateTime.now();
+      creadaEn = LocalDateTime.now(java.time.ZoneOffset.UTC);
     }
     if (estado == null || estado.isBlank()) {
       estado = "PENDIENTE";

@@ -25,7 +25,14 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
+@org.junit.jupiter.api.parallel.Isolated("JVM México para escritura UTC de venta/pago")
 class ServicioVentasCajaTest {
+    private java.util.TimeZone zonaAnterior;
+    @org.junit.jupiter.api.BeforeEach void zonaMexico() {
+        zonaAnterior=java.util.TimeZone.getDefault();
+        java.util.TimeZone.setDefault(java.util.TimeZone.getTimeZone("America/Mexico_City"));
+    }
+    @org.junit.jupiter.api.AfterEach void restaurarZona() { java.util.TimeZone.setDefault(zonaAnterior); }
     @org.junit.jupiter.params.ParameterizedTest
     @org.junit.jupiter.params.provider.CsvSource({"false,false","true,false","false,true","true,true"})
     void registraServicioYProductosComoUnaVentaYDescuentaInventario(boolean regional, boolean promocion) {
@@ -48,7 +55,7 @@ class ServicioVentasCajaTest {
         ServicioVentasCaja servicio = new ServicioVentasCaja(ventas, detalles, pagos, sesiones, movimientos, pagosCita,
                 citas, clientes, servicios, productos, existencias, sucursales, inventario,
                 descuentos,
-                zonas, preciosZona, mock(com.techprotech.agenda.modulos.productos.aplicacion.ServicioComisionesDevengadas.class));
+                zonas, preciosZona, mock(com.techprotech.agenda.modulos.productos.aplicacion.ServicioComisionesDevengadas.class), java.time.Clock.fixed(java.time.Instant.parse("2026-10-15T01:00:00Z"),java.time.ZoneOffset.UTC), com.techprotech.agenda.compartido.tiempo.TiempoPruebas.zona(java.time.ZoneId.of("America/Mexico_City")));
 
         SucursalEntidad sucursal = new SucursalEntidad(); sucursal.setId(5L); sucursal.setEmpresaId(1L); sucursal.setActiva(true);
         CajaSesionEntidad sesion = new CajaSesionEntidad(); sesion.setId(8L); sesion.setEmpresaId(1L); sesion.setSucursalId(5L); sesion.setEstado("ABIERTA");
@@ -93,6 +100,11 @@ class ServicioVentasCajaTest {
         assertThat(response.descuentoTotal()).isEqualByComparingTo(new BigDecimal(regional?"12.00":"10.00").add(new BigDecimal(promocion?"25.00":"0.00")));
         assertThat(response.detalles().get(0).descuento()).isEqualByComparingTo(promocion?"25.00":"0.00");
         assertThat(response.detalles().get(1).descuento()).isEqualByComparingTo(regional?"12.00":"10.00");
+        assertThat(response.creadaEn()).isEqualTo(java.time.OffsetDateTime.parse("2026-10-15T01:00Z"));
+        assertThat(response.folio()).startsWith("V-261014190000-");
+        var pagoCapturado=org.mockito.ArgumentCaptor.forClass(PagoVentaEntidad.class);
+        verify(pagos).save(pagoCapturado.capture());
+        assertThat(pagoCapturado.getValue().getRegistradoEn()).isEqualTo(response.creadaEn().toLocalDateTime());
         assertThat(response.detalles()).extracting(item -> item.tipoConcepto()).containsExactly("SERVICIO", "PRODUCTO");
         assertThat(response.detalles().get(1).costoUnitarioHistorico()).isEqualByComparingTo("20.00");
         assertThat(response.detalles().get(0).costoUnitarioHistorico()).isNull();

@@ -18,6 +18,7 @@ import java.util.Locale;
 
 @Service
 public class ServicioCorreoCitas {
+    private final java.time.Clock reloj;
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ServicioCorreoCitas.class);
     private static final Locale LOCALE_MX = Locale.forLanguageTag("es-MX");
@@ -27,8 +28,10 @@ public class ServicioCorreoCitas {
 
     public ServicioCorreoCitas(
             ServicioConfiguracionCorreoEmpresa servicioConfiguracionCorreoEmpresa,
-            ClienteCorreoSaliente clienteCorreoSaliente
+            ClienteCorreoSaliente clienteCorreoSaliente,
+            java.time.Clock reloj
     ) {
+        this.reloj = reloj;
         this.servicioConfiguracionCorreoEmpresa = servicioConfiguracionCorreoEmpresa;
         this.clienteCorreoSaliente = clienteCorreoSaliente;
     }
@@ -252,7 +255,7 @@ public class ServicioCorreoCitas {
                 .append("METHOD:PUBLISH\r\n")
                 .append("BEGIN:VEVENT\r\n")
                 .append("UID:cita-").append(confirmacion.citaId()).append("@refluora.com\r\n")
-                .append("DTSTAMP:").append(OffsetDateTime.now(ZoneOffset.UTC).format(formatterUtc)).append("\r\n")
+                .append("DTSTAMP:").append(OffsetDateTime.now(reloj).format(formatterUtc)).append("\r\n")
                 .append("DTSTART:").append(confirmacion.inicio().withOffsetSameInstant(ZoneOffset.UTC).format(formatterUtc)).append("\r\n")
                 .append("DTEND:").append(confirmacion.fin().withOffsetSameInstant(ZoneOffset.UTC).format(formatterUtc)).append("\r\n")
                 .append("SUMMARY:").append(escapeIcs(confirmacion.servicioNombre() + " - " + confirmacion.nombreEmpresa())).append("\r\n")

@@ -19,7 +19,7 @@ class ServicioAvisosSuscripcionTest {
     private final EmpresaRepositorio empresas=mock(EmpresaRepositorio.class);
     private final PlanPlataformaRepositorio planes=mock(PlanPlataformaRepositorio.class);
     private final ObjectMapper mapper=new ObjectMapper();
-    private final ServicioAvisosSuscripcion servicio=new ServicioAvisosSuscripcion(outbox,empresas,planes,mapper);
+    private final ServicioAvisosSuscripcion servicio=new ServicioAvisosSuscripcion(outbox,empresas,planes,mapper, java.time.Clock.systemUTC());
     private SuscripcionPlataformaEntidad s;
     @BeforeEach void preparar(){
         s=new SuscripcionPlataformaEntidad();s.setId(8L);s.setEmpresaId(3L);s.setPlanId(4L);s.setCorreoFacturacion("billing@example.test");s.setMoneda("MXN");

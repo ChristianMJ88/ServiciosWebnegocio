@@ -1,7 +1,7 @@
 package com.techprotech.agenda.modulos.caja.api.dto;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 
 public record CajaSesionResponse(
         Long id,
@@ -13,7 +13,7 @@ public record CajaSesionResponse(
         BigDecimal montoContado,
         BigDecimal diferencia,
         String observaciones,
-        LocalDateTime abiertaEn,
-        LocalDateTime cerradaEn
+        OffsetDateTime abiertaEn,
+        OffsetDateTime cerradaEn
 ) {
 }

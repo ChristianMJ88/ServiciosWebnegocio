@@ -19,13 +19,16 @@ import java.util.Map;
 
 @RestControllerAdvice
 public class ManejadorGlobalExcepciones {
+    private final java.time.Clock reloj;
+    public ManejadorGlobalExcepciones(java.time.Clock reloj) { this.reloj = reloj; }
+
 
     private static final Logger log = LoggerFactory.getLogger(ManejadorGlobalExcepciones.class);
 
     @ExceptionHandler(SesionNoDisponibleException.class)
     public ResponseEntity<ErrorApi> manejarSesionNoDisponible(SesionNoDisponibleException ex) {
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ErrorApi(
-                "SESION_NO_DISPONIBLE", ex.getReason(), OffsetDateTime.now()));
+                "SESION_NO_DISPONIBLE", ex.getReason(), OffsetDateTime.now(reloj)));
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
@@ -41,7 +44,7 @@ public class ManejadorGlobalExcepciones {
         respuesta.put("codigo", "VALIDACION_INVALIDA");
         respuesta.put("mensaje", "La solicitud contiene errores de validacion");
         respuesta.put("errores", errores);
-        respuesta.put("fechaHora", OffsetDateTime.now());
+        respuesta.put("fechaHora", OffsetDateTime.now(reloj));
 
         return ResponseEntity.badRequest().body(respuesta);
     }
@@ -52,7 +55,7 @@ public class ManejadorGlobalExcepciones {
         return ResponseEntity.badRequest().body(new ErrorApi(
                 "VALIDACION_INVALIDA",
                 ex.getMessage(),
-                OffsetDateTime.now()
+                OffsetDateTime.now(reloj)
         ));
     }
 
@@ -62,7 +65,7 @@ public class ManejadorGlobalExcepciones {
         return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(new ErrorApi(
                 "FUNCIONALIDAD_PENDIENTE",
                 ex.getMessage(),
-                OffsetDateTime.now()
+                OffsetDateTime.now(reloj)
         ));
     }
 
@@ -72,7 +75,7 @@ public class ManejadorGlobalExcepciones {
         return ResponseEntity.status(ex.getStatusCode()).body(new ErrorApi(
                 "ERROR_NEGOCIO",
                 ex.getReason() != null ? ex.getReason() : ex.getMessage(),
-                OffsetDateTime.now()
+                OffsetDateTime.now(reloj)
         ));
     }
 
@@ -82,20 +85,20 @@ public class ManejadorGlobalExcepciones {
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(new ErrorApi(
                 "ACCESO_DENEGADO",
                 "No tienes permisos para realizar esta acción.",
-                OffsetDateTime.now()
+                OffsetDateTime.now(reloj)
         ));
     }
 
     @ExceptionHandler(org.springframework.web.bind.MissingServletRequestParameterException.class)
     public ResponseEntity<ErrorApi> manejarParametroFaltante(org.springframework.web.bind.MissingServletRequestParameterException ex) {
         return ResponseEntity.badRequest().body(new ErrorApi(
-                "VALIDACION_INVALIDA", "Falta el parámetro obligatorio: " + ex.getParameterName(), OffsetDateTime.now()));
+                "VALIDACION_INVALIDA", "Falta el parámetro obligatorio: " + ex.getParameterName(), OffsetDateTime.now(reloj)));
     }
 
     @ExceptionHandler(org.springframework.web.method.annotation.MethodArgumentTypeMismatchException.class)
     public ResponseEntity<ErrorApi> manejarTipoParametro(org.springframework.web.method.annotation.MethodArgumentTypeMismatchException ex) {
         return ResponseEntity.badRequest().body(new ErrorApi(
-                "VALIDACION_INVALIDA", "El parámetro tiene un formato inválido: " + ex.getName(), OffsetDateTime.now()));
+                "VALIDACION_INVALIDA", "El parámetro tiene un formato inválido: " + ex.getName(), OffsetDateTime.now(reloj)));
     }
 
     @ExceptionHandler(Exception.class)
@@ -104,7 +107,7 @@ public class ManejadorGlobalExcepciones {
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ErrorApi(
                 "ERROR_INTERNO",
                 ex.getMessage(),
-                OffsetDateTime.now()
+                OffsetDateTime.now(reloj)
         ));
     }
 }

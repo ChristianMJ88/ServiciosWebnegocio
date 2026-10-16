@@ -11,12 +11,14 @@ import java.time.LocalDateTime;
 
 @Service
 public class ServicioEstadoEntregaWhatsapp {
+    private final java.time.Clock reloj;
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ServicioEstadoEntregaWhatsapp.class);
 
     private final BandejaSalidaNotificacionRepositorio bandejaSalidaNotificacionRepositorio;
 
-    public ServicioEstadoEntregaWhatsapp(BandejaSalidaNotificacionRepositorio bandejaSalidaNotificacionRepositorio) {
+    public ServicioEstadoEntregaWhatsapp(BandejaSalidaNotificacionRepositorio bandejaSalidaNotificacionRepositorio, java.time.Clock reloj) {
+        this.reloj = reloj;
         this.bandejaSalidaNotificacionRepositorio = bandejaSalidaNotificacionRepositorio;
     }
 
@@ -42,7 +44,7 @@ public class ServicioEstadoEntregaWhatsapp {
         }
 
         salida.setEstadoEntrega(estadoEntrega);
-        salida.setEstadoEntregaActualizadoEn(LocalDateTime.now());
+        salida.setEstadoEntregaActualizadoEn(LocalDateTime.now(reloj));
         salida.setCodigoErrorProveedor(normalizar(codigoErrorProveedor, 32));
         salida.setDetalleErrorProveedor(normalizar(detalleErrorProveedor, 500));
 

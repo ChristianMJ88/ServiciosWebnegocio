@@ -11,10 +11,10 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.time.ZoneOffset;
 
 @Component
 public class ProcesadorWebhooksEnvio {
+    private final java.time.Clock reloj;
     private static final Logger LOGGER = LoggerFactory.getLogger(ProcesadorWebhooksEnvio.class);
     private static final int MAX_INTENTOS = 5;
     private final EventoWebhookEnvioRepositorio eventos;
@@ -22,7 +22,8 @@ public class ProcesadorWebhooksEnvio {
     private final ObjectMapper objectMapper;
 
     public ProcesadorWebhooksEnvio(EventoWebhookEnvioRepositorio eventos, ServicioGuiasEnvio guias,
-                                   ObjectMapper objectMapper) {
+                                   ObjectMapper objectMapper, java.time.Clock reloj) {
+        this.reloj = reloj;
         this.eventos = eventos;
         this.guias = guias;
         this.objectMapper = objectMapper;
@@ -53,7 +54,7 @@ public class ProcesadorWebhooksEnvio {
                         evento.getEventoExternoId());
                 evento.setEstadoProcesamiento("PROCESADO");
             }
-            evento.setProcesadoEn(LocalDateTime.now(ZoneOffset.UTC));
+            evento.setProcesadoEn(LocalDateTime.now(reloj));
             evento.setErrorUltimo(null);
         } catch (Exception ex) {
             int intentos = evento.getIntentos() + 1;

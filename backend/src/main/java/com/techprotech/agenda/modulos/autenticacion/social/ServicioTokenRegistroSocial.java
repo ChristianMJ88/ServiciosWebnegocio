@@ -12,10 +12,12 @@ import java.util.UUID;
 
 @Service
 public class ServicioTokenRegistroSocial {
+    private final java.time.Clock reloj;
     private final ProtectorSecretosCorreo protector;
     private final ObjectMapper objectMapper;
 
-    public ServicioTokenRegistroSocial(ProtectorSecretosCorreo protector, ObjectMapper objectMapper) {
+    public ServicioTokenRegistroSocial(ProtectorSecretosCorreo protector, ObjectMapper objectMapper, java.time.Clock reloj) {
+        this.reloj = reloj;
         this.protector = protector;
         this.objectMapper = objectMapper;
     }
@@ -28,7 +30,7 @@ public class ServicioTokenRegistroSocial {
         return cifrar(Map.of(
                 "proveedor", proveedor,
                 "destino", destino,
-                "exp", Instant.now().plusSeconds(600).getEpochSecond(),
+                "exp", Instant.now(reloj).plusSeconds(600).getEpochSecond(),
                 "nonce", UUID.randomUUID().toString()
         ));
     }
@@ -48,7 +50,7 @@ public class ServicioTokenRegistroSocial {
                 "subject", perfil.subject(),
                 "correo", perfil.correo(),
                 "nombre", perfil.nombre(),
-                "exp", Instant.now().plusSeconds(600).getEpochSecond()
+                "exp", Instant.now(reloj).plusSeconds(600).getEpochSecond()
         ));
     }
 
@@ -86,7 +88,7 @@ public class ServicioTokenRegistroSocial {
 
     private void validarExpiracion(Map<String, Object> datos) {
         Object exp = datos.get("exp");
-        if (!(exp instanceof Number numero) || numero.longValue() < Instant.now().getEpochSecond()) {
+        if (!(exp instanceof Number numero) || numero.longValue() < Instant.now(reloj).getEpochSecond()) {
             throw new IllegalArgumentException("El flujo social expiró");
         }
     }

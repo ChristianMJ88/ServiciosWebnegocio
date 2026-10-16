@@ -33,8 +33,8 @@ public class ServicioCotizacionCitas {
     public ServicioCotizacionCitas(SucursalRepositorio sucursales, ServicioRepositorio servicios,
             ServicioSucursalRepositorio asignaciones, EmpresaSitioPromocionRepositorio promociones,
             EmpresaSitioPromocionServicioRepositorio serviciosPromocion,
-            EmpresaSitioPromocionSucursalRepositorio sucursalesPromocion, EmpresaCheckoutConfigRepositorio checkout, ServicioPoliticaReservaPago politicaPago) {
-        this(sucursales,servicios,asignaciones,promociones,serviciosPromocion,sucursalesPromocion,checkout,Clock.systemUTC());
+            EmpresaSitioPromocionSucursalRepositorio sucursalesPromocion, EmpresaCheckoutConfigRepositorio checkout, ServicioPoliticaReservaPago politicaPago, Clock reloj) {
+        this(sucursales,servicios,asignaciones,promociones,serviciosPromocion,sucursalesPromocion,checkout,reloj);
         this.politicaPago=politicaPago;
     }
     ServicioCotizacionCitas(SucursalRepositorio sucursales, ServicioRepositorio servicios,

@@ -15,10 +15,12 @@ import java.util.List;
 
 @Service
 public class ServicioTokenJwt {
+    private final java.time.Clock reloj;
 
     private final PropiedadesJwt propiedadesJwt;
 
-    public ServicioTokenJwt(PropiedadesJwt propiedadesJwt) {
+    public ServicioTokenJwt(PropiedadesJwt propiedadesJwt, java.time.Clock reloj) {
+        this.reloj = reloj;
         this.propiedadesJwt = propiedadesJwt;
     }
 
@@ -36,7 +38,7 @@ public class ServicioTokenJwt {
 
     public String generarTokenAcceso(String sujeto, Long usuarioId, Long empresaId, String empresaSlug,
             Collection<String> roles, Collection<String> permisos, Collection<Long> sucursalesPermitidas, long versionSesion) {
-        Instant ahora = Instant.now();
+        Instant ahora = Instant.now(reloj);
         return Jwts.builder()
                 .subject(sujeto)
                 .issuer(propiedadesJwt.issuer())
@@ -56,7 +58,7 @@ public class ServicioTokenJwt {
 
     public String generarTokenPlataforma(String sujeto, Long usuarioId,
                                           Collection<String> roles, Collection<String> permisos) {
-        Instant ahora = Instant.now();
+        Instant ahora = Instant.now(reloj);
         return Jwts.builder()
                 .subject(sujeto)
                 .issuer(propiedadesJwt.issuer())
@@ -76,7 +78,7 @@ public class ServicioTokenJwt {
     }
 
     public String generarTokenActualizacion(String sujeto, Long usuarioId, Long empresaId, long versionSesion) {
-        Instant ahora = Instant.now();
+        Instant ahora = Instant.now(reloj);
         return Jwts.builder()
                 .subject(sujeto)
                 .issuer(propiedadesJwt.issuer())
@@ -159,6 +161,7 @@ public class ServicioTokenJwt {
 
     private Claims obtenerClaims(String token) {
         return Jwts.parser()
+                .clock(() -> Date.from(reloj.instant()))
                 .verifyWith(claveFirma())
                 .build()
                 .parseSignedClaims(token)

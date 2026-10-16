@@ -17,12 +17,14 @@ import java.util.stream.Collectors;
 
 @Component
 public class FiltroAutenticacionJwt extends OncePerRequestFilter {
+    private final java.time.Clock reloj;
     private static final com.fasterxml.jackson.databind.ObjectMapper JSON = new com.fasterxml.jackson.databind.ObjectMapper().findAndRegisterModules();
 
     private final ServicioTokenJwt servicioTokenJwt;
     private final UsuarioRepositorio usuarios;
 
-    public FiltroAutenticacionJwt(ServicioTokenJwt servicioTokenJwt, UsuarioRepositorio usuarios) {
+    public FiltroAutenticacionJwt(ServicioTokenJwt servicioTokenJwt, UsuarioRepositorio usuarios, java.time.Clock reloj) {
+        this.reloj = reloj;
         this.servicioTokenJwt = servicioTokenJwt;
         this.usuarios = usuarios;
     }
@@ -41,7 +43,7 @@ public class FiltroAutenticacionJwt extends OncePerRequestFilter {
                     response.setContentType("application/json");
                     response.setCharacterEncoding("UTF-8");
                     JSON.writeValue(response.getWriter(), new com.techprotech.agenda.compartido.exception.ErrorApi(
-                            "SESION_NO_DISPONIBLE", motivo, java.time.OffsetDateTime.now()));
+                            "SESION_NO_DISPONIBLE", motivo, java.time.OffsetDateTime.now(reloj)));
                     return;
                 }
             }

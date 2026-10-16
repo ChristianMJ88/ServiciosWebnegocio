@@ -52,6 +52,8 @@ management:
         enabled: true
 
 aplicacion:
+  tareas-programadas:
+    habilitadas: ${TAREAS_PROGRAMADAS_HABILITADAS:true}
   plataforma:
     bootstrap:
       habilitado: ${PLATAFORMA_BOOTSTRAP_HABILITADO:false}

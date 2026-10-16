@@ -45,7 +45,7 @@ class ServicioAccesoSocialTest {
                 .thenAnswer(invocacion -> invocacion.getArgument(0));
 
         ServicioAccesoSocial servicio = new ServicioAccesoSocial(
-                identidades, codigos, usuarios, autenticacion, empresas, roles);
+                identidades, codigos, usuarios, autenticacion, empresas, roles, java.time.Clock.systemUTC());
 
         String codigo = servicio.crearCodigo(new PerfilRegistroSocial(
                 "GOOGLE", "subject-google", "Persona@Ejemplo.com", "Persona"));

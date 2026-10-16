@@ -24,13 +24,13 @@ import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.SecureRandom;
 import java.time.LocalDateTime;
-import java.time.ZoneOffset;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Service
 public class ServicioConfiguracionEnvios {
+    private final java.time.Clock reloj;
     private final SecureRandom random = new SecureRandom();
     private final EmpresaEnvioConfigRepositorio configuraciones;
     private final SucursalEnvioOrigenRepositorio origenes;
@@ -48,7 +48,8 @@ public class ServicioConfiguracionEnvios {
                                        PropiedadesEnvia propiedadesEnvia,
                                        ClienteConsultasEnvia clienteConsultas,
                                        ServicioValidacionDirecciones direcciones,
-                                       ResolutorCredencialEnvio resolutorCredencial) {
+                                       ResolutorCredencialEnvio resolutorCredencial, java.time.Clock reloj) {
+        this.reloj = reloj;
         this.configuraciones = configuraciones;
         this.origenes = origenes;
         this.sucursales = sucursales;
@@ -208,7 +209,7 @@ public class ServicioConfiguracionEnvios {
         entidad.setGooglePlaceId(validacion.placeId());
         entidad.setLatitud(validacion.latitud());
         entidad.setLongitud(validacion.longitud());
-        entidad.setDireccionValidadaEn(validacion.valida() ? LocalDateTime.now(ZoneOffset.UTC) : null);
+        entidad.setDireccionValidadaEn(validacion.valida() ? LocalDateTime.now(reloj) : null);
         return entidad;
     }
 

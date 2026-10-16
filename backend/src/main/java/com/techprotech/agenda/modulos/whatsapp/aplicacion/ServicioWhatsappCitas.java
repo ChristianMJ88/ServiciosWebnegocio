@@ -1,5 +1,7 @@
 package com.techprotech.agenda.modulos.whatsapp.aplicacion;
 
+import java.time.Clock;
+import com.techprotech.agenda.compartido.tiempo.ZonaNegocio;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.techprotech.agenda.compartido.whatsapp.NormalizadorTelefonoWhatsapp;
@@ -59,6 +61,8 @@ import java.util.regex.Pattern;
 
 @Service
 public class ServicioWhatsappCitas {
+    private final Clock reloj;
+    private final ZonaNegocio zonasNegocio;
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ServicioWhatsappCitas.class);
 
@@ -122,8 +126,12 @@ public class ServicioWhatsappCitas {
             SubgrupoServicioRepositorio subgrupoServicioRepositorio,
             ServicioRepositorio servicioRepositorio,
             ConversacionWhatsappRepositorio conversacionWhatsappRepositorio,
-            MensajeWhatsappRepositorio mensajeWhatsappRepositorio
+            MensajeWhatsappRepositorio mensajeWhatsappRepositorio,
+            Clock reloj,
+            ZonaNegocio zonasNegocio
     ) {
+        this.reloj = reloj;
+        this.zonasNegocio = zonasNegocio;
         this.propiedadesWhatsapp = propiedadesWhatsapp;
         this.contextoEmpresaWhatsapp = contextoEmpresaWhatsapp;
         this.servicioConfiguracionWhatsappEmpresa = servicioConfiguracionWhatsappEmpresa;
@@ -295,7 +303,7 @@ public class ServicioWhatsappCitas {
             mensaje.setEstado(limitar(estado, 30));
             mensaje.setCodigoErrorProveedor(limitar(codigoErrorProveedor, 32));
             mensaje.setDetalleErrorProveedor(limitar(detalleErrorProveedor, 500));
-            mensaje.setCreadoEn(LocalDateTime.now());
+            mensaje.setCreadoEn(LocalDateTime.now(reloj));
             mensajeWhatsappRepositorio.save(mensaje);
         } catch (Exception ex) {
             LOGGER.warn("No se pudo registrar mensaje WhatsApp {} para {}", direccion, telefono, ex);
@@ -749,7 +757,7 @@ public class ServicioWhatsappCitas {
             return construirPreguntaSucursales("Vamos a retomar desde la sucursal para ayudarte mejor.");
         }
 
-        LocalDate fecha = parsearFechaFlexible(mensaje);
+        LocalDate fecha = parsearFechaFlexible(mensaje, conversacion.getSucursalId());
         List<FranjaDisponibleResponse> franjas = servicioConsultaDisponibilidad.obtenerFranjasDisponibles(
                 obtenerEmpresaId(),
                 conversacion.getSucursalId(),
@@ -893,7 +901,7 @@ public class ServicioWhatsappCitas {
             return "Perdí el contexto de la cita a reagendar. Responde MIS CITAS o dime REAGENDAR y lo retomamos.";
         }
 
-        LocalDate fecha = parsearFechaFlexible(mensaje);
+        LocalDate fecha = parsearFechaFlexible(mensaje, conversacion.getSucursalId());
         List<FranjaDisponibleResponse> franjas = servicioConsultaDisponibilidad.obtenerFranjasDisponibles(
                 obtenerEmpresaId(),
                 conversacion.getSucursalId(),
@@ -1250,7 +1258,7 @@ public class ServicioWhatsappCitas {
             return null;
         }
         if (conversacion.getActualizadaEn() != null
-                && conversacion.getActualizadaEn().isBefore(LocalDateTime.now().minusMinutes(MINUTOS_EXPIRACION_CONVERSACION))) {
+                && conversacion.getActualizadaEn().isBefore(LocalDateTime.now(reloj).minusMinutes(MINUTOS_EXPIRACION_CONVERSACION))) {
             conversacionWhatsappRepositorio.delete(conversacion);
             return null;
         }
@@ -1300,13 +1308,13 @@ public class ServicioWhatsappCitas {
             conversacion.setTelefonoNormalizado(NormalizadorTelefonoWhatsapp.normalizarComparable(telefonoRemitente));
             conversacion.setFlujo("NINGUNO");
             conversacion.setPaso("MENU");
-            conversacion.setActualizadaEn(LocalDateTime.now());
+            conversacion.setActualizadaEn(LocalDateTime.now(reloj));
             return conversacion;
         });
     }
 
     private void guardarConversacion(ConversacionWhatsappEntidad conversacion) {
-        conversacion.setActualizadaEn(LocalDateTime.now());
+        conversacion.setActualizadaEn(LocalDateTime.now(reloj));
         conversacionWhatsappRepositorio.save(conversacion);
     }
 
@@ -1548,9 +1556,9 @@ public class ServicioWhatsappCitas {
         return normalizado.contains(buscado) || buscado.contains(normalizado);
     }
 
-    private LocalDate parsearFechaFlexible(String valor) {
+    private LocalDate parsearFechaFlexible(String valor, Long sucursalId) {
         String normalizado = normalizarTextoLibre(valor);
-        LocalDate hoy = LocalDate.now();
+        LocalDate hoy = LocalDate.now(reloj.withZone(zonasNegocio.de(obtenerEmpresaId(), sucursalId)));
         if (Objects.equals(normalizado, "hoy")) {
             return hoy;
         }
@@ -2084,7 +2092,7 @@ public class ServicioWhatsappCitas {
 
         List<CitaClienteResponse> pendientes = servicioCitasCliente.listarMisCitas(empresaId, cliente.getUsuarioId()).stream()
                 .filter(cita -> "PENDIENTE".equalsIgnoreCase(cita.estado()))
-                .filter(cita -> cita.inicio().toLocalDateTime().isAfter(LocalDateTime.now()))
+                .filter(cita -> cita.inicio().toInstant().isAfter(reloj.instant()))
                 .sorted(Comparator.comparing(CitaClienteResponse::inicio))
                 .toList();
 
@@ -2235,7 +2243,7 @@ public class ServicioWhatsappCitas {
 
         List<CitaClienteResponse> pendientes = servicioCitasCliente.listarMisCitas(obtenerEmpresaId(), cliente.getUsuarioId()).stream()
                 .filter(cita -> "PENDIENTE".equalsIgnoreCase(cita.estado()))
-                .filter(cita -> cita.inicio().toLocalDateTime().isAfter(LocalDateTime.now()))
+                .filter(cita -> cita.inicio().toInstant().isAfter(reloj.instant()))
                 .sorted(Comparator.comparing(CitaClienteResponse::inicio))
                 .limit(2)
                 .toList();
@@ -2301,7 +2309,7 @@ public class ServicioWhatsappCitas {
 
     private List<CitaClienteResponse> obtenerCitasActivasCliente(ClienteEntidad cliente) {
         return servicioCitasCliente.listarMisCitas(obtenerEmpresaId(), cliente.getUsuarioId()).stream()
-                .filter(cita -> cita.inicio().toLocalDateTime().isAfter(LocalDateTime.now()))
+                .filter(cita -> cita.inicio().toInstant().isAfter(reloj.instant()))
                 .sorted(Comparator.comparing(CitaClienteResponse::inicio))
                 .limit(5)
                 .toList();
@@ -2422,7 +2430,7 @@ public class ServicioWhatsappCitas {
 
         List<CitaClienteResponse> pendientes = servicioCitasCliente.listarMisCitas(empresaId, cliente.getUsuarioId()).stream()
                 .filter(cita -> "PENDIENTE".equalsIgnoreCase(cita.estado()))
-                .filter(cita -> cita.inicio().toLocalDateTime().isAfter(LocalDateTime.now()))
+                .filter(cita -> cita.inicio().toInstant().isAfter(reloj.instant()))
                 .sorted(Comparator.comparing(CitaClienteResponse::inicio))
                 .toList();
 

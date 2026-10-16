@@ -17,7 +17,6 @@ import java.security.interfaces.RSAPrivateKey;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.time.Instant;
 import java.time.LocalDateTime;
-import java.time.ZoneOffset;
 import java.util.Base64;
 import java.util.Date;
 import java.util.Map;
@@ -25,6 +24,7 @@ import java.util.UUID;
 
 @Service
 public class ServicioOAuthCorreoMicrosoft {
+    private final java.time.Clock reloj;
 
     private static final String LOGIN_BASE_URL = "https://login.microsoftonline.com";
     private static final String GRAPH_BASE_URL = "https://graph.microsoft.com/v1.0";
@@ -40,8 +40,10 @@ public class ServicioOAuthCorreoMicrosoft {
             PropiedadesOAuthCorreoMicrosoft propiedades,
             ProtectorSecretosCorreo protectorSecretos,
             ConfiguracionCorreoEmpresaRepositorio repositorio,
-            RestClient.Builder restClientBuilder
+            RestClient.Builder restClientBuilder,
+            java.time.Clock reloj
     ) {
+        this.reloj = reloj;
         this.propiedades = propiedades;
         this.protectorSecretos = protectorSecretos;
         this.repositorio = repositorio;
@@ -50,7 +52,7 @@ public class ServicioOAuthCorreoMicrosoft {
 
     public InicioOAuthCorreoMicrosoftResponse iniciar(Long empresaId, Long usuarioId) {
         validarConfiguracion();
-        long expira = Instant.now().plusSeconds(600).getEpochSecond();
+        long expira = Instant.now(reloj).plusSeconds(600).getEpochSecond();
         String statePlano = empresaId + "|" + usuarioId + "|" + expira + "|" + UUID.randomUUID();
         String state = protectorSecretos.encriptar(statePlano);
         String url = UriComponentsBuilder.fromHttpUrl(LOGIN_BASE_URL + "/organizations/oauth2/v2.0/authorize")
@@ -107,7 +109,7 @@ public class ServicioOAuthCorreoMicrosoft {
             entidad.setGraphUserId(userId);
             entidad.setGraphOauthRefreshToken(protectorSecretos.encriptar(refreshToken));
             entidad.setGraphOauthScopes((String) token.getOrDefault("scope", SCOPES));
-            entidad.setGraphOauthConectadoEn(LocalDateTime.now(ZoneOffset.UTC));
+            entidad.setGraphOauthConectadoEn(LocalDateTime.now(reloj));
             repositorio.save(entidad);
             return urlResultado("ok", null);
         } catch (Exception ex) {
@@ -155,7 +157,7 @@ public class ServicioOAuthCorreoMicrosoft {
     }
 
     private String construirClientAssertion(String tokenEndpoint) {
-        Instant ahora = Instant.now();
+        Instant ahora = Instant.now(reloj);
         return Jwts.builder().header()
                 .add("typ", "JWT").add("alg", "RS256")
                 .add("x5t", thumbprintBase64Url(propiedades.certificateThumbprint())).and()
@@ -169,7 +171,7 @@ public class ServicioOAuthCorreoMicrosoft {
     private EstadoOAuth validarState(String state) {
         String plano = protectorSecretos.desencriptarSiNecesario(state, "oauth_state");
         String[] partes = plano.split("\\|", 4);
-        if (partes.length != 4 || Long.parseLong(partes[2]) < Instant.now().getEpochSecond()) {
+        if (partes.length != 4 || Long.parseLong(partes[2]) < Instant.now(reloj).getEpochSecond()) {
             throw new IllegalArgumentException("El estado OAuth es inválido o expiró");
         }
         return new EstadoOAuth(Long.parseLong(partes[0]), Long.parseLong(partes[1]));

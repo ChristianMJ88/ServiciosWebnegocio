@@ -1,7 +1,7 @@
 package com.techprotech.agenda.modulos.recepcion.api.dto;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.time.LocalTime;
 
 public record SolicitudEsperaRecepcionResponse(
@@ -20,8 +20,8 @@ public record SolicitudEsperaRecepcionResponse(
         String canalOrigen,
         String estado,
         String notas,
-        LocalDateTime creadaEn,
-        LocalDateTime notificadaEn,
-        LocalDateTime cerradoEn
+        OffsetDateTime creadaEn,
+        OffsetDateTime notificadaEn,
+        OffsetDateTime cerradoEn
 ) {
 }

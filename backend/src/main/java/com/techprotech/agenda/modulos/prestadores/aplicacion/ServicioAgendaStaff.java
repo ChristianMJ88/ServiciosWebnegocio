@@ -1,5 +1,7 @@
 package com.techprotech.agenda.modulos.prestadores.aplicacion;
 
+import java.time.Clock;
+import com.techprotech.agenda.compartido.tiempo.ZonaNegocio;
 import com.techprotech.agenda.modulos.clientes.infraestructura.entidad.ClienteEntidad;
 import com.techprotech.agenda.modulos.autenticacion.infraestructura.entidad.UsuarioEntidad;
 import com.techprotech.agenda.modulos.clientes.infraestructura.repositorio.ClienteRepositorio;
@@ -30,6 +32,8 @@ import static org.springframework.http.HttpStatus.NOT_FOUND;
 
 @Service
 public class ServicioAgendaStaff {
+    private final Clock reloj;
+    private final ZonaNegocio zonasNegocio;
 
     private final CitaRepositorio citaRepositorio;
     private final HistorialEstadoCitaRepositorio historialEstadoCitaRepositorio;
@@ -46,8 +50,12 @@ public class ServicioAgendaStaff {
             ServicioRepositorio servicioRepositorio,
             ClienteRepositorio clienteRepositorio,
             UsuarioRepositorio usuarioRepositorio,
-            PrestadorServicioRepositorio prestadorServicioRepositorio
+            PrestadorServicioRepositorio prestadorServicioRepositorio,
+            Clock reloj,
+            ZonaNegocio zonasNegocio
     ) {
+        this.reloj = reloj;
+        this.zonasNegocio = zonasNegocio;
         this.citaRepositorio = citaRepositorio;
         this.historialEstadoCitaRepositorio = historialEstadoCitaRepositorio;
         this.sucursalRepositorio = sucursalRepositorio;
@@ -81,8 +89,10 @@ public class ServicioAgendaStaff {
 
     @Transactional(readOnly = true)
     public List<CitaAgendaResponse> obtenerAgenda(Long empresaId, Long prestadorId, LocalDate desde, LocalDate hasta) {
-        LocalDate inicio = desde != null ? desde : LocalDate.now();
+        Long sucursalId = desde == null ? obtenerPerfil(empresaId, prestadorId).sucursalId() : null;
+        LocalDate inicio = desde != null ? desde : LocalDate.now(reloj.withZone(zonasNegocio.de(empresaId, sucursalId)));
         LocalDate fin = hasta != null ? hasta : inicio.plusDays(7);
+        var zonasPorSucursal = new java.util.HashMap<Long, ZoneId>();
         return citaRepositorio.findByEmpresaIdAndPrestadorIdAndInicioBetweenOrderByInicioAsc(
                         empresaId,
                         prestadorId,
@@ -90,7 +100,8 @@ public class ServicioAgendaStaff {
                         fin.plusDays(1).atStartOfDay()
                 )
                 .stream()
-                .map(this::mapear)
+                .map(cita -> mapear(cita, zonasPorSucursal.computeIfAbsent(cita.getSucursalId(),
+                        id -> zonasNegocio.de(empresaId, id))))
                 .toList();
     }
 
@@ -112,10 +123,7 @@ public class ServicioAgendaStaff {
         }
 
         if (List.of("FINALIZADA", "NO_ASISTIO").contains(nuevoEstado)) {
-            String zonaHoraria = sucursalRepositorio.findById(cita.getSucursalId())
-                    .map(SucursalEntidad::getZonaHoraria)
-                    .orElse("America/Mexico_City");
-            LocalDateTime ahoraLocal = LocalDateTime.now(ZoneId.of(zonaHoraria));
+            LocalDateTime ahoraLocal = LocalDateTime.now(reloj.withZone(zonasNegocio.de(empresaId, cita.getSucursalId())));
             if (cita.getInicio().isAfter(ahoraLocal)) {
                 throw new ResponseStatusException(BAD_REQUEST, "No puedes cerrar una cita futura antes de que inicie");
             }
@@ -134,13 +142,11 @@ public class ServicioAgendaStaff {
         historialEstadoCitaRepositorio.save(historial);
     }
 
-    private CitaAgendaResponse mapear(CitaEntidad cita) {
+    private CitaAgendaResponse mapear(CitaEntidad cita, ZoneId zonaHoraria) {
         String sucursalNombre = sucursalRepositorio.findById(cita.getSucursalId()).map(SucursalEntidad::getNombre)
           .orElse("Sucursal");
         String servicioNombre = servicioRepositorio.findById(cita.getServicioId()).map(ServicioEntidad::getNombre)
           .orElse("Servicio");
-        String zonaHoraria = sucursalRepositorio.findById(cita.getSucursalId()).map(SucursalEntidad::getZonaHoraria)
-          .orElse("America/Mexico_City");
         String clienteNombre = clienteRepositorio.findById(cita.getClienteId()).map(ClienteEntidad::getNombreCompleto)
           .orElse("Cliente");
         String clienteTelefono = clienteRepositorio.findById(cita.getClienteId()).map(ClienteEntidad::getTelefono)
@@ -156,8 +162,8 @@ public class ServicioAgendaStaff {
                 clienteNombre,
                 clienteCorreo,
                 clienteTelefono,
-                cita.getInicio().atZone(ZoneId.of(zonaHoraria)).toOffsetDateTime(),
-                cita.getFin().atZone(ZoneId.of(zonaHoraria)).toOffsetDateTime(),
+                cita.getInicio().atZone(zonaHoraria).toOffsetDateTime(),
+                cita.getFin().atZone(zonaHoraria).toOffsetDateTime(),
                 cita.getNotas()
         );
     }

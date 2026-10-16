@@ -19,6 +19,7 @@
             <span>{{ solicitud.fechaDeseada | date:'dd/MM/yyyy':'':'es-MX' }}</span>
             <span>{{ solicitud.telefonoCliente }}</span>
             <span>{{ solicitud.aceptaWhatsapp ? 'Avisar por WhatsApp' : 'Seguimiento manual' }}</span>
+            <span class="recepcion-waitlist-created">Registro: {{ solicitud.creadaEn | date:'dd/MM HH:mm':'':'es-MX' }}</span>
           </div>
           @if (solicitud.notas) {
             <div class="recepcion-appointment-note">{{ solicitud.notas }}</div>
@@ -30,7 +31,7 @@
               </button>
             }
             @if (solicitud.estado === estadoNotificada) {
-              <span class="recepcion-waitlist-hint">Ya fue notificado.</span>
+              <span class="recepcion-waitlist-hint">Notificado{{ solicitud.notificadaEn ? ' · ' + (solicitud.notificadaEn | date:'dd/MM HH:mm':'':'es-MX') : '' }}</span>
             }
             @if (!solicitud.aceptaWhatsapp) {
               <span class="recepcion-waitlist-hint">Seguimiento manual.</span>

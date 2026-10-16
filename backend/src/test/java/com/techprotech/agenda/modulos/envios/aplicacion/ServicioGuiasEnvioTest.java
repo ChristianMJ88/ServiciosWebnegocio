@@ -45,7 +45,7 @@ class ServicioGuiasEnvioTest {
         when(proveedor.codigo()).thenReturn("ENVIA");
         servicio = new ServicioGuiasEnvio(envios, ordenes, detalles, configuraciones, origenes, productos,
                 credenciales, mock(ServicioTrazabilidadEnvio.class),
-                mock(com.techprotech.agenda.compartido.correo.ServicioOutboxCorreoEnvios.class), List.of(proveedor), tx);
+                mock(com.techprotech.agenda.compartido.correo.ServicioOutboxCorreoEnvios.class), List.of(proveedor), tx, java.time.Clock.systemUTC());
 
         envio = new EnvioPedidoEntidad(); envio.setId(7L); envio.setEmpresaId(25L); envio.setCheckoutOrdenId(41L);
         envio.setSucursalId(3L); envio.setProveedor("ENVIA"); envio.setAmbiente("PRUEBA");

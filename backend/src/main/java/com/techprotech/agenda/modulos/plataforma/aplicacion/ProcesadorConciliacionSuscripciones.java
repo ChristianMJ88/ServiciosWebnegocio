@@ -9,10 +9,10 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
-import java.time.ZoneOffset;
 
 @Service
 public class ProcesadorConciliacionSuscripciones {
+    private final java.time.Clock reloj;
     private static final Logger log=LoggerFactory.getLogger(ProcesadorConciliacionSuscripciones.class);
     private final SuscripcionPlataformaRepositorio suscripciones;
     private final ConsultaSuscripcionStripe consulta;
@@ -23,13 +23,14 @@ public class ProcesadorConciliacionSuscripciones {
     public ProcesadorConciliacionSuscripciones(SuscripcionPlataformaRepositorio suscripciones,
             ConsultaSuscripcionStripe consulta,ServicioStripePlataforma servicio,
             @Value("${aplicacion.plataforma.stripe.conciliacion.habilitado:true}") boolean habilitado,
-            @Value("${aplicacion.plataforma.stripe.conciliacion.lote:20}") int lote) {
+            @Value("${aplicacion.plataforma.stripe.conciliacion.lote:20}") int lote, java.time.Clock reloj) {
+        this.reloj = reloj;
         this.suscripciones=suscripciones;this.consulta=consulta;this.servicio=servicio;this.habilitado=habilitado;this.lote=lote;
     }
     @Scheduled(fixedDelayString="${aplicacion.plataforma.stripe.conciliacion.delay-ms:300000}",initialDelayString="${aplicacion.plataforma.stripe.conciliacion.delay-ms:300000}")
     public void procesar() {
         if(!habilitado)return;
-        var ahora=LocalDateTime.now(ZoneOffset.UTC);
+        var ahora=LocalDateTime.now(reloj);
         var pagina=PageRequest.of(0,Math.max(1,lote));
         var pendientes=suscripciones.findParaConciliar(ahora,cursor,pagina);
         if(pendientes.isEmpty()&&cursor>0){cursor=0;pendientes=suscripciones.findParaConciliar(ahora,cursor,pagina);}

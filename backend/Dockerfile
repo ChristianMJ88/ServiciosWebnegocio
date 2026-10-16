@@ -5,8 +5,9 @@ COPY src ./src
 RUN mvn -q -DskipTests package
 
 FROM eclipse-temurin:21-jre
+ENV TZ=UTC
 WORKDIR /app
 COPY --from=build /app/target/agenda-backend-0.0.1-SNAPSHOT.jar app.jar
 EXPOSE 8080
-ENTRYPOINT ["java", "-jar", "/app/app.jar"]
+ENTRYPOINT ["java", "-Duser.timezone=UTC", "-jar", "/app/app.jar"]
 

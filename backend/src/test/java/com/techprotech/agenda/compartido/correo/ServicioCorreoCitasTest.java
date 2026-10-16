@@ -19,7 +19,7 @@ class ServicioCorreoCitasTest {
         ServicioCorreoCitas servicio = new ServicioCorreoCitas(
                 crearServicioConfiguracion(new ConfiguracionCorreoResolvida(false, ProveedorCorreo.SMTP, null, null, null, null, 0, null, null, false, false, null, null, null, null, null, null)),
                 clienteCorreoFalso
-        );
+        , java.time.Clock.systemUTC());
 
         boolean lanzo = false;
         try {
@@ -56,7 +56,7 @@ class ServicioCorreoCitasTest {
                         null
                 )),
                 clienteCorreoFalso
-        );
+        , java.time.Clock.systemUTC());
 
         boolean enviado = servicio.enviarConfirmacion(25L, crearConfirmacion());
 
@@ -98,7 +98,7 @@ class ServicioCorreoCitasTest {
                         null
                 )),
                 new ClienteCorreoFalso()
-        );
+        , java.time.Clock.systemUTC());
 
         assertFalse(servicio.estaHabilitado(12L));
     }

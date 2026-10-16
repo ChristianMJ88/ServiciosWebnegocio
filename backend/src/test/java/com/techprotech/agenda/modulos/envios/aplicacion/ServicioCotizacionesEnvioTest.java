@@ -42,7 +42,7 @@ class ServicioCotizacionesEnvioTest {
         PropiedadesEnvia propiedades = new PropiedadesEnvia("", "", "", "", "", "", "", "", "", "",
                 15, false, "", "");
         servicio = new ServicioCotizacionesEnvio(sitios, configuraciones, origenes, productos, cotizador,
-                cotizaciones, proveedor, credenciales, propiedades);
+                cotizaciones, proveedor, credenciales, propiedades, java.time.Clock.systemUTC());
 
         EmpresaSitioConfigEntidad sitio = new EmpresaSitioConfigEntidad();
         sitio.setEmpresaId(25L); sitio.setSlug("nail-art"); sitio.setNombreComercial("Nail Art"); sitio.setPublicado(true);

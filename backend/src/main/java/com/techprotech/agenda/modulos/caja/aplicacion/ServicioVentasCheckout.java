@@ -20,6 +20,7 @@ import java.util.List;
 
 @Service
 public class ServicioVentasCheckout {
+    private final java.time.Clock reloj;
     private final CheckoutOrdenRepositorio ordenes;
     private final CheckoutOrdenDetalleRepositorio detallesCheckout;
     private final IntentoPagoCheckoutRepositorio intentos;
@@ -31,7 +32,8 @@ public class ServicioVentasCheckout {
     public ServicioVentasCheckout(CheckoutOrdenRepositorio ordenes, CheckoutOrdenDetalleRepositorio detallesCheckout,
                                   IntentoPagoCheckoutRepositorio intentos, VentaRepositorio ventas,
                                   VentaDetalleRepositorio detallesVenta, PagoVentaRepositorio pagos,
-                                  com.techprotech.agenda.modulos.productos.aplicacion.ServicioComisionesDevengadas comisiones) {
+                                  com.techprotech.agenda.modulos.productos.aplicacion.ServicioComisionesDevengadas comisiones, java.time.Clock reloj) {
+        this.reloj = reloj;
         this.ordenes = ordenes;
         this.detallesCheckout = detallesCheckout;
         this.intentos = intentos;
@@ -63,7 +65,7 @@ public class ServicioVentasCheckout {
         venta.setImpuestosTotal(orden.getImpuestosTotal());
         venta.setTotal(orden.getTotal());
         venta.setObservaciones(orden.isRequiereConciliacion() ? "Pago con incidencia: " + orden.getMotivoIncidencia() : "Venta creada desde el checkout público");
-        venta.setCreadaEn(orden.getCreadaEn() == null ? LocalDateTime.now() : orden.getCreadaEn());
+        venta.setCreadaEn(orden.getCreadaEn() == null ? LocalDateTime.now(reloj) : orden.getCreadaEn());
         venta = ventas.save(venta);
 
         List<CheckoutOrdenDetalleEntidad> origen = detallesCheckout
@@ -78,7 +80,7 @@ public class ServicioVentasCheckout {
         pago.setMonto(intento.getImporte());
         pago.setMetodoPago("MERCADO_PAGO");
         pago.setReferencia(intento.getReferenciaExterna());
-        pago.setRegistradoEn(LocalDateTime.now());
+        pago.setRegistradoEn(LocalDateTime.now(reloj));
         pagos.save(pago);
         comisiones.registrar(venta, filas);
     }

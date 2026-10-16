@@ -15,7 +15,7 @@ class ServicioSolicitudesHorarioTest {
  @Test void contrasenaIncorrectaNoAplicaCambio(){
   var repo=mock(SolicitudHorarioRepositorio.class);var reglas=mock(ReglaDisponibilidadRepositorio.class);var gestion=mock(ServicioGestionDisponibilidad.class);var semanal=mock(ServicioHorarioSemanal.class);var usuarios=mock(UsuarioRepositorio.class);var encoder=mock(PasswordEncoder.class);
   var admin=new UsuarioEntidad();admin.setHabilitado(true);admin.setContrasenaHash("hash");when(usuarios.findByIdAndEmpresaId(2L,1L)).thenReturn(Optional.of(admin));
-  var servicio=new ServicioSolicitudesHorario(repo,reglas,gestion,semanal,usuarios,encoder,new ObjectMapper());
+  var servicio=new ServicioSolicitudesHorario(repo,reglas,gestion,semanal,usuarios,encoder,new ObjectMapper(), java.time.Clock.systemUTC());
   assertThrows(ResponseStatusException.class,()->servicio.resolver(1L,2L,3L,new ResolverHorarioRequest(true,"incorrecta")));
   verifyNoInteractions(repo,gestion,semanal);
  }

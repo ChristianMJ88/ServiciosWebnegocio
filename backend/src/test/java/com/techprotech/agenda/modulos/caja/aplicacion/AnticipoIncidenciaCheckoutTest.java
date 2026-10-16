@@ -40,7 +40,7 @@ class AnticipoIncidenciaCheckoutTest {
             when(ordenes.bloquearPorEmpresaEId(7L,30L)).thenReturn(Optional.of(orden));
             when(intentos.findFirstByEmpresaIdAndCheckoutOrdenIdAndEstadoOrderByIdDesc(7L,30L,"APROBADO")).thenReturn(Optional.of(intento));
             when(origen.findByEmpresaIdAndCheckoutOrdenIdOrderByIdAsc(7L,30L)).thenReturn(List.of(linea));
-            var proyeccion=new ServicioVentasCheckout(ordenes,origen,intentos,ventas,detalles,mock(PagoVentaRepositorio.class),mock(ServicioComisionesDevengadas.class));
+            var proyeccion=new ServicioVentasCheckout(ordenes,origen,intentos,ventas,detalles,mock(PagoVentaRepositorio.class),mock(ServicioComisionesDevengadas.class), java.time.Clock.systemUTC());
             proyeccion.proyectar(7L,30L);proyeccion.proyectar(7L,30L);em.flush();
             assertThat(ventas.findAll()).singleElement().satisfies(v -> {assertThat(v.getCanal()).isEqualTo("ONLINE");assertThat(v.getObservaciones()).contains("incidencia");});
             assertThat(detalles.sumarServiciosPagadosPorCita(7L,10L)).isEqualByComparingTo("100");
@@ -51,7 +51,7 @@ class AnticipoIncidenciaCheckoutTest {
             cita.setInicio(LocalDateTime.now(ZoneId.of(sucursal.getZonaHoraria())));cita.setPrecio(new BigDecimal("500"));cita.setMoneda("MXN");
             when(citas.findByEmpresaIdAndEstadoInOrderByInicioDesc(eq(7L),any())).thenReturn(List.of(cita));
             var caja=new ServicioCaja(mock(CajaSesionRepositorio.class),mock(PagoCitaRepositorio.class),mock(PagoVentaRepositorio.class),detalles,
-                mock(MovimientoCajaRepositorio.class),citas,mock(ClienteRepositorio.class),mock(ServicioRepositorio.class),sucursales,new ObjectMapper());
+                mock(MovimientoCajaRepositorio.class),citas,mock(ClienteRepositorio.class),mock(ServicioRepositorio.class),sucursales,new ObjectMapper(), java.time.Clock.systemUTC());
             var cobrable=caja.listarCitasPorCobrar(7L,List.of(3L),3L).getFirst();
             assertThat(cobrable.pagado()).isEqualByComparingTo("100");assertThat(cobrable.pendiente()).isEqualByComparingTo("400");
             em.getTransaction().rollback();

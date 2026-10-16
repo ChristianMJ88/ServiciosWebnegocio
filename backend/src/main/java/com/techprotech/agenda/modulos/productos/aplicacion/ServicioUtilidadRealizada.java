@@ -11,11 +11,18 @@ import org.springframework.web.server.ResponseStatusException;
 @Service
 public class ServicioUtilidadRealizada {
     private final RentabilidadVentasRepositorio repositorio;
-    public ServicioUtilidadRealizada(RentabilidadVentasRepositorio repositorio) { this.repositorio=repositorio; }
+    private final com.techprotech.agenda.compartido.tiempo.ZonaNegocio zonasNegocio;
+    public ServicioUtilidadRealizada(RentabilidadVentasRepositorio repositorio,
+            com.techprotech.agenda.compartido.tiempo.ZonaNegocio zonasNegocio) {
+        this.repositorio=repositorio; this.zonasNegocio=zonasNegocio;
+    }
     @Transactional(readOnly=true)
     public UtilidadRealizadaResponse consultar(Long empresaId, LocalDate desde, LocalDate hasta, Long sucursalId, String busqueda, int pagina) {
         if (desde.isAfter(hasta) || hasta.equals(LocalDate.MAX)) throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"Revisa el periodo del reporte");
-        var resultado=repositorio.consultar(empresaId,desde.atStartOfDay(),hasta.plusDays(1).atStartOfDay(),sucursalId,
+        var zona=zonasNegocio.de(empresaId,sucursalId);
+        var resultado=repositorio.consultar(empresaId,
+            desde.atStartOfDay(zona).withZoneSameInstant(java.time.ZoneOffset.UTC).toLocalDateTime(),
+            hasta.plusDays(1).atStartOfDay(zona).withZoneSameInstant(java.time.ZoneOffset.UTC).toLocalDateTime(),sucursalId,
             busqueda.trim().toLowerCase(Locale.ROOT),PageRequest.of(Math.max(0,pagina),25));
         return new UtilidadRealizadaResponse(resultado.getContent().stream().map(ServicioUtilidadRealizada::mapear).toList(),
             resultado.getNumber(),resultado.getTotalPages(),resultado.getTotalElements(),

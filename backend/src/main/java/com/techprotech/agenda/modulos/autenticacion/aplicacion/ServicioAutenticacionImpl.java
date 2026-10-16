@@ -38,6 +38,7 @@ import static org.springframework.http.HttpStatus.UNAUTHORIZED;
 
 @Service
 public class ServicioAutenticacionImpl implements ServicioAutenticacion {
+    private final java.time.Clock reloj;
 
     private static final Logger log = LoggerFactory.getLogger(ServicioAutenticacionImpl.class);
     private static final String CONTRASENA_LEGACY_CITA = "Temporal123!";
@@ -61,8 +62,10 @@ public class ServicioAutenticacionImpl implements ServicioAutenticacion {
             ServicioRolesEmpresa servicioRolesEmpresa,
             TokenActualizacionRepositorio tokenActualizacionRepositorio,
             PasswordEncoder passwordEncoder,
-            ServicioProteccionAcceso proteccionAcceso
+            ServicioProteccionAcceso proteccionAcceso,
+            java.time.Clock reloj
     ) {
+        this.reloj = reloj;
         this.servicioTokenJwt = servicioTokenJwt;
         this.propiedadesJwt = propiedadesJwt;
         this.empresaRepositorio = empresaRepositorio;
@@ -113,7 +116,7 @@ public class ServicioAutenticacionImpl implements ServicioAutenticacion {
 
         List<String> roles = servicioRolesEmpresa.obtenerCodigosRolUsuario(usuario.getEmpresaId(), usuario.getId());
 
-        usuario.setUltimoAccesoEn(LocalDateTime.now());
+        usuario.setUltimoAccesoEn(LocalDateTime.now(reloj));
         proteccionAcceso.limpiar(usuario);
         usuarioRepositorio.save(usuario);
 
@@ -198,7 +201,7 @@ public class ServicioAutenticacionImpl implements ServicioAutenticacion {
         TokenActualizacionEntidad tokenGuardado = buscarTokenVigente(usuarioId, tokenPlano)
                 .orElseThrow(() -> new ResponseStatusException(UNAUTHORIZED, "El token de actualizacion ya no es valido"));
 
-        tokenGuardado.setRevocadoEn(LocalDateTime.now());
+        tokenGuardado.setRevocadoEn(LocalDateTime.now(reloj));
         tokenActualizacionRepositorio.save(tokenGuardado);
 
         List<String> roles = servicioRolesEmpresa.obtenerCodigosRolUsuario(usuario.getEmpresaId(), usuario.getId());
@@ -216,7 +219,7 @@ public class ServicioAutenticacionImpl implements ServicioAutenticacion {
 
         Long usuarioId = servicioTokenJwt.obtenerUsuarioId(tokenPlano);
         buscarTokenVigente(usuarioId, tokenPlano).ifPresent(token -> {
-            token.setRevocadoEn(LocalDateTime.now());
+            token.setRevocadoEn(LocalDateTime.now(reloj));
             tokenActualizacionRepositorio.save(token);
         });
     }
@@ -328,7 +331,7 @@ public class ServicioAutenticacionImpl implements ServicioAutenticacion {
 
     private RespuestaAccesoApp autenticarUsuarioApp(UsuarioEntidad usuario) {
         List<String> roles = servicioRolesEmpresa.obtenerCodigosRolUsuario(usuario.getEmpresaId(), usuario.getId());
-        usuario.setUltimoAccesoEn(LocalDateTime.now());
+        usuario.setUltimoAccesoEn(LocalDateTime.now(reloj));
         proteccionAcceso.limpiar(usuario);
         usuarioRepositorio.save(usuario);
 
@@ -372,7 +375,7 @@ public class ServicioAutenticacionImpl implements ServicioAutenticacion {
         TokenActualizacionEntidad token = new TokenActualizacionEntidad();
         token.setUsuarioId(usuario.getId());
         token.setTokenHash(passwordEncoder.encode(tokenActualizacion));
-        token.setExpiraEn(LocalDateTime.now().plusDays(propiedadesJwt.diasRefresh()));
+        token.setExpiraEn(LocalDateTime.now(reloj).plusDays(propiedadesJwt.diasRefresh()));
         tokenActualizacionRepositorio.save(token);
 
         return new RespuestaTokenJwt(
@@ -420,7 +423,7 @@ public class ServicioAutenticacionImpl implements ServicioAutenticacion {
     }
 
     private Optional<TokenActualizacionEntidad> buscarTokenVigente(Long usuarioId, String tokenPlano) {
-        return tokenActualizacionRepositorio.findByUsuarioIdAndRevocadoEnIsNullAndExpiraEnAfter(usuarioId, LocalDateTime.now())
+        return tokenActualizacionRepositorio.findByUsuarioIdAndRevocadoEnIsNullAndExpiraEnAfter(usuarioId, LocalDateTime.now(reloj))
                 .stream()
                 .filter(token -> passwordEncoder.matches(tokenPlano, token.getTokenHash()))
                 .findFirst();

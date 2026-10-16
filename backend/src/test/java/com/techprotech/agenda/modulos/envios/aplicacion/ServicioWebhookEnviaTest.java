@@ -31,7 +31,7 @@ class ServicioWebhookEnviaTest {
                 .thenReturn(Optional.of(config));
 
         ServicioWebhookEnvia servicio = new ServicioWebhookEnvia(configuraciones, eventos,
-                mock(ResolutorCredencialEnvio.class), new ObjectMapper());
+                mock(ResolutorCredencialEnvio.class), new ObjectMapper(), java.time.Clock.systemUTC());
         String payload = """
                 {"type":"tracking.simple","created_at":"2026-09-30T20:00:00Z","data":{"tracking_number":"ABC123","status":"delivered"}}
                 """;
@@ -59,7 +59,7 @@ class ServicioWebhookEnviaTest {
         when(eventos.existsByEmpresaIdAndProveedorAndEventoExternoId(25L, "ENVIA", "delivery-1"))
                 .thenReturn(true);
         ServicioWebhookEnvia servicio = new ServicioWebhookEnvia(configuraciones, eventos,
-                mock(ResolutorCredencialEnvio.class), new ObjectMapper());
+                mock(ResolutorCredencialEnvio.class), new ObjectMapper(), java.time.Clock.systemUTC());
 
         servicio.recibir(token, "delivery-1", "tracking.simple", null, null,
                 "{\"type\":\"tracking.simple\",\"data\":{}}");

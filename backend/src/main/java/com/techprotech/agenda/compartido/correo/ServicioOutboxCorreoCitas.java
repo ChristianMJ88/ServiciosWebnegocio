@@ -8,6 +8,7 @@ import java.time.LocalDateTime;
 
 @Service
 public class ServicioOutboxCorreoCitas {
+    private final java.time.Clock reloj;
 
     private final BandejaSalidaNotificacionRepositorio bandejaSalidaNotificacionRepositorio;
     private final ServicioConfiguracionCorreoEmpresa servicioConfiguracionCorreoEmpresa;
@@ -16,8 +17,10 @@ public class ServicioOutboxCorreoCitas {
     public ServicioOutboxCorreoCitas(
             BandejaSalidaNotificacionRepositorio bandejaSalidaNotificacionRepositorio,
             ServicioConfiguracionCorreoEmpresa servicioConfiguracionCorreoEmpresa,
-            ObjectMapper objectMapper
+            ObjectMapper objectMapper,
+            java.time.Clock reloj
     ) {
+        this.reloj = reloj;
         this.bandejaSalidaNotificacionRepositorio = bandejaSalidaNotificacionRepositorio;
         this.servicioConfiguracionCorreoEmpresa = servicioConfiguracionCorreoEmpresa;
         this.objectMapper = objectMapper;
@@ -36,7 +39,7 @@ public class ServicioOutboxCorreoCitas {
         salida.setCanal("EMAIL");
         salida.setPayloadJson(serializar(confirmacion));
         salida.setEstado("PENDIENTE");
-        salida.setProgramadaEn(LocalDateTime.now());
+        salida.setProgramadaEn(LocalDateTime.now(reloj));
         salida.setIntentos(0);
         bandejaSalidaNotificacionRepositorio.save(salida);
         return true;
@@ -44,57 +47,57 @@ public class ServicioOutboxCorreoCitas {
 
     public boolean programarRegistrada(Long empresaId, Long citaId, LocalDateTime inicioEsperado) {
         boolean correoCliente = programar(
-                empresaId, citaId, "CITA_REGISTRADA_EMAIL", inicioEsperado, LocalDateTime.now());
-        programar(empresaId, citaId, "CITA_REGISTRADA_NEGOCIO_EMAIL", inicioEsperado, LocalDateTime.now());
+                empresaId, citaId, "CITA_REGISTRADA_EMAIL", inicioEsperado, LocalDateTime.now(reloj));
+        programar(empresaId, citaId, "CITA_REGISTRADA_NEGOCIO_EMAIL", inicioEsperado, LocalDateTime.now(reloj));
         return correoCliente;
     }
 
 public boolean programarNuevaCitaNegocio(Long empresaId,Long citaId,LocalDateTime inicioEsperado) {
-    return programar(empresaId,citaId,"CITA_REGISTRADA_NEGOCIO_EMAIL",inicioEsperado,LocalDateTime.now());
+    return programar(empresaId,citaId,"CITA_REGISTRADA_NEGOCIO_EMAIL",inicioEsperado,LocalDateTime.now(reloj));
 }
 
     public boolean programarConfirmada(Long empresaId, Long citaId, LocalDateTime inicioEsperado) {
-        return programar(empresaId, citaId, "CITA_CONFIRMADA_EMAIL", inicioEsperado, LocalDateTime.now());
+        return programar(empresaId, citaId, "CITA_CONFIRMADA_EMAIL", inicioEsperado, LocalDateTime.now(reloj));
     }
 
     public boolean programarReprogramada(Long empresaId, Long citaId, LocalDateTime inicioEsperado) {
-        return programar(empresaId, citaId, "CITA_REPROGRAMADA_EMAIL", inicioEsperado, LocalDateTime.now());
+        return programar(empresaId, citaId, "CITA_REPROGRAMADA_EMAIL", inicioEsperado, LocalDateTime.now(reloj));
     }
 
     public boolean programarApartadoVencido(Long empresaId, Long citaId, LocalDateTime inicioEsperado) {
-        return programar(empresaId, citaId, "CITA_APARTADO_VENCIDO_EMAIL", inicioEsperado, LocalDateTime.now());
+        return programar(empresaId, citaId, "CITA_APARTADO_VENCIDO_EMAIL", inicioEsperado, LocalDateTime.now(reloj));
     }
 
     public boolean programarIncidenciaPagoNegocio(Long empresaId, Long citaId, LocalDateTime inicioEsperado) {
-        return programar(empresaId, citaId, "CITA_PAGO_INCIDENCIA_NEGOCIO_EMAIL", inicioEsperado, LocalDateTime.now());
+        return programar(empresaId, citaId, "CITA_PAGO_INCIDENCIA_NEGOCIO_EMAIL", inicioEsperado, LocalDateTime.now(reloj));
     }
 
     public boolean programarRecordatorioConfirmacion(Long empresaId, Long citaId, LocalDateTime inicioEsperado) {
-        return programar(empresaId, citaId, "CITA_RECORDATORIO_CONFIRMACION_EMAIL", inicioEsperado, LocalDateTime.now());
+        return programar(empresaId, citaId, "CITA_RECORDATORIO_CONFIRMACION_EMAIL", inicioEsperado, LocalDateTime.now(reloj));
     }
 
     public boolean programarRecordatorio(Long empresaId, Long citaId, LocalDateTime inicioEsperado) {
-        return programar(empresaId, citaId, "CITA_RECORDATORIO_EMAIL", inicioEsperado, LocalDateTime.now());
+        return programar(empresaId, citaId, "CITA_RECORDATORIO_EMAIL", inicioEsperado, LocalDateTime.now(reloj));
     }
 
     public boolean programarCanceladaCliente(Long empresaId, Long citaId, LocalDateTime inicioEsperado) {
-        return programar(empresaId, citaId, "CITA_CANCELADA_CLIENTE_EMAIL", inicioEsperado, LocalDateTime.now());
+        return programar(empresaId, citaId, "CITA_CANCELADA_CLIENTE_EMAIL", inicioEsperado, LocalDateTime.now(reloj));
     }
 
     public boolean programarCanceladaNegocio(Long empresaId, Long citaId, LocalDateTime inicioEsperado) {
-        return programar(empresaId, citaId, "CITA_CANCELADA_NEGOCIO_EMAIL", inicioEsperado, LocalDateTime.now());
+        return programar(empresaId, citaId, "CITA_CANCELADA_NEGOCIO_EMAIL", inicioEsperado, LocalDateTime.now(reloj));
     }
 
     public boolean programarLiberadaSinConfirmacion(Long empresaId, Long citaId, LocalDateTime inicioEsperado) {
-        return programar(empresaId, citaId, "CITA_LIBERADA_SIN_CONFIRMACION_EMAIL", inicioEsperado, LocalDateTime.now());
+        return programar(empresaId, citaId, "CITA_LIBERADA_SIN_CONFIRMACION_EMAIL", inicioEsperado, LocalDateTime.now(reloj));
     }
 
     public boolean programarGraciasVisita(Long empresaId, Long citaId, LocalDateTime inicioEsperado) {
-        return programar(empresaId, citaId, "CITA_GRACIAS_VISITA_EMAIL", inicioEsperado, LocalDateTime.now());
+        return programar(empresaId, citaId, "CITA_GRACIAS_VISITA_EMAIL", inicioEsperado, LocalDateTime.now(reloj));
     }
 
     public boolean programarNoAsistio(Long empresaId, Long citaId, LocalDateTime inicioEsperado) {
-        return programar(empresaId, citaId, "CITA_NO_ASISTIO_EMAIL", inicioEsperado, LocalDateTime.now());
+        return programar(empresaId, citaId, "CITA_NO_ASISTIO_EMAIL", inicioEsperado, LocalDateTime.now(reloj));
     }
 
     private boolean programar(Long empresaId, Long citaId, String evento, LocalDateTime inicioEsperado, LocalDateTime programadaEn) {

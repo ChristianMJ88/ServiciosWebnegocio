@@ -1,4 +1,6 @@
 package com.techprotech.agenda.modulos.disponibilidad.aplicacion;
+import static com.techprotech.agenda.compartido.tiempo.MomentoUtc.de;
+
 import com.techprotech.agenda.modulos.disponibilidad.api.dto.*;
 import com.techprotech.agenda.modulos.disponibilidad.infraestructura.entidad.SolicitudHorarioEntidad;
 import com.techprotech.agenda.modulos.disponibilidad.infraestructura.repositorio.*;
@@ -13,6 +15,7 @@ import java.time.LocalDateTime;
 import java.util.*;
 @Service
 public class ServicioSolicitudesHorario {
+    private final java.time.Clock reloj;
  private final SolicitudHorarioRepositorio solicitudes;
  private final ReglaDisponibilidadRepositorio reglas;
  private final ServicioGestionDisponibilidad gestion;
@@ -20,14 +23,15 @@ public class ServicioSolicitudesHorario {
  private final UsuarioRepositorio usuarios;
  private final PasswordEncoder encoder;
  private final ObjectMapper json;
- public ServicioSolicitudesHorario(SolicitudHorarioRepositorio solicitudes,ReglaDisponibilidadRepositorio reglas,ServicioGestionDisponibilidad gestion,ServicioHorarioSemanal semanal,UsuarioRepositorio usuarios,PasswordEncoder encoder,ObjectMapper json){this.solicitudes=solicitudes;this.reglas=reglas;this.gestion=gestion;this.semanal=semanal;this.usuarios=usuarios;this.encoder=encoder;this.json=json;}
+ public ServicioSolicitudesHorario(SolicitudHorarioRepositorio solicitudes,ReglaDisponibilidadRepositorio reglas,ServicioGestionDisponibilidad gestion,ServicioHorarioSemanal semanal,UsuarioRepositorio usuarios,PasswordEncoder encoder,ObjectMapper json, java.time.Clock reloj){
+        this.reloj = reloj;this.solicitudes=solicitudes;this.reglas=reglas;this.gestion=gestion;this.semanal=semanal;this.usuarios=usuarios;this.encoder=encoder;this.json=json;}
  @Transactional
  public SolicitudHorarioResponse solicitar(Long empresa,Long staff,SolicitudHorarioRequest request){
   var h=request.propuesta().horario();
   var propio=new ReglaDisponibilidadRequest("PRESTADOR",staff,h.diaSemana(),h.horaInicio(),h.horaFin(),h.intervaloMinutos(),h.vigenteDesde(),h.vigenteHasta());
   gestion.validarReglaAdmin(empresa,propio);
   if(request.reglaId()!=null) reglas.findByIdAndEmpresaIdAndTipoSujetoAndSujetoId(request.reglaId(),empresa,"PRESTADOR",staff).orElseThrow(()->new ResponseStatusException(NOT_FOUND,"Horario no encontrado"));
-  var e=new SolicitudHorarioEntidad();e.setEmpresaId(empresa);e.setPrestadorId(staff);e.setReglaId(request.reglaId());e.setEstado("PENDIENTE");e.setCreadaEn(LocalDateTime.now());
+  var e=new SolicitudHorarioEntidad();e.setEmpresaId(empresa);e.setPrestadorId(staff);e.setReglaId(request.reglaId());e.setEstado("PENDIENTE");e.setCreadaEn(LocalDateTime.now(reloj));
   try{e.setPropuesta(json.writeValueAsString(new HorarioSemanalRequest(propio,request.propuesta().diasSemana(),request.propuesta().reemplazar())));}catch(Exception ex){throw new IllegalStateException(ex);}
   return respuesta(solicitudes.save(e));
  }
@@ -44,10 +48,10 @@ public class ServicioSolicitudesHorario {
    if(e.getReglaId()!=null){reglas.findByIdAndEmpresaIdAndTipoSujetoAndSujetoId(e.getReglaId(),empresa,"PRESTADOR",e.getPrestadorId()).orElseThrow(()->new ResponseStatusException(CONFLICT,"El horario original ya no existe"));gestion.actualizarReglaAdmin(empresa,e.getReglaId(),p.horario());}
    else semanal.guardar(empresa,p);
   }
-  e.setEstado(request.aprobar()?"APROBADA":"RECHAZADA");e.setResueltaEn(LocalDateTime.now());e.setResueltaPor(admin);solicitudes.save(e);
+  e.setEstado(request.aprobar()?"APROBADA":"RECHAZADA");e.setResueltaEn(LocalDateTime.now(reloj));e.setResueltaPor(admin);solicitudes.save(e);
  }
  private SolicitudHorarioResponse respuesta(SolicitudHorarioEntidad e){try{
   var nombre=usuarios.findByIdAndEmpresaId(e.getPrestadorId(),e.getEmpresaId()).map(u -> u.getCorreo()).orElse("Usuario no disponible");
-  return new SolicitudHorarioResponse(e.getId(),e.getPrestadorId(),nombre,e.getReglaId(),json.readValue(e.getPropuesta(),HorarioSemanalRequest.class),e.getEstado(),e.getCreadaEn());
+  return new SolicitudHorarioResponse(e.getId(),e.getPrestadorId(),nombre,e.getReglaId(),json.readValue(e.getPropuesta(),HorarioSemanalRequest.class),e.getEstado(),de(e.getCreadaEn()));
  }catch(Exception ex){throw new IllegalStateException(ex);}}
 }

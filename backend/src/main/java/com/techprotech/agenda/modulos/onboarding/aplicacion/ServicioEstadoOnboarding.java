@@ -21,6 +21,7 @@ import static org.springframework.http.HttpStatus.NOT_FOUND;
 
 @Service
 public class ServicioEstadoOnboarding {
+    private final java.time.Clock reloj;
     private final EmpresaOnboardingProgresoRepositorio progresoRepositorio;
     private final UsuarioRepositorio usuarioRepositorio;
     private final ServicioVerificacionCorreoOnboarding verificacionCorreo;
@@ -36,8 +37,10 @@ public class ServicioEstadoOnboarding {
             ReglaDisponibilidadRepositorio reglas,
             ServicioRepositorio servicios,
             CitaRepositorio citas,
-            AuditoriaConfiguracionEmpresaRepositorio auditoriaConfiguracion
+            AuditoriaConfiguracionEmpresaRepositorio auditoriaConfiguracion,
+            java.time.Clock reloj
     ) {
+        this.reloj = reloj;
         this.progresoRepositorio = progresoRepositorio;
         this.usuarioRepositorio = usuarioRepositorio;
         this.verificacionCorreo = verificacionCorreo;
@@ -87,7 +90,7 @@ public class ServicioEstadoOnboarding {
                 empresaId, "CONFIGURACION_SITIO_ACTUALIZADA"));
         progreso.setCitaPruebaCompletada(citas.countByEmpresaId(empresaId) > 0);
         progreso.setPasoRecomendado(resolverPasoRecomendado(progreso));
-        progreso.setActualizadoEn(LocalDateTime.now());
+        progreso.setActualizadoEn(LocalDateTime.now(reloj));
         progresoRepositorio.save(progreso);
     }
 

@@ -66,7 +66,7 @@ class ServicioPagoCheckoutTest {
 
         servicio = new ServicioPagoCheckout(configuracion, sitios, checkoutConfigs, proveedores,
                 ordenes, detalles, intentos, List.of(mercadoPago), inventario, estados, metodosPago,
-                comisionesSinCargo());
+                comisionesSinCargo(), java.time.Clock.systemUTC());
     }
 
     private ServicioComisionPlataforma comisionesSinCargo() {

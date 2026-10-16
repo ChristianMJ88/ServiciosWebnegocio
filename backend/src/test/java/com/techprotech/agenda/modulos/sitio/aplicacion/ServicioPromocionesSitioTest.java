@@ -22,7 +22,7 @@ class ServicioPromocionesSitioTest {
     final AuditoriaConfiguracionEmpresaRepositorio auditoria=mock(AuditoriaConfiguracionEmpresaRepositorio.class);
     final Map<Long,EmpresaSitioPromocionEntidad> filas=new LinkedHashMap<>();
     final ServicioPromocionesSitio servicio=new ServicioPromocionesSitio(promociones,relaciones,ramas,sitios,
-        mock(ServicioRepositorio.class),mock(SucursalRepositorio.class),auditoria,new ObjectMapper(),mock(ServicioMediaEmpresa.class));
+        mock(ServicioRepositorio.class),mock(SucursalRepositorio.class),auditoria,new ObjectMapper(),mock(ServicioMediaEmpresa.class), java.time.Clock.systemUTC(), com.techprotech.agenda.compartido.tiempo.TiempoPruebas.zonaUtc());
     @BeforeEach void preparar() {
         when(sitios.existsById(1L)).thenReturn(true);
         when(promociones.findByEmpresaIdOrderByOrdenAsc(1L)).thenAnswer(i -> new ArrayList<>(filas.values()));

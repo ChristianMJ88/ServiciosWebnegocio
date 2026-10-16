@@ -27,7 +27,7 @@ class ServicioVentasCajaListadoTest {
             mock(MovimientoCajaRepositorio.class),mock(PagoCitaRepositorio.class),mock(CitaRepositorio.class),clientes,
             mock(ServicioRepositorio.class),mock(ProductoRepositorio.class),mock(ProductoExistenciaRepositorio.class),
             sucursales,mock(ServicioInventarioProductos.class),mock(ReglaDescuentoProductoRepositorio.class),
-            mock(ZonaPrecioProductoRepositorio.class),mock(PrecioZonaProductoRepositorio.class),mock(ServicioComisionesDevengadas.class));
+            mock(ZonaPrecioProductoRepositorio.class),mock(PrecioZonaProductoRepositorio.class),mock(ServicioComisionesDevengadas.class), java.time.Clock.systemUTC(), com.techprotech.agenda.compartido.tiempo.TiempoPruebas.zonaUtc());
     void sucursal() {
         var sucursal=new SucursalEntidad(); sucursal.setId(3L);
         when(sucursales.findByIdAndEmpresaIdAndActivaTrue(3L,1L)).thenReturn(Optional.of(sucursal));

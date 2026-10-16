@@ -24,7 +24,7 @@ class ServicioStripeConciliacionTest {
     @BeforeEach void preparar() {
         local=new SuscripcionPlataformaEntidad();local.setId(1L);local.setEmpresaId(2L);local.setPlanId(3L);local.setEstado("ACTIVA");local.setStripeSuscripcionId("sub_test");local.setStripeClienteId("cus_test");
         when(repositorio.findById(1L)).thenReturn(Optional.of(local));when(repositorio.findByStripeSuscripcionId("sub_test")).thenReturn(Optional.of(local));
-        servicio=new ServicioStripePlataforma(new PropiedadesStripePlataforma(true,"PRUEBA","rk_test_fixture",null,null,null,null,null),mock(PlanPlataformaRepositorio.class),repositorio,mock(StripeClientePlataformaRepositorio.class),mock(StripeEventoPlataformaRepositorio.class),mock(EmpresaRepositorio.class),mock(UsuarioRepositorio.class),mock(ServicioAuditoriaPlataforma.class),mapper,mock(ServicioPlanSuscripcionStripe.class),avisos);
+        servicio=new ServicioStripePlataforma(new PropiedadesStripePlataforma(true,"PRUEBA","rk_test_fixture",null,null,null,null,null),mock(PlanPlataformaRepositorio.class),repositorio,mock(StripeClientePlataformaRepositorio.class),mock(StripeEventoPlataformaRepositorio.class),mock(EmpresaRepositorio.class),mock(UsuarioRepositorio.class),mock(ServicioAuditoriaPlataforma.class),mapper,mock(ServicioPlanSuscripcionStripe.class),avisos, java.time.Clock.systemUTC());
         sub=mapper.createObjectNode().put("id","sub_test").put("customer","cus_test").put("livemode",false).put("status","active").put("latest_invoice","in_test").put("current_period_end",System.currentTimeMillis()/1000+86400);
         invoice=mapper.createObjectNode().put("id","in_test").put("customer","cus_test").put("livemode",false).put("status","paid").put("subscription","sub_test").put("amount_paid",19900);
     }

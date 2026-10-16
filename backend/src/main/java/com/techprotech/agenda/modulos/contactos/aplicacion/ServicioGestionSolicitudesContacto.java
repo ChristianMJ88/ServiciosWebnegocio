@@ -9,9 +9,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.time.LocalDateTime;
-import java.time.OffsetDateTime;
-import java.time.ZoneId;
+import static com.techprotech.agenda.compartido.tiempo.MomentoUtc.de;
 import java.util.List;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -22,47 +20,47 @@ import static org.springframework.http.HttpStatus.NOT_FOUND;
 
 @Service
 public class ServicioGestionSolicitudesContacto {
+    private final java.time.Clock reloj;
 
     private final SolicitudContactoRepositorio solicitudContactoRepositorio;
     private final EmpresaRepositorio empresaRepositorio;
 
     public ServicioGestionSolicitudesContacto(
             SolicitudContactoRepositorio solicitudContactoRepositorio,
-            EmpresaRepositorio empresaRepositorio
+            EmpresaRepositorio empresaRepositorio,
+            java.time.Clock reloj
     ) {
+        this.reloj = reloj;
         this.solicitudContactoRepositorio = solicitudContactoRepositorio;
         this.empresaRepositorio = empresaRepositorio;
     }
 
     @Transactional(readOnly = true)
     public List<SolicitudContactoAdminResponse> listarPorEmpresa(Long empresaId) {
-        EmpresaEntidad empresa = obtenerEmpresa(empresaId);
-        ZoneId zona = ZoneId.of(empresa.getZonaHoraria());
+        obtenerEmpresa(empresaId);
 
         return solicitudContactoRepositorio.findByEmpresaIdOrderByCreadaEnDesc(empresaId).stream()
-                .map(solicitud -> mapear(solicitud, zona))
+                .map(solicitud -> mapear(solicitud))
                 .toList();
     }
 
     @Transactional(readOnly = true)
     public Page<SolicitudContactoAdminResponse> listarPorEmpresa(Long empresaId, Pageable pageable) {
-        EmpresaEntidad empresa = obtenerEmpresa(empresaId);
-        ZoneId zona = ZoneId.of(empresa.getZonaHoraria());
+        obtenerEmpresa(empresaId);
         return solicitudContactoRepositorio.findByEmpresaIdOrderByCreadaEnDesc(empresaId, pageable)
-                .map(solicitud -> mapear(solicitud, zona));
+                .map(solicitud -> mapear(solicitud));
     }
 
     @Transactional(readOnly = true)
     public ResumenContactosResponse resumen(Long empresaId) {
-        EmpresaEntidad empresa = obtenerEmpresa(empresaId);
-        ZoneId zona = ZoneId.of(empresa.getZonaHoraria());
+        obtenerEmpresa(empresaId);
         return new ResumenContactosResponse(
                 solicitudContactoRepositorio.countByEmpresaId(empresaId),
                 solicitudContactoRepositorio.countByEmpresaIdAndEstado(empresaId, EstadoSolicitudContacto.NUEVO.name()),
                 solicitudContactoRepositorio.countByEmpresaIdAndEstado(empresaId, EstadoSolicitudContacto.EN_PROCESO.name()),
                 solicitudContactoRepositorio.countByEmpresaIdAndEstado(empresaId, EstadoSolicitudContacto.ATENDIDO.name()),
                 solicitudContactoRepositorio.findFirstByEmpresaIdAndEstadoOrderByCreadaEnDesc(empresaId, EstadoSolicitudContacto.NUEVO.name())
-                        .map(solicitud -> mapear(solicitud, zona)).orElse(null)
+                        .map(solicitud -> mapear(solicitud)).orElse(null)
         );
     }
 
@@ -72,19 +70,18 @@ public class ServicioGestionSolicitudesContacto {
             throw new ResponseStatusException(BAD_REQUEST, "El estado indicado no es válido para la solicitud de contacto");
         }
 
-        EmpresaEntidad empresa = obtenerEmpresa(empresaId);
-        ZoneId zona = ZoneId.of(empresa.getZonaHoraria());
+        obtenerEmpresa(empresaId);
         SolicitudContactoEntidad solicitud = solicitudContactoRepositorio.findByIdAndEmpresaId(solicitudId, empresaId)
                 .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "La solicitud de contacto no existe para la empresa"));
 
         solicitud.setEstado(estado);
-        return mapear(solicitudContactoRepositorio.save(solicitud), zona);
+        return mapear(solicitudContactoRepositorio.save(solicitud));
     }
 
     @Transactional
     public void marcarNotificada(Long solicitudId) {
         solicitudContactoRepositorio.findById(solicitudId).ifPresent(solicitud -> {
-            solicitud.setNotificadaEn(java.time.LocalDateTime.now());
+            solicitud.setNotificadaEn(java.time.LocalDateTime.now(reloj));
             solicitudContactoRepositorio.save(solicitud);
         });
     }
@@ -94,7 +91,7 @@ public class ServicioGestionSolicitudesContacto {
                 .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "La empresa no existe"));
     }
 
-    private SolicitudContactoAdminResponse mapear(SolicitudContactoEntidad solicitud, ZoneId zona) {
+    private SolicitudContactoAdminResponse mapear(SolicitudContactoEntidad solicitud) {
         return new SolicitudContactoAdminResponse(
                 solicitud.getId(),
                 solicitud.getEmpresaId(),
@@ -106,16 +103,9 @@ public class ServicioGestionSolicitudesContacto {
                 solicitud.getCanal(),
                 solicitud.getEstado(),
                 solicitud.isNotificacionCorreoProgramada(),
-                solicitud.getNotificadaEn() != null ? solicitud.getNotificadaEn().atZone(zona).toOffsetDateTime() : null,
-                resolverCreadaEn(solicitud, zona)
+                de(solicitud.getNotificadaEn()),
+                de(solicitud.getCreadaEn())
         );
     }
 
-    private OffsetDateTime resolverCreadaEn(SolicitudContactoEntidad solicitud, ZoneId zona) {
-        LocalDateTime creadaEn = solicitud.getCreadaEn();
-        if (creadaEn == null) {
-            return null;
-        }
-        return creadaEn.atZone(zona).toOffsetDateTime();
-    }
 }

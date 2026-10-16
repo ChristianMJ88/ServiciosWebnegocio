@@ -8,6 +8,7 @@ import java.time.LocalDateTime;
 
 @Service
 public class ServicioOutboxCorreoContactos {
+    private final java.time.Clock reloj;
 
     private final BandejaSalidaNotificacionRepositorio bandejaSalidaNotificacionRepositorio;
     private final ServicioConfiguracionCorreoEmpresa servicioConfiguracionCorreoEmpresa;
@@ -16,8 +17,10 @@ public class ServicioOutboxCorreoContactos {
     public ServicioOutboxCorreoContactos(
             BandejaSalidaNotificacionRepositorio bandejaSalidaNotificacionRepositorio,
             ServicioConfiguracionCorreoEmpresa servicioConfiguracionCorreoEmpresa,
-            ObjectMapper objectMapper
+            ObjectMapper objectMapper,
+            java.time.Clock reloj
     ) {
+        this.reloj = reloj;
         this.bandejaSalidaNotificacionRepositorio = bandejaSalidaNotificacionRepositorio;
         this.servicioConfiguracionCorreoEmpresa = servicioConfiguracionCorreoEmpresa;
         this.objectMapper = objectMapper;
@@ -36,7 +39,7 @@ public class ServicioOutboxCorreoContactos {
         salida.setCanal("EMAIL");
         salida.setPayloadJson(serializar(notificacion));
         salida.setEstado("PENDIENTE");
-        salida.setProgramadaEn(LocalDateTime.now());
+        salida.setProgramadaEn(LocalDateTime.now(reloj));
         salida.setIntentos(0);
         bandejaSalidaNotificacionRepositorio.save(salida);
         return true;

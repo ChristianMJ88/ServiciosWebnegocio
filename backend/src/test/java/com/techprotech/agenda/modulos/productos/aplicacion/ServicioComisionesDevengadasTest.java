@@ -14,7 +14,7 @@ class ServicioComisionesDevengadasTest {
  private final EntityManager em=mock(EntityManager.class);
  private final ReglaComisionRepositorio reglas=mock(ReglaComisionRepositorio.class);
  private final CitaRepositorio citas=mock(CitaRepositorio.class);
- private final ServicioComisionesDevengadas servicio=new ServicioComisionesDevengadas(em,reglas,citas,mock(ProductoRepositorio.class),mock(ServicioComisiones.class));
+ private final ServicioComisionesDevengadas servicio=new ServicioComisionesDevengadas(em,reglas,citas,mock(ProductoRepositorio.class),mock(ServicioComisiones.class), java.time.Clock.systemUTC(), com.techprotech.agenda.compartido.tiempo.TiempoPruebas.zonaUtc());
  private VentaEntidad venta(String estado){var v=new VentaEntidad();v.setId(1L);v.setEmpresaId(2L);v.setMoneda("MXN");v.setEstado(estado);return v;}
  @Test void pagoPendienteNoDevenga(){servicio.registrar(venta("PENDIENTE_PAGO"),List.of());verifyNoInteractions(em,reglas,citas);}
  @Test void reintentoNoDuplica(){var q=mock(Query.class);when(em.createNativeQuery(startsWith("select count"))).thenReturn(q);when(q.setParameter(anyString(),any())).thenReturn(q);when(q.getSingleResult()).thenReturn(1L);servicio.registrar(venta("PAGADA"),List.of());verifyNoInteractions(reglas,citas);}

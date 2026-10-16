@@ -1,5 +1,7 @@
 package com.techprotech.agenda.modulos.ventasstaff.aplicacion;
 
+import java.time.Clock;
+import com.techprotech.agenda.compartido.tiempo.ZonaNegocio;
 import com.techprotech.agenda.modulos.ventasstaff.infraestructura.VentasStaffRepositorio;
 import java.time.LocalDate;
 import com.techprotech.agenda.modulos.ventasstaff.api.VentaStaffResponse;
@@ -13,16 +15,21 @@ import org.springframework.web.server.ResponseStatusException;
 
 @Service
 public class ServicioVentasStaff {
+    private final Clock reloj;
+    private final ZonaNegocio zonasNegocio;
     private final VentasStaffRepositorio repositorio;
-    public ServicioVentasStaff(VentasStaffRepositorio repositorio) { this.repositorio=repositorio; }
+    public ServicioVentasStaff(VentasStaffRepositorio repositorio, Clock reloj, ZonaNegocio zonasNegocio) {
+        this.reloj = reloj;
+        this.zonasNegocio = zonasNegocio; this.repositorio=repositorio; }
     @Transactional(readOnly=true)
     public Page<VentaStaffResponse> consultar(Long empresa,Long usuario,LocalDate desde,LocalDate hasta,String concepto,String busqueda,int pagina,int tamano) {
-        LocalDate fin=hasta==null?LocalDate.now():hasta;
+        var zona = zonasNegocio.de(empresa, (Long) null);
+        LocalDate fin=hasta==null?LocalDate.now(reloj.withZone(zona)):hasta;
         LocalDate inicio=desde==null?fin.withDayOfMonth(1):desde;
         String tipo=concepto==null?"":concepto.trim().toUpperCase(java.util.Locale.ROOT);
         if(inicio.isAfter(fin)||!Set.of("","SERVICIO","PRODUCTO").contains(tipo)||pagina<0||tamano<1||tamano>100)
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"Revisa las fechas, el concepto y la paginación");
-        return repositorio.consultar(empresa,usuario,inicio.atStartOfDay(),fin.plusDays(1).atStartOfDay(),tipo,
+        return repositorio.consultar(empresa,usuario,inicio.atStartOfDay(zona).withZoneSameInstant(java.time.ZoneOffset.UTC).toLocalDateTime(),fin.plusDays(1).atStartOfDay(zona).withZoneSameInstant(java.time.ZoneOffset.UTC).toLocalDateTime(),tipo,
             busqueda==null?"":busqueda.trim().toLowerCase(java.util.Locale.ROOT),PageRequest.of(pagina,tamano)).map(f->new VentaStaffResponse(f.getId(),f.getFolio(),f.getNombre(),f.getConcepto(),f.getEstado(),f.getMoneda(),f.getCantidad(),f.getTotal(),f.getFecha()));
     }
 }

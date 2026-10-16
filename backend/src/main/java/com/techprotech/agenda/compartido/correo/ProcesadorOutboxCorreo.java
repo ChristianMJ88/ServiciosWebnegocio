@@ -14,6 +14,7 @@ import java.util.List;
 
 @Service
 public class ProcesadorOutboxCorreo {
+    private final java.time.Clock reloj;
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ProcesadorOutboxCorreo.class);
     private static final int MAX_INTENTOS = 5;
@@ -39,8 +40,10 @@ public class ProcesadorOutboxCorreo {
             ServicioCorreoSuscripciones servicioCorreoSuscripciones,
             ServicioGestionSolicitudesContacto servicioGestionSolicitudesContacto,
             PropiedadesCorreo propiedadesCorreo,
-            ObjectMapper objectMapper
+            ObjectMapper objectMapper,
+            java.time.Clock reloj
     ) {
+        this.reloj = reloj;
         this.bandejaSalidaNotificacionRepositorio = bandejaSalidaNotificacionRepositorio;
         this.servicioCorreoCitas = servicioCorreoCitas;
         this.servicioCorreoEventosCita = servicioCorreoEventosCita;
@@ -59,7 +62,7 @@ public class ProcesadorOutboxCorreo {
     )
     public void procesarPendientes() {
         List<BandejaSalidaNotificacionEntidad> pendientes = bandejaSalidaNotificacionRepositorio
-                .reclamarPendientesEmail(propiedadesCorreo.loteMaximoOutbox(), LocalDateTime.now());
+                .reclamarPendientesEmail(propiedadesCorreo.loteMaximoOutbox(), LocalDateTime.now(reloj));
 
         for (BandejaSalidaNotificacionEntidad pendiente : pendientes) {
             procesar(pendiente);
@@ -129,7 +132,7 @@ public class ProcesadorOutboxCorreo {
 
     private void marcarComoEnviada(BandejaSalidaNotificacionEntidad pendiente) {
         pendiente.setEstado("ENVIADA");
-        pendiente.setEnviadaEn(LocalDateTime.now());
+        pendiente.setEnviadaEn(LocalDateTime.now(reloj));
         pendiente.setMensajeError(null);
         pendiente.setIntentos(pendiente.getIntentos() + 1);
         bandejaSalidaNotificacionRepositorio.save(pendiente);
@@ -144,7 +147,7 @@ public class ProcesadorOutboxCorreo {
             pendiente.setEstado("ERROR");
         } else {
             pendiente.setEstado("PENDIENTE");
-            pendiente.setProgramadaEn(LocalDateTime.now().plusSeconds(propiedadesCorreo.retrasoReintentoSegundos()));
+            pendiente.setProgramadaEn(LocalDateTime.now(reloj).plusSeconds(propiedadesCorreo.retrasoReintentoSegundos()));
         }
 
         bandejaSalidaNotificacionRepositorio.save(pendiente);

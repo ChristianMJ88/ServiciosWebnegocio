@@ -11,12 +11,12 @@ import org.springframework.web.util.UriComponentsBuilder;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.time.LocalDateTime;
-import java.time.ZoneOffset;
 import java.util.Map;
 import java.util.UUID;
 
 @Service
 public class ServicioOAuthCorreoGoogle {
+    private final java.time.Clock reloj;
 
     private static final String AUTORIZACION = "https://accounts.google.com/o/oauth2/v2/auth";
     private static final String TOKEN = "https://oauth2.googleapis.com/token";
@@ -32,8 +32,10 @@ public class ServicioOAuthCorreoGoogle {
             PropiedadesOAuthCorreoGoogle propiedades,
             ProtectorSecretosCorreo protector,
             ConfiguracionCorreoEmpresaRepositorio repositorio,
-            RestClient.Builder builder
+            RestClient.Builder builder,
+            java.time.Clock reloj
     ) {
+        this.reloj = reloj;
         this.propiedades = propiedades;
         this.protector = protector;
         this.repositorio = repositorio;
@@ -43,7 +45,7 @@ public class ServicioOAuthCorreoGoogle {
     public InicioOAuthCorreoMicrosoftResponse iniciar(Long empresaId, Long usuarioId) {
         validarConfiguracion();
         String state = protector.encriptar(empresaId + "|" + usuarioId + "|"
-                + Instant.now().plusSeconds(600).getEpochSecond() + "|" + UUID.randomUUID());
+                + Instant.now(reloj).plusSeconds(600).getEpochSecond() + "|" + UUID.randomUUID());
         String url = UriComponentsBuilder.fromHttpUrl(AUTORIZACION)
                 .queryParam("client_id", propiedades.clientId())
                 .queryParam("redirect_uri", propiedades.redirectUri())
@@ -85,7 +87,7 @@ public class ServicioOAuthCorreoGoogle {
             entidad.setGmailUserId(correo);
             entidad.setGmailOauthRefreshToken(protector.encriptar(refreshToken));
             entidad.setGmailOauthScopes((String) token.getOrDefault("scope", SCOPES));
-            entidad.setGmailOauthConectadoEn(LocalDateTime.now(ZoneOffset.UTC));
+            entidad.setGmailOauthConectadoEn(LocalDateTime.now(reloj));
             repositorio.save(entidad);
             return resultado("ok", null);
         } catch (Exception ex) {
@@ -122,7 +124,7 @@ public class ServicioOAuthCorreoGoogle {
 
     private EstadoOAuth validarState(String state) {
         String[] partes = protector.desencriptarSiNecesario(state, "oauth_state").split("\\|", 4);
-        if (partes.length != 4 || Long.parseLong(partes[2]) < Instant.now().getEpochSecond()) {
+        if (partes.length != 4 || Long.parseLong(partes[2]) < Instant.now(reloj).getEpochSecond()) {
             throw new IllegalArgumentException("El estado OAuth es inválido o expiró");
         }
         return new EstadoOAuth(Long.parseLong(partes[0]), Long.parseLong(partes[1]));

@@ -46,6 +46,7 @@ import java.util.Map;
 
 @Service
 public class ServicioStripePlataforma {
+    private final java.time.Clock reloj;
     private static final List<String> ESTADOS_CON_ACCESO=List.of("ACTIVA","PRUEBA","GRACIA");
     private final PropiedadesStripePlataforma propiedades;
     private final PlanPlataformaRepositorio planes;
@@ -62,7 +63,8 @@ public class ServicioStripePlataforma {
     public ServicioStripePlataforma(PropiedadesStripePlataforma propiedades, PlanPlataformaRepositorio planes,
             SuscripcionPlataformaRepositorio suscripciones, StripeClientePlataformaRepositorio clientes,
             StripeEventoPlataformaRepositorio eventos, EmpresaRepositorio empresas, UsuarioRepositorio usuarios,
-            ServicioAuditoriaPlataforma auditoria, ObjectMapper objectMapper,ServicioPlanSuscripcionStripe planSuscripcion,ServicioAvisosSuscripcion avisos) {
+            ServicioAuditoriaPlataforma auditoria, ObjectMapper objectMapper,ServicioPlanSuscripcionStripe planSuscripcion,ServicioAvisosSuscripcion avisos, java.time.Clock reloj) {
+        this.reloj = reloj;
         this.propiedades=propiedades; this.planes=planes; this.suscripciones=suscripciones; this.clientes=clientes;
         this.eventos=eventos; this.empresas=empresas; this.usuarios=usuarios; this.auditoria=auditoria; this.objectMapper=objectMapper;
         this.planSuscripcion=planSuscripcion;
@@ -87,7 +89,7 @@ public class ServicioStripePlataforma {
     }
 
     private boolean puedeContratar(Long empresaId) {
-        var ahora=LocalDateTime.now(ZoneOffset.UTC);
+        var ahora=LocalDateTime.now(reloj);
         return suscripciones.findByEmpresaIdAndEstadoIn(empresaId,ESTADOS_CON_ACCESO).stream()
                 .noneMatch(s->presente(s.getStripeSuscripcionId())||PoliticaVigenciaSuscripcion.estaVigente(s,ahora));
     }
@@ -156,7 +158,7 @@ public class ServicioStripePlataforma {
             local.setEmpresaId(empresaId); local.setPlanId(plan.getId()); local.setEstado("PENDIENTE_PAGO"); local.setCiclo(ciclo);
             local.setCorreoFacturacion(usuario.getCorreo());
             local.setPrecioAcordado("ANUAL".equals(ciclo)?plan.getPrecioAnual():plan.getPrecioMensual()); local.setMoneda(plan.getMoneda());
-            local.setIniciaEn(LocalDateTime.now(ZoneOffset.UTC)); local.setStripeClienteId(clienteId); local=suscripciones.save(local);
+            local.setIniciaEn(LocalDateTime.now(reloj)); local.setStripeClienteId(clienteId); local=suscripciones.save(local);
             SessionCreateParams.SubscriptionData.Builder datosSuscripcion=SessionCreateParams.SubscriptionData.builder()
                     .putMetadata("fluora_empresa_id",String.valueOf(empresaId))
                     .putMetadata("fluora_suscripcion_id",String.valueOf(local.getId()));
@@ -208,7 +210,7 @@ public class ServicioStripePlataforma {
         try {
             JsonNode objeto=objectMapper.readTree(payload).path("data").path("object");
             procesarEvento(event.getType(),objeto,event.getCreated()==null?0:event.getCreated());
-            registro.setEstado("PROCESADO"); registro.setProcesadoEn(LocalDateTime.now(ZoneOffset.UTC));
+            registro.setEstado("PROCESADO"); registro.setProcesadoEn(LocalDateTime.now(reloj));
         } catch(Exception ex) {
             registro.setEstado("ERROR"); registro.setErrorUltimo(recortar(ex.getMessage(),1000)); eventos.save(registro);
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,"No se pudo procesar el evento de Stripe",ex);
@@ -231,7 +233,7 @@ public class ServicioStripePlataforma {
                     ||!java.util.Objects.equals(local.getStripeClienteId(),texto(factura,"customer"))
                     ||factura.path("livemode").asBoolean()!=objeto.path("livemode").asBoolean())return;
         }
-        long ahora=Instant.now().getEpochSecond();
+        long ahora=Instant.now(reloj).getEpochSecond();
         procesarEvento("canceled".equals(texto(objeto,"status"))?"customer.subscription.deleted":"customer.subscription.updated",objeto,ahora);
         if(factura!=null&&"paid".equals(texto(factura,"status")))procesarEvento("invoice.paid",factura,ahora);
     }
@@ -265,7 +267,7 @@ public class ServicioStripePlataforma {
             long periodo=epochPeriodoActual(objeto); local.setPeriodoActualHasta(periodo>0?LocalDateTime.ofInstant(Instant.ofEpochSecond(periodo),ZoneOffset.UTC):null);
             long finPrueba=objeto.path("trial_end").asLong(0); local.setPruebaHasta(finPrueba>0?LocalDateTime.ofInstant(Instant.ofEpochSecond(finPrueba),ZoneOffset.UTC):null);
             local.setCancelarAlFinalPeriodo(objeto.path("cancel_at_period_end").asBoolean(false));
-            if("customer.subscription.deleted".equals(tipo))local.setCanceladaEn(LocalDateTime.now(ZoneOffset.UTC));
+            if("customer.subscription.deleted".equals(tipo))local.setCanceladaEn(LocalDateTime.now(reloj));
             suscripciones.save(local);
             if(!java.util.Objects.equals(planAnterior,local.getPlanId()))avisos.programar(local,"PLAN",String.valueOf(creado)+":"+local.getPlanId(),null);
             if("PRUEBA".equals(local.getEstado())&&!"PRUEBA".equals(estadoAnterior))avisos.programar(local,"PRUEBA",String.valueOf(local.getPruebaHasta()),null);
@@ -328,7 +330,7 @@ public class ServicioStripePlataforma {
         if(local.getGraciaHasta()!=null)return;
         PlanPlataformaEntidad plan=planes.findById(local.getPlanId())
                 .orElseThrow(()->new ResponseStatusException(HttpStatus.CONFLICT,"El plan de la suscripción no existe"));
-        local.setGraciaHasta(LocalDateTime.now(ZoneOffset.UTC).plusDays(plan.getDiasGracia()));
+        local.setGraciaHasta(LocalDateTime.now(reloj).plusDays(plan.getDiasGracia()));
     }
 
     private Price crearPrecio(PlanPlataformaEntidad plan,String productoId,BigDecimal importe,

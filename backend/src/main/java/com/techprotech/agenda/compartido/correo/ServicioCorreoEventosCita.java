@@ -31,6 +31,7 @@ import java.util.Locale;
 
 @Service
 public class ServicioCorreoEventosCita {
+    private final java.time.Clock reloj;
 
     private static final Locale LOCALE_MX = Locale.forLanguageTag("es-MX");
     private static final DateTimeFormatter FECHA = DateTimeFormatter.ofPattern("EEEE d 'de' MMMM 'de' yyyy", LOCALE_MX);
@@ -57,8 +58,10 @@ public class ServicioCorreoEventosCita {
             EmpresaSitioConfigRepositorio sitioRepositorio,
             ServicioConfiguracionCorreoEmpresa configuracionCorreo,
             ClienteCorreoSaliente clienteCorreo,
-            @Value("${aplicacion.correo-bienvenida.origen-publico}") String origenPublico
+            @Value("${aplicacion.correo-bienvenida.origen-publico}") String origenPublico,
+            java.time.Clock reloj
     ) {
+        this.reloj = reloj;
         this.citaRepositorio = citaRepositorio;
         this.clienteRepositorio = clienteRepositorio;
         this.usuarioRepositorio = usuarioRepositorio;
@@ -232,7 +235,7 @@ public class ServicioCorreoEventosCita {
         DateTimeFormatter utc = DateTimeFormatter.ofPattern("yyyyMMdd'T'HHmmss'Z'");
         String ics = "BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//Fluora//Citas//ES\r\nCALSCALE:GREGORIAN\r\nMETHOD:PUBLISH\r\nBEGIN:VEVENT\r\n"
                 + "UID:cita-" + cita.getEmpresaId() + "-" + cita.getId() + "@refluora.com\r\n"
-                + "DTSTAMP:" + LocalDateTime.now().atOffset(ZoneOffset.UTC).format(utc) + "\r\n"
+                + "DTSTAMP:" + LocalDateTime.now(reloj).atOffset(ZoneOffset.UTC).format(utc) + "\r\n"
                 + "DTSTART:" + cita.getInicio().atZone(zona).withZoneSameInstant(ZoneOffset.UTC).format(utc) + "\r\n"
                 + "DTEND:" + cita.getFin().atZone(zona).withZoneSameInstant(ZoneOffset.UTC).format(utc) + "\r\n"
                 + "SUMMARY:" + ics(servicio.getNombre() + " - " + empresa) + "\r\n"

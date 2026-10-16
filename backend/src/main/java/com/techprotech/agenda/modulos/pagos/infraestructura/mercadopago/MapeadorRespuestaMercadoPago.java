@@ -10,12 +10,14 @@ import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
-import java.time.ZoneOffset;
 import java.util.Locale;
 import java.util.Set;
 
 @Component
 class MapeadorRespuestaMercadoPago {
+    private final java.time.Clock reloj;
+    public MapeadorRespuestaMercadoPago(java.time.Clock reloj) { this.reloj = reloj; }
+
     ResultadoCobro cobro(JsonNode respuesta) {
         String estado = texto(respuesta, "status");
         String detalle = texto(respuesta, "status_detail");
@@ -103,7 +105,7 @@ private OffsetDateTime vencimiento(JsonNode respuesta) {
         } catch (Exception ignored) {
             // Una fecha inválida del proveedor no debe ocultar el estado del pago.
         }
-        return OffsetDateTime.now(ZoneOffset.UTC);
+        return OffsetDateTime.now(reloj);
     }
 
     private BigDecimal decimal(JsonNode nodo, BigDecimal predeterminado) {

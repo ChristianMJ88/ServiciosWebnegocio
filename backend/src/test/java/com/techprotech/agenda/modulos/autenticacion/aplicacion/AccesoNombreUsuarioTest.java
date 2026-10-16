@@ -19,7 +19,7 @@ class AccesoNombreUsuarioTest {
  @Mock ClienteRepositorio clientes; @Mock ServicioRolesEmpresa roles; @Mock TokenActualizacionRepositorio refresh;
  @Mock PasswordEncoder encoder; @Mock ServicioProteccionAcceso proteccion;
  ServicioAutenticacionImpl servicio;
- @BeforeEach void configurar(){ servicio = new ServicioAutenticacionImpl(tokens, propiedades, empresas, usuarios, clientes, roles, refresh, encoder, proteccion); }
+ @BeforeEach void configurar(){ servicio = new ServicioAutenticacionImpl(tokens, propiedades, empresas, usuarios, clientes, roles, refresh, encoder, proteccion, java.time.Clock.systemUTC()); }
  private UsuarioEntidad preparar(){var e=new EmpresaEntidad();e.setId(10L);when(empresas.findBySlug("negocio-prueba")).thenReturn(Optional.of(e));var u=new UsuarioEntidad();u.setId(20L);u.setEmpresaId(10L);u.setNombreUsuario("operador");u.setContrasenaHash("hash");u.setHabilitado(true);u.setRequiereCambioContrasena(true);when(usuarios.findByEmpresaIdAndNombreUsuario(10L,"operador")).thenReturn(Optional.of(u));return u;}
  @Test void temporalNoEmiteSesion(){preparar();when(encoder.matches("temporal","hash")).thenReturn(true);var r=servicio.iniciarSesionApp(new IniciarSesionAppRequest("negocio-prueba/operador","temporal",null));assertEquals("CAMBIO_CONTRASENA",r.estado());assertNull(r.sesion());verifyNoInteractions(tokens,refresh);}
  @Test void noPermiteSeleccionarOtroTenant(){preparar();when(encoder.matches("temporal","hash")).thenReturn(true);assertThrows(ResponseStatusException.class,()->servicio.iniciarSesionApp(new IniciarSesionAppRequest("negocio-prueba/operador","temporal",99L)));verifyNoInteractions(tokens,refresh);}

@@ -15,6 +15,7 @@ import java.util.List;
 
 @Service
 public class ProcesadorOutboxWhatsapp {
+    private final java.time.Clock reloj;
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ProcesadorOutboxWhatsapp.class);
     private static final int MAX_INTENTOS = 5;
@@ -28,8 +29,10 @@ public class ProcesadorOutboxWhatsapp {
             BandejaSalidaNotificacionRepositorio bandejaSalidaNotificacionRepositorio,
             ServicioMensajesWhatsappCitas servicioMensajesWhatsappCitas,
             PropiedadesWhatsapp propiedadesWhatsapp,
-            ObjectMapper objectMapper
+            ObjectMapper objectMapper,
+            java.time.Clock reloj
     ) {
+        this.reloj = reloj;
         this.bandejaSalidaNotificacionRepositorio = bandejaSalidaNotificacionRepositorio;
         this.servicioMensajesWhatsappCitas = servicioMensajesWhatsappCitas;
         this.propiedadesWhatsapp = propiedadesWhatsapp;
@@ -42,7 +45,7 @@ public class ProcesadorOutboxWhatsapp {
     )
     public void procesarPendientes() {
         List<BandejaSalidaNotificacionEntidad> pendientes = bandejaSalidaNotificacionRepositorio
-                .reclamarPendientesPorCanal("WHATSAPP", propiedadesWhatsapp.loteMaximoOutbox(), LocalDateTime.now());
+                .reclamarPendientesPorCanal("WHATSAPP", propiedadesWhatsapp.loteMaximoOutbox(), LocalDateTime.now(reloj));
 
         for (BandejaSalidaNotificacionEntidad pendiente : pendientes) {
             procesar(pendiente);
@@ -70,13 +73,13 @@ public class ProcesadorOutboxWhatsapp {
 
     private void marcarComoEnviada(BandejaSalidaNotificacionEntidad pendiente, ResultadoEnvioWhatsapp resultado) {
         pendiente.setEstado("ENVIADA");
-        pendiente.setEnviadaEn(LocalDateTime.now());
+        pendiente.setEnviadaEn(LocalDateTime.now(reloj));
         pendiente.setMensajeError(null);
         pendiente.setIntentos(pendiente.getIntentos() + 1);
         if (resultado != null) {
             pendiente.setProveedorMensajeId(resultado.proveedorMensajeId());
             pendiente.setEstadoEntrega(resultado.estadoProveedor());
-            pendiente.setEstadoEntregaActualizadoEn(LocalDateTime.now());
+            pendiente.setEstadoEntregaActualizadoEn(LocalDateTime.now(reloj));
             pendiente.setCodigoErrorProveedor(resultado.codigoErrorProveedor());
             pendiente.setDetalleErrorProveedor(resultado.detalleErrorProveedor());
         }
@@ -100,7 +103,7 @@ public class ProcesadorOutboxWhatsapp {
             pendiente.setEstado("ERROR");
         } else {
             pendiente.setEstado("PENDIENTE");
-            pendiente.setProgramadaEn(LocalDateTime.now().plusSeconds(propiedadesWhatsapp.retrasoReintentoSegundos()));
+            pendiente.setProgramadaEn(LocalDateTime.now(reloj).plusSeconds(propiedadesWhatsapp.retrasoReintentoSegundos()));
         }
 
         bandejaSalidaNotificacionRepositorio.save(pendiente);

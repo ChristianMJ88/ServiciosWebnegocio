@@ -5,13 +5,15 @@ import { construirComprobanteCaja } from './caja-receipt.builder';
 describe('construirComprobanteCaja', () => {
   it('calcula totales y usa etiquetas del catálogo backend', () => {
     const cita = { clienteNombre: 'Ana', sucursalNombre: 'Centro', servicioNombre: 'Consulta', inicio: '2026-08-25T10:00:00', moneda: 'MXN', total: 500, pagado: 200, pendiente: 300 } as CitaPorCobrar;
-    const pagos = [{ monto: 200, metodoPago: 'TARJETA', referencia: null, registradoEn: '2026-08-25T10:30:00' }] as PagoCita[];
+    const pagos = [{ monto: 200, metodoPago: 'TARJETA', referencia: null, registradoEn: '2026-08-25T16:30:00Z' }] as PagoCita[];
 
     const recibo = construirComprobanteCaja('Empresa', cita, pagos, [{ codigo: 'TARJETA', etiqueta: 'Tarjeta bancaria' }]);
 
     expect(recibo.totalPagado).toBe(200);
     expect(recibo.pendiente).toBe(300);
     expect(recibo.pagos[0]).toMatchObject({ metodo: 'Tarjeta bancaria', referencia: '-' });
+    expect(recibo.pagos[0].fecha).toBe('2026-08-25T16:30:00Z');
+    expect(recibo.inicioCita).toBe('2026-08-25T10:00:00');
   });
 
   it('respeta los totales calculados por el backend', () => {

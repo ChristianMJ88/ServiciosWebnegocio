@@ -26,6 +26,9 @@
               <span><i class="bi bi-building"></i>{{ cita.sucursalNombre }}</span>
               <span><i class="bi bi-telephone"></i>{{ cita.clienteTelefono || 'Sin teléfono' }}</span>
               <span><i class="bi bi-envelope"></i>{{ cita.clienteCorreo || 'Sin correo' }}</span>
+              @if (cita.checkInEn) {
+                <span class="recepcion-checkin-time"><i class="bi bi-check2-circle"></i>Llegada: {{ cita.checkInEn | date:'dd/MM HH:mm':'':'es-MX' }}</span>
+              }
             </div>
             @if (cita.notas) {
               <div class="recepcion-appointment-note">{{ cita.notas }}</div>

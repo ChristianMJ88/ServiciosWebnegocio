@@ -28,6 +28,7 @@ import java.util.LinkedHashSet;
 
 @Service
 public class ServicioReportesLiberacion {
+    private final java.time.Clock reloj;
     private static final Set<String> COLUMNAS_CONCILIACION = Set.of("DATE", "SOURCE_ID", "EXTERNAL_REFERENCE",
             "RECORD_TYPE", "DESCRIPTION", "NET_CREDIT_AMOUNT", "GROSS_AMOUNT", "MP_FEE_AMOUNT", "TAXES_AMOUNT");
     private final ClienteReportesMercadoPago cliente;
@@ -36,7 +37,8 @@ public class ServicioReportesLiberacion {
     private final ProveedorPagoRepositorio proveedores;
 
     public ServicioReportesLiberacion(ClienteReportesMercadoPago cliente, ReporteLiberacionPagoRepositorio reportes,
-                                      ConciliacionPagoRepositorio conciliaciones, ProveedorPagoRepositorio proveedores) {
+                                      ConciliacionPagoRepositorio conciliaciones, ProveedorPagoRepositorio proveedores, java.time.Clock reloj) {
+        this.reloj = reloj;
         this.cliente=cliente; this.reportes=reportes; this.conciliaciones=conciliaciones; this.proveedores=proveedores;
     }
 
@@ -63,7 +65,7 @@ public class ServicioReportesLiberacion {
             if (remota.archivo()!=null) entidad.setNombreArchivo(remota.archivo());
             if ("LISTO".equals(entidad.getEstado()) && entidad.getNombreArchivo()!=null) {
                 entidad.setFilasProcesadas(importar(empresaId, cliente.descargar(empresaId, entidad.getNombreArchivo())));
-                entidad.setEstado("PROCESADO"); entidad.setProcesadoEn(LocalDateTime.now(ZoneOffset.UTC));
+                entidad.setEstado("PROCESADO"); entidad.setProcesadoEn(LocalDateTime.now(reloj));
             }
             entidad.setErrorUltimo(null);
         } catch (Exception ex) {
@@ -161,7 +163,7 @@ public class ServicioReportesLiberacion {
     private String campo(CSVRecord fila,String nombre){if(!fila.isMapped(nombre))return null;String v=fila.get(nombre);return v==null||v.isBlank()?null:v.trim();}
     private BigDecimal decimal(CSVRecord fila,String nombre,BigDecimal respaldo){String v=campo(fila,nombre);if(v==null)return respaldo;try{return new BigDecimal(v).abs();}catch(Exception ex){return respaldo;}}
     private BigDecimal absoluto(CSVRecord fila,String nombre){return decimal(fila,nombre,null);}
-    private LocalDateTime fecha(String valor){try{return valor==null?LocalDateTime.now(ZoneOffset.UTC):OffsetDateTime.parse(valor).withOffsetSameInstant(ZoneOffset.UTC).toLocalDateTime();}catch(Exception ex){return LocalDateTime.now(ZoneOffset.UTC);}}
+    private LocalDateTime fecha(String valor){try{return valor==null?LocalDateTime.now(reloj):OffsetDateTime.parse(valor).withOffsetSameInstant(ZoneOffset.UTC).toLocalDateTime();}catch(Exception ex){return LocalDateTime.now(reloj);}}
     private String limitar(String valor,int max){if(valor==null)return "Error sin detalle";return valor.length()<=max?valor:valor.substring(0,max);}
     private ReporteLiberacionResponse respuesta(ReporteLiberacionPagoEntidad r){return new ReporteLiberacionResponse(r.getId(),r.getEstado(),r.getTareaExternaId(),r.getReporteExternoId(),r.getNombreArchivo(),r.getFechaDesde(),r.getFechaHasta(),r.getFilasProcesadas(),r.getErrorUltimo(),r.getSolicitadoEn(),r.getProcesadoEn());}
 }

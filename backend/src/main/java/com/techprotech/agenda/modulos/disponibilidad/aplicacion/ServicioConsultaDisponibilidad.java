@@ -48,22 +48,7 @@ public class ServicioConsultaDisponibilidad {
     private final ServicioConfiguracionReservas configuracion;
     private final java.time.Clock reloj;
 
-    @org.springframework.beans.factory.annotation.Autowired
-    public ServicioConsultaDisponibilidad(
-            SucursalRepositorio sucursalRepositorio,
-            ServicioRepositorio servicioRepositorio,
-            ServicioSucursalRepositorio servicioSucursalRepositorio,
-            PrestadorServicioRepositorio prestadorServicioRepositorio,
-            AsignacionServicioPrestadorRepositorio asignacionServicioPrestadorRepositorio,
-            ReglaDisponibilidadRepositorio reglaDisponibilidadRepositorio,
-            ExcepcionDisponibilidadRepositorio excepcionDisponibilidadRepositorio,
-            CitaRepositorio citaRepositorio,
-            ServicioConfiguracionReservas configuracion
-    ) {
-    this(sucursalRepositorio,servicioRepositorio,servicioSucursalRepositorio,prestadorServicioRepositorio,
-            asignacionServicioPrestadorRepositorio,reglaDisponibilidadRepositorio,excepcionDisponibilidadRepositorio,citaRepositorio,configuracion,java.time.Clock.systemUTC());
-}
-ServicioConsultaDisponibilidad(SucursalRepositorio sucursalRepositorio, ServicioRepositorio servicioRepositorio,
+    public ServicioConsultaDisponibilidad(SucursalRepositorio sucursalRepositorio, ServicioRepositorio servicioRepositorio,
         ServicioSucursalRepositorio servicioSucursalRepositorio,PrestadorServicioRepositorio prestadorServicioRepositorio,
         AsignacionServicioPrestadorRepositorio asignacionServicioPrestadorRepositorio,ReglaDisponibilidadRepositorio reglaDisponibilidadRepositorio,
         ExcepcionDisponibilidadRepositorio excepcionDisponibilidadRepositorio,CitaRepositorio citaRepositorio,

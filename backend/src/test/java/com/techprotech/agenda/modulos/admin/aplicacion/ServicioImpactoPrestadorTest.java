@@ -18,7 +18,7 @@ class ServicioImpactoPrestadorTest {
     final PrestadorServicioRepositorio prestadores = mock(PrestadorServicioRepositorio.class);
     final SucursalRepositorio sucursales = mock(SucursalRepositorio.class);
     final CitaRepositorio citas = mock(CitaRepositorio.class);
-    final ServicioImpactoPrestador servicio = new ServicioImpactoPrestador(usuarios,prestadores,citas,sucursales);
+    final ServicioImpactoPrestador servicio = new ServicioImpactoPrestador(usuarios,prestadores,citas,sucursales, java.time.Clock.systemUTC());
     @Test void noConsultaAgendaDeOtroTenant() {
         assertThrows(ResponseStatusException.class,()->servicio.consultar(10L,2L));
         verifyNoInteractions(prestadores,sucursales,citas);

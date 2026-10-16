@@ -28,7 +28,7 @@ class ServicioCotizacionProductosTest {
         precios = mock(PrecioZonaProductoRepositorio.class);
         descuentos = mock(ReglaDescuentoProductoRepositorio.class);
         existencias = mock(ProductoExistenciaRepositorio.class);
-        servicio = new ServicioCotizacionProductos(productos, zonas, precios, descuentos, existencias);
+        servicio = new ServicioCotizacionProductos(productos, zonas, precios, descuentos, existencias, java.time.Clock.systemUTC(), com.techprotech.agenda.compartido.tiempo.TiempoPruebas.zonaUtc());
     }
 
     @Test

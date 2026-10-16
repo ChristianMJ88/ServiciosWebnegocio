@@ -74,7 +74,7 @@ class ServicioMercadoPagoPointTest {
         RegistrarVentaRequest ventaRequest = new RegistrarVentaRequest(3L, null, null, List.of(), "MERCADO_PAGO_POINT", null, null);
         VentaResponse venta = new VentaResponse(22L, "V-22", 3L, null, null, "PENDIENTE_PAGO", "MXN",
                 new BigDecimal("180.00"), BigDecimal.ZERO, BigDecimal.ZERO, new BigDecimal("180.00"), null, null,
-                LocalDateTime.now(), "CAJA", List.of());
+                java.time.OffsetDateTime.parse("2026-10-15T14:00:00Z"), "CAJA", List.of());
         when(ventas.prepararPoint(eq(7L), eq(9L), eq(List.of(3L)), any())).thenReturn(venta);
         when(cliente.crearOrden(eq(7L), eq("key-1"), eq("POINT__123"), anyString(), eq(new BigDecimal("180.00")),
                 eq(BigDecimal.ZERO), anyString()))

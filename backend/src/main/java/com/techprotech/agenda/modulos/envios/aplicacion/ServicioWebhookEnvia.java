@@ -21,6 +21,7 @@ import java.util.HexFormat;
 
 @Service
 public class ServicioWebhookEnvia {
+    private final java.time.Clock reloj;
     private static final String PROVEEDOR = "ENVIA";
     private static final long VENTANA_FIRMA_MILISEGUNDOS = 5 * 60 * 1000L;
 
@@ -32,7 +33,8 @@ public class ServicioWebhookEnvia {
     public ServicioWebhookEnvia(EmpresaEnvioConfigRepositorio configuraciones,
                                 EventoWebhookEnvioRepositorio eventos,
                                 ResolutorCredencialEnvio credenciales,
-                                ObjectMapper objectMapper) {
+                                ObjectMapper objectMapper, java.time.Clock reloj) {
+        this.reloj = reloj;
         this.configuraciones = configuraciones;
         this.eventos = eventos;
         this.credenciales = credenciales;
@@ -81,7 +83,7 @@ public class ServicioWebhookEnvia {
             if (evento == null || timestamp == null) throw new IllegalArgumentException("Encabezados de firma incompletos");
             long instante = Long.parseLong(timestamp);
             if (instante < 10_000_000_000L) instante *= 1000;
-            if (Math.abs(Instant.now().toEpochMilli() - instante) > VENTANA_FIRMA_MILISEGUNDOS) {
+            if (Math.abs(Instant.now(reloj).toEpochMilli() - instante) > VENTANA_FIRMA_MILISEGUNDOS) {
                 throw new IllegalArgumentException("Firma expirada");
             }
             String token = credenciales.resolver(config);

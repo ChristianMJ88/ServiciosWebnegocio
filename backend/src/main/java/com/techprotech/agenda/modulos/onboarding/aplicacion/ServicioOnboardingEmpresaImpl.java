@@ -51,6 +51,7 @@ import static org.springframework.http.HttpStatus.BAD_REQUEST;
 
 @Service
 public class ServicioOnboardingEmpresaImpl implements ServicioOnboardingEmpresa {
+    private final java.time.Clock reloj;
 
     private static final List<String> CODIGOS_ROL_BASE = List.of("ADMIN", "RECEPCIONISTA", "CAJERO", "STAFF", "CLIENTE");
 
@@ -91,8 +92,10 @@ public class ServicioOnboardingEmpresaImpl implements ServicioOnboardingEmpresa 
             ServicioAutenticacion servicioAutenticacion,
             EmpresaOnboardingProgresoRepositorio progresoRepositorio,
             ServicioSuscripcionesPlataforma suscripcionesPlataforma,
-            ServicioAdquisicionEmpresa adquisicion
+            ServicioAdquisicionEmpresa adquisicion,
+            java.time.Clock reloj
     ) {
+        this.reloj = reloj;
         this.adquisicion = adquisicion;
         this.empresaRepositorio = empresaRepositorio;
         this.usuarioRepositorio = usuarioRepositorio;
@@ -201,7 +204,7 @@ public class ServicioOnboardingEmpresaImpl implements ServicioOnboardingEmpresa 
         }
         String credencial = perfilSocial == null ? request.contrasena() : UUID.randomUUID().toString();
         usuario.setContrasenaHash(passwordEncoder.encode(credencial));
-        usuario.setCorreoVerificadoEn(perfilSocial == null ? null : LocalDateTime.now());
+        usuario.setCorreoVerificadoEn(perfilSocial == null ? null : LocalDateTime.now(reloj));
         usuario.setHabilitado(true);
         usuario.setBloqueado(false);
         usuario = usuarioRepositorio.save(usuario);
@@ -215,8 +218,8 @@ public class ServicioOnboardingEmpresaImpl implements ServicioOnboardingEmpresa 
         progreso.setCategoria(request.giro().trim());
         progreso.setTamanoEquipo(request.tamanoEquipo().trim());
         progreso.setPasoRecomendado("CONFIGURAR_HORARIO");
-        progreso.setCreadoEn(LocalDateTime.now());
-        progreso.setActualizadoEn(LocalDateTime.now());
+        progreso.setCreadoEn(LocalDateTime.now(reloj));
+        progreso.setActualizadoEn(LocalDateTime.now(reloj));
         progresoRepositorio.save(progreso);
     }
 
@@ -232,7 +235,7 @@ public class ServicioOnboardingEmpresaImpl implements ServicioOnboardingEmpresa 
         identidad.setProveedor(perfil.proveedor());
         identidad.setSubjectProveedor(perfil.subject());
         identidad.setCorreoVerificado(perfil.correo());
-        identidad.setCreadoEn(java.time.LocalDateTime.now());
+        identidad.setCreadoEn(java.time.LocalDateTime.now(reloj));
         identidadExternaRepositorio.save(identidad);
     }
 

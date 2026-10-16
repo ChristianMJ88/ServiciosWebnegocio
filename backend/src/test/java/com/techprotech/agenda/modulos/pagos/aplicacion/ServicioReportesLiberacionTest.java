@@ -23,7 +23,7 @@ class ServicioReportesLiberacionTest {
         when(cliente.guardarConfiguracion(eq(7L), any(), eq(false))).thenAnswer(invocacion -> invocacion.getArgument(1));
         ServicioReportesLiberacion servicio=new ServicioReportesLiberacion(cliente,
                 mock(ReporteLiberacionPagoRepositorio.class), mock(ConciliacionPagoRepositorio.class),
-                mock(ProveedorPagoRepositorio.class));
+                mock(ProveedorPagoRepositorio.class), java.time.Clock.systemUTC());
         var request=new com.techprotech.agenda.modulos.pagos.api.dto.GuardarConfiguracionReporteLiberacionRequest(
                 "reporte-negocio", "GMT-06", "daily", 2, "0", true, false);
 
@@ -40,7 +40,7 @@ class ServicioReportesLiberacionTest {
                 "reporte-negocio", "GMT-06", false, "es", List.of("DATE"), "daily", 2, "0", true, false));
         ServicioReportesLiberacion servicio=new ServicioReportesLiberacion(cliente,
                 mock(ReporteLiberacionPagoRepositorio.class), mock(ConciliacionPagoRepositorio.class),
-                mock(ProveedorPagoRepositorio.class));
+                mock(ProveedorPagoRepositorio.class), java.time.Clock.systemUTC());
 
         org.assertj.core.api.Assertions.assertThatThrownBy(() -> servicio.cambiarProgramacion(7L,true))
                 .isInstanceOf(org.springframework.web.server.ResponseStatusException.class);
@@ -56,7 +56,7 @@ class ServicioReportesLiberacionTest {
                 "monthly", 2, "1", true, false));
         ServicioReportesLiberacion servicio=new ServicioReportesLiberacion(cliente,
                 mock(ReporteLiberacionPagoRepositorio.class), mock(ConciliacionPagoRepositorio.class),
-                mock(ProveedorPagoRepositorio.class));
+                mock(ProveedorPagoRepositorio.class), java.time.Clock.systemUTC());
 
         var respuesta=servicio.consultarConfiguracion(7L);
 
@@ -82,7 +82,7 @@ class ServicioReportesLiberacionTest {
         when(cliente.descargar(7L,"fluora.csv")).thenReturn(csv.getBytes(java.nio.charset.StandardCharsets.UTF_8));
         ConciliacionPagoEntidad conciliacion=new ConciliacionPagoEntidad(); conciliacion.setEmpresaId(7L);
         when(conciliaciones.findByEmpresaIdAndReferenciaPagoExterna(7L,"PAY-1")).thenReturn(Optional.of(conciliacion));
-        ServicioReportesLiberacion servicio=new ServicioReportesLiberacion(cliente,reportes,conciliaciones,mock(ProveedorPagoRepositorio.class));
+        ServicioReportesLiberacion servicio=new ServicioReportesLiberacion(cliente,reportes,conciliaciones,mock(ProveedorPagoRepositorio.class), java.time.Clock.systemUTC());
 
         var respuesta=servicio.sincronizar(7L,3L);
 

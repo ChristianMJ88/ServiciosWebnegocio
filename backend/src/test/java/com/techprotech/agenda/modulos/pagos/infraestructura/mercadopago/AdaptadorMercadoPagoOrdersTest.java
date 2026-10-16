@@ -36,7 +36,7 @@ class AdaptadorMercadoPagoOrdersTest {
         when(oauth.obtenerAccessToken(12L)).thenReturn("token-de-prueba");
         ObjectMapper objectMapper = new ObjectMapper();
         adaptador = new AdaptadorMercadoPagoOrders(oauth, builder, objectMapper,
-                new MapeadorRespuestaMercadoPago(), new ValidadorFirmaWebhookMercadoPago(),
+                new MapeadorRespuestaMercadoPago(java.time.Clock.systemUTC()), new ValidadorFirmaWebhookMercadoPago(),
                 new PropiedadesMercadoPago(true, "PRUEBA", "cliente", "secreto", "redirect", "frontend", "", "webhook",
                         "publica-prueba", "token-prueba", "NEWLAND_N950__SBX0000001"));
     }

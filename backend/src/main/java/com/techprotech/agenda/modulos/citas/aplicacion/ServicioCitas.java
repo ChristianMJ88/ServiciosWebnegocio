@@ -55,6 +55,7 @@ import static org.springframework.http.HttpStatus.NOT_FOUND;
 
 @Service
 public class ServicioCitas {
+    private final java.time.Clock reloj;
 
     private static final String PREFIJO_CONTRASENA_PROVISIONAL = "registro-cita";
     private static final Logger LOGGER = LoggerFactory.getLogger(ServicioCitas.class);
@@ -100,8 +101,10 @@ public class ServicioCitas {
             ServicioCapacidadesEmpresa capacidades,
             ServicioCotizacionCitas cotizador,
             com.fasterxml.jackson.databind.ObjectMapper objectMapper,
-            ServicioPoliticaReservaPago politicaPago
+            ServicioPoliticaReservaPago politicaPago,
+            java.time.Clock reloj
     ) {
+        this.reloj = reloj;
         this.servicioConsultaDisponibilidad = servicioConsultaDisponibilidad;
         this.sucursalRepositorio = sucursalRepositorio;
         this.servicioRepositorio = servicioRepositorio;
@@ -201,7 +204,7 @@ private CitaCreadaResponse crearCita(CrearCitaRequest request, boolean programar
         cita.setMoneda(servicio.getMoneda());
         cita.setNotas(request.notas());
         cita.setCreadaPorUsuarioId(clienteId);
-        cita.setCreadaEn(LocalDateTime.now(java.time.ZoneOffset.UTC));
+        cita.setCreadaEn(LocalDateTime.now(reloj));
         cita = citaRepositorio.save(cita);
 
         HistorialEstadoCitaEntidad historial = new HistorialEstadoCitaEntidad();
@@ -350,7 +353,7 @@ var plan=politicaPago.plan(empresaId,publico,politicas.stream().map(PoliticaCobr
             cita.setMoneda(servicio.getMoneda());
             cita.setNotas(request.notas());
             cita.setCreadaPorUsuarioId(clienteId);
-        cita.setCreadaEn(LocalDateTime.now(java.time.ZoneOffset.UTC));
+        cita.setCreadaEn(LocalDateTime.now(reloj));
             cita = citaRepositorio.save(cita);
 
             HistorialEstadoCitaEntidad historial = new HistorialEstadoCitaEntidad();

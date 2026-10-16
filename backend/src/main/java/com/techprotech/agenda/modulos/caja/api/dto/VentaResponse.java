@@ -1,7 +1,7 @@
 package com.techprotech.agenda.modulos.caja.api.dto;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.List;
 
 public record VentaResponse(
@@ -18,7 +18,7 @@ public record VentaResponse(
         BigDecimal total,
         String metodoPago,
         String referencia,
-        LocalDateTime creadaEn,
+        OffsetDateTime creadaEn,
         String canal,
         List<DetalleVentaResponse> detalles
 ) {

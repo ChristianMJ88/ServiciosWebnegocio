@@ -17,6 +17,7 @@ import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class ServicioCitasClienteTest {
+    @org.mockito.Spy private java.time.Clock reloj = com.techprotech.agenda.compartido.tiempo.TiempoPruebas.relojUtc();
 
     @Mock private ClienteRepositorio clienteRepositorio;
     @org.mockito.Mock private com.techprotech.agenda.modulos.plataforma.aplicacion.ServicioCapacidadesEmpresa capacidades;

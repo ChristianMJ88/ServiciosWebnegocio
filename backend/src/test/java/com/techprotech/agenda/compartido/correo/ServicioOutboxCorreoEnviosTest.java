@@ -19,7 +19,7 @@ class ServicioOutboxCorreoEnviosTest {
                 null, null, null, null, null, null, null);
         when(configuracion.resolver(25L)).thenReturn(activa);
         ServicioOutboxCorreoEnvios servicio = new ServicioOutboxCorreoEnvios(
-                repositorio, configuracion, new ObjectMapper());
+                repositorio, configuracion, new ObjectMapper(), java.time.Clock.systemUTC());
 
         assertThat(servicio.programar(25L, 9L, "ENTREGADO")).isTrue();
         ArgumentCaptor<BandejaSalidaNotificacionEntidad> captor =

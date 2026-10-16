@@ -25,6 +25,7 @@ import java.util.UUID;
 
 @Component
 public class ClienteCorreoGraph {
+    private final java.time.Clock reloj;
 
     private static final String GRAPH_SCOPE = "https://graph.microsoft.com/.default";
     private static final String GRAPH_BASE_URL = "https://graph.microsoft.com/v1.0";
@@ -34,7 +35,8 @@ public class ClienteCorreoGraph {
     private final RestClient restClient;
     private ServicioOAuthCorreoMicrosoft servicioOAuth;
 
-    public ClienteCorreoGraph(RestClient.Builder restClientBuilder) {
+    public ClienteCorreoGraph(RestClient.Builder restClientBuilder, java.time.Clock reloj) {
+        this.reloj = reloj;
         this.restClient = restClientBuilder.build();
     }
 
@@ -137,7 +139,7 @@ public class ClienteCorreoGraph {
     }
 
     private String construirClientAssertion(ConfiguracionCorreoResolvida configuracion, String tokenEndpoint) {
-        Instant ahora = Instant.now();
+        Instant ahora = Instant.now(reloj);
         return Jwts.builder()
                 .header()
                 .add("typ", "JWT")

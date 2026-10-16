@@ -34,7 +34,7 @@ class HorariosZonaJvmMysqlTest {
             var registro=new StandardServiceRegistryBuilder().applySettings(HorariosZonaJvmRepositorioTest.configuracionJpa())
                     .addService(ConnectionProvider.class,proveedor).build();
             try {
-                var metadata=new MetadataSources(registro).addAnnotatedClass(CitaEntidad.class).addAnnotatedClass(ReglaDisponibilidadEntidad.class).buildMetadata();
+                var metadata=new MetadataSources(registro).addAnnotatedClass(CitaEntidad.class).addAnnotatedClass(ReglaDisponibilidadEntidad.class).addAnnotatedClass(com.techprotech.agenda.compartido.correo.BandejaSalidaNotificacionEntidad.class).buildMetadata();
                 var ddl=new SchemaCreatorImpl(registro).generateCreationCommands(metadata,false);
                 try(var conexion=datasource.getConnection();var statement=conexion.createStatement()) {
                     for (var sql:ddl) {
@@ -61,6 +61,22 @@ class HorariosZonaJvmMysqlTest {
                     assertThat(releida.getInicio()).isEqualTo(inicio);assertThat(releida.getFin()).isEqualTo(inicio.plusMinutes(30));assertThat(releida.getCreadaEn()).isEqualTo(utc);
                     var horas=(Object[])em.createNativeQuery("SELECT HOUR(inicio),HOUR(creada_en) FROM cita WHERE id=:id").setParameter("id",id).getSingleResult();
                     assertThat(((Number)horas[0]).intValue()).isEqualTo(10);assertThat(((Number)horas[1]).intValue()).isEqualTo(16);
+                    // Connector/J real, misma sesión UTC y JVM México: nunca reclamar antes del vencimiento.
+                    var consultas=new com.techprotech.agenda.compartido.correo.BandejaSalidaNotificacionRepositorioImpl();
+                    org.springframework.test.util.ReflectionTestUtils.setField(consultas,"entityManager",em);
+                    for(var canal:java.util.List.of("EMAIL","WHATSAPP")) {
+                        var salida=new com.techprotech.agenda.compartido.correo.BandejaSalidaNotificacionEntidad();
+                        salida.setEmpresaId(7L);salida.setTipoAgregado("CITA");salida.setAgregadoId(id);
+                        salida.setTipoEvento("CONFIRMADA");salida.setCanal(canal);salida.setPayloadJson("{}");
+                        salida.setEstado("PENDIENTE");salida.setProgramadaEn(utc);em.persist(salida);em.flush();em.clear();
+                        assertThat(consultas.reclamarPendientesPorCanal(canal,10,utc.minusSeconds(1))).isEmpty();
+                        var reclamadas=consultas.reclamarPendientesPorCanal(canal,10,utc);
+                        assertThat(reclamadas).hasSize(1);
+                        assertThat(reclamadas.getFirst().getProgramadaEn()).isEqualTo(utc);
+                        assertThat(reclamadas.getFirst().getEmpresaId()).isEqualTo(7L);
+                        assertThat(reclamadas.getFirst().getEstado()).isEqualTo("PROCESANDO");
+                        assertThat(consultas.reclamarPendientesPorCanal(canal,10,utc)).isEmpty();
+                    }
                     em.getTransaction().rollback();
                 }
             } finally {StandardServiceRegistryBuilder.destroy(registro);datasource.destroy();}

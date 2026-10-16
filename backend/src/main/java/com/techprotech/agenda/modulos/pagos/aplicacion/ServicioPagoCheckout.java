@@ -14,7 +14,6 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.time.ZoneOffset;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
@@ -22,6 +21,7 @@ import java.util.Map;
 
 @Service
 public class ServicioPagoCheckout {
+    private final java.time.Clock reloj;
     private final ServicioConfiguracionCheckout configuracionCheckout;
     private final EmpresaSitioConfigRepositorio sitios;
     private final EmpresaCheckoutConfigRepositorio configuraciones;
@@ -46,7 +46,8 @@ public class ServicioPagoCheckout {
                                 ServicioInventarioCheckout inventario,
                                 ServicioEstadoPagoCheckout estados,
                                 ServicioMetodosPagoCheckout metodosPago,
-                                ServicioComisionPlataforma comisiones) {
+                                ServicioComisionPlataforma comisiones, java.time.Clock reloj) {
+        this.reloj = reloj;
         this.configuracionCheckout = configuracionCheckout;
         this.sitios = sitios;
         this.configuraciones = configuraciones;
@@ -155,7 +156,7 @@ public class ServicioPagoCheckout {
                 .findFirst().orElseThrow(() -> error(HttpStatus.SERVICE_UNAVAILABLE, "El proveedor de pago no está disponible"));
 
         inventario.reservar(orden.getEmpresaId(), orden.getId());
-        orden.setExpiraEn(LocalDateTime.now(ZoneOffset.UTC).plusDays(metodo.getVigenciaDias()));
+        orden.setExpiraEn(LocalDateTime.now(reloj).plusDays(metodo.getVigenciaDias()));
         ordenes.save(orden);
         IntentoPagoCheckoutEntidad intento = nuevoIntento(orden, proveedor, clave,
                 metodo.getMetodoExternoId(), metodo.getTipoExterno());
@@ -256,7 +257,7 @@ public class ServicioPagoCheckout {
         if (!"PENDIENTE_PAGO".equals(orden.getEstado())) {
             throw error(HttpStatus.CONFLICT, "La orden ya no está disponible para iniciar un pago");
         }
-        if (!orden.getExpiraEn().isAfter(LocalDateTime.now(ZoneOffset.UTC))) {
+        if (!orden.getExpiraEn().isAfter(LocalDateTime.now(reloj))) {
             throw error(HttpStatus.CONFLICT, "La orden expiró; vuelve a confirmar el carrito");
         }
         if (!orden.getMoneda().equalsIgnoreCase(config.moneda())) {

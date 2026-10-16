@@ -13,7 +13,7 @@ class ServicioTokenRegistroSocialTest {
             new ProtectorSecretosCorreo(new PropiedadesCorreo(true, "SMTP", "no-reply@prueba.local",
                     "Prueba", null, null, null, null, null, null, null, "llave-prueba", 20, 60)),
             new ObjectMapper()
-    );
+    , java.time.Clock.systemUTC());
 
     @Test
     void conservaProveedorYDestinoSinCompartirEstado() {

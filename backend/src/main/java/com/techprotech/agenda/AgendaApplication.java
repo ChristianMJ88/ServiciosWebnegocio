@@ -18,10 +18,8 @@ import com.techprotech.agenda.modulos.pagos.infraestructura.checkout.Propiedades
 import com.techprotech.agenda.modulos.envios.infraestructura.envia.PropiedadesEnvia;
 import com.techprotech.agenda.compartido.direcciones.infraestructura.google.PropiedadesGoogleMaps;
 import com.techprotech.agenda.modulos.plataforma.infraestructura.stripe.PropiedadesStripePlataforma;
-import org.springframework.scheduling.annotation.EnableScheduling;
 
 @SpringBootApplication(exclude = UserDetailsServiceAutoConfiguration.class)
-@EnableScheduling
 @EnableConfigurationProperties({PropiedadesJwt.class, PropiedadesCorreo.class, PropiedadesCorreoPlataforma.class, PropiedadesOAuthCorreoMicrosoft.class, PropiedadesOAuthCorreoGoogle.class, PropiedadesAutenticacionSocial.class, PropiedadesWhatsapp.class, PropiedadesCloudinary.class, PropiedadesMercadoPago.class, PropiedadesSeguridadPagos.class, PropiedadesCheckout.class, PropiedadesEnvia.class, PropiedadesGoogleMaps.class, PropiedadesStripePlataforma.class, com.techprotech.agenda.compartido.correo.PropiedadesCorreoSuscripciones.class})
 public class AgendaApplication {
 

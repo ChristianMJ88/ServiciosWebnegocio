@@ -29,6 +29,7 @@ import java.util.HexFormat;
 
 @Service
 public class ServicioInvitacionesUsuario {
+    private final java.time.Clock reloj;
     private final InvitacionUsuarioEmpresaRepositorio invitaciones;
     private final EmpresaRepositorio empresas;
     private final UsuarioRepositorio usuarios;
@@ -55,8 +56,10 @@ public class ServicioInvitacionesUsuario {
             ObjectMapper objectMapper,
             PropiedadesCorreo propiedadesCorreo,
             @Value("${aplicacion.invitaciones.url-aceptacion}") String urlAceptacion,
-            @Value("${aplicacion.invitaciones.horas-vigencia}") long horasVigencia
+            @Value("${aplicacion.invitaciones.horas-vigencia}") long horasVigencia,
+            java.time.Clock reloj
     ) {
+        this.reloj = reloj;
         this.invitaciones = invitaciones;
         this.empresas = empresas;
         this.usuarios = usuarios;
@@ -89,7 +92,7 @@ public class ServicioInvitacionesUsuario {
         EmpresaEntidad empresa = empresas.findById(empresaId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "La empresa no existe"));
         String correo = request.correo().trim().toLowerCase();
-        LocalDateTime ahora = LocalDateTime.now();
+        LocalDateTime ahora = LocalDateTime.now(reloj);
         invitaciones.findByEmpresaIdAndCorreoAndEstado(empresaId, correo, "PENDIENTE").forEach(anterior -> {
             anterior.setEstado("CANCELADA");
             anterior.setCanceladaEn(ahora);
@@ -128,7 +131,7 @@ public class ServicioInvitacionesUsuario {
         admin.validarInvitacionPrestador(empresaId,request);
         var empresa=empresas.findById(empresaId).orElseThrow();
         String correo=request.correo().trim().toLowerCase();
-        var ahora=LocalDateTime.now();
+        var ahora=LocalDateTime.now(reloj);
         invitaciones.findByEmpresaIdAndCorreoAndEstado(empresaId,correo,"PENDIENTE").forEach(i->{i.setEstado("CANCELADA");i.setCanceladaEn(ahora);invitaciones.save(i);});
         var i=new InvitacionUsuarioEmpresaEntidad();
         i.setEmpresaId(empresaId);i.setCorreo(correo);i.setNombreCompleto(request.nombreMostrar());i.setSucursalId(request.sucursalId());
@@ -161,8 +164,8 @@ public class ServicioInvitacionesUsuario {
             try {
                 var p=objectMapper.readValue(invitacion.getPrestadorJson(),PrestadorAdminRequest.class);
                 var creado=admin.crearPrestador(invitacion.getEmpresaId(),new PrestadorAdminRequest(p.sucursalId(),p.correo(),request.contrasena(),p.nombreMostrar(),p.biografia(),p.fotoUrl(),p.fotoEncuadre(),p.fotoZoom(),p.colorAgenda(),p.activo(),p.servicioIds()));
-                if(perfilSocial!=null) {var identidad=new UsuarioIdentidadExternaEntidad();identidad.setUsuarioId(creado.usuarioId());identidad.setProveedor(perfilSocial.proveedor());identidad.setSubjectProveedor(perfilSocial.subject());identidad.setCorreoVerificado(perfilSocial.correo());identidad.setCreadoEn(LocalDateTime.now());identidades.save(identidad);}
-                invitacion.setEstado("ACEPTADA");invitacion.setAceptadaEn(LocalDateTime.now());invitacion.setActualizadoEn(LocalDateTime.now());invitaciones.save(invitacion);return creado;
+                if(perfilSocial!=null) {var identidad=new UsuarioIdentidadExternaEntidad();identidad.setUsuarioId(creado.usuarioId());identidad.setProveedor(perfilSocial.proveedor());identidad.setSubjectProveedor(perfilSocial.subject());identidad.setCorreoVerificado(perfilSocial.correo());identidad.setCreadoEn(LocalDateTime.now(reloj));identidades.save(identidad);}
+                invitacion.setEstado("ACEPTADA");invitacion.setAceptadaEn(LocalDateTime.now(reloj));invitacion.setActualizadoEn(LocalDateTime.now(reloj));invitaciones.save(invitacion);return creado;
             } catch(com.fasterxml.jackson.core.JsonProcessingException ex){throw new IllegalStateException(ex);}
         }
         UsuarioInternoAdminRequest alta = new UsuarioInternoAdminRequest(
@@ -177,12 +180,12 @@ public class ServicioInvitacionesUsuario {
             identidad.setProveedor(perfilSocial.proveedor());
             identidad.setSubjectProveedor(perfilSocial.subject());
             identidad.setCorreoVerificado(perfilSocial.correo());
-            identidad.setCreadoEn(LocalDateTime.now());
+            identidad.setCreadoEn(LocalDateTime.now(reloj));
             identidades.save(identidad);
         }
         invitacion.setEstado("ACEPTADA");
-        invitacion.setAceptadaEn(LocalDateTime.now());
-        invitacion.setActualizadoEn(LocalDateTime.now());
+        invitacion.setAceptadaEn(LocalDateTime.now(reloj));
+        invitacion.setActualizadoEn(LocalDateTime.now(reloj));
         invitaciones.save(invitacion);
         return usuario;
     }
@@ -196,7 +199,7 @@ public class ServicioInvitacionesUsuario {
     private InvitacionUsuarioEmpresaEntidad validarVigencia(InvitacionUsuarioEmpresaEntidad invitacion) {
         if (!"PENDIENTE".equals(invitacion.getEstado()))
             throw new ResponseStatusException(HttpStatus.CONFLICT, "La invitación ya fue utilizada o cancelada");
-        if (invitacion.getExpiraEn().isBefore(LocalDateTime.now()))
+        if (invitacion.getExpiraEn().isBefore(LocalDateTime.now(reloj)))
             throw new ResponseStatusException(HttpStatus.GONE, "La invitación expiró; solicita una nueva");
         return invitacion;
     }

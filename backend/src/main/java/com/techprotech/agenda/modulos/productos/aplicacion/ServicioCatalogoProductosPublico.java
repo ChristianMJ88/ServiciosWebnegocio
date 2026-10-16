@@ -1,5 +1,7 @@
 package com.techprotech.agenda.modulos.productos.aplicacion;
 
+import java.time.Clock;
+import com.techprotech.agenda.compartido.tiempo.ZonaNegocio;
 import com.techprotech.agenda.modulos.productos.api.dto.CatalogoProductosPublicoResponse;
 import com.techprotech.agenda.modulos.productos.api.dto.ConfiguracionTiendaResponse;
 import com.techprotech.agenda.modulos.productos.api.dto.IndiceProductosPublicosResponse;
@@ -22,6 +24,8 @@ import java.util.stream.Collectors;
 
 @Service
 public class ServicioCatalogoProductosPublico {
+    private final Clock reloj;
+    private final ZonaNegocio zonasNegocio;
     private final EmpresaSitioConfigRepositorio sitios;
     private final ServicioConfiguracionTienda configuracionTienda;
     private final ProductoRepositorio productos;
@@ -36,7 +40,9 @@ public class ServicioCatalogoProductosPublico {
             ServicioConfiguracionTienda configuracionTienda, ProductoRepositorio productos,
             CategoriaProductoRepositorio categorias, ZonaPrecioProductoRepositorio zonasPrecios,
             PrecioZonaProductoRepositorio preciosZona, ReglaDescuentoProductoRepositorio descuentos,
-            ProductoExistenciaRepositorio existencias, com.techprotech.agenda.modulos.sucursales.infraestructura.repositorio.SucursalRepositorio sucursales) {
+            ProductoExistenciaRepositorio existencias, com.techprotech.agenda.modulos.sucursales.infraestructura.repositorio.SucursalRepositorio sucursales, Clock reloj, ZonaNegocio zonasNegocio) {
+        this.reloj = reloj;
+        this.zonasNegocio = zonasNegocio;
         this.sitios = sitios;
         this.configuracionTienda = configuracionTienda;
         this.productos = productos;
@@ -80,13 +86,14 @@ public class ServicioCatalogoProductosPublico {
         List<Long> productoIds = listaProductos.stream().map(ProductoEntidad::getId).toList();
         Map<Long, PrecioZonaProductoEntidad> precioPorProducto = precioPorProducto(sitio.getEmpresaId(), productoIds, zona);
         Map<Long, BigDecimal> existenciaPorProducto = existenciasPorProducto(sitio.getEmpresaId(), productoIds, sede);
+        LocalDate hoy = LocalDate.now(reloj.withZone(zonasNegocio.de(sitio.getEmpresaId(), sede)));
         List<ReglaDescuentoProductoEntidad> reglas = descuentos.findByEmpresaIdOrderByPrioridadDescNombreAsc(sitio.getEmpresaId())
-                .stream().filter(this::vigente).toList();
+                .stream().filter(regla -> CalculadorDescuentosProductos.vigente(regla, hoy)).toList();
 
         List<CatalogoProductosPublicoResponse.ProductoPublico> publicados = listaProductos.stream()
                 .filter(item -> item.getCategoriaId() == null || categoriaPorId.containsKey(item.getCategoriaId()))
                 .map(item -> mapearProducto(item, categoriaPorId.get(item.getCategoriaId()), precioPorProducto.get(item.getId()),
-                        reglas, zona, existenciaPorProducto.getOrDefault(item.getId(), BigDecimal.ZERO), tienda.mostrarStock(), sede, tienda.diasNuevo()))
+                        reglas, zona, existenciaPorProducto.getOrDefault(item.getId(), BigDecimal.ZERO), tienda.mostrarStock(), sede, tienda.diasNuevo(), hoy))
                 .toList();
 
         return new CatalogoProductosPublicoResponse(
@@ -109,7 +116,7 @@ public class ServicioCatalogoProductosPublico {
     private CatalogoProductosPublicoResponse.ProductoPublico mapearProducto(
             ProductoEntidad producto, CategoriaProductoEntidad categoria, PrecioZonaProductoEntidad precioZona,
             List<ReglaDescuentoProductoEntidad> reglas, ZonaPrecioProductoEntidad zona, BigDecimal existencia,
-            boolean mostrarStock, Long sucursalId, int diasNuevo) {
+            boolean mostrarStock, Long sucursalId, int diasNuevo, LocalDate hoy) {
         BigDecimal precioBase = precioZona == null ? producto.getPrecioBase() : precioZona.getPrecio();
         String moneda = precioZona == null ? producto.getMoneda() : precioZona.getMoneda();
         var resultado = CalculadorDescuentosProductos.calcular(producto,zona,sucursalId,BigDecimal.ONE,precioBase,moneda,reglas);
@@ -120,12 +127,8 @@ public class ServicioCatalogoProductosPublico {
                 resultado.precio(), resultado.precio().compareTo(precioBase) < 0 ? precioBase : null, moneda,
                 resultado.etiqueta(), producto.isControlaInventario(), disponible,
                 mostrarStock && producto.isControlaInventario() ? existencia.max(BigDecimal.ZERO) : null,
-                PoliticaNovedadProductos.esNuevo(producto,diasNuevo,LocalDate.now())
+                PoliticaNovedadProductos.esNuevo(producto,diasNuevo,hoy)
         );
-    }
-
-    private boolean vigente(ReglaDescuentoProductoEntidad regla) {
-        return CalculadorDescuentosProductos.vigente(regla,LocalDate.now());
     }
 
     private Map<Long, PrecioZonaProductoEntidad> precioPorProducto(Long empresaId, List<Long> ids,

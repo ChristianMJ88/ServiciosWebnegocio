@@ -12,7 +12,7 @@ import static org.junit.jupiter.api.Assertions.*;
 class ServicioAdquisicionEmpresaTest {
  private final AdquisicionEmpresaRepositorio repo=mock(AdquisicionEmpresaRepositorio.class);
  private final LandingMarketingRepositorio landings=mock(LandingMarketingRepositorio.class);
- private final ServicioAdquisicionEmpresaImpl servicio=new ServicioAdquisicionEmpresaImpl(repo,landings);
+ private final ServicioAdquisicionEmpresaImpl servicio=new ServicioAdquisicionEmpresaImpl(repo,landings, java.time.Clock.systemUTC());
  @Test void registroSinCampanaNoCreaHistoriaArtificial(){servicio.registrar(7L,null);verifyNoInteractions(repo,landings);}
  @Test void rutaYFechaSonDelServidorYEmpresaEsLaRecienCreada(){
   when(landings.findBySlug("unas")).thenReturn(Optional.of(new LandingMarketingEntidad()));

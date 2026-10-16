@@ -16,11 +16,11 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
-import java.time.ZoneOffset;
 import java.util.List;
 
 @Component
 public class ProcesadorEventosPagoCheckout {
+    private final java.time.Clock reloj;
     private static final Logger LOGGER = LoggerFactory.getLogger(ProcesadorEventosPagoCheckout.class);
 
     private final EventoWebhookPagoRepositorio eventos;
@@ -37,7 +37,8 @@ public class ProcesadorEventosPagoCheckout {
                                          List<ProveedorPagosPort> adaptadores,
                                          ServicioEstadoPagoCheckout estados,
                                          ServicioMercadoPagoPoint point,
-                                         ObjectMapper objectMapper) {
+                                         ObjectMapper objectMapper, java.time.Clock reloj) {
+        this.reloj = reloj;
         this.eventos = eventos;
         this.intentos = intentos;
         this.proveedores = proveedores;
@@ -77,7 +78,7 @@ public class ProcesadorEventosPagoCheckout {
                 evento.setEstadoProcesamiento("PROCESADO");
                 evento.setErrorUltimo(null);
             }
-            evento.setProcesadoEn(LocalDateTime.now(ZoneOffset.UTC));
+            evento.setProcesadoEn(LocalDateTime.now(reloj));
         } catch (Exception ex) {
             evento.setEstadoProcesamiento(evento.getIntentos() >= 5 ? "ERROR" : "RECIBIDO");
             evento.setErrorUltimo(limitar(ex.getMessage(), 1000));

@@ -24,6 +24,7 @@ import java.util.UUID;
 
 @Service
 public class ServicioAutenticacionSocialMicrosoft {
+    private final java.time.Clock reloj;
     private static final Logger LOGGER = LoggerFactory.getLogger(ServicioAutenticacionSocialMicrosoft.class);
     private static final String LOGIN = "https://login.microsoftonline.com/common/oauth2/v2.0";
     private static final String PERFIL = "https://graph.microsoft.com/v1.0/me?$select=id,displayName,mail,userPrincipalName";
@@ -39,8 +40,10 @@ public class ServicioAutenticacionSocialMicrosoft {
             PropiedadesAutenticacionSocial propiedades,
             ServicioTokenRegistroSocial tokens,
             ServicioAccesoSocial accesoSocial,
-            RestClient.Builder builder
+            RestClient.Builder builder,
+            java.time.Clock reloj
     ) {
+        this.reloj = reloj;
         this.propiedades = propiedades;
         this.tokens = tokens;
         this.accesoSocial = accesoSocial;
@@ -117,7 +120,7 @@ public class ServicioAutenticacionSocialMicrosoft {
     }
 
     private String crearAsercion(String audience) {
-        Instant ahora = Instant.now();
+        Instant ahora = Instant.now(reloj);
         return Jwts.builder().header()
                 .add("typ", "JWT").add("alg", "RS256")
                 .add("x5t", thumbprintBase64Url(propiedades.microsoftCertificateThumbprint())).and()

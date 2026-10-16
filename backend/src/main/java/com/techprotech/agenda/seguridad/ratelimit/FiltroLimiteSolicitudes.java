@@ -31,21 +31,22 @@ public class FiltroLimiteSolicitudes extends OncePerRequestFilter {
             ), 10, 900)
     );
 
-    private final LimiteVentanaFija limite = new LimiteVentanaFija(Clock.systemUTC());
+    private final LimiteVentanaFija limite;
     private final boolean habilitado;
     private final Regla disponibilidad;
 
     public FiltroLimiteSolicitudes(
-            @Value("${aplicacion.limite-solicitudes.habilitado:true}") boolean habilitado
+            @Value("${aplicacion.limite-solicitudes.habilitado:true}") boolean habilitado, Clock reloj
     ) {
-        this(habilitado, 60, 60);
+        this(habilitado, 60, 60, reloj);
     }
 
     @org.springframework.beans.factory.annotation.Autowired
     public FiltroLimiteSolicitudes(
             @Value("${aplicacion.limite-solicitudes.habilitado:true}") boolean habilitado,
             @Value("${aplicacion.limite-solicitudes.disponibilidad-maximo:60}") int maximo,
-            @Value("${aplicacion.limite-solicitudes.disponibilidad-ventana-segundos:60}") long ventana) {
+            @Value("${aplicacion.limite-solicitudes.disponibilidad-ventana-segundos:60}") long ventana, Clock reloj) {
+        this.limite = new LimiteVentanaFija(reloj);
         this.habilitado = habilitado;
         this.disponibilidad = new Regla("disponibilidad", List.of("/api/v1/publico/disponibilidad/dias"), maximo, ventana);
     }

@@ -1,5 +1,9 @@
 package com.techprotech.agenda.modulos.caja.aplicacion;
 
+import static com.techprotech.agenda.compartido.tiempo.MomentoUtc.de;
+
+import java.time.Clock;
+import com.techprotech.agenda.compartido.tiempo.ZonaNegocio;
 import com.techprotech.agenda.modulos.caja.api.dto.CatalogoVentaResponse;
 import com.techprotech.agenda.modulos.caja.api.dto.RegistrarVentaRequest;
 import com.techprotech.agenda.modulos.caja.api.dto.VentaResponse;
@@ -35,6 +39,8 @@ import static com.techprotech.agenda.modulos.caja.aplicacion.CatalogosCaja.*;
 
 @Service
 public class ServicioVentasCaja {
+    private final Clock reloj;
+    private final ZonaNegocio zonasNegocio;
     private static final BigDecimal CERO = BigDecimal.ZERO.setScale(2, RoundingMode.HALF_UP);
     private final VentaRepositorio ventas;
     private final VentaDetalleRepositorio detalles;
@@ -62,7 +68,9 @@ public class ServicioVentasCaja {
                               com.techprotech.agenda.modulos.productos.infraestructura.repositorio.ReglaDescuentoProductoRepositorio descuentos,
                               com.techprotech.agenda.modulos.productos.infraestructura.repositorio.ZonaPrecioProductoRepositorio zonas,
                               com.techprotech.agenda.modulos.productos.infraestructura.repositorio.PrecioZonaProductoRepositorio preciosZona,
-                              com.techprotech.agenda.modulos.productos.aplicacion.ServicioComisionesDevengadas comisiones) {
+                              com.techprotech.agenda.modulos.productos.aplicacion.ServicioComisionesDevengadas comisiones, Clock reloj, ZonaNegocio zonasNegocio) {
+        this.reloj = reloj;
+        this.zonasNegocio = zonasNegocio;
         this.ventas = ventas; this.detalles = detalles; this.pagos = pagos; this.sesiones = sesiones;
         this.movimientos = movimientos; this.pagosCita = pagosCita; this.citas = citas; this.clientes = clientes; this.servicios = servicios;
         this.productos = productos; this.existencias = existencias; this.sucursales = sucursales; this.inventario = inventario;
@@ -81,7 +89,7 @@ public class ServicioVentasCaja {
         Map<Long, ProductoExistenciaEntidad> porProducto = stock.stream()
                 .filter(item -> sucursalId.equals(item.getId().getSucursalId()))
                 .collect(Collectors.toMap(item -> item.getId().getProductoId(), Function.identity()));
-        var reglas = reglasVigentes(empresaId);
+        var reglas = reglasVigentes(empresaId, sucursalId);
         var contexto = contextoPrecios(empresaId, sucursalId, activos.stream().map(ProductoEntidad::getId).toList());
         return new CatalogoVentaResponse(activos.stream().map(producto -> {
             ProductoExistenciaEntidad existencia = porProducto.get(producto.getId());
@@ -102,7 +110,7 @@ public class ServicioVentasCaja {
                 RegistrarVentaRequest.ProductoVentaRequest::cantidad, BigDecimal::add));
         var lista = productos.findByEmpresaIdAndIdIn(empresaId, cantidades.keySet()).stream().filter(ProductoEntidad::isActivo).toList();
         if (lista.size() != cantidades.size()) throw badRequest("Uno o más productos no están disponibles para la empresa");
-        var reglas = reglasVigentes(empresaId);
+        var reglas = reglasVigentes(empresaId, request.sucursalId());
         var contexto = contextoPrecios(empresaId, request.sucursalId(), cantidades.keySet());
         BigDecimal subtotal = CERO, total = CERO;
         var lineas = new ArrayList<com.techprotech.agenda.modulos.caja.api.dto.CotizacionCajaResponse.Linea>();
@@ -187,7 +195,7 @@ public class ServicioVentasCaja {
         String moneda = cita != null ? cita.getMoneda() : productosVenta.values().stream().findFirst().map(ProductoEntidad::getMoneda).orElse("MXN");
         if (productosVenta.values().stream().anyMatch(item -> !moneda.equalsIgnoreCase(item.getMoneda())))
             throw badRequest("Todos los conceptos de una venta deben usar la misma moneda");
-        var reglas = reglasVigentes(empresaId);
+        var reglas = reglasVigentes(empresaId, request.sucursalId());
         var contexto = contextoPrecios(empresaId, request.sucursalId(), cantidades.keySet());
         Map<Long, BigDecimal> preciosAplicados = cantidades.entrySet().stream().collect(Collectors.toMap(
                 Map.Entry::getKey, item -> precioProducto(productosVenta.get(item.getKey()), request.sucursalId(), item.getValue(), reglas, contexto)));
@@ -202,9 +210,9 @@ public class ServicioVentasCaja {
         VentaEntidad venta = new VentaEntidad();
         venta.setEmpresaId(empresaId); venta.setSucursalId(request.sucursalId()); venta.setCajaSesionId(sesion == null ? null : sesion.getId());
         venta.setClienteId(cita != null ? cita.getClienteId() : request.clienteId()); venta.setCitaId(cita != null ? cita.getId() : null);
-        venta.setFolio(generarFolio()); venta.setEstado(staff ? "POR_COBRAR" : point ? "PENDIENTE_PAGO" : "PAGADA"); venta.setCanal(staff ? "STAFF" : "CAJA"); venta.setMoneda(moneda.toUpperCase(Locale.ROOT));
+        venta.setFolio(generarFolio(empresaId, request.sucursalId())); venta.setEstado(staff ? "POR_COBRAR" : point ? "PENDIENTE_PAGO" : "PAGADA"); venta.setCanal(staff ? "STAFF" : "CAJA"); venta.setMoneda(moneda.toUpperCase(Locale.ROOT));
         venta.setSubtotal(total.add(descuentoTotal)); venta.setDescuentoTotal(descuentoTotal); venta.setImpuestosTotal(CERO); venta.setTotal(total);
-        venta.setObservaciones(limpiar(request.observaciones())); venta.setCreadaPorUsuarioId(usuarioId); venta.setCreadaEn(LocalDateTime.now());
+        venta.setObservaciones(limpiar(request.observaciones())); venta.setCreadaPorUsuarioId(usuarioId); venta.setCreadaEn(LocalDateTime.now(reloj));
         venta = ventas.save(venta);
 
         List<VentaDetalleEntidad> filas = new ArrayList<>();
@@ -219,7 +227,7 @@ public class ServicioVentasCaja {
             pago = new PagoVentaEntidad();
             pago.setEmpresaId(empresaId); pago.setVentaId(venta.getId()); pago.setCajaSesionId(sesion.getId()); pago.setMonto(total);
             pago.setMetodoPago(metodoPago); pago.setReferencia(limpiar(request.referencia())); pago.setRegistradoPorUsuarioId(usuarioId);
-            pago.setRegistradoEn(LocalDateTime.now()); pago = pagos.save(pago);
+            pago.setRegistradoEn(LocalDateTime.now(reloj)); pago = pagos.save(pago);
         }
 
         if (!staff && !cantidades.isEmpty()) inventario.descontarVenta(empresaId, usuarioId, sucursalesPermitidas,
@@ -243,7 +251,7 @@ public class ServicioVentasCaja {
         PagoVentaEntidad pago = new PagoVentaEntidad();
         pago.setEmpresaId(empresaId); pago.setVentaId(ventaId); pago.setCajaSesionId(venta.getCajaSesionId()); pago.setMonto(venta.getTotal());
         pago.setMetodoPago(METODO_PAGO_POINT); pago.setReferencia(limpiar(referenciaPago));
-        pago.setRegistradoPorUsuarioId(venta.getCreadaPorUsuarioId()); pago.setRegistradoEn(LocalDateTime.now());
+        pago.setRegistradoPorUsuarioId(venta.getCreadaPorUsuarioId()); pago.setRegistradoEn(LocalDateTime.now(reloj));
         comisiones.registrar(venta, filas);
         return mapear(venta, pagos.save(pago), filas);
     }
@@ -374,7 +382,7 @@ public class ServicioVentasCaja {
         venta.setCajaSesionId(sesion.getId()); venta.setEstado("PAGADA"); ventas.save(venta);
         var pago=new PagoVentaEntidad(); pago.setEmpresaId(empresaId);pago.setVentaId(ventaId);pago.setCajaSesionId(sesion.getId());
         pago.setMonto(venta.getTotal());pago.setMetodoPago(codigo);pago.setReferencia(limpiar(referencia));
-        pago.setRegistradoPorUsuarioId(usuarioId);pago.setRegistradoEn(LocalDateTime.now());pago=pagos.save(pago);
+        pago.setRegistradoPorUsuarioId(usuarioId);pago.setRegistradoEn(LocalDateTime.now(reloj));pago=pagos.save(pago);
         if(METODO_PAGO_EFECTIVO.equals(codigo)) registrarIngresoEfectivo(empresaId,usuarioId,sesion.getId(),venta,pago);
         comisiones.registrar(venta,filas);
         return mapear(venta,pago,filas);
@@ -393,8 +401,9 @@ public class ServicioVentasCaja {
         d.setDescuento(precioLista.multiply(cantidad).setScale(2, RoundingMode.HALF_UP).subtract(total));
         d.setCostoUnitarioHistorico(producto.getCosto()); return d;
     }
-    private List<com.techprotech.agenda.modulos.productos.infraestructura.entidad.ReglaDescuentoProductoEntidad> reglasVigentes(Long empresaId) {
-        return descuentos.findByEmpresaIdOrderByPrioridadDescNombreAsc(empresaId).stream().filter(regla -> com.techprotech.agenda.modulos.productos.aplicacion.CalculadorDescuentosProductos.vigente(regla, java.time.LocalDate.now())).toList();
+    private List<com.techprotech.agenda.modulos.productos.infraestructura.entidad.ReglaDescuentoProductoEntidad> reglasVigentes(Long empresaId, Long sucursalId) {
+        var hoy = java.time.LocalDate.now(reloj.withZone(zonasNegocio.de(empresaId, sucursalId)));
+        return descuentos.findByEmpresaIdOrderByPrioridadDescNombreAsc(empresaId).stream().filter(regla -> com.techprotech.agenda.modulos.productos.aplicacion.CalculadorDescuentosProductos.vigente(regla, hoy)).toList();
     }
     private BigDecimal precioProducto(ProductoEntidad producto, Long sucursalId, BigDecimal cantidad,
             List<com.techprotech.agenda.modulos.productos.infraestructura.entidad.ReglaDescuentoProductoEntidad> reglas, ContextoPrecio contexto) {
@@ -423,12 +432,12 @@ public class ServicioVentasCaja {
         MovimientoCajaEntidad m = new MovimientoCajaEntidad(); m.setEmpresaId(empresaId); m.setCajaSesionId(sesionId); m.setCitaId(venta.getCitaId());
         m.setTipoMovimiento("INGRESO_VENTA"); m.setMetodoPago(METODO_PAGO_EFECTIVO); m.setMonto(pago.getMonto());
         m.setConcepto("Venta " + venta.getFolio()); m.setReferencia(pago.getReferencia()); m.setObservaciones(venta.getObservaciones());
-        m.setRegistradoPorUsuarioId(usuarioId); m.setRegistradoEn(LocalDateTime.now()); movimientos.save(m);
+        m.setRegistradoPorUsuarioId(usuarioId); m.setRegistradoEn(LocalDateTime.now(reloj)); movimientos.save(m);
     }
     private VentaResponse mapear(VentaEntidad venta, PagoVentaEntidad pago, List<VentaDetalleEntidad> filas) {
         return new VentaResponse(venta.getId(), venta.getFolio(), venta.getSucursalId(), venta.getCitaId(), venta.getClienteId(), venta.getEstado(),
                 venta.getMoneda(), venta.getSubtotal(), venta.getDescuentoTotal(), venta.getImpuestosTotal(), venta.getTotal(),
-                pago == null ? null : pago.getMetodoPago(), pago == null ? null : pago.getReferencia(), venta.getCreadaEn(), venta.getCanal(),
+                pago == null ? null : pago.getMetodoPago(), pago == null ? null : pago.getReferencia(), de(venta.getCreadaEn()), venta.getCanal(),
                 filas.stream().map(d -> new VentaResponse.DetalleVentaResponse(d.getId(), d.getTipoConcepto(), d.getProductoId(), d.getServicioId(),
                         d.getCitaId(), d.getSku(), d.getNombre(), d.getCantidad(), d.getPrecioUnitario(), d.getDescuento(), d.getImpuestos(), d.getTotal(), d.getCostoUnitarioHistorico())).toList());
     }
@@ -439,7 +448,7 @@ public class ServicioVentasCaja {
         sucursales.findByIdAndEmpresaIdAndActivaTrue(sucursalId, empresaId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Sucursal no encontrada"));
     }
-    private String generarFolio() { return "V-" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyMMddHHmmss")) + "-" + UUID.randomUUID().toString().substring(0, 6).toUpperCase(Locale.ROOT); }
+    private String generarFolio(Long empresaId, Long sucursalId) { return "V-" + LocalDateTime.now(reloj.withZone(zonasNegocio.de(empresaId, sucursalId))).format(DateTimeFormatter.ofPattern("yyMMddHHmmss")) + "-" + UUID.randomUUID().toString().substring(0, 6).toUpperCase(Locale.ROOT); }
     private String limpiar(String valor) { return StringUtils.hasText(valor) ? valor.trim() : null; }
     private BigDecimal seguro(BigDecimal valor) { return valor == null ? BigDecimal.ZERO : valor; }
     private ResponseStatusException badRequest(String mensaje) { return new ResponseStatusException(HttpStatus.BAD_REQUEST, mensaje); }

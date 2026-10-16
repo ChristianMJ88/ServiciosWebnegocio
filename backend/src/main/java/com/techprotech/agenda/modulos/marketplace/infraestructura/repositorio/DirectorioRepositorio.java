@@ -12,8 +12,10 @@ import java.util.ArrayList;
 import java.util.Collections;
 @Repository
 public class DirectorioRepositorio {
+    private final java.time.Clock reloj;
  private final JdbcTemplate jdbc;
- public DirectorioRepositorio(JdbcTemplate jdbc){this.jdbc=jdbc;}
+ public DirectorioRepositorio(JdbcTemplate jdbc, java.time.Clock reloj){
+        this.reloj = reloj;this.jdbc=jdbc;}
  private String patron(String texto){return "%"+texto.replace("!","!!").replace("%","!%").replace("_","!_")+"%";}
  public List<NegocioDirectorioResponse> buscar(String texto,long cursor,int limite){return buscar(texto,"","",cursor,limite);}
  public List<NegocioDirectorioResponse> buscar(String texto,String ubicacion,String categoria,long cursor,int limite){
@@ -58,7 +60,7 @@ public class DirectorioRepositorio {
     rs.getString("pais_codigo"),rs.getString("codigo_postal"),rs.getString("zona_horaria"),List.of()));
    var dia=rs.getObject("dia_semana");
    if(dia!=null){
-    var fecha=java.time.LocalDate.now(java.time.ZoneId.of(rs.getString("zona_horaria")));
+    var fecha=java.time.LocalDate.now(reloj.withZone(java.time.ZoneId.of(rs.getString("zona_horaria"))));
     var desde=rs.getObject("vigente_desde",java.time.LocalDate.class);
     var hasta=rs.getObject("vigente_hasta",java.time.LocalDate.class);
     if((desde==null||!fecha.isBefore(desde))&&(hasta==null||!fecha.isAfter(hasta))){

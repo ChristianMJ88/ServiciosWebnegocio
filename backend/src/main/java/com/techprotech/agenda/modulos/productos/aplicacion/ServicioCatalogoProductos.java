@@ -1,5 +1,7 @@
 package com.techprotech.agenda.modulos.productos.aplicacion;
 
+import java.time.Clock;
+import com.techprotech.agenda.compartido.tiempo.ZonaNegocio;
 import com.techprotech.agenda.compartido.media.aplicacion.ServicioMediaEmpresa;
 import com.techprotech.agenda.compartido.media.dominio.CategoriaMedia;
 import com.techprotech.agenda.compartido.media.infraestructura.EmpresaArchivoMediaEntidad;
@@ -20,6 +22,7 @@ import java.util.stream.Collectors;
 
 @Service
 public class ServicioCatalogoProductos {
+ private final Clock reloj; private final ZonaNegocio zonasNegocio;
     private final CategoriaProductoRepositorio categorias;
     private final ProveedorProductoRepositorio proveedores;
     private final ZonaPrecioProductoRepositorio zonas;
@@ -41,8 +44,12 @@ public class ServicioCatalogoProductos {
             ServicioParametrosSistema parametros,
             ServicioCapacidadesEmpresa capacidadesEmpresa,
             ReglaDescuentoProductoRepositorio descuentos,
-            com.techprotech.agenda.modulos.sucursales.infraestructura.repositorio.SucursalRepositorio sucursales
+            com.techprotech.agenda.modulos.sucursales.infraestructura.repositorio.SucursalRepositorio sucursales,
+            Clock reloj,
+            ZonaNegocio zonasNegocio
     ) {
+        this.reloj = reloj;
+        this.zonasNegocio = zonasNegocio;
         this.categorias = categorias;
         this.proveedores = proveedores;
         this.zonas = zonas;
@@ -76,7 +83,7 @@ public class ServicioCatalogoProductos {
         Map<Long, CategoriaProductoEntidad> categoriaPorId = listaCategorias.stream().collect(Collectors.toMap(CategoriaProductoEntidad::getId, Function.identity()));
         Map<Long, ProveedorProductoEntidad> proveedorPorId = listaProveedores.stream().collect(Collectors.toMap(ProveedorProductoEntidad::getId, Function.identity()));
         Map<Long, ZonaPrecioProductoEntidad> zonaPorId = listaZonas.stream().collect(Collectors.toMap(ZonaPrecioProductoEntidad::getId, Function.identity()));
-        var reglas = reglasVigentes(empresaId);
+        var reglas = reglasVigentes(empresaId, sucursalId);
         Map<Long, List<PrecioZonaProductoEntidad>> preciosPorProducto = listaProductos.isEmpty()
                 ? Map.of()
                 : precios.findByEmpresaIdAndProductoIdIn(empresaId, listaProductos.stream().map(ProductoEntidad::getId).toList())
@@ -178,7 +185,7 @@ public class ServicioCatalogoProductos {
                 categorias.findByEmpresaIdOrderByOrdenAscNombreAsc(empresaId).stream().collect(Collectors.toMap(CategoriaProductoEntidad::getId, Function.identity())),
                 proveedores.findByEmpresaIdOrderByNombreAsc(empresaId).stream().collect(Collectors.toMap(ProveedorProductoEntidad::getId, Function.identity())),
                 zonas.findByEmpresaIdOrderByPrioridadAscNombreAsc(empresaId).stream().collect(Collectors.toMap(ZonaPrecioProductoEntidad::getId, Function.identity())),
-                precios.findByEmpresaIdAndProductoIdIn(empresaId, List.of(id)), reglasVigentes(empresaId), null, null);
+                precios.findByEmpresaIdAndProductoIdIn(empresaId, List.of(id)), reglasVigentes(empresaId, null), null, null);
     }
 
     void validarProductoImportacion(Long empresaId, ProductoRequest request) {
@@ -354,8 +361,9 @@ public class ServicioCatalogoProductos {
                 e.getTasaImpuesto(), e.isControlaInventario(), e.getStockMinimo(),
                 e.isVisiblePublico(), e.isActivo(), preciosZona,e.getNuevoDesde(),e.getNuevoHasta(), descuento.precio(), descuento.etiqueta());
     }
-    private List<ReglaDescuentoProductoEntidad> reglasVigentes(Long empresaId) {
-        return descuentos.findByEmpresaIdOrderByPrioridadDescNombreAsc(empresaId).stream().filter(regla -> CalculadorDescuentosProductos.vigente(regla, java.time.LocalDate.now())).toList();
+    private List<ReglaDescuentoProductoEntidad> reglasVigentes(Long empresaId, Long sucursalId) {
+        var hoy = java.time.LocalDate.now(reloj.withZone(zonasNegocio.de(empresaId, sucursalId)));
+        return descuentos.findByEmpresaIdOrderByPrioridadDescNombreAsc(empresaId).stream().filter(regla -> CalculadorDescuentosProductos.vigente(regla, hoy)).toList();
     }
 
     private String texto(String valor) { return valor == null || valor.isBlank() ? null : valor.trim(); }

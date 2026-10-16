@@ -57,7 +57,7 @@ public class SolicitudContactoEntidad {
     @PrePersist
     void inicializarCamposAutomaticos() {
         if (creadaEn == null) {
-            creadaEn = LocalDateTime.now();
+            creadaEn = LocalDateTime.now(java.time.ZoneOffset.UTC);
         }
     }
 

@@ -10,13 +10,16 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/v1/sistema")
 public class ControladorSistema {
+    private final java.time.Clock reloj;
+    public ControladorSistema(java.time.Clock reloj) { this.reloj = reloj; }
+
 
     @GetMapping("/estado")
     public Map<String, Object> estado() {
         return Map.of(
                 "servicio", "agenda-backend",
                 "estado", "OK",
-                "fechaHora", OffsetDateTime.now()
+                "fechaHora", OffsetDateTime.now(reloj)
         );
     }
 }

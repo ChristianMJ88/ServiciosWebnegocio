@@ -12,6 +12,7 @@ import java.time.LocalDateTime;
 
 @Service
 public class ServicioOutboxWhatsappCitas {
+    private final java.time.Clock reloj;
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ServicioOutboxWhatsappCitas.class);
     private static final String CANAL = "WHATSAPP";
@@ -24,8 +25,10 @@ public class ServicioOutboxWhatsappCitas {
     public ServicioOutboxWhatsappCitas(
             BandejaSalidaNotificacionRepositorio bandejaSalidaNotificacionRepositorio,
             ClienteWhatsappTwilio clienteWhatsappTwilio,
-            ObjectMapper objectMapper
+            ObjectMapper objectMapper,
+            java.time.Clock reloj
     ) {
+        this.reloj = reloj;
         this.bandejaSalidaNotificacionRepositorio = bandejaSalidaNotificacionRepositorio;
         this.clienteWhatsappTwilio = clienteWhatsappTwilio;
         this.objectMapper = objectMapper;
@@ -42,7 +45,7 @@ public class ServicioOutboxWhatsappCitas {
         "CITA_REGISTRADA_WHATSAPP",
         telefonoDestino,
         inicioEsperado,
-        LocalDateTime.now(),
+        LocalDateTime.now(reloj),
         totalServicios
       );
     }
@@ -54,7 +57,7 @@ public class ServicioOutboxWhatsappCitas {
         "CITA_CONFIRMADA_WHATSAPP",
         telefonoDestino,
         inicioEsperado,
-        LocalDateTime.now(),
+        LocalDateTime.now(reloj),
         null
       );
     }
@@ -66,7 +69,7 @@ public class ServicioOutboxWhatsappCitas {
         "CITA_REPROGRAMADA_PENDIENTE_WHATSAPP",
         telefonoDestino,
         inicioEsperado,
-        LocalDateTime.now(),
+        LocalDateTime.now(reloj),
         null
       );
     }
@@ -102,7 +105,7 @@ public class ServicioOutboxWhatsappCitas {
         "CITA_CANCELADA_NEGOCIO_WHATSAPP",
         telefonoDestino,
         inicioEsperado,
-        LocalDateTime.now(),
+        LocalDateTime.now(reloj),
         null
       );
     }
@@ -114,7 +117,7 @@ public class ServicioOutboxWhatsappCitas {
         "CITA_LIBERADA_SIN_CONFIRMACION_WHATSAPP",
         telefonoDestino,
         inicioEsperado,
-        LocalDateTime.now(),
+        LocalDateTime.now(reloj),
         null
       );
     }
@@ -126,7 +129,7 @@ public class ServicioOutboxWhatsappCitas {
         "CITA_GRACIAS_VISITA_WHATSAPP",
         telefonoDestino,
         inicioEsperado,
-        LocalDateTime.now(),
+        LocalDateTime.now(reloj),
         null
       );
     }

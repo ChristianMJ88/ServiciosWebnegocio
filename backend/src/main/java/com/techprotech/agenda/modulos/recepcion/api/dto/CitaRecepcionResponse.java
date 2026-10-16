@@ -1,7 +1,6 @@
 package com.techprotech.agenda.modulos.recepcion.api.dto;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 
 public record CitaRecepcionResponse(
@@ -21,7 +20,7 @@ public record CitaRecepcionResponse(
         BigDecimal precio,
         String moneda,
         String notas,
-        LocalDateTime checkInEn,
+        OffsetDateTime checkInEn,
         Long checkInPorUsuarioId
 ) {
     @com.fasterxml.jackson.annotation.JsonProperty("notificarEnAgenda")

@@ -1,7 +1,7 @@
 package com.techprotech.agenda.modulos.caja.api.dto;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 
 public record MovimientoCajaResponse(
         Long id,
@@ -13,6 +13,6 @@ public record MovimientoCajaResponse(
         String concepto,
         String referencia,
         String observaciones,
-        LocalDateTime registradoEn
+        OffsetDateTime registradoEn
 ) {
 }

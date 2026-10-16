@@ -10,12 +10,14 @@ import java.time.LocalDateTime;
 
 @Service
 public class ServicioProteccionAcceso {
+    private final java.time.Clock reloj;
     private final UsuarioRepositorio usuarios;
     private final int maxIntentos;
     private final int minutosBloqueo;
     public ServicioProteccionAcceso(UsuarioRepositorio usuarios,
             @Value("${aplicacion.seguridad-acceso.max-intentos}") int maxIntentos,
-            @Value("${aplicacion.seguridad-acceso.minutos-bloqueo}") int minutosBloqueo) {
+            @Value("${aplicacion.seguridad-acceso.minutos-bloqueo}") int minutosBloqueo, java.time.Clock reloj) {
+        this.reloj = reloj;
         this.usuarios = usuarios; this.maxIntentos = maxIntentos; this.minutosBloqueo = minutosBloqueo;
     }
 
@@ -25,7 +27,7 @@ public class ServicioProteccionAcceso {
             int intentos = usuario.getIntentosLoginFallidos() + 1;
             usuario.setIntentosLoginFallidos(intentos);
             if (intentos >= maxIntentos) {
-                usuario.setLoginBloqueadoHasta(LocalDateTime.now().plusMinutes(minutosBloqueo));
+                usuario.setLoginBloqueadoHasta(LocalDateTime.now(reloj).plusMinutes(minutosBloqueo));
                 usuario.setIntentosLoginFallidos(0);
             }
             usuarios.save(usuario);
@@ -33,7 +35,7 @@ public class ServicioProteccionAcceso {
     }
 
     public boolean estaBloqueadoTemporalmente(UsuarioEntidad usuario) {
-        return usuario.getLoginBloqueadoHasta() != null && usuario.getLoginBloqueadoHasta().isAfter(LocalDateTime.now());
+        return usuario.getLoginBloqueadoHasta() != null && usuario.getLoginBloqueadoHasta().isAfter(LocalDateTime.now(reloj));
     }
 
     public void limpiar(UsuarioEntidad usuario) {

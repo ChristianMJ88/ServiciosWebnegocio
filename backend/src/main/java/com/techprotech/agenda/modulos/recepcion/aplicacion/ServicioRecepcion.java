@@ -1,5 +1,9 @@
 package com.techprotech.agenda.modulos.recepcion.aplicacion;
 
+import static com.techprotech.agenda.compartido.tiempo.MomentoUtc.de;
+
+import java.time.Clock;
+import com.techprotech.agenda.compartido.tiempo.ZonaNegocio;
 import com.techprotech.agenda.compartido.correo.ServicioOutboxCorreoCitas;
 import com.techprotech.agenda.compartido.whatsapp.ClienteWhatsappTwilio;
 import com.techprotech.agenda.compartido.whatsapp.ServicioConfiguracionWhatsappEmpresa;
@@ -67,6 +71,8 @@ import static org.springframework.http.HttpStatus.NOT_FOUND;
 
 @Service
 public class ServicioRecepcion {
+    private final Clock reloj;
+    private final ZonaNegocio zonasNegocio;
 
     private final CitaRepositorio citaRepositorio;
     private final HistorialEstadoCitaRepositorio historialEstadoCitaRepositorio;
@@ -101,8 +107,12 @@ public class ServicioRecepcion {
             ServicioConsultaDisponibilidad servicioConsultaDisponibilidad,
             SolicitudEsperaRecepcionRepositorio solicitudEsperaRecepcionRepositorio,
             ClienteWhatsappTwilio clienteWhatsappTwilio,
-            ServicioConfiguracionWhatsappEmpresa servicioConfiguracionWhatsappEmpresa
+            ServicioConfiguracionWhatsappEmpresa servicioConfiguracionWhatsappEmpresa,
+            Clock reloj,
+            ZonaNegocio zonasNegocio
     ) {
+        this.reloj = reloj;
+        this.zonasNegocio = zonasNegocio;
         this.citaRepositorio = citaRepositorio;
         this.historialEstadoCitaRepositorio = historialEstadoCitaRepositorio;
         this.clienteRepositorio = clienteRepositorio;
@@ -214,7 +224,7 @@ public class ServicioRecepcion {
 
     @Transactional(readOnly = true)
     public List<CitaRecepcionResponse> agenda(Long empresaId, List<Long> sucursalesPermitidas, LocalDate fecha, Long sucursalId) {
-        LocalDate fechaOperativa = fecha != null ? fecha : LocalDate.now();
+        LocalDate fechaOperativa = fecha != null ? fecha : LocalDate.now(reloj.withZone(zonasNegocio.de(empresaId, sucursalId)));
         if (sucursalId != null) {
             validarAccesoSucursal(sucursalesPermitidas, sucursalId);
         }
@@ -281,7 +291,7 @@ public class ServicioRecepcion {
             LocalDate fecha,
             Long sucursalId
     ) {
-        LocalDate fechaOperativa = fecha != null ? fecha : LocalDate.now();
+        LocalDate fechaOperativa = fecha != null ? fecha : LocalDate.now(reloj.withZone(zonasNegocio.de(empresaId, sucursalId)));
         if (sucursalId != null) {
             validarAccesoSucursal(sucursalesPermitidas, sucursalId);
         }
@@ -313,6 +323,7 @@ public class ServicioRecepcion {
         }
 
         SolicitudEsperaRecepcionEntidad solicitud = new SolicitudEsperaRecepcionEntidad();
+        solicitud.setCreadaEn(LocalDateTime.now(reloj));
         solicitud.setEmpresaId(empresaId);
         solicitud.setSucursalId(request.sucursalId());
         solicitud.setServicioId(request.servicioId());
@@ -364,12 +375,9 @@ public class ServicioRecepcion {
                 solicitud.getFechaDeseada()
         );
 
-        ZoneId zona = sucursalRepositorio.findById(solicitud.getSucursalId())
-                .map(SucursalEntidad::getZonaHoraria)
-                .map(ZoneId::of)
-                .orElse(ZoneId.of("America/Mexico_City"));
+        ZoneId zona = zonasNegocio.de(empresaId, solicitud.getSucursalId());
 
-        ZonedDateTime ahora = ZonedDateTime.now(zona);
+        ZonedDateTime ahora = ZonedDateTime.now(reloj.withZone(zona));
         FranjaDisponibleResponse franja = franjas.stream()
                 .filter(item -> !OffsetDateTime.parse(item.inicio()).atZoneSameInstant(zona).isBefore(ahora))
                 .findFirst()
@@ -397,7 +405,7 @@ public class ServicioRecepcion {
         );
 
         solicitud.setEstado("NOTIFICADO");
-        solicitud.setNotificadaEn(LocalDateTime.now());
+        solicitud.setNotificadaEn(LocalDateTime.now(reloj));
         solicitud.setCreadoPorUsuarioId(usuarioId);
 
         return mapearSolicitudEspera(solicitudEsperaRecepcionRepositorio.save(solicitud));
@@ -419,15 +427,12 @@ public class ServicioRecepcion {
                 sucursalId,
                 servicioId,
                 prestadorId,
-                fecha != null ? fecha : LocalDate.now()
+                fecha != null ? fecha : LocalDate.now(reloj.withZone(zonasNegocio.de(empresaId, sucursalId)))
         );
 
-        ZoneId zona = sucursalRepositorio.findById(sucursalId)
-                .map(SucursalEntidad::getZonaHoraria)
-                .map(ZoneId::of)
-                .orElse(ZoneId.of("America/Mexico_City"));
+        ZoneId zona = zonasNegocio.de(empresaId, sucursalId);
 
-        ZonedDateTime ahora = ZonedDateTime.now(zona);
+        ZonedDateTime ahora = ZonedDateTime.now(reloj.withZone(zona));
 
         Map<Long, String> nombresPrestadores = prestadorServicioRepositorio
                 .findBySucursalIdInOrderByNombreMostrarAsc(List.of(sucursalId)).stream()
@@ -461,7 +466,7 @@ public class ServicioRecepcion {
             throw new ResponseStatusException(BAD_REQUEST, "Solo se puede hacer check-in a citas pendientes o confirmadas");
         }
 
-        cita.setCheckInEn(LocalDateTime.now());
+        cita.setCheckInEn(LocalDateTime.now(reloj));
         cita.setCheckInPorUsuarioId(usuarioId);
         if ("PENDIENTE".equals(cita.getEstado())) {
             String estadoAnterior = cita.getEstado();
@@ -519,7 +524,7 @@ public class ServicioRecepcion {
 
         String estadoAnterior = cita.getEstado();
         cita.setEstado("CANCELADA");
-        cita.setCanceladaEn(LocalDateTime.now());
+        cita.setCanceladaEn(LocalDateTime.now(reloj));
         cita.setMotivoCancelacion("Cancelada desde recepción");
         citaRepositorio.save(cita);
         guardarHistorial(cita.getId(), estadoAnterior, "CANCELADA", usuarioId, "Cancelación desde recepción");
@@ -592,9 +597,9 @@ public class ServicioRecepcion {
                 solicitud.getCanalOrigen(),
                 solicitud.getEstado(),
                 solicitud.getNotas(),
-                solicitud.getCreadaEn(),
-                solicitud.getNotificadaEn(),
-                solicitud.getCerradoEn()
+                de(solicitud.getCreadaEn()),
+                de(solicitud.getNotificadaEn()),
+                de(solicitud.getCerradoEn())
         );
     }
 
@@ -639,7 +644,7 @@ public class ServicioRecepcion {
                 cita.getPrecio(),
                 cita.getMoneda(),
                 cita.getNotas(),
-                cita.getCheckInEn(),
+                de(cita.getCheckInEn()),
                 cita.getCheckInPorUsuarioId()
         );
     }

@@ -1,5 +1,7 @@
 package com.techprotech.agenda.modulos.admin.aplicacion;
 
+import java.time.Clock;
+import com.techprotech.agenda.compartido.tiempo.ZonaNegocio;
 import com.techprotech.agenda.compartido.correo.ConfiguracionCorreoEmpresaEntidad;
 import com.techprotech.agenda.compartido.correo.ConfiguracionCorreoEmpresaRepositorio;
 import com.techprotech.agenda.compartido.correo.BandejaSalidaNotificacionEntidad;
@@ -142,6 +144,8 @@ import static org.springframework.http.HttpStatus.PRECONDITION_REQUIRED;
 
 @Service
 public class ServicioAdminCitas {
+    private final Clock reloj;
+    private final ZonaNegocio zonasNegocio;
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ServicioAdminCitas.class);
     private static final Set<String> PERMISOS_ACCESO_INTERNO = Set.of(
@@ -322,8 +326,12 @@ public class ServicioAdminCitas {
             AuditoriaRolEmpresaRepositorio auditoriaRolEmpresaRepositorio,
             ObjectMapper objectMapper,
             ProtectorSecretosCorreo protectorSecretosCorreo,
-            ServicioCapacidadesEmpresa capacidadesEmpresa
+            ServicioCapacidadesEmpresa capacidadesEmpresa,
+            Clock reloj,
+            ZonaNegocio zonasNegocio
     ) {
+        this.reloj = reloj;
+        this.zonasNegocio = zonasNegocio;
         this.citaRepositorio = citaRepositorio;
         this.historialEstadoCitaRepositorio = historialEstadoCitaRepositorio;
         this.sucursalRepositorio = sucursalRepositorio;
@@ -365,7 +373,7 @@ public class ServicioAdminCitas {
     @Transactional(readOnly = true)
     public ResumenAdminResponse resumen(Long empresaId, LocalDate desde, LocalDate hasta) {
         List<CitaEntidad> citas = citasReporte(empresaId, desde, hasta);
-        LocalDate hoy = LocalDate.now();
+        var hoyPorSucursal = new java.util.HashMap<Long, LocalDate>();
         long total = citas.size();
         return new ResumenAdminResponse(
                 total,
@@ -374,7 +382,7 @@ public class ServicioAdminCitas {
                 contarEstado(citas, "FINALIZADA"),
                 contarEstado(citas, "CANCELADA"),
                 contarEstado(citas, "NO_ASISTIO"),
-                citas.stream().filter(cita -> cita.getInicio().toLocalDate().isEqual(hoy)).count(),
+                citas.stream().filter(cita -> cita.getInicio().toLocalDate().isEqual(hoyPorSucursal.computeIfAbsent(cita.getSucursalId(), id -> LocalDate.now(reloj.withZone(zonasNegocio.de(empresaId, id)))))).count(),
                 sumarIngresos(citas, Set.of("PENDIENTE", "CONFIRMADA", "FINALIZADA")),
                 sumarIngresos(citas, Set.of("FINALIZADA"))
         );
@@ -448,8 +456,8 @@ public class ServicioAdminCitas {
     }
 
     @Transactional(readOnly = true)
-    public List<PeriodoReporteAdminResponse> periodosReporte() {
-        LocalDate hoy = LocalDate.now();
+    public List<PeriodoReporteAdminResponse> periodosReporte(Long empresaId) {
+        LocalDate hoy = LocalDate.now(reloj.withZone(zonasNegocio.de(empresaId, (Long) null)));
         return List.of(
                 new PeriodoReporteAdminResponse(
                         "MES_ACTUAL",
@@ -1000,7 +1008,7 @@ public class ServicioAdminCitas {
         mensaje.setTelefonoNormalizado(telefonoNormalizado);
         mensaje.setDireccion("SALIENTE");
         mensaje.setCuerpo(mensajeTexto);
-        mensaje.setCreadoEn(LocalDateTime.now());
+        mensaje.setCreadoEn(LocalDateTime.now(reloj));
 
         try {
             ResultadoEnvioWhatsapp resultado = clienteWhatsappTwilio.enviarMensaje(empresaId, telefono, mensajeTexto);
@@ -1417,7 +1425,7 @@ public class ServicioAdminCitas {
         cita.setEstado(nuevoEstado);
 
         if ("CANCELADA".equals(nuevoEstado)) {
-            cita.setCanceladaEn(java.time.LocalDateTime.now());
+            cita.setCanceladaEn(java.time.LocalDateTime.now(reloj));
             cita.setMotivoCancelacion("Cancelada desde el panel administrativo");
         }
 
@@ -2867,12 +2875,12 @@ public class ServicioAdminCitas {
                     "hora", request.hora().trim()
             )));
             salida.setEstado("ENVIADA");
-            salida.setProgramadaEn(LocalDateTime.now());
-            salida.setEnviadaEn(LocalDateTime.now());
+            salida.setProgramadaEn(LocalDateTime.now(reloj));
+            salida.setEnviadaEn(LocalDateTime.now(reloj));
             salida.setIntentos(1);
             salida.setProveedorMensajeId(resultado.proveedorMensajeId());
             salida.setEstadoEntrega(resultado.estadoProveedor());
-            salida.setEstadoEntregaActualizadoEn(LocalDateTime.now());
+            salida.setEstadoEntregaActualizadoEn(LocalDateTime.now(reloj));
             salida.setCodigoErrorProveedor(resultado.codigoErrorProveedor());
             salida.setDetalleErrorProveedor(resultado.detalleErrorProveedor());
             bandejaSalidaNotificacionRepositorio.save(salida);

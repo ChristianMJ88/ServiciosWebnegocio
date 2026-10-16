@@ -10,6 +10,7 @@ import java.util.Map;
 
 @Service
 public class ServicioOutboxCorreoEnvios {
+    private final java.time.Clock reloj;
     private static final Map<String, String> EVENTOS = Map.of(
             "GUIA_GENERADA", "ENVIO_GUIA_GENERADA_EMAIL",
             "EN_TRANSITO", "ENVIO_EN_TRANSITO_EMAIL",
@@ -22,7 +23,8 @@ public class ServicioOutboxCorreoEnvios {
 
     public ServicioOutboxCorreoEnvios(BandejaSalidaNotificacionRepositorio outbox,
                                       ServicioConfiguracionCorreoEmpresa configuracionCorreo,
-                                      ObjectMapper objectMapper) {
+                                      ObjectMapper objectMapper, java.time.Clock reloj) {
+        this.reloj = reloj;
         this.outbox = outbox;
         this.configuracionCorreo = configuracionCorreo;
         this.objectMapper = objectMapper;
@@ -41,7 +43,7 @@ public class ServicioOutboxCorreoEnvios {
         salida.setCanal("EMAIL");
         salida.setPayloadJson(serializar(new EventoEnvioCorreoPayload(envioId)));
         salida.setEstado("PENDIENTE");
-        salida.setProgramadaEn(LocalDateTime.now());
+        salida.setProgramadaEn(LocalDateTime.now(reloj));
         salida.setIntentos(0);
         outbox.save(salida);
         return true;

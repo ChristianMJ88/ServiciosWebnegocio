@@ -18,6 +18,7 @@ import java.util.*;
 
 @Service
 public class ServicioRecuperacionContrasena {
+    private final java.time.Clock reloj;
   private final UsuarioRepositorio usuarios;
   private final EmpresaRepositorio empresas;
   private final RecuperacionContrasenaRepositorio recuperaciones;
@@ -33,7 +34,8 @@ public class ServicioRecuperacionContrasena {
                                         RecuperacionContrasenaRepositorio recuperaciones, ServicioConfiguracionCorreoEmpresa configuracionCorreo,
                                         ClienteCorreoSaliente correo, PasswordEncoder encoder, PropiedadesCorreo propiedadesCorreo,
                                         @Value("${aplicacion.recuperacion-contrasena.url}") String url,
-                                        @Value("${aplicacion.recuperacion-contrasena.minutos-vigencia}") long minutosVigencia) {
+                                        @Value("${aplicacion.recuperacion-contrasena.minutos-vigencia}") long minutosVigencia, java.time.Clock reloj) {
+        this.reloj = reloj;
     this.usuarios = usuarios;
     this.empresas = empresas;
     this.recuperaciones = recuperaciones;
@@ -48,7 +50,7 @@ public class ServicioRecuperacionContrasena {
   @Transactional
   public void solicitar(String correoSolicitado) {
     String correoNormalizado = correoSolicitado.trim().toLowerCase();
-    LocalDateTime ahora = LocalDateTime.now();
+    LocalDateTime ahora = LocalDateTime.now(reloj);
     usuarios.findByCorreoOrderByEmpresaIdAsc(correoNormalizado).stream()
       .filter(UsuarioEntidad::isHabilitado).filter(u -> !u.isBloqueado()).forEach(usuario -> {
         if (recuperaciones.existsByUsuarioIdAndEstadoAndCreadoEnAfter(usuario.getId(), "PENDIENTE", ahora.minusMinutes(5)))
@@ -76,7 +78,7 @@ public class ServicioRecuperacionContrasena {
       .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "El enlace no es válido"));
     if (!"PENDIENTE".equals(r.getEstado()))
       throw new ResponseStatusException(HttpStatus.CONFLICT, "El enlace ya fue utilizado");
-    if (r.getExpiraEn().isBefore(LocalDateTime.now()))
+    if (r.getExpiraEn().isBefore(LocalDateTime.now(reloj)))
       throw new ResponseStatusException(HttpStatus.GONE, "El enlace expiró");
     UsuarioEntidad usuario = usuarios.findByIdAndEmpresaId(r.getUsuarioId(), r.getEmpresaId())
       .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "El usuario no existe"));
@@ -89,7 +91,7 @@ public class ServicioRecuperacionContrasena {
     usuario.setLoginBloqueadoHasta(null);
     usuarios.save(usuario);
     r.setEstado("UTILIZADA");
-    r.setUtilizadaEn(LocalDateTime.now());
+    r.setUtilizadaEn(LocalDateTime.now(reloj));
     recuperaciones.save(r);
     recuperaciones.findByUsuarioIdAndEstado(usuario.getId(), "PENDIENTE").stream().filter(x -> !x.getId().equals(r.getId()))
       .forEach(x -> {

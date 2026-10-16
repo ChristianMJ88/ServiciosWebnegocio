@@ -21,6 +21,7 @@ import java.util.HexFormat;
 
 @Service
 public class ServicioAccesoSocial {
+    private final java.time.Clock reloj;
   private final UsuarioIdentidadExternaRepositorio identidades;
   private final CodigoAccesoSocialRepositorio codigos;
   private final UsuarioRepositorio usuarios;
@@ -32,7 +33,8 @@ public class ServicioAccesoSocial {
   public ServicioAccesoSocial(UsuarioIdentidadExternaRepositorio identidades,
                               CodigoAccesoSocialRepositorio codigos, UsuarioRepositorio usuarios,
                               ServicioAutenticacion autenticacion, EmpresaRepositorio empresas,
-                              ServicioRolesEmpresa roles) {
+                              ServicioRolesEmpresa roles, java.time.Clock reloj) {
+        this.reloj = reloj;
     this.identidades = identidades;
     this.codigos = codigos;
     this.usuarios = usuarios;
@@ -59,15 +61,15 @@ public class ServicioAccesoSocial {
     entidad.setProveedor(perfil.proveedor());
     entidad.setSubjectProveedor(perfil.subject());
     entidad.setTokenHash(hash(codigo));
-    entidad.setCreadoEn(LocalDateTime.now());
-    entidad.setExpiraEn(LocalDateTime.now().plusMinutes(5));
+    entidad.setCreadoEn(LocalDateTime.now(reloj));
+    entidad.setExpiraEn(LocalDateTime.now(reloj).plusMinutes(5));
     codigos.save(entidad);
     return codigo;
   }
 
   private void vincularPorCorreoVerificado(PerfilRegistroSocial perfil) {
     String correo = perfil.correo().trim().toLowerCase();
-    LocalDateTime ahora = LocalDateTime.now();
+    LocalDateTime ahora = LocalDateTime.now(reloj);
     usuarios.findByCorreoOrderByEmpresaIdAsc(correo).stream()
       .filter(usuario -> usuario.isHabilitado() && !usuario.isBloqueado())
       .filter(usuario -> !identidades.existsByUsuarioIdAndProveedor(usuario.getId(), perfil.proveedor()))
@@ -90,7 +92,7 @@ public class ServicioAccesoSocial {
   public RespuestaAccesoApp intercambiar(String codigo, Long empresaId) {
     CodigoAccesoSocialEntidad entidad = codigos.findByTokenHash(hash(codigo))
       .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Código social no válido"));
-    if (entidad.getUsadoEn() != null || entidad.getExpiraEn().isBefore(LocalDateTime.now())) {
+    if (entidad.getUsadoEn() != null || entidad.getExpiraEn().isBefore(LocalDateTime.now(reloj))) {
       throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "El código social expiró o ya fue utilizado");
     }
     java.util.List<UsuarioEntidad> candidatos = identidades
@@ -109,7 +111,7 @@ public class ServicioAccesoSocial {
     UsuarioEntidad usuario = empresaId == null ? candidatos.getFirst() : candidatos.stream()
       .filter(candidato -> candidato.getEmpresaId().equals(empresaId)).findFirst()
       .orElseThrow(() -> new ResponseStatusException(HttpStatus.FORBIDDEN, "No tienes acceso a la empresa seleccionada"));
-    entidad.setUsadoEn(LocalDateTime.now());
+    entidad.setUsadoEn(LocalDateTime.now(reloj));
     codigos.save(entidad);
     return new RespuestaAccesoApp("AUTENTICADO", "Inicio de sesión correcto.", null,
       autenticacion.emitirSesionOnboarding(usuario.getEmpresaId(), usuario.getId()));
