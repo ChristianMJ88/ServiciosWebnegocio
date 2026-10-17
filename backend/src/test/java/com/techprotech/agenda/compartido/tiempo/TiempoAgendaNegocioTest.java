@@ -12,6 +12,10 @@ import com.techprotech.agenda.modulos.recepcion.infraestructura.repositorio.Soli
 import com.techprotech.agenda.modulos.sucursales.infraestructura.repositorio.SucursalRepositorio;
 import com.techprotech.agenda.compartido.correo.ServicioOutboxCorreoCitas;
 import java.math.BigDecimal;
+import com.techprotech.agenda.seguridad.jwt.UsuarioAutenticado;
+import com.techprotech.agenda.modulos.caja.aplicacion.*;
+import com.techprotech.agenda.modulos.caja.infraestructura.repositorio.*;
+import org.springframework.test.util.ReflectionTestUtils;
 import java.time.*;
 import java.util.*;
 import org.junit.jupiter.api.*;
@@ -27,6 +31,8 @@ import static org.mockito.Mockito.*;
 @Isolated("Comprueba reloj UTC con JVM America/Mexico_City y restaura su zona")
 @ExtendWith(MockitoExtension.class)
 class TiempoAgendaNegocioTest {
+    @Mock PagoCitaRepositorio pagos;
+    @Mock VentaDetalleRepositorio detalles;
     @Mock Clock reloj;
     @Mock ZonaNegocio zonas;
     @Mock CitaRepositorio citas;
@@ -41,6 +47,7 @@ class TiempoAgendaNegocioTest {
     @Mock ServicioOutboxCorreoCitas correo;
     @InjectMocks ServicioRecepcion recepcion;
     @InjectMocks ServicioAdminCitas admin;
+    @Mock com.techprotech.agenda.modulos.admin.aplicacion.ServicioReporteCobroCitas reporteCobros;
     @InjectMocks ServicioCitasCliente cliente;
     @InjectMocks com.techprotech.agenda.modulos.prestadores.aplicacion.ServicioAgendaStaff staff;
     @Mock com.techprotech.agenda.modulos.caja.infraestructura.repositorio.CajaSesionRepositorio sesiones;
@@ -49,6 +56,18 @@ class TiempoAgendaNegocioTest {
     TimeZone anterior;
 
     @BeforeEach void preparar() {
+        var saldos = new ServicioSaldoCitas(citas,pagos,detalles);
+        var cobros = new ServicioConsultaCobroCitas(saldos,sesiones,null);
+        ReflectionTestUtils.setField(admin,"cobros",cobros);
+        var cancelaciones = new com.techprotech.agenda.modulos.citas.aplicacion.ServicioCancelacionCita(citas,saldos);
+        ReflectionTestUtils.setField(admin,"cancelaciones",cancelaciones);
+        ReflectionTestUtils.setField(recepcion,"cancelaciones",cancelaciones);
+        var cierres = new com.techprotech.agenda.modulos.citas.aplicacion.ServicioCierreCita(citas,historial,correo,null,clientes,reloj,zonas);
+        ReflectionTestUtils.setField(recepcion,"cierres",cierres);
+        ReflectionTestUtils.setField(staff,"cierres",cierres);
+        ReflectionTestUtils.setField(recepcion,"cobros",cobros);
+        ReflectionTestUtils.setField(staff,"cobros",cobros);
+        ReflectionTestUtils.setField(caja,"saldos",saldos);
         anterior = TimeZone.getDefault(); TimeZone.setDefault(TimeZone.getTimeZone("America/Mexico_City"));
         lenient().when(reloj.withZone(any())).thenAnswer(i -> Clock.fixed(ahora, i.getArgument(0)));
         lenient().when(reloj.instant()).thenAnswer(i -> ahora);
@@ -58,7 +77,7 @@ class TiempoAgendaNegocioTest {
     @AfterEach void restaurar() { TimeZone.setDefault(anterior); }
 
     @Test void recepcionConsultaEl13ALas19LocalesAunqueEnUtcYaSea14() {
-        recepcion.agenda(7L, List.of(3L), null, 3L);
+        recepcion.agenda(actor(11L,List.of(3L)), null, 3L);
         verify(citas).findByEmpresaIdAndInicioBetweenOrderByInicioAsc(7L,
                 LocalDateTime.parse("2026-10-13T00:00"), LocalDateTime.parse("2026-10-14T00:00"));
         recepcion.solicitudesEspera(7L, List.of(3L), null, 3L);
@@ -68,7 +87,7 @@ class TiempoAgendaNegocioTest {
     }
 
     @Test void fechaExplicitaDeRecepcionSeRespeta() {
-        recepcion.agenda(7L, List.of(), LocalDate.of(2026,11,2), null);
+        recepcion.agenda(actor(11L,List.of()), LocalDate.of(2026,11,2), null);
         verify(citas).findByEmpresaIdAndInicioBetweenOrderByInicioAsc(7L,
                 LocalDate.of(2026,11,2).atStartOfDay(), LocalDate.of(2026,11,3).atStartOfDay());
     }
@@ -80,7 +99,7 @@ class TiempoAgendaNegocioTest {
         sucursal.setId(3L); sucursal.setEmpresaId(7L);
         when(prestadores.findById(9L)).thenReturn(Optional.of(prestador));
         when(sucursales.findById(3L)).thenReturn(Optional.of(sucursal));
-        staff.obtenerAgenda(7L,9L,null,null);
+        staff.obtenerAgenda(actor(9L,List.of(3L)),null,null);
         verify(citas).findByEmpresaIdAndPrestadorIdAndInicioBetweenOrderByInicioAsc(7L,9L,
                 LocalDateTime.parse("2026-10-13T00:00"),LocalDateTime.parse("2026-10-21T00:00"));
     }
@@ -90,7 +109,7 @@ class TiempoAgendaNegocioTest {
         var utc = cita(4L, "2026-10-14T02:00");
         when(zonas.de(7L, 4L)).thenReturn(ZoneOffset.UTC);
         when(citas.findByEmpresaIdOrderByInicioDesc(7L)).thenReturn(List.of(local, utc));
-        assertThat(admin.resumen(7L, null, null).citasHoy()).isEqualTo(2);
+        assertThat(admin.resumen(actor(11L,List.of()), null, null).citasHoy()).isEqualTo(2);
         assertThat(admin.periodosReporte(7L).stream().filter(p -> p.codigo().equals("ULTIMOS_30_DIAS")).findFirst().orElseThrow().hasta())
                 .isEqualTo(LocalDate.of(2026,10,13));
     }
@@ -115,18 +134,21 @@ class TiempoAgendaNegocioTest {
     @Test void recepcionYAdminEscribenLosMismosMomentosUtcQueCliente() {
         ahora=Instant.parse("2026-10-15T14:00:00Z");
         var cita=cita(3L,"2026-10-15T10:00");
-        when(citas.findByIdAndEmpresaId(9L,7L)).thenReturn(Optional.of(cita));
+        when(citas.bloquearPorIdYEmpresa(9L,7L)).thenReturn(Optional.of(cita));
         when(citas.save(any())).thenAnswer(i -> i.getArgument(0));
-        var respuesta=recepcion.checkIn(7L,11L,List.of(3L),9L);
+        var respuesta=recepcion.checkIn(actor(11L,List.of(3L)),9L);
         assertThat(respuesta.checkInEn()).isEqualTo(OffsetDateTime.parse("2026-10-15T14:00Z"));
         assertThat(respuesta.inicio().getHour()).isEqualTo(10);
         assertThat(cita.getCheckInEn()).isEqualTo(LocalDateTime.parse("2026-10-15T14:00"));
         assertThat(cita.getInicio()).isEqualTo(LocalDateTime.parse("2026-10-15T10:00"));
-        recepcion.cancelar(7L,11L,List.of(3L),9L);
-        assertThat(cita.getCanceladaEn()).isEqualTo(cita.getCheckInEn());
+        var llegada = cita.getCheckInEn();
+        // La cancelación ya no acepta check-in; la auditoría UTC se comprueba en una cita cancelable.
+        cita.setCheckInEn(null);
+        recepcion.cancelar(actor(11L,List.of(3L)),9L);
+        assertThat(cita.getCanceladaEn()).isEqualTo(llegada);
         cita.setEstado("CONFIRMADA");cita.setCanceladaEn(null);
-        admin.cambiarEstadoCita(7L,11L,9L,"CANCELADA");
-        assertThat(cita.getCanceladaEn()).isEqualTo(cita.getCheckInEn());
+        admin.cambiarEstadoCita(actor(11L,List.of(3L)),9L,"CANCELADA");
+        assertThat(cita.getCanceladaEn()).isEqualTo(llegada);
     }
 
     @Test void aperturaDeCajaUsaUtcSinCambiarLaSucursalNiElImporte() {
@@ -145,6 +167,10 @@ class TiempoAgendaNegocioTest {
         when(citas.findByEmpresaIdAndClienteIdOrderByInicioDesc(7L,10L)).thenReturn(List.of(primera,segunda));
         assertThat(cliente.listarMisCitas(7L,10L)).hasSize(2).allMatch(c -> c.cancelable());
         verify(zonas,times(1)).de(7L,3L);
+    }
+
+    static UsuarioAutenticado actor(Long id,List<Long> scope) {
+        return new UsuarioAutenticado(null,id,7L,"EMPRESA",List.of(),List.of(),scope);
     }
 
     static CitaEntidad cita(Long sucursal, String inicio) {

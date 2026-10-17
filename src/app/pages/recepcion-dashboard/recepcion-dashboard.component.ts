@@ -1,3 +1,4 @@
+import { CitaCobroComponent } from '../../shared/components/cita-cobro.component';
 import { CommonModule, DatePipe } from '@angular/common';
 import { AfterViewInit, ChangeDetectorRef, Component, DestroyRef, NgZone, OnInit, ViewEncapsulation, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -34,7 +35,7 @@ import {
 @Component({
   selector: 'app-recepcion-dashboard',
   standalone: true,
-  imports: [
+  imports: [CitaCobroComponent,
     CommonModule,
     DatePipe,
     FormsModule,
@@ -96,8 +97,6 @@ export class RecepcionDashboardComponent implements OnInit, AfterViewInit {
   readonly estadosCita = this.store.estadosCita;
   readonly estadoCitaPendiente = this.store.estadoCitaPendiente;
   readonly estadoCitaConfirmada = this.store.estadoCitaConfirmada;
-  readonly estadosCitaFinalizables = this.store.estadosCitaFinalizables;
-  readonly estadosCitaCancelables = this.store.estadosCitaCancelables;
   readonly estadosEspera = this.store.estadosEspera;
   readonly estadoEsperaPendiente = this.store.estadoEsperaPendiente;
   readonly estadoEsperaNotificada = this.store.estadoEsperaNotificada;
@@ -475,8 +474,22 @@ export class RecepcionDashboardComponent implements OnInit, AfterViewInit {
     this.ejecutarAccion(() => this.agendaFacade.cancelar(citaId), 'Cita cancelada.');
   }
 
+  readonly ultimoCierre = signal<CitaRecepcion | null>(null);
+
   finalizar(citaId: number) {
-    this.ejecutarAccion(() => this.agendaFacade.finalizar(citaId), 'Cita finalizada.');
+    this.store.setGuardando(true);
+    this.agendaFacade.finalizar(citaId).pipe(finalize(() => this.store.setGuardando(false))).subscribe({
+      next: cita => { this.ultimoCierre.set(cita); this.store.setMensaje('Atención finalizada.'); this.recargarAgenda(); },
+      error: error => this.store.setError(this.extraerMensaje(error, 'No fue posible finalizar la cita.'))
+    });
+  }
+
+  noAsistio(citaId: number) {
+    this.store.setGuardando(true);
+    this.agendaFacade.noAsistio(citaId).pipe(finalize(() => this.store.setGuardando(false))).subscribe({
+      next: cita => { this.ultimoCierre.set(cita); this.store.setMensaje('Cita marcada como No asistió.'); this.recargarAgenda(); },
+      error: error => this.store.setError(this.extraerMensaje(error, 'No fue posible marcar la inasistencia.'))
+    });
   }
 
   abrirConfiguracionPerfil() {

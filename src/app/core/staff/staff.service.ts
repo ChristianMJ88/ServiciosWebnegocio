@@ -1,3 +1,4 @@
+import { DatosCobroCita, ResultadoCierreCita } from '../caja/cobro-cita.models';
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
@@ -9,7 +10,8 @@ export interface MetadatosDisponibilidadStaff {
   intervaloMinimoMinutos: number;
 }
 
-export interface CitaStaff {
+export interface CitaStaff extends DatosCobroCita {
+  puedeCerrar?: boolean;
   id: number;
   estado: string;
   estadoEtiqueta?: string;
@@ -118,12 +120,12 @@ export class StaffService {
     return this.http.patch<void>(`${environment.apiBaseUrl}/staff/citas/${citaId}/confirmar`, {});
   }
 
-  finalizar(citaId: number): Observable<void> {
-    return this.http.patch<void>(`${environment.apiBaseUrl}/staff/citas/${citaId}/finalizar`, {});
+  finalizar(citaId: number): Observable<ResultadoCierreCita> {
+    return this.http.patch<ResultadoCierreCita>(`${environment.apiBaseUrl}/staff/citas/${citaId}/finalizar`, {});
   }
 
-  noAsistio(citaId: number): Observable<void> {
-    return this.http.patch<void>(`${environment.apiBaseUrl}/staff/citas/${citaId}/no-asistio`, {});
+  noAsistio(citaId: number): Observable<ResultadoCierreCita> {
+    return this.http.patch<ResultadoCierreCita>(`${environment.apiBaseUrl}/staff/citas/${citaId}/no-asistio`, {});
   }
 
   getReglasDisponibilidad(): Observable<ReglaDisponibilidadStaff[]> {

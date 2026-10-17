@@ -1,7 +1,7 @@
 import { AfterViewInit, ChangeDetectorRef, Component, DestroyRef, NgZone, OnInit, ViewEncapsulation, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { BreakpointObserver } from '@angular/cdk/layout';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { finalize } from 'rxjs/operators';
 import { AuthService } from '../../core/auth/auth.service';
@@ -62,6 +62,9 @@ export class CajaDashboardComponent implements OnInit, AfterViewInit {
   private readonly authService = inject(AuthService);
   private readonly userProfileService = inject(UserProfileService);
   private readonly router = inject(Router);
+  private readonly route = inject(ActivatedRoute);
+  private citaSolicitadaId: number | null = null;
+  readonly abrirCobroDirecto = signal(false);
   private readonly breakpointObserver = inject(BreakpointObserver);
   private readonly ngZone = inject(NgZone);
   private readonly changeDetectorRef = inject(ChangeDetectorRef);
@@ -194,7 +197,11 @@ export class CajaDashboardComponent implements OnInit, AfterViewInit {
         });
       });
 
-    this.cargarCatalogoYTablero();
+    const parametros = this.route.snapshot.queryParamMap;
+    const idPositivo = (valor: string | null) => valor && /^[1-9]\d*$/.test(valor) && Number.isSafeInteger(Number(valor)) ? Number(valor) : null;
+    this.citaSolicitadaId = idPositivo(parametros.get('cita'));
+    if (this.citaSolicitadaId) { this.store.clearAppointmentContext(); this.vistaActiva.set('cobros'); }
+    this.cargarCatalogoYTablero(idPositivo(parametros.get('sucursal')));
   }
 
   ngAfterViewInit(): void {
@@ -314,6 +321,7 @@ export class CajaDashboardComponent implements OnInit, AfterViewInit {
   }
 
   seleccionarCita(citaId: number) {
+    if (this.citaSolicitadaId !== null) { this.citaSolicitadaId = null; this.store.setMessage(''); }
     this.store.selectAppointment(citaId);
     const cita = this.citasPorCobrar().find(item => item.citaId === citaId);
     if (cita) {
@@ -522,10 +530,23 @@ export class CajaDashboardComponent implements OnInit, AfterViewInit {
   private sincronizarCitaSeleccionada() {
     const citas = this.citasPorCobrar();
     if (!citas.length) {
+      if (this.citaSolicitadaId !== null) this.store.setMessage('La cita solicitada no tiene saldo disponible en este listado.');
       this.store.clearAppointmentContext();
       return;
     }
 
+    if (this.citaSolicitadaId !== null) {
+      const solicitada = citas.find(c => c.citaId === this.citaSolicitadaId);
+      if (!solicitada) {
+        this.store.clearAppointmentContext();
+        this.store.setMessage('La cita solicitada ya no tiene saldo en este listado o está fuera de tu alcance y ventana de consulta.');
+        return;
+      }
+      this.citaSolicitadaId = null;
+      this.abrirCobroDirecto.set(true);
+      this.seleccionarCita(solicitada.citaId);
+      return;
+    }
     const citaSeleccionadaId = this.citaSeleccionadaId();
     const citaSeleccionadaExiste = citas.some(cita => cita.citaId === citaSeleccionadaId);
     const citaId = citaSeleccionadaExiste ? citaSeleccionadaId! : citas[0].citaId;

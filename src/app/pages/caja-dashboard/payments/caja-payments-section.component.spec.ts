@@ -18,8 +18,8 @@ describe('Desglose pactado de promociones en Caja', () => {
     const cita: CitaPorCobrar = {
       citaId: 1, clienteNombre: 'Cliente', clienteTelefono: null, servicioNombre: 'Servicio',
       sucursalNombre: 'Sucursal', inicio: '2026-10-12T09:00:00', total: 200, pagado: 0,
-      pendiente: 200, moneda: 'MXN', estadoCita: 'FINALIZADA', estadoPago: 'PENDIENTE',
-      precioLista: descuento ? 250 : 200, descuento, promocionTitulo: descuento ? 'Oferta pactada' : null
+      pendiente: 200, moneda: 'MXN', estadoCita: 'FINALIZADA', estadoCobro: 'PENDIENTE',
+      periodoCobro: 'HOY', sucursalId: 3, diasAtraso: 0, precioLista: descuento ? 250 : 200, descuento, promocionTitulo: descuento ? 'Oferta pactada' : null
     };
     Object.assign(fixture.componentInstance, {
       sucursalId: null, citas: [cita], citaSeleccionada: cita, citaSeleccionadaId: 1,

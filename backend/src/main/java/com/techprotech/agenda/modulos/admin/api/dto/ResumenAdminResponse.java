@@ -11,6 +11,8 @@ public record ResumenAdminResponse(
         long noAsistio,
         long citasHoy,
         BigDecimal ingresosProgramados,
-        BigDecimal ingresosFinalizados
+        BigDecimal ingresosFinalizados,
+        java.util.List<FinanzasCitasResponse> finanzasCitas,
+        boolean puedeVerFinanzas
 ) {
 }

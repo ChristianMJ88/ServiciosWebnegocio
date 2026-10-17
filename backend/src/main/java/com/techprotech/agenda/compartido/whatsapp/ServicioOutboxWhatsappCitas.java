@@ -123,6 +123,8 @@ public class ServicioOutboxWhatsappCitas {
     }
 
     public void programarGraciasVisita(Long empresaId, Long citaId, String telefonoDestino, LocalDateTime inicioEsperado) {
+      if (bandejaSalidaNotificacionRepositorio.existsByAgregadoIdAndCanalAndTipoEventoAndEstadoIn(
+              citaId, CANAL, "CITA_GRACIAS_VISITA_WHATSAPP", java.util.List.of("PENDIENTE", "PROCESANDO", "ENVIADA"))) return;
       programar(
         empresaId,
         citaId,

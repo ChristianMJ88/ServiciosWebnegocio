@@ -9,12 +9,14 @@ describe('RecepcionAgendaFacade', () => {
     ['hacerCheckIn', 'checkIn'],
     ['confirmar', 'confirmar'],
     ['cancelar', 'cancelar'],
+    ['noAsistio', 'noAsistio'],
     ['finalizar', 'finalizar']
   ] as const)('delega %s al endpoint correspondiente', async (metodoFacade, metodoServicio) => {
     const recepcionService = {
       checkIn: vi.fn().mockReturnValue(of({ id: 18 })),
       confirmar: vi.fn().mockReturnValue(of({ id: 18 })),
       cancelar: vi.fn().mockReturnValue(of({ id: 18 })),
+      noAsistio: vi.fn().mockReturnValue(of({ id: 18 })),
       finalizar: vi.fn().mockReturnValue(of({ id: 18 }))
     };
     TestBed.configureTestingModule({

@@ -265,3 +265,40 @@
   justify-content: space-between;
   gap: .5rem;
 }
+
+.caja-pending-group { border:1px solid #dfdcd5; border-radius:16px; padding:10px; }
+.caja-pending-group summary { display:flex; justify-content:space-between; align-items:center; gap:12px; min-height:44px; cursor:pointer; font-weight:650; padding:6px 8px; }
+.caja-pending-group summary span { background:#eae8df; border-radius:20px; padding:3px 10px; }
+.caja-pending-group .caja-appointment-card { display:block; width:100%; margin-top:10px; }
+.caja-overdue { display:block; margin-top:8px; color:#8a4f25; font-size:.8rem; font-weight:600; }
+.caja-mobile-panes { display:none; }
+@media(max-width:991px) {
+ .caja-mobile-panes { display:flex; gap:8px; position:sticky; top:0; z-index:2; padding:8px 0; background:var(--mat-sys-surface,#f9f8f5); }
+ .caja-mobile-panes button { flex:1; min-height:46px; border:1px solid #ddd9ce; background:transparent; border-radius:14px; font:inherit; font-weight:600; }
+ .caja-mobile-panes button[aria-pressed=true] { background:#1f7061; color:white; border-color:#1f7061; }
+ .caja-grid:not(.caja-grid--detail) > .caja-side-column, .caja-grid--detail > .caja-main-column { display:none; }
+ .caja-appointments { max-height:none; overflow:visible; }
+}
+.caja-appointment-head > div { display:grid; gap:6px; min-width:0; text-align:start; }
+.caja-appointment-head > div > span { line-height:1.45; overflow-wrap:anywhere; }
+
+.caja-payment-extra { min-width:0; border:1px solid #e6e2d9; border-radius:12px; padding:8px 12px; }
+.caja-payment-extra summary { min-height:44px; display:flex; align-items:center; cursor:pointer; font-weight:600; gap:8px; }
+.caja-payment-extra summary::after { content:'＋'; margin-inline-start:auto; }
+.caja-payment-extra[open] summary::after { content:'−'; }
+.caja-payment-extra mat-form-field { display:block; width:100%; margin-top:10px; }
+@media(max-width:575px) {
+ .caja-appointment-money { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px; width:100%; }
+ .caja-appointment-money strong { font-size:.9rem; overflow-wrap:anywhere; }
+}
+@media(max-width:575px) {
+ .caja-form-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
+ .caja-form-actions { position:static; }
+ .caja-payment-context { padding:12px; gap:5px; }
+ .caja-payment-highlight { margin-top:6px; padding-top:8px; }
+}
+
+.caja-pending-group summary { justify-content:flex-start; }
+.caja-pending-group summary span { margin-inline-start:auto; }
+.caja-pending-group summary::after { content:'⌄'; font-size:1.1rem; }
+.caja-pending-group[open] summary::after { content:'⌃'; }

@@ -1,3 +1,4 @@
+import { CitaCobroComponent } from '../../shared/components/cita-cobro.component';
 import { CommonModule, DatePipe } from '@angular/common';
 import { Component, input, output } from '@angular/core';
 import { AgendaActionVm, AgendaAppointmentVm, AgendaThemeMode } from './agenda.types';
@@ -5,7 +6,7 @@ import { AgendaActionVm, AgendaAppointmentVm, AgendaThemeMode } from './agenda.t
 @Component({
   selector: 'app-agenda-detail-panel',
   standalone: true,
-  imports: [CommonModule, DatePipe],
+  imports: [CommonModule, DatePipe, CitaCobroComponent],
   templateUrl: './agenda-detail-panel.component.html',
   styleUrl: './agenda-detail-panel.component.css'
 })

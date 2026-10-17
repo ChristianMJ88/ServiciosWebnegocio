@@ -1,5 +1,11 @@
 package com.techprotech.agenda.modulos.recepcion.aplicacion;
 
+import com.techprotech.agenda.modulos.caja.aplicacion.*;
+import com.techprotech.agenda.modulos.citas.aplicacion.ServicioCierreCita;
+import com.techprotech.agenda.modulos.citas.aplicacion.ServicioCancelacionCita;
+import com.techprotech.agenda.modulos.citas.aplicacion.OrigenCierreCita;
+import com.techprotech.agenda.seguridad.jwt.UsuarioAutenticado;
+
 import static com.techprotech.agenda.compartido.tiempo.MomentoUtc.de;
 
 import java.time.Clock;
@@ -71,6 +77,9 @@ import static org.springframework.http.HttpStatus.NOT_FOUND;
 
 @Service
 public class ServicioRecepcion {
+    private final ServicioConsultaCobroCitas cobros;
+    private final ServicioCierreCita cierres;
+    private final ServicioCancelacionCita cancelaciones;
     private final Clock reloj;
     private final ZonaNegocio zonasNegocio;
 
@@ -109,8 +118,14 @@ public class ServicioRecepcion {
             ClienteWhatsappTwilio clienteWhatsappTwilio,
             ServicioConfiguracionWhatsappEmpresa servicioConfiguracionWhatsappEmpresa,
             Clock reloj,
-            ZonaNegocio zonasNegocio
+            ZonaNegocio zonasNegocio,
+            ServicioConsultaCobroCitas cobros,
+            ServicioCierreCita cierres,
+            ServicioCancelacionCita cancelaciones
     ) {
+        this.cobros=cobros;
+        this.cierres=cierres;
+        this.cancelaciones=cancelaciones;
         this.reloj = reloj;
         this.zonasNegocio = zonasNegocio;
         this.citaRepositorio = citaRepositorio;
@@ -223,7 +238,8 @@ public class ServicioRecepcion {
     }
 
     @Transactional(readOnly = true)
-    public List<CitaRecepcionResponse> agenda(Long empresaId, List<Long> sucursalesPermitidas, LocalDate fecha, Long sucursalId) {
+    public List<CitaRecepcionResponse> agenda(UsuarioAutenticado usuario, LocalDate fecha, Long sucursalId) {
+        Long empresaId=usuario.empresaId(); var sucursalesPermitidas=usuario.sucursalesPermitidas();
         LocalDate fechaOperativa = fecha != null ? fecha : LocalDate.now(reloj.withZone(zonasNegocio.de(empresaId, sucursalId)));
         if (sucursalId != null) {
             validarAccesoSucursal(sucursalesPermitidas, sucursalId);
@@ -234,11 +250,13 @@ public class ServicioRecepcion {
                 fechaOperativa.plusDays(1).atStartOfDay()
         );
 
-        return citas.stream()
+        var visibles=citas.stream()
                 .filter(cita -> sucursalId == null || sucursalId.equals(cita.getSucursalId()))
                 .filter(cita -> !tieneScopeSucursales(sucursalesPermitidas) || sucursalesPermitidas.contains(cita.getSucursalId()))
-                .map(this::mapearCita)
                 .toList();
+        var datosCobro=cobros.consultar(usuario,visibles);
+        var elegibles=cierres.elegibilidad(visibles);
+        return visibles.stream().map(cita -> mapearCita(cita,datosCobro.get(cita.getId()), elegibles.get(cita.getId()))).toList();
     }
 
     @Transactional(readOnly = true)
@@ -460,8 +478,11 @@ public class ServicioRecepcion {
     }
 
     @Transactional
-    public CitaRecepcionResponse checkIn(Long empresaId, Long usuarioId, List<Long> sucursalesPermitidas, Long citaId) {
-        CitaEntidad cita = obtenerCitaEmpresa(empresaId, sucursalesPermitidas, citaId);
+    public CitaRecepcionResponse checkIn(UsuarioAutenticado usuario, Long citaId) {
+        Long empresaId=usuario.empresaId(), usuarioId=usuario.usuarioId(); var sucursalesPermitidas=usuario.sucursalesPermitidas();
+        CitaEntidad cita = citaRepositorio.bloquearPorIdYEmpresa(citaId, empresaId)
+                .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "La cita no existe para la empresa"));
+        validarAccesoSucursal(sucursalesPermitidas, cita.getSucursalId());
         if (!List.of("PENDIENTE", "CONFIRMADA").contains(cita.getEstado())) {
             throw new ResponseStatusException(BAD_REQUEST, "Solo se puede hacer check-in a citas pendientes o confirmadas");
         }
@@ -474,11 +495,12 @@ public class ServicioRecepcion {
             guardarHistorial(cita.getId(), estadoAnterior, "CONFIRMADA", usuarioId, "Check-in en recepción");
             servicioOutboxCorreoCitas.programarConfirmada(empresaId, cita.getId(), cita.getInicio());
         }
-        return mapearCita(citaRepositorio.save(cita));
+        return mapearCita(citaRepositorio.save(cita),usuario);
     }
 
     @Transactional
-    public CitaRecepcionResponse confirmar(Long empresaId, Long usuarioId, List<Long> sucursalesPermitidas, Long citaId) {
+    public CitaRecepcionResponse confirmar(UsuarioAutenticado usuario, Long citaId) {
+        Long empresaId=usuario.empresaId(), usuarioId=usuario.usuarioId(); var sucursalesPermitidas=usuario.sucursalesPermitidas();
         CitaEntidad cita = obtenerCitaEmpresa(empresaId, sucursalesPermitidas, citaId);
         if (!"PENDIENTE".equals(cita.getEstado())) {
             throw new ResponseStatusException(BAD_REQUEST, "Solo se pueden confirmar citas pendientes");
@@ -489,38 +511,23 @@ public class ServicioRecepcion {
         citaRepositorio.save(cita);
         guardarHistorial(cita.getId(), estadoAnterior, "CONFIRMADA", usuarioId, "Confirmación desde recepción");
         servicioOutboxCorreoCitas.programarConfirmada(empresaId, cita.getId(), cita.getInicio());
-        return mapearCita(cita);
+        return mapearCita(cita,usuario);
     }
 
     @Transactional
-    public CitaRecepcionResponse finalizar(Long empresaId, Long usuarioId, List<Long> sucursalesPermitidas, Long citaId) {
-        CitaEntidad cita = obtenerCitaEmpresa(empresaId, sucursalesPermitidas, citaId);
-        if (!List.of("PENDIENTE", "CONFIRMADA").contains(cita.getEstado())) {
-            throw new ResponseStatusException(BAD_REQUEST, "Solo se pueden finalizar citas pendientes o confirmadas");
-        }
-
-        String estadoAnterior = cita.getEstado();
-        cita.setEstado("FINALIZADA");
-        citaRepositorio.save(cita);
-        guardarHistorial(cita.getId(), estadoAnterior, "FINALIZADA", usuarioId, "Cierre desde recepción");
-        servicioOutboxCorreoCitas.programarGraciasVisita(empresaId, cita.getId(), cita.getInicio());
-        clienteRepositorio.findById(cita.getClienteId())
-                .filter(cliente -> cliente.isAceptaWhatsapp() && cliente.getTelefono() != null && !cliente.getTelefono().isBlank())
-                .ifPresent(cliente -> servicioOutboxWhatsappCitas.programarGraciasVisita(
-                        empresaId,
-                        cita.getId(),
-                        cliente.getTelefono(),
-                        cita.getInicio()
-                ));
-        return mapearCita(cita);
+    public CitaRecepcionResponse finalizar(UsuarioAutenticado usuario, Long citaId) {
+        return mapearCita(cierres.cerrar(usuario,citaId,"FINALIZADA",OrigenCierreCita.RECEPCION),usuario);
     }
 
     @Transactional
-    public CitaRecepcionResponse cancelar(Long empresaId, Long usuarioId, List<Long> sucursalesPermitidas, Long citaId) {
-        CitaEntidad cita = obtenerCitaEmpresa(empresaId, sucursalesPermitidas, citaId);
-        if (!List.of("PENDIENTE", "CONFIRMADA").contains(cita.getEstado())) {
-            throw new ResponseStatusException(BAD_REQUEST, "Solo se pueden cancelar citas pendientes o confirmadas");
-        }
+    public CitaRecepcionResponse noAsistio(UsuarioAutenticado usuario, Long citaId) {
+        return mapearCita(cierres.cerrar(usuario,citaId,"NO_ASISTIO",OrigenCierreCita.RECEPCION),usuario);
+    }
+
+    @Transactional
+    public CitaRecepcionResponse cancelar(UsuarioAutenticado usuario, Long citaId) {
+        Long empresaId=usuario.empresaId(), usuarioId=usuario.usuarioId();
+        CitaEntidad cita = cancelaciones.bloquearYValidar(usuario, citaId);
 
         String estadoAnterior = cita.getEstado();
         cita.setEstado("CANCELADA");
@@ -529,7 +536,7 @@ public class ServicioRecepcion {
         citaRepositorio.save(cita);
         guardarHistorial(cita.getId(), estadoAnterior, "CANCELADA", usuarioId, "Cancelación desde recepción");
         servicioOutboxCorreoCitas.programarCanceladaNegocio(empresaId, cita.getId(), cita.getInicio());
-        clienteRepositorio.findById(cita.getClienteId())
+        clienteRepositorio.findByClienteIdAndEmpresaId(cita.getClienteId(), empresaId)
                 .filter(cliente -> cliente.isAceptaWhatsapp() && cliente.getTelefono() != null && !cliente.getTelefono().isBlank())
                 .ifPresent(cliente -> servicioOutboxWhatsappCitas.programarCancelacionNegocio(
                         empresaId,
@@ -537,7 +544,7 @@ public class ServicioRecepcion {
                         cliente.getTelefono(),
                         cita.getInicio()
                 ));
-        return mapearCita(cita);
+        return mapearCita(cita,usuario);
     }
 
     @Transactional
@@ -616,14 +623,23 @@ public class ServicioRecepcion {
         return limpio.isBlank() ? null : limpio;
     }
 
-    private CitaRecepcionResponse mapearCita(CitaEntidad cita) {
+    private CitaRecepcionResponse mapearCita(CitaEntidad cita,UsuarioAutenticado usuario) {
+        return mapearCita(cita,cobros.de(usuario,cita));
+    }
+
+    private CitaRecepcionResponse mapearCita(CitaEntidad cita,CobroCita cobro) {
+        return mapearCita(cita,cobro,cierres.puedeCerrar(cita));
+    }
+
+    private CitaRecepcionResponse mapearCita(CitaEntidad cita,CobroCita cobro,boolean puedeCerrar) {
         SucursalEntidad sucursal = sucursalRepositorio.findById(cita.getSucursalId()).orElse(null);
         String zonaHoraria = sucursal != null ? sucursal.getZonaHoraria() : "America/Mexico_City";
         String sucursalNombre = sucursal != null ? sucursal.getNombre() : "Sucursal";
         String servicioNombre = servicioRepositorio.findById(cita.getServicioId()).map(servicio -> servicio.getNombre()).orElse("Servicio");
         String prestadorNombre = prestadorServicioRepositorio.findById(cita.getPrestadorId()).map(prestador -> prestador.getNombreMostrar()).orElse("Prestador");
-        String clienteNombre = clienteRepositorio.findById(cita.getClienteId()).map(ClienteEntidad::getNombreCompleto).orElse("Cliente");
-        String clienteTelefono = clienteRepositorio.findById(cita.getClienteId()).map(ClienteEntidad::getTelefono).orElse("");
+        ClienteEntidad cliente = clienteRepositorio.findByClienteIdAndEmpresaId(cita.getClienteId(), cita.getEmpresaId()).orElse(null);
+        String clienteNombre = cliente != null ? cliente.getNombreCompleto() : "Cliente";
+        String clienteTelefono = cliente != null ? cliente.getTelefono() : "";
         String clienteCorreo = usuarioRepositorio.findById(cita.getClienteId()).map(UsuarioEntidad::getCorreo).orElse("");
         ZoneId zoneId = ZoneId.of(zonaHoraria);
 
@@ -645,7 +661,8 @@ public class ServicioRecepcion {
                 cita.getMoneda(),
                 cita.getNotas(),
                 de(cita.getCheckInEn()),
-                cita.getCheckInPorUsuarioId()
+                cita.getCheckInPorUsuarioId(),
+                cobro.saldo().pagado(), cobro.saldo().condonado(), cobro.saldo().pendiente(), cobro.saldo().estadoCobro(), cobro.puedeCobrar(), puedeCerrar, cancelaciones.puedeCancelar(cita, cobro.saldo())
         );
     }
 }

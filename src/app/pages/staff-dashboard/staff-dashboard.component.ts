@@ -1,3 +1,5 @@
+import { CitaCobroComponent } from '../../shared/components/cita-cobro.component';
+import { ResultadoCierreCita, ETIQUETAS_COBRO } from '../../core/caja/cobro-cita.models';
 import { environment } from '../../../environments/environment';
 import { StaffSaleRegisterComponent } from './staff-sale-register.component';
 import { HttpClient } from '@angular/common/http';
@@ -50,7 +52,7 @@ type GrupoSidebarStaff = { id: string; titulo: string; icono: string; modulos: S
 @Component({
   selector: 'app-staff-dashboard',
   standalone: true,
-  imports: [
+  imports: [CitaCobroComponent,
     CommonModule,
     FormsModule,
     MatBadgeModule,
@@ -301,6 +303,8 @@ export class StaffDashboardComponent implements OnInit {
         collaboratorAccentColor: null,
         supportingText: cita.sucursalNombre,
         supportingTextSecondary: cita.clienteTelefono || cita.clienteCorreo || 'Sin contacto',
+        cobro: cita,
+        priceLabel: ETIQUETAS_COBRO[cita.estadoCobro ?? ''] ?? '',
         avatarLabel: getInitials(cita.clienteNombre),
         top: cita.top,
         height: cita.height,
@@ -319,10 +323,11 @@ export class StaffDashboardComponent implements OnInit {
           { label: 'Estado', value: cita.estadoEtiqueta ?? formatAgendaStatusLabel(cita.estado) },
           { label: 'Horario', value: `${new Date(cita.inicio).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' })} - ${new Date(cita.fin).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' })}` }
         ],
-        actions: this.construirAccionesAgendaStaff(cita.id, cita.estado, whatsappUrl)
+        actions: this.construirAccionesAgendaStaff(cita.id, cita.estado, whatsappUrl, cita.puedeCerrar === true)
       };
     })
   );
+  readonly cobroCitaSeleccionada = computed(() => this.agenda().find(c => c.id === this.citaAgendaSeleccionadaId()) ?? null);
   readonly citaAgendaDetalleSeleccionada = computed<AgendaAppointmentVm | null>(() => {
     const citas = this.agendaAppointmentsVm();
     const seleccionadaId = this.citaAgendaSeleccionadaId();
@@ -785,13 +790,15 @@ export class StaffDashboardComponent implements OnInit {
     return this.diasSemana.find(item => item.value === dia)?.label ?? `Día ${dia}`;
   }
 
+  readonly ultimoCierre = signal<ResultadoCierreCita | null>(null);
+
   private actualizarEstado(operation: () => any) {
     this.loading.set(true);
     this.error = '';
     operation()
       .pipe(finalize(() => this.loading.set(false)))
       .subscribe({
-        next: () => this.recargar(),
+        next: (resultado: ResultadoCierreCita | undefined) => { if (resultado?.estadoCobro) this.ultimoCierre.set(resultado); this.recargar(); },
         error: (err: any) => {
           this.error = err?.error?.mensaje || err?.message || 'No se pudo actualizar el estado de la cita.';
         }
@@ -803,14 +810,14 @@ export class StaffDashboardComponent implements OnInit {
     return limpio ? limpio : null;
   }
 
-  private construirAccionesAgendaStaff(citaId: number, estado: string, whatsappUrl: string | null): AgendaActionVm[] {
+  private construirAccionesAgendaStaff(citaId: number, estado: string, whatsappUrl: string | null, puedeCerrar: boolean): AgendaActionVm[] {
     const acciones: AgendaActionVm[] = [];
 
     if (this.puedeGestionarCitas() && estado === 'PENDIENTE') {
       acciones.push({ id: 'confirm', label: 'Confirmar', kind: 'primary' });
     }
 
-    if (this.puedeGestionarCitas() && estado === 'CONFIRMADA') {
+    if (this.puedeGestionarCitas() && puedeCerrar) {
       acciones.push({ id: 'finalize', label: 'Finalizar', kind: 'primary' });
       acciones.push({ id: 'no_show', label: 'No asistió', kind: 'secondary' });
     }

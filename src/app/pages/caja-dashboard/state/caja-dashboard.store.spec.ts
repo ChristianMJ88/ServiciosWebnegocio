@@ -21,4 +21,11 @@ describe('CajaDashboardStore', () => {
     expect(store.metricas().find(metrica => metrica.label === 'Citas por cobrar')?.value).toBe(2);
     expect(citas).toHaveLength(2);
   });
+  it('no sustituye una cita solicitada ausente por otra cuenta para cobrar', () => {
+    const store=new CajaDashboardStore();
+    store.applyDashboard({sesion:null,citas:[{citaId:1,pendiente:80} as CitaPorCobrar],resumen:{} as ResumenCaja,movimientos:[]});
+    store.selectAppointment(999);
+    expect(store.citaSeleccionada()).toBeNull();
+  });
+
 });

@@ -1,5 +1,12 @@
 package com.techprotech.agenda.modulos.admin.aplicacion;
 
+import com.techprotech.agenda.modulos.caja.aplicacion.*;
+import com.techprotech.agenda.modulos.citas.aplicacion.ServicioCierreCita;
+import com.techprotech.agenda.modulos.citas.aplicacion.ServicioCancelacionCita;
+import com.techprotech.agenda.modulos.citas.aplicacion.OrigenCierreCita;
+import com.techprotech.agenda.modulos.citas.api.dto.ResultadoCierreCitaResponse;
+import com.techprotech.agenda.seguridad.jwt.UsuarioAutenticado;
+
 import java.time.Clock;
 import com.techprotech.agenda.compartido.tiempo.ZonaNegocio;
 import com.techprotech.agenda.compartido.correo.ConfiguracionCorreoEmpresaEntidad;
@@ -144,6 +151,10 @@ import static org.springframework.http.HttpStatus.PRECONDITION_REQUIRED;
 
 @Service
 public class ServicioAdminCitas {
+    private final ServicioConsultaCobroCitas cobros;
+    private final ServicioCierreCita cierres;
+    private final ServicioCancelacionCita cancelaciones;
+    private final ServicioReporteCobroCitas reporteCobros;
     private final Clock reloj;
     private final ZonaNegocio zonasNegocio;
 
@@ -328,8 +339,16 @@ public class ServicioAdminCitas {
             ProtectorSecretosCorreo protectorSecretosCorreo,
             ServicioCapacidadesEmpresa capacidadesEmpresa,
             Clock reloj,
-            ZonaNegocio zonasNegocio
+            ZonaNegocio zonasNegocio,
+            ServicioConsultaCobroCitas cobros,
+            ServicioCierreCita cierres,
+            ServicioCancelacionCita cancelaciones,
+            ServicioReporteCobroCitas reporteCobros
     ) {
+        this.cobros=cobros;
+        this.cierres=cierres;
+        this.cancelaciones=cancelaciones;
+        this.reporteCobros=reporteCobros;
         this.reloj = reloj;
         this.zonasNegocio = zonasNegocio;
         this.citaRepositorio = citaRepositorio;
@@ -371,8 +390,10 @@ public class ServicioAdminCitas {
     }
 
     @Transactional(readOnly = true)
-    public ResumenAdminResponse resumen(Long empresaId, LocalDate desde, LocalDate hasta) {
-        List<CitaEntidad> citas = citasReporte(empresaId, desde, hasta);
+    public ResumenAdminResponse resumen(UsuarioAutenticado usuario, LocalDate desde, LocalDate hasta) {
+        Long empresaId=usuario.empresaId();
+        List<CitaEntidad> citas = citasReporte(empresaId, desde, hasta).stream()
+                .filter(c -> usuario.puedeAccederSucursal(c.getSucursalId())).toList();
         var hoyPorSucursal = new java.util.HashMap<Long, LocalDate>();
         long total = citas.size();
         return new ResumenAdminResponse(
@@ -384,8 +405,14 @@ public class ServicioAdminCitas {
                 contarEstado(citas, "NO_ASISTIO"),
                 citas.stream().filter(cita -> cita.getInicio().toLocalDate().isEqual(hoyPorSucursal.computeIfAbsent(cita.getSucursalId(), id -> LocalDate.now(reloj.withZone(zonasNegocio.de(empresaId, id)))))).count(),
                 sumarIngresos(citas, Set.of("PENDIENTE", "CONFIRMADA", "FINALIZADA")),
-                sumarIngresos(citas, Set.of("FINALIZADA"))
+                sumarIngresos(citas, Set.of("FINALIZADA")),
+                puedeVerReportes(usuario) ? reporteCobros.consultar(usuario,desde,hasta) : List.of(),
+                puedeVerReportes(usuario)
         );
+    }
+
+    private boolean puedeVerReportes(UsuarioAutenticado usuario) {
+        return usuario.empresaId()!=null && !usuario.esPlataforma() && usuario.tienePermiso("REPORTES_ADMIN_VER");
     }
 
     @Transactional(readOnly = true)
@@ -1317,7 +1344,8 @@ public class ServicioAdminCitas {
     }
 
     @Transactional(readOnly = true)
-    public List<CitaClienteResponse> listar(Long empresaId, LocalDate desde, LocalDate hasta) {
+    public List<com.techprotech.agenda.modulos.admin.api.dto.CitaAgendaAdminResponse> listar(UsuarioAutenticado usuario, LocalDate desde, LocalDate hasta) {
+        Long empresaId=usuario.empresaId();
         if (desde == null || hasta == null || desde.isAfter(hasta)) {
             throw new ResponseStatusException(BAD_REQUEST, "El rango de citas no es válido");
         }
@@ -1347,10 +1375,12 @@ public class ServicioAdminCitas {
         Map<Long, ClienteEntidad> clientes = clienteRepositorio.findAllById(clienteIds).stream()
                 .collect(Collectors.toMap(ClienteEntidad::getUsuarioId, cliente -> cliente));
         Map<Long, UsuarioEntidad> usuarios = usuarioRepositorio.findAllById(clienteIds).stream()
-                .collect(Collectors.toMap(UsuarioEntidad::getId, usuario -> usuario));
+                .collect(Collectors.toMap(UsuarioEntidad::getId, entidad -> entidad));
 
-        return citas.stream()
-                .map(cita -> new CitaClienteResponse(
+        var elegibles=cierres.elegibilidad(citas);
+        var cancelables=cancelaciones.elegibilidad(empresaId,citas);
+        return citas.stream().filter(cita -> usuario.puedeAccederSucursal(cita.getSucursalId()))
+                .map(cita -> new com.techprotech.agenda.modulos.admin.api.dto.CitaAgendaAdminResponse(new CitaClienteResponse(
                         cita.getId(),
                         cita.getEstado(),
                         cita.getSucursalId(),
@@ -1368,7 +1398,7 @@ public class ServicioAdminCitas {
                         nombreCliente(clientes, cita.getClienteId()),
                         correoCliente(usuarios, cita.getClienteId()),
                         telefonoCliente(clientes, cita.getClienteId())
-                ))
+                ), elegibles.get(cita.getId()), cancelables.get(cita.getId())))
                 .toList();
     }
 
@@ -1409,17 +1439,25 @@ public class ServicioAdminCitas {
     }
 
     @Transactional
-    public void cambiarEstadoCita(Long empresaId, Long usuarioAdminId, Long citaId, String nuevoEstado) {
-        CitaEntidad cita = citaRepositorio.findByIdAndEmpresaId(citaId, empresaId)
-                .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "La cita no existe para la empresa"));
+    public ResultadoCierreCitaResponse cambiarEstadoCita(UsuarioAutenticado usuario, Long citaId, String nuevoEstado) {
+        if (List.of("FINALIZADA","NO_ASISTIO").contains(nuevoEstado))
+            return cobros.respuesta(usuario,cierres.cerrar(usuario,citaId,nuevoEstado,OrigenCierreCita.ADMIN));
+        Long empresaId=usuario.empresaId(), usuarioAdminId=usuario.usuarioId();
+        CitaEntidad cita = "CANCELADA".equals(nuevoEstado)
+                ? cancelaciones.bloquearYValidar(usuario, citaId)
+                : citaRepositorio.findByIdAndEmpresaId(citaId, empresaId)
+                    .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "La cita no existe para la empresa"));
 
         if ("PENDIENTE_PAGO".equals(cita.getEstado())) {
             throw new ResponseStatusException(CONFLICT, "La reserva está esperando pago. Gestiona el pago antes de modificar una cita del grupo");
         }
 
-        if (!List.of("CONFIRMADA", "FINALIZADA", "NO_ASISTIO", "CANCELADA").contains(nuevoEstado)) {
+        if (!List.of("CONFIRMADA", "CANCELADA").contains(nuevoEstado)) {
             throw new ResponseStatusException(BAD_REQUEST, "El estado solicitado no es valido para administracion");
         }
+
+        if (!usuario.puedeAccederSucursal(cita.getSucursalId()))
+            throw new ResponseStatusException(NOT_FOUND, "La cita no existe en tu alcance");
 
         String estadoAnterior = cita.getEstado();
         cita.setEstado(nuevoEstado);
@@ -1445,16 +1483,12 @@ public class ServicioAdminCitas {
                         empresaId, cita.getId(), cita.getInicio());
                 case "CANCELADA" -> servicioOutboxCorreoCitas.programarCanceladaNegocio(
                         empresaId, cita.getId(), cita.getInicio());
-                case "FINALIZADA" -> servicioOutboxCorreoCitas.programarGraciasVisita(
-                        empresaId, cita.getId(), cita.getInicio());
-                case "NO_ASISTIO" -> servicioOutboxCorreoCitas.programarNoAsistio(
-                        empresaId, cita.getId(), cita.getInicio());
                 default -> { }
             }
         }
 
         if ("CANCELADA".equals(nuevoEstado) && !"CANCELADA".equals(estadoAnterior)) {
-            clienteRepositorio.findById(cita.getClienteId())
+            clienteRepositorio.findByClienteIdAndEmpresaId(cita.getClienteId(), empresaId)
                     .filter(cliente -> cliente.isAceptaWhatsapp() && cliente.getTelefono() != null && !cliente.getTelefono().isBlank())
                     .ifPresent(cliente -> servicioOutboxWhatsappCitas.programarCancelacionNegocio(
                             empresaId,
@@ -1464,16 +1498,7 @@ public class ServicioAdminCitas {
                     ));
         }
 
-        if ("FINALIZADA".equals(nuevoEstado) && !"FINALIZADA".equals(estadoAnterior)) {
-            clienteRepositorio.findById(cita.getClienteId())
-                    .filter(cliente -> cliente.isAceptaWhatsapp() && cliente.getTelefono() != null && !cliente.getTelefono().isBlank())
-                    .ifPresent(cliente -> servicioOutboxWhatsappCitas.programarGraciasVisita(
-                            empresaId,
-                            cita.getId(),
-                            cliente.getTelefono(),
-                            cita.getInicio()
-                    ));
-        }
+        return null;
     }
 
     @Transactional(readOnly = true)

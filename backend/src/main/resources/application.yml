@@ -52,6 +52,8 @@ management:
         enabled: true
 
 aplicacion:
+  caja:
+    dias-pendientes: ${CAJA_PENDIENTES_DIAS:90}
   tareas-programadas:
     habilitadas: ${TAREAS_PROGRAMADAS_HABILITADAS:true}
   plataforma:

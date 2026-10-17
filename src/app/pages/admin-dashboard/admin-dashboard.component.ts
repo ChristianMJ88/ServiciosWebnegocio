@@ -707,7 +707,7 @@ export class AdminDashboardComponent implements OnInit {
           { label: 'Precio', value: this.formatearMonedaAgenda(cita.precio, cita.moneda) },
           { label: 'Contacto', value: cita.clienteTelefono || cita.clienteCorreo || 'Sin contacto' }
         ],
-        actions: this.construirAccionesAgendaAdmin(cita.id, cita.estado, whatsappUrl)
+        actions: this.construirAccionesAgendaAdmin(cita.id, cita.estado, whatsappUrl, cita.puedeCerrar === true, cita.puedeCancelar === true)
       };
     })
   );
@@ -2384,17 +2384,18 @@ export class AdminDashboardComponent implements OnInit {
     return limpio ? limpio : null;
   }
 
-  private construirAccionesAgendaAdmin(citaId: number, estado: string, whatsappUrl: string | null): AgendaActionVm[] {
+  private construirAccionesAgendaAdmin(citaId: number, estado: string, whatsappUrl: string | null, puedeCerrar: boolean, puedeCancelar: boolean): AgendaActionVm[] {
     const acciones: AgendaActionVm[] = [];
 
     if (estado === 'PENDIENTE') {
       acciones.push({ id: 'confirm', label: 'Confirmar', kind: 'primary' });
-      acciones.push({ id: 'cancel', label: 'Cancelar', kind: 'danger' });
     }
 
-    if (estado === 'CONFIRMADA') {
+    if (puedeCerrar) {
       acciones.push({ id: 'finalize', label: 'Finalizar', kind: 'primary' });
       acciones.push({ id: 'no_show', label: 'No asistió', kind: 'secondary' });
+    }
+    if (puedeCancelar) {
       acciones.push({ id: 'cancel', label: 'Cancelar', kind: 'danger' });
     }
 

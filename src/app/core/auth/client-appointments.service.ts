@@ -4,6 +4,8 @@ import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
 
 export interface CitaCliente {
+  puedeCerrar?: boolean;
+  puedeCancelar?: boolean;
   id: number;
   estado: string;
   estadoEtiqueta?:string;

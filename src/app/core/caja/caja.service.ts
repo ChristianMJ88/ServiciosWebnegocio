@@ -43,6 +43,9 @@ export interface CajaSesion {
 }
 
 export interface CitaPorCobrar {
+  sucursalId?: number;
+  periodoCobro?: string;
+  diasAtraso?: number;
   precioLista?: number;
   descuento?: number;
   promocionTitulo?: string | null;
@@ -57,7 +60,9 @@ export interface CitaPorCobrar {
   pendiente: number;
   moneda: string;
   estadoCita: string;
-  estadoPago: string;
+  estadoCobro: string;
+  /** Alias legado; las pantallas leen estadoCobro. */
+  estadoPago?: string;
 }
 
 export interface PagoCita {

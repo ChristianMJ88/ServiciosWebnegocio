@@ -10,6 +10,9 @@ import org.springframework.data.repository.query.Param;
 import java.util.Optional;
 
 public interface CajaSesionRepositorio extends JpaRepository<CajaSesionEntidad, Long> {
+    @Query("select s.sucursalId from CajaSesionEntidad s where s.empresaId=:empresaId and s.sucursalId in :sucursales and s.estado=:estado")
+    java.util.List<Long> buscarSucursalesConSesion(Long empresaId, java.util.Collection<Long> sucursales, String estado);
+
 
     Optional<CajaSesionEntidad> findByEmpresaIdAndSucursalIdAndEstado(Long empresaId, Long sucursalId, String estado);
 

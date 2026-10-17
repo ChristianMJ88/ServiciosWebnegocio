@@ -41,27 +41,25 @@ public class ControladorAgendaStaff {
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate desde,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate hasta
     ) {
-        return servicioAgendaStaff.obtenerAgenda(usuario.empresaId(), usuario.usuarioId(), desde, hasta);
+        return servicioAgendaStaff.obtenerAgenda(usuario, desde, hasta);
     }
 
     @PatchMapping("/citas/{citaId}/confirmar")
     @PreAuthorize("hasAuthority('STAFF_CITAS_GESTIONAR')")
     public ResponseEntity<Void> confirmar(@PathVariable Long citaId, @AuthenticationPrincipal UsuarioAutenticado usuario) {
-        servicioAgendaStaff.cambiarEstado(usuario.empresaId(), usuario.usuarioId(), citaId, "CONFIRMADA");
+        servicioAgendaStaff.cambiarEstado(usuario, citaId, "CONFIRMADA");
         return ResponseEntity.noContent().build();
     }
 
     @PatchMapping("/citas/{citaId}/finalizar")
     @PreAuthorize("hasAuthority('STAFF_CITAS_GESTIONAR')")
-    public ResponseEntity<Void> finalizar(@PathVariable Long citaId, @AuthenticationPrincipal UsuarioAutenticado usuario) {
-        servicioAgendaStaff.cambiarEstado(usuario.empresaId(), usuario.usuarioId(), citaId, "FINALIZADA");
-        return ResponseEntity.noContent().build();
+    public ResponseEntity<com.techprotech.agenda.modulos.citas.api.dto.ResultadoCierreCitaResponse> finalizar(@PathVariable Long citaId, @AuthenticationPrincipal UsuarioAutenticado usuario) {
+        return ResponseEntity.ok(servicioAgendaStaff.cambiarEstado(usuario, citaId, "FINALIZADA"));
     }
 
     @PatchMapping("/citas/{citaId}/no-asistio")
     @PreAuthorize("hasAuthority('STAFF_CITAS_GESTIONAR')")
-    public ResponseEntity<Void> noAsistio(@PathVariable Long citaId, @AuthenticationPrincipal UsuarioAutenticado usuario) {
-        servicioAgendaStaff.cambiarEstado(usuario.empresaId(), usuario.usuarioId(), citaId, "NO_ASISTIO");
-        return ResponseEntity.noContent().build();
+    public ResponseEntity<com.techprotech.agenda.modulos.citas.api.dto.ResultadoCierreCitaResponse> noAsistio(@PathVariable Long citaId, @AuthenticationPrincipal UsuarioAutenticado usuario) {
+        return ResponseEntity.ok(servicioAgendaStaff.cambiarEstado(usuario, citaId, "NO_ASISTIO"));
     }
 }

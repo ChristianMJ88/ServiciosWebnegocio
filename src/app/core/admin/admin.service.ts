@@ -8,6 +8,17 @@ export interface PoliticasCobroServicios {
   opciones: {codigo:string;etiqueta:string}[];
   predeterminado:{requiereAnticipo:boolean;anticipoTipo:string|null;anticipoValor:number|null};
 }
+export interface FinanzasCitas {
+  moneda: string;
+  ingresosProgramados: number;
+  ingresosDevengados: number;
+  ingresosCobrados: number;
+  saldoPorCobrar: number;
+  anticiposEnCustodia: number | null;
+  ingresosAnticiposVencidos: number | null;
+  custodiaDisponible: boolean;
+}
+
 export interface ResumenAdmin {
   totalCitas: number;
   pendientes: number;
@@ -18,6 +29,8 @@ export interface ResumenAdmin {
   citasHoy: number;
   ingresosProgramados: number;
   ingresosFinalizados: number;
+  finanzasCitas?: FinanzasCitas[];
+  puedeVerFinanzas?: boolean;
 }
 
 export interface PeriodoReporteAdmin {

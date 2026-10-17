@@ -62,17 +62,29 @@
         <strong class="dashboard-kpi-value">{{ r.canceladas + r.noAsistio }}</strong>
         <small class="dashboard-kpi-helper">{{ r.canceladas }} canceladas · {{ r.noAsistio }} no asistieron</small>
       </article>
-      <article class="dashboard-kpi-card dashboard-kpi-card--money">
-        <span class="dashboard-kpi-icon is-money"><i class="bi bi-graph-up-arrow"></i></span>
-        <span class="dashboard-kpi-label">Ingreso programado</span>
-        <strong class="dashboard-kpi-value">{{ r.ingresosProgramados | appMoney:'MXN':0:0 }}</strong>
-      </article>
-      <article class="dashboard-kpi-card dashboard-kpi-card--money">
-        <span class="dashboard-kpi-icon is-money"><i class="bi bi-cash-stack"></i></span>
-        <span class="dashboard-kpi-label">Ingreso finalizado</span>
-        <strong class="dashboard-kpi-value">{{ r.ingresosFinalizados | appMoney:'MXN':0:0 }}</strong>
-      </article>
     </section>
+  }
+
+  @if (resumen(); as r) {
+    @if (r.puedeVerFinanzas === true) {
+    <section class="dashboard-finances" aria-label="Finanzas de citas">
+      <header><span class="section-eyebrow">Servicios y cobros</span><h3>Finanzas de citas</h3>
+        <p>Programado y devengado por fecha de atención; cobrado por fecha de pago. La deuda incluye todo el historial.</p></header>
+      @for (finanzas of r.finanzasCitas ?? []; track finanzas.moneda) {
+        <div class="dashboard-finances-currency"><strong>{{ finanzas.moneda }}</strong>
+          <div class="dashboard-finances-grid">
+            <article><span>Programado</span><strong>{{ finanzas.ingresosProgramados | appMoney:finanzas.moneda:2:2 }}</strong><small>Valor de las citas del periodo</small></article>
+            <article><span>Devengado</span><strong>{{ finanzas.ingresosDevengados | appMoney:finanzas.moneda:2:2 }}</strong><small>Servicios finalizados del periodo</small></article>
+            <article><span>Cobrado</span><strong>{{ finanzas.ingresosCobrados | appMoney:finanzas.moneda:2:2 }}</strong><small>Pagos de citas recibidos en el periodo</small></article>
+            <article class="dashboard-finances-debt"><span>Por cobrar · histórico</span><strong>{{ finanzas.saldoPorCobrar | appMoney:finanzas.moneda:2:2 }}</strong><small>Saldo actual, incluye deudas de más de 90 días</small></article>
+          </div>
+          @if (finanzas.custodiaDisponible) {
+            <p>Anticipos en custodia: {{ finanzas.anticiposEnCustodia | appMoney:finanzas.moneda:2:2 }}</p>
+          } @else {<p class="dashboard-finances-note">La clasificación de anticipos en custodia aún no está disponible.</p>}
+        </div>
+      } @empty {<p class="dashboard-finances-note">Sin importes registrados en las sucursales de tu alcance.</p>}
+    </section>
+    }
   }
 
   <mat-card class="dashboard-priority-card">
@@ -144,7 +156,7 @@
         <div class="section-header">
           <div>
             <div class="section-eyebrow">Rendimiento del equipo</div>
-            <h3>Ingresos por prestador</h3>
+            <h3>Valor realizado por prestador</h3>
           </div>
         </div>
         <div class="team-metric-list">
@@ -196,7 +208,7 @@
       <span>
         <span class="section-eyebrow">Analítica comercial</span>
         <strong>Rendimiento por servicio</strong>
-        <small>Consulta el detalle de citas e ingresos del periodo</small>
+        <small>Consulta el detalle de citas y valor de servicios del periodo</small>
       </span>
       <i class="bi bi-chevron-down" aria-hidden="true"></i>
     </summary>
@@ -218,7 +230,7 @@
               <strong>{{ reporte.ingresosProgramados | appMoney:'MXN':0:0 }}</strong>
             </div>
             <div>
-              <span>Finalizado</span>
+              <span>Devengado</span>
               <strong>{{ reporte.ingresosFinalizados | appMoney:'MXN':0:0 }}</strong>
             </div>
           </div>

@@ -1,4 +1,7 @@
 <section class="recepcion-shell">
+  @if (ultimoCierre(); as cita) {
+    <aside class="recepcion-cierre-aviso" aria-label="Resultado del cierre"><app-cita-cobro [datos]="cita" [citaId]="cita.id" /><button type="button" class="btn btn-sm" (click)="ultimoCierre.set(null)" aria-label="Cerrar aviso de cobro">Cerrar aviso</button></aside>
+  }
   <mat-toolbar class="recepcion-toolbar">
     <div class="recepcion-toolbar-brand">
       <span class="recepcion-brand-mark">RE</span>
@@ -219,11 +222,10 @@
             [puedeRegistrarCheckIn]="puedeRegistrarCheckIn()"
             [estadosCita]="estadosCita()"
             [estadoPendiente]="estadoCitaPendiente()"
-            [estadosFinalizables]="estadosCitaFinalizables()"
-            [estadosCancelables]="estadosCitaCancelables()"
             (checkIn)="hacerCheckIn($event)"
             (confirm)="confirmar($event)"
             (finish)="finalizar($event)"
+            (noShow)="noAsistio($event)"
             (cancel)="cancelar($event)" />
         </div>
       }

@@ -1,3 +1,4 @@
+import { ETIQUETAS_COBRO } from '../../../core/caja/cobro-cita.models';
 import { CommonModule, DatePipe } from '@angular/common';
 import { Component, DestroyRef, EventEmitter, Input, OnChanges, Output, SimpleChanges, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -32,8 +33,18 @@ import { FormularioPagoCaja } from '../forms/caja.forms';
   styleUrls: ['./caja-payments-section.component.css']
 })
 export class CajaPaymentsSectionComponent implements OnChanges {
+  readonly etiquetasCobro = ETIQUETAS_COBRO;
   private readonly caja = inject(CajaService);
   private readonly destroyRef = inject(DestroyRef);
+  @Input() mostrarCobroInicial = false;
+  readonly mostrandoCobro = signal(false);
+  seleccionar(citaId: number): void { this.mostrandoCobro.set(true); this.selectAppointment.emit(citaId); }
+  get gruposPendientes() {
+    return [
+      {codigo:'HOY', titulo:'Hoy', citas:this.citas.filter(c => c.periodoCobro === 'HOY')},
+      {codigo:'ANTERIOR', titulo:'Pendientes anteriores', citas:this.citas.filter(c => c.periodoCobro === 'ANTERIOR')}
+    ];
+  }
   @Input({ required: true }) sucursalId!: number | null;
   @Input({ required: true }) citas!: CitaPorCobrar[];
   @Input({ required: true }) citaSeleccionadaId!: number | null;
@@ -59,6 +70,7 @@ export class CajaPaymentsSectionComponent implements OnChanges {
   terminalPointId: number | null = null;
 
   ngOnChanges(changes: SimpleChanges): void {
+    if (changes['mostrarCobroInicial'] && this.mostrarCobroInicial) this.mostrandoCobro.set(true);
     if (changes['sucursalId']) this.cargarTerminalesPoint();
     if (changes['citaSeleccionada']) {
       this.ordenPoint.set(null);
@@ -68,7 +80,7 @@ export class CajaPaymentsSectionComponent implements OnChanges {
 
   cobrarConPoint(): void {
     const cita = this.citaSeleccionada;
-    if (!cita || !this.sucursalId || !this.terminalPointId || this.procesandoPoint() || !this.cajaAbierta) return;
+    if (!cita || !this.sucursalId || !this.terminalPointId || this.guardando || this.procesandoPoint() || !this.cajaAbierta) return;
     this.procesandoPoint.set(true);
     this.errorPoint.set('');
     this.ordenPoint.set(null);

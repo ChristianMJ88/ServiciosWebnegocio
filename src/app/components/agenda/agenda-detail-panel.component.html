@@ -32,6 +32,7 @@
         </div>
       }
     </div>
+    @if (item.cobro; as cobro) {<app-cita-cobro [datos]="cobro" [citaId]="item.id" />}
     @if (item.notes) {
       <div class="agenda-detail__notes">
         <span>Notas</span>

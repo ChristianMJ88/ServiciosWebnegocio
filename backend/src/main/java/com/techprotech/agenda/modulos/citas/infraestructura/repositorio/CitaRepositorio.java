@@ -10,6 +10,28 @@ import java.util.List;
 import java.util.Optional;
 
 public interface CitaRepositorio extends JpaRepository<CitaEntidad, Long> {
+    // Mismo predicado para lista y conteo. El desglose y estado siguen en ServicioSaldoCitas.
+    // D2 deberá descontar aquí los ajustes condonados cuando se añada su persistencia.
+    String COBRABLE_CON_SALDO = "c.empresaId=:empresaId and c.sucursalId=:sucursalId " +
+            "and c.estado in :estados " +
+            "and (c.estado='FINALIZADA' or c.checkInEn is not null) " +
+            "and c.precio > coalesce((select sum(p.monto) from PagoCitaEntidad p " +
+                "where p.empresaId=c.empresaId and p.citaId=c.id),0) " +
+            "+ coalesce((select sum(d.total) from VentaDetalleEntidad d, VentaEntidad v " +
+                "where d.ventaId=v.id and d.empresaId=c.empresaId and v.empresaId=c.empresaId " +
+                "and d.citaId=c.id and d.tipoConcepto='SERVICIO' and v.estado='PAGADA'),0)";
+
+    String COBRABLE_CON_SALDO_EN_RANGO = COBRABLE_CON_SALDO + " and c.inicio >= :desde and c.inicio < :hasta";
+
+    @Query("select c from CitaEntidad c where " + COBRABLE_CON_SALDO_EN_RANGO + " order by c.inicio desc, c.id desc")
+    List<CitaEntidad> buscarCobrablesEnRango(Long empresaId, Long sucursalId, LocalDateTime desde,
+            LocalDateTime hasta, Collection<String> estados);
+
+    @Query("select count(c) from CitaEntidad c where " + COBRABLE_CON_SALDO_EN_RANGO)
+    long contarCobrablesEnRango(Long empresaId, Long sucursalId, LocalDateTime desde,
+            LocalDateTime hasta, Collection<String> estados);
+
+    List<CitaEntidad> findByEmpresaIdAndIdIn(Long empresaId, Collection<Long> ids);
     List<CitaEntidad> findByEmpresaIdAndSucursalIdAndInicioBetweenAndEstadoInOrderByInicioAsc(
             Long empresaId, Long sucursalId, LocalDateTime desde, LocalDateTime hasta, List<String> estados);
     @Query("select distinct c.prestadorId from CitaEntidad c where c.empresaId=:empresaId and (c.id=:id or (:grupo is not null and c.reservaGrupoId=:grupo)) order by c.prestadorId")

@@ -30,6 +30,7 @@
                 <span class="recepcion-checkin-time"><i class="bi bi-check2-circle"></i>Llegada: {{ cita.checkInEn | date:'dd/MM HH:mm':'':'es-MX' }}</span>
               }
             </div>
+            <app-cita-cobro [datos]="cita" [citaId]="cita.id" />
             @if (cita.notas) {
               <div class="recepcion-appointment-note">{{ cita.notas }}</div>
             }
@@ -44,9 +45,11 @@
                 <button class="btn btn-outline-secondary btn-sm" type="button" (click)="confirm.emit(cita.id)"
                   [disabled]="guardando || cita.estado !== estadoPendiente">Confirmar</button>
                 <button class="btn btn-outline-success btn-sm" type="button" (click)="finish.emit(cita.id)"
-                  [disabled]="guardando || !estadosFinalizables.includes(cita.estado)">Finalizar</button>
+                  [disabled]="guardando || cita.puedeCerrar !== true">Finalizar</button>
+                <button class="btn btn-outline-secondary btn-sm" type="button" (click)="noShow.emit(cita.id)"
+                  [disabled]="guardando || cita.puedeCerrar !== true">No asistió</button>
                 <button class="btn btn-outline-danger btn-sm" type="button" (click)="cancel.emit(cita.id)"
-                  [disabled]="guardando || !estadosCancelables.includes(cita.estado)">Cancelar</button>
+                  [disabled]="guardando || cita.puedeCancelar !== true">Cancelar</button>
               }
             </div>
           </div>

@@ -58,7 +58,7 @@ public class ControladorRecepcion {
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fecha,
             @RequestParam(required = false) Long sucursalId
     ) {
-        return servicioRecepcion.agenda(usuario.empresaId(), usuario.sucursalesPermitidas(), fecha, sucursalId);
+        return servicioRecepcion.agenda(usuario, fecha, sucursalId);
     }
 
     @GetMapping("/clientes")
@@ -142,7 +142,7 @@ public class ControladorRecepcion {
             @AuthenticationPrincipal UsuarioAutenticado usuario,
             @PathVariable Long citaId
     ) {
-        return servicioRecepcion.checkIn(usuario.empresaId(), usuario.usuarioId(), usuario.sucursalesPermitidas(), citaId);
+        return servicioRecepcion.checkIn(usuario, citaId);
     }
 
     @PatchMapping("/citas/{citaId}/confirmar")
@@ -151,7 +151,7 @@ public class ControladorRecepcion {
             @AuthenticationPrincipal UsuarioAutenticado usuario,
             @PathVariable Long citaId
     ) {
-        return servicioRecepcion.confirmar(usuario.empresaId(), usuario.usuarioId(), usuario.sucursalesPermitidas(), citaId);
+        return servicioRecepcion.confirmar(usuario, citaId);
     }
 
     @PatchMapping("/citas/{citaId}/cancelar")
@@ -160,7 +160,7 @@ public class ControladorRecepcion {
             @AuthenticationPrincipal UsuarioAutenticado usuario,
             @PathVariable Long citaId
     ) {
-        return servicioRecepcion.cancelar(usuario.empresaId(), usuario.usuarioId(), usuario.sucursalesPermitidas(), citaId);
+        return servicioRecepcion.cancelar(usuario, citaId);
     }
 
     @PatchMapping("/citas/{citaId}/reagendar")
@@ -173,12 +173,18 @@ public class ControladorRecepcion {
         return servicioRecepcion.reprogramar(usuario.empresaId(), usuario.usuarioId(), usuario.sucursalesPermitidas(), citaId, request);
     }
 
+    @PatchMapping("/citas/{citaId}/no-asistio")
+    @PreAuthorize("hasAuthority('RECEPCION_CITAS_GESTIONAR')")
+    public CitaRecepcionResponse noAsistio(@AuthenticationPrincipal UsuarioAutenticado usuario,@PathVariable Long citaId) {
+        return servicioRecepcion.noAsistio(usuario,citaId);
+    }
+
     @PatchMapping("/citas/{citaId}/finalizar")
     @PreAuthorize("hasAuthority('RECEPCION_CITAS_GESTIONAR')")
     public CitaRecepcionResponse finalizar(
             @AuthenticationPrincipal UsuarioAutenticado usuario,
             @PathVariable Long citaId
     ) {
-        return servicioRecepcion.finalizar(usuario.empresaId(), usuario.usuarioId(), usuario.sucursalesPermitidas(), citaId);
+        return servicioRecepcion.finalizar(usuario, citaId);
     }
 }

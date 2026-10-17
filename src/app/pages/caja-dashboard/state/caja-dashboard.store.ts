@@ -57,7 +57,7 @@ export class CajaDashboardStore {
 
   readonly cajaAbierta = computed(() => Boolean(this._estadoSesionAbierta() && this._sesionActual()?.estado === this._estadoSesionAbierta()));
   readonly ultimoMovimiento = computed(() => this._movimientos()[0] ?? null);
-  readonly citaSeleccionada = computed(() => this._citasPorCobrar().find(cita => cita.citaId === this._citaSeleccionadaId()) ?? this._citasPorCobrar()[0] ?? null);
+  readonly citaSeleccionada = computed(() => this._citasPorCobrar().find(cita => cita.citaId === this._citaSeleccionadaId()) ?? null);
   readonly totalPendiente = computed(() => this._citasPorCobrar().reduce((total, cita) => total + (Number(cita.pendiente) || 0), 0));
   readonly totalNotificaciones = computed(() => this._citasPorCobrar().length + (this.cajaAbierta() ? 0 : 1));
   readonly estadoSesionEtiqueta = computed(() => {

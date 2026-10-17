@@ -1,3 +1,4 @@
+import { DatosCobroCita, ResultadoCierreCita } from '../caja/cobro-cita.models';
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
@@ -55,7 +56,9 @@ export interface FranjaRecepcionDisponible {
   finAt: string;
 }
 
-export interface CitaRecepcion {
+export interface CitaRecepcion extends DatosCobroCita {
+  puedeCerrar?: boolean;
+  puedeCancelar?: boolean;
   estadoEtiqueta?:string;
   notificarEnAgenda?:boolean;
   id: number;
@@ -247,6 +250,10 @@ export class RecepcionService {
 
   cancelar(citaId: number): Observable<CitaRecepcion> {
     return this.http.patch<CitaRecepcion>(`${environment.apiBaseUrl}/recepcion/citas/${citaId}/cancelar`, {});
+  }
+
+  noAsistio(citaId: number): Observable<CitaRecepcion> {
+    return this.http.patch<CitaRecepcion>(`${environment.apiBaseUrl}/recepcion/citas/${citaId}/no-asistio`, {});
   }
 
   finalizar(citaId: number): Observable<CitaRecepcion> {

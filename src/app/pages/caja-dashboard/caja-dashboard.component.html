@@ -36,6 +36,7 @@
 
     @if (vistaActiva() === 'cobros') {
       <app-caja-payments-section
+        [mostrarCobroInicial]="abrirCobroDirecto()"
         [sucursalId]="sucursalOperativaId()"
         [citas]="citasPorCobrar()"
         [citaSeleccionadaId]="citaSeleccionadaActualId()"
@@ -44,7 +45,7 @@
         [metodosPago]="metodosPago()"
         [metodoPagoEfectivo]="metodoPagoEfectivo()"
         [pagos]="pagosCitaSeleccionada()"
-        [guardando]="guardandoPago()"
+        [guardando]="guardandoPago() || loading()"
         [cajaAbierta]="cajaAbierta()"
         [mensajeBloqueo]="mensajePagoBloqueado()"
         (selectAppointment)="seleccionarCita($event)"

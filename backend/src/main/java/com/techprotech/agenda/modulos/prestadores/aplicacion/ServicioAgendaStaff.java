@@ -1,5 +1,11 @@
 package com.techprotech.agenda.modulos.prestadores.aplicacion;
 
+import com.techprotech.agenda.modulos.caja.aplicacion.*;
+import com.techprotech.agenda.modulos.citas.aplicacion.ServicioCierreCita;
+import com.techprotech.agenda.modulos.citas.aplicacion.OrigenCierreCita;
+import com.techprotech.agenda.modulos.citas.api.dto.ResultadoCierreCitaResponse;
+import com.techprotech.agenda.seguridad.jwt.UsuarioAutenticado;
+
 import java.time.Clock;
 import com.techprotech.agenda.compartido.tiempo.ZonaNegocio;
 import com.techprotech.agenda.modulos.clientes.infraestructura.entidad.ClienteEntidad;
@@ -32,6 +38,8 @@ import static org.springframework.http.HttpStatus.NOT_FOUND;
 
 @Service
 public class ServicioAgendaStaff {
+    private final ServicioConsultaCobroCitas cobros;
+    private final ServicioCierreCita cierres;
     private final Clock reloj;
     private final ZonaNegocio zonasNegocio;
 
@@ -52,8 +60,12 @@ public class ServicioAgendaStaff {
             UsuarioRepositorio usuarioRepositorio,
             PrestadorServicioRepositorio prestadorServicioRepositorio,
             Clock reloj,
-            ZonaNegocio zonasNegocio
+            ZonaNegocio zonasNegocio,
+            ServicioConsultaCobroCitas cobros,
+            ServicioCierreCita cierres
     ) {
+        this.cobros=cobros;
+        this.cierres=cierres;
         this.reloj = reloj;
         this.zonasNegocio = zonasNegocio;
         this.citaRepositorio = citaRepositorio;
@@ -88,25 +100,31 @@ public class ServicioAgendaStaff {
     }
 
     @Transactional(readOnly = true)
-    public List<CitaAgendaResponse> obtenerAgenda(Long empresaId, Long prestadorId, LocalDate desde, LocalDate hasta) {
+    public List<CitaAgendaResponse> obtenerAgenda(UsuarioAutenticado usuario, LocalDate desde, LocalDate hasta) {
+        Long empresaId=usuario.empresaId(), prestadorId=usuario.usuarioId();
         Long sucursalId = desde == null ? obtenerPerfil(empresaId, prestadorId).sucursalId() : null;
         LocalDate inicio = desde != null ? desde : LocalDate.now(reloj.withZone(zonasNegocio.de(empresaId, sucursalId)));
         LocalDate fin = hasta != null ? hasta : inicio.plusDays(7);
         var zonasPorSucursal = new java.util.HashMap<Long, ZoneId>();
-        return citaRepositorio.findByEmpresaIdAndPrestadorIdAndInicioBetweenOrderByInicioAsc(
+        var citas=citaRepositorio.findByEmpresaIdAndPrestadorIdAndInicioBetweenOrderByInicioAsc(
                         empresaId,
                         prestadorId,
                         inicio.atStartOfDay(),
                         fin.plusDays(1).atStartOfDay()
-                )
-                .stream()
-                .map(cita -> mapear(cita, zonasPorSucursal.computeIfAbsent(cita.getSucursalId(),
-                        id -> zonasNegocio.de(empresaId, id))))
+                ).stream().filter(c -> usuario.puedeAccederSucursal(c.getSucursalId())).toList();
+        var datosCobro=cobros.consultar(usuario,citas);
+        var elegibles=cierres.elegibilidad(citas);
+        return citas.stream()
+                .map(cita -> mapear(cita,zonasPorSucursal.computeIfAbsent(cita.getSucursalId(),
+                        id -> zonasNegocio.de(empresaId,id)),datosCobro.get(cita.getId()),elegibles.get(cita.getId())))
                 .toList();
     }
 
     @Transactional
-    public void cambiarEstado(Long empresaId, Long prestadorId, Long citaId, String nuevoEstado) {
+    public ResultadoCierreCitaResponse cambiarEstado(UsuarioAutenticado usuario, Long citaId, String nuevoEstado) {
+        if (List.of("FINALIZADA","NO_ASISTIO").contains(nuevoEstado))
+            return cobros.respuesta(usuario,cierres.cerrar(usuario,citaId,nuevoEstado,OrigenCierreCita.STAFF));
+        Long empresaId=usuario.empresaId(), prestadorId=usuario.usuarioId();
         CitaEntidad cita = citaRepositorio.findByIdAndEmpresaIdAndPrestadorId(citaId, empresaId, prestadorId)
                 .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "La cita no existe para el staff autenticado"));
 
@@ -122,13 +140,6 @@ public class ServicioAgendaStaff {
             throw new ResponseStatusException(BAD_REQUEST, "Solo puedes confirmar citas pendientes");
         }
 
-        if (List.of("FINALIZADA", "NO_ASISTIO").contains(nuevoEstado)) {
-            LocalDateTime ahoraLocal = LocalDateTime.now(reloj.withZone(zonasNegocio.de(empresaId, cita.getSucursalId())));
-            if (cita.getInicio().isAfter(ahoraLocal)) {
-                throw new ResponseStatusException(BAD_REQUEST, "No puedes cerrar una cita futura antes de que inicie");
-            }
-        }
-
         String estadoAnterior = cita.getEstado();
         cita.setEstado(nuevoEstado);
         citaRepositorio.save(cita);
@@ -140,9 +151,10 @@ public class ServicioAgendaStaff {
         historial.setCambiadoPorUsuarioId(prestadorId);
         historial.setMotivo("Cambio de estado realizado por staff");
         historialEstadoCitaRepositorio.save(historial);
+        return null;
     }
 
-    private CitaAgendaResponse mapear(CitaEntidad cita, ZoneId zonaHoraria) {
+    private CitaAgendaResponse mapear(CitaEntidad cita, ZoneId zonaHoraria,CobroCita cobro,boolean puedeCerrar) {
         String sucursalNombre = sucursalRepositorio.findById(cita.getSucursalId()).map(SucursalEntidad::getNombre)
           .orElse("Sucursal");
         String servicioNombre = servicioRepositorio.findById(cita.getServicioId()).map(ServicioEntidad::getNombre)
@@ -164,7 +176,8 @@ public class ServicioAgendaStaff {
                 clienteTelefono,
                 cita.getInicio().atZone(zonaHoraria).toOffsetDateTime(),
                 cita.getFin().atZone(zonaHoraria).toOffsetDateTime(),
-                cita.getNotas()
+                cita.getNotas(), cita.getSucursalId(),
+                cobro.saldo().pagado(), cobro.saldo().condonado(), cobro.saldo().pendiente(), cobro.saldo().estadoCobro(), cobro.puedeCobrar(), puedeCerrar, cita.getMoneda()
         );
     }
 }

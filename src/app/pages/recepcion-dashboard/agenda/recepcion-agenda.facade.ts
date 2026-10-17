@@ -17,6 +17,10 @@ export class RecepcionAgendaFacade {
     return this.recepcionService.cancelar(citaId);
   }
 
+  noAsistio(citaId: number) {
+    return this.recepcionService.noAsistio(citaId);
+  }
+
   finalizar(citaId: number) {
     return this.recepcionService.finalizar(citaId);
   }

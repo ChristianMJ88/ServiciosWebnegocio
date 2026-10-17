@@ -87,17 +87,17 @@ public class ControladorAdminCitas {
             @RequestParam(required = false) LocalDate desde,
             @RequestParam(required = false) LocalDate hasta
     ) {
-        return servicioAdminCitas.resumen(usuario.empresaId(), desde, hasta);
+        return servicioAdminCitas.resumen(usuario, desde, hasta);
     }
 
     @GetMapping("/citas")
     @PreAuthorize("hasAuthority('CITAS_ADMIN_GESTIONAR')")
-    public List<CitaClienteResponse> citas(
+    public List<com.techprotech.agenda.modulos.admin.api.dto.CitaAgendaAdminResponse> citas(
             @AuthenticationPrincipal UsuarioAutenticado usuario,
             @RequestParam LocalDate desde,
             @RequestParam LocalDate hasta
     ) {
-        return servicioAdminCitas.listar(usuario.empresaId(), desde, hasta);
+        return servicioAdminCitas.listar(usuario, desde, hasta);
     }
 
     @PatchMapping("/citas/{citaId}/confirmar")
@@ -106,28 +106,26 @@ public class ControladorAdminCitas {
             @AuthenticationPrincipal UsuarioAutenticado usuario,
             @PathVariable Long citaId
     ) {
-        servicioAdminCitas.cambiarEstadoCita(usuario.empresaId(), usuario.usuarioId(), citaId, "CONFIRMADA");
+        servicioAdminCitas.cambiarEstadoCita(usuario, citaId, "CONFIRMADA");
         return org.springframework.http.ResponseEntity.noContent().build();
     }
 
     @PatchMapping("/citas/{citaId}/finalizar")
     @PreAuthorize("hasAuthority('CITAS_ADMIN_GESTIONAR')")
-    public org.springframework.http.ResponseEntity<Void> finalizarCita(
+    public org.springframework.http.ResponseEntity<com.techprotech.agenda.modulos.citas.api.dto.ResultadoCierreCitaResponse> finalizarCita(
             @AuthenticationPrincipal UsuarioAutenticado usuario,
             @PathVariable Long citaId
     ) {
-        servicioAdminCitas.cambiarEstadoCita(usuario.empresaId(), usuario.usuarioId(), citaId, "FINALIZADA");
-        return org.springframework.http.ResponseEntity.noContent().build();
+        return org.springframework.http.ResponseEntity.ok(servicioAdminCitas.cambiarEstadoCita(usuario, citaId, "FINALIZADA"));
     }
 
     @PatchMapping("/citas/{citaId}/no-asistio")
     @PreAuthorize("hasAuthority('CITAS_ADMIN_GESTIONAR')")
-    public org.springframework.http.ResponseEntity<Void> marcarNoAsistio(
+    public org.springframework.http.ResponseEntity<com.techprotech.agenda.modulos.citas.api.dto.ResultadoCierreCitaResponse> marcarNoAsistio(
             @AuthenticationPrincipal UsuarioAutenticado usuario,
             @PathVariable Long citaId
     ) {
-        servicioAdminCitas.cambiarEstadoCita(usuario.empresaId(), usuario.usuarioId(), citaId, "NO_ASISTIO");
-        return org.springframework.http.ResponseEntity.noContent().build();
+        return org.springframework.http.ResponseEntity.ok(servicioAdminCitas.cambiarEstadoCita(usuario, citaId, "NO_ASISTIO"));
     }
 
     @PatchMapping("/citas/{citaId}/cancelar")
@@ -136,7 +134,7 @@ public class ControladorAdminCitas {
             @AuthenticationPrincipal UsuarioAutenticado usuario,
             @PathVariable Long citaId
     ) {
-        servicioAdminCitas.cambiarEstadoCita(usuario.empresaId(), usuario.usuarioId(), citaId, "CANCELADA");
+        servicioAdminCitas.cambiarEstadoCita(usuario, citaId, "CANCELADA");
         return org.springframework.http.ResponseEntity.noContent().build();
     }
 

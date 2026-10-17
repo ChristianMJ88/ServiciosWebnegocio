@@ -12,7 +12,15 @@ public record CitaAgendaResponse(
         String clienteTelefono,
         OffsetDateTime inicio,
         OffsetDateTime fin,
-        String notas
+        String notas,
+        Long sucursalId,
+        java.math.BigDecimal pagado,
+        java.math.BigDecimal condonado,
+        java.math.BigDecimal pendiente,
+        com.techprotech.agenda.modulos.caja.aplicacion.EstadoCobroCita estadoCobro,
+        boolean puedeCobrar,
+        boolean puedeCerrar,
+        String moneda
 ) {
     @com.fasterxml.jackson.annotation.JsonProperty("notificarEnAgenda")
     public boolean notificarEnAgenda() { return estado != null && java.util.Set.of("PENDIENTE","CONFIRMADA").contains(estado); }

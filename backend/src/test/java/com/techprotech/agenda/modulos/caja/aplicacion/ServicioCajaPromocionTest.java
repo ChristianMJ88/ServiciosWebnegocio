@@ -24,12 +24,14 @@ class ServicioCajaPromocionTest {
         boolean promocion = !"normal".equals(caso);
         var citas=mock(CitaRepositorio.class);
         var sucursales=mock(SucursalRepositorio.class);
-        var servicio=new ServicioCaja(mock(CajaSesionRepositorio.class),mock(PagoCitaRepositorio.class),
-                mock(PagoVentaRepositorio.class),mock(VentaDetalleRepositorio.class),mock(MovimientoCajaRepositorio.class),
-                citas,mock(ClienteRepositorio.class),mock(ServicioRepositorio.class),sucursales,new ObjectMapper(), java.time.Clock.systemUTC());
+        var pagos=mock(PagoCitaRepositorio.class);var detalles=mock(VentaDetalleRepositorio.class);
+        var pendientes=mock(ServicioPendientesCitasCaja.class);
+        var servicio=new ServicioCaja(mock(CajaSesionRepositorio.class),pagos,
+                mock(PagoVentaRepositorio.class),mock(MovimientoCajaRepositorio.class),
+                citas,mock(ClienteRepositorio.class),mock(ServicioRepositorio.class),sucursales,new ObjectMapper(), java.time.Clock.systemUTC(),new ServicioSaldoCitas(citas,pagos,detalles),pendientes);
         var sucursal=new SucursalEntidad(); sucursal.setId(3L); sucursal.setNombre("Sucursal de prueba"); sucursal.setZonaHoraria("America/Mexico_City");
         when(sucursales.findAllById(any())).thenReturn(List.of(sucursal));
-        var cita=new CitaEntidad(); cita.setId(10L); cita.setClienteId(20L); cita.setServicioId(30L);
+        var cita=new CitaEntidad(); cita.setId(10L); cita.setEmpresaId(1L); cita.setClienteId(20L); cita.setServicioId(30L);
         cita.setSucursalId(3L); cita.setEstado("FINALIZADA"); cita.setMoneda("MXN");
         cita.setInicio(LocalDateTime.now(ZoneId.of(sucursal.getZonaHoraria())));
         cita.setPrecio(new BigDecimal("200")); cita.setPrecioLista(new BigDecimal(promocion?"250":"200"));
@@ -37,6 +39,7 @@ class ServicioCajaPromocionTest {
         if(promocion) cita.setPromocionSnapshotJson("{\"id\":8,\"titulo\":\"Oferta pactada\"}");
         if("snapshot-invalido".equals(caso)) cita.setPromocionSnapshotJson("{");
         when(citas.findByEmpresaIdAndEstadoInOrderByInicioDesc(eq(1L),any())).thenReturn(List.of(cita));
+        when(pendientes.consultar(eq(1L),any(),eq(3L))).thenReturn(new ServicioPendientesCitasCaja.Lote(List.of(cita),java.util.Map.of(3L,cita.getInicio().toLocalDate())));
         var respuesta=servicio.listarCitasPorCobrar(1L,List.of(3L),3L).getFirst();
         assertThat(respuesta.precioLista()).isEqualByComparingTo(promocion?"250":"200");
         assertThat(respuesta.descuento()).isEqualByComparingTo(promocion?"50":"0");

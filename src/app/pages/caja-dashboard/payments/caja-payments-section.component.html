@@ -1,4 +1,8 @@
-<div class="caja-grid">
+<nav class="caja-mobile-panes" aria-label="Navegación de cobros">
+  <button type="button" [attr.aria-pressed]="!mostrandoCobro()" (click)="mostrandoCobro.set(false)">Pendientes <span>{{ citas.length }}</span></button>
+  <button type="button" [attr.aria-pressed]="mostrandoCobro()" [disabled]="!citaSeleccionada" (click)="mostrandoCobro.set(true)">Cobrar</button>
+</nav>
+<div class="caja-grid" [class.caja-grid--detail]="mostrandoCobro()">
   <div class="caja-main-column">
     <mat-card class="caja-card">
       <div class="caja-card-heading">
@@ -11,32 +15,39 @@
           <strong>{{ citas.length }} pendientes</strong>
         </div>
       } @else {
-        <div class="caja-empty">No hay citas cobrables hoy.</div>
+        <div class="caja-empty">No hay citas con saldo pendiente en el periodo consultado.</div>
       }
       @if (citas.length) {
         <div class="caja-appointments">
-          @for (cita of citas; track cita.citaId) {
+          @for (grupo of gruposPendientes; track grupo.codigo) {
+            <details class="caja-pending-group" [open]="(grupo.codigo === 'HOY' && grupo.citas.length > 0) || citaSeleccionada?.periodoCobro === grupo.codigo">
+              <summary>{{ grupo.titulo }} <span>{{ grupo.citas.length }}</span></summary>
+              @if (!grupo.citas.length) {<p class="caja-empty">Sin pendientes en esta sección.</p>}
+          @for (cita of grupo.citas; track cita.citaId) {
             <button type="button" class="caja-appointment-card"
               [class.active]="citaSeleccionadaId === cita.citaId"
-              [class.status-pending]="cita.estadoPago === 'PENDIENTE'"
-              [class.status-partial]="cita.estadoPago === 'PARCIAL'"
-              (click)="selectAppointment.emit(cita.citaId)">
+              [class.status-pending]="cita.estadoCobro === 'PENDIENTE'"
+              [class.status-partial]="cita.estadoCobro === 'PARCIAL'"
+              (click)="seleccionar(cita.citaId)">
               <div class="caja-appointment-head">
                 <div><strong>{{ cita.clienteNombre }}</strong><span>{{ cita.servicioNombre }} · {{ cita.sucursalNombre }}</span></div>
                 <span class="caja-table-badge"
-                  [class.is-partial]="cita.estadoPago === 'PARCIAL'"
-                  [class.is-pending]="cita.estadoPago === 'PENDIENTE'">{{ cita.estadoPago }}</span>
+                  [class.is-partial]="cita.estadoCobro === 'PARCIAL'"
+                  [class.is-pending]="cita.estadoCobro === 'PENDIENTE'">{{ etiquetasCobro[cita.estadoCobro] || cita.estadoCobro }}</span>
               </div>
+              @if (cita.diasAtraso) {<span class="caja-overdue">{{ cita.diasAtraso }} días de atraso</span>}
               <div class="caja-appointment-meta">
                 <span>{{ cita.inicio | date:'dd/MM/yyyy HH:mm':'':'es-MX' }}</span>
                 <span>{{ cita.clienteTelefono || 'Sin teléfono' }}</span>
               </div>
               <div class="caja-appointment-money">
-                <div><small>Total</small><strong>{{ cita.total | appMoney:'MXN':2:2 }}</strong></div>
-                <div><small>Pagado</small><strong>{{ cita.pagado | appMoney:'MXN':2:2 }}</strong></div>
-                <div><small>Pendiente</small><strong>{{ cita.pendiente | appMoney:'MXN':2:2 }}</strong></div>
+                <div><small>Total</small><strong>{{ cita.total | appMoney:cita.moneda:2:2 }}</strong></div>
+                <div><small>Pagado</small><strong>{{ cita.pagado | appMoney:cita.moneda:2:2 }}</strong></div>
+                <div><small>Pendiente</small><strong>{{ cita.pendiente | appMoney:cita.moneda:2:2 }}</strong></div>
               </div>
             </button>
+          }
+            </details>
           }
         </div>
       }
@@ -63,23 +74,27 @@
   </div>
 }
 <div class="caja-payment-highlight">
-<small>Saldo pendiente</small><strong>{{ cita.pendiente | appMoney:'MXN':2:2 }}</strong></div>
+<small>Saldo pendiente</small><strong>{{ cita.pendiente | appMoney:cita.moneda:2:2 }}</strong></div>
         </div>
         <form class="caja-form-grid" (ngSubmit)="savePayment.emit()">
           <mat-form-field appearance="outline"><mat-label>Monto</mat-label><input matInput type="number" min="0.01" step="0.01" name="montoPago" [(ngModel)]="formularioPago.monto" required></mat-form-field>
           <mat-form-field appearance="outline"><mat-label>Método de pago</mat-label><mat-select name="metodoPago" [(ngModel)]="formularioPago.metodoPago">@for (metodo of metodosPago; track metodo.codigo) {<mat-option [value]="metodo.codigo">{{ metodo.etiqueta }}</mat-option>}</mat-select></mat-form-field>
           @if (formularioPago.metodoPago === 'TARJETA') {<div class="manual-card-note full-width"><i class="bi bi-credit-card-2-front"></i><span><strong>Registro manual</strong><small>Cobra en una terminal externa y registra aquí el monto y la referencia.</small></span></div>}
           @if (terminalesPoint().length) {
+            <details class="caja-payment-extra full-width" [open]="!!ordenPoint()"><summary>Tarjeta con Mercado Pago Point</summary>
             <div class="point-divider"><span>o cobra en terminal</span></div>
             <mat-form-field appearance="outline" class="full-width"><mat-label>Terminal Mercado Pago Point</mat-label><mat-select name="terminalPointCobro" [(ngModel)]="terminalPointId">@for (terminal of terminalesPoint(); track terminal.id) {<mat-option [value]="terminal.id">{{ terminal.nombre }}</mat-option>}</mat-select></mat-form-field>
-            <div class="point-action full-width"><span><i class="bi bi-credit-card"></i><span><strong>Tarjeta física</strong><small>Envía el saldo pendiente a la terminal de esta sucursal.</small></span></span><button mat-stroked-button type="button" [disabled]="procesandoPoint() || !cajaAbierta" (click)="cobrarConPoint()">{{ procesandoPoint() ? 'Esperando terminal…' : 'Enviar a Point' }}</button></div>
+            <div class="point-action full-width"><span><i class="bi bi-credit-card"></i><span><strong>Tarjeta física</strong><small>Envía el saldo pendiente a la terminal de esta sucursal.</small></span></span><button mat-stroked-button type="button" [disabled]="guardando || procesandoPoint() || !cajaAbierta" (click)="cobrarConPoint()">{{ procesandoPoint() ? 'Esperando terminal…' : 'Enviar a Point' }}</button></div>
+            </details>
           }
           @if (formularioPago.metodoPago === metodoPagoEfectivo) {
             <mat-form-field appearance="outline"><mat-label>Recibido</mat-label><input matInput type="number" min="0.01" step="0.01" name="montoRecibido" [(ngModel)]="formularioPago.montoRecibido"></mat-form-field>
-            <div class="caja-payment-result"><span>Cambio</span><strong>{{ calcularCambio() | appMoney:'MXN':2:2 }}</strong></div>
+            <div class="caja-payment-result"><span>Cambio</span><strong>{{ calcularCambio() | appMoney:cita.moneda:2:2 }}</strong></div>
           }
+          <details class="caja-payment-extra full-width"><summary>Referencia y notas</summary>
           <mat-form-field appearance="outline"><mat-label>Referencia</mat-label><input matInput name="referenciaPago" [(ngModel)]="formularioPago.referencia"></mat-form-field>
           <mat-form-field appearance="outline" class="full-width"><mat-label>Observaciones</mat-label><textarea matInput rows="3" name="observacionesPago" [(ngModel)]="formularioPago.observaciones"></textarea></mat-form-field>
+          </details>
           <div class="caja-form-actions">
             <button mat-flat-button color="primary" type="submit" [disabled]="guardando || !cajaAbierta">Registrar pago</button>
             @if (pagos.length) {<button mat-stroked-button type="button" (click)="printReceipt.emit()">Imprimir comprobante</button>}
@@ -93,7 +108,7 @@
           <div class="caja-subheading"><span>Pagos registrados</span></div>
           @if (!pagos.length) {<div class="caja-empty">Aún no hay pagos registrados para esta cita.</div>}
           @if (pagos.length) {
-            <div class="caja-history-list">@for (pago of pagos; track pago.id) {<div class="caja-history-item"><div><strong>{{ pago.monto | appMoney:'MXN':2:2 }}</strong><span>{{ pago.metodoPago }}{{ pago.referencia ? ' · ' + pago.referencia : '' }}</span></div><small>{{ pago.registradoEn | date:'dd/MM HH:mm':'':'es-MX' }}</small></div>}</div>
+            <div class="caja-history-list">@for (pago of pagos; track pago.id) {<div class="caja-history-item"><div><strong>{{ pago.monto | appMoney:cita.moneda:2:2 }}</strong><span>{{ pago.metodoPago }}{{ pago.referencia ? ' · ' + pago.referencia : '' }}</span></div><small>{{ pago.registradoEn | date:'dd/MM HH:mm':'':'es-MX' }}</small></div>}</div>
           }
         </div>
       } @else {

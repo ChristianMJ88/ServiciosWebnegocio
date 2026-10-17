@@ -23,7 +23,6 @@ import com.techprotech.agenda.modulos.caja.infraestructura.repositorio.CajaSesio
 import com.techprotech.agenda.modulos.caja.infraestructura.repositorio.MovimientoCajaRepositorio;
 import com.techprotech.agenda.modulos.caja.infraestructura.repositorio.PagoCitaRepositorio;
 import com.techprotech.agenda.modulos.caja.infraestructura.repositorio.PagoVentaRepositorio;
-import com.techprotech.agenda.modulos.caja.infraestructura.repositorio.VentaDetalleRepositorio;
 import com.techprotech.agenda.modulos.citas.infraestructura.entidad.CitaEntidad;
 import com.techprotech.agenda.modulos.citas.infraestructura.repositorio.CitaRepositorio;
 import com.techprotech.agenda.modulos.servicios.infraestructura.entidad.ServicioEntidad;
@@ -57,13 +56,14 @@ import static com.techprotech.agenda.modulos.caja.aplicacion.CatalogosCaja.*;
 
 @Service
 public class ServicioCaja {
+    private final ServicioSaldoCitas saldos;
+    private final ServicioPendientesCitasCaja pendientes;
     private final java.time.Clock reloj;
     private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(ServicioCaja.class);
 
     private final CajaSesionRepositorio cajaSesionRepositorio;
     private final PagoCitaRepositorio pagoCitaRepositorio;
     private final PagoVentaRepositorio pagoVentaRepositorio;
-    private final VentaDetalleRepositorio ventaDetalleRepositorio;
     private final MovimientoCajaRepositorio movimientoCajaRepositorio;
     private final CitaRepositorio citaRepositorio;
     private final ClienteRepositorio clienteRepositorio;
@@ -75,20 +75,22 @@ public class ServicioCaja {
             CajaSesionRepositorio cajaSesionRepositorio,
             PagoCitaRepositorio pagoCitaRepositorio,
             PagoVentaRepositorio pagoVentaRepositorio,
-            VentaDetalleRepositorio ventaDetalleRepositorio,
             MovimientoCajaRepositorio movimientoCajaRepositorio,
             CitaRepositorio citaRepositorio,
             ClienteRepositorio clienteRepositorio,
             ServicioRepositorio servicioRepositorio,
             SucursalRepositorio sucursalRepositorio,
             com.fasterxml.jackson.databind.ObjectMapper json,
-            java.time.Clock reloj
+            java.time.Clock reloj,
+            ServicioSaldoCitas saldos,
+            ServicioPendientesCitasCaja pendientes
     ) {
+        this.saldos=saldos;
+        this.pendientes=pendientes;
         this.reloj = reloj;
         this.cajaSesionRepositorio = cajaSesionRepositorio;
         this.pagoCitaRepositorio = pagoCitaRepositorio;
         this.pagoVentaRepositorio = pagoVentaRepositorio;
-        this.ventaDetalleRepositorio = ventaDetalleRepositorio;
         this.movimientoCajaRepositorio = movimientoCajaRepositorio;
         this.citaRepositorio = citaRepositorio;
         this.clienteRepositorio = clienteRepositorio;
@@ -194,33 +196,19 @@ public class ServicioCaja {
     }
 
     /**
-     * Lista citas cobrables del día con batch-loading de datos relacionados.
-     * Antes: 1 + N*5 queries (250+ para 50 citas). Ahora: ~7 queries fijas.
+     * Lista citas cobrables dentro de la ventana configurada, con datos relacionados por lote.
+     * Los rangos se consultan por sucursal y los datos relacionados y pagos se cargan por lote.
      */
     @Transactional(readOnly = true)
     public List<CitaPorCobrarResponse> listarCitasPorCobrar(Long empresaId, List<Long> sucursalesPermitidas, Long sucursalId) {
         Long sucursalConsulta = resolverSucursalConsulta(sucursalesPermitidas, sucursalId);
 
-        // Query 1: citas candidatas filtradas por estado
-        List<CitaEntidad> candidatas = citaRepositorio.findByEmpresaIdAndEstadoInOrderByInicioDesc(
-                empresaId, List.of("PENDIENTE", "CONFIRMADA", "FINALIZADA"));
-
-        // Query 2: zona horaria de sucursales en batch
-        Set<Long> sucursalIds = candidatas.stream().map(CitaEntidad::getSucursalId).collect(Collectors.toSet());
-        Map<Long, String> zonaHorariaPorSucursal = sucursalRepositorio.findAllById(sucursalIds).stream()
-                .collect(Collectors.toMap(SucursalEntidad::getId, s -> s.getZonaHoraria() != null ? s.getZonaHoraria() : "America/Mexico_City"));
-
-        // Filtros en memoria (sin queries adicionales)
-        List<CitaEntidad> cobrable = candidatas.stream()
-                .filter(cita -> sucursalConsulta == null || sucursalConsulta.equals(cita.getSucursalId()))
-                .filter(cita -> !tieneScopeSucursales(sucursalesPermitidas) || sucursalesPermitidas.contains(cita.getSucursalId()))
-                .filter(cita -> esDelDiaOperativo(cita, zonaHorariaPorSucursal))
-                .filter(this::esCitaCobrable)
-                .toList();
+        var lote = pendientes.consultar(empresaId, sucursalesPermitidas, sucursalConsulta);
+        List<CitaEntidad> cobrable = lote.citas();
+        Set<Long> sucursalIds = cobrable.stream().map(CitaEntidad::getSucursalId).collect(Collectors.toSet());
 
         if (cobrable.isEmpty()) return List.of();
 
-        Set<Long> citaIds = cobrable.stream().map(CitaEntidad::getId).collect(Collectors.toSet());
         Set<Long> clienteIds = cobrable.stream().map(CitaEntidad::getClienteId).collect(Collectors.toSet());
         Set<Long> servicioIds = cobrable.stream().map(CitaEntidad::getServicioId).collect(Collectors.toSet());
 
@@ -236,18 +224,14 @@ public class ServicioCaja {
         Map<Long, String> nombreSucursal = sucursalRepositorio.findAllById(sucursalIds).stream()
                 .collect(Collectors.toMap(SucursalEntidad::getId, SucursalEntidad::getNombre));
 
-        // Query 6: suma de pagos de cita en batch
-        Map<Long, BigDecimal> pagadoCita = pagosEnBatch(pagoCitaRepositorio.sumarPagadoPorCitas(empresaId, citaIds));
-
-        // Query 7: suma de ventas pagadas por cita en batch
-        Map<Long, BigDecimal> pagadoVenta = pagosEnBatch(ventaDetalleRepositorio.sumarServiciosPagadosPorCitas(empresaId, citaIds));
+        Map<Long, SaldoCita> saldosCitas = saldos.calcular(empresaId, cobrable);
 
         return cobrable.stream()
                 .map(cita -> {
                     ClienteEntidad cliente = clientes.get(cita.getClienteId());
-                    BigDecimal pagado = montoSeguro(pagadoCita.get(cita.getId()))
-                            .add(montoSeguro(pagadoVenta.get(cita.getId())));
-                    BigDecimal pendiente = cita.getPrecio().subtract(pagado).max(BigDecimal.ZERO);
+                    SaldoCita saldo = saldosCitas.get(cita.getId());
+                    BigDecimal pagado = saldo.pagado();
+                    BigDecimal pendiente = saldo.pendiente();
                     return new CitaPorCobrarResponse(
                             cita.getId(),
                             cliente != null ? cliente.getNombreCompleto() : "Cliente",
@@ -260,11 +244,11 @@ public class ServicioCaja {
                             pendiente,
                             cita.getMoneda(),
                             cita.getEstado(),
-                            pendiente.compareTo(BigDecimal.ZERO) <= 0 ? "PAGADO"
-                                    : (pagado.compareTo(BigDecimal.ZERO) > 0 ? "PARCIAL" : "PENDIENTE"),
+                            saldo.estadoCobro(),
                             cita.getPrecioLista() != null ? cita.getPrecioLista() : cita.getPrecio(),
                             montoSeguro(cita.getDescuento()),
-                            tituloPromocion(cita)
+                            tituloPromocion(cita), cita.getSucursalId(),
+                            lote.diasAtraso(cita) == 0 ? "HOY" : "ANTERIOR", lote.diasAtraso(cita)
                     );
                 })
                 .filter(cita -> cita.pendiente().compareTo(BigDecimal.ZERO) > 0)
@@ -291,15 +275,14 @@ public class ServicioCaja {
             if (!contiene(METODOS_PAGO, metodoPago)) {
                 throw new ResponseStatusException(BAD_REQUEST, "El método de pago no es válido");
             }
-            CitaEntidad cita = citaRepositorio.findByIdAndEmpresaId(citaId, empresaId)
+            CitaEntidad cita = citaRepositorio.bloquearPorIdYEmpresa(citaId, empresaId)
                     .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "La cita no existe para la empresa"));
             validarAccesoSucursal(sucursalesPermitidas, cita.getSucursalId());
             if (!esCitaCobrable(cita)) {
                 throw new ResponseStatusException(CONFLICT, "La cita solo se puede cobrar después del check-in o cuando haya sido finalizada");
             }
 
-            BigDecimal pagado = totalPagadoCita(empresaId, citaId);
-            BigDecimal pendiente = cita.getPrecio().subtract(pagado);
+            BigDecimal pendiente = saldos.de(cita).pendiente();
             if (pendiente.compareTo(BigDecimal.ZERO) <= 0) {
                 throw new ResponseStatusException(CONFLICT, "La cita ya está pagada");
             }
@@ -387,7 +370,7 @@ public class ServicioCaja {
 
         /**
          * Resumen del turno. Optimizado para:
-         * 1. No hacer N+1 al contar citas (reutiliza listarCitasPorCobrar ya optimizado).
+         * 1. Contar pendientes en SQL sin cargar citas ni sus datos relacionados.
          * 2. Una sola pasada para calcular totales por método de pago.
          * 3. No recargar movimientos que ya están en memoria.
          */
@@ -395,8 +378,7 @@ public class ServicioCaja {
         public ResumenCajaResponse resumen(Long empresaId, List<Long> sucursalesPermitidas, Long sucursalId) {
             Long sucursalConsulta = resolverSucursalConsulta(sucursalesPermitidas, sucursalId);
 
-            // listarCitasPorCobrar ya usa batch-loading (~7 queries) — no N+1
-            int citasPendientes = listarCitasPorCobrar(empresaId, sucursalesPermitidas, sucursalConsulta).size();
+            int citasPendientes = pendientes.contar(empresaId, sucursalesPermitidas, sucursalConsulta);
 
             CajaSesionEntidad sesion = resolverSesionAbierta(empresaId, sucursalConsulta).orElse(null);
             if (sesion == null) {
@@ -521,19 +503,10 @@ public class ServicioCaja {
         }
 
         private boolean esCitaCobrable(CitaEntidad cita) {
-            if (cita == null) return false;
-            if (List.of("CANCELADA", "NO_ASISTIO").contains(cita.getEstado())) return false;
-            return cita.getCheckInEn() != null || "FINALIZADA".equalsIgnoreCase(cita.getEstado());
+            return ServicioSaldoCitas.esCobrable(cita);
         }
 
         /** Recibe el mapa de zona horaria pre-cargado para evitar N+1. */
-        private boolean esDelDiaOperativo(CitaEntidad cita, Map<Long, String> zonaHorariaPorSucursal) {
-            String zonaHoraria = zonaHorariaPorSucursal.getOrDefault(cita.getSucursalId(), "America/Mexico_City");
-            ZoneId zoneId = ZoneId.of(zonaHoraria);
-            LocalDate hoy = LocalDate.now(reloj.withZone(zoneId));
-            return cita.getInicio().atZone(zoneId).toLocalDate().equals(hoy);
-        }
-
         private CajaSesionResponse mapearSesion(CajaSesionEntidad sesion) {
             return new CajaSesionResponse(
                     sesion.getId(),
@@ -569,11 +542,6 @@ public class ServicioCaja {
             );
         }
 
-        private BigDecimal totalPagadoCita(Long empresaId, Long citaId) {
-            return montoSeguro(pagoCitaRepositorio.sumarPagadoPorCita(empresaId, citaId))
-                    .add(montoSeguro(ventaDetalleRepositorio.sumarServiciosPagadosPorCita(empresaId, citaId)));
-        }
-
         private MovimientoCajaResponse mapearMovimiento(MovimientoCajaEntidad movimiento) {
             return new MovimientoCajaResponse(
                     movimiento.getId(),
@@ -587,15 +555,6 @@ public class ServicioCaja {
                     movimiento.getObservaciones(),
                     de(movimiento.getRegistradoEn())
             );
-        }
-
-        /** Convierte filas [citaId, total] de queries batch en Map. */
-        private Map<Long, BigDecimal> pagosEnBatch(List<Object[]> filas) {
-            Map<Long, BigDecimal> mapa = new HashMap<>();
-            for (Object[] fila : filas) {
-                mapa.put(((Number) fila[0]).longValue(), (BigDecimal) fila[1]);
-            }
-            return mapa;
         }
 
         private BigDecimal sumar(Collection<BigDecimal> valores) {

@@ -1,0 +1,5 @@
+# Verificar R1 del cierre 005, solo lectura
+
+Autor Codex. Lee revisiones/005-cierre.md y comprueba únicamente R1 en ServicioAdminCitas.resumen/puedeVerReportes, ServicioReporteCobroCitas y ResumenAdminFinanzasPermisosTest. Sin REPORTES_ADMIN_VER o con ámbito plataforma, resumen conserva conteos, finanzasCitas vacía y puedeVerFinanzas=false; no llama al servicio de reportes. El acceso directo a ese servicio también valida el permiso. La UI overview muestra el bloque solo con el booleano de backend. No es una decisión de rol frontend. Tests completos vuelven a ejecutarse.
+
+No ejecutes comandos, no modifiques archivos, no leas .env. Devuelve solo un veredicto breve y hallazgos nuevos de R1 si los hay; este wrapper guarda tu salida, no necesitas registrar ni editar revisiones. Los R2–R4 del cierre permanecen de seguimiento. D2, T6(a) y S2 están diferidos a 007 por decisión del usuario. Staff ya se comprobó en su sesión real: Jimena, cita propia finalizada, Pagada/Pagado 200, sin Cobrar ni acciones de cierre repetidas. No des por hecho un cierre/pago real; no se ejecutaron.

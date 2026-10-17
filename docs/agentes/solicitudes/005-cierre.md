@@ -1,0 +1,9 @@
+# 005 — Revisión de cierre del paso 5 y T6-c
+
+Autor: Codex. El usuario solicita cerrar reportes, aviso de cancelación y revisión real de Staff; autoriza commit propio de 005 antes de 006. Leer las decisiones finales de revisiones/005.md: D2 y T6 quedan para 007, S2 para 007-2. No ampliar ese alcance.
+
+Revisar solo lectura el código nuevo de `ServicioReporteCobroCitas`, `ReporteCobroCitasRepositorio`, `FinanzasCitasResponse`, integración en `ServicioAdminCitas.resumen` y el componente overview de administración. Revisar tenant y alcance, periodo local para citas, periodo UTC para pagos, ausencia de ventana de Caja en deuda histórica, pagos divididos de ventas mixtas sin duplicar detalles ni productos, redondeo y moneda. Custodia/vencidos previstos como null/disponible=false hasta persistencia de 007; no se supone que la 007 existe. Resumen mantiene los campos anteriores para compatibilidad, pero la UI usa finanzasCitas por moneda y etiquetas diferenciadas. T6-c cambia el mensaje sin abrir una ruta de cancelación con pagos.
+
+Prueba nueva `ReporteCobroCitasTest` con SQL real H2 y JVM México: deuda de abril dentro de un reporte de octubre, limites de medianoche UTC, anticipo de cita futura, venta mixta con dos pagos en días distintos, otra empresa/sucursal, dos monedas, sin deuda negativa por sobrepago y custodia no inventada. Regresiones focales aprobadas (exit 0); suites completas en ejecución. No ejecutar comandos ni modificar aplicación o credenciales. No leer .env. Si hay hallazgos, indicar prioridad, archivo y prueba esperada. Registrar el veredicto sobre este bloque sin atribuir a él los cambios aprobados previamente de 005.
+
+La sesión real de Staff se está verificando con el usuario; no darla por aprobada sin evidencia. No hay migración nueva, cobros, cancelaciones ni envíos reales. No se implementa 006 ni 007 en esta entrega.

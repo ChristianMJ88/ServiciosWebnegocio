@@ -47,11 +47,14 @@ class AnticipoIncidenciaCheckoutTest {
             assertThat(detalles.sumarServiciosPagadosPorCita(8L,10L)).isEqualByComparingTo("0");
             var citas=mock(CitaRepositorio.class);var sucursales=mock(SucursalRepositorio.class);
             var sucursal=new SucursalEntidad();sucursal.setId(3L);sucursal.setNombre("Sucursal de prueba");sucursal.setZonaHoraria("America/Mexico_City");when(sucursales.findAllById(any())).thenReturn(List.of(sucursal));
-            var cita=new CitaEntidad();cita.setId(10L);cita.setSucursalId(3L);cita.setEstado("FINALIZADA");cita.setServicioId(4L);cita.setClienteId(9L);
+            var cita=new CitaEntidad();cita.setId(10L);cita.setEmpresaId(7L);cita.setSucursalId(3L);cita.setEstado("FINALIZADA");cita.setServicioId(4L);cita.setClienteId(9L);
             cita.setInicio(LocalDateTime.now(ZoneId.of(sucursal.getZonaHoraria())));cita.setPrecio(new BigDecimal("500"));cita.setMoneda("MXN");
             when(citas.findByEmpresaIdAndEstadoInOrderByInicioDesc(eq(7L),any())).thenReturn(List.of(cita));
-            var caja=new ServicioCaja(mock(CajaSesionRepositorio.class),mock(PagoCitaRepositorio.class),mock(PagoVentaRepositorio.class),detalles,
-                mock(MovimientoCajaRepositorio.class),citas,mock(ClienteRepositorio.class),mock(ServicioRepositorio.class),sucursales,new ObjectMapper(), java.time.Clock.systemUTC());
+            var pagos=mock(PagoCitaRepositorio.class);
+            var pendientes=mock(ServicioPendientesCitasCaja.class);
+        var caja=new ServicioCaja(mock(CajaSesionRepositorio.class),pagos,mock(PagoVentaRepositorio.class),
+                mock(MovimientoCajaRepositorio.class),citas,mock(ClienteRepositorio.class),mock(ServicioRepositorio.class),sucursales,new ObjectMapper(), java.time.Clock.systemUTC(),new ServicioSaldoCitas(citas,pagos,detalles),pendientes);
+        when(pendientes.consultar(eq(7L),any(),eq(3L))).thenReturn(new ServicioPendientesCitasCaja.Lote(List.of(cita),java.util.Map.of(3L,cita.getInicio().toLocalDate())));
             var cobrable=caja.listarCitasPorCobrar(7L,List.of(3L),3L).getFirst();
             assertThat(cobrable.pagado()).isEqualByComparingTo("100");assertThat(cobrable.pendiente()).isEqualByComparingTo("400");
             em.getTransaction().rollback();

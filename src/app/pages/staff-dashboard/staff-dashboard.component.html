@@ -1,4 +1,6 @@
 <section class="staff-shell">
+  @if (ultimoCierre(); as cierre) {<aside class="staff-cierre-aviso" aria-label="Resultado del cierre"><app-cita-cobro [datos]="cierre" [citaId]="cierre.citaId" /><button type="button" class="btn btn-sm" (click)="ultimoCierre.set(null)">Cerrar aviso</button></aside>}
+
   <mat-drawer-container
     class="staff-layout"
     [class.is-compact]="sidebarCompacto() && !panelMovil()"
@@ -231,7 +233,7 @@
 
         @if (seccionActiva() === 'agenda') {
           @defer {
-          <app-staff-agenda-section
+  <app-staff-agenda-section
             [totalAgenda]="totalAgenda()"
             [totalPendientes]="notificaciones()"
             [totalConfirmadas]="totalConfirmadas()"

@@ -1,3 +1,4 @@
+import { DatosCobroCita } from '../../core/caja/cobro-cita.models';
 export type AgendaThemeMode = 'dark' | 'light';
 export type AgendaViewMode = 'month' | 'week' | 'day' | 'staff';
 
@@ -35,6 +36,7 @@ export interface AgendaActionVm {
 }
 
 export interface AgendaAppointmentVm {
+  cobro?: DatosCobroCita;
   id: number;
   status: string;
   statusLabel: string;

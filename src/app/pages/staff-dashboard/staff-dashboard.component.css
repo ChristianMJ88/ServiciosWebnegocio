@@ -2366,3 +2366,5 @@ app-staff-dashboard .mat-mdc-form-field, app-staff-dashboard .mat-mdc-select { f
 @media (prefers-reduced-motion: reduce) {
   .staff-submenu, .staff-nav-item, .staff-menu-chevron, .staff-layout .mat-drawer-content { transition: none; }
 }
+
+.staff-cierre-aviso { position:fixed; z-index:1100; bottom:calc(76px + env(safe-area-inset-bottom)); right:16px; width:min(420px, calc(100vw - 32px)); padding:12px; border:1px solid var(--mat-sys-outline-variant, #dce4e1); border-radius:18px; background:var(--mat-sys-surface, white); box-shadow:0 16px 48px #172e2426; }

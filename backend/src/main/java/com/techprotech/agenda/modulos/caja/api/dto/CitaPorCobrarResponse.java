@@ -15,9 +15,19 @@ public record CitaPorCobrarResponse(
         BigDecimal pendiente,
         String moneda,
         String estadoCita,
-        String estadoPago,
+        com.techprotech.agenda.modulos.caja.aplicacion.EstadoCobroCita estadoCobro,
         BigDecimal precioLista,
         BigDecimal descuento,
-        String promocionTitulo
+        String promocionTitulo,
+        Long sucursalId,
+        String periodoCobro,
+        long diasAtraso
 ) {
+    /** Alias legado; el valor procede del mismo enum, sin un segundo cálculo. */
+    @Deprecated
+    @com.fasterxml.jackson.annotation.JsonProperty("estadoPago")
+    public String estadoPago() {
+        return estadoCobro == com.techprotech.agenda.modulos.caja.aplicacion.EstadoCobroCita.PAGADA
+                ? "PAGADO" : estadoCobro.name();
+    }
 }
