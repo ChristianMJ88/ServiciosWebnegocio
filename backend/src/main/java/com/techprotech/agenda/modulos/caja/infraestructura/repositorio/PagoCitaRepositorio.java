@@ -11,6 +11,7 @@ import java.util.List;
 
 public interface PagoCitaRepositorio extends JpaRepository<PagoCitaEntidad, Long> {
 
+
     List<PagoCitaEntidad> findByEmpresaIdAndCitaIdOrderByRegistradoEnDesc(Long empresaId, Long citaId);
 
     List<PagoCitaEntidad> findByEmpresaIdAndCajaSesionIdOrderByRegistradoEnDesc(Long empresaId, Long cajaSesionId);

@@ -91,5 +91,6 @@ class ServicioCotizacionCitasTest {
         servicio.setAnticipoTipo("PORCENTAJE"); servicio.setAnticipoValor(new BigDecimal("50"));
         assertThat(cotizar().anticipoTotal()).isEqualByComparingTo("100");
         assertThat(cotizar().requierePago()).isFalse();
+        assertThat(cotizar().reservableEnLinea()).isFalse();assertThat(cotizar().motivoNoReservable()).contains("anticipo en línea");
     }
 }

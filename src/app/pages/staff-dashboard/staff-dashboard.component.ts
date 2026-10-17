@@ -316,6 +316,7 @@ export class StaffDashboardComponent implements OnInit {
         detailEyebrow: 'Cita seleccionada',
         notes: cita.notas,
         metaFields: [
+          ...(cita.folio ? [{label: 'Folio', value: cita.folio}] : []),
           { label: 'Servicio', value: cita.servicioNombre },
           { label: 'Sucursal', value: cita.sucursalNombre },
           { label: 'Teléfono', value: cita.clienteTelefono || 'Sin teléfono' },

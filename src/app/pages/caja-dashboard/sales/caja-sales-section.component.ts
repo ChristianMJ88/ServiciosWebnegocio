@@ -1,3 +1,4 @@
+import { VentaComprobanteComponent } from '../../../shared/components/venta-comprobante.component';
 import { CommonModule } from '@angular/common';
 import { Component, DestroyRef, EventEmitter, Input, OnChanges, Output, SimpleChanges, computed, effect, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -15,7 +16,7 @@ interface LineaProducto { producto: ProductoCaja; cantidad: number; }
 @Component({
   selector: 'app-caja-sales-section',
   standalone: true,
-  imports: [CommonModule, FormsModule, MatButtonModule, MatFormFieldModule, MatInputModule, MatSelectModule, MoneyDisplayPipe],
+  imports: [VentaComprobanteComponent, CommonModule, FormsModule, MatButtonModule, MatFormFieldModule, MatInputModule, MatSelectModule, MoneyDisplayPipe],
   templateUrl: './caja-sales-section.component.html',
   styleUrl: './caja-sales-section.component.css'
 })
@@ -44,6 +45,7 @@ export class CajaSalesSectionComponent implements OnChanges {
   }
   readonly productos = signal<ProductoCaja[]>([]);
   readonly ventas = signal<VentaCaja[]>([]);
+  readonly comprobante = signal<VentaCaja | null>(null);
   readonly pendientesStaff = signal<{venta:VentaCaja;clienteNombre:string;clienteTelefono:string}[]>([]);
   ventaStaffSeleccionada: number | null = null;
   paginaStaff=0; readonly paginasStaff=signal(0);readonly totalStaff=signal(0);
@@ -52,7 +54,8 @@ export class CajaSalesSectionComponent implements OnChanges {
   readonly ordenPoint = signal<OrdenPointCaja | null>(null);
   readonly historialPoint = signal<OrdenPointCaja[]>([]);
   readonly lineas = signal<LineaProducto[]>([]);
-  readonly citaId = signal<number | null>(null);
+  readonly citaIds = signal<number[]>([]);
+  private readonly citasVersion = signal(0);
   readonly busqueda = signal('');
   readonly cargando = signal(false);
   readonly guardando = signal(false);
@@ -68,7 +71,9 @@ export class CajaSalesSectionComponent implements OnChanges {
     const termino = this.busqueda().trim().toLocaleLowerCase('es-MX');
     return this.productos().filter(item => !termino || `${item.nombre} ${item.sku} ${item.codigoBarras || ''}`.toLocaleLowerCase('es-MX').includes(termino));
   });
-  readonly citaSeleccionada = computed(() => this.citas.find(item => item.citaId === this.citaId()) ?? null);
+  readonly citasSeleccionadas = computed(() => {this.citasVersion(); return this.citas.filter(c => this.citaIds().includes(c.citaId));});
+  readonly citaSeleccionada = computed(() => this.citasSeleccionadas()[0] ?? null);
+  compatible(c: CitaPorCobrar) {const primera=this.citaSeleccionada(); return !primera || (primera.clienteId === c.clienteId && primera.sucursalId === c.sucursalId && primera.moneda === c.moneda); }
   readonly cotizacion = signal<{ subtotal: number; descuento: number; total: number; lineas: { productoId: number; precioUnitario: number; total: number }[] } | null>(null);
   readonly cotizando = signal(false);
   readonly subtotalProductos = computed(() => Number(this.cotizacion()?.total ?? 0));
@@ -85,23 +90,28 @@ export class CajaSalesSectionComponent implements OnChanges {
       onCleanup(() => subscription.unsubscribe());
     });
   }
-  readonly totalEstimado = computed(() => this.subtotalProductos() + Number(this.citaSeleccionada()?.pendiente ?? 0));
-  readonly conceptosSeleccionados = computed(() => this.lineas().reduce((total, item) => total + item.cantidad, 0) + (this.citaSeleccionada() ? 1 : 0));
+  readonly totalEstimado = computed(() => this.subtotalProductos() + this.citasSeleccionadas().reduce((total,c) => total + Number(c.pendiente),0));
+  readonly conceptosSeleccionados = computed(() => this.lineas().reduce((total, item) => total + item.cantidad, 0) + this.citasSeleccionadas().length);
   readonly moneda = computed(() => this.citaSeleccionada()?.moneda ?? this.lineas()[0]?.producto.moneda ?? 'MXN');
 
   ngOnChanges(changes: SimpleChanges): void {
+    if (changes['citas']) {this.citasVersion.update(v=>v+1); this.citaIds.update(ids=>ids.filter(id=>this.citas.some(c=>c.citaId===id)));}
     if (changes['metodosPago'] && !this.metodosPago.some(item => item.codigo === this.metodoPago)) {
       this.metodoPago = this.metodosPago[0]?.codigo ?? '';
     }
     if (changes['sucursalId']) {
       this.cuentaMovilAbierta.set(false);this.vistaPos.set('catalogo');
       this.ventaStaffSeleccionada=null;this.paginaStaff=0;this.pendientesStaff.set([]);this.totalStaff.set(0);this.paginasStaff.set(0);
-      this.cotizacion.set(null); this.lineas.set([]); this.citaId.set(null);
+      this.cotizacion.set(null); this.lineas.set([]); this.citaIds.set([]);
       if (this.sucursalId) this.cargar();
     }
   }
 
-  seleccionarCita(id: number | null): void { if(this.guardando())return;this.citaId.set(this.citaId() === id ? null : id); }
+  seleccionarCita(id: number | null): void {
+    if(this.guardando() || id === null) return;
+    const cita=this.citas.find(c=>c.citaId === id); if (!cita || !this.compatible(cita)) return;
+    this.citaIds.update(ids=>ids.includes(id)?ids.filter(i=>i!==id):[...ids,id]);
+  }
   cantidad(productoId: number): number { return this.lineas().find(item => item.producto.id === productoId)?.cantidad ?? 0; }
   precioCotizado(productoId: number) { return this.cotizacion()?.lineas.find(item => item.productoId === productoId); }
   agregar(producto: ProductoCaja): void {
@@ -147,20 +157,21 @@ export class CajaSalesSectionComponent implements OnChanges {
   }
 
   cobrar(): void {
-    if (!this.sucursalId || this.cotizando() || (this.lineas().length && !this.cotizacion()) || (!this.citaId() && !this.lineas().length) || !this.metodoPago || !this.cajaAbierta) return;
+    if (!this.sucursalId || this.cotizando() || (this.lineas().length && !this.cotizacion()) || (!this.citaIds().length && !this.lineas().length) || !this.metodoPago || !this.cajaAbierta) return;
     if (this.metodoPago === 'MERCADO_PAGO_POINT') { this.cobrarConPoint(); return; }
     this.guardando.set(true); this.error.set(''); this.mensaje.set('');
     this.caja.registrarVenta({
-      sucursalId: this.sucursalId, citaId: this.citaId(), clienteId: null,
+      sucursalId: this.sucursalId, citaId: null, citaIds: this.citaIds(), clienteId: null,
       productos: this.lineas().map(item => ({ productoId: item.producto.id, cantidad: item.cantidad })),
       metodoPago: this.metodoPago, referencia: this.referencia.trim() || null, observaciones: this.observaciones.trim() || null
     }).pipe(finalize(() => this.guardando.set(false))).subscribe({
       next: venta => {
-        this.lineas.set([]); this.citaId.set(null); this.referencia = ''; this.observaciones = '';
+        this.comprobante.set(venta);
+        this.lineas.set([]); this.citaIds.set([]); this.referencia = ''; this.observaciones = '';
         this.mensaje.set(`Venta ${venta.folio} cobrada correctamente.`); this.ventas.update(items => [venta, ...items]);
         this.saleCompleted.emit(); this.cargar();
       },
-      error: error => this.error.set(error?.error?.detail || error?.error?.message || 'No fue posible registrar la venta.')
+      error: error => this.error.set(error?.error?.mensaje || error?.error?.detail || error?.error?.message || 'No fue posible registrar la venta.')
     });
   }
 
@@ -170,7 +181,7 @@ export class CajaSalesSectionComponent implements OnChanges {
     const venta = this.payloadVenta('MERCADO_PAGO_POINT');
     this.caja.crearOrdenPoint(this.terminalPointId, venta, crypto.randomUUID()).subscribe({
       next: orden => { this.ordenPoint.set(orden); this.mensaje.set('La cuenta fue enviada a la terminal. Esperando el pago…'); this.vigilarPoint(orden.id); },
-      error: error => { this.guardando.set(false); this.error.set(error?.error?.detail || error?.error?.message || 'No fue posible enviar el cobro a la terminal.') }
+      error: error => { this.guardando.set(false); this.error.set(error?.error?.mensaje || error?.error?.detail || error?.error?.message || 'No fue posible enviar el cobro a la terminal.') }
     });
   }
 
@@ -225,7 +236,7 @@ export class CajaSalesSectionComponent implements OnChanges {
       next: orden => {
         this.ordenPoint.set(orden);
         if (orden.estado === 'APROBADO') {
-          this.lineas.set([]); this.citaId.set(null); this.referencia = ''; this.observaciones = '';
+          this.lineas.set([]); this.citaIds.set([]); this.referencia = ''; this.observaciones = '';
           this.ventaStaffSeleccionada=null; this.mensaje.set(`Pago aprobado en ${orden.terminalNombre}. Venta ${orden.folioVenta} conciliada.`);
           this.saleCompleted.emit(); this.cargar();
         } else if (this.esEstadoFinalPoint(orden.estado)) {
@@ -242,7 +253,7 @@ export class CajaSalesSectionComponent implements OnChanges {
 
   private payloadVenta(metodoPago: string) {
     return {
-      sucursalId: this.sucursalId!, citaId: this.citaId(), clienteId: null,
+      sucursalId: this.sucursalId!, citaId: null, citaIds: this.citaIds(), clienteId: null,
       productos: this.lineas().map(item => ({ productoId: item.producto.id, cantidad: item.cantidad })),
       metodoPago, referencia: this.referencia.trim() || null, observaciones: this.observaciones.trim() || null
     };

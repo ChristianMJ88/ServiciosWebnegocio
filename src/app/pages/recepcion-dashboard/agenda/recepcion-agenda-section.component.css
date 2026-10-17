@@ -1,3 +1,7 @@
-:host {
-  display: block;
-}
+:host { display:block; min-width:0; }
+.agenda-segments { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:.5rem; margin:1rem 0; }
+.agenda-segments button { display:flex; align-items:center; justify-content:center; flex-wrap:wrap; gap:.4rem; min-width:0; min-height:44px; padding:.65rem .5rem; border:1px solid var(--operation-line); border-radius:12px; color:var(--operation-muted); background:var(--operation-surface); font:inherit; font-size:.85rem; cursor:pointer; }
+.agenda-segments button[aria-pressed="true"] { background:var(--operation-brand-dark); border-color:var(--operation-brand-dark); color:white; }
+.agenda-segments button:focus-visible { outline:3px solid var(--operation-brand); outline-offset:3px; }
+.agenda-segments span { font-variant-numeric:tabular-nums; font-weight:700; }
+@media(max-width:575px) { .agenda-segments {gap:.35rem;} .agenda-segments button { flex-direction:column; gap:.2rem; font-size:.78rem; } }

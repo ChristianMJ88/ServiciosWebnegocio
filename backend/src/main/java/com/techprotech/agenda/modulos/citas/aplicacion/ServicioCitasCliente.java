@@ -259,7 +259,7 @@ public class ServicioCitasCliente {
                 cancelable,
                 clienteNombre,
                 clienteCorreo,
-                clienteTelefono
+                clienteTelefono, cita.getFolio()
         );
     }
 }

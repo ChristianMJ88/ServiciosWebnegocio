@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Optional;
 
 public interface ServicioRepositorio extends JpaRepository<ServicioEntidad, Long> {
+    boolean existsByEmpresaIdAndActivoTrueAndRequiereAnticipoTrue(Long empresaId);
 
     @Query("""
             select s

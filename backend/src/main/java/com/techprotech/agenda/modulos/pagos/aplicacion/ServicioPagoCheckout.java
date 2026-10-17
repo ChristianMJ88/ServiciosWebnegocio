@@ -35,6 +35,8 @@ public class ServicioPagoCheckout {
     private final ServicioMetodosPagoCheckout metodosPago;
     private final ServicioComisionPlataforma comisiones;
 
+    private final com.techprotech.agenda.modulos.pagos.aplicacion.ServicioAceptacionPoliticaCheckout aceptacionPolitica;
+
     public ServicioPagoCheckout(ServicioConfiguracionCheckout configuracionCheckout,
                                 EmpresaSitioConfigRepositorio sitios,
                                 EmpresaCheckoutConfigRepositorio configuraciones,
@@ -46,7 +48,8 @@ public class ServicioPagoCheckout {
                                 ServicioInventarioCheckout inventario,
                                 ServicioEstadoPagoCheckout estados,
                                 ServicioMetodosPagoCheckout metodosPago,
-                                ServicioComisionPlataforma comisiones, java.time.Clock reloj) {
+                                ServicioComisionPlataforma comisiones, java.time.Clock reloj, com.techprotech.agenda.modulos.pagos.aplicacion.ServicioAceptacionPoliticaCheckout aceptacionPolitica) {
+        this.aceptacionPolitica = aceptacionPolitica;
         this.reloj = reloj;
         this.configuracionCheckout = configuracionCheckout;
         this.sitios = sitios;
@@ -87,6 +90,7 @@ public class ServicioPagoCheckout {
         ProveedorPagosPort adaptador = adaptadores.stream().filter(item -> item.proveedor() == proveedorDominio)
                 .findFirst().orElseThrow(() -> error(HttpStatus.SERVICE_UNAVAILABLE, "El proveedor de pago no está disponible"));
 
+        aceptacionPolitica.validarAntesDePagar(orden);
         inventario.reservar(orden.getEmpresaId(), orden.getId());
         IntentoPagoCheckoutEntidad intento = nuevoIntento(orden, proveedor, clave,
                 request.metodoPagoId().trim(), request.tipoPagoId());
@@ -155,6 +159,7 @@ public class ServicioPagoCheckout {
         ProveedorPagosPort adaptador = adaptadores.stream().filter(item -> item.proveedor() == proveedor(proveedor.getCodigo()))
                 .findFirst().orElseThrow(() -> error(HttpStatus.SERVICE_UNAVAILABLE, "El proveedor de pago no está disponible"));
 
+        aceptacionPolitica.validarAntesDePagar(orden);
         inventario.reservar(orden.getEmpresaId(), orden.getId());
         orden.setExpiraEn(LocalDateTime.now(reloj).plusDays(metodo.getVigenciaDias()));
         ordenes.save(orden);

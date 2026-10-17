@@ -20,7 +20,8 @@ public record CitaClienteResponse(
         boolean cancelable,
         String clienteNombre,
         String clienteCorreo,
-        String clienteTelefono
+        String clienteTelefono,
+        String folio
 ) {
     @com.fasterxml.jackson.annotation.JsonProperty("notificarEnAgenda")
     public boolean notificarEnAgenda() { return estado != null && java.util.Set.of("PENDIENTE","CONFIRMADA").contains(estado); }

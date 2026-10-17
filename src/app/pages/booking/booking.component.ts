@@ -126,6 +126,7 @@ private readonly cargarDiasSeleccion=effect(() => {
   selectedDate = signal<string | null>(null);
   readonly prestadoresElegidos=signal<Record<number,number|null>>({});
   readonly errorStaff=signal('');
+  readonly foliosReserva = signal<string[]>([]);
   readonly confirmacionExpiraEn=signal<string|null>(null);
   selectedHour = signal<string | null>(null);
   selectedGroupId = signal<number | null>(null);
@@ -715,6 +716,7 @@ private cargarDiasDisponibles(servicios:number[],desde?:string): void {
     const empresaId = this.tenantContext.empresaId();
     if (!empresaId) { this.errorMessage = 'No se pudo identificar el negocio. Recarga la página para continuar.'; return; }
     if (this.cotizando() || !this.cotizacion()) { this.errorMessage = 'Espera a que confirmemos el precio de tu reserva.'; return; }
+    if (this.cotizacion()?.reservableEnLinea === false) { this.errorMessage = this.cotizacion()?.motivoNoReservable || 'La reserva en línea no está disponible.'; return; }
     if (this.bookingForm.invalid || !this.selectedDate() || !itinerary || !this.selectedSlot) {
       this.bookingForm.markAllAsTouched();
       return;
@@ -781,6 +783,7 @@ private cargarDiasDisponibles(servicios:number[],desde?:string): void {
             return;
           }
 
+          this.foliosReserva.set((response?.id ? [response] : response?.citas ?? []).map((c: {folio?: string}) => c.folio).filter((f: unknown): f is string => typeof f === 'string' && !!f));
           this.confirmacionExpiraEn.set(response?.confirmacionExpiraEn ?? response?.citas?.[0]?.confirmacionExpiraEn ?? null);
           if (response?.id || response?.total) {
             const appointmentIds = response?.id

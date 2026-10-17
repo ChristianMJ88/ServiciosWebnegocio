@@ -24,6 +24,11 @@ export class RecepcionAgendaSectionComponent {
   @Output() noShow = new EventEmitter<number>();
   @Output() cancel = new EventEmitter<number>();
 
+  seccion: 'ACTIVA' | 'FINALIZADA' | 'CANCELADA' = 'ACTIVA';
+  readonly secciones = [{codigo:'ACTIVA',etiqueta:'Activas'},{codigo:'FINALIZADA',etiqueta:'Finalizadas'},{codigo:'CANCELADA',etiqueta:'Canceladas'}] as const;
+  get citasVisibles() { return this.citas.filter(c => c.seccionAgenda === this.seccion); }
+  contar(seccion: string) { return this.citas.filter(c => c.seccionAgenda === seccion).length; }
+  get titulo() { return this.secciones.find(s => s.codigo === this.seccion)!.etiqueta; }
   etiquetaEstado(codigo: string): string {
     return this.estadosCita.find(estado => estado.codigo === codigo)?.etiqueta ?? codigo;
   }

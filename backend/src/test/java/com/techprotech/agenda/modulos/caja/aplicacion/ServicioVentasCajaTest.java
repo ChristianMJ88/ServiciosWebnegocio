@@ -53,7 +53,7 @@ class ServicioVentasCajaTest {
         var zonas = mock(com.techprotech.agenda.modulos.productos.infraestructura.repositorio.ZonaPrecioProductoRepositorio.class);
         var preciosZona = mock(com.techprotech.agenda.modulos.productos.infraestructura.repositorio.PrecioZonaProductoRepositorio.class);
         var bus=mock(org.springframework.context.ApplicationEventPublisher.class);
-        ServicioVentasCaja servicio = new ServicioVentasCaja(ventas, detalles, pagos, sesiones, movimientos, pagosCita, citas, clientes, servicios, productos, existencias, sucursales, inventario, descuentos, zonas, preciosZona, mock(com.techprotech.agenda.modulos.productos.aplicacion.ServicioComisionesDevengadas.class), java.time.Clock.fixed(java.time.Instant.parse("2026-10-15T01:00:00Z"),java.time.ZoneOffset.UTC), com.techprotech.agenda.compartido.tiempo.TiempoPruebas.zona(java.time.ZoneId.of("America/Mexico_City")), new com.techprotech.agenda.modulos.citas.aplicacion.PublicadorPagosCitas(citas, new com.techprotech.agenda.modulos.citas.aplicacion.PublicadorEventosCita(bus, java.time.Clock.systemUTC())));
+        ServicioVentasCaja servicio = new ServicioVentasCaja(ventas, detalles, pagos, sesiones, movimientos, pagosCita, citas, clientes, servicios, productos, existencias, sucursales, inventario, descuentos, zonas, preciosZona, mock(com.techprotech.agenda.modulos.productos.aplicacion.ServicioComisionesDevengadas.class), java.time.Clock.fixed(java.time.Instant.parse("2026-10-15T01:00:00Z"),java.time.ZoneOffset.UTC), com.techprotech.agenda.compartido.tiempo.TiempoPruebas.zona(java.time.ZoneId.of("America/Mexico_City")), new com.techprotech.agenda.modulos.citas.aplicacion.PublicadorPagosCitas(citas, new com.techprotech.agenda.modulos.citas.aplicacion.PublicadorEventosCita(bus, java.time.Clock.systemUTC())), new ServicioSaldoCitas(citas,pagosCita,detalles));
 
         SucursalEntidad sucursal = new SucursalEntidad(); sucursal.setId(5L); sucursal.setEmpresaId(1L); sucursal.setActiva(true);
         CajaSesionEntidad sesion = new CajaSesionEntidad(); sesion.setId(8L); sesion.setEmpresaId(1L); sesion.setSucursalId(5L); sesion.setEstado("ABIERTA");
@@ -79,7 +79,7 @@ class ServicioVentasCajaTest {
         when(sesiones.findByEmpresaIdAndSucursalIdAndEstado(1L, 5L, "ABIERTA")).thenReturn(Optional.of(sesion));
         when(productos.findAllById(any())).thenReturn(List.of(producto));
         when(productos.findByEmpresaIdAndIdIn(eq(1L), any())).thenReturn(List.of(producto));
-        when(citas.findByIdAndEmpresaId(10L, 1L)).thenReturn(Optional.of(cita));
+        when(citas.bloquearPorIdYEmpresa(10L, 1L)).thenReturn(Optional.of(cita));
         when(servicios.findByIdAndEmpresaId(20L, 1L)).thenReturn(Optional.of(conceptoServicio));
         when(pagosCita.sumarPagadoPorCita(1L, 10L)).thenReturn(BigDecimal.ZERO);
         when(detalles.sumarServiciosPagadosPorCita(1L, 10L)).thenReturn(BigDecimal.ZERO);

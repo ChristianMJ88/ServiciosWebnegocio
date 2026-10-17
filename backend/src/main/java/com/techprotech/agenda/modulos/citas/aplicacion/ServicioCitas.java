@@ -192,6 +192,7 @@ private CitaCreadaResponse crearCita(CrearCitaRequest request, boolean programar
         cita.setPrestadorId(prestador.getUsuarioId());
         cita.setClienteId(clienteId);
         cita.setEstado("PENDIENTE");
+        cita.setFolio(nuevoFolioReserva(empresaId));
         cita.setInicio(inicio);
         cita.setFin(fin);
         aplicarCotizacion(cita,cotizacion,0,request.promocionId());
@@ -236,7 +237,7 @@ private CitaCreadaResponse crearCita(CrearCitaRequest request, boolean programar
                 correoConfirmacionProgramado,
                 false,
                 cita.getPrecioLista(), cita.getDescuento(), cita.getPrecio(),
-                plan.requierePago(), cita.getImporteRequerido(), cita.getPagoExpiraEn()==null?null:cita.getPagoExpiraEn().atOffset(java.time.ZoneOffset.UTC), cita.getPoliticaCobro(), politicaPago.limiteConfirmacion(cita,zona)
+                plan.requierePago(), cita.getImporteRequerido(), cita.getPagoExpiraEn()==null?null:cita.getPagoExpiraEn().atOffset(java.time.ZoneOffset.UTC), cita.getPoliticaCobro(), politicaPago.limiteConfirmacion(cita,zona), cita.getFolio()
         );
     }
 
@@ -329,6 +330,7 @@ var plan=politicaPago.plan(empresaId,publico,politicas.stream().map(PoliticaCobr
                 request.telefonoCliente()
         );
         List<CitaCreadaResponse> citas = new ArrayList<>();
+        String folioReserva = nuevoFolioReserva(empresaId);
         int indiceCotizacion = 0;
         for (RangoReservaValidado rango : rangos) {
             ServicioEntidad servicio = servicioRepositorio.findByIdAndEmpresaIdAndActivoTrue(rango.servicioId(), empresaId)
@@ -343,6 +345,7 @@ var plan=politicaPago.plan(empresaId,publico,politicas.stream().map(PoliticaCobr
             cita.setEstado("PENDIENTE");
             cita.setInicio(rango.inicio().toLocalDateTime());
             cita.setFin(rango.fin().toLocalDateTime());
+            cita.setFolio(rangos.size() > 1 ? com.techprotech.agenda.modulos.citas.dominio.FolioCita.miembro(folioReserva, indiceCotizacion + 1) : folioReserva);
             aplicarCotizacion(cita,cotizacion,indiceCotizacion++,request.promocionId());
             politicaPago.aplicar(cita,plan,politicas.get(indiceCotizacion-1));
             cita.setMoneda(servicio.getMoneda());
@@ -377,7 +380,7 @@ var plan=politicaPago.plan(empresaId,publico,politicas.stream().map(PoliticaCobr
                     correoConfirmacionProgramado,
                     false,
                     cita.getPrecioLista(), cita.getDescuento(), cita.getPrecio(),
-                plan.requierePago(), cita.getImporteRequerido(), cita.getPagoExpiraEn()==null?null:cita.getPagoExpiraEn().atOffset(java.time.ZoneOffset.UTC), cita.getPoliticaCobro(), politicaPago.limiteConfirmacion(cita,zona)
+                plan.requierePago(), cita.getImporteRequerido(), cita.getPagoExpiraEn()==null?null:cita.getPagoExpiraEn().atOffset(java.time.ZoneOffset.UTC), cita.getPoliticaCobro(), politicaPago.limiteConfirmacion(cita,zona), cita.getFolio()
             ));
         }
 
@@ -525,4 +528,13 @@ private PoliticaCobroServicio politicaServicio(java.math.BigDecimal neto,Servici
             OffsetDateTime fin
     ) {
     }
+    private String nuevoFolioReserva(Long empresaId) {
+        for (int intento = 0; intento < 5; intento++) {
+            String candidato = com.techprotech.agenda.modulos.citas.dominio.FolioCita.nuevo();
+            if (!citaRepositorio.existeFolioReserva(empresaId, candidato)) return candidato;
+        }
+        throw new org.springframework.web.server.ResponseStatusException(org.springframework.http.HttpStatus.CONFLICT,
+                "No fue posible asignar un folio. Vuelve a intentar la reserva");
+    }
+
 }

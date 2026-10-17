@@ -61,6 +61,8 @@ public class ServicioOrdenCheckout {
     private final ServicioCapacidadesEmpresa capacidades;
     private final com.techprotech.agenda.modulos.productos.infraestructura.repositorio.ProductoRepositorio productos;
 
+    private final com.techprotech.agenda.modulos.pagos.aplicacion.ServicioAceptacionPoliticaCheckout aceptacionPolitica;
+
     public ServicioOrdenCheckout(ServicioConfiguracionCheckout configuracionCheckout,
                                  EmpresaSitioConfigRepositorio sitios, SucursalRepositorio sucursales,
                                  ServicioCotizacionProductos cotizadorProductos, CitaRepositorio citas,
@@ -70,7 +72,8 @@ public class ServicioOrdenCheckout {
                                  PropiedadesCheckout propiedades, ServicioValidacionDirecciones direcciones,
                                  ServicioCotizacionesEnvio cotizacionesEnvio,
                                  ServicioCapacidadesEmpresa capacidades,
-                                 com.techprotech.agenda.modulos.productos.infraestructura.repositorio.ProductoRepositorio productos, com.techprotech.agenda.modulos.disponibilidad.aplicacion.ServicioConfiguracionReservas reservas, java.time.Clock reloj) {
+                                 com.techprotech.agenda.modulos.productos.infraestructura.repositorio.ProductoRepositorio productos, com.techprotech.agenda.modulos.disponibilidad.aplicacion.ServicioConfiguracionReservas reservas, java.time.Clock reloj, com.techprotech.agenda.modulos.pagos.aplicacion.ServicioAceptacionPoliticaCheckout aceptacionPolitica) {
+        this.aceptacionPolitica = aceptacionPolitica;
         this.reloj = reloj;
         this.configuracionCheckout = configuracionCheckout;
         this.sitios = sitios;
@@ -98,7 +101,10 @@ public class ServicioOrdenCheckout {
         EmpresaSitioConfigEntidad sitio = sitio(slug);
         capacidades.exigirSuscripcion(sitio.getEmpresaId());
         Optional<CheckoutOrdenEntidad> existente = ordenes.findByEmpresaIdAndIdempotencia(sitio.getEmpresaId(), idempotencia.trim());
-        if (existente.isPresent()) return mapear(existente.get());
+        if (existente.isPresent()) {
+            aceptacionPolitica.validarReintento(existente.get(), request);
+            return mapear(existente.get());
+        }
         ConfiguracionCheckoutPublicaResponse config = configuracionCheckout.obtenerPublica(slug);
         if (!config.habilitado()) throw error(HttpStatus.CONFLICT, "El checkout no está habilitado para este negocio");
         sucursales.findByIdAndEmpresaIdAndActivaTrue(request.sucursalId(), sitio.getEmpresaId())
@@ -134,6 +140,7 @@ public class ServicioOrdenCheckout {
         if (total.signum() <= 0) throw error(HttpStatus.CONFLICT, "La orden no tiene saldo por cobrar");
 
         CheckoutOrdenEntidad orden = new CheckoutOrdenEntidad();
+        aceptacionPolitica.aceptar(orden, sitio.getEmpresaId(), request, lineas.stream().anyMatch(l -> "SERVICIO".equals(l.tipo())));
         orden.setPublicId(UUID.randomUUID().toString());
         orden.setEmpresaId(sitio.getEmpresaId());
         orden.setSucursalId(request.sucursalId());

@@ -19,7 +19,7 @@ class ServicioCorreoCitasTest {
         ServicioCorreoCitas servicio = new ServicioCorreoCitas(
                 crearServicioConfiguracion(new ConfiguracionCorreoResolvida(false, ProveedorCorreo.SMTP, null, null, null, null, 0, null, null, false, false, null, null, null, null, null, null)),
                 clienteCorreoFalso
-        , java.time.Clock.systemUTC());
+        , java.time.Clock.systemUTC(), org.mockito.Mockito.mock(com.techprotech.agenda.modulos.citas.infraestructura.repositorio.CitaRepositorio.class), org.mockito.Mockito.mock(com.techprotech.agenda.modulos.sitio.infraestructura.repositorio.EmpresaSitioConfigRepositorio.class), "https://example.com", org.mockito.Mockito.mock(com.techprotech.agenda.modulos.politicas.aplicacion.ServicioPoliticaEmpresa.class));
 
         boolean lanzo = false;
         try {
@@ -56,14 +56,14 @@ class ServicioCorreoCitasTest {
                         null
                 )),
                 clienteCorreoFalso
-        , java.time.Clock.systemUTC());
+        , java.time.Clock.systemUTC(), org.mockito.Mockito.mock(com.techprotech.agenda.modulos.citas.infraestructura.repositorio.CitaRepositorio.class), org.mockito.Mockito.mock(com.techprotech.agenda.modulos.sitio.infraestructura.repositorio.EmpresaSitioConfigRepositorio.class), "https://example.com", org.mockito.Mockito.mock(com.techprotech.agenda.modulos.politicas.aplicacion.ServicioPoliticaEmpresa.class));
 
         boolean enviado = servicio.enviarConfirmacion(25L, crearConfirmacion());
 
         assertTrue(enviado);
         assertTrue(clienteCorreoFalso.fueInvocado);
         assertEquals("cliente@correo.com", clienteCorreoFalso.mensaje.destinatario());
-        assertEquals("Confirmacion de tu cita #25 | Empresa Demo", clienteCorreoFalso.mensaje.asunto());
+        assertEquals("Confirmacion de tu cita FL-ABCDEFGH | Empresa Demo", clienteCorreoFalso.mensaje.asunto());
         assertEquals("reply@tenant.com", clienteCorreoFalso.mensaje.responderA());
         assertTrue(clienteCorreoFalso.mensaje.textoPlano().contains("Empresa Demo"));
         assertTrue(clienteCorreoFalso.mensaje.contenidoHtml().contains("<html"));
@@ -98,7 +98,7 @@ class ServicioCorreoCitasTest {
                         null
                 )),
                 new ClienteCorreoFalso()
-        , java.time.Clock.systemUTC());
+        , java.time.Clock.systemUTC(), org.mockito.Mockito.mock(com.techprotech.agenda.modulos.citas.infraestructura.repositorio.CitaRepositorio.class), org.mockito.Mockito.mock(com.techprotech.agenda.modulos.sitio.infraestructura.repositorio.EmpresaSitioConfigRepositorio.class), "https://example.com", org.mockito.Mockito.mock(com.techprotech.agenda.modulos.politicas.aplicacion.ServicioPoliticaEmpresa.class));
 
         assertFalse(servicio.estaHabilitado(12L));
     }
@@ -118,7 +118,7 @@ class ServicioCorreoCitasTest {
                 ZoneId.of("America/Mexico_City"),
                 new BigDecimal("250.00"),
                 "MXN"
-        );
+        , "FL-ABCDEFGH", "https://example.com/e/negocio/politicas");
     }
 
     private ServicioConfiguracionCorreoEmpresa crearServicioConfiguracion(ConfiguracionCorreoResolvida configuracion) {

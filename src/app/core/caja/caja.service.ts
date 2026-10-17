@@ -43,6 +43,8 @@ export interface CajaSesion {
 }
 
 export interface CitaPorCobrar {
+  clienteId: number;
+  folio?: string | null;
   sucursalId?: number;
   periodoCobro?: string;
   diasAtraso?: number;
@@ -146,6 +148,7 @@ export interface ProductoCaja {
 export interface CatalogoVentaCaja { productos: ProductoCaja[]; }
 export interface ProductoVentaPayload { productoId: number; cantidad: number; }
 export interface RegistrarVentaPayload {
+  citaIds?: number[];
   ventaPendienteId?: number | null;
   sucursalId: number;
   citaId: number | null;

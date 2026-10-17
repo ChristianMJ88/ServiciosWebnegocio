@@ -151,7 +151,7 @@
     </section>
   }
 }
-                        @if(cotizacion(); as presupuesto) { <p class="booking-inline-note" role="status">@if(presupuesto.requierePago) {Este servicio requiere pago para apartar tu horario: {{ presupuesto.importeRequeridoTotal | appMoney:presupuesto.moneda:2:2 }}. Tu cita se confirma al aprobarse el pago.} @else {Tu cita quedará pendiente de confirmación. @if(presupuesto.importeRequeridoTotal) {El anticipo de {{ presupuesto.importeRequeridoTotal | appMoney:presupuesto.moneda:2:2 }} se paga en el negocio.} @else {Este servicio no requiere anticipo.}}</p> }
+                        @if(cotizacion(); as presupuesto) { <p class="booking-inline-note" role="status">@if(presupuesto.reservableEnLinea === false) {{{ presupuesto.motivoNoReservable }}} @else if(presupuesto.requierePago) {Este servicio requiere pago para apartar tu horario: {{ presupuesto.importeRequeridoTotal | appMoney:presupuesto.moneda:2:2 }}. Tu cita se confirma al aprobarse el pago.} @else {Tu cita quedará pendiente de confirmación. @if(presupuesto.importeRequeridoTotal) {Anticipo requerido: {{ presupuesto.importeRequeridoTotal | appMoney:presupuesto.moneda:2:2 }}.} @else {Este servicio no requiere anticipo.}}</p> }
                         <section class="booking-service-browser" [attr.aria-label]="catalogContext()">
                           <header class="booking-service-browser__header">
                             <div><span>Explorar</span><h3>{{ catalogContext() }}</h3></div>
@@ -586,7 +586,7 @@
                           </div>
                         </div>
                         <div class="d-grid mt-4">
-                          <button type="submit" [disabled]="bookingForm.invalid || isSubmitting() || cotizando() || !cotizacion()" class="btn btn-primary rounded-pill shadow-lg py-3">
+                          <button type="submit" [disabled]="bookingForm.invalid || isSubmitting() || cotizando() || !cotizacion() || cotizacion()?.reservableEnLinea === false" class="btn btn-primary rounded-pill shadow-lg py-3">
                             @if (!isSubmitting()) {
                               <span>{{ cotizacion()?.requierePago ? 'Reservar y pagar' : 'Reservar cita' }} @if(cotizacion()?.requierePago) { {{ cotizacion()!.importeRequeridoTotal | appMoney:cotizacion()!.moneda:2:2 }} } <i class="bi bi-arrow-right ms-2" aria-hidden="true"></i></span>
                             }
@@ -612,6 +612,7 @@
                         <i class="bi me-2 h4 mb-0 booking-accent" [class.bi-check-circle-fill]="submitted()" [class.bi-exclamation-octagon-fill]="!submitted()"></i>
                         @if (submitted()) {
                           <strong class="booking-accent">Tu cita está pendiente de confirmación.</strong>
+                          @for (folio of foliosReserva(); track folio) {<span class="d-block mt-2">Folio: <strong>{{ folio }}</strong></span>}
                           @if(confirmacionExpiraEn()) {<span>Confírmala antes de {{confirmacionExpiraEn() | date:'medium'}} o el horario se liberará.</span>}
                         }
                         @if (!submitted() && errorMessage) {
@@ -630,7 +631,7 @@
 
           <div class="col-lg-4 col-xl-4 booking-cart-column">
             <aside class="booking-aside">
-              <app-reservation-cart [services]="selectedServices()" [branch]="selectedBranch?.nombre || ''" [date]="selectedDate() ? (selectedDate() | date:'dd MMM':'':'es') || '' : ''" [time]="selectedSlot?.hora ? selectedSlot!.hora + ' – ' + itineraryEndHour(selectedItinerary()) : ''" [actionLabel]="cartActionLabel()" [quote]="cotizacion()" [pricePending]="cotizando()" [disabled]="isSubmitting() || loadingCatalog() || cotizando() || !cotizacion()" (remove)="removeSelectedService($event)" (proceed)="continueBooking()" />
+              <app-reservation-cart [services]="selectedServices()" [branch]="selectedBranch?.nombre || ''" [date]="selectedDate() ? (selectedDate() | date:'dd MMM':'':'es') || '' : ''" [time]="selectedSlot?.hora ? selectedSlot!.hora + ' – ' + itineraryEndHour(selectedItinerary()) : ''" [actionLabel]="cartActionLabel()" [quote]="cotizacion()" [pricePending]="cotizando()" [disabled]="isSubmitting() || loadingCatalog() || cotizando() || !cotizacion() || cotizacion()?.reservableEnLinea === false" (remove)="removeSelectedService($event)" (proceed)="continueBooking()" />
               @if (tenantContext.whatsappHabilitado()) {
               <div class="booking-aside__card booking-aside__contact">
                 <span class="booking-aside__label">Ayuda rápida</span>

@@ -21,7 +21,9 @@ public record CitaPorCobrarResponse(
         String promocionTitulo,
         Long sucursalId,
         String periodoCobro,
-        long diasAtraso
+        long diasAtraso,
+        String folio,
+        Long clienteId
 ) {
     /** Alias legado; el valor procede del mismo enum, sin un segundo cálculo. */
     @Deprecated

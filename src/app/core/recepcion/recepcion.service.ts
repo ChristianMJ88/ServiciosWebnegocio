@@ -57,6 +57,8 @@ export interface FranjaRecepcionDisponible {
 }
 
 export interface CitaRecepcion extends DatosCobroCita {
+  seccionAgenda: 'ACTIVA' | 'FINALIZADA' | 'CANCELADA';
+  folio?: string | null;
   puedeCerrar?: boolean;
   puedeCancelar?: boolean;
   estadoEtiqueta?:string;

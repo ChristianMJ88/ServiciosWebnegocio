@@ -9,6 +9,7 @@ const redirectComponent = () => import('./pages/platform-redirect/platform-redir
   .then((m) => m.PlatformRedirectComponent);
 
 export const publicContentRoutes: Routes = [
+  { path: 'politicas', canMatch: [tenantHostMatch], resolve: {tenant: tenantHostResolver}, loadComponent: () => import('./pages/business-policy/business-policy.component').then(m => m.BusinessPolicyComponent) },
   { path: 'negocios', canMatch: [() => inject(PlatformHostService).isKnownPlatformHost()],
     loadComponent: () => import('./pages/marketplace/marketplace.component').then(m => m.MarketplaceComponent) },
   {
@@ -68,6 +69,7 @@ export const publicContentRoutes: Routes = [
   {
     path: 'e/:slug', resolve: { tenant: tenantResolver },
     children: [
+      { path: 'politicas', loadComponent: () => import('./pages/business-policy/business-policy.component').then(m => m.BusinessPolicyComponent) },
       { path: '', loadComponent: () => import('./pages/home/home.component').then((m) => m.HomeComponent) },
       { path: 'servicios', loadComponent: () => import('./pages/services/services.component').then((m) => m.ServicesComponent) },
       { path: 'productos', loadComponent: () => import('./pages/products/products.component').then((m) => m.ProductsComponent) },

@@ -22,9 +22,12 @@ public class ServicioEstadoPagoCheckout {
     private final EntityManager entityManager;
     private final Clock reloj;
 
+    private final com.techprotech.agenda.modulos.pagos.aplicacion.ServicioAceptacionPoliticaCheckout aceptacionPolitica;
+
     public ServicioEstadoPagoCheckout(IntentoPagoCheckoutRepositorio intentos, CheckoutOrdenRepositorio ordenes,
             ServicioInventarioCheckout inventario, ServicioConfirmacionCitasCheckout citas,
-            ServicioConciliacionPagos conciliacion, EntityManager entityManager, Clock reloj) {
+            ServicioConciliacionPagos conciliacion, EntityManager entityManager, Clock reloj, com.techprotech.agenda.modulos.pagos.aplicacion.ServicioAceptacionPoliticaCheckout aceptacionPolitica) {
+        this.aceptacionPolitica = aceptacionPolitica;
         this.intentos = intentos; this.ordenes = ordenes; this.inventario = inventario;
         this.citas = citas; this.conciliacion = conciliacion; this.entityManager = entityManager; this.reloj = reloj;
     }
@@ -53,6 +56,7 @@ public class ServicioEstadoPagoCheckout {
         Long empresa = intento.getEmpresaId(); Long id = intento.getCheckoutOrdenId();
         if (resultado.estado() == EstadoPago.APROBADO) {
             boolean stock = inventario.confirmarSiDisponible(empresa, id);
+            aceptacionPolitica.acreditarAceptacion(orden);
             boolean reserva = stock && citas.confirmar(empresa, id);
             if (!reserva) {
                 orden.setRequiereConciliacion(true);

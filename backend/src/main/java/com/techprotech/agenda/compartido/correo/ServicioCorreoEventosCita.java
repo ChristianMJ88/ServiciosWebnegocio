@@ -48,6 +48,8 @@ public class ServicioCorreoEventosCita {
     private final ClienteCorreoSaliente clienteCorreo;
     private final String origenPublico;
 
+    private final com.techprotech.agenda.modulos.politicas.aplicacion.ServicioPoliticaEmpresa politicas;
+
     public ServicioCorreoEventosCita(
             CitaRepositorio citaRepositorio,
             ClienteRepositorio clienteRepositorio,
@@ -60,7 +62,8 @@ public class ServicioCorreoEventosCita {
             ClienteCorreoSaliente clienteCorreo,
             @Value("${aplicacion.correo-bienvenida.origen-publico}") String origenPublico,
             java.time.Clock reloj
-    ) {
+    , com.techprotech.agenda.modulos.politicas.aplicacion.ServicioPoliticaEmpresa politicas) {
+        this.politicas=politicas;
         this.reloj = reloj;
         this.citaRepositorio = citaRepositorio;
         this.clienteRepositorio = clienteRepositorio;
@@ -106,14 +109,17 @@ public class ServicioCorreoEventosCita {
         String nombreEmpresa = sitio != null && tieneTexto(sitio.getNombreComercial())
                 ? sitio.getNombreComercial() : empresa.getNombre();
         String color = sitio != null && colorValido(sitio.getColorPrimario()) ? sitio.getColorPrimario() : "#173b57";
-        String urlSitio = sitio != null && tieneTexto(sitio.getSlug()) ? origenPublico + "/e/" + sitio.getSlug() : null;
+        String urlSitio = sitio != null && sitio.isPublicado() && tieneTexto(sitio.getSlug()) ? origenPublico + "/e/" + sitio.getSlug() : null;
 
         if ("CITA_PAGO_INCIDENCIA_NEGOCIO_EMAIL".equals(evento)) {
-            String mensaje = "Se registró un pago aprobado relacionado con la cita #" + cita.getId()
+            String mensaje = "Se registró un pago aprobado relacionado con la cita " + cita.getFolio()
                     + ". La reserva requiere revisión: comprueba la incidencia en Pagos antes de reprogramar o decidir un reembolso. No se confirmó al cliente.";
+            String politicaUrl = urlSitio != null && politicas.vigente(empresaId).isPresent() ? urlSitio + "/politicas" : null;
+            String politicaTexto = politicaUrl == null ? "" : "\n\nPolítica de anticipos y cancelación: " + politicaUrl;
+            String politicaHtml = politicaUrl == null ? "" : "<p><a href=\"" + attr(politicaUrl) + "\">Política de anticipos y cancelación</a></p>";
             clienteCorreo.enviar(configuracion, new MensajeCorreoSaliente(
                     resolverCorreoNegocio(sitio, configuracion), "Pago aprobado con incidencia | " + nombreEmpresa,
-                    mensaje, "<p>" + org.springframework.web.util.HtmlUtils.htmlEscape(mensaje) + "</p>", configuracion.responderA(), List.of()));
+                    mensaje + politicaTexto, "<p>" + org.springframework.web.util.HtmlUtils.htmlEscape(mensaje) + "</p>" + politicaHtml, configuracion.responderA(), List.of()));
             return;
         }
         if (esNotificacionNegocio(evento)) {
@@ -193,7 +199,7 @@ public class ServicioCorreoEventosCita {
                               String empresa, String cliente, ZoneId zona, String urlSitio) {
         StringBuilder texto = new StringBuilder("Hola ").append(cliente).append(",\n\n")
                 .append(evento.mensaje()).append("\n\n")
-                .append("Folio: #").append(cita.getId()).append('\n')
+                .append("Folio: ").append(cita.getFolio()).append('\n')
                 .append("Servicio: ").append(servicio.getNombre()).append('\n')
                 .append("Sucursal: ").append(sucursal.getNombre()).append('\n')
                 .append("Fecha: ").append(capitalizar(cita.getInicio().atZone(zona).format(FECHA))).append('\n')
@@ -203,6 +209,7 @@ public class ServicioCorreoEventosCita {
         if (tieneTexto(sucursal.getDireccion())) texto.append("Dirección: ").append(sucursal.getDireccion()).append('\n');
         if (tieneTexto(sucursal.getTelefono())) texto.append("Teléfono: ").append(sucursal.getTelefono()).append('\n');
         if (urlSitio != null) texto.append("\nAgenda o consulta servicios: ").append(urlSitio).append('\n');
+        if (urlSitio != null && politicas.vigente(cita.getEmpresaId()).isPresent()) texto.append("Política de anticipos y cancelación: ").append(urlSitio).append("/politicas\n");
         return texto.append("\n").append(empresa).toString();
     }
 
@@ -220,15 +227,15 @@ public class ServicioCorreoEventosCita {
                 <table role="presentation" width="100%%" cellpadding="0" cellspacing="0" style="max-width:640px;background:#fff;border-radius:22px;overflow:hidden">
                 <tr><td style="background:%s;padding:34px 38px;color:#fff">%s<div style="font-size:13px;opacity:.82;text-transform:uppercase;letter-spacing:.12em">%s</div><h1 style="margin:10px 0 0;font-size:29px">Hola, %s</h1></td></tr>
                 <tr><td style="padding:30px 38px"><p style="font-size:16px;line-height:1.65;margin-top:0">%s</p>
-                <table role="presentation" width="100%%" cellpadding="9" cellspacing="0" style="background:#f7f9fb;border-radius:14px"><tr><td><strong>Folio</strong></td><td>#%d</td></tr><tr><td><strong>Servicio</strong></td><td>%s</td></tr><tr><td><strong>Sucursal</strong></td><td>%s</td></tr><tr><td><strong>Fecha</strong></td><td>%s</td></tr><tr><td><strong>Horario</strong></td><td>%s - %s</td></tr>%s%s%s</table>%s
+                <table role="presentation" width="100%%" cellpadding="9" cellspacing="0" style="background:#f7f9fb;border-radius:14px"><tr><td><strong>Folio</strong></td><td>%s</td></tr><tr><td><strong>Servicio</strong></td><td>%s</td></tr><tr><td><strong>Sucursal</strong></td><td>%s</td></tr><tr><td><strong>Fecha</strong></td><td>%s</td></tr><tr><td><strong>Horario</strong></td><td>%s - %s</td></tr>%s%s%s</table>%s
                 <p style="margin:28px 0 0;color:#607486;font-size:14px">Este mensaje corresponde a una cita con <strong>%s</strong>.</p></td></tr></table></td></tr></table></body></html>
                 """.formatted(
-                attr(color), logo, esc(evento.titulo()), esc(cliente), esc(evento.mensaje()), cita.getId(),
+                attr(color), logo, esc(evento.titulo()), esc(cliente), esc(evento.mensaje()), esc(cita.getFolio()),
                 esc(servicio.getNombre()), esc(sucursal.getNombre()), esc(capitalizar(cita.getInicio().atZone(zona).format(FECHA))),
                 cita.getInicio().atZone(zona).format(HORA), cita.getFin().atZone(zona).format(HORA),
                 filaOpcional("Precio", cita.getPrecio() != null ? moneda(cita.getPrecio(), cita.getMoneda()) : null),
                 filaOpcional("Dirección", sucursal.getDireccion()), filaOpcional("Teléfono", sucursal.getTelefono()),
-                boton, esc(empresa));
+                boton + (urlSitio == null || politicas.vigente(cita.getEmpresaId()).isEmpty() ? "" : "<p><a href=\"" + attr(urlSitio + "/politicas") + "\">Política de anticipos y cancelación</a></p>"), esc(empresa));
     }
 
     private AdjuntoCorreoSaliente crearCalendario(CitaEntidad cita, ServicioEntidad servicio, SucursalEntidad sucursal, String empresa, ZoneId zona) {

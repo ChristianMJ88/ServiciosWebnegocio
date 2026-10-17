@@ -12,6 +12,8 @@ import java.time.LocalDateTime;
 @Entity
 @Table(name = "checkout_orden")
 public class CheckoutOrdenEntidad {
+    @Column(name="politica_version_id") private Long politicaVersionId;
+    @Column(name="politica_aceptada_en") private java.time.LocalDateTime politicaAceptadaEn;
   @Column(name = "requiere_conciliacion", nullable = false)
   private boolean requiereConciliacion;
   @Column(name = "motivo_incidencia", length = 500)

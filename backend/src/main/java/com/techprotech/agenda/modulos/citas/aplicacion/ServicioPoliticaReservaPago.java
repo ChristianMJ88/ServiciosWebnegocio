@@ -14,19 +14,23 @@ public class ServicioPoliticaReservaPago {
     private final java.time.Clock reloj;
     private final ServicioConfiguracionCheckout checkout;
     private final ServicioConfiguracionReservas configuracion;
-    public ServicioPoliticaReservaPago(ServicioConfiguracionCheckout checkout,ServicioConfiguracionReservas configuracion,java.time.Clock reloj) {
+    private final com.techprotech.agenda.modulos.politicas.aplicacion.ServicioPoliticaEmpresa politicas;
+
+    public ServicioPoliticaReservaPago(ServicioConfiguracionCheckout checkout,ServicioConfiguracionReservas configuracion,java.time.Clock reloj, com.techprotech.agenda.modulos.politicas.aplicacion.ServicioPoliticaEmpresa politicas) {
+        this.politicas = politicas;
         this.reloj=reloj;this.checkout=checkout;this.configuracion=configuracion;
     }
     public boolean puedeCobrarOnline(Long empresaId) {
-        try { var config=checkout.obtener(empresaId); return config.habilitado() && config.conectado() && config.permitirPagoServicios() && config.aceptarTarjeta(); }
+        try { var config=checkout.obtener(empresaId); return politicas.vigente(empresaId).isPresent() && config.habilitado() && config.conectado() && config.permitirPagoServicios() && config.aceptarTarjeta(); }
         catch(ResponseStatusException ex) { if(ex.getStatusCode().value()==404) return false; throw ex; }
     }
 public boolean puedeCobrarProductosOnline(Long empresaId) {
-    try { var config=checkout.obtener(empresaId); return config.habilitado() && config.conectado() && config.permitirPagoProductos() && (config.aceptarTarjeta() || config.aceptarTransferencia() || config.aceptarEfectivoReferenciado()); }
+    try { var config=checkout.obtener(empresaId); return politicas.vigente(empresaId).isPresent() && config.habilitado() && config.conectado() && config.permitirPagoProductos() && (config.aceptarTarjeta() || config.aceptarTransferencia() || config.aceptarEfectivoReferenciado()); }
     catch(ResponseStatusException ex) { if(ex.getStatusCode().value()==404) return false; throw ex; }
 }
     public PlanReserva plan(Long empresaId,boolean publico,List<BigDecimal> importes) {
-        boolean requierePago=publico && importes.stream().anyMatch(i -> i.signum()>0) && puedeCobrarOnline(empresaId);
+        boolean requierePago = publico && importes.stream().anyMatch(i -> i.signum() > 0);
+        if (requierePago && !puedeCobrarOnline(empresaId)) throw new AnticipoNoDisponibleException();
         return new PlanReserva(java.util.UUID.randomUUID().toString(),requierePago,
                 requierePago?LocalDateTime.now(reloj).plusMinutes(configuracion.obtener(empresaId).minutosApartadoPago()):null);
     }

@@ -1,3 +1,4 @@
+<app-venta-comprobante [venta]="comprobante()" />
 <nav class="pos-workspace-tabs" [class.is-checkout]="cuentaMovilAbierta()" aria-label="Operaciones del punto de venta">
   <button type="button" [class.active]="vistaPos()==='catalogo'" [disabled]="guardando()" (click)="abrirVistaPos('catalogo')"><i class="bi bi-plus-circle"></i>Nueva cuenta</button>
   <button type="button" [class.active]="vistaPos()==='staff'" [disabled]="guardando()" (click)="abrirVistaPos('staff')"><i class="bi bi-receipt"></i>Cuentas de Staff <span>{{ totalStaff() }}</span></button>
@@ -13,7 +14,7 @@
       <div class="pos-section-heading"><div><span>Servicio de la visita</span><small>Opcional: selecciónalo para cobrarlo junto con productos.</small></div></div>
       <div class="pos-appointments">
         @for (cita of citas; track cita.citaId) {
-          <button type="button" class="pos-appointment" [class.active]="citaId() === cita.citaId" [disabled]="guardando()" (click)="seleccionarCita(cita.citaId)">
+          <button type="button" class="pos-appointment" [attr.title]="compatible(cita) ? null : 'Otro cliente, sucursal o moneda'" [class.active]="citaIds().includes(cita.citaId)" [disabled]="guardando() || !compatible(cita)" [attr.aria-pressed]="citaIds().includes(cita.citaId)" (click)="seleccionarCita(cita.citaId)">@if(!compatible(cita)) {<small>Otro cliente, sucursal o moneda</small>}
             <span><strong>{{ cita.clienteNombre }}</strong><small>{{ cita.servicioNombre }}</small></span>
             <strong>{{ cita.pendiente | appMoney:cita.moneda:2:2 }}</strong>
           </button>
@@ -70,8 +71,8 @@
       @for (detalle of cuenta.venta.detalles; track detalle.id) {<div class="pos-line"><div><span>{{ detalle.tipoConcepto }}</span><strong>{{ detalle.nombre }}</strong><small>{{ detalle.cantidad }} unidades</small></div><strong>{{ detalle.total | appMoney:cuenta.venta.moneda:2:2 }}</strong></div>}
       <button class="pos-release" type="button" (click)="liberarCuentaStaff()" [disabled]="guardando()">Volver a nueva cuenta</button>
     } @else {
-    @if (citaSeleccionada(); as cita) {
-      <div class="pos-line service"><div><span>Servicio</span><strong>{{ cita.servicioNombre }}</strong><small>{{ cita.clienteNombre }}</small></div><strong>{{ cita.pendiente | appMoney:cita.moneda:2:2 }}</strong><button type="button" aria-label="Quitar servicio" [disabled]="guardando()" (click)="seleccionarCita(cita.citaId)">×</button></div>
+    @for(cita of citasSeleccionadas(); track cita.citaId) {
+      <div class="pos-line service"><div><span>Servicio</span><strong>{{ cita.servicioNombre }}</strong><small>{{ cita.clienteNombre }}</small></div><strong>{{ cita.pendiente | appMoney:cita.moneda:2:2 }}</strong><button type="button" aria-label="Quitar servicio" [disabled]="guardando() || !compatible(cita)" [attr.aria-pressed]="citaIds().includes(cita.citaId)" (click)="seleccionarCita(cita.citaId)">@if(!compatible(cita)) {<small>Otro cliente, sucursal o moneda</small>}×</button></div>
     }
     @for (linea of lineas(); track linea.producto.id) {
       <div class="pos-line"><div><span>Producto</span><strong>{{ linea.producto.nombre }}</strong><small>{{ linea.cantidad }} × {{ (precioCotizado(linea.producto.id)?.precioUnitario ?? linea.producto.precio) | appMoney:linea.producto.moneda:2:2 }}</small></div><strong>{{ (precioCotizado(linea.producto.id)?.total ?? 0) | appMoney:linea.producto.moneda:2:2 }}</strong><div class="pos-quantity"><button type="button" aria-label="Reducir cantidad" [disabled]="guardando()" (click)="disminuir(linea.producto.id)">−</button><b>{{ linea.cantidad }}</b><button type="button" aria-label="Aumentar cantidad" [disabled]="guardando()" (click)="agregar(linea.producto)">+</button><button type="button" class="remove" aria-label="Quitar producto" [disabled]="guardando()" (click)="quitar(linea.producto.id)">×</button></div></div>

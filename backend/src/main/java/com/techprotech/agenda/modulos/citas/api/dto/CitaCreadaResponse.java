@@ -21,6 +21,7 @@ public record CitaCreadaResponse(
         java.math.BigDecimal importeRequerido,
         OffsetDateTime pagoExpiraEn,
         String politicaCobro,
-        OffsetDateTime confirmacionExpiraEn
+        OffsetDateTime confirmacionExpiraEn,
+        String folio
 ) {
 }

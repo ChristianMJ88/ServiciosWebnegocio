@@ -1,3 +1,4 @@
+import { AdminPolicyComponent } from './admin-policy.component';
 import { Component, inject, OnInit, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
@@ -8,7 +9,7 @@ import { MatSelectModule } from '@angular/material/select';
 import { ParametroSistemaAdmin, SystemParametersService } from '../../../core/admin/system-parameters.service';
 
 @Component({ selector: 'app-admin-system-parameters-section', standalone: true,
-  imports: [FormsModule, MatButtonModule, MatCardModule, MatFormFieldModule, MatInputModule, MatSelectModule],
+  imports: [AdminPolicyComponent, FormsModule, MatButtonModule, MatCardModule, MatFormFieldModule, MatInputModule, MatSelectModule],
   templateUrl: './admin-system-parameters-section.component.html' })
 export class AdminSystemParametersSectionComponent implements OnInit {
   private readonly service = inject(SystemParametersService); readonly parametros = signal<ParametroSistemaAdmin[]>([]);

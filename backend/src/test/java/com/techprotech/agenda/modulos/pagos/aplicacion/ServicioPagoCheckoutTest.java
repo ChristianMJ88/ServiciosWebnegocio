@@ -66,7 +66,7 @@ class ServicioPagoCheckoutTest {
 
         servicio = new ServicioPagoCheckout(configuracion, sitios, checkoutConfigs, proveedores,
                 ordenes, detalles, intentos, List.of(mercadoPago), inventario, estados, metodosPago,
-                comisionesSinCargo(), java.time.Clock.systemUTC());
+                comisionesSinCargo(), java.time.Clock.systemUTC(), org.mockito.Mockito.mock(com.techprotech.agenda.modulos.pagos.aplicacion.ServicioAceptacionPoliticaCheckout.class));
     }
 
     private ServicioComisionPlataforma comisionesSinCargo() {
@@ -191,6 +191,6 @@ class ServicioPagoCheckoutTest {
     private ConfiguracionCheckoutPublicaResponse configHabilitada() {
         return new ConfiguracionCheckoutPublicaResponse(true, "MERCADO_PAGO", "PRUEBA", "public-key",
                 true, false, false, true, true, true, true, false, BigDecimal.ZERO, false, BigDecimal.ZERO,
-                false, "PAGO_COMPLETO", null, null, "MXN");
+                false, "PAGO_COMPLETO", null, null, "MXN", null);
     }
 }

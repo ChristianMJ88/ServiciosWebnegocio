@@ -302,3 +302,5 @@
 .caja-pending-group summary span { margin-inline-start:auto; }
 .caja-pending-group summary::after { content:'⌄'; font-size:1.1rem; }
 .caja-pending-group[open] summary::after { content:'⌃'; }
+
+.caja-extra-appointment{display:flex;align-items:center;gap:.75rem;padding:.75rem 0;min-height:44px}.caja-extra-appointment input{width:20px;height:20px;flex-shrink:0}.caja-extra-appointment span{display:flex;flex-wrap:wrap;gap:.4rem}

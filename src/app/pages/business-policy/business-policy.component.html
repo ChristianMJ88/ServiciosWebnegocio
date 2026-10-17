@@ -1,0 +1,15 @@
+<main class="policy-page">
+  <a class="policy-back" [routerLink]="tenant.routeFor()"><i class="bi bi-arrow-left" aria-hidden="true"></i> Volver al negocio</a>
+  <header><span>{{ tenant.nombreComercial() }}</span><h1>Tu reserva, con claridad</h1><p>Política de anticipos, cancelación y aclaraciones del negocio.</p></header>
+  @if (loading()) { <p role="status">Consultando la política…</p> }
+  @else if (policy(); as p) {
+    <article class="policy-card"><div class="policy-meta"><span>Versión {{ p.version }}</span><span>Vigente desde {{ p.vigenteDesde | date:'longDate' }}</span></div>
+      <h2>Antes de reservar</h2><p class="policy-copy">{{ p.textoGenerado }}</p>
+      @if (p.textoAdicional) {<section><h2>Información adicional del negocio</h2><p class="policy-copy">{{ p.textoAdicional }}</p></section>}
+    </article>
+    <aside class="policy-card"><i class="bi bi-chat-square-text" aria-hidden="true"></i><h2>¿Necesitas una aclaración?</h2><p>Contacta directamente a {{ p.nombreComercial }} para revisar tu reserva o pago.</p>
+      <div class="policy-contact">@if (p.contactoReclamos.correo) {<a [href]="'mailto:' + p.contactoReclamos.correo">{{ p.contactoReclamos.correo }}</a>}
+      @if (p.contactoReclamos.telefono) {<a [href]="'tel:' + p.contactoReclamos.telefono">{{ p.contactoReclamos.telefono }}</a>}</div>
+    </aside>
+  } @else {<article class="policy-card" role="status"><h2>Política no disponible</h2><p>Consulta directamente con el negocio antes de realizar un pago.</p><a [routerLink]="tenant.routeFor('contacto')">Contactar al negocio</a></article>}
+</main>

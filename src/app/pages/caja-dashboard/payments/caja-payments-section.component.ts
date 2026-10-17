@@ -1,3 +1,4 @@
+import { VentaComprobanteComponent } from '../../../shared/components/venta-comprobante.component';
 import { ETIQUETAS_COBRO } from '../../../core/caja/cobro-cita.models';
 import { CommonModule, DatePipe } from '@angular/common';
 import { Component, DestroyRef, EventEmitter, Input, OnChanges, Output, SimpleChanges, inject, signal } from '@angular/core';
@@ -10,7 +11,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { finalize, switchMap, takeWhile, timer } from 'rxjs';
-import { CajaService, CitaPorCobrar, OpcionCaja, OrdenPointCaja, PagoCita, TerminalPointCaja } from '../../../core/caja/caja.service';
+import { CajaService, CitaPorCobrar, OpcionCaja, OrdenPointCaja, PagoCita, TerminalPointCaja, VentaCaja } from '../../../core/caja/caja.service';
 import { MoneyDisplayPipe } from '../../../shared/pipes/money-display.pipe';
 import { FormularioPagoCaja } from '../forms/caja.forms';
 
@@ -18,7 +19,7 @@ import { FormularioPagoCaja } from '../forms/caja.forms';
   selector: 'app-caja-payments-section',
   standalone: true,
   imports: [
-    CommonModule,
+    VentaComprobanteComponent, CommonModule,
     DatePipe,
     FormsModule,
     MoneyDisplayPipe,
@@ -39,10 +40,37 @@ export class CajaPaymentsSectionComponent implements OnChanges {
   @Input() mostrarCobroInicial = false;
   readonly mostrandoCobro = signal(false);
   seleccionar(citaId: number): void { this.mostrandoCobro.set(true); this.selectAppointment.emit(citaId); }
+  busqueda = '';
+  adicionales: number[] = [];
+  readonly procesandoVenta = signal(false);
+  readonly ventaCobrada = signal<VentaCaja | null>(null);
+  get otrasCitas() {const c=this.citaSeleccionada; return c ? this.citas.filter(o=>o.citaId!==c.citaId && o.clienteId===c.clienteId && o.sucursalId===c.sucursalId && o.moneda===c.moneda) : [];}
+  get seleccionadas() {return this.citaSeleccionada ? [this.citaSeleccionada,...this.otrasCitas.filter(c=>this.adicionales.includes(c.citaId))] : [];}
+  get cobroMultiple() {return this.seleccionadas.length > 1;}
+  get totalSeleccionado() {return this.seleccionadas.reduce((t,c)=>t + Number(c.pendiente),0);}
+  alternarCita(id:number) {
+    if(this.procesandoVenta() || this.guardando || this.procesandoPoint()) return;
+    this.adicionales=this.adicionales.includes(id)?this.adicionales.filter(i=>i!==id):[...this.adicionales,id];
+    if(this.cobroMultiple) this.formularioPago.monto=this.totalSeleccionado;
+    else this.formularioPago.monto=this.citaSeleccionada?.pendiente ?? 0;
+  }
+  registrarCobro() {
+    if(this.guardando || this.procesandoVenta() || this.procesandoPoint() || !this.cajaAbierta) return;
+    if(!this.cobroMultiple) {this.savePayment.emit(); return;}
+    if(!this.sucursalId || !this.formularioPago.metodoPago) return;
+    this.procesandoVenta.set(true); this.errorPoint.set('');
+    this.caja.registrarVenta({sucursalId:this.sucursalId,citaId:null,citaIds:this.seleccionadas.map(c=>c.citaId),clienteId:null,productos:[],metodoPago:this.formularioPago.metodoPago,referencia:this.formularioPago.referencia || null,observaciones:this.formularioPago.observaciones || null})
+      .pipe(finalize(()=>this.procesandoVenta.set(false)),takeUntilDestroyed(this.destroyRef)).subscribe({
+        next:v=>{this.ventaCobrada.set(v);this.adicionales=[];this.pointPaymentCompleted.emit();},
+        error:e=>this.errorPoint.set(e.error?.mensaje || e.error?.message || e.error?.detail || 'No se pudo cobrar la cuenta completa.')
+      });
+  }
   get gruposPendientes() {
+    const texto = this.busqueda.trim().toLocaleLowerCase();
+    const visibles = this.citas.filter(c => !texto || `${c.folio ?? ''} ${c.clienteNombre} ${c.clienteTelefono ?? ''}`.toLocaleLowerCase().includes(texto));
     return [
-      {codigo:'HOY', titulo:'Hoy', citas:this.citas.filter(c => c.periodoCobro === 'HOY')},
-      {codigo:'ANTERIOR', titulo:'Pendientes anteriores', citas:this.citas.filter(c => c.periodoCobro === 'ANTERIOR')}
+      {codigo:'HOY', titulo:'Hoy', citas:visibles.filter(c => c.periodoCobro === 'HOY')},
+      {codigo:'ANTERIOR', titulo:'Pendientes anteriores', citas:visibles.filter(c => c.periodoCobro === 'ANTERIOR')}
     ];
   }
   @Input({ required: true }) sucursalId!: number | null;
@@ -73,6 +101,7 @@ export class CajaPaymentsSectionComponent implements OnChanges {
     if (changes['mostrarCobroInicial'] && this.mostrarCobroInicial) this.mostrandoCobro.set(true);
     if (changes['sucursalId']) this.cargarTerminalesPoint();
     if (changes['citaSeleccionada']) {
+      this.adicionales=[];
       this.ordenPoint.set(null);
       this.errorPoint.set('');
     }
@@ -80,13 +109,15 @@ export class CajaPaymentsSectionComponent implements OnChanges {
 
   cobrarConPoint(): void {
     const cita = this.citaSeleccionada;
+    if (this.cobroMultiple) {this.errorPoint.set('Point admite una sola cita por operación.');return;}
     if (!cita || !this.sucursalId || !this.terminalPointId || this.guardando || this.procesandoPoint() || !this.cajaAbierta) return;
     this.procesandoPoint.set(true);
     this.errorPoint.set('');
     this.ordenPoint.set(null);
     this.caja.crearOrdenPoint(this.terminalPointId, {
       sucursalId: this.sucursalId,
-      citaId: cita.citaId,
+      citaId: this.cobroMultiple ? null : cita.citaId,
+      ...(this.cobroMultiple ? {citaIds:this.seleccionadas.map(c=>c.citaId)} : {}),
       clienteId: null,
       productos: [],
       metodoPago: 'MERCADO_PAGO_POINT',
@@ -100,7 +131,7 @@ export class CajaPaymentsSectionComponent implements OnChanges {
       },
       error: error => {
         this.procesandoPoint.set(false);
-        this.errorPoint.set(error?.error?.detail || error?.error?.message || 'No fue posible enviar el cobro a la terminal.');
+        this.errorPoint.set(error?.error?.mensaje || error?.error?.detail || error?.error?.message || 'No fue posible enviar el cobro a la terminal.');
       }
     });
   }
@@ -110,7 +141,7 @@ export class CajaPaymentsSectionComponent implements OnChanges {
     if (!orden || this.esEstadoFinalPoint(orden.estado)) return;
     this.caja.cancelarOrdenPoint(orden.id, crypto.randomUUID()).subscribe({
       next: actualizada => this.finalizarPoint(actualizada),
-      error: error => this.errorPoint.set(error?.error?.detail || 'No fue posible cancelar la orden Point.')
+      error: error => this.errorPoint.set(error?.error?.mensaje || error?.error?.detail || 'No fue posible cancelar la orden Point.')
     });
   }
 
@@ -120,7 +151,7 @@ export class CajaPaymentsSectionComponent implements OnChanges {
     this.simulandoPoint.set(true); this.errorPoint.set('');
     this.caja.simularAprobacionPoint(orden.id).pipe(finalize(() => this.simulandoPoint.set(false))).subscribe({
       next: actualizada => this.ordenPoint.set(actualizada),
-      error: error => this.errorPoint.set(error?.error?.detail || 'No fue posible simular la aprobación de Point.')
+      error: error => this.errorPoint.set(error?.error?.mensaje || error?.error?.detail || 'No fue posible simular la aprobación de Point.')
     });
   }
 
@@ -148,7 +179,7 @@ export class CajaPaymentsSectionComponent implements OnChanges {
         this.ordenPoint.set(orden);
         if (this.esEstadoFinalPoint(orden.estado)) this.finalizarPoint(orden);
       },
-      error: error => this.errorPoint.set(error?.error?.detail || 'No fue posible consultar la terminal.')
+      error: error => this.errorPoint.set(error?.error?.mensaje || error?.error?.detail || 'No fue posible consultar la terminal.')
     });
   }
 

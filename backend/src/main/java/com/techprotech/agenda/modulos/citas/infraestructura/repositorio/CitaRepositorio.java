@@ -10,6 +10,27 @@ import java.util.List;
 import java.util.Optional;
 
 public interface CitaRepositorio extends JpaRepository<CitaEntidad, Long> {
+    @Query("select count(c) > 0 from CitaEntidad c where c.empresaId=:empresaId and (c.folio=:base or c.folio like concat(:base,'-%'))")
+    boolean existeFolioReserva(Long empresaId, String base);
+    @org.springframework.data.jpa.repository.Modifying
+    @Query(value="UPDATE cita SET politica_version_id=:politicaId, politica_aceptada_en=:aceptadaEn " +
+            "WHERE id=:citaId AND empresa_id=:empresaId AND politica_version_id IS NULL", nativeQuery=true)
+    int acreditarPoliticaSiAusente(Long empresaId, Long citaId, Long politicaId, LocalDateTime aceptadaEn);
+
+    // Lecturas actuales tras bloquear las citas; no reutilizan la instantánea REPEATABLE READ.
+    @Query(value="select p.cita_id from pago_cita p where p.empresa_id=:empresaId and p.cita_id in (:ids) and p.monto>0 FOR UPDATE", nativeQuery=true)
+    List<Long> buscarCitasConAnticipoDirecto(Long empresaId, Collection<Long> ids);
+
+    @Query(value="select d.cita_id from venta_detalle d join venta v on v.id=d.venta_id and v.empresa_id=d.empresa_id " +
+            "where d.empresa_id=:empresaId and d.cita_id in (:ids) and d.tipo_concepto='SERVICIO' and d.total>0 and v.estado='PAGADA' " +
+            "and (v.checkout_orden_id is null or v.checkout_orden_id<>:ordenId) FOR UPDATE", nativeQuery=true)
+    List<Long> buscarCitasConVentaAnterior(Long empresaId, Collection<Long> ids, Long ordenId);
+
+    default List<Long> buscarCitasConPagoAnterior(Long empresaId, Collection<Long> ids, Long ordenId) {
+        var resultado = new java.util.HashSet<>(buscarCitasConAnticipoDirecto(empresaId, ids));
+        resultado.addAll(buscarCitasConVentaAnterior(empresaId, ids, ordenId));
+        return List.copyOf(resultado);
+    }
     // Mismo predicado para lista y conteo. El desglose y estado siguen en ServicioSaldoCitas.
     // D2 deberá descontar aquí los ajustes condonados cuando se añada su persistencia.
     String COBRABLE_CON_SALDO = "c.empresaId=:empresaId and c.sucursalId=:sucursalId " +

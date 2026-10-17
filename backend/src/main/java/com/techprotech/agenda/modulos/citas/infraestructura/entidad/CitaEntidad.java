@@ -16,11 +16,21 @@ import java.time.LocalDateTime;
 @Entity
 @Table(name = "cita")
 public class CitaEntidad {
+    @Column(name="politica_version_id", updatable=false) private Long politicaVersionId;
+    @Column(name="politica_aceptada_en", updatable=false) private java.time.LocalDateTime politicaAceptadaEn;
 
 @Column(name="pago_expira_en") private LocalDateTime pagoExpiraEn;
 @Column(name="reserva_grupo_id",length=36) private String reservaGrupoId;
 @Column(name="politica_cobro",length=30) private String politicaCobro;
 @Column(name="importe_requerido",precision=10,scale=2) private BigDecimal importeRequerido;
+
+  @Column(name = "folio", length = 16, updatable = false)
+  private String folio;
+
+  @jakarta.persistence.PrePersist
+  void asignarFolio() {
+    if (folio == null || folio.isBlank()) folio = com.techprotech.agenda.modulos.citas.dominio.FolioCita.nuevo();
+  }
 
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)

@@ -1,0 +1,26 @@
+@if(data()?.avisoCobro) {<div class="alert alert-warning" role="alert">{{data()!.avisoCobro}} <a href="#politica-editor">Revisar política</a></div>}
+<details id="politica-editor" class="workspace-card policy-editor">
+  <summary><div><div class="section-eyebrow">Reservas y pagos</div><h3>Política de anticipos y cancelación</h3><p>{{ data()?.vigente ? 'Versión publicada: ' + data()!.vigente!.version : 'Pendiente de publicación' }}</p></div><i class="bi bi-chevron-down" aria-hidden="true"></i></summary>
+  @if (error()) {<p class="alert alert-danger" role="alert">{{ error() }}</p><button type="button" (click)="load()">Actualizar</button>}
+  @if (success()) {<p class="alert alert-success" role="status">{{ success() }}</p>}
+  @if (draft; as d) {
+    <p class="helper-text">Revisa el texto y publica una versión para habilitar el cobro online. Cada publicación conserva el historial de las reservas.</p>
+    <form #policyForm="ngForm" (ngSubmit)="showPreview()" (ngModelChange)="changed()">
+      <div class="policy-grid">
+        <label>Si el cliente no asiste<select name="mode" [(ngModel)]="d.modoNoShow" (ngModelChange)="changed()" required>@for (mode of data()!.modos; track mode.codigo) {<option [value]="mode.codigo">{{ mode.etiqueta }}</option>}</select></label>
+        <label>Días para aclaraciones<input name="clarification" type="number" min="1" [(ngModel)]="d.diasAclaracion" (ngModelChange)="changed()" required></label>
+        @if (d.modoNoShow === 'CREDITO_REAGENDAR') {
+          <label>Días para solicitar reagendar<input name="rescheduleDays" type="number" min="1" [(ngModel)]="d.diasReagendar" (ngModelChange)="changed()" required></label>
+          <label>Reagendados permitidos<input name="maxReschedules" type="number" min="1" [(ngModel)]="d.reagendadosMax" (ngModelChange)="changed()" required></label>
+          <label>Primer aviso: días antes del vencimiento<input name="reminder1" type="number" min="1" [(ngModel)]="d.recordatorio1Dias" (ngModelChange)="changed()" required></label>
+          <label>Segundo aviso: días antes del vencimiento<input name="reminder2" type="number" min="1" [(ngModel)]="d.recordatorio2Dias" (ngModelChange)="changed()" required></label>
+        }
+        <label>Correo de aclaraciones<input name="claimEmail" type="email" maxlength="255" [(ngModel)]="d.contactoReclamosCorreo" (ngModelChange)="changed()"></label>
+        <label>Teléfono de aclaraciones<input name="claimPhone" type="tel" maxlength="30" [(ngModel)]="d.contactoReclamosTelefono" (ngModelChange)="changed()"></label>
+        <label class="policy-wide">Información adicional<textarea name="additional" rows="3" maxlength="2000" [(ngModel)]="d.textoAdicional" (ngModelChange)="changed()"></textarea><small>Complementa las reglas publicadas sin contradecir sus plazos.</small></label>
+      </div>
+      <div class="policy-actions"><button class="btn btn-outline-primary" type="submit" [disabled]="busy() || policyForm.invalid">Revisar texto</button><button class="btn btn-link" type="button" (click)="load()" [disabled]="busy()">Descartar cambios</button></div>
+    </form>
+    @if (preview()) {<section class="policy-preview"><h4>Vista previa de la nueva versión</h4><p>{{ preview() }}</p>@if (d.textoAdicional) {<p>{{ d.textoAdicional }}</p>}<p><strong>Contacto:</strong> {{ d.contactoReclamosCorreo }} {{ d.contactoReclamosTelefono }}</p><button class="btn btn-primary" type="button" (click)="publish()" [disabled]="busy()">{{ busy() ? 'Publicando…' : 'Publicar versión' }}</button></section>}
+  } @else if (!error()) {<p role="status">Consultando política…</p>}
+</details>

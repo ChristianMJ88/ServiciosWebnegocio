@@ -81,7 +81,7 @@ class ServicioOrdenCheckoutTest {
         });
         servicio = new ServicioOrdenCheckout(configuracion, sitios, sucursales, cotizador, citas, servicios,
                 usuarios, pagosCita, detallesVenta, ordenes, detalles, new PropiedadesCheckout(20, 3), direcciones,
-                cotizacionesEnvio,mock(com.techprotech.agenda.modulos.plataforma.aplicacion.ServicioCapacidadesEmpresa.class), productosCostos(), new com.techprotech.agenda.modulos.disponibilidad.aplicacion.ServicioConfiguracionReservas(mock(com.techprotech.agenda.modulos.disponibilidad.infraestructura.repositorio.EmpresaConfiguracionReservasRepositorio.class),0,30,2,15,24), java.time.Clock.systemUTC());
+                cotizacionesEnvio,mock(com.techprotech.agenda.modulos.plataforma.aplicacion.ServicioCapacidadesEmpresa.class), productosCostos(), new com.techprotech.agenda.modulos.disponibilidad.aplicacion.ServicioConfiguracionReservas(mock(com.techprotech.agenda.modulos.disponibilidad.infraestructura.repositorio.EmpresaConfiguracionReservasRepositorio.class),0,30,2,15,24), java.time.Clock.systemUTC(), org.mockito.Mockito.mock(com.techprotech.agenda.modulos.pagos.aplicacion.ServicioAceptacionPoliticaCheckout.class));
     }
 
     private com.techprotech.agenda.modulos.productos.infraestructura.repositorio.ProductoRepositorio productosCostos() {
@@ -104,7 +104,7 @@ class ServicioOrdenCheckoutTest {
                                 new BigDecimal("160.00"), "MXN"))));
         CrearOrdenCheckoutRequest request = new CrearOrdenCheckoutRequest(3L, "CENTRO", "cliente@test.mx",
                 "Ana Pérez", "2221234567", "RECOGE_EN_SUCURSAL", null, null,
-                List.of(new CrearOrdenCheckoutRequest.ProductoOrdenRequest(12L, new BigDecimal("2"))), List.of());
+                List.of(new CrearOrdenCheckoutRequest.ProductoOrdenRequest(12L, new BigDecimal("2"))), List.of(), null, null);
 
         OrdenCheckoutResponse respuesta = servicio.crear("nail-art", "carrito-123", request);
 
@@ -125,7 +125,7 @@ class ServicioOrdenCheckoutTest {
         when(configuracion.obtenerPublica("nail-art")).thenReturn(new ConfiguracionCheckoutPublicaResponse(
                 true, "MERCADO_PAGO", "PRUEBA", "public-key", true, false, false, true, true,
                 true, true, true, new BigDecimal("49.00"), true, new BigDecimal("129.00"),
-                false, "PAGO_COMPLETO", null, null, "MXN"));
+                false, "PAGO_COMPLETO", null, null, "MXN", null));
         when(cotizador.cotizar(eq(25L), eq(3L), isNull(), any())).thenReturn(
                 new ServicioCotizacionProductos.ResultadoCotizacion(null, List.of(
                         new ServicioCotizacionProductos.CotizacionProducto(12L, "Aceite", BigDecimal.ONE,
@@ -136,7 +136,7 @@ class ServicioOrdenCheckoutTest {
                         "Centro", "Puebla", "Puebla", "72000", "MX", "Portón blanco");
         CrearOrdenCheckoutRequest request = new CrearOrdenCheckoutRequest(3L, null, "cliente@test.mx",
                 "Ana Pérez", "2221234567", "ENTREGA_LOCAL", null, direccion,
-                List.of(new CrearOrdenCheckoutRequest.ProductoOrdenRequest(12L, BigDecimal.ONE)), List.of());
+                List.of(new CrearOrdenCheckoutRequest.ProductoOrdenRequest(12L, BigDecimal.ONE)), List.of(), null, null);
 
         OrdenCheckoutResponse respuesta = servicio.crear("nail-art", "entrega-local-1", request);
 
@@ -156,7 +156,7 @@ class ServicioOrdenCheckoutTest {
         when(cotizador.cotizar(25L, 3L, null, java.util.Map.of()))
                 .thenReturn(new ServicioCotizacionProductos.ResultadoCotizacion(null, List.of()));
         CrearOrdenCheckoutRequest request = new CrearOrdenCheckoutRequest(3L, null, "cliente@test.mx",
-                "Ana Pérez", "2221234567", "RECOGE_EN_SUCURSAL", null, null, List.of(), List.of(91L));
+                "Ana Pérez", "2221234567", "RECOGE_EN_SUCURSAL", null, null, List.of(), List.of(91L), null, null);
 
         assertThatThrownBy(() -> servicio.crear("nail-art", "cita-ajena", request))
                 .isInstanceOf(ResponseStatusException.class)
@@ -177,7 +177,7 @@ class ServicioOrdenCheckoutTest {
 
         OrdenCheckoutResponse respuesta = servicio.crear("nail-art", "misma-clave",
                 new CrearOrdenCheckoutRequest(3L, null, "cliente@test.mx", "Ana Pérez", "2221234567",
-                        "RECOGE_EN_SUCURSAL", null, null, List.of(), List.of()));
+                        "RECOGE_EN_SUCURSAL", null, null, List.of(), List.of(), null, null));
 
         assertThat(respuesta.id()).isEqualTo("orden-existente");
         verifyNoInteractions(cotizador);
@@ -200,7 +200,7 @@ class ServicioOrdenCheckoutTest {
 
         OrdenCheckoutResponse respuesta = servicio.crear("nail-art", "anticipo-servicio",
                 new CrearOrdenCheckoutRequest(3L, null, "cliente@test.mx", "Ana Pérez", "2221234567",
-                        "RECOGE_EN_SUCURSAL", null, null, List.of(), List.of(91L)));
+                        "RECOGE_EN_SUCURSAL", null, null, List.of(), List.of(91L), null, null));
 
         assertThat(respuesta.total()).isEqualByComparingTo("200.00");
         verify(detalles).saveAll(argThat(items -> {
@@ -212,7 +212,7 @@ class ServicioOrdenCheckoutTest {
     private ConfiguracionCheckoutPublicaResponse configHabilitada() {
         return new ConfiguracionCheckoutPublicaResponse(true, "MERCADO_PAGO", "PRUEBA", "public-key",
                 true, false, false, true, true, true, true, false, BigDecimal.ZERO, false, BigDecimal.ZERO,
-                false, "PAGO_COMPLETO", null, null, "MXN");
+                false, "PAGO_COMPLETO", null, null, "MXN", null);
     }
 
     @Test void anticipaCienSobreDoscientosNetosYNoDuplicaDescuentoEnSaldo() {
@@ -224,7 +224,7 @@ class ServicioOrdenCheckoutTest {
         ServicioEntidad concepto=new ServicioEntidad();concepto.setId(12L);concepto.setNombre("Servicio");concepto.setRequiereAnticipo(true);concepto.setAnticipoTipo("PORCENTAJE");concepto.setAnticipoValor(new BigDecimal("50"));
         when(servicios.findByEmpresaIdAndIdIn(eq(25L),any())).thenReturn(List.of(concepto));
         when(cotizador.cotizar(25L,3L,null,java.util.Map.of())).thenReturn(new ServicioCotizacionProductos.ResultadoCotizacion(null,List.of()));
-        var request=new CrearOrdenCheckoutRequest(3L,null,"cliente@test.mx","Cliente prueba","2220000000","RECOGE_EN_SUCURSAL",null,null,List.of(),List.of(91L));
+        var request=new CrearOrdenCheckoutRequest(3L,null,"cliente@test.mx","Cliente prueba","2220000000","RECOGE_EN_SUCURSAL",null,null,List.of(),List.of(91L), null, null);
         var anticipo=servicio.crear("nail-art","anticipo-con-oferta",request);
         assertThat(anticipo.total()).isEqualByComparingTo("100");assertThat(anticipo.descuentoTotal()).isEqualByComparingTo("50");
         when(pagosCita.sumarPagadoPorCita(25L,91L)).thenReturn(new BigDecimal("100"));

@@ -19,6 +19,9 @@ import java.util.Locale;
 @Service
 public class ServicioCorreoCitas {
     private final java.time.Clock reloj;
+    private final com.techprotech.agenda.modulos.citas.infraestructura.repositorio.CitaRepositorio citas;
+    private final com.techprotech.agenda.modulos.sitio.infraestructura.repositorio.EmpresaSitioConfigRepositorio sitios;
+    private final String origenPublico;
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ServicioCorreoCitas.class);
     private static final Locale LOCALE_MX = Locale.forLanguageTag("es-MX");
@@ -26,12 +29,19 @@ public class ServicioCorreoCitas {
     private final ServicioConfiguracionCorreoEmpresa servicioConfiguracionCorreoEmpresa;
     private final ClienteCorreoSaliente clienteCorreoSaliente;
 
+    private final com.techprotech.agenda.modulos.politicas.aplicacion.ServicioPoliticaEmpresa politicas;
+
     public ServicioCorreoCitas(
             ServicioConfiguracionCorreoEmpresa servicioConfiguracionCorreoEmpresa,
             ClienteCorreoSaliente clienteCorreoSaliente,
-            java.time.Clock reloj
-    ) {
+            java.time.Clock reloj,
+            com.techprotech.agenda.modulos.citas.infraestructura.repositorio.CitaRepositorio citas,
+            com.techprotech.agenda.modulos.sitio.infraestructura.repositorio.EmpresaSitioConfigRepositorio sitios,
+            @org.springframework.beans.factory.annotation.Value("${aplicacion.correo-bienvenida.origen-publico}") String origenPublico
+    , com.techprotech.agenda.modulos.politicas.aplicacion.ServicioPoliticaEmpresa politicas) {
+        this.politicas=politicas;
         this.reloj = reloj;
+        this.citas = citas; this.sitios = sitios; this.origenPublico = origenPublico.replaceAll("/+$", "");
         this.servicioConfiguracionCorreoEmpresa = servicioConfiguracionCorreoEmpresa;
         this.clienteCorreoSaliente = clienteCorreoSaliente;
     }
@@ -54,6 +64,15 @@ public class ServicioCorreoCitas {
             throw new IllegalStateException("No hay remitente configurado para la empresa " + empresaId);
         }
 
+        // Enriquece también payloads de outbox antiguos sin modificar su identificador técnico.
+        var cita = citas.findByIdAndEmpresaId(confirmacion.citaId(), empresaId).orElse(null);
+        String folio = cita == null ? confirmacion.folio() : cita.getFolio();
+        String url = sitios.findById(empresaId).filter(sitio -> sitio.getSlug() != null && sitio.isPublicado() && politicas.vigente(empresaId).isPresent())
+                .map(sitio -> origenPublico + "/e/" + sitio.getSlug() + "/politicas").orElse(null);
+        confirmacion = new ConfirmacionCitaCorreo(confirmacion.citaId(), confirmacion.nombreEmpresa(), confirmacion.nombreCliente(),
+                confirmacion.destinatario(), confirmacion.servicioNombre(), confirmacion.sucursalNombre(), confirmacion.sucursalDireccion(),
+                confirmacion.sucursalTelefono(), confirmacion.inicio(), confirmacion.fin(), confirmacion.zonaHoraria(),
+                confirmacion.precio(), confirmacion.moneda(), folio, url);
         clienteCorreoSaliente.enviar(
                 configuracion,
                 new MensajeCorreoSaliente(
@@ -70,14 +89,14 @@ public class ServicioCorreoCitas {
     }
 
     private String construirAsunto(ConfirmacionCitaCorreo confirmacion) {
-        return "Confirmacion de tu cita #" + confirmacion.citaId() + " | " + confirmacion.nombreEmpresa();
+        return "Confirmacion de tu cita " + folioVisible(confirmacion) + " | " + confirmacion.nombreEmpresa();
     }
 
     private String construirTextoPlano(ConfirmacionCitaCorreo confirmacion) {
         StringBuilder contenido = new StringBuilder();
         contenido.append("Hola ").append(confirmacion.nombreCliente()).append(",\n\n");
         contenido.append("Tu cita fue registrada correctamente.\n\n");
-        contenido.append("Folio: ").append(confirmacion.citaId()).append('\n');
+        contenido.append("Folio: ").append(folioVisible(confirmacion)).append('\n');
         contenido.append("Servicio: ").append(confirmacion.servicioNombre()).append('\n');
         contenido.append("Sucursal: ").append(confirmacion.sucursalNombre()).append('\n');
         contenido.append("Fecha: ").append(formatearFecha(confirmacion.inicio(), confirmacion.zonaHoraria())).append('\n');
@@ -102,6 +121,7 @@ public class ServicioCorreoCitas {
         }
 
         contenido.append("\nSi necesitas reprogramar o cancelar, ponte en contacto con la sucursal.\n\n");
+        if (confirmacion.urlPolitica() != null) contenido.append("Política de anticipos y cancelación: ").append(confirmacion.urlPolitica()).append("\n\n");
         contenido.append("Gracias por tu preferencia.\n");
         contenido.append(confirmacion.nombreEmpresa());
         return contenido.toString();
@@ -139,7 +159,7 @@ public class ServicioCorreoCitas {
 
         html.append("<tr><td style=\"padding:32px 40px 18px;\">");
         html.append("<table role=\"presentation\" width=\"100%\" cellspacing=\"0\" cellpadding=\"0\" style=\"border-collapse:separate;border-spacing:0 14px;\">");
-        agregarFilaResumen(html, "Folio", "#" + confirmacion.citaId());
+        agregarFilaResumen(html, "Folio", folioVisible(confirmacion));
         agregarFilaResumen(html, "Servicio", confirmacion.servicioNombre());
         agregarFilaResumen(html, "Sucursal", confirmacion.sucursalNombre());
         agregarFilaResumen(html, "Fecha", capitalizar(formatearFecha(confirmacion.inicio(), confirmacion.zonaHoraria())));
@@ -190,8 +210,9 @@ public class ServicioCorreoCitas {
                 .append(escapeHtml(confirmacion.nombreEmpresa()))
                 .append("</strong>. Estaremos listos para recibirte.</p>");
         html.append("</td></tr>");
-        html.append("</table>");
-        html.append("</td></tr></table></body></html>");
+        if (confirmacion.urlPolitica() != null) html.append("<tr><td style=\"padding:20px\"><a href=\"")
+                .append(escapeHtml(confirmacion.urlPolitica())).append("\">Política de anticipos y cancelación</a></td></tr>");
+        html.append("</table></td></tr></table></body></html>");
         return html.toString();
     }
 
@@ -270,7 +291,7 @@ public class ServicioCorreoCitas {
     private String construirDescripcionCalendario(ConfirmacionCitaCorreo confirmacion) {
         StringBuilder descripcion = new StringBuilder();
         descripcion.append("Cita confirmada para ").append(confirmacion.nombreCliente()).append(". ");
-        descripcion.append("Folio ").append(confirmacion.citaId()).append(". ");
+        descripcion.append("Folio ").append(folioVisible(confirmacion)).append(". ");
         descripcion.append("Servicio: ").append(confirmacion.servicioNombre()).append(". ");
         descripcion.append("Sucursal: ").append(confirmacion.sucursalNombre()).append(". ");
         if (confirmacion.sucursalTelefono() != null && !confirmacion.sucursalTelefono().isBlank()) {
@@ -336,6 +357,10 @@ public class ServicioCorreoCitas {
         NumberFormat formatter = NumberFormat.getCurrencyInstance(LOCALE_MX);
         formatter.setCurrency(Currency.getInstance(moneda));
         return formatter.format(cantidad);
+    }
+
+    private String folioVisible(ConfirmacionCitaCorreo c) {
+        return c.folio() == null || c.folio().isBlank() ? "Reserva registrada" : c.folio();
     }
 
 }

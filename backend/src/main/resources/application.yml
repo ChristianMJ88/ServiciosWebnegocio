@@ -258,3 +258,14 @@ productos:
   importacion:
     max-filas: ${PRODUCTOS_IMPORTACION_MAX_FILAS:500}
     max-bytes: ${PRODUCTOS_IMPORTACION_MAX_BYTES:5242880}
+
+# Solo precarga el borrador: cada negocio debe revisar y publicar su propia versión.
+fluora:
+  politica:
+    predeterminada:
+      modo-no-show: CREDITO_REAGENDAR
+      dias-reagendar: 30
+      dias-aclaracion: 90
+      reagendados-max: 1
+      recordatorio-1-dias: 7
+      recordatorio-2-dias: 2

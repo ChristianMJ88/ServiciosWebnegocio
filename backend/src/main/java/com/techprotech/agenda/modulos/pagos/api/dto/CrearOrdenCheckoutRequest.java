@@ -16,7 +16,9 @@ public record CrearOrdenCheckoutRequest(
         @Size(max = 36) String cotizacionEnvioId,
         @Valid DireccionEntregaRequest direccion,
         @Valid @Size(max = 100) List<ProductoOrdenRequest> productos,
-        @Size(max = 20) List<Long> citaIds
+        @Size(max = 20) List<Long> citaIds,
+        @Positive Integer politicaVersion,
+        Boolean aceptaPolitica
 ) {
     public record ProductoOrdenRequest(
             @NotNull Long productoId,

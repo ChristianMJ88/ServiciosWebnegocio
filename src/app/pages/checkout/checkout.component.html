@@ -119,6 +119,9 @@
                   }
                 </section>
               }
+              @if (hasAppointments() && !order()) {
+                <div class="checkout-policy"><label><input type="checkbox" formControlName="acceptPolicy"><span>Acepto la <a [routerLink]="tenant.routeFor('politicas')" target="_blank" rel="noopener">política de anticipos y cancelación</a> del negocio.</span></label><small>Versión {{ config()?.politica?.version }}. Se conservará la versión aceptada al realizar tu pago.</small></div>
+              } @else {<p class="checkout-policy-link"><a [routerLink]="tenant.routeFor('politicas')" target="_blank" rel="noopener">Consultar política del negocio</a></p>}
               @if (!order()) {<button type="submit" [disabled]="creatingOrder()"><span>{{ creatingOrder() ? 'Validando orden…' : 'Continuar al pago' }}</span><i class="bi bi-arrow-right"></i></button>}
             </form>
 

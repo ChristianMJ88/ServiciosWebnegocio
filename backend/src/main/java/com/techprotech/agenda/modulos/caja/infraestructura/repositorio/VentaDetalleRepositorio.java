@@ -15,6 +15,7 @@ public interface VentaDetalleRepositorio extends JpaRepository<VentaDetalleEntid
 
     List<VentaDetalleEntidad> findByEmpresaIdAndVentaIdIn(Long empresaId, Collection<Long> ventaIds);
 
+
     @Query("select coalesce(sum(d.total), 0) from VentaDetalleEntidad d, VentaEntidad v " +
            "where d.ventaId = v.id and d.empresaId = :empresaId and v.empresaId = :empresaId and d.tipoConcepto = 'SERVICIO' and d.citaId = :citaId and v.estado = 'PAGADA'")
     BigDecimal sumarServiciosPagadosPorCita(Long empresaId, Long citaId);

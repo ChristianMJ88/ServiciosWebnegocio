@@ -69,6 +69,12 @@ public class ManejadorGlobalExcepciones {
         ));
     }
 
+    @ExceptionHandler(com.techprotech.agenda.modulos.citas.aplicacion.AnticipoNoDisponibleException.class)
+    public ResponseEntity<ErrorApi> manejarAnticipoNoDisponible(com.techprotech.agenda.modulos.citas.aplicacion.AnticipoNoDisponibleException ex) {
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(new ErrorApi(
+                "ANTICIPO_NO_DISPONIBLE", ex.getReason(), OffsetDateTime.now(reloj)));
+    }
+
     @ExceptionHandler(ResponseStatusException.class)
     public ResponseEntity<ErrorApi> manejarResponseStatus(ResponseStatusException ex) {
         log.warn("Error de negocio [{}]: {}", ex.getStatusCode(), ex.getReason() != null ? ex.getReason() : ex.getMessage());

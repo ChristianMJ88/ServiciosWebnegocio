@@ -91,6 +91,7 @@ interface FranjaDisponibleBackendResponse {
 }
 
 export interface CotizacionCitas {
+  reservableEnLinea?: boolean; motivoNoReservable?: string | null;
   requierePago?:boolean; importeRequeridoTotal?:number; requierePagoProductos?:boolean; avisoProductos?:string|null;
   productos?:{productoId:number;nombre:string;cantidad:number;precioListaUnitario:number;precioUnitario:number;descuento:number;total:number;moneda:string}[];
   moneda: string; subtotalLista: number; descuentoTotal: number; total: number; anticipoTotal: number;

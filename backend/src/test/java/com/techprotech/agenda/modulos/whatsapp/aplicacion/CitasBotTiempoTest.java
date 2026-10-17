@@ -29,9 +29,24 @@ class CitasBotTiempoTest {
         assertThat(resultado).extracting(CitaClienteResponse::id).containsExactly(3L,1L);
         verify(citas).listarMisCitas(7L,11L);
     }
+
+    @Test void folioSoloResuelveCitasPropiasDelTelefonoYTenant() {
+        var servicio = mock(ServicioWhatsappCitas.class, CALLS_REAL_METHODS);
+        var citas = mock(ServicioCitasCliente.class); var contexto = new ContextoEmpresaWhatsapp();
+        ReflectionTestUtils.setField(servicio,"servicioCitasCliente",citas);
+        ReflectionTestUtils.setField(servicio,"contextoEmpresaWhatsapp",contexto);
+        ReflectionTestUtils.setField(servicio,"reloj",Clock.fixed(Instant.parse("2026-10-15T14:00:00Z"),ZoneOffset.UTC));
+        var cliente = new ClienteEntidad(); cliente.setUsuarioId(11L);
+        when(citas.listarMisCitas(7L,11L)).thenReturn(List.of(cita(1L,"2026-10-15T10:00:00-06:00")));
+        Long id = contexto.ejecutar(7L,() -> ReflectionTestUtils.invokeMethod(servicio,"resolverCitaPorOpcion",cliente,"fl-abcdefg1",false));
+        assertThat(id).isEqualTo(1L);
+        org.assertj.core.api.Assertions.assertThatThrownBy(() -> contexto.ejecutar(7L,() -> ReflectionTestUtils.invokeMethod(servicio,"resolverCitaPorOpcion",cliente,"FL-AJENO999",false)))
+                .isInstanceOf(IllegalArgumentException.class).hasMessageContaining("No encontré esa opción");
+        verify(citas,times(2)).listarMisCitas(7L,11L);
+    }
     private CitaClienteResponse cita(Long id, String inicio) {
         var fecha = OffsetDateTime.parse(inicio);
         return new CitaClienteResponse(id,"CONFIRMADA",3L,8L,9L,null,null,null,fecha,fecha.plusHours(1),
-                null,"MXN",null,true,null,null,null);
+                null,"MXN",null,true,null,null,null, "FL-ABCDEFG" + id);
     }
 }

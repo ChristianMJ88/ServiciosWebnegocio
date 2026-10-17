@@ -108,7 +108,9 @@ BigDecimal anticipo=politica.importeRequerido();
                 suma(lineas.stream().map(LineaCotizacionCita::anticipo).toList()),
                 aplicada ? new PromocionAplicada(promocion.getId(),promocion.getTitulo(),promocion.getTipoDescuento().name(),promocion.getValorDescuento(),promocion.getMoneda()) : null,
                 aplicada?null:motivo!=null?motivo:motivosLinea.isEmpty()?null:String.join(". ",motivosLinea),List.copyOf(lineas),
-                online && lineas.stream().anyMatch(l -> l.importeRequerido().signum()>0), suma(lineas.stream().map(LineaCotizacionCita::importeRequerido).toList()));
+                online && lineas.stream().anyMatch(l -> l.importeRequerido().signum()>0), suma(lineas.stream().map(LineaCotizacionCita::importeRequerido).toList()),
+                List.of(), false, null, !calcularAnticipo || online || lineas.stream().noneMatch(l -> l.importeRequerido().signum() > 0),
+                calcularAnticipo && !online && lineas.stream().anyMatch(l -> l.importeRequerido().signum() > 0) ? AnticipoNoDisponibleException.MENSAJE : null);
     }
     private static boolean vigente(EmpresaSitioPromocionEntidad p,LocalDate fecha) {
         return (p.getFechaInicio()==null || !fecha.isBefore(p.getFechaInicio())) && (p.getFechaFin()==null || !fecha.isAfter(p.getFechaFin()));

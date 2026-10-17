@@ -251,7 +251,7 @@ public class ServicioCaja {
                             cita.getPrecioLista() != null ? cita.getPrecioLista() : cita.getPrecio(),
                             montoSeguro(cita.getDescuento()),
                             tituloPromocion(cita), cita.getSucursalId(),
-                            lote.diasAtraso(cita) == 0 ? "HOY" : "ANTERIOR", lote.diasAtraso(cita)
+                            lote.diasAtraso(cita) == 0 ? "HOY" : "ANTERIOR", lote.diasAtraso(cita), cita.getFolio(), cita.getClienteId()
                     );
                 })
                 .filter(cita -> cita.pendiente().compareTo(BigDecimal.ZERO) > 0)
@@ -271,7 +271,7 @@ public class ServicioCaja {
         }
     }
 
-    @Transactional
+    @Transactional(isolation = org.springframework.transaction.annotation.Isolation.READ_COMMITTED)
     public PagoCitaResponse registrarPago
     (Long empresaId, Long usuarioId, List<Long> sucursalesPermitidas, Long citaId, RegistrarPagoRequest request) {
             String metodoPago = normalizarMayusculas(request.metodoPago());
@@ -285,7 +285,7 @@ public class ServicioCaja {
                 throw new ResponseStatusException(CONFLICT, "La cita solo se puede cobrar después del check-in o cuando haya sido finalizada");
             }
 
-            BigDecimal pendiente = saldos.de(cita).pendiente();
+            BigDecimal pendiente = saldos.calcularBajoBloqueo(empresaId,List.of(cita)).get(citaId).pendiente();
             if (pendiente.compareTo(BigDecimal.ZERO) <= 0) {
                 throw new ResponseStatusException(CONFLICT, "La cita ya está pagada");
             }

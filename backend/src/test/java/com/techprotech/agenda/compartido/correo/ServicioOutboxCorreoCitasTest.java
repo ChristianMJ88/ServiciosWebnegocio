@@ -98,7 +98,7 @@ class ServicioOutboxCorreoCitasTest {
                 ZoneId.of("America/Mexico_City"),
                 new BigDecimal("320.00"),
                 "MXN"
-        );
+        , "FL-ABCDEFGH", "https://example.com/e/negocio/politicas");
     }
 
     private ConfiguracionCorreoEmpresaEntidad crearConfigEmpresaActiva() {

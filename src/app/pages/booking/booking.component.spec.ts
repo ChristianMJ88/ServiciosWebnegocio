@@ -121,6 +121,11 @@ it('does not quote again when only unselected available slots change', () => {
     expect(payload.precio).toBeUndefined();expect(payload.descuento).toBeUndefined();
   });
 
+  it('respeta el rechazo de reserva del backend sin crear cliente o cita',()=>{
+    const {component,serverQuote,reservar}=setup();component.cotizacion.set({...serverQuote,reservableEnLinea:false,motivoNoReservable:'Anticipo no disponible del negocio'});
+    component.onSubmit();expect(reservar).not.toHaveBeenCalled();
+  });
+
   it('allows normal prices when the server reports an unavailable promotion', () => {
     const {component,cotizar,serverQuote}=setup({sucursal:'10',servicios:'1',promocion:'88'});
     cotizar.mockReturnValue(of({...serverQuote,promocion:null,motivoNoAplicada:'La promoción venció',total:250,descuentoTotal:0,anticipoTotal:250,

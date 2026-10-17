@@ -34,6 +34,8 @@ public class ServicioConfiguracionCheckout {
     private final PropiedadesMercadoPago propiedadesMercadoPago;
     private final EmpresaEnvioConfigRepositorio configuracionesEnvio;
 
+    private final com.techprotech.agenda.modulos.politicas.aplicacion.ServicioPoliticaEmpresa politicas;
+
     public ServicioConfiguracionCheckout(
             EmpresaCheckoutConfigRepositorio configuraciones,
             ProveedorPagoRepositorio proveedores,
@@ -41,7 +43,8 @@ public class ServicioConfiguracionCheckout {
             EmpresaSitioConfigRepositorio sitios,
             PropiedadesMercadoPago propiedadesMercadoPago,
             EmpresaEnvioConfigRepositorio configuracionesEnvio
-    ) {
+    , com.techprotech.agenda.modulos.politicas.aplicacion.ServicioPoliticaEmpresa politicas) {
+        this.politicas = politicas;
         this.configuraciones = configuraciones;
         this.proveedores = proveedores;
         this.conexiones = conexiones;
@@ -63,6 +66,7 @@ public class ServicioConfiguracionCheckout {
         ProveedorPagoEntidad proveedor = proveedorMercadoPago();
         EmpresaProveedorPagoEntidad conexion = conexion(empresaId, proveedor.getId());
         validar(request, conexion);
+        if (request.habilitado()) politicas.exigirPublicada(empresaId);
         EmpresaCheckoutConfigEntidad configuracion = configuraciones.findById(empresaId).orElseGet(() -> predeterminada(empresaId));
         configuracion.setProveedorPredeterminadoId(proveedor.getId());
         configuracion.setHabilitado(request.habilitado());
@@ -93,7 +97,8 @@ public class ServicioConfiguracionCheckout {
         EmpresaCheckoutConfigEntidad configuracion = configuraciones.findById(sitio.getEmpresaId())
                 .orElseGet(() -> predeterminada(sitio.getEmpresaId()));
         EmpresaProveedorPagoEntidad conexion = conexion(sitio.getEmpresaId(), proveedor.getId());
-        boolean habilitado = configuracion.isHabilitado() && conectada(conexion);
+        var politica = politicas.vigente(sitio.getEmpresaId()).orElse(null);
+        boolean habilitado = configuracion.isHabilitado() && conectada(conexion) && politica != null;
         return new ConfiguracionCheckoutPublicaResponse(
                 habilitado,
                 proveedor.getCodigo(),
@@ -115,7 +120,11 @@ public class ServicioConfiguracionCheckout {
                 configuracion.getModalidadServicios(),
                 configuracion.getAnticipoPorcentaje(),
                 configuracion.getAnticipoImporte(),
-                configuracion.getMoneda()
+                configuracion.getMoneda(),
+                politica == null ? null : new ConfiguracionCheckoutPublicaResponse.Politica(politica.getVersion(), politica.getPublicadaEn().atOffset(java.time.ZoneOffset.UTC)),
+                habilitado && configuracion.isPermitirPagoProductos() && (configuracion.isAceptarTarjeta() || configuracion.isAceptarTransferencia() || configuracion.isAceptarEfectivoReferenciado()),
+                !habilitado || !configuracion.isPermitirPagoProductos() || !(configuracion.isAceptarTarjeta() || configuracion.isAceptarTransferencia() || configuracion.isAceptarEfectivoReferenciado())
+                    ? "El negocio no tiene disponible el pago de productos en línea en este momento. Tu carrito se conserva; contacta al negocio para comprar." : null
         );
     }
 

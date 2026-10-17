@@ -78,7 +78,8 @@ export class CheckoutComponent implements OnInit, OnDestroy {
     municipality: [''],
     postalCode: [''],
     countryCode: [''],
-    references: ['']
+    references: [''],
+    acceptPolicy: [false]
   });
 
   ngOnInit(): void {
@@ -124,6 +125,9 @@ export class CheckoutComponent implements OnInit, OnDestroy {
       this.form.markAllAsTouched();
       return;
     }
+    if (this.hasAppointments() && (!config.politica || !this.form.controls.acceptPolicy.value)) {
+      this.error.set('Acepta la política de anticipos y cancelación para continuar.'); return;
+    }
     this.creatingOrder.set(true);
     this.error.set(null);
     try {
@@ -147,13 +151,20 @@ export class CheckoutComponent implements OnInit, OnDestroy {
           referencias: this.optional(this.form.controls.references.value)
         } : null,
         productos: this.cart.items().map(item => ({ productoId: item.productoId, cantidad: item.cantidad })),
-        citaIds: this.appointmentIds()
+        citaIds: this.appointmentIds(),
+        politicaVersion: this.hasAppointments() ? config.politica?.version ?? null : null,
+        aceptaPolitica: this.hasAppointments() ? this.form.controls.acceptPolicy.value : null
       }, this.orderKey));
       this.order.set(order);
       await new Promise(resolve => setTimeout(resolve));
       if (this.selectedPaymentMethod() === 'CARD') await this.mountBrick(config, order);
     } catch (error: unknown) {
       this.error.set(this.message(error, 'No pudimos confirmar la orden. Revisa disponibilidad y vuelve a intentar.'));
+      if ((error as {status?: number})?.status === 409 && this.hasAppointments()) {
+        this.form.controls.acceptPolicy.setValue(false);
+        this.orderKey = this.key('orden');
+        this.checkout.config(slug).subscribe({next: updated => this.config.set(updated), error: () => {}});
+      }
     } finally {
       this.creatingOrder.set(false);
     }
@@ -440,8 +451,19 @@ export class CheckoutComponent implements OnInit, OnDestroy {
       }
     } catch (error: unknown) {
       this.error.set(this.message(error, 'El pago no pudo procesarse. Revisa los datos o intenta con otro método.'));
+      if ((error as {status?: number})?.status === 409 && this.hasAppointments()) await this.resetPolicyOrder(slug);
       throw error;
     }
+  }
+
+  private async resetPolicyOrder(slug: string): Promise<void> {
+    this.paymentController?.unmount(); this.paymentController = null;
+    this.statusController?.unmount(); this.statusController = null;
+    this.order.set(null); this.payment.set(null); this.brickReady.set(false); this.statusReady.set(false);
+    this.orderKey = this.key('orden'); this.paymentKey = this.key('pago');
+    this.form.controls.acceptPolicy.setValue(false);
+    try { this.config.set(await firstValueFrom(this.checkout.config(slug))); }
+    catch { this.config.set(null); this.error.set('La política cambió. Recarga la página para consultar y aceptar la versión vigente antes de pagar.'); }
   }
 
   private async mountStatus(publicKey: string, paymentId: string): Promise<void> {

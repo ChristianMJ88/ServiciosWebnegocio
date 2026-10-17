@@ -114,6 +114,7 @@
       <div class="footer-legal-links">
         @if (tenantActivo()) {
           <a [routerLink]="contactLink()" class="footer-bottom-link">Soporte</a>
+          <a [routerLink]="tenantContext.routeFor('politicas')" class="footer-bottom-link">Política de reservas</a>
         } @else {
           <a [attr.href]="accessHref()" class="footer-bottom-link">Acceso</a>
         }

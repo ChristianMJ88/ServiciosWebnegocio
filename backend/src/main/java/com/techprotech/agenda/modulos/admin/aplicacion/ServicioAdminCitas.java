@@ -300,6 +300,8 @@ public class ServicioAdminCitas {
     private final ProtectorSecretosCorreo protectorSecretosCorreo;
     private final ServicioCapacidadesEmpresa capacidadesEmpresa;
 
+    private final com.techprotech.agenda.modulos.politicas.aplicacion.ServicioPoliticaEmpresa politicas;
+
     public ServicioAdminCitas(
             CitaRepositorio citaRepositorio,
             HistorialEstadoCitaRepositorio historialEstadoCitaRepositorio,
@@ -342,7 +344,8 @@ public class ServicioAdminCitas {
             ServicioCierreCita cierres,
             ServicioCancelacionCita cancelaciones,
             ServicioReporteCobroCitas reporteCobros
-    ) {
+    , com.techprotech.agenda.modulos.politicas.aplicacion.ServicioPoliticaEmpresa politicas) {
+        this.politicas = politicas;
         this.eventos = eventos;
         this.cobros=cobros;
         this.cierres=cierres;
@@ -1394,7 +1397,7 @@ public class ServicioAdminCitas {
                         false,
                         nombreCliente(clientes, cita.getClienteId()),
                         correoCliente(usuarios, cita.getClienteId()),
-                        telefonoCliente(clientes, cita.getClienteId())
+                        telefonoCliente(clientes, cita.getClienteId()), cita.getFolio()
                 ), elegibles.get(cita.getId()), cancelables.get(cita.getId())))
                 .toList();
     }
@@ -1652,6 +1655,7 @@ public class ServicioAdminCitas {
                     servicio.setMoneda(servicioDef.moneda());
                     servicio.setOrdenPublico(servicioDef.ordenPublico());
                     servicio.setVisiblePublico(true);
+                    if (servicioDef.requiereAnticipo() && !servicio.isRequiereAnticipo()) politicas.exigirPublicada(servicio.getEmpresaId());
                     servicio.setRequiereAnticipo(servicioDef.requiereAnticipo());
                     servicio.setAnticipoTipo(servicioDef.anticipoTipo());
                     servicio.setAnticipoValor(servicioDef.anticipoValor());
@@ -2962,6 +2966,7 @@ public class ServicioAdminCitas {
         servicio.setMoneda(request.moneda().trim().toUpperCase());
         servicio.setOrdenPublico(request.ordenPublico());
         servicio.setVisiblePublico(request.visiblePublico());
+        if (request.requiereAnticipo() && !servicio.isRequiereAnticipo()) politicas.exigirPublicada(servicio.getEmpresaId());
         servicio.setRequiereAnticipo(request.requiereAnticipo());
         servicio.setAnticipoTipo(request.requiereAnticipo() ? normalizarAnticipoTipo(request.anticipoTipo()) : null);
         servicio.setAnticipoValor(request.requiereAnticipo() && !"TOTAL".equals(servicio.getAnticipoTipo()) ? validarAnticipoValor(request.anticipoValor()) : null);

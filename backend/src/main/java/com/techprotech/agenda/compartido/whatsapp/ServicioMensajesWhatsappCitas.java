@@ -259,32 +259,32 @@ public class ServicioMensajesWhatsappCitas {
         String mensaje = switch (tipoEvento) {
           case "CITA_RECORDATORIO_WHATSAPP" -> """
             Recordatorio de cita
-            Folio: %d
+            Folio: %s
             Servicio: %s
             Fecha: %s
             Sucursal: %s
             Direccion: %s
 
             Responde:
-            CONFIRMAR %d
-            CANCELAR %d
-            REAGENDAR|%d|AAAA-MM-DD HH:mm
+            CONFIRMAR %s
+            CANCELAR %s
+            REAGENDAR|%s|AAAA-MM-DD HH:mm
             """.formatted(
-            cita.getId(),
+            cita.getFolio(),
             servicio.getNombre(),
             fechaHora,
             sucursal.getNombre(),
             textoSeguro(sucursal.getDireccion()),
-            cita.getId(),
-            cita.getId(),
-            cita.getId()
+            cita.getFolio(),
+            cita.getFolio(),
+            cita.getFolio()
           );
           case "CITA_RECORDATORIO_CONFIRMACION_WHATSAPP" -> """
             Hola %s, te recordamos tu cita en %s para el %s a las %s.
 
             Aun esta pendiente de confirmacion.
             Para asegurar tu lugar responde:
-            CONFIRMAR %d
+            CONFIRMAR %s
 
             Si deseas revisarla, responde MIS CITAS.
             """.formatted(
@@ -292,14 +292,14 @@ public class ServicioMensajesWhatsappCitas {
             sucursal.getNombre(),
             fecha,
             hora,
-            cita.getId()
+            cita.getFolio()
           );
           case "CITA_REPROGRAMADA_PENDIENTE_WHATSAPP" -> """
             Hola %s, tu cita en %s fue reprogramada para el %s a las %s.
 
             Direccion: %s.
             Para asegurar tu lugar responde:
-            CONFIRMAR %d
+            CONFIRMAR %s
 
             Si necesitas revisarla, tambien puedes responder MIS CITAS.
             """.formatted(
@@ -308,7 +308,7 @@ public class ServicioMensajesWhatsappCitas {
             fecha,
             hora,
             textoSeguro(sucursal.getDireccion()),
-            cita.getId()
+            cita.getFolio()
           );
           case "CITA_CANCELADA_NEGOCIO_WHATSAPP" -> """
             Hola %s, tu cita en %s programada para el %s a las %s fue cancelada por el negocio.
@@ -341,28 +341,29 @@ public class ServicioMensajesWhatsappCitas {
           );
           case null, default -> """
             Tu cita fue registrada
-            Folio: %d
+            Folio: %s
             Servicio: %s
             Fecha: %s
             Sucursal: %s
 
             Responde:
-            CONFIRMAR %d
-            CANCELAR %d
-            REAGENDAR|%d|AAAA-MM-DD HH:mm
+            CONFIRMAR %s
+            CANCELAR %s
+            REAGENDAR|%s|AAAA-MM-DD HH:mm
             También puedes consultar: MIS CITAS
             """.formatted(
-            cita.getId(),
+            cita.getFolio(),
             servicio.getNombre(),
             fecha,
             sucursal.getNombre(),
-            cita.getId(),
-            cita.getId(),
-            cita.getId()
+            cita.getFolio(),
+            cita.getFolio(),
+            cita.getFolio()
           );
         };
 
-      return clienteWhatsappTwilio.enviarMensaje(empresaId, telefonoDestino, mensaje.trim());
+      String contenido = mensaje.contains("Folio:") ? mensaje.trim() : mensaje.trim() + "\n\nFolio: " + cita.getFolio();
+      return clienteWhatsappTwilio.enviarMensaje(empresaId, telefonoDestino, contenido);
     }
 
     private void validarPlantillaConfigurada(String tipoEvento, String plantillaSid, Long empresaId) {
@@ -370,7 +371,7 @@ public class ServicioMensajesWhatsappCitas {
             return;
         }
         throw new IllegalStateException(
-                "No hay plantilla configurada para el evento %s en la empresa %d".formatted(tipoEvento, empresaId)
+                "No hay plantilla configurada para el evento %s en la empresa %s".formatted(tipoEvento, empresaId)
         );
     }
 

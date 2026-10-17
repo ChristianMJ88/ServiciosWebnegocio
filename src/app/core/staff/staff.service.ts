@@ -11,6 +11,7 @@ export interface MetadatosDisponibilidadStaff {
 }
 
 export interface CitaStaff extends DatosCobroCita {
+  folio?: string | null;
   puedeCerrar?: boolean;
   id: number;
   estado: string;

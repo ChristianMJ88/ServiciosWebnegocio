@@ -25,7 +25,7 @@
           <div><dt>Descuento</dt><dd>−{{ currentQuote.descuentoTotal | appMoney:currentQuote.moneda:2:2 }}</dd></div>
         }
         @if (currentQuote.anticipoTotal > 0 && currentQuote.anticipoTotal < currentQuote.total) {
-          <div><dt>{{currentQuote.requierePago ? 'A pagar ahora' : 'Anticipo en el negocio'}}</dt><dd>{{ currentQuote.anticipoTotal | appMoney:currentQuote.moneda:2:2 }}</dd></div>
+          <div><dt>{{currentQuote.requierePago ? 'A pagar ahora' : 'Anticipo requerido'}}</dt><dd>{{ currentQuote.anticipoTotal | appMoney:currentQuote.moneda:2:2 }}</dd></div>
         }
       }
       <div><dt>Tiempo estimado</dt><dd>{{ duration() }} min</dd></div>
@@ -35,7 +35,8 @@
         <div class="cart-total"><dt>Total {{ total.currency }}</dt><dd>@if(pricePending()) { Calculando… } @else { {{ total.amount | appMoney:total.currency:2:2 }} }</dd></div>
       }
     </dl>
-    <p class="cart-note">{{quote()?.requierePago ? 'Las citas con pago se confirman cuando el pago sea aprobado.' : 'Te enviaremos las instrucciones para confirmar tu cita.'}}</p>
+    @if(quote()?.reservableEnLinea === false) {<p role="alert">{{quote()?.motivoNoReservable}}</p>}
+    @if(quote()?.reservableEnLinea !== false) {<p class="cart-note">{{quote()?.requierePago ? 'Las citas con pago se confirman cuando el pago sea aprobado.' : 'Te enviaremos las instrucciones para confirmar tu cita.'}}</p>}
   } @else {
     <div class="cart-empty"><i class="bi bi-calendar-plus" aria-hidden="true"></i><p>Empieza con un servicio</p><span>Puedes agregar varios a tu cita.</span></div>
   }

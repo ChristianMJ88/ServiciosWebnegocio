@@ -215,7 +215,7 @@ class ServicioAdminCitasCorreoTest {
                 null,
                 null,
                 null
-        );
+        , org.mockito.Mockito.mock(com.techprotech.agenda.modulos.politicas.aplicacion.ServicioPoliticaEmpresa.class));
     }
 
     private ConfiguracionCorreoEmpresaRepositorio crearRepositorio(Map<Long, ConfiguracionCorreoEmpresaEntidad> store) {

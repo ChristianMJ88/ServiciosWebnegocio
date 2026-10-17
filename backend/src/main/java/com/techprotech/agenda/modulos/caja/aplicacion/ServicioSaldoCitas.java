@@ -37,6 +37,16 @@ public class ServicioSaldoCitas {
         if(ids.isEmpty()) return Map.of();
         var caja=totales(pagos.sumarPagadoPorCitas(empresaId,ids));
         var venta=totales(ventas.sumarServiciosPagadosPorCitas(empresaId,ids));
+        return calcularSaldos(propias,caja,venta);
+    }
+
+    /** Invocar en READ_COMMITTED después de bloquear las citas; evita bloqueos de hueco en tablas de pagos. */
+    @Transactional(propagation = org.springframework.transaction.annotation.Propagation.MANDATORY)
+    public Map<Long, SaldoCita> calcularBajoBloqueo(Long empresaId, Collection<CitaEntidad> bloqueadas) {
+        return calcular(empresaId,bloqueadas);
+    }
+
+    private Map<Long,SaldoCita> calcularSaldos(Collection<CitaEntidad> propias, Map<Long,BigDecimal> caja, Map<Long,BigDecimal> venta) {
         var resultado=new HashMap<Long,SaldoCita>();
         for(var cita:propias) {
             var precio=seguro(cita.getPrecio()).max(BigDecimal.ZERO);
@@ -71,7 +81,7 @@ public class ServicioSaldoCitas {
     }
     private static Map<Long,BigDecimal> totales(List<Object[]> filas) {
         var mapa=new HashMap<Long,BigDecimal>();
-        for(var fila:filas)mapa.put(((Number)fila[0]).longValue(),seguro((BigDecimal)fila[1]));
+        for(var fila:filas)mapa.merge(((Number)fila[0]).longValue(),seguro((BigDecimal)fila[1]),BigDecimal::add);
         return mapa;
     }
     private static BigDecimal seguro(BigDecimal valor) { return valor==null?BigDecimal.ZERO:valor; }

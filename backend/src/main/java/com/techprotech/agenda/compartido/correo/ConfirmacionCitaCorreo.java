@@ -17,6 +17,8 @@ public record ConfirmacionCitaCorreo(
         OffsetDateTime fin,
         ZoneId zonaHoraria,
         BigDecimal precio,
-        String moneda
+        String moneda,
+        String folio,
+        String urlPolitica
 ) {
 }

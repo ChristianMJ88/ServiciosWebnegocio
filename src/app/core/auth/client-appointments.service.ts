@@ -4,6 +4,7 @@ import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
 
 export interface CitaCliente {
+  folio?: string | null;
   puedeCerrar?: boolean;
   puedeCancelar?: boolean;
   id: number;

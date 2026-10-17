@@ -17,8 +17,18 @@ public record RegistrarVentaRequest(
         @NotBlank String metodoPago,
         @Size(max = 120) String referencia,
         @Size(max = 500) String observaciones,
-        Long ventaPendienteId
+        Long ventaPendienteId,
+        @Size(max = 20) List<@NotNull Long> citaIds
 ) {
+    public RegistrarVentaRequest(Long sucursalId,Long citaId,Long clienteId,List<ProductoVentaRequest> productos,String metodoPago,String referencia,String observaciones, Long ventaPendienteId) {
+        this(sucursalId,citaId,clienteId,productos,metodoPago,referencia,observaciones,ventaPendienteId,null);
+    }
+    public List<Long> citasNormalizadas() {
+        if (citaId != null && citaIds != null) throw new org.springframework.web.server.ResponseStatusException(org.springframework.http.HttpStatus.BAD_REQUEST,"Usa citaId o citaIds, no ambos");
+        var lista = citaIds == null ? (citaId == null ? List.<Long>of() : List.of(citaId)) : citaIds;
+        if (lista.size() > 20 || lista.stream().anyMatch(java.util.Objects::isNull)) throw new org.springframework.web.server.ResponseStatusException(org.springframework.http.HttpStatus.BAD_REQUEST,"Indica hasta veinte citas válidas");
+        return lista.stream().distinct().sorted().toList();
+    }
     public RegistrarVentaRequest(Long sucursalId,Long citaId,Long clienteId,List<ProductoVentaRequest> productos,String metodoPago,String referencia,String observaciones) {
         this(sucursalId,citaId,clienteId,productos,metodoPago,referencia,observaciones,null);
     }

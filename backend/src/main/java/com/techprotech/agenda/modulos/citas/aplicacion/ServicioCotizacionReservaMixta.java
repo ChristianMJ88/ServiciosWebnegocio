@@ -28,6 +28,7 @@ public class ServicioCotizacionReservaMixta {
         var requerido=(cotizacion.requierePago()?cotizacion.importeRequeridoTotal():BigDecimal.ZERO).add(online?neto:BigDecimal.ZERO);
         return new ResultadoCotizacionCitas(cotizacion.moneda(),cotizacion.subtotalLista().add(lista),cotizacion.descuentoTotal().add(lista.subtract(neto)),cotizacion.total().add(neto),requerido,
                 cotizacion.promocion(),cotizacion.motivoNoAplicada(),cotizacion.lineas(),cotizacion.requierePago() || online && neto.signum()>0,requerido,List.copyOf(lineas),online && neto.signum()>0,
-                online?null:"El negocio no tiene habilitada la compra de productos en línea. Tu carrito se conserva.");
+                online?null:"El negocio no tiene habilitada la compra de productos en línea. Tu carrito se conserva.",
+                cotizacion.reservableEnLinea(), cotizacion.motivoNoReservable());
     }
 }

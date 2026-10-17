@@ -43,6 +43,7 @@ export class ProductsComponent implements OnInit {
   readonly categoryId = signal<number | null>(null);
   readonly cartOpen = signal(false);
   readonly onlineCheckout = signal(false);
+  readonly checkoutNotice = signal<string | null>(null);
   readonly addedProduct = signal<string | null>(null);
   private readonly document = inject(DOCUMENT);
   private feedbackTimer: ReturnType<typeof setTimeout> | undefined;
@@ -156,8 +157,8 @@ export class ProductsComponent implements OnInit {
       error: error => this.error.set(error?.status === 404 ? 'Esta tienda todavía no está disponible.' : 'No pudimos cargar los productos. Intenta de nuevo.')
     });
     this.checkout.config(slug).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
-      next: config => this.onlineCheckout.set(config.habilitado && config.aceptarTarjeta && config.permitirPagoProductos),
-      error: () => this.onlineCheckout.set(false)
+      next: config => {this.onlineCheckout.set(config.productosOnlineDisponibles === true); this.checkoutNotice.set(config.motivoProductosNoDisponibles ?? null);},
+      error: () => {this.onlineCheckout.set(false); this.checkoutNotice.set('No pudimos comprobar el pago en línea. Tu carrito se conserva; intenta de nuevo.');}
     });
   }
 

@@ -2,20 +2,22 @@
   <div class="card-body recepcion-card-body">
     <div class="recepcion-card-heading">
       <span class="recepcion-card-kicker">Agenda del día</span>
-      <h2>Citas activas</h2>
+      <h2>Citas {{titulo.toLowerCase()}}</h2>
       <p>Clientes programados para la fecha y sucursal seleccionadas.</p>
     </div>
 
-    @if (!citas.length) {
-      <div class="recepcion-empty">No hay citas registradas para esta fecha en la sucursal seleccionada.</div>
+    <div class="agenda-segments" role="group" aria-label="Filtrar agenda">@for(s of secciones; track s.codigo) {<button type="button" [attr.aria-pressed]="seccion === s.codigo" (click)="seccion=s.codigo">{{s.etiqueta}} <span>{{contar(s.codigo)}}</span></button>}</div>
+    @if (!citasVisibles.length) {
+      <div class="recepcion-empty">No hay citas en esta sección para la fecha y sucursal seleccionadas.</div>
     } @else {
       <div class="recepcion-appointments">
-        @for (cita of citas; track cita.id) {
+        @for (cita of citasVisibles; track cita.id) {
           <div class="recepcion-appointment-card">
             <div class="recepcion-appointment-head">
               <div>
                 <strong>{{ cita.clienteNombre }}</strong>
                 <span>{{ cita.servicioNombre }} · {{ cita.prestadorNombre }}</span>
+                @if (cita.folio) {<span class="d-block small">Folio: {{ cita.folio }}</span>}
               </div>
               <span class="badge rounded-pill recepcion-status-badge" [class.has-checkin]="!!cita.checkInEn">
                 {{ cita.estadoEtiqueta ?? etiquetaEstado(cita.estado) }}
@@ -30,6 +32,7 @@
                 <span class="recepcion-checkin-time"><i class="bi bi-check2-circle"></i>Llegada: {{ cita.checkInEn | date:'dd/MM HH:mm':'':'es-MX' }}</span>
               }
             </div>
+            @if(cita.seccionAgenda === 'FINALIZADA' && cita.puedeCerrar) {<span class="badge text-bg-success">{{cita.estadoCobro === 'PAGADA' ? 'Pagada · por cerrar' : 'Atendida · por cerrar'}}</span>}
             <app-cita-cobro [datos]="cita" [citaId]="cita.id" />
             @if (cita.notas) {
               <div class="recepcion-appointment-note">{{ cita.notas }}</div>

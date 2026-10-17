@@ -2172,8 +2172,8 @@ public class ServicioWhatsappCitas {
                 notas == null || notas.isBlank() ? null : notas
         ));
 
-        return "Tu cita fue creada con folio %d para el %s. Si deseas ver mas detalles responde MIS CITAS.".formatted(
-                cita.id(),
+        return "Tu cita fue creada con folio %s para el %s. Si deseas ver mas detalles responde MIS CITAS.".formatted(
+                cita.folio(),
                 cita.inicio().format(FORMATO_RESPUESTA)
         );
     }
@@ -2331,6 +2331,11 @@ public class ServicioWhatsappCitas {
             return citas.get(opcion - 1).id();
         }
 
+        if (valor != null && valor.trim().toUpperCase(java.util.Locale.ROOT).startsWith("FL-")) {
+            String folio = valor.trim().toUpperCase(java.util.Locale.ROOT);
+            return citas.stream().filter(c -> folio.equals(c.folio())).map(CitaClienteResponse::id).findFirst()
+                    .orElseThrow(() -> new IllegalArgumentException("No encontré esa opción para este número. Responde MIS CITAS para revisar tus opciones."));
+        }
         Long citaId = parsearLong(valor, "La opción indicada no es válida");
         return citas.stream()
                 .filter(cita -> cita.id().equals(citaId))
@@ -2452,7 +2457,8 @@ public class ServicioWhatsappCitas {
     }
 
     private String formatearCitaVisible(CitaClienteResponse cita) {
-        return "%s · %s · %s · %s".formatted(
+        return "%s · %s · %s · %s · %s".formatted(
+                cita.folio() == null ? "" : cita.folio(),
                 cita.servicioNombre(),
                 formatearFechaHoraCliente(cita.inicio()),
                 nombreVisibleSucursal(cita.sucursalNombre()),

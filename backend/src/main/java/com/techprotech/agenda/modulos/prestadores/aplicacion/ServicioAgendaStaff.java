@@ -177,7 +177,7 @@ public class ServicioAgendaStaff {
                 cita.getInicio().atZone(zonaHoraria).toOffsetDateTime(),
                 cita.getFin().atZone(zonaHoraria).toOffsetDateTime(),
                 cita.getNotas(), cita.getSucursalId(),
-                cobro.saldo().pagado(), cobro.saldo().condonado(), cobro.saldo().pendiente(), cobro.saldo().estadoCobro(), cobro.puedeCobrar(), puedeCerrar, cita.getMoneda()
+                cobro.saldo().pagado(), cobro.saldo().condonado(), cobro.saldo().pendiente(), cobro.saldo().estadoCobro(), cobro.puedeCobrar(), puedeCerrar, cita.getMoneda(), cita.getFolio()
         );
     }
 }

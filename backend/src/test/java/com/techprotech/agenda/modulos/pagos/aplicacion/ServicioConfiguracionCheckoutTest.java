@@ -31,6 +31,7 @@ class ServicioConfiguracionCheckoutTest {
     private EmpresaProveedorPagoRepositorio conexiones;
     private EmpresaSitioConfigRepositorio sitios;
     private ServicioConfiguracionCheckout servicio;
+    private com.techprotech.agenda.modulos.politicas.aplicacion.ServicioPoliticaEmpresa politicas;
 
     @BeforeEach
     void preparar() {
@@ -44,9 +45,10 @@ class ServicioConfiguracionCheckoutTest {
         proveedor.setCodigo("MERCADO_PAGO");
         when(proveedores.findByCodigoAndActivoTrue("MERCADO_PAGO")).thenReturn(Optional.of(proveedor));
         when(configuraciones.save(any())).thenAnswer(invocacion -> invocacion.getArgument(0));
+        politicas = mock(com.techprotech.agenda.modulos.politicas.aplicacion.ServicioPoliticaEmpresa.class);
         servicio = new ServicioConfiguracionCheckout(configuraciones, proveedores, conexiones, sitios,
                 new PropiedadesMercadoPago(true, "PRUEBA", "", "", "", "", "", "", "", "", "NEWLAND_N950__SBX0000001"),
-                configuracionesEnvio);
+                configuracionesEnvio, politicas);
     }
 
     @Test
@@ -74,6 +76,9 @@ class ServicioConfiguracionCheckoutTest {
         when(conexiones.findByEmpresaIdAndProveedorPagoIdAndAmbiente(25L, 7L, "PRUEBA"))
                 .thenReturn(Optional.of(conexion("public-key-tenant-25")));
 
+        var politica = new com.techprotech.agenda.modulos.politicas.infraestructura.entidad.PoliticaEmpresaEntidad();
+        politica.setVersion(3); politica.setPublicadaEn(java.time.LocalDateTime.of(2026,10,17,16,0));
+        when(politicas.vigente(25L)).thenReturn(Optional.of(politica));
         ConfiguracionCheckoutPublicaResponse respuesta = servicio.obtenerPublica("NAIL-ART");
 
         assertThat(respuesta.habilitado()).isTrue();
@@ -127,4 +132,13 @@ class ServicioConfiguracionCheckoutTest {
         conexion.setLlavePublica(llavePublica);
         return conexion;
     }
+    @Test void rechazaActivarCheckoutSinPoliticaPublicada() {
+        when(conexiones.findByEmpresaIdAndProveedorPagoIdAndAmbiente(25L,7L,"PRUEBA"))
+                .thenReturn(Optional.of(conexion("public-key")));
+        doThrow(new ResponseStatusException(org.springframework.http.HttpStatus.CONFLICT,"Publica la política"))
+                .when(politicas).exigirPublicada(25L);
+        assertThatThrownBy(() -> servicio.actualizar(25L,requestHabilitado())).isInstanceOf(ResponseStatusException.class);
+        verify(configuraciones,never()).save(any());
+    }
+
 }

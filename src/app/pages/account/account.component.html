@@ -73,6 +73,7 @@
                               <div>
                                 <div class="small text-light opacity-75">{{ cita.sucursalNombre }}</div>
                                 <div class="text-light fw-bold">{{ cita.servicioNombre }}</div>
+                @if (cita.folio) {<span class="d-block small">Folio: {{ cita.folio }}</span>}
                                 <div class="small text-light opacity-75 mt-1">Con {{ cita.prestadorNombre }}</div>
                               </div>
                               <span class="badge rounded-pill estado-badge" [ngClass]="'estado-' + cita.estado.toLowerCase()">

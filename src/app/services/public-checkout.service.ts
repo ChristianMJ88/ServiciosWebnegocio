@@ -4,6 +4,8 @@ import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
 
 export interface PublicCheckoutConfig {
+  productosOnlineDisponibles?: boolean; motivoProductosNoDisponibles?: string | null;
+  politica?: {version: number; vigenteDesde: string} | null;
   habilitado: boolean;
   proveedor: string;
   ambiente: 'PRUEBA' | 'PRODUCCION';
@@ -171,6 +173,8 @@ export class PublicCheckoutService {
     direccion: DeliveryAddressInput | null;
     productos: Array<{ productoId: number; cantidad: number }>;
     citaIds: number[];
+    politicaVersion: number | null;
+    aceptaPolitica: boolean | null;
   }, idempotencyKey: string): Observable<CheckoutOrder> {
     return this.http.post<CheckoutOrder>(
       `${environment.apiBaseUrl}/publico/empresas/${encodeURIComponent(slug)}/checkout/ordenes`,

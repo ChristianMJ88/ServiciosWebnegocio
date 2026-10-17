@@ -70,7 +70,7 @@ describe('Momentos UTC en Caja y Recepción', () => {
 
   it('muestra cuándo se registró la llegada sin modificar la cita', () => {
     const vista = render(RecepcionAgendaSectionComponent, { citas: [{ ...cita, id: 1, estado: 'CONFIRMADA',
-      checkInEn: momento }], guardando: false, puedeGestionarCitas: false, puedeRegistrarCheckIn: false,
+      seccionAgenda: 'ACTIVA', checkInEn: momento }], guardando: false, puedeGestionarCitas: false, puedeRegistrarCheckIn: false,
       estadosCita: [], estadoPendiente: '', estadosFinalizables: [], estadosCancelables: [] });
     expect(vista.querySelector('.recepcion-checkin-time')?.textContent).toContain(local());
     expect(vista.querySelector('.recepcion-appointment-meta')?.textContent).toContain('15/10/2026 10:00');

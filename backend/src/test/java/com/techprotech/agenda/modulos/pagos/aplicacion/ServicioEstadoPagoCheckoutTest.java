@@ -26,7 +26,8 @@ class ServicioEstadoPagoCheckoutTest {
     private final ServicioConfirmacionCitasCheckout citas=mock(ServicioConfirmacionCitasCheckout.class);
     private final ServicioConciliacionPagos conciliacion=mock(ServicioConciliacionPagos.class);
     private final Clock reloj=Clock.fixed(Instant.parse("2026-10-13T12:00:00Z"),ZoneOffset.UTC);
-    private final ServicioEstadoPagoCheckout servicio=new ServicioEstadoPagoCheckout(intentos,ordenes,inventario,citas,conciliacion,mock(EntityManager.class),reloj);
+    private final ServicioAceptacionPoliticaCheckout aceptacion = mock(ServicioAceptacionPoliticaCheckout.class);
+    private final ServicioEstadoPagoCheckout servicio=new ServicioEstadoPagoCheckout(intentos,ordenes,inventario,citas,conciliacion,mock(EntityManager.class),reloj, aceptacion);
 
     @Test void rechazoConservaApartadoEInventarioYPermiteOtroIntento() {
         var orden=preparar(8L,"CREADO","PAGO_EN_PROCESO");
@@ -38,6 +39,8 @@ class ServicioEstadoPagoCheckoutTest {
         when(inventario.confirmarSiDisponible(7L,9L)).thenReturn(true);
         when(citas.confirmar(7L,9L)).thenReturn(true);
         servicio.aplicar(10L,resultado(EstadoPago.APROBADO));
+        var locks = inOrder(inventario, aceptacion, citas);
+        locks.verify(inventario).confirmarSiDisponible(7L,9L); locks.verify(aceptacion).acreditarAceptacion(orden); locks.verify(citas).confirmar(7L,9L);
         assertThat(orden.getEstado()).isEqualTo("PAGADA");
         verify(conciliacion).registrarCheckout(eq(segundo),any());
     }
@@ -65,6 +68,7 @@ class ServicioEstadoPagoCheckoutTest {
         when(inventario.confirmarSiDisponible(7L,9L)).thenReturn(false);
         servicio.aplicar(8L,resultado(EstadoPago.APROBADO));
         assertThat(orden.isRequiereConciliacion()).isTrue();
+        verify(aceptacion).acreditarAceptacion(orden);
         verify(citas,never()).confirmar(any(),any());
         verify(conciliacion).registrarCheckout(any(),any());
     }

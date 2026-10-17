@@ -641,7 +641,7 @@ public class ServicioRecepcion {
                 cita.getNotas(),
                 de(cita.getCheckInEn()),
                 cita.getCheckInPorUsuarioId(),
-                cobro.saldo().pagado(), cobro.saldo().condonado(), cobro.saldo().pendiente(), cobro.saldo().estadoCobro(), cobro.puedeCobrar(), puedeCerrar, cancelaciones.puedeCancelar(cita, cobro.saldo())
+                cobro.saldo().pagado(), cobro.saldo().condonado(), cobro.saldo().pendiente(), cobro.saldo().estadoCobro(), cobro.puedeCobrar(), puedeCerrar, cancelaciones.puedeCancelar(cita, cobro.saldo()), cita.getFolio(), com.techprotech.agenda.modulos.citas.aplicacion.SeccionAgendaCita.de(cita, cobro.saldo())
         );
     }
 }

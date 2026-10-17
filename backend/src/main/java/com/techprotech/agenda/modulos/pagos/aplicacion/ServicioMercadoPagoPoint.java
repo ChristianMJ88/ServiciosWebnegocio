@@ -110,7 +110,7 @@ public class ServicioMercadoPagoPoint {
         return mapear(remota, entidad, Map.of(sucursal.getId(), sucursal.getNombre()));
     }
 
-    @Transactional
+    @Transactional(isolation = org.springframework.transaction.annotation.Isolation.READ_COMMITTED)
     public OrdenPointResponse crearOrden(Long empresaId, Long usuarioId, List<Long> sucursalesPermitidas,
                                          String idempotencia, CrearOrdenPointRequest request) {
         validarIdempotencia(idempotencia);
