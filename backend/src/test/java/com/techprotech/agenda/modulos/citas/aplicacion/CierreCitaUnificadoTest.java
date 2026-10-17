@@ -33,6 +33,7 @@ import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class CierreCitaUnificadoTest {
+    @Mock org.springframework.context.ApplicationEventPublisher observador;
     @Mock CitaRepositorio citas;
     @Mock HistorialEstadoCitaRepositorio historial;
     @Mock ServicioOutboxCorreoCitas correo;
@@ -54,17 +55,31 @@ class CierreCitaUnificadoTest {
     Clock reloj=Clock.fixed(Instant.parse("2026-10-15T16:00:00Z"),ZoneOffset.UTC);
 
     @BeforeEach void preparar() {
-        cierre=new ServicioCierreCita(citas,historial,correo,whatsapp,clientes,reloj,zonas);
+        cierre=new ServicioCierreCita(citas, historial, com.techprotech.agenda.modulos.citas.aplicacion.EventosCitaPruebas.publicador(correo, whatsapp, clientes, reloj), reloj, zonas);
+        var notificaciones = EventosCitaPruebas.publicador(correo, whatsapp, clientes, reloj);
+        var eventos = new PublicadorEventosCita(evento -> { observador.publishEvent(evento); notificaciones.publicar((com.techprotech.agenda.modulos.citas.dominio.eventos.EventoCita) evento); }, reloj);
+        ReflectionTestUtils.setField(cierre, "eventos", eventos);
+        org.springframework.test.util.ReflectionTestUtils.setField(recepcion, "eventos", eventos);
+        org.springframework.test.util.ReflectionTestUtils.setField(admin, "eventos", eventos);
         cobros=new ServicioConsultaCobroCitas(new ServicioSaldoCitas(citas,pagos,ventas),sesiones,null);
         for(Object servicio:List.of(recepcion,staff,admin)) {
             ReflectionTestUtils.setField(servicio,"cierres",cierre);
             ReflectionTestUtils.setField(servicio,"cobros",cobros);
             ReflectionTestUtils.setField(servicio,"reloj",reloj);
         }
-        var cancelaciones = new ServicioCancelacionCita(citas,new ServicioSaldoCitas(citas,pagos,ventas));
+        var cancelaciones = new ServicioCancelacionCita(citas, new ServicioSaldoCitas(citas,pagos,ventas), historial, eventos, reloj);
         ReflectionTestUtils.setField(recepcion,"cancelaciones",cancelaciones);
         ReflectionTestUtils.setField(admin,"cancelaciones",cancelaciones);
         lenient().when(zonas.de(7L,3L)).thenReturn(ZoneId.of("America/Mexico_City"));
+    }
+
+    @Test void confirmarDesdeStaffConservaElComportamientoSinNotificacionesNuevasEnFaseUno() {
+        var cita=cita(); cita.setEstado("PENDIENTE");
+        when(citas.findByIdAndEmpresaIdAndPrestadorId(1L,7L,11L)).thenReturn(Optional.of(cita));
+        staff.cambiarEstado(actor(),1L,"CONFIRMADA");
+        assertThat(cita.getEstado()).isEqualTo("CONFIRMADA");
+        verify(historial).save(argThat(h -> h.getCambiadoPorUsuarioId().equals(11L) && h.getEstadoNuevo().equals("CONFIRMADA")));
+        verifyNoInteractions(observador,correo,whatsapp);
     }
 
     @ParameterizedTest @EnumSource(OrigenCierreCita.class)
@@ -85,6 +100,9 @@ class CierreCitaUnificadoTest {
         verify(whatsapp).programarGraciasVisita(7L,1L,cliente.getTelefono(),cita.getInicio());
         cierre.cerrar(actor(),1L,"FINALIZADA",origen);
         verify(historial,times(1)).save(any());verifyNoMoreInteractions(correo,whatsapp);
+        verify(observador).publishEvent(argThat((Object e) -> e instanceof com.techprotech.agenda.modulos.citas.dominio.eventos.CitaFinalizada f
+                && f.datos().origen().name().equals(origen.name()) && f.datos().actorId().equals(11L)));
+        verifyNoMoreInteractions(observador);
     }
 
     @ParameterizedTest @EnumSource(OrigenCierreCita.class)
@@ -98,6 +116,8 @@ class CierreCitaUnificadoTest {
         cierre.cerrar(actor(),1L,"NO_ASISTIO",origen);
         verify(correo).programarNoAsistio(7L,1L,cita.getInicio());verifyNoMoreInteractions(correo);verifyNoInteractions(whatsapp);
         verify(historial,times(1)).save(any());
+        verify(observador).publishEvent(isA(com.techprotech.agenda.modulos.citas.dominio.eventos.CitaNoAsistio.class));
+        verifyNoMoreInteractions(observador);
     }
 
     @ParameterizedTest @EnumSource(OrigenCierreCita.class)
@@ -139,7 +159,7 @@ class CierreCitaUnificadoTest {
     @Test void elegibilidadCambiaAlInicioYElContratoAdminLoExponeSinUnaReglaDeRelojEnFrontend() throws Exception {
         var cita=cita();cita.setInicio(cita.getInicio().plusSeconds(1));
         assertThat(cierre.puedeCerrar(cita)).isFalse();
-        var despues=new ServicioCierreCita(citas,historial,correo,whatsapp,clientes,Clock.offset(reloj,Duration.ofSeconds(1)),zonas);
+        var despues=new ServicioCierreCita(citas, historial, com.techprotech.agenda.modulos.citas.aplicacion.EventosCitaPruebas.publicador(correo, whatsapp, clientes, Clock.offset(reloj,Duration.ofSeconds(1))), Clock.offset(reloj,Duration.ofSeconds(1)), zonas);
         assertThat(despues.puedeCerrar(cita)).isTrue();
         when(citas.findByEmpresaIdAndInicioBetweenOrderByInicioAsc(7L,LocalDate.of(2026,10,15).atStartOfDay(),LocalDate.of(2026,10,16).atStartOfDay())).thenReturn(List.of(cita));
         var r=admin.listar(actor(),LocalDate.of(2026,10,15),LocalDate.of(2026,10,15)).getFirst();
@@ -202,6 +222,9 @@ class CierreCitaUnificadoTest {
         verify(correo).programarCanceladaNegocio(7L,1L,cita.getInicio());
         verify(whatsapp).programarCancelacionNegocio(7L,1L,cliente.getTelefono(),cita.getInicio());
         verify(clientes,never()).findById(any());
+        verify(observador).publishEvent(argThat((Object e) -> e instanceof com.techprotech.agenda.modulos.citas.dominio.eventos.CitaCancelada c
+                && c.datos().origen().name().equals(origen.name()) && c.datos().empresaId().equals(7L)));
+        verifyNoMoreInteractions(observador);
     }
 
     @ParameterizedTest @CsvSource({"ADMIN,false", "ADMIN,true", "RECEPCION,false", "RECEPCION,true"})

@@ -1,5 +1,7 @@
 package com.techprotech.agenda.modulos.caja.aplicacion;
 
+import com.techprotech.agenda.modulos.citas.aplicacion.PublicadorPagosCitas;
+import com.techprotech.agenda.modulos.citas.dominio.eventos.OrigenEventoCita;
 import static com.techprotech.agenda.compartido.tiempo.MomentoUtc.de;
 
 import java.time.Clock;
@@ -39,6 +41,7 @@ import static com.techprotech.agenda.modulos.caja.aplicacion.CatalogosCaja.*;
 
 @Service
 public class ServicioVentasCaja {
+    private final PublicadorPagosCitas eventosPago;
     private final Clock reloj;
     private final ZonaNegocio zonasNegocio;
     private static final BigDecimal CERO = BigDecimal.ZERO.setScale(2, RoundingMode.HALF_UP);
@@ -68,7 +71,8 @@ public class ServicioVentasCaja {
                               com.techprotech.agenda.modulos.productos.infraestructura.repositorio.ReglaDescuentoProductoRepositorio descuentos,
                               com.techprotech.agenda.modulos.productos.infraestructura.repositorio.ZonaPrecioProductoRepositorio zonas,
                               com.techprotech.agenda.modulos.productos.infraestructura.repositorio.PrecioZonaProductoRepositorio preciosZona,
-                              com.techprotech.agenda.modulos.productos.aplicacion.ServicioComisionesDevengadas comisiones, Clock reloj, ZonaNegocio zonasNegocio) {
+                              com.techprotech.agenda.modulos.productos.aplicacion.ServicioComisionesDevengadas comisiones, Clock reloj, ZonaNegocio zonasNegocio, PublicadorPagosCitas eventosPago) {
+        this.eventosPago = eventosPago;
         this.reloj = reloj;
         this.zonasNegocio = zonasNegocio;
         this.ventas = ventas; this.detalles = detalles; this.pagos = pagos; this.sesiones = sesiones;
@@ -234,6 +238,8 @@ public class ServicioVentasCaja {
                 request.sucursalId(), cantidades, venta.getFolio());
         if (!staff && !point && METODO_PAGO_EFECTIVO.equals(metodoPago)) registrarIngresoEfectivo(empresaId, usuarioId, sesion.getId(), venta, pago);
         if (!staff && !point) comisiones.registrar(venta, filas);
+        if (!staff && !point && cita != null)
+            eventosPago.pagoEnVenta(cita, venta, pago, pendienteServicio, OrigenEventoCita.ADMIN, usuarioId);
         return mapear(venta, pago, filas);
     }
 
@@ -253,7 +259,9 @@ public class ServicioVentasCaja {
         pago.setMetodoPago(METODO_PAGO_POINT); pago.setReferencia(limpiar(referenciaPago));
         pago.setRegistradoPorUsuarioId(venta.getCreadaPorUsuarioId()); pago.setRegistradoEn(LocalDateTime.now(reloj));
         comisiones.registrar(venta, filas);
-        return mapear(venta, pagos.save(pago), filas);
+        pago = pagos.save(pago);
+        eventosPago.venta(venta, pago, filas, OrigenEventoCita.WEBHOOK, null);
+        return mapear(venta, pago, filas);
     }
 
     @Transactional
@@ -385,6 +393,7 @@ public class ServicioVentasCaja {
         pago.setRegistradoPorUsuarioId(usuarioId);pago.setRegistradoEn(LocalDateTime.now(reloj));pago=pagos.save(pago);
         if(METODO_PAGO_EFECTIVO.equals(codigo)) registrarIngresoEfectivo(empresaId,usuarioId,sesion.getId(),venta,pago);
         comisiones.registrar(venta,filas);
+        eventosPago.venta(venta, pago, filas, OrigenEventoCita.ADMIN, usuarioId);
         return mapear(venta,pago,filas);
     }
 

@@ -26,9 +26,7 @@ class ServicioCajaPromocionTest {
         var sucursales=mock(SucursalRepositorio.class);
         var pagos=mock(PagoCitaRepositorio.class);var detalles=mock(VentaDetalleRepositorio.class);
         var pendientes=mock(ServicioPendientesCitasCaja.class);
-        var servicio=new ServicioCaja(mock(CajaSesionRepositorio.class),pagos,
-                mock(PagoVentaRepositorio.class),mock(MovimientoCajaRepositorio.class),
-                citas,mock(ClienteRepositorio.class),mock(ServicioRepositorio.class),sucursales,new ObjectMapper(), java.time.Clock.systemUTC(),new ServicioSaldoCitas(citas,pagos,detalles),pendientes);
+        var servicio=new ServicioCaja(mock(CajaSesionRepositorio.class), pagos, mock(PagoVentaRepositorio.class), mock(MovimientoCajaRepositorio.class), citas, mock(ClienteRepositorio.class), mock(ServicioRepositorio.class), sucursales, new ObjectMapper(), java.time.Clock.systemUTC(), new ServicioSaldoCitas(citas,pagos,detalles), pendientes, org.mockito.Mockito.mock(com.techprotech.agenda.modulos.citas.aplicacion.PublicadorPagosCitas.class));
         var sucursal=new SucursalEntidad(); sucursal.setId(3L); sucursal.setNombre("Sucursal de prueba"); sucursal.setZonaHoraria("America/Mexico_City");
         when(sucursales.findAllById(any())).thenReturn(List.of(sucursal));
         var cita=new CitaEntidad(); cita.setId(10L); cita.setEmpresaId(1L); cita.setClienteId(20L); cita.setServicioId(30L);

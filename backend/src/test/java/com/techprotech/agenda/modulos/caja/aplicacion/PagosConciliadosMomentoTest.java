@@ -50,9 +50,7 @@ class PagosConciliadosMomentoTest {
             var pagos=mock(PagoCitaRepositorio.class);
             var directo=new PagoCitaEntidad();directo.setId(40L);directo.setCitaId(9L);directo.setMonto(BigDecimal.ONE);directo.setRegistradoEn(utc);
             when(pagos.findByEmpresaIdAndCitaIdOrderByRegistradoEnDesc(7L,9L)).thenReturn(List.of(directo));
-            var caja=new ServicioCaja(mock(CajaSesionRepositorio.class),pagos,conciliados,
-                    mock(MovimientoCajaRepositorio.class),citas,mock(ClienteRepositorio.class),mock(ServicioRepositorio.class),
-                    mock(SucursalRepositorio.class),new ObjectMapper(),reloj,mock(ServicioSaldoCitas.class),mock(ServicioPendientesCitasCaja.class));
+            var caja=new ServicioCaja(mock(CajaSesionRepositorio.class), pagos, conciliados, mock(MovimientoCajaRepositorio.class), citas, mock(ClienteRepositorio.class), mock(ServicioRepositorio.class), mock(SucursalRepositorio.class), new ObjectMapper(), reloj, mock(ServicioSaldoCitas.class), mock(ServicioPendientesCitasCaja.class), org.mockito.Mockito.mock(com.techprotech.agenda.modulos.citas.aplicacion.PublicadorPagosCitas.class));
             var respuesta=caja.listarPagosCita(7L,List.of(3L),9L);
             assertThat(respuesta).hasSize(2);
             assertThat(respuesta.getFirst().registradoEn()).isEqualTo(OffsetDateTime.parse("2026-10-15T15:00Z"));

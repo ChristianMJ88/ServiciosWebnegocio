@@ -1,5 +1,7 @@
 package com.techprotech.agenda.modulos.admin.aplicacion;
 
+import com.techprotech.agenda.modulos.citas.dominio.eventos.*;
+import com.techprotech.agenda.modulos.citas.aplicacion.PublicadorEventosCita;
 import com.techprotech.agenda.modulos.caja.aplicacion.*;
 import com.techprotech.agenda.modulos.citas.aplicacion.ServicioCierreCita;
 import com.techprotech.agenda.modulos.citas.aplicacion.ServicioCancelacionCita;
@@ -23,8 +25,6 @@ import com.techprotech.agenda.compartido.whatsapp.PlantillaWhatsappEmpresaEntida
 import com.techprotech.agenda.compartido.whatsapp.PlantillaWhatsappEmpresaRepositorio;
 import com.techprotech.agenda.compartido.whatsapp.ResultadoEnvioWhatsapp;
 import com.techprotech.agenda.compartido.whatsapp.ServicioConfiguracionWhatsappEmpresa;
-import com.techprotech.agenda.compartido.whatsapp.ServicioOutboxWhatsappCitas;
-import com.techprotech.agenda.compartido.correo.ServicioOutboxCorreoCitas;
 import com.techprotech.agenda.modulos.admin.api.dto.ConfiguracionCorreoAdminRequest;
 import com.techprotech.agenda.modulos.admin.api.dto.ConfiguracionCorreoAdminResponse;
 import com.techprotech.agenda.modulos.admin.api.dto.ConfiguracionSitioAdminRequest;
@@ -151,6 +151,7 @@ import static org.springframework.http.HttpStatus.PRECONDITION_REQUIRED;
 
 @Service
 public class ServicioAdminCitas {
+    private final PublicadorEventosCita eventos;
     private final ServicioConsultaCobroCitas cobros;
     private final ServicioCierreCita cierres;
     private final ServicioCancelacionCita cancelaciones;
@@ -291,8 +292,6 @@ public class ServicioAdminCitas {
     private final PlantillaWhatsappEmpresaRepositorio plantillaWhatsappEmpresaRepositorio;
     private final ServicioConfiguracionWhatsappEmpresa servicioConfiguracionWhatsappEmpresa;
     private final ClienteWhatsappTwilio clienteWhatsappTwilio;
-    private final ServicioOutboxWhatsappCitas servicioOutboxWhatsappCitas;
-    private final ServicioOutboxCorreoCitas servicioOutboxCorreoCitas;
     private final BandejaSalidaNotificacionRepositorio bandejaSalidaNotificacionRepositorio;
     private final MensajeWhatsappRepositorio mensajeWhatsappRepositorio;
     private final AuditoriaConfiguracionEmpresaRepositorio auditoriaConfiguracionEmpresaRepositorio;
@@ -329,8 +328,7 @@ public class ServicioAdminCitas {
             PlantillaWhatsappEmpresaRepositorio plantillaWhatsappEmpresaRepositorio,
             ServicioConfiguracionWhatsappEmpresa servicioConfiguracionWhatsappEmpresa,
             ClienteWhatsappTwilio clienteWhatsappTwilio,
-            ServicioOutboxWhatsappCitas servicioOutboxWhatsappCitas,
-            ServicioOutboxCorreoCitas servicioOutboxCorreoCitas,
+            PublicadorEventosCita eventos,
             BandejaSalidaNotificacionRepositorio bandejaSalidaNotificacionRepositorio,
             MensajeWhatsappRepositorio mensajeWhatsappRepositorio,
             AuditoriaConfiguracionEmpresaRepositorio auditoriaConfiguracionEmpresaRepositorio,
@@ -345,6 +343,7 @@ public class ServicioAdminCitas {
             ServicioCancelacionCita cancelaciones,
             ServicioReporteCobroCitas reporteCobros
     ) {
+        this.eventos = eventos;
         this.cobros=cobros;
         this.cierres=cierres;
         this.cancelaciones=cancelaciones;
@@ -378,8 +377,6 @@ public class ServicioAdminCitas {
         this.plantillaWhatsappEmpresaRepositorio = plantillaWhatsappEmpresaRepositorio;
         this.servicioConfiguracionWhatsappEmpresa = servicioConfiguracionWhatsappEmpresa;
         this.clienteWhatsappTwilio = clienteWhatsappTwilio;
-        this.servicioOutboxWhatsappCitas = servicioOutboxWhatsappCitas;
-        this.servicioOutboxCorreoCitas = servicioOutboxCorreoCitas;
         this.bandejaSalidaNotificacionRepositorio = bandejaSalidaNotificacionRepositorio;
         this.mensajeWhatsappRepositorio = mensajeWhatsappRepositorio;
         this.auditoriaConfiguracionEmpresaRepositorio = auditoriaConfiguracionEmpresaRepositorio;
@@ -1443,10 +1440,12 @@ public class ServicioAdminCitas {
         if (List.of("FINALIZADA","NO_ASISTIO").contains(nuevoEstado))
             return cobros.respuesta(usuario,cierres.cerrar(usuario,citaId,nuevoEstado,OrigenCierreCita.ADMIN));
         Long empresaId=usuario.empresaId(), usuarioAdminId=usuario.usuarioId();
-        CitaEntidad cita = "CANCELADA".equals(nuevoEstado)
-                ? cancelaciones.bloquearYValidar(usuario, citaId)
-                : citaRepositorio.findByIdAndEmpresaId(citaId, empresaId)
-                    .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "La cita no existe para la empresa"));
+        if ("CANCELADA".equals(nuevoEstado)) {
+            cancelaciones.cancelar(usuario, citaId, OrigenEventoCita.ADMIN);
+            return null;
+        }
+        CitaEntidad cita = citaRepositorio.findByIdAndEmpresaId(citaId, empresaId)
+                .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "La cita no existe para la empresa"));
 
         if ("PENDIENTE_PAGO".equals(cita.getEstado())) {
             throw new ResponseStatusException(CONFLICT, "La reserva está esperando pago. Gestiona el pago antes de modificar una cita del grupo");
@@ -1462,11 +1461,6 @@ public class ServicioAdminCitas {
         String estadoAnterior = cita.getEstado();
         cita.setEstado(nuevoEstado);
 
-        if ("CANCELADA".equals(nuevoEstado)) {
-            cita.setCanceladaEn(java.time.LocalDateTime.now(reloj));
-            cita.setMotivoCancelacion("Cancelada desde el panel administrativo");
-        }
-
         citaRepositorio.save(cita);
 
         HistorialEstadoCitaEntidad historial = new HistorialEstadoCitaEntidad();
@@ -1477,26 +1471,8 @@ public class ServicioAdminCitas {
         historial.setMotivo("Cambio de estado realizado por administracion");
         historialEstadoCitaRepositorio.save(historial);
 
-        if (!nuevoEstado.equals(estadoAnterior)) {
-            switch (nuevoEstado) {
-                case "CONFIRMADA" -> servicioOutboxCorreoCitas.programarConfirmada(
-                        empresaId, cita.getId(), cita.getInicio());
-                case "CANCELADA" -> servicioOutboxCorreoCitas.programarCanceladaNegocio(
-                        empresaId, cita.getId(), cita.getInicio());
-                default -> { }
-            }
-        }
-
-        if ("CANCELADA".equals(nuevoEstado) && !"CANCELADA".equals(estadoAnterior)) {
-            clienteRepositorio.findByClienteIdAndEmpresaId(cita.getClienteId(), empresaId)
-                    .filter(cliente -> cliente.isAceptaWhatsapp() && cliente.getTelefono() != null && !cliente.getTelefono().isBlank())
-                    .ifPresent(cliente -> servicioOutboxWhatsappCitas.programarCancelacionNegocio(
-                            empresaId,
-                            cita.getId(),
-                            cliente.getTelefono(),
-                            cita.getInicio()
-                    ));
-        }
+        if (!nuevoEstado.equals(estadoAnterior))
+            eventos.publicar(new CitaConfirmada(eventos.datos(cita, OrigenEventoCita.ADMIN, usuarioAdminId), false, false));
 
         return null;
     }

@@ -31,8 +31,7 @@ class ServicioVentasCheckoutTest {
         VentaRepositorio ventas = mock(VentaRepositorio.class);
         VentaDetalleRepositorio detallesVenta = mock(VentaDetalleRepositorio.class);
         PagoVentaRepositorio pagos = mock(PagoVentaRepositorio.class);
-        ServicioVentasCheckout servicio = new ServicioVentasCheckout(
-                ordenes, detallesCheckout, intentos, ventas, detallesVenta, pagos, mock(com.techprotech.agenda.modulos.productos.aplicacion.ServicioComisionesDevengadas.class), java.time.Clock.systemUTC());
+        ServicioVentasCheckout servicio = new ServicioVentasCheckout(ordenes, detallesCheckout, intentos, ventas, detallesVenta, pagos, mock(com.techprotech.agenda.modulos.productos.aplicacion.ServicioComisionesDevengadas.class), java.time.Clock.systemUTC(), org.mockito.Mockito.mock(com.techprotech.agenda.modulos.citas.aplicacion.PublicadorPagosCitas.class));
 
         CheckoutOrdenEntidad orden = new CheckoutOrdenEntidad();
         orden.setId(3L); orden.setPublicId("orden-publica"); orden.setEmpresaId(25L); orden.setSucursalId(1L);
@@ -76,8 +75,7 @@ class ServicioVentasCheckoutTest {
         VentaRepositorio ventas = mock(VentaRepositorio.class);
         VentaDetalleRepositorio detallesVenta = mock(VentaDetalleRepositorio.class);
         PagoVentaRepositorio pagos = mock(PagoVentaRepositorio.class);
-        ServicioVentasCheckout servicio = new ServicioVentasCheckout(
-                ordenes, detallesCheckout, intentos, ventas, detallesVenta, pagos, mock(com.techprotech.agenda.modulos.productos.aplicacion.ServicioComisionesDevengadas.class), java.time.Clock.systemUTC());
+        ServicioVentasCheckout servicio = new ServicioVentasCheckout(ordenes, detallesCheckout, intentos, ventas, detallesVenta, pagos, mock(com.techprotech.agenda.modulos.productos.aplicacion.ServicioComisionesDevengadas.class), java.time.Clock.systemUTC(), org.mockito.Mockito.mock(com.techprotech.agenda.modulos.citas.aplicacion.PublicadorPagosCitas.class));
         CheckoutOrdenEntidad orden = new CheckoutOrdenEntidad();
         orden.setId(3L); orden.setEmpresaId(25L); orden.setEstado("PAGADA");
         when(ordenes.bloquearPorEmpresaEId(25L, 3L)).thenReturn(Optional.of(orden));
@@ -93,7 +91,7 @@ class ServicioVentasCheckoutTest {
     void conservaElDescuentoDelAnticipoAlProyectarServicioEnVentaDetalle(String estado) {
         var ordenes=mock(CheckoutOrdenRepositorio.class);var origen=mock(CheckoutOrdenDetalleRepositorio.class);var intentos=mock(IntentoPagoCheckoutRepositorio.class);
         var ventas=mock(VentaRepositorio.class);var detalles=mock(VentaDetalleRepositorio.class);var pagos=mock(PagoVentaRepositorio.class);
-        var servicio=new ServicioVentasCheckout(ordenes,origen,intentos,ventas,detalles,pagos,mock(com.techprotech.agenda.modulos.productos.aplicacion.ServicioComisionesDevengadas.class), java.time.Clock.systemUTC());
+        var servicio=new ServicioVentasCheckout(ordenes, origen, intentos, ventas, detalles, pagos, mock(com.techprotech.agenda.modulos.productos.aplicacion.ServicioComisionesDevengadas.class), java.time.Clock.systemUTC(), org.mockito.Mockito.mock(com.techprotech.agenda.modulos.citas.aplicacion.PublicadorPagosCitas.class));
         var orden=new CheckoutOrdenEntidad();orden.setId(3L);orden.setPublicId("prueba");orden.setEmpresaId(25L);orden.setEstado(estado);orden.setRequiereConciliacion("PAGADA_CON_INCIDENCIA".equals(estado));orden.setMotivoIncidencia("Horario ocupado");orden.setSucursalId(2L);orden.setMoneda("MXN");orden.setSubtotal(new BigDecimal("150"));orden.setDescuentoTotal(new BigDecimal("50"));orden.setTotal(new BigDecimal("100"));
         var intento=new IntentoPagoCheckoutEntidad();intento.setId(9L);intento.setImporte(new BigDecimal("100"));
         var linea=new CheckoutOrdenDetalleEntidad();linea.setTipoConcepto("SERVICIO");linea.setServicioId(10L);linea.setCitaId(90L);linea.setCantidad(BigDecimal.ONE);linea.setPrecioListaUnitario(new BigDecimal("150"));linea.setPrecioUnitario(new BigDecimal("100"));linea.setDescuento(new BigDecimal("50"));linea.setTotal(new BigDecimal("100"));

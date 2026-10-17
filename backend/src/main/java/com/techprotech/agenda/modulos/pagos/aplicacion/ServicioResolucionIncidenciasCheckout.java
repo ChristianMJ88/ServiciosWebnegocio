@@ -84,7 +84,7 @@ public class ServicioResolucionIncidenciasCheckout {
                     && a.getInicio().isBefore(b.getFin()) && a.getFin().isAfter(b.getInicio()))
                 throw new ResponseStatusException(CONFLICT,"Los nuevos horarios se superponen");
             em.flush(); // El refresco de confirmación debe releer los nuevos horarios.
-            if (!inventario.confirmarSiDisponible(empresa,orden.getId()) || !citas.confirmar(empresa,orden.getId()))
+            if (!inventario.confirmarSiDisponible(empresa,orden.getId()) || !citas.confirmar(empresa,orden.getId(),com.techprotech.agenda.modulos.citas.dominio.eventos.OrigenEventoCita.ADMIN,usuario.usuarioId()))
                 throw new ResponseStatusException(CONFLICT,"No es posible confirmar la reserva con el pago existente");
         } else if (request.citas()!=null && !request.citas().isEmpty()) {
             throw new ResponseStatusException(BAD_REQUEST,"Solo la reprogramación admite nuevos horarios");

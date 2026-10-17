@@ -1,5 +1,7 @@
 package com.techprotech.agenda.modulos.caja.aplicacion;
 
+import com.techprotech.agenda.modulos.citas.aplicacion.PublicadorPagosCitas;
+import com.techprotech.agenda.modulos.citas.dominio.eventos.OrigenEventoCita;
 import com.techprotech.agenda.modulos.caja.infraestructura.entidad.PagoVentaEntidad;
 import com.techprotech.agenda.modulos.caja.infraestructura.entidad.VentaDetalleEntidad;
 import com.techprotech.agenda.modulos.caja.infraestructura.entidad.VentaEntidad;
@@ -20,6 +22,7 @@ import java.util.List;
 
 @Service
 public class ServicioVentasCheckout {
+    private final PublicadorPagosCitas eventosPago;
     private final java.time.Clock reloj;
     private final CheckoutOrdenRepositorio ordenes;
     private final CheckoutOrdenDetalleRepositorio detallesCheckout;
@@ -32,7 +35,8 @@ public class ServicioVentasCheckout {
     public ServicioVentasCheckout(CheckoutOrdenRepositorio ordenes, CheckoutOrdenDetalleRepositorio detallesCheckout,
                                   IntentoPagoCheckoutRepositorio intentos, VentaRepositorio ventas,
                                   VentaDetalleRepositorio detallesVenta, PagoVentaRepositorio pagos,
-                                  com.techprotech.agenda.modulos.productos.aplicacion.ServicioComisionesDevengadas comisiones, java.time.Clock reloj) {
+                                  com.techprotech.agenda.modulos.productos.aplicacion.ServicioComisionesDevengadas comisiones, java.time.Clock reloj, PublicadorPagosCitas eventosPago) {
+        this.eventosPago = eventosPago;
         this.reloj = reloj;
         this.ordenes = ordenes;
         this.detallesCheckout = detallesCheckout;
@@ -81,8 +85,9 @@ public class ServicioVentasCheckout {
         pago.setMetodoPago("MERCADO_PAGO");
         pago.setReferencia(intento.getReferenciaExterna());
         pago.setRegistradoEn(LocalDateTime.now(reloj));
-        pagos.save(pago);
+        pago = pagos.save(pago);
         comisiones.registrar(venta, filas);
+        eventosPago.venta(venta, pago, filas, OrigenEventoCita.WEBHOOK, null);
     }
 
     private VentaDetalleEntidad detalle(Long empresaId, Long ventaId, CheckoutOrdenDetalleEntidad item) {

@@ -1,5 +1,7 @@
 package com.techprotech.agenda.modulos.recepcion.aplicacion;
 
+import com.techprotech.agenda.modulos.citas.dominio.eventos.*;
+import com.techprotech.agenda.modulos.citas.aplicacion.PublicadorEventosCita;
 import com.techprotech.agenda.modulos.caja.aplicacion.*;
 import com.techprotech.agenda.modulos.citas.aplicacion.ServicioCierreCita;
 import com.techprotech.agenda.modulos.citas.aplicacion.ServicioCancelacionCita;
@@ -10,10 +12,8 @@ import static com.techprotech.agenda.compartido.tiempo.MomentoUtc.de;
 
 import java.time.Clock;
 import com.techprotech.agenda.compartido.tiempo.ZonaNegocio;
-import com.techprotech.agenda.compartido.correo.ServicioOutboxCorreoCitas;
 import com.techprotech.agenda.compartido.whatsapp.ClienteWhatsappTwilio;
 import com.techprotech.agenda.compartido.whatsapp.ServicioConfiguracionWhatsappEmpresa;
-import com.techprotech.agenda.compartido.whatsapp.ServicioOutboxWhatsappCitas;
 import com.techprotech.agenda.modulos.clientes.infraestructura.entidad.ClienteEntidad;
 import com.techprotech.agenda.modulos.autenticacion.infraestructura.entidad.UsuarioEntidad;
 import com.techprotech.agenda.modulos.clientes.infraestructura.repositorio.ClienteRepositorio;
@@ -77,6 +77,7 @@ import static org.springframework.http.HttpStatus.NOT_FOUND;
 
 @Service
 public class ServicioRecepcion {
+    private final PublicadorEventosCita eventos;
     private final ServicioConsultaCobroCitas cobros;
     private final ServicioCierreCita cierres;
     private final ServicioCancelacionCita cancelaciones;
@@ -93,8 +94,6 @@ public class ServicioRecepcion {
     private final PrestadorServicioRepositorio prestadorServicioRepositorio;
     private final ServicioCitas servicioCitas;
     private final ServicioCitasCliente servicioCitasCliente;
-    private final ServicioOutboxWhatsappCitas servicioOutboxWhatsappCitas;
-    private final ServicioOutboxCorreoCitas servicioOutboxCorreoCitas;
     private final ServicioConsultaDisponibilidad servicioConsultaDisponibilidad;
     private final SolicitudEsperaRecepcionRepositorio solicitudEsperaRecepcionRepositorio;
     private final ClienteWhatsappTwilio clienteWhatsappTwilio;
@@ -111,8 +110,7 @@ public class ServicioRecepcion {
             PrestadorServicioRepositorio prestadorServicioRepositorio,
             ServicioCitas servicioCitas,
             ServicioCitasCliente servicioCitasCliente,
-            ServicioOutboxWhatsappCitas servicioOutboxWhatsappCitas,
-            ServicioOutboxCorreoCitas servicioOutboxCorreoCitas,
+            PublicadorEventosCita eventos,
             ServicioConsultaDisponibilidad servicioConsultaDisponibilidad,
             SolicitudEsperaRecepcionRepositorio solicitudEsperaRecepcionRepositorio,
             ClienteWhatsappTwilio clienteWhatsappTwilio,
@@ -123,6 +121,7 @@ public class ServicioRecepcion {
             ServicioCierreCita cierres,
             ServicioCancelacionCita cancelaciones
     ) {
+        this.eventos = eventos;
         this.cobros=cobros;
         this.cierres=cierres;
         this.cancelaciones=cancelaciones;
@@ -138,8 +137,6 @@ public class ServicioRecepcion {
         this.prestadorServicioRepositorio = prestadorServicioRepositorio;
         this.servicioCitas = servicioCitas;
         this.servicioCitasCliente = servicioCitasCliente;
-        this.servicioOutboxWhatsappCitas = servicioOutboxWhatsappCitas;
-        this.servicioOutboxCorreoCitas = servicioOutboxCorreoCitas;
         this.servicioConsultaDisponibilidad = servicioConsultaDisponibilidad;
         this.solicitudEsperaRecepcionRepositorio = solicitudEsperaRecepcionRepositorio;
         this.clienteWhatsappTwilio = clienteWhatsappTwilio;
@@ -493,7 +490,7 @@ public class ServicioRecepcion {
             String estadoAnterior = cita.getEstado();
             cita.setEstado("CONFIRMADA");
             guardarHistorial(cita.getId(), estadoAnterior, "CONFIRMADA", usuarioId, "Check-in en recepción");
-            servicioOutboxCorreoCitas.programarConfirmada(empresaId, cita.getId(), cita.getInicio());
+            eventos.publicar(new CitaConfirmada(eventos.datos(cita, OrigenEventoCita.RECEPCION, usuarioId), false, false));
         }
         return mapearCita(citaRepositorio.save(cita),usuario);
     }
@@ -510,7 +507,7 @@ public class ServicioRecepcion {
         cita.setEstado("CONFIRMADA");
         citaRepositorio.save(cita);
         guardarHistorial(cita.getId(), estadoAnterior, "CONFIRMADA", usuarioId, "Confirmación desde recepción");
-        servicioOutboxCorreoCitas.programarConfirmada(empresaId, cita.getId(), cita.getInicio());
+        eventos.publicar(new CitaConfirmada(eventos.datos(cita, OrigenEventoCita.RECEPCION, usuarioId), false, false));
         return mapearCita(cita,usuario);
     }
 
@@ -526,31 +523,13 @@ public class ServicioRecepcion {
 
     @Transactional
     public CitaRecepcionResponse cancelar(UsuarioAutenticado usuario, Long citaId) {
-        Long empresaId=usuario.empresaId(), usuarioId=usuario.usuarioId();
-        CitaEntidad cita = cancelaciones.bloquearYValidar(usuario, citaId);
-
-        String estadoAnterior = cita.getEstado();
-        cita.setEstado("CANCELADA");
-        cita.setCanceladaEn(LocalDateTime.now(reloj));
-        cita.setMotivoCancelacion("Cancelada desde recepción");
-        citaRepositorio.save(cita);
-        guardarHistorial(cita.getId(), estadoAnterior, "CANCELADA", usuarioId, "Cancelación desde recepción");
-        servicioOutboxCorreoCitas.programarCanceladaNegocio(empresaId, cita.getId(), cita.getInicio());
-        clienteRepositorio.findByClienteIdAndEmpresaId(cita.getClienteId(), empresaId)
-                .filter(cliente -> cliente.isAceptaWhatsapp() && cliente.getTelefono() != null && !cliente.getTelefono().isBlank())
-                .ifPresent(cliente -> servicioOutboxWhatsappCitas.programarCancelacionNegocio(
-                        empresaId,
-                        cita.getId(),
-                        cliente.getTelefono(),
-                        cita.getInicio()
-                ));
-        return mapearCita(cita,usuario);
+        return mapearCita(cancelaciones.cancelar(usuario, citaId, OrigenEventoCita.RECEPCION), usuario);
     }
 
     @Transactional
     public CitaClienteResponse reprogramar(Long empresaId, Long usuarioId, List<Long> sucursalesPermitidas, Long citaId, ReagendarRecepcionRequest request) {
         CitaEntidad cita = obtenerCitaEmpresa(empresaId, sucursalesPermitidas, citaId);
-        return servicioCitasCliente.reprogramar(empresaId, cita.getClienteId(), citaId, request.nuevoInicio());
+        return servicioCitasCliente.reprogramar(empresaId, cita.getClienteId(), citaId, request.nuevoInicio(), OrigenEventoCita.RECEPCION, usuarioId);
     }
 
     private CitaEntidad obtenerCitaEmpresa(Long empresaId, List<Long> sucursalesPermitidas, Long citaId) {

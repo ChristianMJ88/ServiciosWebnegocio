@@ -1,11 +1,9 @@
 package com.techprotech.agenda.modulos.citas.aplicacion;
 
-import com.techprotech.agenda.compartido.correo.ServicioOutboxCorreoCitas;
-import com.techprotech.agenda.compartido.whatsapp.ServicioOutboxWhatsappCitas;
+import com.techprotech.agenda.modulos.citas.dominio.eventos.*;
 import com.techprotech.agenda.compartido.tiempo.ZonaNegocio;
 import com.techprotech.agenda.modulos.citas.infraestructura.entidad.*;
 import com.techprotech.agenda.modulos.citas.infraestructura.repositorio.*;
-import com.techprotech.agenda.modulos.clientes.infraestructura.repositorio.ClienteRepositorio;
 import com.techprotech.agenda.seguridad.jwt.UsuarioAutenticado;
 import java.time.*;
 import java.util.*;
@@ -18,15 +16,13 @@ import static org.springframework.http.HttpStatus.*;
 public class ServicioCierreCita {
     private final CitaRepositorio citas;
     private final HistorialEstadoCitaRepositorio historial;
-    private final ServicioOutboxCorreoCitas correo;
-    private final ServicioOutboxWhatsappCitas whatsapp;
-    private final ClienteRepositorio clientes;
+    private final PublicadorEventosCita eventos;
     private final Clock reloj;
     private final ZonaNegocio zonas;
 
-    public ServicioCierreCita(CitaRepositorio citas,HistorialEstadoCitaRepositorio historial,ServicioOutboxCorreoCitas correo,
-            ServicioOutboxWhatsappCitas whatsapp,ClienteRepositorio clientes,Clock reloj,ZonaNegocio zonas) {
-        this.citas=citas;this.historial=historial;this.correo=correo;this.whatsapp=whatsapp;this.clientes=clientes;this.reloj=reloj;this.zonas=zonas;
+    public ServicioCierreCita(CitaRepositorio citas, HistorialEstadoCitaRepositorio historial,
+            PublicadorEventosCita eventos, Clock reloj, ZonaNegocio zonas) {
+        this.citas = citas; this.historial = historial; this.eventos = eventos; this.reloj = reloj; this.zonas = zonas;
     }
 
     public boolean puedeCerrar(CitaEntidad cita) {
@@ -79,12 +75,8 @@ public class ServicioCierreCita {
         cambio.setCambiadoPorUsuarioId(usuario.usuarioId());
         cambio.setMotivo("Cierre desde "+origen.name()+ ("FINALIZADA".equals(estado) && cita.getCheckInEn()==null?"; finalizada sin check-in":""));
         historial.save(cambio);
-        if("FINALIZADA".equals(estado)) {
-            correo.programarGraciasVisita(usuario.empresaId(),citaId,cita.getInicio());
-            clientes.findByClienteIdAndEmpresaId(cita.getClienteId(),usuario.empresaId())
-                    .filter(c -> c.isAceptaWhatsapp() && c.getTelefono()!=null && !c.getTelefono().isBlank())
-                    .ifPresent(c -> whatsapp.programarGraciasVisita(usuario.empresaId(),citaId,c.getTelefono(),cita.getInicio()));
-        } else correo.programarNoAsistio(usuario.empresaId(),citaId,cita.getInicio());
+        var datos = eventos.datos(cita, OrigenEventoCita.valueOf(origen.name()), usuario.usuarioId());
+        eventos.publicar("FINALIZADA".equals(estado) ? new CitaFinalizada(datos) : new CitaNoAsistio(datos));
         return cita;
     }
 }

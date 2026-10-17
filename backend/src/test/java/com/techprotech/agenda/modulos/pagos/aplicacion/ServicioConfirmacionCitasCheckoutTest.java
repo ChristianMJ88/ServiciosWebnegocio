@@ -32,8 +32,15 @@ class ServicioConfirmacionCitasCheckoutTest {
     final SucursalRepositorio sucursales=mock(SucursalRepositorio.class);
     final ServicioConfiguracionReservas reservas=mock(ServicioConfiguracionReservas.class);
     final Clock reloj=Clock.fixed(Instant.parse("2026-10-13T12:00:00Z"),ZoneOffset.UTC);
-    final ServicioConfirmacionCitasCheckout servicio=new ServicioConfirmacionCitasCheckout(detalles,citas,historial,correo,whatsapp,mock(ClienteRepositorio.class),em,prestadores,sucursales,reservas,reloj);
+    final org.springframework.context.ApplicationEventPublisher bus=mock(org.springframework.context.ApplicationEventPublisher.class);
+    final ServicioConfirmacionCitasCheckout servicio=new ServicioConfirmacionCitasCheckout(detalles, citas, historial, eventos(), em, prestadores, sucursales, reservas, reloj);
     final CitaEntidad a=miembro(18L),b=miembro(19L);
+    private com.techprotech.agenda.modulos.citas.aplicacion.PublicadorEventosCita eventos() {
+        var notificaciones=com.techprotech.agenda.modulos.citas.aplicacion.EventosCitaPruebas.publicador(correo,whatsapp,mock(ClienteRepositorio.class),reloj);
+        return new com.techprotech.agenda.modulos.citas.aplicacion.PublicadorEventosCita(evento -> {
+            bus.publishEvent(evento); notificaciones.publicar((com.techprotech.agenda.modulos.citas.dominio.eventos.EventoCita)evento);
+        },reloj);
+    }
     @BeforeEach void preparar() {
         var detalle=new CheckoutOrdenDetalleEntidad();detalle.setTipoConcepto("SERVICIO");detalle.setCitaId(18L);
         when(detalles.findByEmpresaIdAndCheckoutOrdenIdOrderByIdAsc(7L,30L)).thenReturn(List.of(detalle));
@@ -52,6 +59,19 @@ class ServicioConfirmacionCitasCheckoutTest {
         assertThat(servicio.confirmar(7L,30L)).isTrue(); assertThat(servicio.confirmar(7L,30L)).isTrue();
         assertThat(List.of(a.getEstado(),b.getEstado())).containsOnly("CONFIRMADA");
         verify(historial,times(2)).save(any());verify(correo,times(2)).programarConfirmada(eq(7L),anyLong(),any());
+        verify(bus,times(2)).publishEvent(argThat((Object e) -> e instanceof com.techprotech.agenda.modulos.citas.dominio.eventos.CitaConfirmada c
+                && c.datos().origen()==com.techprotech.agenda.modulos.citas.dominio.eventos.OrigenEventoCita.WEBHOOK && c.datos().actorId()==null
+                && c.avisarNegocio() && c.avisarWhatsapp()));
+        verifyNoMoreInteractions(bus);
+    }
+    @Test void resolucionAdministrativaConservaActorRealYLosMismosCanalesDelPago() {
+        servicio.confirmar(7L,30L,com.techprotech.agenda.modulos.citas.dominio.eventos.OrigenEventoCita.ADMIN,9L);
+        verify(bus,times(2)).publishEvent(argThat((Object e) -> e instanceof com.techprotech.agenda.modulos.citas.dominio.eventos.CitaConfirmada c
+                && c.datos().origen()==com.techprotech.agenda.modulos.citas.dominio.eventos.OrigenEventoCita.ADMIN
+                && c.datos().actorId().equals(9L) && c.avisarNegocio() && c.avisarWhatsapp()));
+        verifyNoMoreInteractions(bus);
+        verify(correo,times(2)).programarConfirmada(eq(7L),anyLong(),any());
+        verify(correo,times(2)).programarNuevaCitaNegocio(eq(7L),anyLong(),any());
     }
     @Test void pagoTardioRecuperaHorarioLibreYConfirmaTodoElGrupo() {
         a.setEstado("LIBERADA_SIN_PAGO");b.setEstado("LIBERADA_SIN_PAGO");

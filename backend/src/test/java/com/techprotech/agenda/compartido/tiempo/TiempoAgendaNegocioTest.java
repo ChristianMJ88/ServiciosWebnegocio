@@ -56,13 +56,16 @@ class TiempoAgendaNegocioTest {
     TimeZone anterior;
 
     @BeforeEach void preparar() {
+        var eventos = com.techprotech.agenda.modulos.citas.aplicacion.EventosCitaPruebas.publicador(correo, null, clientes, reloj);
+        for (Object servicio : java.util.List.of(recepcion, admin, cliente))
+            ReflectionTestUtils.setField(servicio, "eventos", eventos);
         var saldos = new ServicioSaldoCitas(citas,pagos,detalles);
         var cobros = new ServicioConsultaCobroCitas(saldos,sesiones,null);
         ReflectionTestUtils.setField(admin,"cobros",cobros);
-        var cancelaciones = new com.techprotech.agenda.modulos.citas.aplicacion.ServicioCancelacionCita(citas,saldos);
+        var cancelaciones = new com.techprotech.agenda.modulos.citas.aplicacion.ServicioCancelacionCita(citas, saldos, historial, com.techprotech.agenda.modulos.citas.aplicacion.EventosCitaPruebas.publicador(correo, null, clientes, reloj), reloj);
         ReflectionTestUtils.setField(admin,"cancelaciones",cancelaciones);
         ReflectionTestUtils.setField(recepcion,"cancelaciones",cancelaciones);
-        var cierres = new com.techprotech.agenda.modulos.citas.aplicacion.ServicioCierreCita(citas,historial,correo,null,clientes,reloj,zonas);
+        var cierres = new com.techprotech.agenda.modulos.citas.aplicacion.ServicioCierreCita(citas, historial, com.techprotech.agenda.modulos.citas.aplicacion.EventosCitaPruebas.publicador(correo, null, clientes, reloj), reloj, zonas);
         ReflectionTestUtils.setField(recepcion,"cierres",cierres);
         ReflectionTestUtils.setField(staff,"cierres",cierres);
         ReflectionTestUtils.setField(recepcion,"cobros",cobros);

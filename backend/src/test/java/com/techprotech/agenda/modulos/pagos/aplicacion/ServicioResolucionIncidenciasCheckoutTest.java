@@ -42,7 +42,7 @@ class ServicioResolucionIncidenciasCheckoutTest {
         assertThat(orden.isRequiereConciliacion()).isFalse();
         verify(proyeccion).proyectar(7L,30L);
         verify(auditoria).save(argThat(a -> a.getEmpresaId()==7L && a.getUsuarioActorId()==9L && a.getDetalleDespuesJson().contains("Entrega coordinada")));
-        verify(citas,never()).confirmar(any(),any());
+        verify(citas,never()).confirmar(any(),any(),any(),any());
     }
     @Test void noResuelveDosVecesNiOtroTenant() {
         orden.setRequiereConciliacion(false);
@@ -72,10 +72,10 @@ class ServicioResolucionIncidenciasCheckoutTest {
         when(disponibilidad.obtenerFranjasDisponibles(7L,3L,4L,5L,inicio.toLocalDate())).thenReturn(List.of(new FranjaDisponibleResponse(
                 inicio.atZone(zona).toOffsetDateTime().toString(),
                 inicio.plusMinutes(30).atZone(zona).toOffsetDateTime().toString(),5L,4L,3L)));
-        when(inventario.confirmarSiDisponible(7L,30L)).thenReturn(true);when(citas.confirmar(7L,30L)).thenReturn(true);
+        when(inventario.confirmarSiDisponible(7L,30L)).thenReturn(true);when(citas.confirmar(7L,30L,com.techprotech.agenda.modulos.citas.dominio.eventos.OrigenEventoCita.ADMIN,9L)).thenReturn(true);
         servicio.resolver(usuario,"publica",new ResolverIncidenciaRequest(ResolverIncidenciaRequest.Tipo.REPROGRAMADA,"Nueva fecha acordada",List.of(new ResolverIncidenciaRequest.Reprogramacion(10L,inicio))));
         assertThat(cita.getInicio()).isEqualTo(inicio);assertThat(orden.getEstado()).isEqualTo("PAGADA");
-        var secuencia=inOrder(em,citas);secuencia.verify(em,times(2)).flush();secuencia.verify(citas).confirmar(7L,30L);
+        var secuencia=inOrder(em,citas);secuencia.verify(em,times(2)).flush();secuencia.verify(citas).confirmar(7L,30L,com.techprotech.agenda.modulos.citas.dominio.eventos.OrigenEventoCita.ADMIN,9L);
         verify(auditoria).save(any());
     }
     @Test void horarioOcupadoNoCierraIncidenciaNiConfirma() {
@@ -83,6 +83,6 @@ class ServicioResolucionIncidenciasCheckoutTest {
         var inicio=LocalDateTime.of(2026,12,1,10,0);cita.setInicio(inicio);cita.setFin(inicio.plusMinutes(30));
         when(citas.bloquearGrupoOrden(7L,30L)).thenReturn(List.of(cita));
         assertThatThrownBy(() -> servicio.resolver(usuario,"publica",new ResolverIncidenciaRequest(ResolverIncidenciaRequest.Tipo.REPROGRAMADA,"Nueva fecha",List.of(new ResolverIncidenciaRequest.Reprogramacion(10L,inicio.plusDays(1)))))).isInstanceOf(ResponseStatusException.class);
-        assertThat(orden.isRequiereConciliacion()).isTrue();verify(citas,never()).confirmar(any(),any());verifyNoInteractions(auditoria);
+        assertThat(orden.isRequiereConciliacion()).isTrue();verify(citas,never()).confirmar(any(),any(),any(),any());verifyNoInteractions(auditoria);
     }
 }

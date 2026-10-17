@@ -1,5 +1,6 @@
 package com.techprotech.agenda.modulos.caja.aplicacion;
 
+import com.techprotech.agenda.modulos.citas.aplicacion.PublicadorPagosCitas;
 import static com.techprotech.agenda.compartido.tiempo.MomentoUtc.de;
 
 import com.techprotech.agenda.modulos.clientes.infraestructura.entidad.ClienteEntidad;
@@ -56,6 +57,7 @@ import static com.techprotech.agenda.modulos.caja.aplicacion.CatalogosCaja.*;
 
 @Service
 public class ServicioCaja {
+    private final PublicadorPagosCitas eventosPago;
     private final ServicioSaldoCitas saldos;
     private final ServicioPendientesCitasCaja pendientes;
     private final java.time.Clock reloj;
@@ -83,8 +85,9 @@ public class ServicioCaja {
             com.fasterxml.jackson.databind.ObjectMapper json,
             java.time.Clock reloj,
             ServicioSaldoCitas saldos,
-            ServicioPendientesCitasCaja pendientes
+            ServicioPendientesCitasCaja pendientes, PublicadorPagosCitas eventosPago
     ) {
+        this.eventosPago = eventosPago;
         this.saldos=saldos;
         this.pendientes=pendientes;
         this.reloj = reloj;
@@ -312,6 +315,7 @@ public class ServicioCaja {
                 );
             }
 
+            eventosPago.pagoDirecto(cita, guardado);
             return mapearPago(guardado);
         }
 

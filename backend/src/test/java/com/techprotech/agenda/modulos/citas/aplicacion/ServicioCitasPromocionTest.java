@@ -55,6 +55,7 @@ class ServicioCitasPromocionTest {
     @InjectMocks ServicioCitas servicio;
     final OffsetDateTime inicio=OffsetDateTime.parse("2026-12-01T10:00:00-06:00");
 @BeforeEach void preparar() {
+    org.springframework.test.util.ReflectionTestUtils.setField(servicio, "notificaciones", new NotificacionesRegistroCita(outbox, whatsapp));
     lenient().when(politicaPago.plan(eq(1L),anyBoolean(),any())).thenReturn(new ServicioPoliticaReservaPago.PlanReserva("grupo-prueba",false,null));
     lenient().doCallRealMethod().when(politicaPago).aplicar(any(),any(),any());
 

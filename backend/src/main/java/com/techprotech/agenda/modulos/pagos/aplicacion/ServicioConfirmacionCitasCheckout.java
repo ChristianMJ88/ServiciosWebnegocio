@@ -1,12 +1,11 @@
 package com.techprotech.agenda.modulos.pagos.aplicacion;
 
-import com.techprotech.agenda.compartido.correo.ServicioOutboxCorreoCitas;
-import com.techprotech.agenda.compartido.whatsapp.ServicioOutboxWhatsappCitas;
+import com.techprotech.agenda.modulos.citas.dominio.eventos.*;
+import com.techprotech.agenda.modulos.citas.aplicacion.PublicadorEventosCita;
 import com.techprotech.agenda.modulos.citas.infraestructura.entidad.CitaEntidad;
 import com.techprotech.agenda.modulos.citas.infraestructura.entidad.HistorialEstadoCitaEntidad;
 import com.techprotech.agenda.modulos.citas.infraestructura.repositorio.CitaRepositorio;
 import com.techprotech.agenda.modulos.citas.infraestructura.repositorio.HistorialEstadoCitaRepositorio;
-import com.techprotech.agenda.modulos.clientes.infraestructura.repositorio.ClienteRepositorio;
 import com.techprotech.agenda.modulos.disponibilidad.aplicacion.ServicioConfiguracionReservas;
 import com.techprotech.agenda.modulos.pagos.infraestructura.repositorio.CheckoutOrdenDetalleRepositorio;
 import com.techprotech.agenda.modulos.prestadores.infraestructura.repositorio.PrestadorServicioRepositorio;
@@ -25,9 +24,7 @@ public class ServicioConfirmacionCitasCheckout {
     private final CheckoutOrdenDetalleRepositorio detalles;
     private final CitaRepositorio citas;
     private final HistorialEstadoCitaRepositorio historial;
-    private final ServicioOutboxCorreoCitas correo;
-    private final ServicioOutboxWhatsappCitas whatsapp;
-    private final ClienteRepositorio clientes;
+    private final PublicadorEventosCita eventos;
     private final EntityManager entityManager;
     private final PrestadorServicioRepositorio prestadores;
     private final SucursalRepositorio sucursales;
@@ -35,12 +32,11 @@ public class ServicioConfirmacionCitasCheckout {
     private final Clock reloj;
 
     public ServicioConfirmacionCitasCheckout(CheckoutOrdenDetalleRepositorio detalles, CitaRepositorio citas,
-            HistorialEstadoCitaRepositorio historial, ServicioOutboxCorreoCitas correo,
-            ServicioOutboxWhatsappCitas whatsapp, ClienteRepositorio clientes, EntityManager entityManager,
+            HistorialEstadoCitaRepositorio historial, PublicadorEventosCita eventos, EntityManager entityManager,
             PrestadorServicioRepositorio prestadores, SucursalRepositorio sucursales,
             ServicioConfiguracionReservas reservas, Clock reloj) {
         this.detalles = detalles; this.citas = citas; this.historial = historial;
-        this.correo = correo; this.whatsapp = whatsapp; this.clientes = clientes;
+        this.eventos = eventos;
         this.entityManager = entityManager; this.prestadores = prestadores; this.sucursales = sucursales;
         this.reservas = reservas; this.reloj = reloj;
     }
@@ -48,6 +44,11 @@ public class ServicioConfirmacionCitasCheckout {
     /** False es incidencia operativa; no revierte un pago por el estado de la cita. */
     @Transactional
     public boolean confirmar(Long empresaId, Long ordenId) {
+        return confirmar(empresaId, ordenId, OrigenEventoCita.WEBHOOK, null);
+    }
+
+    @Transactional
+    public boolean confirmar(Long empresaId, Long ordenId, OrigenEventoCita origen, Long actorId) {
         List<CitaEntidad> grupo = grupoDeOrden(empresaId, ordenId);
         if (grupo.stream().anyMatch(c -> !Set.of("PENDIENTE", "PENDIENTE_PAGO", "LIBERADA_SIN_PAGO", "CONFIRMADA").contains(c.getEstado()))) return false;
         Set<Long> ids = new HashSet<>();
@@ -63,11 +64,7 @@ public class ServicioConfirmacionCitasCheckout {
             if ("CONFIRMADA".equals(cita.getEstado())) continue;
             cita.setPagoExpiraEn(null);
             cambiar(cita, "CONFIRMADA", "Pago en línea aprobado");
-            correo.programarConfirmada(empresaId, cita.getId(), cita.getInicio());
-            correo.programarNuevaCitaNegocio(empresaId, cita.getId(), cita.getInicio());
-            clientes.findByClienteIdAndEmpresaId(cita.getClienteId(), empresaId)
-                    .filter(c -> c.isAceptaWhatsapp()).ifPresent(cliente ->
-                        whatsapp.programarCitaConfirmada(empresaId, cita.getId(), cliente.getTelefono(), cita.getInicio()));
+            eventos.publicar(new CitaConfirmada(eventos.datos(cita, origen, actorId), true, true));
         }
         return true;
     }
@@ -75,7 +72,7 @@ public class ServicioConfirmacionCitasCheckout {
     @Transactional
     public void avisarIncidencia(Long empresaId, Long ordenId) {
         grupoDeOrden(empresaId, ordenId).stream().findFirst().ifPresent(cita ->
-                correo.programarIncidenciaPagoNegocio(empresaId, cita.getId(), cita.getInicio()));
+                eventos.publicar(new PagoCitaConIncidencia(eventos.datos(cita, OrigenEventoCita.WEBHOOK, null))));
     }
 
     @Transactional
@@ -119,7 +116,7 @@ if (grupo.stream().anyMatch(c -> "PENDIENTE_PAGO".equals(c.getEstado()))
         for (CitaEntidad cita : grupo) if ("PENDIENTE_PAGO".equals(cita.getEstado())) {
             cita.setPagoExpiraEn(null);
             cambiar(cita, "LIBERADA_SIN_PAGO", "Apartado vencido sin pago");
-            correo.programarApartadoVencido(cita.getEmpresaId(), cita.getId(), cita.getInicio());
+            eventos.publicar(new CitaApartadoVencido(eventos.datos(cita, OrigenEventoCita.SISTEMA, null)));
         }
     }
 

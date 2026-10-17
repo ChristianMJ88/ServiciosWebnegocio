@@ -40,7 +40,7 @@ class AnticipoIncidenciaCheckoutTest {
             when(ordenes.bloquearPorEmpresaEId(7L,30L)).thenReturn(Optional.of(orden));
             when(intentos.findFirstByEmpresaIdAndCheckoutOrdenIdAndEstadoOrderByIdDesc(7L,30L,"APROBADO")).thenReturn(Optional.of(intento));
             when(origen.findByEmpresaIdAndCheckoutOrdenIdOrderByIdAsc(7L,30L)).thenReturn(List.of(linea));
-            var proyeccion=new ServicioVentasCheckout(ordenes,origen,intentos,ventas,detalles,mock(PagoVentaRepositorio.class),mock(ServicioComisionesDevengadas.class), java.time.Clock.systemUTC());
+            var proyeccion=new ServicioVentasCheckout(ordenes, origen, intentos, ventas, detalles, mock(PagoVentaRepositorio.class), mock(ServicioComisionesDevengadas.class), java.time.Clock.systemUTC(), org.mockito.Mockito.mock(com.techprotech.agenda.modulos.citas.aplicacion.PublicadorPagosCitas.class));
             proyeccion.proyectar(7L,30L);proyeccion.proyectar(7L,30L);em.flush();
             assertThat(ventas.findAll()).singleElement().satisfies(v -> {assertThat(v.getCanal()).isEqualTo("ONLINE");assertThat(v.getObservaciones()).contains("incidencia");});
             assertThat(detalles.sumarServiciosPagadosPorCita(7L,10L)).isEqualByComparingTo("100");
@@ -52,8 +52,7 @@ class AnticipoIncidenciaCheckoutTest {
             when(citas.findByEmpresaIdAndEstadoInOrderByInicioDesc(eq(7L),any())).thenReturn(List.of(cita));
             var pagos=mock(PagoCitaRepositorio.class);
             var pendientes=mock(ServicioPendientesCitasCaja.class);
-        var caja=new ServicioCaja(mock(CajaSesionRepositorio.class),pagos,mock(PagoVentaRepositorio.class),
-                mock(MovimientoCajaRepositorio.class),citas,mock(ClienteRepositorio.class),mock(ServicioRepositorio.class),sucursales,new ObjectMapper(), java.time.Clock.systemUTC(),new ServicioSaldoCitas(citas,pagos,detalles),pendientes);
+        var caja=new ServicioCaja(mock(CajaSesionRepositorio.class), pagos, mock(PagoVentaRepositorio.class), mock(MovimientoCajaRepositorio.class), citas, mock(ClienteRepositorio.class), mock(ServicioRepositorio.class), sucursales, new ObjectMapper(), java.time.Clock.systemUTC(), new ServicioSaldoCitas(citas,pagos,detalles), pendientes, org.mockito.Mockito.mock(com.techprotech.agenda.modulos.citas.aplicacion.PublicadorPagosCitas.class));
         when(pendientes.consultar(eq(7L),any(),eq(3L))).thenReturn(new ServicioPendientesCitasCaja.Lote(List.of(cita),java.util.Map.of(3L,cita.getInicio().toLocalDate())));
             var cobrable=caja.listarCitasPorCobrar(7L,List.of(3L),3L).getFirst();
             assertThat(cobrable.pagado()).isEqualByComparingTo("100");assertThat(cobrable.pendiente()).isEqualByComparingTo("400");

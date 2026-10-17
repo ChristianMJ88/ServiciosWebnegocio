@@ -3,8 +3,6 @@ package com.techprotech.agenda.modulos.citas.aplicacion;
 import com.techprotech.agenda.modulos.plataforma.aplicacion.ServicioCapacidadesEmpresa;
 
 import com.techprotech.agenda.compartido.correo.ServicioCorreoCitas;
-import com.techprotech.agenda.compartido.correo.ServicioOutboxCorreoCitas;
-import com.techprotech.agenda.compartido.whatsapp.ServicioOutboxWhatsappCitas;
 import com.techprotech.agenda.modulos.autenticacion.aplicacion.ServicioRolesEmpresa;
 import com.techprotech.agenda.modulos.citas.api.dto.CitaCreadaResponse;
 import com.techprotech.agenda.modulos.citas.api.dto.CitasMultiplesCreadasResponse;
@@ -55,6 +53,7 @@ import static org.springframework.http.HttpStatus.NOT_FOUND;
 
 @Service
 public class ServicioCitas {
+    private final NotificacionesRegistroCita notificaciones;
     private final java.time.Clock reloj;
 
     private static final String PREFIJO_CONTRASENA_PROVISIONAL = "registro-cita";
@@ -74,8 +73,6 @@ public class ServicioCitas {
     private final HistorialEstadoCitaRepositorio historialEstadoCitaRepositorio;
     private final PasswordEncoder passwordEncoder;
     private final ServicioCorreoCitas servicioCorreoCitas;
-    private final ServicioOutboxCorreoCitas servicioOutboxCorreoCitas;
-    private final ServicioOutboxWhatsappCitas servicioOutboxWhatsappCitas;
     private final ServicioCapacidadesEmpresa capacidades;
     private final ServicioCotizacionCitas cotizador;
     private final ServicioPoliticaReservaPago politicaPago;
@@ -96,14 +93,14 @@ public class ServicioCitas {
             HistorialEstadoCitaRepositorio historialEstadoCitaRepositorio,
             PasswordEncoder passwordEncoder,
             ServicioCorreoCitas servicioCorreoCitas,
-            ServicioOutboxCorreoCitas servicioOutboxCorreoCitas,
-            ServicioOutboxWhatsappCitas servicioOutboxWhatsappCitas,
+            NotificacionesRegistroCita notificaciones,
             ServicioCapacidadesEmpresa capacidades,
             ServicioCotizacionCitas cotizador,
             com.fasterxml.jackson.databind.ObjectMapper objectMapper,
             ServicioPoliticaReservaPago politicaPago,
             java.time.Clock reloj
     ) {
+        this.notificaciones = notificaciones;
         this.reloj = reloj;
         this.servicioConsultaDisponibilidad = servicioConsultaDisponibilidad;
         this.sucursalRepositorio = sucursalRepositorio;
@@ -119,8 +116,6 @@ public class ServicioCitas {
         this.historialEstadoCitaRepositorio = historialEstadoCitaRepositorio;
         this.passwordEncoder = passwordEncoder;
         this.servicioCorreoCitas = servicioCorreoCitas;
-        this.servicioOutboxCorreoCitas = servicioOutboxCorreoCitas;
-        this.servicioOutboxWhatsappCitas = servicioOutboxWhatsappCitas;
         this.capacidades=capacidades;
         this.politicaPago=politicaPago;
         this.cotizador=cotizador;
@@ -217,10 +212,10 @@ private CitaCreadaResponse crearCita(CrearCitaRequest request, boolean programar
 
         OffsetDateTime inicioRespuesta = cita.getInicio().atZone(zona).toOffsetDateTime();
         OffsetDateTime finRespuesta = cita.getFin().atZone(zona).toOffsetDateTime();
-        boolean correoConfirmacionProgramado = !plan.requierePago() && servicioOutboxCorreoCitas.programarRegistrada(
+        boolean correoConfirmacionProgramado = !plan.requierePago() && notificaciones.registrada(
                 empresaId, cita.getId(), cita.getInicio());
         if (programarWhatsappConfirmacion && !plan.requierePago()) {
-            servicioOutboxWhatsappCitas.programarConfirmacion(
+            notificaciones.solicitarConfirmacion(
                     empresaId,
                     cita.getId(),
                     request.telefonoCliente().trim(),
@@ -366,7 +361,7 @@ var plan=politicaPago.plan(empresaId,publico,politicas.stream().map(PoliticaCobr
 
             OffsetDateTime inicioRespuesta = cita.getInicio().atZone(zona).toOffsetDateTime();
             OffsetDateTime finRespuesta = cita.getFin().atZone(zona).toOffsetDateTime();
-            boolean correoConfirmacionProgramado = !plan.requierePago() && servicioOutboxCorreoCitas.programarRegistrada(
+            boolean correoConfirmacionProgramado = !plan.requierePago() && notificaciones.registrada(
                     empresaId, cita.getId(), cita.getInicio());
 
             citas.add(new CitaCreadaResponse(
@@ -387,7 +382,7 @@ var plan=politicaPago.plan(empresaId,publico,politicas.stream().map(PoliticaCobr
         }
 
         if (!citas.isEmpty() && !plan.requierePago()) {
-            servicioOutboxWhatsappCitas.programarConfirmacion(
+            notificaciones.solicitarConfirmacion(
                     empresaId,
                     citas.getFirst().id(),
                     request.telefonoCliente().trim(),

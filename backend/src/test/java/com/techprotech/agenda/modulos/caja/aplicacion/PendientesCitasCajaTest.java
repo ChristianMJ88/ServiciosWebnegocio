@@ -75,8 +75,7 @@ class PendientesCitasCajaTest {
             var consulta=new ServicioPendientesCitasCaja(citas,sucursales,zonas,reloj,config);
             var candidatos=consulta.consultar(7L,List.of(3L),3L).citas();
             assertThat(candidatos).extracting(CitaEntidad::getId).containsExactlyInAnyOrder(hoy.getId(),ayer.getId(),limite.getId(),llegada.getId());
-            var caja=new ServicioCaja(mock(CajaSesionRepositorio.class),pagos,mock(PagoVentaRepositorio.class),mock(MovimientoCajaRepositorio.class),citas,
-                    mock(ClienteRepositorio.class),mock(ServicioRepositorio.class),sucursales,new ObjectMapper(),reloj,new ServicioSaldoCitas(citas,pagos,ventas),consulta);
+            var caja=new ServicioCaja(mock(CajaSesionRepositorio.class), pagos, mock(PagoVentaRepositorio.class), mock(MovimientoCajaRepositorio.class), citas, mock(ClienteRepositorio.class), mock(ServicioRepositorio.class), sucursales, new ObjectMapper(), reloj, new ServicioSaldoCitas(citas,pagos,ventas), consulta, org.mockito.Mockito.mock(com.techprotech.agenda.modulos.citas.aplicacion.PublicadorPagosCitas.class));
             var resultado=caja.listarCitasPorCobrar(7L,List.of(3L),3L);
             assertThat(resultado).hasSize(4).allSatisfy(c -> assertThat(c.sucursalId()).isEqualTo(3L));
             assertThat(resultado.stream().filter(c -> c.citaId().equals(hoy.getId())).findFirst().orElseThrow().periodoCobro()).isEqualTo("HOY");

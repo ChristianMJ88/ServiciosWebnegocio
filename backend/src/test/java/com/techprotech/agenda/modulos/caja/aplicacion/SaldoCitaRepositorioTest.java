@@ -52,8 +52,8 @@ class SaldoCitaRepositorioTest {
             var sesiones=mock(CajaSesionRepositorio.class);
             var sesion=new CajaSesionEntidad();sesion.setId(6L);sesion.setEmpresaId(7L);sesion.setSucursalId(3L);sesion.setEstado("ABIERTA");
             when(sesiones.findByEmpresaIdAndSucursalIdAndEstado(7L,3L,"ABIERTA")).thenReturn(Optional.of(sesion));
-            var caja=new ServicioCaja(sesiones,pagos,mock(PagoVentaRepositorio.class),mock(MovimientoCajaRepositorio.class),citas,
-                    mock(ClienteRepositorio.class),mock(ServicioRepositorio.class),mock(SucursalRepositorio.class),new ObjectMapper(),Clock.systemUTC(),servicio,mock(ServicioPendientesCitasCaja.class));
+            var bus=mock(org.springframework.context.ApplicationEventPublisher.class);
+            var caja=new ServicioCaja(sesiones, pagos, mock(PagoVentaRepositorio.class), mock(MovimientoCajaRepositorio.class), citas, mock(ClienteRepositorio.class), mock(ServicioRepositorio.class), mock(SucursalRepositorio.class), new ObjectMapper(), Clock.systemUTC(), servicio, mock(ServicioPendientesCitasCaja.class), new com.techprotech.agenda.modulos.citas.aplicacion.PublicadorPagosCitas(citas, new com.techprotech.agenda.modulos.citas.aplicacion.PublicadorEventosCita(bus, Clock.systemUTC())));
             assertThatThrownBy(() -> caja.registrarPago(7L,11L,List.of(3L),cita.getId(),new RegistrarPagoRequest(new BigDecimal("401"),"TARJETA",null,null)))
                     .isInstanceOf(org.springframework.web.server.ResponseStatusException.class);
             caja.registrarPago(7L,11L,List.of(3L),cita.getId(),new RegistrarPagoRequest(new BigDecimal("400"),"TARJETA",null,null));em.flush();
@@ -61,6 +61,9 @@ class SaldoCitaRepositorioTest {
                     .isInstanceOf(org.springframework.web.server.ResponseStatusException.class);
             assertThat(servicio.saldos(7L,List.of(cita.getId())).get(cita.getId()).estadoCobro()).isEqualTo(EstadoCobroCita.PAGADA);
             assertThat(servicio.saldos(9L,List.of(cita.getId(),ajena.getId()))).isEmpty();
+            verify(bus).publishEvent(argThat((Object e) -> e instanceof com.techprotech.agenda.modulos.citas.dominio.eventos.PagoCitaRegistrado p
+                    && p.monto().compareTo(new BigDecimal("400"))==0 && p.datos().empresaId().equals(7L)));
+            verifyNoMoreInteractions(bus);
             em.getTransaction().rollback();
         } finally {StandardServiceRegistryBuilder.destroy(registro);}
     }

@@ -1,11 +1,17 @@
 package com.techprotech.agenda.modulos.citas.aplicacion;
 
+import com.techprotech.agenda.modulos.citas.dominio.eventos.*;
 import com.techprotech.agenda.modulos.caja.aplicacion.SaldoCita;
 import com.techprotech.agenda.modulos.caja.aplicacion.ServicioSaldoCitas;
 import com.techprotech.agenda.modulos.citas.infraestructura.entidad.CitaEntidad;
 import com.techprotech.agenda.modulos.citas.infraestructura.repositorio.CitaRepositorio;
 import com.techprotech.agenda.seguridad.jwt.UsuarioAutenticado;
 import java.util.*;
+import java.time.Clock;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
+import com.techprotech.agenda.modulos.citas.infraestructura.entidad.HistorialEstadoCitaEntidad;
+import com.techprotech.agenda.modulos.citas.infraestructura.repositorio.HistorialEstadoCitaRepositorio;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
@@ -16,10 +22,15 @@ import static org.springframework.http.HttpStatus.*;
 public class ServicioCancelacionCita {
     private final CitaRepositorio citas;
     private final ServicioSaldoCitas saldos;
+    private final PublicadorEventosCita eventos;
+    private final Clock reloj;
+    private final HistorialEstadoCitaRepositorio historial;
 
-    public ServicioCancelacionCita(CitaRepositorio citas, ServicioSaldoCitas saldos) {
+    public ServicioCancelacionCita(CitaRepositorio citas, ServicioSaldoCitas saldos,
+            HistorialEstadoCitaRepositorio historial,
+            PublicadorEventosCita eventos, Clock reloj) {
         this.citas = citas;
-        this.saldos = saldos;
+        this.saldos = saldos; this.historial = historial; this.eventos = eventos; this.reloj = reloj;
     }
 
     public boolean puedeCancelar(CitaEntidad cita, SaldoCita saldo) {
@@ -50,6 +61,26 @@ public class ServicioCancelacionCita {
         var saldo = estadosAdmitidos(cita) && cita.getCheckInEn() == null ? saldos.de(cita) : null;
         var motivo = motivoRechazo(cita, saldo);
         if (motivo != null) throw new ResponseStatusException(CONFLICT, motivo);
+        return cita;
+    }
+
+    @Transactional
+    public CitaEntidad cancelar(UsuarioAutenticado usuario, Long citaId, OrigenEventoCita origen) {
+        if (origen != OrigenEventoCita.ADMIN && origen != OrigenEventoCita.RECEPCION)
+            throw new ResponseStatusException(BAD_REQUEST, "Origen de cancelación del negocio no válido");
+        var cita = bloquearYValidar(usuario, citaId);
+        var anterior = cita.getEstado();
+        cita.setEstado("CANCELADA");
+        cita.setCanceladaEn(LocalDateTime.ofInstant(reloj.instant(), ZoneOffset.UTC));
+        cita.setMotivoCancelacion(origen == OrigenEventoCita.ADMIN
+                ? "Cancelada desde el panel administrativo" : "Cancelada desde recepción");
+        citas.save(cita);
+        var cambio = new HistorialEstadoCitaEntidad();
+        cambio.setCitaId(citaId); cambio.setEstadoAnterior(anterior); cambio.setEstadoNuevo("CANCELADA");
+        cambio.setCambiadoPorUsuarioId(usuario.usuarioId());
+        cambio.setMotivo(origen == OrigenEventoCita.ADMIN ? "Cambio de estado realizado por administracion" : "Cancelación desde recepción");
+        historial.save(cambio);
+        eventos.publicar(new CitaCancelada(eventos.datos(cita, origen, usuario.usuarioId())));
         return cita;
     }
 

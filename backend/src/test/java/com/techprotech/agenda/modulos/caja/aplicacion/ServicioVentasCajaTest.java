@@ -52,10 +52,8 @@ class ServicioVentasCajaTest {
         var descuentos = mock(com.techprotech.agenda.modulos.productos.infraestructura.repositorio.ReglaDescuentoProductoRepositorio.class);
         var zonas = mock(com.techprotech.agenda.modulos.productos.infraestructura.repositorio.ZonaPrecioProductoRepositorio.class);
         var preciosZona = mock(com.techprotech.agenda.modulos.productos.infraestructura.repositorio.PrecioZonaProductoRepositorio.class);
-        ServicioVentasCaja servicio = new ServicioVentasCaja(ventas, detalles, pagos, sesiones, movimientos, pagosCita,
-                citas, clientes, servicios, productos, existencias, sucursales, inventario,
-                descuentos,
-                zonas, preciosZona, mock(com.techprotech.agenda.modulos.productos.aplicacion.ServicioComisionesDevengadas.class), java.time.Clock.fixed(java.time.Instant.parse("2026-10-15T01:00:00Z"),java.time.ZoneOffset.UTC), com.techprotech.agenda.compartido.tiempo.TiempoPruebas.zona(java.time.ZoneId.of("America/Mexico_City")));
+        var bus=mock(org.springframework.context.ApplicationEventPublisher.class);
+        ServicioVentasCaja servicio = new ServicioVentasCaja(ventas, detalles, pagos, sesiones, movimientos, pagosCita, citas, clientes, servicios, productos, existencias, sucursales, inventario, descuentos, zonas, preciosZona, mock(com.techprotech.agenda.modulos.productos.aplicacion.ServicioComisionesDevengadas.class), java.time.Clock.fixed(java.time.Instant.parse("2026-10-15T01:00:00Z"),java.time.ZoneOffset.UTC), com.techprotech.agenda.compartido.tiempo.TiempoPruebas.zona(java.time.ZoneId.of("America/Mexico_City")), new com.techprotech.agenda.modulos.citas.aplicacion.PublicadorPagosCitas(citas, new com.techprotech.agenda.modulos.citas.aplicacion.PublicadorEventosCita(bus, java.time.Clock.systemUTC())));
 
         SucursalEntidad sucursal = new SucursalEntidad(); sucursal.setId(5L); sucursal.setEmpresaId(1L); sucursal.setActiva(true);
         CajaSesionEntidad sesion = new CajaSesionEntidad(); sesion.setId(8L); sesion.setEmpresaId(1L); sesion.setSucursalId(5L); sesion.setEstado("ABIERTA");
@@ -147,5 +145,8 @@ class ServicioVentasCajaTest {
         verify(pagos,times(1)).save(any());
 
 
+        verify(bus).publishEvent(argThat((Object e) -> e instanceof com.techprotech.agenda.modulos.citas.dominio.eventos.PagoCitaRegistrado p
+                && p.monto().compareTo(new BigDecimal("100"))==0 && p.datos().citaId().equals(10L)));
+        verifyNoMoreInteractions(bus);
     }
 }
