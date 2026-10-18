@@ -25,7 +25,7 @@ class UtilidadRealizadaZonaRepositorioTest {
                 "hibernate.connection.url","jdbc:h2:mem:utilidad_zona;MODE=MySQL",
                 "hibernate.hbm2ddl.auto","create-drop")).build();
         try(var factory=new MetadataSources(registro).addAnnotatedClass(VentaEntidad.class)
-                .addAnnotatedClass(VentaDetalleEntidad.class).buildMetadata().buildSessionFactory();var em=factory.createEntityManager()) {
+                .addAnnotatedClass(VentaDetalleEntidad.class).addAnnotatedClass(com.techprotech.agenda.modulos.pagos.infraestructura.entidad.OrdenPointCajaEntidad.class).buildMetadata().buildSessionFactory();var em=factory.createEntityManager()) {
             em.getTransaction().begin();
             crearVenta(em,"2026-10-14T01:00",8L);
             crearVenta(em,"2026-10-13T05:59",9L);

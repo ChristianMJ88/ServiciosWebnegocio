@@ -45,7 +45,7 @@ class EventosCitaTransaccionTest {
                         "hibernate.connection.url", "jdbc:h2:mem:eventos_006;MODE=MySQL",
                         "hibernate.hbm2ddl.auto", "create-drop")).build();
         try (var factory = new MetadataSources(registro).addAnnotatedClass(CitaEntidad.class)
-                .addAnnotatedClass(PagoCitaEntidad.class).addAnnotatedClass(VentaEntidad.class).addAnnotatedClass(VentaDetalleEntidad.class)
+                .addAnnotatedClass(PagoCitaEntidad.class).addAnnotatedClass(VentaEntidad.class).addAnnotatedClass(VentaDetalleEntidad.class).addAnnotatedClass(com.techprotech.agenda.modulos.pagos.infraestructura.entidad.OrdenPointCajaEntidad.class)
                 .addAnnotatedClass(HistorialEstadoCitaEntidad.class).addAnnotatedClass(BandejaSalidaNotificacionEntidad.class)
                 .buildMetadata().buildSessionFactory(); var contexto = new AnnotationConfigApplicationContext()) {
             var em = SharedEntityManagerCreator.createSharedEntityManager(factory);

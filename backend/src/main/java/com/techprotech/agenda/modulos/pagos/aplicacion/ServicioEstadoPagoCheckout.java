@@ -32,7 +32,7 @@ public class ServicioEstadoPagoCheckout {
         this.citas = citas; this.conciliacion = conciliacion; this.entityManager = entityManager; this.reloj = reloj;
     }
 
-    @Transactional
+    @Transactional(isolation = org.springframework.transaction.annotation.Isolation.READ_COMMITTED)
     public EstadoAplicado aplicar(Long intentoId, ResultadoCobro resultado) {
         var intento = intentos.findById(intentoId).orElseThrow(() -> new IllegalStateException("Intento no encontrado"));
         var orden = ordenes.bloquearPorEmpresaEId(intento.getEmpresaId(), intento.getCheckoutOrdenId())

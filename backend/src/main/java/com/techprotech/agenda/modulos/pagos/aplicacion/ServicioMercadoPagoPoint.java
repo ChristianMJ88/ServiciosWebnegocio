@@ -24,6 +24,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Service
+@lombok.extern.slf4j.Slf4j
 public class ServicioMercadoPagoPoint {
     private final ClienteMercadoPagoPoint cliente;
     private final ServicioOAuthMercadoPago oauth;
@@ -35,17 +36,24 @@ public class ServicioMercadoPagoPoint {
     private final ServicioVentasCaja ventas;
     private final ServicioConciliacionPagos conciliacion;
     private final ServicioComisionPlataforma comisiones;
+    private final PagosPrevistosPoint previstos;
+    private final java.time.Clock reloj;
+    private final java.time.Duration limiteReenvio;
+    private final org.springframework.transaction.support.TransactionTemplate transaccion;
 
     public ServicioMercadoPagoPoint(ClienteMercadoPagoPoint cliente, ServicioOAuthMercadoPago oauth,
                                     PropiedadesMercadoPago propiedades,
                                     TerminalMercadoPagoRepositorio terminales, OrdenPointCajaRepositorio ordenes,
                                     SucursalRepositorio sucursales, VentaRepositorio ventasRepositorio,
                                     ServicioVentasCaja ventas, ServicioConciliacionPagos conciliacion,
-                                    ServicioComisionPlataforma comisiones) {
+                                    ServicioComisionPlataforma comisiones, org.springframework.transaction.PlatformTransactionManager gestor, java.time.Clock reloj,
+                                    @org.springframework.beans.factory.annotation.Value("${aplicacion.pagos.mercado-pago.point.limite-reenvio}") java.time.Duration limiteReenvio, PagosPrevistosPoint previstos) {
         this.cliente = cliente; this.oauth = oauth; this.propiedades = propiedades; this.terminales = terminales; this.ordenes = ordenes;
         this.sucursales = sucursales; this.ventasRepositorio = ventasRepositorio; this.ventas = ventas;
         this.conciliacion = conciliacion;
-        this.comisiones = comisiones;
+        this.comisiones = comisiones; this.reloj=reloj; this.limiteReenvio=limiteReenvio;this.previstos=previstos;
+        this.transaccion = new org.springframework.transaction.support.TransactionTemplate(gestor);
+        this.transaccion.setIsolationLevel(org.springframework.transaction.TransactionDefinition.ISOLATION_READ_COMMITTED);
     }
 
     @Transactional(readOnly = true)
@@ -86,8 +94,11 @@ public class ServicioMercadoPagoPoint {
         }
         Set<Long> idsTerminal = terminales.findByEmpresaIdOrderByNombreAsc(empresaId).stream()
                 .filter(item -> sucursalId.equals(item.getSucursalId())).map(TerminalMercadoPagoEntidad::getId).collect(Collectors.toSet());
-        return ordenes.findTop50ByEmpresaIdOrderByCreadoEnDesc(empresaId).stream()
-                .filter(item -> idsTerminal.contains(item.getTerminalId())).map(this::mapear).toList();
+        if(idsTerminal.isEmpty()) return List.of();
+        var lista=new java.util.LinkedHashMap<Long,OrdenPointCajaEntidad>();
+        ordenes.noFinales(empresaId,idsTerminal).forEach(o -> lista.put(o.getId(),o));
+        ordenes.findTop50ByEmpresaIdAndTerminalIdInOrderByCreadoEnDesc(empresaId,idsTerminal).forEach(o -> lista.putIfAbsent(o.getId(),o));
+        return lista.values().stream().map(this::mapear).toList();
     }
 
     @Transactional
@@ -110,115 +121,187 @@ public class ServicioMercadoPagoPoint {
         return mapear(remota, entidad, Map.of(sucursal.getId(), sucursal.getNombre()));
     }
 
-    @Transactional(isolation = org.springframework.transaction.annotation.Isolation.READ_COMMITTED)
+    @Transactional(propagation = org.springframework.transaction.annotation.Propagation.NOT_SUPPORTED)
     public OrdenPointResponse crearOrden(Long empresaId, Long usuarioId, List<Long> sucursalesPermitidas,
                                          String idempotencia, CrearOrdenPointRequest request) {
         validarIdempotencia(idempotencia);
-        Optional<OrdenPointCajaEntidad> existente = ordenes.findByEmpresaIdAndIdempotencia(empresaId, idempotencia.trim());
-        if (existente.isPresent()) return mapear(existente.get());
-        TerminalMercadoPagoEntidad terminal = terminales.findByIdAndEmpresaId(request.terminalId(), empresaId)
-                .filter(TerminalMercadoPagoEntidad::isActiva)
-                .orElseThrow(() -> error(HttpStatus.NOT_FOUND, "La terminal Point no está disponible"));
-        if (!terminal.getSucursalId().equals(request.venta().sucursalId())) {
-            throw error(HttpStatus.BAD_REQUEST, "La terminal Point pertenece a otra sucursal");
+        var orden = transaccion.execute(status -> {
+            // Serializa la idempotencia y la reserva por terminal antes de tomar citas.
+            var terminal = terminales.bloquear(request.terminalId(),empresaId)
+                    .filter(TerminalMercadoPagoEntidad::isActiva)
+                    .orElseThrow(() -> error(HttpStatus.NOT_FOUND,"La terminal Point no está disponible"));
+            if (!terminal.getSucursalId().equals(request.venta().sucursalId()) ||
+                    sucursalesPermitidas != null && !sucursalesPermitidas.isEmpty() && !sucursalesPermitidas.contains(terminal.getSucursalId()))
+                throw error(HttpStatus.FORBIDDEN,"La terminal Point pertenece a otra sucursal");
+            var existente = ordenes.findByEmpresaIdAndIdempotencia(empresaId,idempotencia.trim());
+            if (existente.isPresent()) {
+                if (!terminal.getId().equals(existente.get().getTerminalId())) throw error(HttpStatus.CONFLICT,"La clave ya corresponde a otra terminal");
+                if(!previstos.mismaSolicitud(existente.get().getPagosPrevistosJson(),request.venta())) throw error(HttpStatus.CONFLICT,"La clave ya se utilizó con otra cuenta. Retoma la orden existente sin cambiar su solicitud");
+                return new Preparada(existente.get(),false);
+            }
+            if (ordenes.existeEnCurso(empresaId,terminal.getId()))
+                throw error(HttpStatus.CONFLICT,"La terminal ya tiene un cobro pendiente. Retómalo o cancélalo desde Cobros Point antes de enviar otra cuenta");
+            var venta = ventas.prepararPoint(empresaId,usuarioId,sucursalesPermitidas,request.venta());
+            var nueva = new OrdenPointCajaEntidad();
+            nueva.setPublicId(UUID.randomUUID().toString()); nueva.setEmpresaId(empresaId); nueva.setVentaId(venta.id());
+            nueva.setTerminalId(terminal.getId()); nueva.setIdempotencia(idempotencia.trim()); nueva.setEstado("CREANDO");
+            var plan=com.techprotech.agenda.modulos.caja.aplicacion.PlanPagosVenta.resolver(venta.total(),request.venta(),true);
+            nueva.setPagosPrevistosJson(previstos.escribir(plan,request.venta()));
+            nueva.setImporte(plan.importePoint()); nueva.setMoneda(venta.moneda()); nueva.setCreadoPorUsuarioId(usuarioId);
+            return new Preparada(ordenes.save(nueva),true);
+        });
+        if (!"CREANDO".equals(orden.orden().getEstado())) return mapear(orden.orden());
+        return enviarCreacion(orden.orden(),orden.primerEnvio());
+    }
+
+    private record Preparada(OrdenPointCajaEntidad orden, boolean primerEnvio) {}
+
+    private OrdenPointResponse enviarCreacion(OrdenPointCajaEntidad orden, boolean primerEnvio) {
+        if (!primerEnvio && orden.getCreadoEn()!=null && orden.getCreadoEn().plus(limiteReenvio).isBefore(java.time.LocalDateTime.now(reloj))) {
+            return revisarIndeterminada(orden);
         }
-        VentaResponse venta = ventas.prepararPoint(empresaId, usuarioId, sucursalesPermitidas, request.venta());
-        String publicId = UUID.randomUUID().toString();
         ClienteMercadoPagoPoint.OrdenRemota remota;
         try {
-            remota = cliente.crearOrden(empresaId, idempotencia.trim(), terminal.getTerminalId(),
-                    referencia(publicId), venta.total(),
-                    comisiones.calcular(empresaId, ProveedorPago.MERCADO_PAGO, venta.total(), venta.moneda()),
-                    "Venta " + venta.folio());
-        } catch (IllegalStateException ex) {
-            if (ex.getMessage() != null && ex.getMessage().contains("HTTP 409")) {
-                throw error(HttpStatus.CONFLICT, "La terminal ya tiene un cobro pendiente. Retómalo o cancélalo desde Cobros Point antes de enviar otra cuenta");
+            var terminal = terminales.findByIdAndEmpresaId(orden.getTerminalId(),orden.getEmpresaId()).orElseThrow();
+            var venta = ventasRepositorio.findByIdAndEmpresaId(orden.getVentaId(),orden.getEmpresaId()).orElseThrow();
+            // Sin transacción JDBC ni locks durante la red. Repetir usa la misma clave y referencia.
+            remota = cliente.crearOrden(orden.getEmpresaId(),orden.getIdempotencia(),terminal.getTerminalId(),
+                    referencia(orden.getPublicId()),orden.getImporte(),
+                    comisiones.calcular(orden.getEmpresaId(),ProveedorPago.MERCADO_PAGO,orden.getImporte(),orden.getMoneda()),"Venta " + venta.getFolio());
+        } catch (RuntimeException ex) {
+            // Timeout, 5xx, respuesta incompleta o cualquier fallo de reenvío no prueban ausencia de cobro.
+            if (!primerEnvio || !(ex instanceof com.techprotech.agenda.modulos.pagos.infraestructura.mercadopago.ErrorProveedorPoint proveedor) || !proveedor.definitivo()) {
+                log.warn("Resultado Point indeterminado: empresa={}, orden={}, tipo={}",orden.getEmpresaId(),orden.getPublicId(),ex.getClass().getSimpleName());
+                return mapear(orden);
             }
+            transaccion.executeWithoutResult(status -> {
+                var actual = ordenes.bloquear(orden.getEmpresaId(),orden.getPublicId()).orElseThrow();
+                if ("CREANDO".equals(actual.getEstado())) {
+                    actual.setEstado("CANCELADO"); actual.setDetalleEstado("No se pudo crear el cobro Point");
+                    ventas.cancelarPoint(actual.getEmpresaId(),actual.getVentaId(),actual.getDetalleEstado());
+                    ordenes.save(actual);
+                }
+            });
+            if (ex instanceof com.techprotech.agenda.modulos.pagos.infraestructura.mercadopago.ErrorProveedorPoint p && p.status()==409)
+                throw error(HttpStatus.CONFLICT,"La terminal ya tiene un cobro pendiente. Retómalo o cancélalo desde Cobros Point antes de enviar otra cuenta");
             throw ex;
         }
-        OrdenPointCajaEntidad orden = new OrdenPointCajaEntidad();
-        orden.setPublicId(publicId); orden.setEmpresaId(empresaId); orden.setVentaId(venta.id()); orden.setTerminalId(terminal.getId());
-        orden.setProveedorOrdenId(remota.ordenId()); orden.setProveedorPagoId(remota.pagoId()); orden.setIdempotencia(idempotencia.trim());
-        orden.setImporte(venta.total()); orden.setMoneda(venta.moneda()); orden.setCreadoPorUsuarioId(usuarioId);
-        aplicarEstado(orden, remota);
-        orden = ordenes.save(orden);
-        conciliacion.registrarPoint(orden, remota);
-        return mapear(orden);
+        return guardarRespuesta(orden,remota);
     }
 
-    @Transactional
-    public OrdenPointResponse consultar(Long empresaId, String publicId) {
-        OrdenPointCajaEntidad orden = buscar(empresaId, publicId);
-        ClienteMercadoPagoPoint.OrdenRemota remota = cliente.consultar(empresaId, orden.getProveedorOrdenId());
-        aplicarEstado(orden, remota);
-        orden = ordenes.save(orden);
-        conciliacion.registrarPoint(orden, remota);
-        return mapear(orden);
+    private OrdenPointResponse revisarIndeterminada(OrdenPointCajaEntidad orden) {
+        return transaccion.execute(status -> {
+            var actual=ordenes.bloquear(orden.getEmpresaId(),orden.getPublicId()).orElseThrow();
+            if("CREANDO".equals(actual.getEstado())) {actual.setEstado("REQUIERE_REVISION");actual.setDetalleEstado("Verifica en Mercado Pago si se cobró antes de liberar");ordenes.save(actual);}
+            return mapear(actual);
+        });
     }
 
-    @Transactional
-    public OrdenPointResponse cancelar(Long empresaId, String publicId, String idempotencia) {
-        validarIdempotencia(idempotencia);
-        OrdenPointCajaEntidad orden = buscar(empresaId, publicId);
-        if (Set.of("APROBADO", "REEMBOLSADO").contains(orden.getEstado())) throw error(HttpStatus.CONFLICT, "La orden ya fue cobrada");
-        ClienteMercadoPagoPoint.OrdenRemota remota = cliente.cancelar(empresaId, orden.getProveedorOrdenId(), idempotencia);
-        aplicarEstado(orden, remota);
-        orden = ordenes.save(orden);
-        conciliacion.registrarPoint(orden, remota);
-        return mapear(orden);
+    @Transactional(propagation = org.springframework.transaction.annotation.Propagation.NOT_SUPPORTED)
+    public OrdenPointResponse reintentar(Long empresaId,List<Long> permitidas,String publicId) {
+        var orden=buscarConAlcance(empresaId,permitidas,publicId);
+        if(!"CREANDO".equals(orden.getEstado()) || orden.getProveedorOrdenId()!=null) throw error(HttpStatus.CONFLICT,"La orden no está pendiente de envío");
+        return enviarCreacion(orden,false);
     }
 
-    @Transactional
-    public OrdenPointResponse reembolsar(Long empresaId, String publicId, String idempotencia) {
-        validarIdempotencia(idempotencia);
-        OrdenPointCajaEntidad orden = buscar(empresaId, publicId);
-        if (!"APROBADO".equals(orden.getEstado())) throw error(HttpStatus.CONFLICT, "Sólo se puede reembolsar un cobro Point aprobado");
-        ClienteMercadoPagoPoint.OrdenRemota remota = cliente.reembolsar(empresaId, orden.getProveedorOrdenId(), idempotencia);
-        aplicarEstado(orden, remota);
-        orden = ordenes.save(orden);
-        conciliacion.registrarPoint(orden, remota);
-        return mapear(orden);
+    OrdenPointCajaEntidad buscarConAlcance(Long empresaId,List<Long> permitidas,String publicId) {
+        var orden=buscar(empresaId,publicId);
+        var terminal=terminales.findByIdAndEmpresaId(orden.getTerminalId(),empresaId).orElseThrow(() -> error(HttpStatus.NOT_FOUND,"Terminal no disponible"));
+        if(permitidas!=null && !permitidas.isEmpty() && !permitidas.contains(terminal.getSucursalId())) throw error(HttpStatus.FORBIDDEN,"No tienes acceso a la sucursal de esta orden Point");
+        return orden;
     }
 
-    @Transactional
-    public OrdenPointResponse simularAprobacion(Long empresaId, String publicId) {
-        OrdenPointCajaEntidad orden = buscar(empresaId, publicId);
-        TerminalMercadoPagoEntidad terminal = terminales.findByIdAndEmpresaId(orden.getTerminalId(), empresaId)
-                .orElseThrow(() -> error(HttpStatus.NOT_FOUND, "La terminal Point no está disponible"));
-        if (!simulacionDisponible(terminal)) {
-            throw error(HttpStatus.CONFLICT, "La simulación sólo está disponible con la terminal virtual en ambiente de prueba");
+    private OrdenPointResponse guardarRespuesta(OrdenPointCajaEntidad orden, ClienteMercadoPagoPoint.OrdenRemota remota) {
+        return transaccion.execute(status -> {
+            var actual = ordenes.bloquear(orden.getEmpresaId(),orden.getPublicId()).orElseThrow();
+            aplicarEstado(actual,remota);
+            ordenes.save(actual); conciliacion.registrarPoint(actual,remota);
+            return mapear(actual);
+        });
+    }
+
+    @Transactional(propagation = org.springframework.transaction.annotation.Propagation.NOT_SUPPORTED)
+    public OrdenPointResponse consultar(Long empresaId, String publicId) {return consultar(empresaId,List.of(),publicId);}
+
+    @Transactional(propagation = org.springframework.transaction.annotation.Propagation.NOT_SUPPORTED)
+    public OrdenPointResponse consultar(Long empresaId,List<Long> permitidas, String publicId) {
+        var orden=buscarConAlcance(empresaId,permitidas,publicId);
+        if ("CREANDO".equals(orden.getEstado()) && orden.getProveedorOrdenId()==null) {
+            if(orden.getCreadoEn()!=null && orden.getCreadoEn().plus(limiteReenvio).isBefore(java.time.LocalDateTime.now(reloj)))
+                return revisarIndeterminada(orden);
+            return mapear(orden);
         }
-        if (Set.of("APROBADO", "CANCELADO", "RECHAZADO", "EXPIRADO", "REEMBOLSADO").contains(orden.getEstado())) {
-            throw error(HttpStatus.CONFLICT, "La orden Point ya terminó");
-        }
-        cliente.simularAprobacion(empresaId, orden.getProveedorOrdenId());
-        ClienteMercadoPagoPoint.OrdenRemota remota = cliente.consultar(empresaId, orden.getProveedorOrdenId());
-        aplicarEstado(orden, remota);
-        orden = ordenes.save(orden);
-        conciliacion.registrarPoint(orden, remota);
-        return mapear(orden);
+        if (orden.getProveedorOrdenId()==null) return mapear(orden);
+        return guardarRespuesta(orden,cliente.consultar(empresaId,orden.getProveedorOrdenId()));
     }
 
-    @Transactional
+    @Transactional(propagation = org.springframework.transaction.annotation.Propagation.NOT_SUPPORTED)
+    public OrdenPointResponse cancelar(Long empresaId, String publicId, String idempotencia) {return cancelar(empresaId,List.of(),publicId,idempotencia);}
+
+    @Transactional(propagation = org.springframework.transaction.annotation.Propagation.NOT_SUPPORTED)
+    public OrdenPointResponse cancelar(Long empresaId,List<Long> permitidas, String publicId, String idempotencia) {
+        validarIdempotencia(idempotencia);
+        var orden=buscarConAlcance(empresaId,permitidas,publicId);
+        if (Set.of("APROBADO","REEMBOLSADO").contains(orden.getEstado())) throw error(HttpStatus.CONFLICT,"La orden ya fue cobrada");
+        if (orden.getProveedorOrdenId()==null) throw error(HttpStatus.CONFLICT,"El resultado del envío a Point está pendiente. Consulta la orden antes de cancelarla");
+        return guardarRespuesta(orden,cliente.cancelar(empresaId,orden.getProveedorOrdenId(),idempotencia));
+    }
+
+    @Transactional(propagation = org.springframework.transaction.annotation.Propagation.NOT_SUPPORTED)
+    public OrdenPointResponse reembolsar(Long empresaId,String publicId,String idempotencia) {return reembolsar(empresaId,List.of(),publicId,idempotencia);}
+
+    @Transactional(propagation = org.springframework.transaction.annotation.Propagation.NOT_SUPPORTED)
+    public OrdenPointResponse reembolsar(Long empresaId,List<Long> permitidas,String publicId,String idempotencia) {
+        validarIdempotencia(idempotencia);
+        var orden=buscarConAlcance(empresaId,permitidas,publicId);
+        if (!"APROBADO".equals(orden.getEstado())) throw error(HttpStatus.CONFLICT,"Sólo se puede reembolsar un cobro Point aprobado");
+        if (!previstos.leer(orden.getPagosPrevistosJson()).isEmpty()) throw error(HttpStatus.CONFLICT,"El pago dividido requiere revisión del reembolso de todos los métodos; no se reembolsa solo la parte Point desde esta acción");
+        return guardarRespuesta(orden,cliente.reembolsar(empresaId,orden.getProveedorOrdenId(),idempotencia));
+    }
+
+    @Transactional(propagation = org.springframework.transaction.annotation.Propagation.NOT_SUPPORTED)
+    public OrdenPointResponse simularAprobacion(Long empresaId,String publicId) {return simularAprobacion(empresaId,List.of(),publicId);}
+
+    @Transactional(propagation = org.springframework.transaction.annotation.Propagation.NOT_SUPPORTED)
+    public OrdenPointResponse simularAprobacion(Long empresaId,List<Long> permitidas,String publicId) {
+        var orden=buscarConAlcance(empresaId,permitidas,publicId);
+        var terminal=terminales.findByIdAndEmpresaId(orden.getTerminalId(),empresaId).orElseThrow(() -> error(HttpStatus.NOT_FOUND,"La terminal Point no está disponible"));
+        if (!simulacionDisponible(terminal)) throw error(HttpStatus.CONFLICT,"La simulación sólo está disponible con la terminal virtual en ambiente de prueba");
+        if (Set.of("APROBADO","CANCELADO","RECHAZADO","EXPIRADO","REEMBOLSADO").contains(orden.getEstado())) throw error(HttpStatus.CONFLICT,"La orden Point ya terminó");
+        if (orden.getProveedorOrdenId()==null) throw error(HttpStatus.CONFLICT,"Consulta primero el resultado del envío a Point");
+        cliente.simularAprobacion(empresaId,orden.getProveedorOrdenId());
+        return guardarRespuesta(orden,cliente.consultar(empresaId,orden.getProveedorOrdenId()));
+    }
+
+    @Transactional(propagation = org.springframework.transaction.annotation.Propagation.NOT_SUPPORTED)
     public boolean procesarWebhook(String proveedorOrdenId) {
-        OrdenPointCajaEntidad orden = ordenes.findByProveedorOrdenId(proveedorOrdenId).orElse(null);
-        if (orden == null) return false;
-        ClienteMercadoPagoPoint.OrdenRemota remota = cliente.consultar(orden.getEmpresaId(), proveedorOrdenId);
-        aplicarEstado(orden, remota);
-        orden = ordenes.save(orden);
-        conciliacion.registrarPoint(orden, remota);
+        var orden=ordenes.findByProveedorOrdenId(proveedorOrdenId).orElse(null);
+        if (orden==null) return false;
+        guardarRespuesta(orden,cliente.consultar(orden.getEmpresaId(),proveedorOrdenId));
         return true;
     }
 
-    private void aplicarEstado(OrdenPointCajaEntidad orden, ClienteMercadoPagoPoint.OrdenRemota remota) {
+    void aplicarEstado(OrdenPointCajaEntidad orden, ClienteMercadoPagoPoint.OrdenRemota remota) {
         orden.setProveedorOrdenId(remota.ordenId());
         if (remota.pagoId() != null) orden.setProveedorPagoId(remota.pagoId());
         String estado = normalizarEstado(remota.estado(), remota.estadoPago(), remota.detallePago());
+        // Una notificación atrasada no revierte un cobro acreditado.
+        if ("REEMBOLSADO".equals(orden.getEstado()) || "APROBADO".equals(orden.getEstado()) && !"REEMBOLSADO".equals(estado)) return;
+        if(Set.of("CANCELADO","RECHAZADO","EXPIRADO").contains(orden.getEstado()) && !Set.of("APROBADO","REEMBOLSADO").contains(estado)) return;
         orden.setEstado(estado); orden.setDetalleEstado(remota.detallePago() != null ? remota.detallePago() : remota.detalleEstado());
         if (orden.getVentaId() == null) return;
-        if ("APROBADO".equals(estado)) ventas.confirmarPoint(orden.getEmpresaId(), orden.getVentaId(), remota.pagoId());
+        if ("APROBADO".equals(estado)) {
+            java.util.List<com.techprotech.agenda.modulos.caja.aplicacion.PlanPagosVenta.Parte> partes;boolean invalido=false;
+            try{partes=previstos.leer(orden.getPagosPrevistosJson());}catch(IllegalStateException e){partes=List.of();invalido=true;}
+            var resultado=ventas.confirmarPoint(orden,remota.pagoId()==null?remota.ordenId():remota.pagoId(),partes);
+            if(resultado.requiereRevision() || invalido) orden.setDetalleEstado("REVISAR: Pago aprobado con incidencia. Verifica la conciliación antes de registrar otro cobro");
+        }
         if (Set.of("CANCELADO", "RECHAZADO", "EXPIRADO").contains(estado)) ventas.cancelarPoint(orden.getEmpresaId(), orden.getVentaId(), orden.getDetalleEstado());
-        if ("REEMBOLSADO".equals(estado)) ventas.marcarReembolsadaPoint(orden.getEmpresaId(), orden.getVentaId());
+        if ("REEMBOLSADO".equals(estado)) {
+            boolean simple;try{simple=previstos.leer(orden.getPagosPrevistosJson()).isEmpty();}catch(IllegalStateException e){simple=false;}
+            if(simple) {if(!ventas.marcarReembolsadaPoint(orden)) orden.setDetalleEstado("REVISAR: Reembolso de orden no acreditada. Se conservan la venta y los otros cobros");}
+            else {ventas.revisarReembolsoPoint(orden.getEmpresaId(),orden.getVentaId());orden.setDetalleEstado("REVISAR: Reembolso parcial externo. El efectivo y la venta se conservan hasta la revisión completa");}
+        }
     }
 
     private String normalizarEstado(String orden, String pago, String detalle) {
@@ -233,12 +316,16 @@ public class ServicioMercadoPagoPoint {
         return "CREADO";
     }
 
-    private OrdenPointResponse mapear(OrdenPointCajaEntidad orden) {
+    OrdenPointResponse mapear(OrdenPointCajaEntidad orden) {
         VentaEntidad venta = ventasRepositorio.findByIdAndEmpresaId(orden.getVentaId(), orden.getEmpresaId()).orElse(null);
         TerminalMercadoPagoEntidad terminal = terminales.findByIdAndEmpresaId(orden.getTerminalId(), orden.getEmpresaId()).orElse(null);
+        java.math.BigDecimal efectivo=null;boolean planInvalido=false;boolean reembolsable=false;
+        try {var partes=previstos.leer(orden.getPagosPrevistosJson());reembolsable=partes.isEmpty() && "APROBADO".equals(orden.getEstado()) && (orden.getDetalleEstado()==null || !orden.getDetalleEstado().startsWith("REVISAR:"));efectivo=partes.stream().filter(p -> com.techprotech.agenda.modulos.caja.aplicacion.CatalogosCaja.METODO_PAGO_EFECTIVO.equals(p.metodoPago())).map(com.techprotech.agenda.modulos.caja.aplicacion.PlanPagosVenta.Parte::monto).reduce(java.math.BigDecimal.ZERO,java.math.BigDecimal::add);}
+        catch(IllegalStateException ex){planInvalido=true;}
         return new OrdenPointResponse(orden.getPublicId(), orden.getVentaId(), venta == null ? null : venta.getFolio(), orden.getTerminalId(),
                 terminal == null ? null : terminal.getNombre(), orden.getEstado(), orden.getDetalleEstado(), orden.getImporte(), orden.getMoneda(),
-                orden.getProveedorOrdenId(), orden.getProveedorPagoId(), orden.getCreadoEn(), orden.getActualizadoEn(), simulacionDisponible(terminal));
+                orden.getProveedorOrdenId(), orden.getProveedorPagoId(), orden.getCreadoEn(), orden.getActualizadoEn(), simulacionDisponible(terminal),
+                efectivo,false,false,orden.getDetalleEstado()!=null && orden.getDetalleEstado().startsWith("REVISAR:"),planInvalido,reembolsable);
     }
 
     private TerminalPointResponse mapear(ClienteMercadoPagoPoint.TerminalRemota remota, TerminalMercadoPagoEntidad local,

@@ -30,7 +30,8 @@ public record CitaRecepcionResponse(
         boolean puedeCerrar,
         boolean puedeCancelar,
         String folio,
-        com.techprotech.agenda.modulos.citas.aplicacion.SeccionAgendaCita seccionAgenda
+        com.techprotech.agenda.modulos.citas.aplicacion.SeccionAgendaCita seccionAgenda,
+        boolean cobroPointEnCurso
 ) {
     @com.fasterxml.jackson.annotation.JsonProperty("notificarEnAgenda")
     public boolean notificarEnAgenda() { return estado != null && java.util.Set.of("PENDIENTE","CONFIRMADA").contains(estado); }

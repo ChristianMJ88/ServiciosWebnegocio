@@ -28,7 +28,7 @@ class SaldoCitaRepositorioTest {
                 "hibernate.connection.driver_class","org.h2.Driver","hibernate.connection.url","jdbc:h2:mem:saldo_005;MODE=MySQL",
                 "hibernate.hbm2ddl.auto","create-drop")).build();
         try(var factory=new MetadataSources(registro).addAnnotatedClass(CitaEntidad.class).addAnnotatedClass(PagoCitaEntidad.class)
-                .addAnnotatedClass(VentaEntidad.class).addAnnotatedClass(VentaDetalleEntidad.class).buildMetadata().buildSessionFactory();var em=factory.createEntityManager()) {
+                .addAnnotatedClass(VentaEntidad.class).addAnnotatedClass(VentaDetalleEntidad.class).addAnnotatedClass(com.techprotech.agenda.modulos.pagos.infraestructura.entidad.OrdenPointCajaEntidad.class).buildMetadata().buildSessionFactory();var em=factory.createEntityManager()) {
             em.getTransaction().begin();
             var cita=cita(em,7L);var ajena=cita(em,8L);
             var venta=venta(em,7L,"PAGADA");var pendiente=venta(em,7L,"PENDIENTE");var ventaAjena=venta(em,8L,"PAGADA");

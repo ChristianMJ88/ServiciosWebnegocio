@@ -38,7 +38,7 @@ public class ServicioConsultaCobroCitas {
         for(var cita:citas) {
             var saldo=montos.get(cita.getId());if(saldo==null)continue;
             boolean puede=abiertas.contains(cita.getSucursalId()) && usuario.puedeAccederSucursal(cita.getSucursalId())
-                    && ServicioSaldoCitas.esCobrable(cita) && saldo.pendiente().signum()>0;
+                    && ServicioSaldoCitas.esCobrable(cita) && saldo.pendiente().signum()>0 && !saldo.cobroPointEnCurso();
             resultado.put(cita.getId(),new CobroCita(saldo,puede));
         }
         return Map.copyOf(resultado);

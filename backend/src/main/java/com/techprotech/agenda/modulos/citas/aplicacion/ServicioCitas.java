@@ -129,6 +129,23 @@ public class ServicioCitas {
 
 @Transactional
 public CitaCreadaResponse crearCitaPublica(CrearCitaRequest request) { return crearCita(request,true,true); }
+/** El bot nunca crea reservas de pago: el cliente debe aceptar y pagar en el sitio. */
+@Transactional
+public CitaCreadaResponse crearCitaBot(CrearCitaRequest request) {
+    if (requierePagoBot(request.empresaId(),request.sucursalId(),request.servicioId(),request.inicio()))
+        throw new AnticipoNoDisponibleException();
+    return crearCita(request,true,false);
+}
+
+@Transactional(readOnly=true)
+public boolean requierePagoBot(Long empresaId, Long sucursalId, Long servicioId, OffsetDateTime inicio) {
+    var precio = cotizador.cotizarPrecio(empresaId,sucursalId,null,List.of(
+        new com.techprotech.agenda.modulos.citas.api.dto.CotizarCitasRequest.ItemCotizacion(servicioId,inicio)));
+    var servicio = servicioRepositorio.findByIdAndEmpresaIdAndActivoTrue(servicioId,empresaId)
+        .orElseThrow(() -> new ResponseStatusException(NOT_FOUND,"Servicio no disponible"));
+    return PoliticaCobroServicio.resolver(precio.lineas().getFirst().precioNeto(),servicio).importeRequerido().signum()>0;
+}
+
 private CitaCreadaResponse crearCita(CrearCitaRequest request, boolean programarWhatsappConfirmacion, boolean publico) {
 
         if (request.empresaId() == null) throw new org.springframework.web.server.ResponseStatusException(org.springframework.http.HttpStatus.BAD_REQUEST, "La empresa es obligatoria");

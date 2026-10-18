@@ -29,6 +29,7 @@ class EventosPagoCitaTest {
     @Mock VentaDetalleRepositorio detalles;
     @Mock PagoVentaRepositorio pagos;
     @Mock ServicioComisionesDevengadas comisiones;
+    @Mock ServicioSaldoCitas saldos;
     @InjectMocks ServicioVentasCaja caja;
     final Clock reloj = Clock.fixed(Instant.parse("2026-10-16T18:00:00Z"), ZoneOffset.UTC);
     PublicadorPagosCitas eventos;
@@ -77,6 +78,8 @@ class EventosPagoCitaTest {
         when(pagos.findByEmpresaIdAndVentaIdOrderByRegistradoEnDesc(7L,30L)).thenAnswer(i -> List.copyOf(guardados));
         when(pagos.save(any())).thenAnswer(i -> { var p=(PagoVentaEntidad)i.getArgument(0); p.setId(40L); guardados.add(p); return p; });
         when(citas.findByEmpresaIdAndIdIn(eq(7L),any())).thenReturn(List.of(cita(1L)));
+        when(citas.bloquearPorIdYEmpresa(1L,7L)).thenReturn(Optional.of(cita(1L)));
+        when(saldos.calcular(eq(7L),any())).thenReturn(Map.of(1L,new SaldoCita(new BigDecimal("80"),BigDecimal.ZERO,BigDecimal.ZERO,BigDecimal.ZERO,new BigDecimal("80"),EstadoCobroCita.PENDIENTE)));
         caja.confirmarPoint(7L,30L,"point-prueba"); caja.confirmarPoint(7L,30L,"point-prueba");
         verify(bus).publishEvent(argThat((Object e) -> e instanceof PagoCitaRegistrado p
                 && p.datos().origen()==OrigenEventoCita.WEBHOOK && p.monto().compareTo(new BigDecimal("80"))==0));

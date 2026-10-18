@@ -248,7 +248,7 @@ class CierreCitaUnificadoTest {
         var r=recepcion.agenda(actor(),dia,3L);
         assertThat(r).extracting(c -> c.puedeCancelar()).containsExactly(true,false,false,false);
         verify(pagos).sumarPagadoPorCitas(7L,List.of(1L,2L,3L,4L));
-        verify(ventas).sumarServiciosPagadosPorCitas(7L,List.of(1L,2L,3L,4L));verifyNoMoreInteractions(pagos,ventas);
+        verify(ventas).sumarServiciosPagadosPorCitas(7L,List.of(1L,2L,3L,4L));verify(ventas).citasConPointEnCurso(7L,List.of(1L,2L,3L,4L));verifyNoMoreInteractions(pagos,ventas);
     }
 
     @Test void checkinTambienBloqueaLaCitaParaSerializarseConLaCancelacion() {

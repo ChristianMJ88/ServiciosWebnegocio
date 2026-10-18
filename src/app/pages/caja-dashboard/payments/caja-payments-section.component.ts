@@ -1,3 +1,5 @@
+import {ResolverPointPayload} from '../../../core/caja/caja.service';
+import {CajaCobroComponent,SolicitudCobro} from '../cobro/caja-cobro.component';
 import { VentaComprobanteComponent } from '../../../shared/components/venta-comprobante.component';
 import { ETIQUETAS_COBRO } from '../../../core/caja/cobro-cita.models';
 import { CommonModule, DatePipe } from '@angular/common';
@@ -10,7 +12,7 @@ import { MatDividerModule } from '@angular/material/divider';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
-import { finalize, switchMap, takeWhile, timer } from 'rxjs';
+import { Subscription,finalize, switchMap, takeWhile, timer } from 'rxjs';
 import { CajaService, CitaPorCobrar, OpcionCaja, OrdenPointCaja, PagoCita, TerminalPointCaja, VentaCaja } from '../../../core/caja/caja.service';
 import { MoneyDisplayPipe } from '../../../shared/pipes/money-display.pipe';
 import { FormularioPagoCaja } from '../forms/caja.forms';
@@ -19,7 +21,7 @@ import { FormularioPagoCaja } from '../forms/caja.forms';
   selector: 'app-caja-payments-section',
   standalone: true,
   imports: [
-    VentaComprobanteComponent, CommonModule,
+    CajaCobroComponent, VentaComprobanteComponent, CommonModule,
     DatePipe,
     FormsModule,
     MoneyDisplayPipe,
@@ -54,12 +56,23 @@ export class CajaPaymentsSectionComponent implements OnChanges {
     if(this.cobroMultiple) this.formularioPago.monto=this.totalSeleccionado;
     else this.formularioPago.monto=this.citaSeleccionada?.pendiente ?? 0;
   }
-  registrarCobro() {
+  get bloqueoPanel(){return !this.cajaAbierta?this.mensajeBloqueo||'Abre la caja para cobrar.':this.seleccionadas.some(c=>c.cobroPointEnCurso)?'Cobro Point en curso. Espera a que termine o cancélalo en Actividad del punto de venta.':'';}
+  cobrarDesdePanel(s:SolicitudCobro){
+    if(this.bloqueoPanel)return;
+    this.terminalPointId=s.terminalId;
+    if(s.usaPoint){this.cobrarConPoint(s);return;}
+    const p=s.pagos[0];
+    if(!this.cobroMultiple && s.pagos.length===1 && Number(p.monto)<this.totalSeleccionado){
+      Object.assign(this.formularioPago,{monto:p.monto,metodoPago:p.metodoPago,montoRecibido:p.montoRecibido??0,referencia:p.referencia??'',observaciones:s.observaciones});this.savePayment.emit();return;
+    }
+    this.registrarCobro(s);
+  }
+  registrarCobro(s?:SolicitudCobro) {
     if(this.guardando || this.procesandoVenta() || this.procesandoPoint() || !this.cajaAbierta) return;
-    if(!this.cobroMultiple) {this.savePayment.emit(); return;}
-    if(!this.sucursalId || !this.formularioPago.metodoPago) return;
+    if(!s && !this.cobroMultiple) {this.savePayment.emit(); return;}
+    if(!this.sucursalId || (!s && !this.formularioPago.metodoPago)) return;
     this.procesandoVenta.set(true); this.errorPoint.set('');
-    this.caja.registrarVenta({sucursalId:this.sucursalId,citaId:null,citaIds:this.seleccionadas.map(c=>c.citaId),clienteId:null,productos:[],metodoPago:this.formularioPago.metodoPago,referencia:this.formularioPago.referencia || null,observaciones:this.formularioPago.observaciones || null})
+    this.caja.registrarVenta({sucursalId:this.sucursalId,citaId:null,citaIds:this.seleccionadas.map(c=>c.citaId),clienteId:null,productos:[],...(s?{pagos:s.pagos}:{metodoPago:this.formularioPago.metodoPago}),referencia:s?null:this.formularioPago.referencia || null,observaciones:s?.observaciones || this.formularioPago.observaciones || null})
       .pipe(finalize(()=>this.procesandoVenta.set(false)),takeUntilDestroyed(this.destroyRef)).subscribe({
         next:v=>{this.ventaCobrada.set(v);this.adicionales=[];this.pointPaymentCompleted.emit();},
         error:e=>this.errorPoint.set(e.error?.mensaje || e.error?.message || e.error?.detail || 'No se pudo cobrar la cuenta completa.')
@@ -89,8 +102,11 @@ export class CajaPaymentsSectionComponent implements OnChanges {
   @Output() savePayment = new EventEmitter<void>();
   @Output() printReceipt = new EventEmitter<void>();
   @Output() pointPaymentCompleted = new EventEmitter<void>();
+  @Output() pointStateChanged = new EventEmitter<void>();
 
   readonly terminalesPoint = signal<TerminalPointCaja[]>([]);
+  private pointPoll?:Subscription;
+  readonly accionPointEnCurso=signal(false);
   readonly ordenPoint = signal<OrdenPointCaja | null>(null);
   readonly procesandoPoint = signal(false);
   readonly simulandoPoint = signal(false);
@@ -100,16 +116,15 @@ export class CajaPaymentsSectionComponent implements OnChanges {
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['mostrarCobroInicial'] && this.mostrarCobroInicial) this.mostrandoCobro.set(true);
     if (changes['sucursalId']) this.cargarTerminalesPoint();
-    if (changes['citaSeleccionada']) {
+    if (changes['citaSeleccionada'] && changes['citaSeleccionada'].previousValue?.citaId!==changes['citaSeleccionada'].currentValue?.citaId && !this.procesandoPoint()) {
       this.adicionales=[];
       this.ordenPoint.set(null);
       this.errorPoint.set('');
     }
   }
 
-  cobrarConPoint(): void {
+  cobrarConPoint(s?:SolicitudCobro): void {
     const cita = this.citaSeleccionada;
-    if (this.cobroMultiple) {this.errorPoint.set('Point admite una sola cita por operación.');return;}
     if (!cita || !this.sucursalId || !this.terminalPointId || this.guardando || this.procesandoPoint() || !this.cajaAbierta) return;
     this.procesandoPoint.set(true);
     this.errorPoint.set('');
@@ -120,9 +135,9 @@ export class CajaPaymentsSectionComponent implements OnChanges {
       ...(this.cobroMultiple ? {citaIds:this.seleccionadas.map(c=>c.citaId)} : {}),
       clienteId: null,
       productos: [],
-      metodoPago: 'MERCADO_PAGO_POINT',
+      ...(s?{pagos:s.pagos}:{metodoPago:this.terminalesPoint().find(t=>t.id===this.terminalPointId)?.metodoPago?.codigo}),
       referencia: null,
-      observaciones: this.formularioPago.observaciones.trim() || null
+      observaciones: s?.observaciones || this.formularioPago.observaciones.trim() || null
     }, crypto.randomUUID()).subscribe({
       next: orden => {
         this.ordenPoint.set(orden);
@@ -135,6 +150,9 @@ export class CajaPaymentsSectionComponent implements OnChanges {
       }
     });
   }
+
+  reintentarPoint():void {const o=this.ordenPoint();if(!o?.puedeReintentar || this.accionPointEnCurso())return;this.accionPointEnCurso.set(true);this.caja.reintentarOrdenPoint(o.id).pipe(finalize(()=>this.accionPointEnCurso.set(false))).subscribe({next:o=>{this.ordenPoint.set(o);if(this.esEstadoFinalPoint(o.estado))this.finalizarPoint(o);else this.vigilarPoint(o.id);},error:e=>this.errorPoint.set(e.error?.mensaje||'No se pudo consultar el mismo envío.')});}
+  resolverPoint(r:ResolverPointPayload):void {const o=this.ordenPoint();if(!o?.puedeResolver || this.accionPointEnCurso())return;this.accionPointEnCurso.set(true);this.caja.resolverOrdenPoint(o.id,r).pipe(finalize(()=>this.accionPointEnCurso.set(false))).subscribe({next:o=>{this.ordenPoint.set(o);if(this.esEstadoFinalPoint(o.estado))this.finalizarPoint(o);else this.vigilarPoint(o.id);},error:e=>this.errorPoint.set(e.error?.mensaje||'No se pudo resolver la orden.')});}
 
   cancelarPoint(): void {
     const orden = this.ordenPoint();
@@ -169,9 +187,11 @@ export class CajaPaymentsSectionComponent implements OnChanges {
   }
 
   private vigilarPoint(id: string): void {
-    timer(2000, 3000).pipe(
+    this.pointPoll?.unsubscribe();
+    this.procesandoPoint.set(true);
+    this.pointPoll=timer(2000, 3000).pipe(
       switchMap(() => this.caja.consultarOrdenPoint(id)),
-      takeWhile(orden => !this.esEstadoFinalPoint(orden.estado), true),
+      takeWhile(orden => !this.esEstadoFinalPoint(orden.estado) && orden.estado!=='REQUIERE_REVISION', true),
       takeUntilDestroyed(this.destroyRef),
       finalize(() => this.procesandoPoint.set(false))
     ).subscribe({
@@ -184,10 +204,17 @@ export class CajaPaymentsSectionComponent implements OnChanges {
   }
 
   private finalizarPoint(orden: OrdenPointCaja): void {
+    this.pointPoll?.unsubscribe();
     this.ordenPoint.set(orden);
     this.procesandoPoint.set(false);
-    if (orden.estado === 'APROBADO') this.pointPaymentCompleted.emit();
-    else if (orden.estado !== 'CANCELADO') this.errorPoint.set(`El cobro terminó con estado ${orden.estado.toLowerCase()}.`);
+    if(orden.requiereRevision){this.errorPoint.set(orden.detalleEstado||'Pago aprobado con incidencia. Revisa la conciliación.');return;}
+    if (orden.estado === 'APROBADO') {
+      this.caja.comprobanteVenta(orden.ventaId).subscribe({next:v=>{this.ventaCobrada.set(v);this.adicionales=[];this.pointPaymentCompleted.emit();},error:()=>this.errorPoint.set('Pago aprobado. Consulta el comprobante en Actividad.')});
+    } else {
+      this.pointStateChanged.emit();
+      const efectivo=Number(orden.efectivoPrevisto||0);
+      this.errorPoint.set(`La tarjeta no se aprobó.${efectivo>0?' No se registró el efectivo de '+new Intl.NumberFormat('es-MX',{style:'currency',currency:orden.moneda,currencyDisplay:'narrowSymbol'}).format(efectivo)+': devuélvelo o cobra el total con otro método.':' Puedes cobrar el total con otro método.'}`);
+    }
   }
 
   private esEstadoFinalPoint(estado: string): boolean {

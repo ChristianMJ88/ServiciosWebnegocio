@@ -36,7 +36,9 @@ class ServicioVentasCajaListadoTest {
         var posterior=new PagoVentaEntidad(); posterior.setId(2L); posterior.setVentaId(10L);
         posterior.setRegistradoEn(anterior.getRegistradoEn().plusHours(1)); posterior.setMetodoPago("TARJETA");
         when(pagos.findByEmpresaIdAndVentaIdIn(eq(1L),any())).thenReturn(List.of(anterior,posterior));
-        assertThat(servicio.listar(1L,List.of(3L),3L).getFirst().metodoPago()).isEqualTo("TARJETA");
+        var respuesta=servicio.listar(1L,List.of(3L),3L).getFirst();
+        assertThat(respuesta.metodoPago()).isEqualTo("MIXTO");
+        assertThat(respuesta.pagos()).extracting(p -> p.metodoPago()).containsExactly("TARJETA","EFECTIVO");
     }
     @Test void paginaVaciaNoConsultaDetallesNiClientes() {
         sucursal();

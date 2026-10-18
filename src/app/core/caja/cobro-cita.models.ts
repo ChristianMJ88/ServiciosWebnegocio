@@ -1,5 +1,6 @@
 export interface DatosCobroCita {
   estadoCobro?: string;
+  cobroPointEnCurso?: boolean;
   pagado?: number;
   pendiente?: number;
   condonado?: number;

@@ -77,6 +77,7 @@ class ServicioVentasCajaTest {
 
         when(sucursales.findByIdAndEmpresaIdAndActivaTrue(5L, 1L)).thenReturn(Optional.of(sucursal));
         when(sesiones.findByEmpresaIdAndSucursalIdAndEstado(1L, 5L, "ABIERTA")).thenReturn(Optional.of(sesion));
+        when(sesiones.findParaAperturaConBloqueo(1L,5L,"ABIERTA")).thenReturn(Optional.of(sesion));
         when(productos.findAllById(any())).thenReturn(List.of(producto));
         when(productos.findByEmpresaIdAndIdIn(eq(1L), any())).thenReturn(List.of(producto));
         when(citas.bloquearPorIdYEmpresa(10L, 1L)).thenReturn(Optional.of(cita));

@@ -17,13 +17,13 @@ public interface CitaRepositorio extends JpaRepository<CitaEntidad, Long> {
             "WHERE id=:citaId AND empresa_id=:empresaId AND politica_version_id IS NULL", nativeQuery=true)
     int acreditarPoliticaSiAusente(Long empresaId, Long citaId, Long politicaId, LocalDateTime aceptadaEn);
 
-    // Lecturas actuales tras bloquear las citas; no reutilizan la instantánea REPEATABLE READ.
-    @Query(value="select p.cita_id from pago_cita p where p.empresa_id=:empresaId and p.cita_id in (:ids) and p.monto>0 FOR UPDATE", nativeQuery=true)
+    // Lecturas en READ_COMMITTED después de bloquear prestadores y citas: sin bloquear huecos de pagos.
+    @Query(value="select p.cita_id from pago_cita p where p.empresa_id=:empresaId and p.cita_id in (:ids) and p.monto>0", nativeQuery=true)
     List<Long> buscarCitasConAnticipoDirecto(Long empresaId, Collection<Long> ids);
 
     @Query(value="select d.cita_id from venta_detalle d join venta v on v.id=d.venta_id and v.empresa_id=d.empresa_id " +
             "where d.empresa_id=:empresaId and d.cita_id in (:ids) and d.tipo_concepto='SERVICIO' and d.total>0 and v.estado='PAGADA' " +
-            "and (v.checkout_orden_id is null or v.checkout_orden_id<>:ordenId) FOR UPDATE", nativeQuery=true)
+            "and (v.checkout_orden_id is null or v.checkout_orden_id<>:ordenId)", nativeQuery=true)
     List<Long> buscarCitasConVentaAnterior(Long empresaId, Collection<Long> ids, Long ordenId);
 
     default List<Long> buscarCitasConPagoAnterior(Long empresaId, Collection<Long> ids, Long ordenId) {

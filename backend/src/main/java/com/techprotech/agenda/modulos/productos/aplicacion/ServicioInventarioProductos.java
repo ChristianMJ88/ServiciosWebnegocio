@@ -172,6 +172,12 @@ public class ServicioInventarioProductos {
         });
     }
 
+    /** Orden global: existencias (producto/sucursal), prestadores, citas. */
+    @Transactional(propagation = org.springframework.transaction.annotation.Propagation.MANDATORY)
+    public void bloquearParaVenta(Long empresaId, Long sucursalId, java.util.Collection<Long> productos) {
+        productos.stream().sorted().forEach(id -> bloquearExistencia(empresaId,id,sucursalId));
+    }
+
     private ProductoExistenciaEntidad bloquearExistencia(Long empresaId, Long productoId, Long sucursalId) {
         existencias.asegurarFila(empresaId, productoId, sucursalId);
         return existencias.bloquear(empresaId, productoId, sucursalId)

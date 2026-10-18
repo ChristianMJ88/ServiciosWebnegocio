@@ -15,6 +15,11 @@ public interface VentaDetalleRepositorio extends JpaRepository<VentaDetalleEntid
 
     List<VentaDetalleEntidad> findByEmpresaIdAndVentaIdIn(Long empresaId, Collection<Long> ventaIds);
 
+    @Query("select distinct d.citaId from VentaDetalleEntidad d, VentaEntidad v, OrdenPointCajaEntidad o " +
+            "where d.ventaId=v.id and o.ventaId=v.id and d.empresaId=:empresaId and v.empresaId=:empresaId " +
+            "and o.empresaId=:empresaId and d.citaId in :ids and d.tipoConcepto='SERVICIO' " +
+            "and v.estado='PENDIENTE_PAGO' and o.estado not in ('APROBADO','REEMBOLSADO','CANCELADO','RECHAZADO','EXPIRADO')")
+    List<Long> citasConPointEnCurso(Long empresaId, Collection<Long> ids);
 
     @Query("select coalesce(sum(d.total), 0) from VentaDetalleEntidad d, VentaEntidad v " +
            "where d.ventaId = v.id and d.empresaId = :empresaId and v.empresaId = :empresaId and d.tipoConcepto = 'SERVICIO' and d.citaId = :citaId and v.estado = 'PAGADA'")

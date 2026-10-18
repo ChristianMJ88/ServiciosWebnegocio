@@ -61,6 +61,7 @@ import java.util.regex.Pattern;
 
 @Service
 public class ServicioWhatsappCitas {
+    private final ServicioOrientacionReservaBot orientacionReserva;
     private final Clock reloj;
     private final ZonaNegocio zonasNegocio;
 
@@ -128,8 +129,10 @@ public class ServicioWhatsappCitas {
             ConversacionWhatsappRepositorio conversacionWhatsappRepositorio,
             MensajeWhatsappRepositorio mensajeWhatsappRepositorio,
             Clock reloj,
-            ZonaNegocio zonasNegocio
+            ZonaNegocio zonasNegocio,
+            ServicioOrientacionReservaBot orientacionReserva
     ) {
+        this.orientacionReserva=orientacionReserva;
         this.reloj = reloj;
         this.zonasNegocio = zonasNegocio;
         this.propiedadesWhatsapp = propiedadesWhatsapp;
@@ -734,6 +737,10 @@ public class ServicioWhatsappCitas {
             return construirPreguntaServicios(conversacion.getSucursalId(), conversacion.getGrupoId(), conversacion.getSubgrupoId(), "No identifiqué el servicio. Elige una opción.");
         }
 
+        if (orientacionReserva.requiereAnticipo(obtenerEmpresaId(),conversacion.getSucursalId(),servicio.getId())) {
+            limpiarConversacion(conversacion);
+            return orientacionReserva.mensaje(obtenerEmpresaId(),conversacion.getSucursalId(),servicio.getId());
+        }
         conversacion.setServicioId(servicio.getId());
         conversacion.setFechaSeleccionada(null);
         conversacion.setHoraSeleccionada(null);
@@ -986,7 +993,8 @@ public class ServicioWhatsappCitas {
                 FORMATO_FECHA_HORA
         );
 
-        CitaCreadaResponse cita = servicioCitas.crearCita(new CrearCitaRequest(
+        CitaCreadaResponse cita;
+        try { cita = servicioCitas.crearCitaBot(new CrearCitaRequest(
                 obtenerEmpresaId(),
                 conversacion.getSucursalId(),
                 conversacion.getServicioId(),
@@ -996,7 +1004,10 @@ public class ServicioWhatsappCitas {
                 NormalizadorTelefonoWhatsapp.normalizarComparable(telefonoRemitente),
                 fechaHora.atZone(zona).toOffsetDateTime(),
                 null
-        ));
+        )); } catch (com.techprotech.agenda.modulos.citas.aplicacion.AnticipoNoDisponibleException ex) {
+            limpiarConversacion(telefonoRemitente);
+            return orientacionReserva.mensaje(obtenerEmpresaId(),conversacion.getSucursalId(),conversacion.getServicioId());
+        }
 
         limpiarConversacion(telefonoRemitente);
         return "Listo, registré tu cita de %s para el %s. En un momento te enviaré la solicitud de confirmación por este mismo chat.".formatted(
@@ -2160,7 +2171,8 @@ public class ServicioWhatsappCitas {
         String notas = partes.length >= 7 ? partes[6].trim() : null;
 
         ZoneId zona = ZoneId.of(resolverZonaHoraria(sucursalId));
-        CitaCreadaResponse cita = servicioCitas.crearCita(new CrearCitaRequest(
+        CitaCreadaResponse cita;
+        try { cita = servicioCitas.crearCitaBot(new CrearCitaRequest(
                 obtenerEmpresaId(),
                 sucursalId,
                 servicioId,
@@ -2170,7 +2182,9 @@ public class ServicioWhatsappCitas {
                 NormalizadorTelefonoWhatsapp.normalizarComparable(telefonoRemitente),
                 fechaHora.atZone(zona).toOffsetDateTime(),
                 notas == null || notas.isBlank() ? null : notas
-        ));
+        )); } catch (com.techprotech.agenda.modulos.citas.aplicacion.AnticipoNoDisponibleException ex) {
+            return orientacionReserva.mensaje(obtenerEmpresaId(),sucursalId,servicioId);
+        }
 
         return "Tu cita fue creada con folio %s para el %s. Si deseas ver mas detalles responde MIS CITAS.".formatted(
                 cita.folio(),

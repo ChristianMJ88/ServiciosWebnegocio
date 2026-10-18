@@ -11,7 +11,7 @@ spring:
   jpa:
     open-in-view: false
     hibernate:
-      ddl-auto: update
+      ddl-auto: ${JPA_DDL_AUTO:validate}
     properties:
       hibernate:
         # LocalDate/LocalTime/LocalDateTime conservan el valor SQL; creada_en mantiene su converter UTC.
@@ -132,6 +132,10 @@ aplicacion:
       webhook-secret: ${MERCADO_PAGO_WEBHOOK_SECRET:}
       public-key-prueba: ${MERCADO_PAGO_PRUEBA_PUBLIC_KEY:}
       access-token-prueba: ${MERCADO_PAGO_PRUEBA_ACCESS_TOKEN:}
+      point:
+        limite-reenvio: ${MERCADO_PAGO_POINT_LIMITE_REENVIO:PT20M}
+        connect-timeout-ms: ${MERCADO_PAGO_POINT_CONNECT_TIMEOUT_MS:5000}
+        read-timeout-ms: ${MERCADO_PAGO_POINT_READ_TIMEOUT_MS:15000}
       point-terminal-prueba-id: ${MERCADO_PAGO_POINT_TERMINAL_PRUEBA_ID:NEWLAND_N950__SBX0000001}
   envios:
     envia:
@@ -261,6 +265,10 @@ productos:
 
 # Solo precarga el borrador: cada negocio debe revisar y publicar su propia versión.
 fluora:
+  caja:
+    cobro:
+      denominaciones:
+        MXN: ${CAJA_BILLETES_MXN:200,500,1000}
   politica:
     predeterminada:
       modo-no-show: CREDITO_REAGENDAR
@@ -269,3 +277,5 @@ fluora:
       reagendados-max: 1
       recordatorio-1-dias: 7
       recordatorio-2-dias: 2
+
+# Límites de red de Point (milisegundos), independientes del aislamiento JDBC.

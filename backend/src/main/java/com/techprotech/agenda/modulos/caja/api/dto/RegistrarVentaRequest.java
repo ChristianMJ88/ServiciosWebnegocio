@@ -14,12 +14,19 @@ public record RegistrarVentaRequest(
         Long citaId,
         Long clienteId,
         @Valid @Size(max = 100) List<ProductoVentaRequest> productos,
-        @NotBlank String metodoPago,
+        @Size(max=30) String metodoPago,
         @Size(max = 120) String referencia,
         @Size(max = 500) String observaciones,
         Long ventaPendienteId,
-        @Size(max = 20) List<@NotNull Long> citaIds
+        @Size(max = 20) List<@NotNull Long> citaIds,
+        @Valid @Size(min=1,max=3) List<PagoVentaRequest> pagos
 ) {
+    public RegistrarVentaRequest(Long sucursalId,Long citaId,Long clienteId,List<ProductoVentaRequest> productos,String metodoPago,String referencia,String observaciones,Long ventaPendienteId,List<Long> citaIds) {
+        this(sucursalId,citaId,clienteId,productos,metodoPago,referencia,observaciones,ventaPendienteId,citaIds,null);
+    }
+    public record PagoVentaRequest(@NotBlank @Size(max=30) String metodoPago,
+            @DecimalMin("0.01") BigDecimal monto, @DecimalMin("0.01") BigDecimal montoRecibido,
+            @Size(max=120) String referencia) {}
     public RegistrarVentaRequest(Long sucursalId,Long citaId,Long clienteId,List<ProductoVentaRequest> productos,String metodoPago,String referencia,String observaciones, Long ventaPendienteId) {
         this(sucursalId,citaId,clienteId,productos,metodoPago,referencia,observaciones,ventaPendienteId,null);
     }

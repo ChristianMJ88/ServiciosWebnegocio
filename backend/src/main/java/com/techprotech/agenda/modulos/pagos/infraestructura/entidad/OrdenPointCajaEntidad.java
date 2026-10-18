@@ -19,6 +19,7 @@ public class OrdenPointCajaEntidad {
     @Column(name = "proveedor_pago_id", length = 180) private String proveedorPagoId;
     @Column(nullable = false, length = 128) private String idempotencia;
     @Column(nullable = false, length = 30) private String estado;
+    @Column(name="pagos_previstos_json", columnDefinition="json", updatable=false) private String pagosPrevistosJson;
     @Column(nullable = false, precision = 12, scale = 2) private BigDecimal importe;
     @Column(nullable = false, length = 10) private String moneda;
     @Column(name = "detalle_estado", length = 180) private String detalleEstado;

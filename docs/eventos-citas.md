@@ -26,3 +26,13 @@ El origen es operativo, no un rol ni una regla de acceso: `ADMIN` incluye el cob
 Los recordatorios programados permanecen en su programador. Los tipos, payloads, deduplicación y configuración por tenant del outbox no cambian. El listener conserva las consultas de consentimiento por cita que ya existían; no introduce una caché compartida entre tenants.
 
 No hay actualización automática del navegador en esta fase. El token de versión, polling visible cada 20 segundos y sus pruebas pertenecen a 006 fase 2, después de 007. Tampoco se implementan custodia, condonación, SSE, migraciones o contratos nuevos.
+
+## Orden de bloqueo para cobros (010)
+
+Checkout y Caja toman existencias por producto/sucursal ascendente, después prestadores cuando hay reservas, después citas por ID ascendente. Caja reutiliza los bloqueos al descontar inventario. No se toman bloqueos de hueco en pagos/venta_detalle: entradas de cobro y aplicación del webhook usan READ_COMMITTED. La orden/venta propias pueden bloquearse antes: ninguna ruta de cita espera esas filas para calcular su saldo.
+
+Point toma terminal → venta Staff (si existe) → sesión abierta → existencias → citas. T1 confirma venta y orden local CREANDO antes de la llamada HTTP; T2 toma orden → venta → citas al acreditar, u orden → venta → existencias al cancelar. Un timeout conserva la reserva: el reenvío explícito reutiliza la misma clave de idempotencia; GET nunca envía un nuevo cobro. Al superar el límite configurado, una resolución con PAGOS_CONFIGURAR, alcance de sucursal y auditoría UTC permite verificar el resultado remoto o liberar una cuenta comprobada como no cobrada.
+
+Una aprobación tardía de una orden reemplazada o de una venta que ya no está pendiente conserva la orden aprobada y su conciliación, pero no acredita pagos ni partes previstas: se marca para revisión. Si la orden vigente encuentra saldo cubierto por datos anteriores, registra el cobro y lo señala en observaciones/log; el saldo a favor corresponde a 007-2. Un reembolso externo de Point dividido conserva la venta y el efectivo, con incidencia de revisión hasta esa entrega.
+
+El cierre de sesión usa READ_COMMITTED, bloquea la sesión y rechaza órdenes Point no finales; T1 bloquea esa misma sesión antes de reservar. La carrera previa entre cierre y cobros directos/ventas sin Point no se amplía en 010 y permanece como seguimiento.

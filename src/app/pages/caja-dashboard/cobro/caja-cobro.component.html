@@ -1,0 +1,64 @@
+<section class="cobro-panel" aria-label="Cobrar cuenta">
+ @if(comprobante) {
+  <div class="cobro-success" role="status"><i class="bi bi-check-circle" aria-hidden="true"></i><strong>Cobro registrado</strong><span>El pago ya forma parte de la cuenta y del corte.</span></div>
+  <app-venta-comprobante [venta]="comprobante" />
+  <button type="button" class="cobro-secondary" (click)="nueva()">Nuevo cobro</button>
+ } @else if(esperando || orden?.estado==='APROBADO') {
+  <div class="cobro-total"><span>Importe en terminal</span><strong>{{orden!.importe | appMoney:moneda:2:2}}</strong></div>
+  <div class="cobro-wait" role="status" aria-live="polite"><i class="bi bi-credit-card" aria-hidden="true"></i><h3>{{orden?.requiereRevision?'Pago aprobado · requiere revisión':orden?.estado==='REQUIERE_REVISION'?'Revisar cobro en Mercado Pago':orden?.estado==='APROBADO'?'Pago aprobado':orden?.estado==='CREANDO'?'Confirmando envío…':'Esperando la terminal…'}}</h3><strong>{{orden!.terminalNombre}}</strong><p>{{orden!.detalleEstado || 'Conserva esta cuenta abierta hasta recibir la confirmación.'}}</p>
+   @if(orden?.estado!=='APROBADO') {
+    @if(orden!.simulacionDisponible && orden!.proveedorOrdenId) {<button type="button" class="cobro-secondary" [disabled]="simulando" (click)="simularPoint.emit()">{{simulando?'Simulando…':'Simular aprobación'}}</button>}
+    @if(orden!.puedeReintentar){<button type="button" class="cobro-secondary" [disabled]="accionPointEnCurso" (click)="reintentarPoint.emit()">Reintentar el mismo envío</button>}
+    <button type="button" class="cobro-secondary" [disabled]="!orden!.proveedorOrdenId" (click)="cancelarPoint.emit()">Cancelar cobro en terminal</button>
+   }
+  </div>
+  @if(orden!.puedeResolver){
+   <details class="cobro-detail" [open]="orden!.estado==='REQUIERE_REVISION'"><summary>Resolver resultado verificado</summary>
+    <p class="cobro-help">Revisa el movimiento en Mercado Pago antes de liberar la cuenta. Esta acción quedará auditada.</p>
+    <div class="cobro-resolution"><label>Resultado comprobado<select [(ngModel)]="resolucionCobrado"><option [ngValue]="false">No se cobró</option><option [ngValue]="true">Encontré la orden de Mercado Pago</option></select></label>
+    @if(resolucionCobrado){<label>ID de orden Mercado Pago<input [(ngModel)]="resolucionProveedor" maxlength="180" autocomplete="off"></label>}
+    <label>Cómo lo verificaste<textarea [(ngModel)]="resolucionMotivo" rows="3" minlength="10" maxlength="500"></textarea></label>
+    <label class="cobro-verification"><input type="checkbox" [(ngModel)]="verificado">Verifiqué el resultado y cancelé cualquier orden pendiente en Mercado Pago si no se cobró.</label>
+    <button type="button" class="cobro-secondary" [disabled]="accionPointEnCurso || !verificado || resolucionMotivo.trim().length<10 || (resolucionCobrado&&!resolucionProveedor.trim())" (click)="resolver()">Guardar resolución verificada</button></div>
+   </details>
+  }
+  @if(orden!.requiereRevision){<button type="button" class="cobro-secondary" (click)="nueva()">Volver a la operación</button>}
+ } @else {
+  <header class="cobro-total"><span>Total de la cuenta</span><strong>{{total | appMoney:moneda:2:2}}</strong><small>El servidor verifica el importe al confirmar.</small></header>
+  <details class="cobro-detail"><summary>Ver desglose de la cuenta</summary><ng-content select="[desgloseCobro]" /></details>
+  <form (ngSubmit)="enviar()">
+   @for(linea of lineas;track linea;let i=$index) {
+    <fieldset [disabled]="procesando"><legend>{{dividida?'Parte '+(i+1):'¿Cómo paga el cliente?'}}</legend>
+     @if(dividida) {<button type="button" class="cobro-remove" [attr.aria-label]="'Quitar parte '+(i+1)" (click)="quitar(i)">Quitar</button>}
+     <div class="cobro-methods" role="radiogroup" [attr.aria-label]="'Método de pago '+(i+1)">
+      @for(m of disponibles;track m.codigo) {<label [class.is-selected]="linea.metodoPago===m.codigo"><input type="radio" [name]="'metodo'+i" [value]="m.codigo" [ngModel]="linea.metodoPago" (ngModelChange)="elegir(linea,$event)"><i class="bi" [class.bi-cash-stack]="m.esEfectivo" [class.bi-credit-card]="m.esPoint" [class.bi-receipt]="!m.esEfectivo&&!m.esPoint" aria-hidden="true"></i><span>{{m.etiqueta}}</span></label>}
+     </div>
+     @if(opcion(linea);as metodo) {
+      <div class="cobro-fields">
+       @if(metodo.esPoint) {
+        <label>Terminal<select [name]="'terminal'+i" [(ngModel)]="terminalId"><option [ngValue]="null">Seleccionar terminal</option>@for(t of terminales;track t.id){<option [ngValue]="t.id">{{t.nombre}}</option>}</select></label>
+        <label>Importe en terminal<input type="text" [value]="dinero(importe(linea))" readonly aria-readonly="true"></label>
+        <p class="cobro-help">El importe aparecerá en la terminal. Se acredita cuando Mercado Pago confirma el cobro.</p>
+       } @else {
+        <label>{{permiteAbono&&!dividida?'Importe a abonar':'Importe de esta parte'}}<input type="number" inputmode="decimal" min="0.01" step="0.01" [name]="'monto'+i" [readonly]="!dividida&&!permiteAbono" [ngModel]="linea.monto" (ngModelChange)="cambiarMonto(linea,$event)"></label>
+        @if(metodo.esEfectivo) {
+         <label>Efectivo recibido<input type="number" inputmode="decimal" min="0.01" step="0.01" [name]="'recibido'+i" [(ngModel)]="linea.recibido"></label>
+         <div class="cobro-shortcuts"><button type="button" (click)="linea.recibido=importe(linea)">Exacto</button>@for(n of atajos(linea);track n){<button type="button" (click)="linea.recibido=n">{{n | appMoney:moneda:0:0}}</button>}</div>
+         <div class="cobro-change"><span>Cambio del efectivo</span><strong>{{cambio(linea) | appMoney:moneda:2:2}}</strong></div>
+        } @else {
+         <label>Referencia {{metodo.requiereReferencia?'(obligatoria)':'(opcional)'}}<input type="text" maxlength="120" [name]="'referencia'+i" [(ngModel)]="linea.referencia" [required]="!!metodo.requiereReferencia" autocomplete="off"></label>
+         @if(metodo.ayuda){<p class="cobro-help">{{metodo.ayuda}}</p>}
+        }
+       }
+      </div>
+     }
+    </fieldset>
+   }
+   @if(!dividida && disponibles.length>1){<button type="button" class="cobro-link" [disabled]="procesando" (click)="dividir()"><i class="bi bi-intersect" aria-hidden="true"></i> Dividir pago</button>}
+   @if(dividida){<p class="cobro-remainder" role="status">Resto por distribuir <strong>{{restante | appMoney:moneda:2:2}}</strong></p>}
+   <details class="cobro-detail"><summary>Agregar una nota (opcional)</summary><label>Notas del cobro<textarea name="notasCobro" maxlength="500" rows="2" [(ngModel)]="notas" [disabled]="procesando"></textarea></label></details>
+   <div class="cobro-submit"><div><span>{{permiteAbono&&!dividida?'A cobrar':'Total'}}</span><strong>{{(dividida?total:importe(lineas[0])) | appMoney:moneda:2:2}}</strong></div><button type="submit" [disabled]="!!motivo">{{procesando?'Procesando…':cta}}</button>@if(motivo){<small role="status">{{motivo}}</small>}</div>
+  </form>
+ }
+ @if(error){<p class="cobro-error" role="alert">{{error}}</p>}
+</section>

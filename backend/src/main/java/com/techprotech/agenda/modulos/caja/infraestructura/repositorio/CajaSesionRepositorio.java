@@ -18,6 +18,13 @@ public interface CajaSesionRepositorio extends JpaRepository<CajaSesionEntidad, 
 
     Optional<CajaSesionEntidad> findFirstByEmpresaIdAndEstadoOrderByAbiertaEnDesc(Long empresaId, String estado);
 
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("select s from CajaSesionEntidad s where s.id=:id and s.empresaId=:empresaId")
+    Optional<CajaSesionEntidad> bloquearPorId(Long id, Long empresaId);
+    @Query("select count(o)>0 from OrdenPointCajaEntidad o, VentaEntidad v where o.ventaId=v.id and o.empresaId=:empresaId and v.empresaId=:empresaId and v.cajaSesionId=:sesionId and o.estado not in ('APROBADO','REEMBOLSADO','CANCELADO','RECHAZADO','EXPIRADO')")
+    boolean tienePointEnCurso(Long empresaId,Long sesionId);
+    @Query("select distinct v.folio from OrdenPointCajaEntidad o, VentaEntidad v where o.ventaId=v.id and o.empresaId=:empresaId and v.empresaId=:empresaId and v.cajaSesionId=:sesionId and o.estado not in ('APROBADO','REEMBOLSADO','CANCELADO','RECHAZADO','EXPIRADO')")
+    java.util.List<String> foliosPointEnCurso(Long empresaId,Long sesionId);
     Optional<CajaSesionEntidad> findByIdAndEmpresaId(Long id, Long empresaId);
 
     /**

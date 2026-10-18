@@ -168,15 +168,17 @@ public class ServicioCaja {
         return mapearSesion(cajaSesionRepositorio.save(sesion));
     }
 
-    @Transactional
+    @Transactional(isolation = org.springframework.transaction.annotation.Isolation.READ_COMMITTED)
     public CajaSesionResponse cerrarSesion(Long empresaId, Long usuarioId, List<Long> sucursalesPermitidas, Long cajaSesionId, CerrarCajaRequest request) {
-        CajaSesionEntidad sesion = cajaSesionRepositorio.findByIdAndEmpresaId(cajaSesionId, empresaId)
+        CajaSesionEntidad sesion = cajaSesionRepositorio.bloquearPorId(cajaSesionId, empresaId)
                 .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "La sesión de caja no existe para la empresa"));
         validarAccesoSucursal(sucursalesPermitidas, sesion.getSucursalId());
         if (!ESTADO_SESION_ABIERTA.equalsIgnoreCase(sesion.getEstado())) {
             throw new ResponseStatusException(CONFLICT, "La caja indicada ya está cerrada");
         }
 
+        if(cajaSesionRepositorio.tienePointEnCurso(empresaId,cajaSesionId))
+            throw new ResponseStatusException(CONFLICT,"Hay un cobro Point en curso. Termínalo o resuélvelo en Actividad antes de cerrar la caja: "+String.join(", ",cajaSesionRepositorio.foliosPointEnCurso(empresaId,cajaSesionId)));
         BigDecimal esperado = calcularSaldoEsperado(sesion);
         sesion.setMontoEsperado(esperado);
         sesion.setMontoContado(request.montoContado());
@@ -251,7 +253,7 @@ public class ServicioCaja {
                             cita.getPrecioLista() != null ? cita.getPrecioLista() : cita.getPrecio(),
                             montoSeguro(cita.getDescuento()),
                             tituloPromocion(cita), cita.getSucursalId(),
-                            lote.diasAtraso(cita) == 0 ? "HOY" : "ANTERIOR", lote.diasAtraso(cita), cita.getFolio(), cita.getClienteId()
+                            lote.diasAtraso(cita) == 0 ? "HOY" : "ANTERIOR", lote.diasAtraso(cita), cita.getFolio(), cita.getClienteId(), saldo.cobroPointEnCurso()
                     );
                 })
                 .filter(cita -> cita.pendiente().compareTo(BigDecimal.ZERO) > 0)

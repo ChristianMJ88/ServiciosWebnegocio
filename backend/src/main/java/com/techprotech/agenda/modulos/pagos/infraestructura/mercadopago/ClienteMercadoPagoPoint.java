@@ -26,9 +26,13 @@ public class ClienteMercadoPagoPoint {
     private final MapeadorRespuestaMercadoPago mapeador;
 
     public ClienteMercadoPagoPoint(ServicioOAuthMercadoPago oauth, RestClient.Builder builder,
-                                   MapeadorRespuestaMercadoPago mapeador) {
+                                   MapeadorRespuestaMercadoPago mapeador,
+                                   @org.springframework.beans.factory.annotation.Value("${aplicacion.pagos.mercado-pago.point.connect-timeout-ms}") int conexion,
+                                   @org.springframework.beans.factory.annotation.Value("${aplicacion.pagos.mercado-pago.point.read-timeout-ms}") int lectura) {
         this.oauth = oauth;
-        this.restClient = builder.build();
+        var factory = new org.springframework.http.client.SimpleClientHttpRequestFactory();
+        factory.setConnectTimeout(conexion); factory.setReadTimeout(lectura);
+        this.restClient = builder.requestFactory(factory).build();
         this.mapeador = mapeador;
     }
 
@@ -87,7 +91,17 @@ public class ClienteMercadoPagoPoint {
         EstadoPago estado = mapeador.estado(texto(respuesta, "status"), texto(respuesta, "status_detail"));
         DesgloseLiquidacionPago liquidacion = mapeador.liquidacion(respuesta, estado);
         return new OrdenRemota(requerido(respuesta, "id"), texto(respuesta, "status"), texto(respuesta, "status_detail"),
-                texto(pago, "id"), texto(pago, "status"), texto(pago, "status_detail"), liquidacion);
+                texto(pago, "id"), texto(pago, "status"), texto(pago, "status_detail"), liquidacion,texto(respuesta,"external_reference"),
+                importeRespuesta(respuesta,pago),monedaRespuesta(respuesta,pago));
+    }
+
+    private String monedaRespuesta(JsonNode orden,JsonNode pago) {
+        for(var nodo:java.util.List.of(orden,pago)) for(var campo:java.util.List.of("currency","currency_id")) {var moneda=texto(nodo,campo);if(moneda!=null)return moneda;}return null;
+    }
+
+    private BigDecimal importeRespuesta(JsonNode orden,JsonNode pago) {
+        String valor=texto(orden,"total_amount");if(valor==null)valor=texto(pago,"amount");
+        try{return valor==null?null:new BigDecimal(valor);}catch(NumberFormatException e){throw new IllegalStateException("Importe Point inválido");}
     }
 
     private JsonNode get(String url, Long empresaId) {
@@ -117,8 +131,8 @@ public class ClienteMercadoPagoPoint {
         } catch (RestClientResponseException ex) { throw error(ex); }
     }
 
-    private IllegalStateException error(RestClientResponseException ex) {
-        return new IllegalStateException("Mercado Pago rechazó la operación Point (HTTP " + ex.getStatusCode().value() + ")");
+    private ErrorProveedorPoint error(RestClientResponseException ex) {
+        return new ErrorProveedorPoint(ex.getStatusCode().value());
     }
     private String requerido(JsonNode nodo, String campo) { String valor = texto(nodo, campo); if (valor == null) throw new IllegalStateException("Mercado Pago no devolvió " + campo); return valor; }
     private String texto(JsonNode nodo, String campo) { JsonNode valor = nodo.path(campo); return valor.isMissingNode() || valor.isNull() || valor.asText().isBlank() ? null : valor.asText(); }
@@ -127,7 +141,10 @@ public class ClienteMercadoPagoPoint {
 
     public record TerminalRemota(String terminalId, String posId, String storeId, String externalPosId, String modoOperacion) {}
     public record OrdenRemota(String ordenId, String estado, String detalleEstado, String pagoId, String estadoPago,
-                              String detallePago, DesgloseLiquidacionPago liquidacion) {
+                              String detallePago, DesgloseLiquidacionPago liquidacion,String externalReference,BigDecimal importe,String moneda) {
+        public OrdenRemota(String ordenId,String estado,String detalleEstado,String pagoId,String estadoPago,String detallePago,DesgloseLiquidacionPago liquidacion) {
+            this(ordenId,estado,detalleEstado,pagoId,estadoPago,detallePago,liquidacion,null,null,null);
+        }
         public OrdenRemota(String ordenId, String estado, String detalleEstado, String pagoId, String estadoPago,
                            String detallePago) {
             this(ordenId, estado, detalleEstado, pagoId, estadoPago, detallePago, null);

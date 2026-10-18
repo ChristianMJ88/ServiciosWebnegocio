@@ -23,7 +23,8 @@ public record CitaPorCobrarResponse(
         String periodoCobro,
         long diasAtraso,
         String folio,
-        Long clienteId
+        Long clienteId,
+        boolean cobroPointEnCurso
 ) {
     /** Alias legado; el valor procede del mismo enum, sin un segundo cálculo. */
     @Deprecated

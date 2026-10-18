@@ -29,13 +29,17 @@ public interface PagoVentaRepositorio extends JpaRepository<PagoVentaEntidad, Lo
             @Param("ventaIds") Collection<Long> ventaIds
     );
 
+    // Una fila por detalle de servicio: repartir medios no duplica el importe de la cita.
+    // Evita MAX(LocalDateTime), incompatible con el mapeo JDBC directo en Hibernate6.
     @Query("select new com.techprotech.agenda.modulos.caja.infraestructura.repositorio.PagoConciliadoCita(" +
-            "d.id, d.citaId, p.cajaSesionId, d.total, p.metodoPago, p.referencia, " +
-            "'Cobro conciliado desde la venta', p.registradoEn) " +
-            "from PagoVentaEntidad p, VentaEntidad v, VentaDetalleEntidad d " +
-            "where p.ventaId = v.id and d.ventaId = v.id " +
-            "and p.empresaId = :empresaId and v.empresaId = :empresaId and d.empresaId = :empresaId " +
-            "and d.citaId = :citaId and v.estado = 'PAGADA' order by p.registradoEn desc")
+            "d.id,d.citaId,p.cajaSesionId,d.total, " +
+            "case when (select count(distinct otro.metodoPago) from PagoVentaEntidad otro where otro.empresaId=p.empresaId and otro.ventaId=p.ventaId)>1 then 'MIXTO' else p.metodoPago end, " +
+            "p.referencia,'Cobro conciliado desde la venta',p.registradoEn) " +
+            "from PagoVentaEntidad p,VentaEntidad v,VentaDetalleEntidad d " +
+            "where p.ventaId=v.id and d.ventaId=v.id and p.empresaId=:empresaId and v.empresaId=:empresaId and d.empresaId=:empresaId " +
+            "and d.citaId=:citaId and v.estado='PAGADA' " +
+            "and not exists (select nuevo.id from PagoVentaEntidad nuevo where nuevo.empresaId=p.empresaId and nuevo.ventaId=p.ventaId " +
+            "and (nuevo.registradoEn>p.registradoEn or (nuevo.registradoEn=p.registradoEn and nuevo.id>p.id))) order by p.registradoEn desc")
     List<PagoConciliadoCita> findPagosConciliadosPorCita(
             @Param("empresaId") Long empresaId,
             @Param("citaId") Long citaId

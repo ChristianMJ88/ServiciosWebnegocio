@@ -53,7 +53,7 @@ class ServicioSaldoCitasTest {
         assertThat(resultado).hasSize(100).doesNotContainKey(900L);
         assertThat(resultado.get(1L).pendiente()).isEqualByComparingTo("80.55");
         verify(pagos).sumarPagadoPorCitas(7L,ids);verifyNoMoreInteractions(pagos);
-        verify(ventas).sumarServiciosPagadosPorCitas(7L,ids);verifyNoMoreInteractions(ventas);
+        verify(ventas).sumarServiciosPagadosPorCitas(7L,ids);verify(ventas).citasConPointEnCurso(7L,ids);verifyNoMoreInteractions(ventas);
         verifyNoInteractions(citas);
     }
 
@@ -65,6 +65,17 @@ class ServicioSaldoCitasTest {
         assertThat(servicio.saldos(7L,List.of())).isEmpty();
         assertThat(servicio.calcular(7L,List.of(cita(2L,8L,"FINALIZADA","999")))).isEmpty();
         verifyNoInteractions(citas,pagos,ventas);
+    }
+
+    @Test void pointApartaSoloEnEntradaDeCobroSinCambiarSaldoPresentado() {
+        var cita=cita(1L,7L,"FINALIZADA","500");
+        when(ventas.citasConPointEnCurso(7L,List.of(1L))).thenReturn(List.of(1L));
+        var saldo=servicio.de(cita);
+        assertThat(saldo.pendiente()).isEqualByComparingTo("500");
+        assertThat(saldo.cobroPointEnCurso()).isTrue();
+        assertThatThrownBy(() -> servicio.calcularBajoBloqueo(7L,List.of(cita)))
+            .isInstanceOf(org.springframework.web.server.ResponseStatusException.class).hasMessageContaining("Point en curso");
+        assertThat(servicio.calcularBajoBloqueo(7L,List.of(cita(2L,7L,"FINALIZADA","500")))).containsKey(2L);
     }
 
     static CitaEntidad cita(Long id,Long empresa,String estado,String precio) {

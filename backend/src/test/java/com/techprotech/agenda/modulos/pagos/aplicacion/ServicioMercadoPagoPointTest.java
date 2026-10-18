@@ -37,8 +37,9 @@ class ServicioMercadoPagoPointTest {
         SucursalRepositorio sucursales = mock(SucursalRepositorio.class);
         VentaRepositorio ventasRepositorio = mock(VentaRepositorio.class);
         ServicioVentasCaja ventas = mock(ServicioVentasCaja.class);
+        when(ventas.confirmarPoint(any(OrdenPointCajaEntidad.class),anyString(),anyList())).thenReturn(new ServicioVentasCaja.ConfirmacionPoint(null,false));
         ServicioMercadoPagoPoint servicio = new ServicioMercadoPagoPoint(cliente, oauth, propiedades, terminales, ordenes,
-                sucursales, ventasRepositorio, ventas, mock(ServicioConciliacionPagos.class), comisionesSinCargo());
+                sucursales, ventasRepositorio, ventas, mock(ServicioConciliacionPagos.class), comisionesSinCargo(), gestor(), java.time.Clock.systemUTC(),java.time.Duration.ofMinutes(20),new PagosPrevistosPoint(new com.fasterxml.jackson.databind.ObjectMapper()));
         when(oauth.esAmbientePrueba()).thenReturn(true);
         when(cliente.listarTerminales(7L)).thenReturn(List.of());
         when(terminales.findByEmpresaIdOrderByNombreAsc(7L)).thenReturn(List.of());
@@ -63,8 +64,9 @@ class ServicioMercadoPagoPointTest {
         SucursalRepositorio sucursales = mock(SucursalRepositorio.class);
         VentaRepositorio ventasRepositorio = mock(VentaRepositorio.class);
         ServicioVentasCaja ventas = mock(ServicioVentasCaja.class);
+        when(ventas.confirmarPoint(any(OrdenPointCajaEntidad.class),anyString(),anyList())).thenReturn(new ServicioVentasCaja.ConfirmacionPoint(null,false));
         ServicioMercadoPagoPoint servicio = new ServicioMercadoPagoPoint(cliente, oauth, propiedades, terminales, ordenes,
-                sucursales, ventasRepositorio, ventas, mock(ServicioConciliacionPagos.class), comisionesSinCargo());
+                sucursales, ventasRepositorio, ventas, mock(ServicioConciliacionPagos.class), comisionesSinCargo(), gestor(), java.time.Clock.systemUTC(),java.time.Duration.ofMinutes(20),new PagosPrevistosPoint(new com.fasterxml.jackson.databind.ObjectMapper()));
 
         TerminalMercadoPagoEntidad terminal = new TerminalMercadoPagoEntidad();
         terminal.setId(5L); terminal.setEmpresaId(7L); terminal.setSucursalId(3L); terminal.setTerminalId("POINT__123");
@@ -79,7 +81,10 @@ class ServicioMercadoPagoPointTest {
         when(cliente.crearOrden(eq(7L), eq("key-1"), eq("POINT__123"), anyString(), eq(new BigDecimal("180.00")),
                 eq(BigDecimal.ZERO), anyString()))
                 .thenReturn(new ClienteMercadoPagoPoint.OrdenRemota("ORD-1", "processed", "accredited", "PAY-1", "processed", "accredited"));
-        when(ordenes.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
+        var local = new java.util.concurrent.atomic.AtomicReference<OrdenPointCajaEntidad>();
+        when(terminales.bloquear(5L,7L)).thenReturn(Optional.of(terminal));
+        when(ordenes.save(any())).thenAnswer(i -> {local.set(i.getArgument(0)); return i.getArgument(0);});
+        when(ordenes.bloquear(eq(7L),anyString())).thenAnswer(i -> Optional.ofNullable(local.get()));
         VentaEntidad ventaEntidad = new VentaEntidad(); ventaEntidad.setId(22L); ventaEntidad.setEmpresaId(7L); ventaEntidad.setFolio("V-22");
         when(ventasRepositorio.findByIdAndEmpresaId(22L, 7L)).thenReturn(Optional.of(ventaEntidad));
 
@@ -87,7 +92,7 @@ class ServicioMercadoPagoPointTest {
 
         assertThat(respuesta.estado()).isEqualTo("APROBADO");
         assertThat(respuesta.proveedorOrdenId()).isEqualTo("ORD-1");
-        verify(ventas).confirmarPoint(7L, 22L, "PAY-1");
+        verify(ventas).confirmarPoint(argThat(o -> o.getEmpresaId().equals(7L) && o.getVentaId().equals(22L) && o.getImporte().compareTo(new BigDecimal("180"))==0),eq("PAY-1"),eq(List.of()));
     }
 
     @Test
@@ -100,8 +105,9 @@ class ServicioMercadoPagoPointTest {
         SucursalRepositorio sucursales = mock(SucursalRepositorio.class);
         VentaRepositorio ventasRepositorio = mock(VentaRepositorio.class);
         ServicioVentasCaja ventas = mock(ServicioVentasCaja.class);
+        when(ventas.confirmarPoint(any(OrdenPointCajaEntidad.class),anyString(),anyList())).thenReturn(new ServicioVentasCaja.ConfirmacionPoint(null,false));
         ServicioMercadoPagoPoint servicio = new ServicioMercadoPagoPoint(cliente, oauth, propiedades, terminales, ordenes,
-                sucursales, ventasRepositorio, ventas, mock(ServicioConciliacionPagos.class), comisionesSinCargo());
+                sucursales, ventasRepositorio, ventas, mock(ServicioConciliacionPagos.class), comisionesSinCargo(), gestor(), java.time.Clock.systemUTC(),java.time.Duration.ofMinutes(20),new PagosPrevistosPoint(new com.fasterxml.jackson.databind.ObjectMapper()));
         when(oauth.esAmbientePrueba()).thenReturn(true);
 
         TerminalMercadoPagoEntidad terminal = new TerminalMercadoPagoEntidad();
@@ -116,12 +122,13 @@ class ServicioMercadoPagoPointTest {
         when(cliente.consultar(7L, "ORD-1"))
                 .thenReturn(new ClienteMercadoPagoPoint.OrdenRemota("ORD-1", "processed", "accredited", "PAY-1", "processed", "accredited"));
         when(ordenes.save(orden)).thenReturn(orden);
+        when(ordenes.bloquear(7L,"point-public-id")).thenReturn(Optional.of(orden));
         when(ventasRepositorio.findByIdAndEmpresaId(22L, 7L)).thenReturn(Optional.of(ventaEntidad));
 
         var respuesta = servicio.simularAprobacion(7L, "point-public-id");
 
         verify(cliente).simularAprobacion(7L, "ORD-1");
-        verify(ventas).confirmarPoint(7L, 22L, "PAY-1");
+        verify(ventas).confirmarPoint(argThat(o -> o.getEmpresaId().equals(7L) && o.getVentaId().equals(22L) && o.getImporte().compareTo(new BigDecimal("180"))==0),eq("PAY-1"),eq(List.of()));
         assertThat(respuesta.estado()).isEqualTo("APROBADO");
         assertThat(respuesta.simulacionDisponible()).isTrue();
     }
@@ -134,7 +141,7 @@ class ServicioMercadoPagoPointTest {
         OrdenPointCajaRepositorio ordenes = mock(OrdenPointCajaRepositorio.class);
         ServicioMercadoPagoPoint servicio = new ServicioMercadoPagoPoint(cliente, oauth, propiedades("POINT_VIRTUAL_CONFIGURADA"), terminales,
                 ordenes, mock(SucursalRepositorio.class), mock(VentaRepositorio.class), mock(ServicioVentasCaja.class),
-                mock(ServicioConciliacionPagos.class), comisionesSinCargo());
+                mock(ServicioConciliacionPagos.class), comisionesSinCargo(), gestor(), java.time.Clock.systemUTC(),java.time.Duration.ofMinutes(20),new PagosPrevistosPoint(new com.fasterxml.jackson.databind.ObjectMapper()));
         when(oauth.esAmbientePrueba()).thenReturn(true);
         OrdenPointCajaEntidad orden = new OrdenPointCajaEntidad();
         orden.setTerminalId(5L); orden.setEstado("CREADO");
@@ -157,4 +164,10 @@ class ServicioMercadoPagoPointTest {
         when(servicio.calcular(anyLong(), any(ProveedorPago.class), any(), anyString())).thenReturn(BigDecimal.ZERO);
         return servicio;
     }
+    static org.springframework.transaction.PlatformTransactionManager gestor() {
+        var gestor=mock(org.springframework.transaction.PlatformTransactionManager.class);
+        when(gestor.getTransaction(any())).thenReturn(new org.springframework.transaction.support.SimpleTransactionStatus());
+        return gestor;
+    }
+
 }

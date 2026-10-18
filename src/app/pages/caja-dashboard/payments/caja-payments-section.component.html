@@ -1,4 +1,4 @@
-<app-venta-comprobante [venta]="ventaCobrada()" />
+
 <nav class="caja-mobile-panes" aria-label="Navegación de cobros">
   <button type="button" [attr.aria-pressed]="!mostrandoCobro()" (click)="mostrandoCobro.set(false)">Pendientes <span>{{ citas.length }}</span></button>
   <button type="button" [attr.aria-pressed]="mostrandoCobro()" [disabled]="!citaSeleccionada" (click)="mostrandoCobro.set(true)">Cobrar</button>
@@ -58,12 +58,15 @@
   </div>
 
   <div class="caja-side-column">
+    @if(!citaSeleccionada && ventaCobrada()) {<app-venta-comprobante [venta]="ventaCobrada()" />}
     <mat-card class="caja-card caja-card-payment">
       <div class="caja-card-heading">
         <span class="caja-card-kicker">Pago</span>
         <h2>{{ citaSeleccionada ? 'Registrar cobro' : 'Selecciona una cita' }}</h2>
       </div>
       @if (citaSeleccionada; as cita) {
+        @if(cita.cobroPointEnCurso){<p role="status" class="caja-empty">Cobro Point en curso</p>}
+        @if(!ventaCobrada()){
         <div class="caja-payment-context">
           <strong>{{ cita.clienteNombre }}</strong>
           <span>{{ cita.servicioNombre }} · {{ cita.sucursalNombre }}</span>
@@ -82,33 +85,17 @@
         </div>
         @if(otrasCitas.length) {<details class="caja-payment-extra"><summary>Agregar otras citas de este cliente ({{otrasCitas.length}})</summary>@for(otra of otrasCitas; track otra.citaId) {<label class="caja-extra-appointment"><input type="checkbox" [checked]="adicionales.includes(otra.citaId)" [disabled]="guardando || procesandoVenta() || procesandoPoint()" (change)="alternarCita(otra.citaId)"><span>{{otra.servicioNombre}} · {{otra.inicio | date:'dd/MM HH:mm'}} <strong>{{otra.pendiente | appMoney:otra.moneda:2:2}}</strong></span></label>}</details>}
         @if(cobroMultiple) {<p role="status">{{seleccionadas.length}} citas · Saldo total estimado {{totalSeleccionado | appMoney:cita.moneda:2:2}}. El servidor confirma el importe al cobrar.</p>}
-        <form class="caja-form-grid" (ngSubmit)="registrarCobro()">
-          <mat-form-field appearance="outline"><mat-label>Monto</mat-label><input matInput type="number" min="0.01" step="0.01" name="montoPago" [readonly]="cobroMultiple" [(ngModel)]="formularioPago.monto" required></mat-form-field>
-          <mat-form-field appearance="outline"><mat-label>Método de pago</mat-label><mat-select name="metodoPago" [(ngModel)]="formularioPago.metodoPago">@for (metodo of metodosPago; track metodo.codigo) {<mat-option [value]="metodo.codigo">{{ metodo.etiqueta }}</mat-option>}</mat-select></mat-form-field>
-          @if (formularioPago.metodoPago === 'TARJETA') {<div class="manual-card-note full-width"><i class="bi bi-credit-card-2-front"></i><span><strong>Registro manual</strong><small>Cobra en una terminal externa y registra aquí el monto y la referencia.</small></span></div>}
-          @if (terminalesPoint().length) {
-            <details class="caja-payment-extra full-width" [open]="!!ordenPoint()"><summary>Tarjeta con Mercado Pago Point</summary>
-            <div class="point-divider"><span>o cobra en terminal</span></div>
-            <mat-form-field appearance="outline" class="full-width"><mat-label>Terminal Mercado Pago Point</mat-label><mat-select name="terminalPointCobro" [(ngModel)]="terminalPointId">@for (terminal of terminalesPoint(); track terminal.id) {<mat-option [value]="terminal.id">{{ terminal.nombre }}</mat-option>}</mat-select></mat-form-field>
-            @if(cobroMultiple) {<p role="status">Point admite una sola cita por operación.</p>}<div class="point-action full-width"><span><i class="bi bi-credit-card"></i><span><strong>Tarjeta física</strong><small>Envía el saldo pendiente a la terminal de esta sucursal.</small></span></span><button mat-stroked-button type="button" [disabled]="guardando || procesandoPoint() || cobroMultiple || !cajaAbierta" (click)="cobrarConPoint()">{{ procesandoPoint() ? 'Esperando terminal…' : 'Enviar a Point' }}</button></div>
-            </details>
-          }
-          @if (formularioPago.metodoPago === metodoPagoEfectivo) {
-            <mat-form-field appearance="outline"><mat-label>Recibido</mat-label><input matInput type="number" min="0.01" step="0.01" name="montoRecibido" [(ngModel)]="formularioPago.montoRecibido"></mat-form-field>
-            <div class="caja-payment-result"><span>Cambio</span><strong>{{ calcularCambio() | appMoney:cita.moneda:2:2 }}</strong></div>
-          }
-          <details class="caja-payment-extra full-width"><summary>Referencia y notas</summary>
-          <mat-form-field appearance="outline"><mat-label>Referencia</mat-label><input matInput name="referenciaPago" [(ngModel)]="formularioPago.referencia"></mat-form-field>
-          <mat-form-field appearance="outline" class="full-width"><mat-label>Observaciones</mat-label><textarea matInput rows="3" name="observacionesPago" [(ngModel)]="formularioPago.observaciones"></textarea></mat-form-field>
-          </details>
-          <div class="caja-form-actions">
-            <button mat-flat-button color="primary" type="submit" [disabled]="guardando || procesandoVenta() || procesandoPoint() || !cajaAbierta">{{cobroMultiple ? 'Cobrar todas las citas' : 'Registrar pago'}}</button>
-            @if (pagos.length) {<button mat-stroked-button type="button" (click)="printReceipt.emit()">Imprimir comprobante</button>}
-          </div>
-        </form>
-        @if (ordenPoint(); as orden) {<div class="point-status" [class.approved]="orden.estado === 'APROBADO'"><span></span><div class="point-status__copy"><strong>{{ orden.estado === 'APROBADO' ? 'Pago conciliado' : 'Orden enviada' }}</strong><small>{{ orden.terminalNombre }} · {{ orden.estado }}{{ orden.detalleEstado ? ' · ' + orden.detalleEstado : '' }}</small></div>@if (!['APROBADO','CANCELADO','RECHAZADO','EXPIRADO','REEMBOLSADO'].includes(orden.estado)) {<div class="point-status__actions">@if (orden.simulacionDisponible) {<button class="simulate" type="button" [disabled]="simulandoPoint()" (click)="simularAprobacionPoint()">{{ simulandoPoint() ? 'Simulando…' : 'Simular aprobación' }}</button>}<button type="button" (click)="cancelarPoint()">Cancelar</button></div>}</div>}
-        @if (errorPoint()) {<div class="point-error">{{ errorPoint() }}</div>}
-        @if (!cajaAbierta) {<div class="caja-empty">{{ mensajeBloqueo }}</div>}
+        }
+        <app-caja-cobro [total]="totalSeleccionado" [moneda]="cita.moneda" [identidad]="cita.citaId"
+          [metodos]="metodosPago" [terminales]="terminalesPoint()" [permiteAbono]="!cobroMultiple"
+          [bloqueo]="bloqueoPanel" [procesando]="guardando || procesandoVenta() || procesandoPoint()"
+          [orden]="ordenPoint()" [accionPointEnCurso]="accionPointEnCurso()" [comprobante]="ventaCobrada()" [error]="errorPoint()" [simulando]="simulandoPoint()"
+          (cobrar)="cobrarDesdePanel($event)" (reintentarPoint)="reintentarPoint()" (resolverPoint)="resolverPoint($event)" (cancelarPoint)="cancelarPoint()" (simularPoint)="simularAprobacionPoint()"
+          (nuevo)="ventaCobrada.set(null);ordenPoint.set(null);mostrandoCobro.set(false)">
+          <div desgloseCobro>@for(c of seleccionadas;track c.citaId){<p>{{c.servicioNombre}} · {{c.pendiente | appMoney:c.moneda:2:2}}</p>}</div>
+        </app-caja-cobro>
+        @if(!ventaCobrada()){
+        @if (pagos.length) {<button mat-stroked-button type="button" (click)="printReceipt.emit()">Imprimir pagos anteriores</button>}
         <mat-divider></mat-divider>
         <div class="caja-history">
           <div class="caja-subheading"><span>Pagos registrados</span></div>
@@ -117,6 +104,7 @@
             <div class="caja-history-list">@for (pago of pagos; track pago.id) {<div class="caja-history-item"><div><strong>{{ pago.monto | appMoney:cita.moneda:2:2 }}</strong><span>{{ pago.metodoPago }}{{ pago.referencia ? ' · ' + pago.referencia : '' }}</span></div><small>{{ pago.registradoEn | date:'dd/MM HH:mm':'':'es-MX' }}</small></div>}</div>
           }
         </div>
+        }
       } @else {
         <div class="caja-empty">Elige una cita por cobrar para registrar pago, anticipo o liquidación.</div>
       }

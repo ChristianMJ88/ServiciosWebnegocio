@@ -16,6 +16,8 @@ public class PagoVentaEntidad {
     @Column(name = "intento_pago_checkout_id") private Long intentoPagoCheckoutId;
     @Column(name = "caja_sesion_id") private Long cajaSesionId;
     @Column(nullable = false, precision = 12, scale = 2) private BigDecimal monto;
+    @Column(name="monto_recibido", precision=12, scale=2) private BigDecimal montoRecibido;
+    @Column(precision=12, scale=2) private BigDecimal cambio;
     @Column(name = "metodo_pago", nullable = false, length = 30) private String metodoPago;
     @Column(length = 120) private String referencia;
     @Column(name = "registrado_por_usuario_id") private Long registradoPorUsuarioId;

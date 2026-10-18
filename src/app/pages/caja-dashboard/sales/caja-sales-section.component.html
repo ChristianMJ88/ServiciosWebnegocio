@@ -1,4 +1,4 @@
-<app-venta-comprobante [venta]="comprobante()" />
+
 <nav class="pos-workspace-tabs" [class.is-checkout]="cuentaMovilAbierta()" aria-label="Operaciones del punto de venta">
   <button type="button" [class.active]="vistaPos()==='catalogo'" [disabled]="guardando()" (click)="abrirVistaPos('catalogo')"><i class="bi bi-plus-circle"></i>Nueva cuenta</button>
   <button type="button" [class.active]="vistaPos()==='staff'" [disabled]="guardando()" (click)="abrirVistaPos('staff')"><i class="bi bi-receipt"></i>Cuentas de Staff <span>{{ totalStaff() }}</span></button>
@@ -59,13 +59,19 @@
       <div class="pos-history"><span>Actividad reciente</span>@for (venta of ventas().slice(0, 5); track venta.id) {<div><span><strong>{{ venta.folio }}</strong><small>{{ venta.canal }} · {{ venta.estado }} · {{ venta.detalles.length }} conceptos · {{ venta.metodoPago }}</small></span><strong>{{ venta.total | appMoney:venta.moneda:2:2 }}</strong></div>}</div>
     }
     @if (historialPoint().length) {
-      <div class="point-history"><span>Cobros Point</span>@for (orden of historialPoint().slice(0, 5); track orden.id) {<article><div><strong>{{ orden.folioVenta }}</strong><small>{{ orden.terminalNombre }} · {{ orden.estado }}</small></div><b>{{ orden.importe | appMoney:orden.moneda:2:2 }}</b>@if (orden.estado === 'APROBADO') {<button type="button" [disabled]="guardando()" (click)="reembolsarPoint(orden)">Reembolsar</button>} @else if (!['CANCELADO','RECHAZADO','EXPIRADO','REEMBOLSADO'].includes(orden.estado)) {<button class="continue" type="button" [disabled]="guardando()" (click)="continuarOrdenPoint(orden)">Continuar cobro</button>}</article>}</div>
+      <div class="point-history"><span>Cobros Point</span>@for (orden of historialPoint(); track orden.id) {<article><div><strong>{{ orden.folioVenta }}</strong><small>{{ orden.terminalNombre }} · {{ orden.estado }}</small></div><b>{{ orden.importe | appMoney:orden.moneda:2:2 }}</b>@if (orden.puedeReembolsar) {<button type="button" [disabled]="guardando()" (click)="reembolsarPoint(orden)">Reembolsar</button>} @else if (orden.requiereRevision) {<button type="button" [disabled]="guardando()" (click)="continuarOrdenPoint(orden)">Revisar incidencia</button>} @else if (!['APROBADO','CANCELADO','RECHAZADO','EXPIRADO','REEMBOLSADO'].includes(orden.estado)) {<button class="continue" type="button" [disabled]="guardando()" (click)="continuarOrdenPoint(orden)">Continuar cobro</button>}</article>}</div>
     }
 </section>}
   @if (vistaPos() !== 'actividad') {
   <aside class="pos-checkout caja-card" id="caja-resumen-venta">
     <button type="button" class="pos-mobile-back" (click)="cuentaMovilAbierta.set(false)"><i class="bi bi-arrow-left"></i> Volver a seleccionar</button>
     <div class="caja-card-heading pos-checkout-heading"><div><span class="caja-card-kicker">Resumen</span><h2>{{ cuentaStaff() ? cuentaStaff()!.clienteNombre : 'Cuenta actual' }}</h2></div><span class="pos-concept-count">{{ cantidadConceptosCuenta() }} {{ cantidadConceptosCuenta() === 1 ? 'concepto' : 'conceptos' }}</span></div>
+    <app-caja-cobro [total]="totalCuenta()" [moneda]="monedaCuenta()" [identidad]="ventaStaffSeleccionada||sucursalId"
+      [metodos]="metodosPago" [terminales]="terminalesPoint()" [bloqueo]="bloqueoPanel" [procesando]="guardando()"
+      [orden]="ordenPoint()" [accionPointEnCurso]="accionPointEnCurso()" [comprobante]="comprobante()" [error]="error()" [simulando]="simulandoPoint()"
+      (cobrar)="confirmarPanel($event)" (reintentarPoint)="reintentarPoint()" (resolverPoint)="resolverPoint($event)" (cancelarPoint)="cancelarPoint()" (simularPoint)="simularAprobacionPoint()"
+      (nuevo)="comprobante.set(null);ordenPoint.set(null);cuentaMovilAbierta.set(false)">
+      <div desgloseCobro>
     @if (cuentaStaff(); as cuenta) {
       <p class="pos-customer">{{ cuenta.clienteTelefono }} · {{ cuenta.venta.folio }}</p>
       @for (detalle of cuenta.venta.detalles; track detalle.id) {<div class="pos-line"><div><span>{{ detalle.tipoConcepto }}</span><strong>{{ detalle.nombre }}</strong><small>{{ detalle.cantidad }} unidades</small></div><strong>{{ detalle.total | appMoney:cuenta.venta.moneda:2:2 }}</strong></div>}
@@ -79,35 +85,10 @@
     }
     @if (!citaSeleccionada() && !lineas().length) {<div class="caja-empty">Selecciona una cita, productos o ambos para crear la cuenta.</div>}
     }
-    <div class="pos-total"><span>Total por cobrar</span><strong>{{ (!cuentaStaff() && cotizando()) ? 'Calculando…' : (totalCuenta() | appMoney:monedaCuenta():2:2) }}</strong>@if (!cuentaStaff() && cotizacion(); as precio) { <small>Descuento en productos: {{ precio.descuento | appMoney:moneda():2:2 }}</small> }@if(cuentaStaff(); as cuenta){<small>Descuentos: {{cuenta.venta.descuentoTotal | appMoney:cuenta.venta.moneda:2:2}}</small>}<small>Revisa el importe y selecciona cómo pagar.</small></div>
-    <form class="pos-payment" (ngSubmit)="cuentaStaff() ? cobrarCuentaStaff() : cobrar()">
-      <mat-form-field appearance="outline"><mat-label>Método de pago</mat-label><mat-select name="metodoVenta" [(ngModel)]="metodoPago">@for (metodo of metodosPago; track metodo.codigo) {<mat-option [value]="metodo.codigo">{{ metodo.etiqueta }}</mat-option>} @if (terminalesPoint().length) {<mat-option value="MERCADO_PAGO_POINT">Mercado Pago Point</mat-option>}</mat-select></mat-form-field>
-      @if (metodoPago === 'MERCADO_PAGO_POINT') {
-        <mat-form-field appearance="outline"><mat-label>Terminal</mat-label><mat-select name="terminalPoint" [(ngModel)]="terminalPointId">@for (terminal of terminalesPoint(); track terminal.id) {<mat-option [value]="terminal.id">{{ terminal.nombre }}</mat-option>}</mat-select></mat-form-field>
-        <div class="point-payment-note"><i class="bi bi-credit-card"></i><span><strong>El importe aparecerá en la terminal</strong><small>La venta se conciliará automáticamente cuando Mercado Pago confirme el cobro.</small></span></div>
-      }
-      @if (metodoPago === 'TARJETA') {
-        <div class="point-payment-note is-manual"><i class="bi bi-credit-card-2-front"></i><span><strong>Registro manual de tarjeta</strong><small>Cobra primero en una terminal externa y captura la referencia. Esta opción no envía instrucciones a Mercado Pago Point.</small></span></div>
-      }
-      <details class="pos-payment-extras"><summary>Referencia y notas</summary>
-      <mat-form-field appearance="outline"><mat-label>Referencia</mat-label><input matInput name="referenciaVenta" [(ngModel)]="referencia"></mat-form-field>
-      <mat-form-field appearance="outline"><mat-label>Notas</mat-label><textarea matInput rows="2" name="notasVenta" [(ngModel)]="observaciones"></textarea></mat-form-field>
-      </details>
-      <button mat-flat-button color="primary" type="submit" [disabled]="!puedeCobrarCuenta()">{{ guardando() ? 'Cobrando…' : 'Confirmar cobro' }}</button>
-    </form>
-    @if (ordenPoint(); as orden) {
-      <div class="point-payment-status" [class.is-approved]="orden.estado === 'APROBADO'">
-        <span class="point-payment-status__pulse"></span><div><strong>{{ orden.estado === 'APROBADO' ? 'Pago confirmado' : 'Esperando terminal' }}</strong><small>{{ orden.terminalNombre }} · {{ orden.estado }}{{ orden.detalleEstado ? ' · ' + orden.detalleEstado : '' }}</small></div>
-        @if (!['APROBADO','CANCELADO','RECHAZADO','EXPIRADO','REEMBOLSADO'].includes(orden.estado)) {
-          <div class="point-payment-status__actions">
-            @if (orden.simulacionDisponible) {<button class="simulate" type="button" [disabled]="simulandoPoint()" (click)="simularAprobacionPoint()">{{ simulandoPoint() ? 'Simulando…' : 'Simular aprobación' }}</button>}
-            <button type="button" (click)="cancelarPoint()">Cancelar</button>
-          </div>
-        }
-      </div>
-    }
+<p>{{cantidadConceptosCuenta()}} conceptos incluidos.</p>@if(cotizacion();as precio){<p>Descuento en productos: {{precio.descuento | appMoney:monedaCuenta():2:2}}</p>}</div>
+    </app-caja-cobro>
     @if (!cajaAbierta) {<div class="caja-empty">Abre la caja de esta sucursal para registrar la venta.</div>}
-    @if (error()) {<div class="pos-alert error">{{ error() }}</div>}
+
     @if (mensaje()) {<div class="pos-alert success">{{ mensaje() }}</div>}
 
   </aside>

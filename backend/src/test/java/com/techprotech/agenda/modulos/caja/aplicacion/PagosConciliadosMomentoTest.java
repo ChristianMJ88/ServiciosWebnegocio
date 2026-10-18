@@ -26,7 +26,7 @@ class PagosConciliadosMomentoTest {
         var registro=new StandardServiceRegistryBuilder().applySettings(TiempoPruebas.configuracionJpa()).applySettings(Map.of(
                 "hibernate.connection.driver_class","org.h2.Driver", "hibernate.connection.url","jdbc:h2:mem:pagos_conciliados_utc;MODE=MySQL",
                 "hibernate.hbm2ddl.auto","create-drop")).build();
-        try(var factory=new MetadataSources(registro).addAnnotatedClass(VentaEntidad.class).addAnnotatedClass(VentaDetalleEntidad.class)
+        try(var factory=new MetadataSources(registro).addAnnotatedClass(VentaEntidad.class).addAnnotatedClass(VentaDetalleEntidad.class).addAnnotatedClass(com.techprotech.agenda.modulos.pagos.infraestructura.entidad.OrdenPointCajaEntidad.class)
                 .addAnnotatedClass(PagoVentaEntidad.class).buildMetadata().buildSessionFactory();var em=factory.createEntityManager()) {
             em.getTransaction().begin();
             for(long empresa:List.of(7L,8L)) {

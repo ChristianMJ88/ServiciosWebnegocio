@@ -40,6 +40,7 @@ import java.util.Set;
 import static com.techprotech.agenda.modulos.caja.aplicacion.CatalogosCaja.*;
 
 @Service
+@lombok.extern.slf4j.Slf4j
 public class ServicioVentasCaja {
     private final PublicadorPagosCitas eventosPago;
     private final ServicioSaldoCitas saldos;
@@ -132,7 +133,7 @@ public class ServicioVentasCaja {
 
     @Transactional(isolation = org.springframework.transaction.annotation.Isolation.READ_COMMITTED)
     public VentaResponse registrar(Long empresaId, Long usuarioId, List<Long> sucursalesPermitidas, RegistrarVentaRequest request) {
-        if(request.ventaPendienteId()!=null) throw badRequest("Las cuentas de Staff se cobran desde su acción de cobro");
+        if(request.ventaPendienteId()!=null) return cobrarPendienteInterno(empresaId,usuarioId,sucursalesPermitidas,request.ventaPendienteId(),request);
         if (METODO_PAGO_POINT.equalsIgnoreCase(request.metodoPago())) {
             throw badRequest("El cobro Point debe iniciarse desde el flujo de terminal");
         }
@@ -142,10 +143,9 @@ public class ServicioVentasCaja {
     @Transactional(isolation = org.springframework.transaction.annotation.Isolation.READ_COMMITTED)
     public VentaResponse prepararPoint(Long empresaId, Long usuarioId, List<Long> sucursalesPermitidas,
                                        RegistrarVentaRequest request) {
-        if(request.citasNormalizadas().size()>1) throw badRequest("Point todavía admite una sola cita por operación. Usa otro método para cobrar varias citas juntas");
         if(request.ventaPendienteId()!=null) return prepararPendientePoint(empresaId,usuarioId,sucursalesPermitidas,request.ventaPendienteId(),request.sucursalId());
-        RegistrarVentaRequest point = new RegistrarVentaRequest(request.sucursalId(), request.citasNormalizadas().stream().findFirst().orElse(null), request.clienteId(),
-                request.productos(), METODO_PAGO_POINT, null, request.observaciones());
+        RegistrarVentaRequest point = new RegistrarVentaRequest(request.sucursalId(), request.citaId(), request.clienteId(),
+                request.productos(), request.pagos()==null?METODO_PAGO_POINT:null, null, request.observaciones(), null, request.citaIds(),request.pagos());
         return registrarInterno(empresaId, usuarioId, sucursalesPermitidas, point, true);
     }
 
@@ -161,11 +161,14 @@ public class ServicioVentasCaja {
     private VentaResponse registrarInterno(Long empresaId, Long usuarioId, List<Long> sucursalesPermitidas,
                                             RegistrarVentaRequest request, boolean point, boolean staff) {
         validarSucursal(empresaId, sucursalesPermitidas, request.sucursalId());
-        String metodoPago = request.metodoPago().trim().toUpperCase(Locale.ROOT);
-        if (!staff && !point && !contiene(METODOS_PAGO, metodoPago)) throw badRequest("El método de pago no es válido");
+        String metodoPago = request.metodoPago()==null?null:request.metodoPago().trim().toUpperCase(Locale.ROOT);
         CajaSesionEntidad sesion = staff ? null : sesiones.findByEmpresaIdAndSucursalIdAndEstado(empresaId, request.sucursalId(), ESTADO_SESION_ABIERTA)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.CONFLICT, "No hay una caja abierta para la sucursal indicada"));
 
+        if(point) {
+            sesion=sesiones.findParaAperturaConBloqueo(empresaId,sesion.getSucursalId(),ESTADO_SESION_ABIERTA)
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.CONFLICT,"La caja se cerró antes de preparar el cobro"));
+        }
         List<RegistrarVentaRequest.ProductoVentaRequest> solicitados = request.productos() == null ? List.of() : request.productos();
         Map<Long, BigDecimal> cantidades = solicitados.stream().collect(Collectors.toMap(
                 RegistrarVentaRequest.ProductoVentaRequest::productoId,
@@ -176,6 +179,8 @@ public class ServicioVentasCaja {
                 .collect(Collectors.toMap(ProductoEntidad::getId, Function.identity()));
         if (productosVenta.size() != cantidades.size()) throw badRequest("Uno o más productos no están disponibles para la empresa");
 
+        // Mismo orden que checkout: existencias → prestadores (si aplica) → citas.
+        if (!staff && !cantidades.isEmpty()) inventario.bloquearParaVenta(empresaId,request.sucursalId(),cantidades.keySet());
         var bloqueadas = new ArrayList<CitaEntidad>();
         for (Long id : request.citasNormalizadas()) {
             var c = citas.bloquearPorIdYEmpresa(id,empresaId).orElseThrow(() -> new ResponseStatusException(HttpStatus.CONFLICT,"La cita " + id + " no está disponible para este negocio"));
@@ -213,6 +218,7 @@ public class ServicioVentasCaja {
         for (var c : bloqueadas) descuentoTotal = descuentoTotal.add(com.techprotech.agenda.modulos.citas.aplicacion.DesglosePrecioCita.paraCobro(c,saldosCitas.get(c.getId()).pendiente(),saldosCitas.get(c.getId()).pagado()).descuento());
         BigDecimal total = pendienteServicio.add(netoProductos).setScale(2, RoundingMode.HALF_UP);
 
+        var reparto = staff ? null : PlanPagosVenta.resolver(total,request,point);
         VentaEntidad venta = new VentaEntidad();
         venta.setEmpresaId(empresaId); venta.setSucursalId(request.sucursalId()); venta.setCajaSesionId(sesion == null ? null : sesion.getId());
         venta.setClienteId(cita != null ? cita.getClienteId() : request.clienteId()); venta.setCitaId(bloqueadas.size() == 1 ? cita.getId() : null);
@@ -228,42 +234,78 @@ public class ServicioVentasCaja {
         if (staff) filas.forEach(fila -> fila.setPrestadorResponsableId(usuarioId));
         filas = detalles.saveAll(filas);
 
-        PagoVentaEntidad pago = null;
+        List<PagoVentaEntidad> registrados = new ArrayList<>();
         if (!staff && !point) {
-            pago = new PagoVentaEntidad();
-            pago.setEmpresaId(empresaId); pago.setVentaId(venta.getId()); pago.setCajaSesionId(sesion.getId()); pago.setMonto(total);
-            pago.setMetodoPago(metodoPago); pago.setReferencia(limpiar(request.referencia())); pago.setRegistradoPorUsuarioId(usuarioId);
-            pago.setRegistradoEn(LocalDateTime.now(reloj)); pago = pagos.save(pago);
+            for(var parte:reparto.partes()) {
+                var pago=registrarParte(venta,parte,usuarioId);
+                registrados.add(pago);
+                if(METODO_PAGO_EFECTIVO.equals(parte.metodoPago())) registrarIngresoEfectivo(empresaId,usuarioId,sesion.getId(),venta,pago);
+            }
         }
+        PagoVentaEntidad pago=registrados.isEmpty()?null:registrados.getFirst();
 
         if (!staff && !cantidades.isEmpty()) inventario.descontarVenta(empresaId, usuarioId, sucursalesPermitidas,
                 request.sucursalId(), cantidades, venta.getFolio());
-        if (!staff && !point && METODO_PAGO_EFECTIVO.equals(metodoPago)) registrarIngresoEfectivo(empresaId, usuarioId, sesion.getId(), venta, pago);
         if (!staff && !point) comisiones.registrar(venta, filas);
         if (!staff && !point) for (var c : bloqueadas)
             eventosPago.pagoEnVenta(c, venta, pago, saldosCitas.get(c.getId()).pendiente(), OrigenEventoCita.ADMIN, usuarioId);
-        return mapear(venta, pago, filas);
+        return mapearPagos(venta,registrados,filas);
     }
 
-    @Transactional
-    public VentaResponse confirmarPoint(Long empresaId, Long ventaId, String referenciaPago) {
-        VentaEntidad venta = ventas.findConBloqueoByIdAndEmpresaId(ventaId, empresaId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Venta Point no encontrada"));
-        List<VentaDetalleEntidad> filas = detalles.findByEmpresaIdAndVentaIdOrderByIdAsc(empresaId, ventaId);
-        PagoVentaEntidad existente = pagos.findByEmpresaIdAndVentaIdOrderByRegistradoEnDesc(empresaId, ventaId).stream()
-                .filter(item -> METODO_PAGO_POINT.equals(item.getMetodoPago())).findFirst().orElse(null);
-        if (existente != null) return mapear(venta, existente, filas);
-        if (!"PENDIENTE_PAGO".equals(venta.getEstado())) throw new ResponseStatusException(HttpStatus.CONFLICT, "La venta Point ya no puede confirmarse");
-        venta.setEstado("PAGADA");
-        ventas.save(venta);
-        PagoVentaEntidad pago = new PagoVentaEntidad();
-        pago.setEmpresaId(empresaId); pago.setVentaId(ventaId); pago.setCajaSesionId(venta.getCajaSesionId()); pago.setMonto(venta.getTotal());
-        pago.setMetodoPago(METODO_PAGO_POINT); pago.setReferencia(limpiar(referenciaPago));
-        pago.setRegistradoPorUsuarioId(venta.getCreadaPorUsuarioId()); pago.setRegistradoEn(LocalDateTime.now(reloj));
-        comisiones.registrar(venta, filas);
-        pago = pagos.save(pago);
-        eventosPago.venta(venta, pago, filas, OrigenEventoCita.WEBHOOK, null);
-        return mapear(venta, pago, filas);
+    @Transactional(isolation = org.springframework.transaction.annotation.Isolation.READ_COMMITTED)
+    public VentaResponse confirmarPoint(Long empresaId,Long ventaId,String referenciaPago) {
+        return confirmarPointInterno(empresaId,ventaId,referenciaPago,null,List.of(),null).venta();
+    }
+
+    @Transactional(isolation = org.springframework.transaction.annotation.Isolation.READ_COMMITTED)
+    public VentaResponse confirmarPoint(Long empresaId,Long ventaId,String referenciaPago,BigDecimal importePoint,List<PlanPagosVenta.Parte> previstas) {
+        return confirmarPointInterno(empresaId,ventaId,referenciaPago,importePoint,previstas,null).venta();
+    }
+    public record ConfirmacionPoint(VentaResponse venta,boolean requiereRevision) {}
+    @Transactional(isolation=org.springframework.transaction.annotation.Isolation.READ_COMMITTED)
+    public ConfirmacionPoint confirmarPoint(com.techprotech.agenda.modulos.pagos.infraestructura.entidad.OrdenPointCajaEntidad orden,String referenciaPago,List<PlanPagosVenta.Parte> previstas) {
+        return confirmarPointInterno(orden.getEmpresaId(),orden.getVentaId(),referenciaPago,orden.getImporte(),previstas,orden.getId());
+    }
+    private ConfirmacionPoint confirmarPointInterno(Long empresaId,Long ventaId,String referenciaPago,BigDecimal importePoint,List<PlanPagosVenta.Parte> previstas,Long ordenId) {
+        VentaEntidad venta=ventas.findConBloqueoByIdAndEmpresaId(ventaId,empresaId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,"Venta Point no encontrada"));
+        var filas=detalles.findByEmpresaIdAndVentaIdOrderByIdAsc(empresaId,ventaId);
+        var registrados=pagos.findByEmpresaIdAndVentaIdOrderByRegistradoEnDesc(empresaId,ventaId);
+        if(registrados.stream().anyMatch(p -> METODO_PAGO_POINT.equals(p.getMetodoPago()) && Objects.equals(p.getReferencia(),limpiar(referenciaPago)))) return new ConfirmacionPoint(mapearPagos(venta,registrados,filas),false);
+        if(!"PENDIENTE_PAGO".equals(venta.getEstado()) || ordenId!=null && !ventas.esOrdenPointVigente(empresaId,ventaId,ordenId)) {
+            marcarRevisionPoint(venta,"aprobación tardía o de una orden sustituida; revisar el cobro del proveedor");ventas.save(venta);
+            return new ConfirmacionPoint(mapearPagos(venta,registrados,filas),true);
+        }
+        var citasVenta=filas.stream().filter(f -> f.getCitaId()!=null).map(VentaDetalleEntidad::getCitaId).distinct().sorted()
+                .map(id -> citas.bloquearPorIdYEmpresa(id,empresaId).orElseThrow(() -> conflictoCita(id,"no está disponible"))).toList();
+        var actuales=saldos.calcular(empresaId,citasVenta);
+        var excedidas=filas.stream().filter(f -> f.getCitaId()!=null).filter(f -> actuales.get(f.getCitaId()).pendiente().compareTo(f.getTotal())<0).map(VentaDetalleEntidad::getCitaId).toList();
+        if(!excedidas.isEmpty()) marcarRevisionPoint(venta,"saldo previamente cubierto, citas "+excedidas);
+        BigDecimal point=importePoint==null?venta.getTotal():importePoint;
+        var suma=previstas.stream().map(PlanPagosVenta.Parte::monto).reduce(point,BigDecimal::add);
+        boolean cuadra=suma.compareTo(venta.getTotal())==0;
+        if(!cuadra) marcarRevisionPoint(venta,"reparto no coincide con total; se registra solo Point");
+        var pago=registrarParte(venta,new PlanPagosVenta.Parte(METODO_PAGO_POINT,point,null,null,limpiar(referenciaPago)),venta.getCreadaPorUsuarioId());
+        var nuevos=new ArrayList<PagoVentaEntidad>();nuevos.add(pago);
+        if(cuadra) for(var parte:previstas) {
+            var registrado=registrarParte(venta,parte,venta.getCreadaPorUsuarioId());nuevos.add(registrado);
+            if(METODO_PAGO_EFECTIVO.equals(parte.metodoPago())) registrarIngresoEfectivo(empresaId,venta.getCreadaPorUsuarioId(),venta.getCajaSesionId(),venta,registrado);
+        }
+        venta.setEstado("PAGADA");ventas.save(venta);comisiones.registrar(venta,filas);
+        eventosPago.venta(venta,pago,filas,OrigenEventoCita.WEBHOOK,null);
+        return new ConfirmacionPoint(mapearPagos(venta,nuevos,filas),!excedidas.isEmpty() || !cuadra);
+    }
+
+    private void marcarRevisionPoint(VentaEntidad venta,String motivo) {
+        String nota=(venta.getObservaciones()==null?"":venta.getObservaciones()+"; ")+"Revisión Point: "+motivo;
+        venta.setObservaciones(nota.substring(0,Math.min(500,nota.length())));
+        log.warn("Point requiere revisión: empresa={}, venta={}, motivo={}",venta.getEmpresaId(),venta.getId(),motivo);
+    }
+
+    private PagoVentaEntidad registrarParte(VentaEntidad venta,PlanPagosVenta.Parte parte,Long usuario) {
+        var pago=new PagoVentaEntidad();pago.setEmpresaId(venta.getEmpresaId());pago.setVentaId(venta.getId());pago.setCajaSesionId(venta.getCajaSesionId());
+        pago.setMonto(parte.monto());pago.setMetodoPago(parte.metodoPago());pago.setMontoRecibido(parte.montoRecibido());pago.setCambio(parte.cambio());
+        pago.setReferencia(limpiar(parte.referencia()));pago.setRegistradoPorUsuarioId(usuario);pago.setRegistradoEn(LocalDateTime.now(reloj));return pagos.save(pago);
     }
 
     @Transactional
@@ -282,10 +324,23 @@ public class ServicioVentasCaja {
     }
 
     @Transactional
-    public void marcarReembolsadaPoint(Long empresaId, Long ventaId) {
+    public void revisarReembolsoPoint(Long empresaId,Long ventaId) {
+        var venta=ventas.findConBloqueoByIdAndEmpresaId(ventaId,empresaId).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,"Venta no encontrada"));
+        marcarRevisionPoint(venta,"reembolso externo de la parte Point de un pago dividido; reversión completa pendiente");ventas.save(venta);
+    }
+
+    @Transactional
+    public boolean marcarReembolsadaPoint(com.techprotech.agenda.modulos.pagos.infraestructura.entidad.OrdenPointCajaEntidad orden) {
+        Long empresaId=orden.getEmpresaId(),ventaId=orden.getVentaId();
         VentaEntidad venta = ventas.findConBloqueoByIdAndEmpresaId(ventaId, empresaId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Venta Point no encontrada"));
-        if ("REEMBOLSADA".equals(venta.getEstado())) return;
+        boolean acreditada=pagos.findByEmpresaIdAndVentaIdOrderByRegistradoEnDesc(empresaId,ventaId).stream()
+                .anyMatch(p -> METODO_PAGO_POINT.equals(p.getMetodoPago()) && p.getReferencia()!=null
+                    && (p.getReferencia().equals(orden.getProveedorPagoId()) || p.getReferencia().equals(orden.getProveedorOrdenId())));
+        if(acreditada && "REEMBOLSADA".equals(venta.getEstado())) return true;
+        if (!"PAGADA".equals(venta.getEstado()) || !acreditada) {
+            marcarRevisionPoint(venta,"reembolso de orden no acreditada en esta venta; no se revierte inventario ni otros cobros");ventas.save(venta);return false;
+        }
         Map<Long, BigDecimal> cantidades = detalles.findByEmpresaIdAndVentaIdOrderByIdAsc(empresaId, ventaId).stream()
                 .filter(item -> "PRODUCTO".equals(item.getTipoConcepto()) && item.getProductoId() != null)
                 .collect(Collectors.toMap(VentaDetalleEntidad::getProductoId, VentaDetalleEntidad::getCantidad, BigDecimal::add));
@@ -293,6 +348,7 @@ public class ServicioVentasCaja {
                 cantidades, venta.getFolio(), "Reembolso de cobro Point");
         venta.setEstado("REEMBOLSADA");
         ventas.save(venta);
+        return true;
     }
 
     /**
@@ -308,21 +364,26 @@ public class ServicioVentasCaja {
         Set<Long> ventaIds = lista.stream().map(VentaEntidad::getId).collect(Collectors.toSet());
 
         // Query batch: seleccionar el pago más reciente con desempate por ID.
-        Map<Long, PagoVentaEntidad> pagoPorVenta = pagos.findByEmpresaIdAndVentaIdIn(empresaId, ventaIds)
-                .stream().collect(Collectors.toMap(PagoVentaEntidad::getVentaId, Function.identity(), (a, b) -> Comparator.comparing(PagoVentaEntidad::getRegistradoEn)
-                        .thenComparing(PagoVentaEntidad::getId).compare(a,b) >= 0 ? a : b));
+        Map<Long,List<PagoVentaEntidad>> pagoPorVenta=pagos.findByEmpresaIdAndVentaIdIn(empresaId,ventaIds).stream().collect(Collectors.groupingBy(PagoVentaEntidad::getVentaId));
 
         // Query batch: todos los detalles de las ventas
         Map<Long, List<VentaDetalleEntidad>> detallesPorVenta = detalles.findByEmpresaIdAndVentaIdIn(empresaId, ventaIds)
                 .stream().collect(Collectors.groupingBy(VentaDetalleEntidad::getVentaId));
 
         return lista.stream()
-                .map(venta -> mapear(
+                .map(venta -> mapearPagos(
                         venta,
-                        pagoPorVenta.get(venta.getId()),
+                        pagoPorVenta.getOrDefault(venta.getId(),List.of()),
                         detallesPorVenta.getOrDefault(venta.getId(), List.of())
                 ))
                 .toList();
+    }
+
+    @Transactional(readOnly=true)
+    public VentaResponse comprobante(Long empresaId,List<Long> permitidas,Long ventaId) {
+        var venta=ventas.findByIdAndEmpresaId(ventaId,empresaId).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,"Venta no encontrada"));
+        validarSucursal(empresaId,permitidas,venta.getSucursalId());
+        return mapearPagos(venta,pagos.findByEmpresaIdAndVentaIdOrderByRegistradoEnDesc(empresaId,ventaId),detalles.findByEmpresaIdAndVentaIdOrderByIdAsc(empresaId,ventaId));
     }
 
     public record PendienteStaff(VentaResponse venta, String clienteNombre, String clienteTelefono) {}
@@ -369,6 +430,8 @@ public class ServicioVentasCaja {
             .orElseThrow(()->new ResponseStatusException(HttpStatus.CONFLICT,"Abre la caja de la sucursal para cobrar"));
         var filas=detalles.findByEmpresaIdAndVentaIdOrderByIdAsc(empresaId,ventaId);
         var cantidades=filas.stream().filter(f->"PRODUCTO".equals(f.getTipoConcepto())).collect(Collectors.toMap(VentaDetalleEntidad::getProductoId,VentaDetalleEntidad::getCantidad,BigDecimal::add));
+        sesion=sesiones.findParaAperturaConBloqueo(empresaId,sesion.getSucursalId(),ESTADO_SESION_ABIERTA)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.CONFLICT,"La caja se cerró antes de preparar el cobro"));
         inventario.descontarVenta(empresaId,usuarioId,permitidas,sucursalId,cantidades,venta.getFolio());
         venta.setCajaSesionId(sesion.getId());venta.setEstado("PENDIENTE_PAGO");ventas.save(venta);
         return mapear(venta,null,filas);
@@ -376,13 +439,17 @@ public class ServicioVentasCaja {
 
     @Transactional
     public VentaResponse cobrarPendiente(Long empresaId,Long usuarioId,List<Long> permitidas,Long ventaId,String metodo,String referencia) {
+        return cobrarPendienteInterno(empresaId,usuarioId,permitidas,ventaId,new RegistrarVentaRequest(null,null,null,List.of(),metodo,referencia,null));
+    }
+
+    private VentaResponse cobrarPendienteInterno(Long empresaId,Long usuarioId,List<Long> permitidas,Long ventaId,RegistrarVentaRequest request) {
         VentaEntidad venta=ventas.findConBloqueoByIdAndEmpresaId(ventaId,empresaId)
             .orElseThrow(()->new ResponseStatusException(HttpStatus.NOT_FOUND,"La venta no existe"));
         validarSucursal(empresaId,permitidas,venta.getSucursalId());
         if(!"POR_COBRAR".equals(venta.getEstado()) || !"STAFF".equals(venta.getCanal()))
             throw new ResponseStatusException(HttpStatus.CONFLICT,"La venta ya no está pendiente de cobro");
-        String codigo=metodo==null?"":metodo.trim().toUpperCase(Locale.ROOT);
-        if(!contiene(METODOS_PAGO,codigo) || METODO_PAGO_POINT.equals(codigo)) throw badRequest("Selecciona un método de cobro directo válido");
+        if(request.sucursalId()!=null && !request.sucursalId().equals(venta.getSucursalId())) throw badRequest("La cuenta pertenece a otra sucursal");
+        var plan=PlanPagosVenta.resolver(venta.getTotal(),request,false);
         var sesion=sesiones.findByEmpresaIdAndSucursalIdAndEstado(empresaId,venta.getSucursalId(),ESTADO_SESION_ABIERTA)
             .orElseThrow(()->new ResponseStatusException(HttpStatus.CONFLICT,"Abre la caja de la sucursal para cobrar"));
         var filas=detalles.findByEmpresaIdAndVentaIdOrderByIdAsc(empresaId,ventaId);
@@ -390,13 +457,14 @@ public class ServicioVentasCaja {
             .collect(Collectors.toMap(VentaDetalleEntidad::getProductoId,VentaDetalleEntidad::getCantidad,BigDecimal::add));
         inventario.descontarVenta(empresaId,usuarioId,permitidas,venta.getSucursalId(),cantidades,venta.getFolio());
         venta.setCajaSesionId(sesion.getId()); venta.setEstado("PAGADA"); ventas.save(venta);
-        var pago=new PagoVentaEntidad(); pago.setEmpresaId(empresaId);pago.setVentaId(ventaId);pago.setCajaSesionId(sesion.getId());
-        pago.setMonto(venta.getTotal());pago.setMetodoPago(codigo);pago.setReferencia(limpiar(referencia));
-        pago.setRegistradoPorUsuarioId(usuarioId);pago.setRegistradoEn(LocalDateTime.now(reloj));pago=pagos.save(pago);
-        if(METODO_PAGO_EFECTIVO.equals(codigo)) registrarIngresoEfectivo(empresaId,usuarioId,sesion.getId(),venta,pago);
+        var registrados=new ArrayList<PagoVentaEntidad>();
+        for(var parte:plan.partes()) {
+            var pago=registrarParte(venta,parte,usuarioId);registrados.add(pago);
+            if(METODO_PAGO_EFECTIVO.equals(parte.metodoPago())) registrarIngresoEfectivo(empresaId,usuarioId,sesion.getId(),venta,pago);
+        }
         comisiones.registrar(venta,filas);
-        eventosPago.venta(venta, pago, filas, OrigenEventoCita.ADMIN, usuarioId);
-        return mapear(venta,pago,filas);
+        eventosPago.venta(venta,registrados.getFirst(),filas,OrigenEventoCita.ADMIN,usuarioId);
+        return mapearPagos(venta,registrados,filas);
     }
 
     private VentaDetalleEntidad detalleServicio(Long empresaId, Long ventaId, CitaEntidad cita, ServicioEntidad servicio, BigDecimal total, BigDecimal pagado) {
@@ -445,12 +513,18 @@ public class ServicioVentasCaja {
         m.setConcepto("Venta " + venta.getFolio()); m.setReferencia(pago.getReferencia()); m.setObservaciones(venta.getObservaciones());
         m.setRegistradoPorUsuarioId(usuarioId); m.setRegistradoEn(LocalDateTime.now(reloj)); movimientos.save(m);
     }
-    private VentaResponse mapear(VentaEntidad venta, PagoVentaEntidad pago, List<VentaDetalleEntidad> filas) {
+    private VentaResponse mapear(VentaEntidad venta,PagoVentaEntidad pago,List<VentaDetalleEntidad> filas) {
+        return mapearPagos(venta,pago==null?List.of():List.of(pago),filas);
+    }
+    private VentaResponse mapearPagos(VentaEntidad venta,List<PagoVentaEntidad> registrados,List<VentaDetalleEntidad> filas) {
+        var ordenados=registrados.stream().sorted(Comparator.comparing(PagoVentaEntidad::getRegistradoEn,Comparator.nullsLast(Comparator.naturalOrder())).reversed().thenComparing(PagoVentaEntidad::getId,Comparator.nullsLast(Comparator.reverseOrder()))).toList();
+        var pago=ordenados.isEmpty()?null:ordenados.getFirst();
         return new VentaResponse(venta.getId(), venta.getFolio(), venta.getSucursalId(), venta.getCitaId(), venta.getClienteId(), venta.getEstado(),
                 venta.getMoneda(), venta.getSubtotal(), venta.getDescuentoTotal(), venta.getImpuestosTotal(), venta.getTotal(),
-                pago == null ? null : pago.getMetodoPago(), pago == null ? null : pago.getReferencia(), de(venta.getCreadaEn()), venta.getCanal(),
+                ordenados.stream().map(PagoVentaEntidad::getMetodoPago).distinct().count()>1?"MIXTO":pago == null ? null : pago.getMetodoPago(), pago == null ? null : pago.getReferencia(), de(venta.getCreadaEn()), venta.getCanal(),
                 filas.stream().map(d -> new VentaResponse.DetalleVentaResponse(d.getId(), d.getTipoConcepto(), d.getProductoId(), d.getServicioId(),
-                        d.getCitaId(), d.getSku(), d.getNombre(), d.getCantidad(), d.getPrecioUnitario(), d.getDescuento(), d.getImpuestos(), d.getTotal(), d.getCostoUnitarioHistorico())).toList());
+                        d.getCitaId(), d.getSku(), d.getNombre(), d.getCantidad(), d.getPrecioUnitario(), d.getDescuento(), d.getImpuestos(), d.getTotal(), d.getCostoUnitarioHistorico())).toList(),
+                ordenados.stream().map(p -> new VentaResponse.PagoVentaResponse(p.getMetodoPago(),METODO_PAGO_POINT.equals(p.getMetodoPago())?"Tarjeta (Point)":METODOS_PAGO.stream().filter(m -> m.codigo().equals(p.getMetodoPago())).map(Opcion::etiqueta).findFirst().orElse(p.getMetodoPago()),p.getMonto(),p.getMontoRecibido(),p.getCambio(),p.getReferencia())).toList());
     }
     private void validarSucursal(Long empresaId, List<Long> permitidas, Long sucursalId) {
         if (sucursalId == null) throw badRequest("Selecciona una sucursal");

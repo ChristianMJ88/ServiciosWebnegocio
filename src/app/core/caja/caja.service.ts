@@ -26,6 +26,8 @@ export interface CatalogoCaja {
 export interface OpcionCaja {
   codigo: string;
   etiqueta: string;
+  esEfectivo?: boolean; esPoint?: boolean; requiereReferencia?: boolean; ayuda?: string | null;
+  denominaciones?: Record<string,number[]>;
 }
 
 export interface CajaSesion {
@@ -43,6 +45,7 @@ export interface CajaSesion {
 }
 
 export interface CitaPorCobrar {
+  cobroPointEnCurso?: boolean;
   clienteId: number;
   folio?: string | null;
   sucursalId?: number;
@@ -154,10 +157,13 @@ export interface RegistrarVentaPayload {
   citaId: number | null;
   clienteId: number | null;
   productos: ProductoVentaPayload[];
-  metodoPago: string;
+  metodoPago?: string | null;
+  pagos?: PagoVentaPayload[];
   referencia: string | null;
   observaciones: string | null;
 }
+export interface PagoVentaPayload {metodoPago:string; monto?:number|null; montoRecibido?:number|null; referencia?:string|null;}
+export interface PagoVentaCaja extends PagoVentaPayload {etiqueta:string;cambio:number|null;}
 export interface DetalleVentaCaja {
   id: number; tipoConcepto: 'SERVICIO' | 'PRODUCTO'; productoId: number | null; servicioId: number | null;
   citaId: number | null; sku: string | null; nombre: string; cantidad: number; precioUnitario: number;
@@ -166,16 +172,21 @@ export interface DetalleVentaCaja {
 export interface VentaCaja {
   id: number; folio: string; sucursalId: number; citaId: number | null; clienteId: number | null;
   estado: string; moneda: string; subtotal: number; descuentoTotal: number; impuestosTotal: number;
-  total: number; metodoPago: string; referencia: string | null; creadaEn: string; canal: 'CAJA' | 'ONLINE'; detalles: DetalleVentaCaja[];
+  total: number; metodoPago: string; referencia: string | null; creadaEn: string; canal: 'CAJA' | 'ONLINE'; detalles: DetalleVentaCaja[]; pagos?:PagoVentaCaja[];
 }
 
-export interface TerminalPointCaja { id: number; terminalId: string; nombre: string; modoOperacion: string | null; sucursalId: number; sucursalNombre: string; activa: boolean; }
+export interface TerminalPointCaja { id: number; terminalId: string; nombre: string; modoOperacion: string | null; sucursalId: number; sucursalNombre: string; activa: boolean; metodoPago?:OpcionCaja; }
 export interface OrdenPointCaja {
   id: string; ventaId: number; folioVenta: string; terminalId: number; terminalNombre: string;
   estado: string; detalleEstado: string | null; importe: number; moneda: string;
   proveedorOrdenId: string | null; proveedorPagoId: string | null; creadoEn: string | null; actualizadoEn: string | null;
   simulacionDisponible: boolean;
+  efectivoPrevisto?: number | null;
+  puedeReembolsar?: boolean;
+  puedeReintentar?:boolean;puedeResolver?:boolean;requiereRevision?:boolean;planInvalido?:boolean;
 }
+
+export interface ResolverPointPayload {cobrado:boolean;proveedorOrdenId:string|null;motivo:string;}
 
 @Injectable({
   providedIn: 'root'
@@ -272,6 +283,9 @@ export class CajaService {
     return this.http.post<VentaCaja>(`${environment.apiBaseUrl}/caja/ventas`, payload);
   }
 
+  comprobanteVenta(id:number): Observable<VentaCaja> {
+    return this.http.get<VentaCaja>(`${environment.apiBaseUrl}/caja/ventas/${id}`);
+  }
   listarVentas(sucursalId: number): Observable<VentaCaja[]> {
     return this.http.get<VentaCaja[]>(`${environment.apiBaseUrl}/caja/ventas`, {
       params: new HttpParams().set('sucursalId', sucursalId)
@@ -300,6 +314,8 @@ export class CajaService {
     });
   }
 
+  reintentarOrdenPoint(id:string):Observable<OrdenPointCaja>{return this.http.post<OrdenPointCaja>(`${environment.apiBaseUrl}/caja/point/ordenes/${id}/reintentar`,{});}
+  resolverOrdenPoint(id:string,payload:ResolverPointPayload):Observable<OrdenPointCaja>{return this.http.post<OrdenPointCaja>(`${environment.apiBaseUrl}/caja/point/ordenes/${id}/resolver`,payload);}
   cancelarOrdenPoint(id: string, idempotencia: string): Observable<OrdenPointCaja> {
     return this.http.post<OrdenPointCaja>(`${environment.apiBaseUrl}/caja/point/ordenes/${id}/cancelar`, {}, {
       headers: { 'Idempotency-Key': idempotencia }

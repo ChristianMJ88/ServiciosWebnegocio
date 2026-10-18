@@ -56,6 +56,11 @@ Spring Boot usa configuracion en:
 
 No hay `application.properties` porque en este backend se esta usando formato YAML.
 
+Hibernate usa `validate` por defecto (`JPA_DDL_AUTO`): Flyway es quien modifica el
+esquema. Si falta una columna, revisa las migraciones y no uses `update` para
+ocultar una migración pendiente. La entrega 010 incorpora V139 (partes previstas
+de Point y recibido/cambio de los pagos de venta).
+
 Si ya habias levantado Docker con una version distinta de MySQL, puede que necesites recrear el volumen:
 
 ```bash

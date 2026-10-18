@@ -28,7 +28,7 @@ class PendientesCitasCajaTest {
                 "hibernate.connection.driver_class","org.h2.Driver","hibernate.connection.url","jdbc:h2:mem:pendientes_005;MODE=MySQL",
                 "hibernate.hbm2ddl.auto","create-drop","hibernate.generate_statistics","true")).build();
         try(var factory=new MetadataSources(registro).addAnnotatedClass(CitaEntidad.class).addAnnotatedClass(PagoCitaEntidad.class)
-                .addAnnotatedClass(VentaEntidad.class).addAnnotatedClass(VentaDetalleEntidad.class).buildMetadata().buildSessionFactory();var em=factory.createEntityManager()) {
+                .addAnnotatedClass(VentaEntidad.class).addAnnotatedClass(VentaDetalleEntidad.class).addAnnotatedClass(com.techprotech.agenda.modulos.pagos.infraestructura.entidad.OrdenPointCajaEntidad.class).buildMetadata().buildSessionFactory();var em=factory.createEntityManager()) {
             em.getTransaction().begin();
             var hoy=cita("2026-10-15T10:00",7L,3L,"FINALIZADA",false);em.persist(hoy);
             var ayer=cita("2026-10-14T10:00",7L,3L,"FINALIZADA",false);em.persist(ayer);

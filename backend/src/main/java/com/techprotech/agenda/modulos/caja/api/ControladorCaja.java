@@ -39,10 +39,12 @@ import java.util.List;
 @RequiereModulo(CAJA)
 public class ControladorCaja {
 
+    private final com.techprotech.agenda.modulos.caja.aplicacion.ConfiguracionCobroCaja cobroConfig;
     private final ServicioCaja servicioCaja;
     private final ServicioVentasCaja servicioVentas;
 
-    public ControladorCaja(ServicioCaja servicioCaja, ServicioVentasCaja servicioVentas) {
+    public ControladorCaja(ServicioCaja servicioCaja, ServicioVentasCaja servicioVentas,com.techprotech.agenda.modulos.caja.aplicacion.ConfiguracionCobroCaja cobroConfig) {
+        this.cobroConfig=cobroConfig;
         this.servicioCaja = servicioCaja;
         this.servicioVentas = servicioVentas;
     }
@@ -60,6 +62,10 @@ public class ControladorCaja {
             @AuthenticationPrincipal UsuarioAutenticado usuario,
             @Valid @RequestBody com.techprotech.agenda.modulos.caja.api.dto.CotizacionCajaRequest request) {
         return servicioVentas.cotizarProductos(usuario.empresaId(), usuario.sucursalesPermitidas(), request);
+    }
+    @GetMapping("/ventas/{ventaId}")
+    public VentaResponse comprobante(@AuthenticationPrincipal UsuarioAutenticado usuario,@PathVariable Long ventaId) {
+        return servicioVentas.comprobante(usuario.empresaId(),usuario.sucursalesPermitidas(),ventaId);
     }
     @PostMapping("/ventas")
     @PreAuthorize("hasAuthority('CAJA_COBRAR')")
@@ -93,7 +99,9 @@ public class ControladorCaja {
             @AuthenticationPrincipal UsuarioAutenticado usuario,
             @RequestParam(required = false) Long sucursalId
     ) {
-        return servicioCaja.catalogo(usuario.empresaId(), usuario.sucursalesPermitidas(), sucursalId);
+        var c=servicioCaja.catalogo(usuario.empresaId(),usuario.sucursalesPermitidas(),sucursalId);
+        var metodos=c.metodosPago().stream().map(m -> new CatalogoCajaResponse.OpcionCajaResponse(m.codigo(),m.etiqueta(),m.esEfectivo(),m.esPoint(),m.requiereReferencia(),m.ayuda(),m.esEfectivo()?cobroConfig.getDenominaciones():java.util.Map.<String,java.util.List<java.math.BigDecimal>>of())).toList();
+        return new CatalogoCajaResponse(c.sucursalActivaId(),c.sucursales(),metodos,c.tiposMovimiento(),c.estadosSesion(),c.estadoSesionAbierta(),c.estadoSesionCerrada(),c.metodoPagoEfectivo());
     }
 
     @PostMapping("/sesiones/abrir")

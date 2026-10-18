@@ -8,7 +8,7 @@ import { CajaService, CitaPorCobrar } from '../../../core/caja/caja.service';
 import { crearFormularioPago } from '../forms/caja.forms';
 
 describe('Desglose pactado de promociones en Caja', () => {
-  function render(descuento: number) {
+  function render(descuento: number, conComprobante=false) {
     registerLocaleData(localeEsMx);
     TestBed.configureTestingModule({
       imports: [CajaPaymentsSectionComponent],
@@ -26,11 +26,16 @@ describe('Desglose pactado de promociones en Caja', () => {
       formularioPago: crearFormularioPago(), metodosPago: [], metodoPagoEfectivo: 'EFECTIVO',
       pagos: [], guardando: false, cajaAbierta: false, mensajeBloqueo: ''
     });
+    if(conComprobante)fixture.componentInstance.ventaCobrada.set({folio:'V-anterior',total:560,moneda:'MXN',detalles:[{id:1,nombre:'Cita liquidada',cantidad:1,total:560}]} as any);
     fixture.detectChanges();
     return fixture.nativeElement as HTMLElement;
   }
-  it('no envía varias citas a Point y muestra su limitación',()=>{
-    const crearOrdenPoint=vi.fn();TestBed.configureTestingModule({providers:[{provide:CajaService,useValue:{crearOrdenPoint}}]});const c=TestBed.runInInjectionContext(()=>new CajaPaymentsSectionComponent());const cita={citaId:1,clienteId:42,sucursalId:3,moneda:'MXN',pendiente:200} as CitaPorCobrar;Object.assign(c,{citaSeleccionada:cita,citas:[cita,{...cita,citaId:2}],sucursalId:3,formularioPago:crearFormularioPago(),cajaAbierta:true});c.alternarCita(2);c.cobrarConPoint();expect(crearOrdenPoint).not.toHaveBeenCalled();expect(c.errorPoint()).toContain('una sola cita');
+  it('envía varias citas compatibles a Point usando el saldo del backend',()=>{
+    const crearOrdenPoint=vi.fn(()=>of({id:'P-test',estado:'CREADO'}));TestBed.configureTestingModule({providers:[{provide:CajaService,useValue:{crearOrdenPoint}}]});
+    const c=TestBed.runInInjectionContext(()=>new CajaPaymentsSectionComponent());const cita={citaId:1,clienteId:42,sucursalId:3,moneda:'MXN',pendiente:200} as CitaPorCobrar;
+    Object.assign(c,{citaSeleccionada:cita,citas:[cita,{...cita,citaId:2}],sucursalId:3,formularioPago:crearFormularioPago(),cajaAbierta:true,terminalPointId:5});
+    (c as any).vigilarPoint=vi.fn();c.alternarCita(2);c.cobrarConPoint({pagos:[{metodoPago:'POINT_TEST',monto:null}],usaPoint:true,terminalId:5,observaciones:''});
+    expect(crearOrdenPoint).toHaveBeenCalledWith(5,expect.objectContaining({citaId:null,citaIds:[1,2],pagos:[{metodoPago:'POINT_TEST',monto:null}]}),expect.any(String));expect(c.errorPoint()).toBe('');
   });
   it('cobra varias citas compatibles por venta y conserva el pago parcial individual',()=>{
     const registrarVenta=vi.fn(()=>of({id:99,folio:'V-test',total:300,moneda:'MXN',detalles:[{id:1,nombre:'Uno',cantidad:1,total:200},{id:2,nombre:'Dos',cantidad:1,total:100}]}));
@@ -51,5 +56,9 @@ describe('Desglose pactado de promociones en Caja', () => {
   });
   it('conserva el contexto de cobro sin bloque de promoción cuando no hay descuento', () => {
     expect(render(0).querySelector('.caja-promotion-breakdown')).toBeNull();
+  });
+  it('el comprobante pagado no se mezcla con el contexto o el historial de la siguiente cita',()=>{
+    const vista=render(0,true);expect(vista.querySelector('app-venta-comprobante')?.textContent).toContain('Cita liquidada');expect(vista.querySelector('app-venta-comprobante')?.textContent).toContain('$560.00');
+    expect(vista.querySelector('.caja-payment-context')).toBeNull();expect(vista.querySelector('.caja-history')).toBeNull();
   });
 });

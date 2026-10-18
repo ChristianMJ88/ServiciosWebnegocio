@@ -31,7 +31,7 @@
         [citas]="citasPorCobrar()"
         [metodosPago]="metodosPago()"
         [cajaAbierta]="cajaAbierta()"
-        (saleCompleted)="ventaCompletada()" />
+        (saleCompleted)="ventaCompletada()" (pointStateChanged)="recargarTablero()" />
     }
 
     @if (vistaActiva() === 'cobros') {
@@ -51,6 +51,7 @@
         (selectAppointment)="seleccionarCita($event)"
         (savePayment)="registrarPago()"
         (pointPaymentCompleted)="cobroPointCompletado()"
+        (pointStateChanged)="recargarTablero()"
         (printReceipt)="imprimirComprobante()" />
     }
 

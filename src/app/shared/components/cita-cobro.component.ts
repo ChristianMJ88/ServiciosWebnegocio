@@ -13,7 +13,7 @@ import { DatosCobroCita, ETIQUETAS_COBRO } from '../../core/caja/cobro-cita.mode
           <strong>{{ etiquetas[estado] || estado }}</strong>
           @if (estado === 'PENDIENTE' || estado === 'PARCIAL') {
             <span>Saldo {{ datos().pendiente | appMoney:datos().moneda:2:2 }}</span>
-            @if (!datos().puedeCobrar) { <small>Queda saldo pendiente en Caja.</small> }
+            @if(datos().cobroPointEnCurso){<small>Cobro Point en curso</small>} @else if (!datos().puedeCobrar) { <small>Queda saldo pendiente en Caja.</small> }
           }
           @if (estado === 'PAGADA' || estado === 'PARCIAL') {
             <small>Pagado {{ datos().pagado | appMoney:datos().moneda:2:2 }}</small>

@@ -37,16 +37,20 @@ public class ServicioSaldoCitas {
         if(ids.isEmpty()) return Map.of();
         var caja=totales(pagos.sumarPagadoPorCitas(empresaId,ids));
         var venta=totales(ventas.sumarServiciosPagadosPorCitas(empresaId,ids));
-        return calcularSaldos(propias,caja,venta);
+        return calcularSaldos(propias,caja,venta,new HashSet<>(ventas.citasConPointEnCurso(empresaId,ids)));
     }
 
     /** Invocar en READ_COMMITTED después de bloquear las citas; evita bloqueos de hueco en tablas de pagos. */
     @Transactional(propagation = org.springframework.transaction.annotation.Propagation.MANDATORY)
     public Map<Long, SaldoCita> calcularBajoBloqueo(Long empresaId, Collection<CitaEntidad> bloqueadas) {
-        return calcular(empresaId,bloqueadas);
+        var resultado = calcular(empresaId,bloqueadas);
+        if (resultado.values().stream().anyMatch(SaldoCita::cobroPointEnCurso))
+            throw new ResponseStatusException(org.springframework.http.HttpStatus.CONFLICT,
+                    "Esta cita tiene un cobro en la terminal Point en curso. Espera a que termine o cancélalo en Cobros.");
+        return resultado;
     }
 
-    private Map<Long,SaldoCita> calcularSaldos(Collection<CitaEntidad> propias, Map<Long,BigDecimal> caja, Map<Long,BigDecimal> venta) {
+    private Map<Long,SaldoCita> calcularSaldos(Collection<CitaEntidad> propias, Map<Long,BigDecimal> caja, Map<Long,BigDecimal> venta, Set<Long> enCurso) {
         var resultado=new HashMap<Long,SaldoCita>();
         for(var cita:propias) {
             var precio=seguro(cita.getPrecio()).max(BigDecimal.ZERO);
@@ -62,7 +66,7 @@ public class ServicioSaldoCitas {
             else if(pendiente.signum()==0) estado=EstadoCobroCita.PAGADA;
             else if(pagado.signum()>0) estado=EstadoCobroCita.PARCIAL;
             else estado=EstadoCobroCita.PENDIENTE;
-            resultado.put(cita.getId(),new SaldoCita(precio,pagadoCaja,pagadoVenta,condonado,pendiente,estado));
+            resultado.put(cita.getId(),new SaldoCita(precio,pagadoCaja,pagadoVenta,condonado,pendiente,estado,enCurso.contains(cita.getId())));
         }
         return Map.copyOf(resultado);
     }

@@ -34,3 +34,4 @@
 .pos-payment>button[type=submit]{background:var(--caja-brand-dark)!important;color:white!important;border-radius:14px!important;font-family:var(--bs-body-font-family,Inter,system-ui,sans-serif)!important;box-shadow:0 8px 20px rgba(15,79,67,.15)}.pos-payment>button[type=submit]:disabled{background:#e1e7e4!important;color:#78847e!important;box-shadow:none}
 .pos-products{max-height:55dvh;overflow:auto;overscroll-behavior:contain;align-content:start;padding:2px 3px 8px}
 @media(max-width:767px){.pos-products{max-height:42dvh}}
+.pos-appointment{flex:0 0 230px;position:relative;align-items:flex-start;flex-wrap:wrap}.pos-appointment>small{flex-basis:100%;font-size:.7rem}.pos-appointment>span{flex:1;min-width:0}.pos-line.service{grid-template-columns:minmax(0,1fr) auto 44px;align-items:center}.pos-line.service>button{min-height:44px}

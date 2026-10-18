@@ -1,4 +1,5 @@
-import { VentaComprobanteComponent } from '../../../shared/components/venta-comprobante.component';
+import {ResolverPointPayload} from '../../../core/caja/caja.service';
+import {CajaCobroComponent,SolicitudCobro} from '../cobro/caja-cobro.component';
 import { CommonModule } from '@angular/common';
 import { Component, DestroyRef, EventEmitter, Input, OnChanges, Output, SimpleChanges, computed, effect, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -7,7 +8,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
-import { finalize, forkJoin, switchMap, takeWhile, timer } from 'rxjs';
+import { Subscription,finalize, forkJoin, switchMap, takeWhile, timer } from 'rxjs';
 import { CajaService, CitaPorCobrar, OpcionCaja, OrdenPointCaja, ProductoCaja, TerminalPointCaja, VentaCaja } from '../../../core/caja/caja.service';
 import { MoneyDisplayPipe } from '../../../shared/pipes/money-display.pipe';
 
@@ -16,7 +17,7 @@ interface LineaProducto { producto: ProductoCaja; cantidad: number; }
 @Component({
   selector: 'app-caja-sales-section',
   standalone: true,
-  imports: [VentaComprobanteComponent, CommonModule, FormsModule, MatButtonModule, MatFormFieldModule, MatInputModule, MatSelectModule, MoneyDisplayPipe],
+  imports: [CajaCobroComponent, CommonModule, FormsModule, MatButtonModule, MatFormFieldModule, MatInputModule, MatSelectModule, MoneyDisplayPipe],
   templateUrl: './caja-sales-section.component.html',
   styleUrl: './caja-sales-section.component.css'
 })
@@ -26,6 +27,7 @@ export class CajaSalesSectionComponent implements OnChanges {
   @Input({ required: true }) metodosPago!: OpcionCaja[];
   @Input({ required: true }) cajaAbierta!: boolean;
   @Output() saleCompleted = new EventEmitter<void>();
+  @Output() pointStateChanged = new EventEmitter<void>();
 
   private readonly caja = inject(CajaService);
   private readonly destroyRef = inject(DestroyRef);
@@ -38,11 +40,6 @@ export class CajaSalesSectionComponent implements OnChanges {
   seleccionarCuentaStaff(id:number){if(this.guardando())return;this.ventaStaffSeleccionada=id;this.verCuenta();}
   liberarCuentaStaff(){this.ventaStaffSeleccionada=null;this.vistaPos.set('catalogo');this.cuentaMovilAbierta.set(false);}
   abrirVistaPos(vista:'catalogo'|'staff'|'actividad'){if(this.guardando())return;if(vista==='catalogo')this.ventaStaffSeleccionada=null;this.vistaPos.set(vista);this.cuentaMovilAbierta.set(false);}
-  puedeCobrarCuenta(){
-    if(this.guardando()||!this.cajaAbierta||!this.metodoPago||(this.metodoPago==='MERCADO_PAGO_POINT'&&!this.terminalPointId))return false;
-    if(this.cuentaStaff())return true;
-    return !this.cotizando()&&(!this.lineas().length||!!this.cotizacion())&&!!(this.citaSeleccionada()||this.lineas().length);
-  }
   readonly productos = signal<ProductoCaja[]>([]);
   readonly ventas = signal<VentaCaja[]>([]);
   readonly comprobante = signal<VentaCaja | null>(null);
@@ -51,6 +48,8 @@ export class CajaSalesSectionComponent implements OnChanges {
   paginaStaff=0; readonly paginasStaff=signal(0);readonly totalStaff=signal(0);
   moverPaginaStaff(delta:number){if(this.guardando())return;this.paginaStaff+=delta;this.ventaStaffSeleccionada=null;this.cargar();}
   readonly terminalesPoint = signal<TerminalPointCaja[]>([]);
+  private pointPoll?:Subscription;
+  readonly accionPointEnCurso=signal(false);
   readonly ordenPoint = signal<OrdenPointCaja | null>(null);
   readonly historialPoint = signal<OrdenPointCaja[]>([]);
   readonly lineas = signal<LineaProducto[]>([]);
@@ -136,67 +135,44 @@ export class CajaSalesSectionComponent implements OnChanges {
     requestAnimationFrame(() => document.getElementById('caja-resumen-venta')?.scrollIntoView({ behavior: 'smooth', block: 'start' }));
   }
 
-  cobrarCuentaStaff():void {
-    if(!this.ventaStaffSeleccionada || !this.cajaAbierta || !this.metodoPago || this.guardando())return;
-    if(this.metodoPago==='MERCADO_PAGO_POINT'){this.cobrarCuentaStaffPoint();return;}
-    this.guardando.set(true);this.error.set('');
-    this.caja.cobrarVentaStaff(this.ventaStaffSeleccionada,this.metodoPago,this.referencia.trim()||null)
-      .pipe(finalize(()=>this.guardando.set(false)),takeUntilDestroyed(this.destroyRef)).subscribe({
-        next:v=>{this.ventaStaffSeleccionada=null;this.mensaje.set(`Cuenta ${v.folio} cobrada.`);this.saleCompleted.emit();this.cargar();},
-        error:e=>this.error.set(e.error?.detail||'No se pudo cobrar la cuenta.')
-      });
+  get bloqueoPanel(){return !this.cajaAbierta?'Abre la caja de esta sucursal para cobrar.':this.citasSeleccionadas().some(c=>c.cobroPointEnCurso)?'Esta cuenta tiene un cobro Point en curso. Retómalo en Actividad.':this.cotizando()?'Calculando el total…':!this.cuentaStaff() && this.lineas().length && !this.cotizacion()?'Espera la cotización del servidor.':'';}
+  confirmarPanel(s:SolicitudCobro){
+    if(this.guardando() || this.bloqueoPanel || !this.sucursalId)return;
+    const payload={sucursalId:this.sucursalId,citaId:null,citaIds:this.citaIds(),clienteId:null,productos:this.lineas().map(l=>({productoId:l.producto.id,cantidad:l.cantidad})),pagos:s.pagos,referencia:null,observaciones:s.observaciones||null,...(this.ventaStaffSeleccionada?{ventaPendienteId:this.ventaStaffSeleccionada}: {})};
+    this.guardando.set(true);this.error.set('');this.mensaje.set('');this.ordenPoint.set(null);
+    if(s.usaPoint && s.terminalId){this.caja.crearOrdenPoint(s.terminalId,payload,crypto.randomUUID()).subscribe({next:o=>{this.ordenPoint.set(o);if(this.esEstadoFinalPoint(o.estado))this.finalizarPoint(o);else this.vigilarPoint(o.id);},error:e=>{this.guardando.set(false);this.error.set(e.error?.mensaje||e.error?.detail||'No se pudo enviar a la terminal.');}});return;}
+    this.caja.registrarVenta(payload).pipe(finalize(()=>this.guardando.set(false)),takeUntilDestroyed(this.destroyRef)).subscribe({next:v=>{this.comprobante.set(v);this.lineas.set([]);this.citaIds.set([]);this.ventaStaffSeleccionada=null;this.saleCompleted.emit();this.cargar();},error:e=>this.error.set(e.error?.mensaje||e.error?.detail||'No se pudo cobrar la cuenta.')});
+  }
+  private finalizarPoint(o:OrdenPointCaja){
+    this.pointPoll?.unsubscribe();
+    this.ordenPoint.set(o);this.guardando.set(false);
+    if(o.requiereRevision){this.error.set(o.detalleEstado||'Pago aprobado con incidencia. Revisa la conciliación.');return;}
+    if(o.estado==='APROBADO'){
+      this.caja.comprobanteVenta(o.ventaId).subscribe({next:v=>{this.comprobante.set(v);this.lineas.set([]);this.citaIds.set([]);this.ventaStaffSeleccionada=null;this.saleCompleted.emit();this.cargar();},error:()=>this.error.set('Pago aprobado. Consulta el comprobante en Actividad.')});
+    }else{
+      this.pointStateChanged.emit();
+      const efectivo=Number(o.efectivoPrevisto||0);
+      this.error.set('La tarjeta no se aprobó.'+(efectivo>0?' No se registró el efectivo de '+new Intl.NumberFormat('es-MX',{style:'currency',currency:o.moneda,currencyDisplay:'narrowSymbol'}).format(efectivo)+': devuélvelo o cobra el total con otro método.':' Puedes cobrar el total con otro método.'));
+    }
   }
 
-  cobrarCuentaStaffPoint():void {
-    if(!this.terminalPointId||!this.sucursalId||!this.ventaStaffSeleccionada)return;
-    this.guardando.set(true);this.error.set('');this.ordenPoint.set(null);
-    this.caja.crearOrdenPoint(this.terminalPointId,{sucursalId:this.sucursalId,citaId:null,clienteId:null,productos:[],metodoPago:'MERCADO_PAGO_POINT',referencia:null,observaciones:null,ventaPendienteId:this.ventaStaffSeleccionada},crypto.randomUUID()).subscribe({
-      next:o=>{this.ordenPoint.set(o);this.mensaje.set('Cuenta enviada a la terminal. Esperando el pago.');this.vigilarPoint(o.id);},
-      error:e=>{this.guardando.set(false);this.error.set(e.error?.detail||'No se pudo enviar a la terminal.');}
-    });
-  }
-
-  cobrar(): void {
-    if (!this.sucursalId || this.cotizando() || (this.lineas().length && !this.cotizacion()) || (!this.citaIds().length && !this.lineas().length) || !this.metodoPago || !this.cajaAbierta) return;
-    if (this.metodoPago === 'MERCADO_PAGO_POINT') { this.cobrarConPoint(); return; }
-    this.guardando.set(true); this.error.set(''); this.mensaje.set('');
-    this.caja.registrarVenta({
-      sucursalId: this.sucursalId, citaId: null, citaIds: this.citaIds(), clienteId: null,
-      productos: this.lineas().map(item => ({ productoId: item.producto.id, cantidad: item.cantidad })),
-      metodoPago: this.metodoPago, referencia: this.referencia.trim() || null, observaciones: this.observaciones.trim() || null
-    }).pipe(finalize(() => this.guardando.set(false))).subscribe({
-      next: venta => {
-        this.comprobante.set(venta);
-        this.lineas.set([]); this.citaIds.set([]); this.referencia = ''; this.observaciones = '';
-        this.mensaje.set(`Venta ${venta.folio} cobrada correctamente.`); this.ventas.update(items => [venta, ...items]);
-        this.saleCompleted.emit(); this.cargar();
-      },
-      error: error => this.error.set(error?.error?.mensaje || error?.error?.detail || error?.error?.message || 'No fue posible registrar la venta.')
-    });
-  }
-
-  cobrarConPoint(): void {
-    if (!this.sucursalId || !this.terminalPointId || this.guardando() || this.cotizando() || (this.lineas().length && !this.cotizacion())) return;
-    this.guardando.set(true); this.error.set(''); this.mensaje.set(''); this.ordenPoint.set(null);
-    const venta = this.payloadVenta('MERCADO_PAGO_POINT');
-    this.caja.crearOrdenPoint(this.terminalPointId, venta, crypto.randomUUID()).subscribe({
-      next: orden => { this.ordenPoint.set(orden); this.mensaje.set('La cuenta fue enviada a la terminal. Esperando el pago…'); this.vigilarPoint(orden.id); },
-      error: error => { this.guardando.set(false); this.error.set(error?.error?.mensaje || error?.error?.detail || error?.error?.message || 'No fue posible enviar el cobro a la terminal.') }
-    });
-  }
+  reintentarPoint():void {const o=this.ordenPoint();if(!o?.puedeReintentar || this.accionPointEnCurso())return;this.accionPointEnCurso.set(true);this.caja.reintentarOrdenPoint(o.id).pipe(finalize(()=>this.accionPointEnCurso.set(false))).subscribe({next:o=>{this.ordenPoint.set(o);if(this.esEstadoFinalPoint(o.estado))this.finalizarPoint(o);else this.vigilarPoint(o.id);},error:e=>this.error.set(e.error?.mensaje||'No se pudo consultar el mismo envío.')});}
+  resolverPoint(r:ResolverPointPayload):void {const o=this.ordenPoint();if(!o?.puedeResolver || this.accionPointEnCurso())return;this.accionPointEnCurso.set(true);this.caja.resolverOrdenPoint(o.id,r).pipe(finalize(()=>this.accionPointEnCurso.set(false))).subscribe({next:o=>{this.ordenPoint.set(o);if(this.esEstadoFinalPoint(o.estado))this.finalizarPoint(o);else this.vigilarPoint(o.id);},error:e=>this.error.set(e.error?.mensaje||'No se pudo resolver la orden.')});}
 
   cancelarPoint(): void {
     const orden = this.ordenPoint();
     if (!orden || this.esEstadoFinalPoint(orden.estado)) return;
     this.caja.cancelarOrdenPoint(orden.id, crypto.randomUUID()).subscribe({
-      next: actualizada => { this.ordenPoint.set(actualizada); this.guardando.set(false); this.mensaje.set('La orden Point fue cancelada.'); this.cargar(); },
-      error: error => this.error.set(error?.error?.detail || 'No fue posible cancelar la orden Point.')
+      next: actualizada => this.finalizarPoint(actualizada),
+      error: error => this.error.set(error?.error?.mensaje || error?.error?.detail || 'No fue posible cancelar la orden Point.')
     });
   }
 
   continuarOrdenPoint(orden: OrdenPointCaja): void {
-    if (this.esEstadoFinalPoint(orden.estado) || this.guardando()) return;
+    if ((this.esEstadoFinalPoint(orden.estado) && !orden.requiereRevision) || this.guardando()) return;
+    this.vistaPos.set('catalogo');this.cuentaMovilAbierta.set(true);
     this.ordenPoint.set(orden); this.guardando.set(true); this.error.set('');
+    if(this.esEstadoFinalPoint(orden.estado)){this.guardando.set(false);return;}
     this.mensaje.set('Cobro pendiente recuperado. Completa la operación en la terminal o usa la simulación de pruebas.');
     this.vigilarPoint(orden.id);
   }
@@ -210,7 +186,7 @@ export class CajaSalesSectionComponent implements OnChanges {
         this.ordenPoint.set(actualizada);
         this.mensaje.set('Mercado Pago recibió el pago simulado. Estamos conciliando la venta…');
       },
-      error: error => this.error.set(error?.error?.detail || 'No fue posible simular la aprobación de Point.')
+      error: error => this.error.set(error?.error?.mensaje || error?.error?.detail || 'No fue posible simular la aprobación de Point.')
     });
   }
 
@@ -222,41 +198,29 @@ export class CajaSalesSectionComponent implements OnChanges {
         this.historialPoint.update(items => items.map(item => item.id === actualizada.id ? actualizada : item));
         this.mensaje.set(`El cobro de ${actualizada.folioVenta} fue reembolsado y conciliado.`); this.cargar();
       },
-      error: error => this.error.set(error?.error?.detail || 'No fue posible reembolsar el cobro Point.')
+      error: error => this.error.set(error?.error?.mensaje || error?.error?.detail || 'No fue posible reembolsar el cobro Point.')
     });
   }
 
   private vigilarPoint(id: string): void {
-    timer(2000, 3000).pipe(
+    this.pointPoll?.unsubscribe();
+    this.guardando.set(true);
+    this.pointPoll=timer(2000, 3000).pipe(
       switchMap(() => this.caja.consultarOrdenPoint(id)),
-      takeWhile(orden => !this.esEstadoFinalPoint(orden.estado), true),
+      takeWhile(orden => !this.esEstadoFinalPoint(orden.estado) && orden.estado!=='REQUIERE_REVISION', true),
       takeUntilDestroyed(this.destroyRef),
       finalize(() => this.guardando.set(false))
     ).subscribe({
       next: orden => {
         this.ordenPoint.set(orden);
-        if (orden.estado === 'APROBADO') {
-          this.lineas.set([]); this.citaIds.set([]); this.referencia = ''; this.observaciones = '';
-          this.ventaStaffSeleccionada=null; this.mensaje.set(`Pago aprobado en ${orden.terminalNombre}. Venta ${orden.folioVenta} conciliada.`);
-          this.saleCompleted.emit(); this.cargar();
-        } else if (this.esEstadoFinalPoint(orden.estado)) {
-          this.error.set(`El cobro Point terminó con estado ${orden.estado.toLowerCase()}.`); this.cargar();
-        }
+        if(this.esEstadoFinalPoint(orden.estado))this.finalizarPoint(orden);
       },
-      error: error => { this.guardando.set(false); this.error.set(error?.error?.detail || 'No fue posible consultar el estado de la terminal.') }
+      error: error => { this.guardando.set(false); this.error.set(error?.error?.mensaje || error?.error?.detail || 'No fue posible consultar el estado de la terminal.') }
     });
   }
 
   private esEstadoFinalPoint(estado: string): boolean {
     return ['APROBADO', 'CANCELADO', 'RECHAZADO', 'EXPIRADO', 'REEMBOLSADO'].includes(estado);
-  }
-
-  private payloadVenta(metodoPago: string) {
-    return {
-      sucursalId: this.sucursalId!, citaId: null, citaIds: this.citaIds(), clienteId: null,
-      productos: this.lineas().map(item => ({ productoId: item.producto.id, cantidad: item.cantidad })),
-      metodoPago, referencia: this.referencia.trim() || null, observaciones: this.observaciones.trim() || null
-    };
   }
 
   private cargar(): void {
@@ -268,7 +232,7 @@ export class CajaSalesSectionComponent implements OnChanges {
           this.pendientesStaff.set(pendientesStaff.content);this.paginasStaff.set(pendientesStaff.totalPages);this.totalStaff.set(pendientesStaff.totalElements); this.productos.set(catalogo.productos ?? []); this.ventas.set(ventas ?? []); this.terminalesPoint.set(terminales ?? []); this.historialPoint.set(ordenesPoint ?? []);
           if (!terminales.some(item => item.id === this.terminalPointId)) this.terminalPointId = terminales[0]?.id ?? null;
         },
-        error: error => this.error.set(error?.error?.detail || 'No fue posible cargar el punto de venta.')
+        error: error => this.error.set(error?.error?.mensaje || error?.error?.detail || 'No fue posible cargar el punto de venta.')
       });
   }
 }

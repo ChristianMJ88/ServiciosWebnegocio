@@ -31,6 +31,7 @@ public final class CatalogosCaja {
         return opciones.stream().anyMatch(opcion -> opcion.codigo().equals(codigo));
     }
 
-    public record Opcion(String codigo, String etiqueta) {
+    public record Opcion(String codigo, String etiqueta,boolean requiereReferencia) {
+        public Opcion(String codigo,String etiqueta){this(codigo,etiqueta,false);}
     }
 }

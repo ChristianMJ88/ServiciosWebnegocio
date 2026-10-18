@@ -26,7 +26,7 @@ class ReporteCobroCitasTest {
                 "hibernate.hbm2ddl.auto","create-drop")).build();
         var anterior=TimeZone.getDefault();TimeZone.setDefault(TimeZone.getTimeZone("America/Mexico_City"));
         try(var factory=new MetadataSources(registro).addAnnotatedClass(CitaEntidad.class).addAnnotatedClass(PagoCitaEntidad.class)
-                .addAnnotatedClass(VentaEntidad.class).addAnnotatedClass(VentaDetalleEntidad.class).addAnnotatedClass(PagoVentaEntidad.class)
+                .addAnnotatedClass(VentaEntidad.class).addAnnotatedClass(VentaDetalleEntidad.class).addAnnotatedClass(com.techprotech.agenda.modulos.pagos.infraestructura.entidad.OrdenPointCajaEntidad.class).addAnnotatedClass(PagoVentaEntidad.class)
                 .buildMetadata().buildSessionFactory();var em=factory.createEntityManager()) {
             em.getTransaction().begin();
             var vieja=PendientesCitasCajaTest.cita("2026-04-01T10:00",7L,3L,"FINALIZADA",false);em.persist(vieja);
