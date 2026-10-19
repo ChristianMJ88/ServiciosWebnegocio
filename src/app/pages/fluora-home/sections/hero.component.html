@@ -1,0 +1,15 @@
+<section class="fl-home-hero fl-container" aria-labelledby="home-title">
+  <div class="fl-home-hero-copy">
+    <p class="fl-kicker">{{content.kicker}}</p>
+    <h1 id="home-title">{{content.title}}</h1>
+    <p class="fl-home-hero-lead">{{content.lead}}</p>
+    <div class="fl-home-hero-actions"><a class="fl-button" [href]="offer.href()" (click)="offer.signup()">{{offer.label()}} <i class="bi bi-arrow-up-right" aria-hidden="true"></i></a><a class="fl-home-hero-secondary" href="#como-funciona">{{content.secondary}} <i class="bi bi-arrow-down" aria-hidden="true"></i></a></div>
+    <p class="fl-home-hero-reassurance">@if(offer.recommended();as plan){@if(plan.diasPrueba>0){Prueba sin tarjeta · }}{{content.reassurance}}</p>
+    <nav class="fl-home-hero-verticals" aria-label="Fluora para tu tipo de negocio">@for(vertical of verticals();track vertical.slug){<a [href]="href(vertical.slug)">{{label(vertical.titulo)}}</a>}</nav>
+  </div>
+  <div class="fl-home-hero-preview" role="group" aria-label="Vista ilustrativa de una agenda, sin datos de clientes">
+    <div class="fl-home-preview-heading"><span class="fl-home-preview-icon"><i class="bi bi-calendar2-week" aria-hidden="true"></i></span><div><strong>Todo en tu agenda</strong><span>Servicios · Equipo · Clientes</span></div><span class="fl-home-preview-caption">Vista ilustrativa</span></div>
+    <div class="fl-home-agenda-preview" aria-hidden="true"><div class="fl-home-agenda-lines"><span></span><span></span><span></span><span></span></div><div class="fl-home-agenda-entry"><span class="fl-home-entry-icon"><i class="bi bi-scissors"></i></span><div><strong>Servicio reservado</strong><span>Con el integrante asignado</span></div><i class="bi bi-check2"></i></div><div class="fl-home-agenda-entry fl-home-muted-entry"><span class="fl-home-entry-icon"><i class="bi bi-bag"></i></span><div><strong>Pedido de productos</strong><span>Listo para dar seguimiento</span></div><i class="bi bi-arrow-up-right"></i></div></div>
+    <div class="fl-home-preview-footer"><i class="bi bi-link-45deg" aria-hidden="true"></i><span>Tu sitio y tu operación, conectados.</span></div>
+  </div>
+</section>

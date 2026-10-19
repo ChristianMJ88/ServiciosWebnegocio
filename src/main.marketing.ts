@@ -1,3 +1,5 @@
+import { provideEnvironmentInitializer } from '@angular/core';
+import { prepareMarketingHome } from './app/core/marketing/marketing-bootstrap';
 import { registerLocaleData } from '@angular/common';
 import localeEs from '@angular/common/locales/es';
 import localeEsMx from '@angular/common/locales/es-MX';
@@ -9,5 +11,6 @@ import { marketingRoutes } from './app/app.routes.marketing';
 registerLocaleData(localeEs);
 registerLocaleData(localeEsMx);
 
-bootstrapApplication(App, createAppConfig(marketingRoutes))
+const config=createAppConfig(marketingRoutes);
+bootstrapApplication(App,{...config,providers:[...config.providers,provideEnvironmentInitializer(prepareMarketingHome)]})
   .catch((err) => console.error(err));

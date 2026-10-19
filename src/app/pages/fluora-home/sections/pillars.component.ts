@@ -1,0 +1,4 @@
+import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { HOME_CONTENT } from '../fluora-home.content';
+@Component({selector:'app-home-pillars',standalone:true,template:`<section class="fl-container fl-home-pillars" aria-labelledby="pillars-title"><h2 class="visually-hidden" id="pillars-title">Herramientas conectadas para tu negocio</h2>@for(pillar of pillars;track pillar.title){<article><i [class]="'bi '+pillar.icon" aria-hidden="true"></i><div><h3>{{pillar.title}}</h3><p>{{pillar.description}}</p></div></article>}<p class="fl-home-availability">Herramientas según tu plan. <a href="#planes">Ver planes</a></p></section>`,styleUrl:'./pillars.component.css',changeDetection:ChangeDetectionStrategy.OnPush})
+export class HomePillarsComponent {readonly pillars=HOME_CONTENT.pillars;}

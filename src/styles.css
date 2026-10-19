@@ -4,6 +4,8 @@
 @import './app/pages/admin-dashboard/site/admin-site-section.component.css';
 @import './app/pages/admin-dashboard/admin-shell.css';
 @import './app/shared/styles/operation-workspace.css';
+@import './app/shared/styles/marketing-tokens.css';
+@import './app/shared/styles/tenant-fonts.css';
 
 /* Global visual system */
 :root {

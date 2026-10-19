@@ -1,5 +1,5 @@
 import { MarketingTrackingService } from '../../core/marketing/marketing-tracking.service';
-import { Component, DestroyRef, ElementRef, ViewChild, inject, signal } from '@angular/core';
+import { Component, ElementRef, inject, signal } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { LandingMarketingService, MarketingLanding } from '../../core/marketing/landing-marketing.service';
@@ -15,14 +15,6 @@ export class FluoraVerticalComponent {
  readonly host=inject(PlatformHostService);
  private readonly element=inject<ElementRef<HTMLElement>>(ElementRef);
  private readonly seo=inject(SeoService);
- readonly showSticky=signal(false);
- private actionObserver?:IntersectionObserver;
- @ViewChild('primaryAction') set primaryAction(ref:ElementRef<HTMLAnchorElement>|undefined){
-  this.actionObserver?.disconnect();
-  if(!ref||typeof IntersectionObserver==='undefined')return;
-  this.actionObserver=new IntersectionObserver(([entry])=>this.showSticky.set(!entry.isIntersecting),{threshold:0});
-  this.actionObserver.observe(ref.nativeElement);
- }
  readonly landing=signal<MarketingLanding|null>(null);
  readonly plans=signal<PlanPublicoFluora[]>([]);
  readonly failed=signal(false);
@@ -32,7 +24,6 @@ export class FluoraVerticalComponent {
  get registrationHref(){return this.tracking.registrationUrl(this.host.appUrl('/registro'));}
  signupClick(){this.tracking.emit('signup_click');}
  constructor(){
-  inject(DestroyRef).onDestroy(()=>this.actionObserver?.disconnect());
   const slug=inject(ActivatedRoute).snapshot.data['vertical'] as string;
   inject(LandingMarketingService).publica(slug).pipe(takeUntilDestroyed()).subscribe({
    next:l=>{this.tracking.capture(globalThis.location.search,l.slug);this.tracking.emit('landing_view');this.landing.set(l);this.loading.set(false);this.seo.applyLanding(l);},

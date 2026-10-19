@@ -9,7 +9,7 @@
 }
 
 .legal-shell {
-  width: min(100% - 2rem, 920px);
+  width: min(calc(100% - 2rem - env(safe-area-inset-left) - env(safe-area-inset-right)), 920px);
   margin: 0 auto;
   padding: 1.5rem 0 3rem;
 }
@@ -114,7 +114,7 @@ li {
 
 @media (max-width: 560px) {
   .legal-shell {
-    width: min(100% - 1rem, 920px);
+    width: min(calc(100% - 1rem - env(safe-area-inset-left) - env(safe-area-inset-right)), 920px);
     padding-top: .75rem;
   }
 

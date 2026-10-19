@@ -1,10 +1,11 @@
+import { SupportEditorComponent } from './support-editor.component';
 import { Component, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { LandingMarketingService, MarketingLanding } from '../../core/marketing/landing-marketing.service';
 import { PlatformHostService } from '../../core/platform/platform-host.service';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-@Component({selector:'app-platform-marketing',standalone:true,imports:[FormsModule,RouterLink],
+@Component({selector:'app-platform-marketing',standalone:true,imports:[FormsModule,RouterLink,SupportEditorComponent],
  templateUrl:'./platform-marketing.component.html',styleUrl:'./platform-marketing.component.css'})
 export class PlatformMarketingComponent {
  private readonly api=inject(LandingMarketingService);

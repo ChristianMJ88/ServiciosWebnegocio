@@ -231,7 +231,7 @@
     #080c14;
 }
 .site-footer--marketing::before { content: ''; position: absolute; inset: 0 0 auto; height: 1px; background: linear-gradient(90deg, transparent, rgba(255,255,255,.14), transparent); }
-.site-footer--marketing .footer-shell { width: min(100% - 3rem, 1200px); }
+.site-footer--marketing .footer-shell { width: min(calc(100% - 3rem - env(safe-area-inset-left) - env(safe-area-inset-right)), 1200px); }
 .site-footer--marketing .footer-grid { grid-template-columns: minmax(280px, 1.8fr) repeat(2, minmax(135px, .65fr)) minmax(200px, .85fr); gap: clamp(2.5rem, 5vw, 5.5rem); align-items: start; }
 .site-footer--marketing .footer-brand-panel,
 .site-footer--marketing .footer-links-panel {
@@ -249,7 +249,7 @@
 .site-footer--marketing .footer-copy { max-width: 34rem; margin: 0; color: #8e9bad; font-size: .88rem; line-height: 1.8; }
 .site-footer--marketing .footer-brand-title,
 .site-footer--marketing .footer-title { color: #fff; }
-.site-footer--marketing .footer-title { margin-bottom: 1.35rem; color: #dce4ef; font-size: .72rem; letter-spacing: .1em; }
+.site-footer--marketing .footer-title { margin-bottom: 1.35rem; color: #dce4ef; font-size: 12px; letter-spacing: .1em; }
 .site-footer--marketing .footer-brand-copy,
 .site-footer--marketing .footer-copy,
 .site-footer--marketing .footer-bottom p,
@@ -265,7 +265,7 @@
 .site-footer--marketing .footer-contact-list i { color: #718096; }
 .site-footer--marketing .footer-bottom { margin-top: clamp(3.5rem, 7vw, 6rem); padding-top: 1.5rem; border-top-color: rgba(255,255,255,.08); }
 .site-footer--marketing .footer-bottom p,
-.site-footer--marketing .footer-bottom-link { font-size: .74rem; }
+.site-footer--marketing .footer-bottom-link { font-size: 12px; }
 
 @media (max-width: 991.98px) {
   .site-footer--marketing .footer-grid { grid-template-columns: minmax(0, 1.5fr) repeat(3, minmax(120px, 1fr)); gap: 2.5rem 2rem; }
@@ -273,7 +273,7 @@
 
 @media (max-width: 767.98px) {
   .site-footer--marketing { padding-top: 4rem; }
-  .site-footer--marketing .footer-shell { width: min(100% - 2rem, 560px); }
+  .site-footer--marketing .footer-shell { width: min(calc(100% - 2rem - env(safe-area-inset-left) - env(safe-area-inset-right)), 560px); }
   .site-footer--marketing .footer-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 2.75rem 1.5rem; }
   .site-footer--marketing .footer-brand-panel { grid-column: 1 / -1; }
   .site-footer--marketing .footer-copy { max-width: 30rem; }
@@ -310,3 +310,26 @@
 @media (max-width: 991.98px) { .site-footer:not(.site-footer--marketing) { padding-bottom: calc(10rem + env(safe-area-inset-bottom)); } .site-footer:not(.site-footer--marketing) .footer-grid { gap: 1.5rem; } }
 @media (max-width: 767.98px) { .site-footer:not(.site-footer--marketing) .footer-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } .site-footer:not(.site-footer--marketing) .footer-brand-panel { grid-column: 1 / -1; } }
 @media (max-width: 399.98px) { .site-footer:not(.site-footer--marketing) .footer-grid, .site-footer:not(.site-footer--marketing) .footer-grid.footer-grid--two { grid-template-columns: minmax(0, 1fr); } .site-footer:not(.site-footer--marketing) .footer-links-list { display: flex; flex-wrap: wrap; gap: 0 1.25rem; } }
+
+[data-fluora-support] a,[data-fluora-support] span{overflow-wrap:anywhere;min-width:0}
+
+/* Compact Fluora footer: keep every destination reachable on a phone. */
+.site-footer--marketing{font-family:'Fluora Marketing Manrope',system-ui,sans-serif}
+@media(max-width:767.98px){
+  .site-footer--marketing{padding-top:36px}
+  .site-footer--marketing .footer-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:28px 20px}
+  .site-footer--marketing .footer-brand-panel{grid-column:1/-1}
+  .site-footer--marketing .footer-brand-row{margin-bottom:12px}
+  .site-footer--marketing .footer-brand-row>div{margin-top:12px}
+  .site-footer--marketing .footer-wordmark{width:150px}
+  .site-footer--marketing .footer-copy{font-size:13px;line-height:1.7}
+  .site-footer--marketing .footer-title{font-size:12px;margin-bottom:8px}
+  .site-footer--marketing .footer-links-list{gap:0}
+  .site-footer--marketing .footer-link{display:inline-flex;align-items:center;min-height:44px;font-size:13px;overflow-wrap:anywhere}
+  .site-footer--marketing [data-fluora-support]{grid-column:1/-1}
+  .site-footer--marketing .footer-contact-list{gap:8px}
+  .site-footer--marketing .footer-contact-list span{font-size:12px;line-height:1.7}
+  .site-footer--marketing .footer-bottom{margin-top:28px;padding-top:20px;gap:14px}
+  .site-footer--marketing .footer-bottom p,.site-footer--marketing .footer-bottom-link{font-size:12px}
+  .site-footer--marketing .footer-bottom-link{display:inline-flex;align-items:center;min-height:44px}
+}

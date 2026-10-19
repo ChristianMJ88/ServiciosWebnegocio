@@ -1,3 +1,4 @@
+import { shareReplay } from 'rxjs';
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../environments/environment';
@@ -15,7 +16,10 @@ export interface MarketingLanding {
 @Injectable({providedIn:'root'})
 export class LandingMarketingService {
  private readonly http=inject(HttpClient);
- navegacion(){return this.http.get<{slug:string;titulo:string;descripcion:string}[]>(environment.apiBaseUrl+'/publico/marketing/landings/navegacion');}
+ private navRequest?:ReturnType<LandingMarketingService['requestNavigation']>;
+ private navExpires=0;
+ private requestNavigation(){return this.http.get<{slug:string;titulo:string;descripcion:string}[]>(environment.apiBaseUrl+'/publico/marketing/landings/navegacion').pipe(shareReplay({bufferSize:1,refCount:true}));}
+ navegacion(){if(!this.navRequest||Date.now()>=this.navExpires){this.navRequest=this.requestNavigation();this.navExpires=Date.now()+60_000;}return this.navRequest;}
  publica(slug:string){return this.http.get<MarketingLanding>(environment.apiBaseUrl+'/publico/marketing/landings/'+encodeURIComponent(slug));}
  listar(){return this.http.get<MarketingLanding[]>(environment.apiBaseUrl+'/plataforma/marketing/landings');}
  guardar(landing:MarketingLanding){return this.http.put<MarketingLanding>(environment.apiBaseUrl+'/plataforma/marketing/landings/'+encodeURIComponent(landing.slug),landing);}

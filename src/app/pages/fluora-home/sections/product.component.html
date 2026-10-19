@@ -1,0 +1,17 @@
+<section class="fl-container fl-section" aria-labelledby="product-title">
+  <div class="fl-heading"><p class="fl-kicker">Conoce Fluora</p><h2 id="product-title">Todo tu negocio, conectado.</h2></div>
+  <div class="fl-home-product-tabs" role="tablist" aria-label="Herramientas de Fluora">@for(tab of tabs;track tab.id;let index=$index){<button type="button" role="tab" [id]="'product-tab-'+tab.id" [attr.aria-controls]="'product-panel-'+tab.id" [attr.aria-selected]="selected()===index" [tabIndex]="selected()===index?0:-1" (click)="select(index)" (keydown)="keydown($event,index)"><i [class]="'bi '+tab.icon" aria-hidden="true"></i>{{tab.label}}</button>}</div>
+  @for(tab of tabs;track tab.id;let index=$index){<div role="tabpanel" class="fl-home-product-panel" [id]="'product-panel-'+tab.id" [attr.aria-labelledby]="'product-tab-'+tab.id" [hidden]="selected()!==index" tabindex="0">
+    <div class="fl-home-product-copy"><h3>{{tab.title}}</h3><p>{{tab.description}}</p><ul>@for(item of tab.items;track item){<li><i class="bi bi-check2" aria-hidden="true"></i>{{item}}</li>}</ul><a href="#planes">Consulta módulos y planes <i class="bi bi-arrow-right" aria-hidden="true"></i></a></div>
+    <div class="fl-home-product-visual">
+      @switch(tab.id){
+        @case('sitio'){<figure class="fl-home-site-preview"><figcaption>Minisitio de demostración</figcaption><img src="/fluora-nail-air-demo.png" alt="Captura de un minisitio de demostración creado con Fluora" width="1280" height="720" loading="lazy" decoding="async"></figure>}
+        @case('agenda'){<div class="fl-home-agenda-card fl-home-illustrative"><span class="fl-home-visual-label">Vista ilustrativa</span><strong>La cita, con su contexto</strong><div><i class="bi bi-calendar2-week" aria-hidden="true"></i> Servicio y duración</div><div><i class="bi bi-person-check" aria-hidden="true"></i> Integrante disponible</div><div><i class="bi bi-building" aria-hidden="true"></i> Sucursal asignada</div></div>}
+        @case('tienda'){<ol class="fl-home-store-flow" aria-label="Flujo de compra de la tienda"><li><i class="bi bi-grid" aria-hidden="true"></i><span>Catálogo</span></li><li><i class="bi bi-bag" aria-hidden="true"></i><span>Carrito</span></li><li><i class="bi bi-credit-card" aria-hidden="true"></i><span>Pago</span></li><li><i class="bi bi-box-seam" aria-hidden="true"></i><span>Entrega</span></li></ol><p class="fl-home-visual-note">Inventario y finanzas, en tu panel.</p>}
+        @case('whatsapp'){<div class="fl-home-chat fl-home-illustrative"><span class="fl-home-visual-label">Conversación ilustrativa</span><div class="fl-home-chat-heading"><i class="bi bi-whatsapp" aria-hidden="true"></i><strong>Tu negocio</strong></div><p class="fl-home-chat-in">Hola, ¿cómo puedo reservar?</p><p class="fl-home-chat-out">Elige tu servicio y un horario disponible desde nuestro sitio.<span>Enlace a tu página de reservas <i class="bi bi-arrow-up-right" aria-hidden="true"></i></span></p></div>}
+        @case('operacion'){<div class="fl-home-operation-card fl-home-illustrative"><span class="fl-home-visual-label">Flujo de atención</span><div><i class="bi bi-person-circle" aria-hidden="true"></i><span>Cliente e historial</span></div><div><i class="bi bi-receipt" aria-hidden="true"></i><span>Servicios + productos</span></div><div><i class="bi bi-wallet2" aria-hidden="true"></i><span>Cobro y reporte</span></div></div>}
+      }
+    </div>
+  </div>}
+  <p class="fl-home-product-availability">La disponibilidad de cada herramienta depende de los módulos de tu plan.</p>
+</section>

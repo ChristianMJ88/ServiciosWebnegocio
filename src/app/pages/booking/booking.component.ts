@@ -64,7 +64,7 @@ interface OpcionHorarioServicio {
   standalone: true,
   imports: [CommonModule, FormsModule, ReactiveFormsModule, BookingCalendarComponent, ReservationCartComponent, MoneyDisplayPipe],
   templateUrl: './booking.component.html',
-  styleUrls: ['./booking.component.css', './booking-experience.css']
+  styleUrls: ['./booking.component.css', './booking-experience.css', './booking-animate.css']
 })
 export class BookingComponent implements OnInit {
   private readonly mobileBreakpoint = '(max-width: 767.98px)';

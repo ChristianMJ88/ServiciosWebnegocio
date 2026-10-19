@@ -3,6 +3,7 @@
  @if(error()){<div class="alert alert-danger" role="alert">{{ error() }}</div>}
  @if(message()){<div class="alert alert-success" role="status">{{ message() }}</div>}
  @if(loading()){<p role="status">Cargando contenido…</p>}
+ <app-support-editor />
  <div class="editor-layout"><nav aria-label="Landing pages disponibles">@for(l of landings();track l.slug){<button type="button" (click)="editar(l)" [class.selected]="draft?.slug===l.slug" [disabled]="saving()"><strong>/{{ l.slug }}</strong><span>{{ l.publicado ? 'Publicada' : 'Borrador' }}</span></button>}</nav>
  @if(draft;as l){<form (ngSubmit)="guardar()" #editor="ngForm">
   <div class="editor-title"><div><h2>/{{ l.slug }}</h2><a [href]="host.marketingUrl('/'+l.slug)" target="_blank" rel="noopener">Ver página pública <i class="bi bi-box-arrow-up-right" aria-hidden="true"></i></a></div><label class="publish"><input type="checkbox" name="publicado" [(ngModel)]="l.publicado"> Publicar</label></div>

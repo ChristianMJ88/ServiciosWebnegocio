@@ -13,7 +13,7 @@
         <h1>Aviso de privacidad</h1>
         <p class="updated">Última actualización: 29 de agosto de 2026</p>
 
-        <p>Fluora, operada por Christian Mejia Lara (en adelante, “Fluora”), es responsable del tratamiento de los datos personales que recaba directamente a través de su sitio web y plataforma. Para cualquier asunto relacionado con privacidad puedes escribir a <a href="mailto:contacto@refluora.com">contacto&#64;refluora.com</a>.</p>
+        <p>Fluora, operada por Christian Mejia Lara (en adelante, “Fluora”), es responsable del tratamiento de los datos personales que recaba directamente a través de su sitio web y plataforma. Para cualquier asunto relacionado con privacidad puedes escribir a @if(contact(); as correo){<a [href]="'mailto:'+correo">{{correo}}</a>} @else {<span role="status">{{contactLoading() ? 'Cargando contacto…' : 'Contacto legal no disponible temporalmente.'}}</span>}.</p>
 
         <h2>Datos que podemos tratar</h2>
         <p>Dependiendo de la forma en que uses Fluora, podemos tratar datos de identificación y contacto, datos de acceso y seguridad, información de tu negocio, agenda, servicios, citas, clientes, personal, sucursales, comunicaciones, pagos y datos técnicos del dispositivo o navegador.</p>
@@ -31,7 +31,7 @@
         <p>Conservamos la información durante el tiempo necesario para prestar el servicio, atender obligaciones contractuales o legales y resolver controversias. Aplicamos medidas administrativas y técnicas razonables para reducir riesgos de pérdida, acceso no autorizado o alteración.</p>
 
         <h2>Tus derechos</h2>
-        <p>Puedes solicitar acceso, rectificación, cancelación u oposición, así como revocar tu consentimiento cuando corresponda. Envía tu solicitud a <a href="mailto:contacto@refluora.com">contacto&#64;refluora.com</a> indicando tu nombre, la cuenta o negocio relacionado y el derecho que deseas ejercer. También puedes consultar las <a routerLink="/eliminacion-de-datos">instrucciones para eliminar datos</a>.</p>
+        <p>Puedes solicitar acceso, rectificación, cancelación u oposición, así como revocar tu consentimiento cuando corresponda. Envía tu solicitud a @if(contact(); as correo){<a [href]="'mailto:'+correo">{{correo}}</a>} @else {<span role="status">{{contactLoading() ? 'Cargando contacto…' : 'Contacto legal no disponible temporalmente.'}}</span>} indicando tu nombre, la cuenta o negocio relacionado y el derecho que deseas ejercer. También puedes consultar las <a routerLink="/eliminacion-de-datos">instrucciones para eliminar datos</a>.</p>
 
         <h2>Cambios a este aviso</h2>
         <p>Podemos actualizar este aviso para reflejar cambios legales, operativos o de producto. La versión vigente estará disponible permanentemente en esta página con su fecha de actualización.</p>
@@ -66,7 +66,7 @@
         <p>Podemos limitar o suspender una cuenta ante incumplimientos, riesgos de seguridad, falta de pago, solicitudes de autoridad o uso que afecte a otras personas. Cuando sea razonable, procuraremos informar y permitir corregir la situación.</p>
 
         <h2>Contacto</h2>
-        <p>Para dudas sobre estos términos escribe a <a href="mailto:contacto@refluora.com">contacto&#64;refluora.com</a>.</p>
+        <p>Para dudas sobre estos términos escribe a @if(contact(); as correo){<a [href]="'mailto:'+correo">{{correo}}</a>} @else {<span role="status">{{contactLoading() ? 'Cargando contacto…' : 'Contacto legal no disponible temporalmente.'}}</span>}.</p>
       }
 
       @case ('deletion') {
@@ -77,7 +77,7 @@
         <p>Puedes solicitar la eliminación de tu cuenta de Fluora y de los datos personales asociados mediante el siguiente procedimiento.</p>
 
         <ol class="steps">
-          <li><strong>Envía un correo</strong> desde la dirección vinculada con tu cuenta a <a href="mailto:contacto@refluora.com?subject=Solicitud%20de%20eliminaci%C3%B3n%20de%20datos">contacto&#64;refluora.com</a> con el asunto “Solicitud de eliminación de datos”.</li>
+          <li><strong>Envía un correo</strong> desde la dirección vinculada con tu cuenta a @if(contact(); as correo){<a [href]="'mailto:'+correo+'?subject='+deletionSubject">{{correo}}</a>} @else {<span role="status">{{contactLoading() ? 'Cargando contacto…' : 'Contacto legal no disponible temporalmente.'}}</span>} con el asunto “Solicitud de eliminación de datos”.</li>
           <li><strong>Identifica la cuenta</strong> incluyendo tu nombre, correo de acceso y nombre del negocio. No envíes contraseñas, códigos de autenticación ni datos bancarios.</li>
           <li><strong>Confirma la solicitud</strong> si te pedimos verificar tu identidad o autoridad sobre el negocio. Esta comprobación protege la cuenta contra solicitudes fraudulentas.</li>
           <li><strong>Recibe la confirmación</strong> cuando la eliminación haya concluido o cuando exista información adicional necesaria para procesarla.</li>
@@ -92,7 +92,7 @@
         <h2>Meta y WhatsApp</h2>
         <p>Eliminar tu cuenta de Fluora no elimina automáticamente una cuenta de Meta, un portafolio comercial, una cuenta de WhatsApp Business ni datos que esos proveedores conserven bajo sus propias políticas. Debes gestionar esos activos desde sus respectivos servicios.</p>
 
-        <p class="notice">También puedes solicitar acceso, corrección u oposición al tratamiento de tus datos escribiendo al mismo correo. Consulta el <a routerLink="/privacidad">Aviso de privacidad</a> para conocer más.</p>
+        <p class="notice">@if(contact()){También puedes solicitar acceso, corrección u oposición al tratamiento de tus datos escribiendo al mismo correo.} @else {<span role="status">{{contactLoading() ? 'Cargando contacto…' : 'Contacto legal no disponible temporalmente.'}}</span>} Consulta el <a routerLink="/privacidad">Aviso de privacidad</a> para conocer más.</p>
       }
     }
   </article>

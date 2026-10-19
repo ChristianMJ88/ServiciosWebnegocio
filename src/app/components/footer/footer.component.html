@@ -19,7 +19,7 @@
 
         @if (!tenantActivo()) {
         <p class="footer-copy">
-          Reúne tus citas, clientes y operación diaria en un solo lugar. Menos pendientes dispersos y más tiempo para atender y hacer crecer tu negocio.
+          Tu agenda, tu sitio y tu operación en un mismo lugar.
         </p>
         }
 
@@ -87,26 +87,26 @@
         </div>
       }
 
-      @if (!tenantActivo() || tenantContext.footerMostrarContacto()) {
+      @if (tenantActivo() && tenantContext.footerMostrarContacto()) {
       <div class="footer-links-panel">
         <h4 class="footer-title">Contacto</h4>
         <ul class="footer-contact-list">
-          @if (tenantActivo() && tenantContext.direccion()) {
-            <li><i class="bi bi-geo-alt"></i><span>{{ tenantContext.direccion() }}</span></li>
-          }
-          @if (!tenantActivo() || tenantContext.correo()) {
-          <li>
-            <i class="bi bi-envelope"></i>
-            <a class="footer-link" [href]="'mailto:' + (tenantActivo() && tenantContext.correo() ? tenantContext.correo() : 'contacto@refluora.com')">{{ tenantActivo() && tenantContext.correo() ? tenantContext.correo() : 'contacto@refluora.com' }}</a>
-          </li>
-          }
-          @if (tenantActivo() && tenantContext.telefono()) {
-            <li><i class="bi bi-telephone"></i><a class="footer-link" [href]="tenantContext.telefonoHref()">{{ tenantContext.telefono() }}</a></li>
-          }
-
+          @if (tenantContext.direccion()) {<li><i class="bi bi-geo-alt" aria-hidden="true"></i><span>{{tenantContext.direccion()}}</span></li>}
+          @if (tenantContext.correo()) {<li><i class="bi bi-envelope" aria-hidden="true"></i><a class="footer-link" [href]="'mailto:'+tenantContext.correo()">{{tenantContext.correo()}}</a></li>}
+          @if (tenantContext.telefono()) {<li><i class="bi bi-telephone" aria-hidden="true"></i><a class="footer-link" [href]="tenantContext.telefonoHref()">{{tenantContext.telefono()}}</a></li>}
         </ul>
       </div>
+      } @else if(fluoraContact()) {
+        @if(support(); as contact){<div class="footer-links-panel" data-fluora-support>
+          <h4 class="footer-title">Soporte</h4>
+          <ul class="footer-contact-list">
+            <li><i class="bi bi-envelope" aria-hidden="true"></i><a class="footer-link" [href]="'mailto:'+contact.correo">{{contact.correo}}</a></li>
+            <li><i class="bi bi-telephone" aria-hidden="true"></i><a class="footer-link" [href]="'tel:'+contact.telefono">{{contact.telefono}}</a></li>
+            <li><i class="bi bi-clock" aria-hidden="true"></i><span>{{schedule(contact)}}</span></li>
+          </ul>
+        </div>}
       }
+
     </div>
 
     <div class="footer-bottom">

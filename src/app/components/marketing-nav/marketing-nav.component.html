@@ -1,0 +1,31 @@
+<div class="marketing-navigation" [class.has-tabs]="mobileTabs()">
+  <header class="marketing-topbar" [class.is-detached]="detached() || !isHome()">
+    <a class="brand" [href]="host.marketingUrl('/')" aria-label="Fluora, inicio"><img src="/fluora-mark.svg" alt="" width="36" height="36"><span>Fluora</span></a>
+    <nav class="desktop-links" aria-label="Navegación principal de Fluora">
+      <details #business class="business-menu"><summary>Para tu negocio <i class="bi bi-chevron-down" aria-hidden="true"></i></summary><div class="vertical-links">
+        @for(link of links();track link.slug){<a [href]="verticalHref(link.slug)" (click)="choose()"><strong>{{link.titulo}}</strong><span>{{link.descripcion}}</span></a>}
+        <a [href]="host.marketingUrl('/negocios')" (click)="choose()"><strong>Explorar negocios</strong><span>Encuentra dónde reservar</span></a>
+      </div></details>
+      @for(section of sections;track section.id){<a [href]="sectionHref(section.id)" [attr.aria-current]="active()===section.id?'location':null">{{section.label}}</a>}
+    </nav>
+    <div class="top-actions"><a class="sign-in" [href]="host.appUrl('/acceso')"><span class="desktop-login">Iniciar sesión</span><span class="mobile-login">Entrar</span></a><a class="action top-cta" [href]="offer.href()" [attr.aria-label]="offer.shortLabel()+': '+offer.label()" (click)="signup()">{{offer.shortLabel()}} <i class="bi bi-arrow-up-right" aria-hidden="true"></i></a><button class="menu-trigger" type="button" [class.hide-mobile]="mobileTabs()" (click)="openMenu($event)" [attr.aria-expanded]="menuOpen()" aria-controls="marketing-menu" aria-label="Abrir menú"><i class="bi bi-list" aria-hidden="true"></i></button></div>
+  </header>
+  @if(mobileTabs()){
+    <nav class="mobile-tabs" aria-label="Navegación rápida de Fluora">
+      <a [href]="sectionHref('inicio')" [attr.aria-current]="active()==='inicio'?'location':null"><i class="bi bi-house" aria-hidden="true"></i><span>Inicio</span></a>
+      <a [href]="sectionHref('producto')" [attr.aria-current]="active()==='producto'?'location':null"><i class="bi bi-grid" aria-hidden="true"></i><span>Producto</span></a>
+      <a class="tab-primary" [href]="offer.href()" (click)="signup()" [attr.aria-label]="offer.shortLabel()+': '+offer.label()"><i class="bi bi-plus-lg" aria-hidden="true"></i><span>{{offer.shortLabel()}}</span></a>
+      <a [href]="sectionHref('planes')" [attr.aria-current]="active()==='planes'?'location':null"><i class="bi bi-layers" aria-hidden="true"></i><span>Planes</span></a>
+      <button type="button" (click)="openMenu($event)" [attr.aria-expanded]="menuOpen()" aria-controls="marketing-menu"><i class="bi bi-three-dots" aria-hidden="true"></i><span>Más</span></button>
+    </nav>
+  }
+  <dialog #menu id="marketing-menu" class="marketing-menu" aria-labelledby="marketing-menu-title" (cancel)="finishClose()" (close)="finishClose()" (click)="backdrop($event)" (keydown)="trapTab($event)">
+    <header class="menu-heading"><div><span>Explora Fluora</span><h2 id="marketing-menu-title">Tu negocio, conectado.</h2></div><button type="button" (click)="closeMenu()" aria-label="Cerrar menú"><i class="bi bi-x-lg" aria-hidden="true"></i></button></header>
+    <nav class="menu-sections" aria-label="Secciones de Fluora">
+      @for(section of sections;track section.id){<a [href]="sectionHref(section.id)" (click)="choose()"><i [class]="'bi '+section.icon" aria-hidden="true"></i><span>{{section.label}}</span><i class="bi bi-arrow-up-right" aria-hidden="true"></i></a>}
+      <a [href]="host.marketingUrl('/negocios')" (click)="choose()"><i class="bi bi-shop" aria-hidden="true"></i><span>Directorio de negocios</span><i class="bi bi-arrow-up-right" aria-hidden="true"></i></a>
+    </nav>
+    @if(links().length){<section class="menu-verticals" aria-labelledby="menu-business-title"><h3 id="menu-business-title">Para tu negocio</h3>@for(link of links();track link.slug){<a [href]="verticalHref(link.slug)" (click)="choose()">{{link.titulo}} <i class="bi bi-arrow-up-right" aria-hidden="true"></i></a>}</section>}
+    <footer class="menu-footer"><a class="action" [href]="offer.href()" (click)="signup()">{{offer.label()}} <i class="bi bi-arrow-right" aria-hidden="true"></i></a><a class="sign-in" [href]="host.appUrl('/acceso')" (click)="choose()">Iniciar sesión</a></footer>
+  </dialog>
+</div>

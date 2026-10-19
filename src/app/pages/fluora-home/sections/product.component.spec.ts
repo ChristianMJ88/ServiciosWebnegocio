@@ -1,0 +1,8 @@
+import { TestBed } from '@angular/core/testing';
+import { vi } from 'vitest';
+import { HomeProductComponent } from './product.component';
+describe('producto en pestañas',()=>{
+  function setup(){TestBed.configureTestingModule({imports:[HomeProductComponent]});const fixture=TestBed.createComponent(HomeProductComponent);fixture.detectChanges();return fixture;}
+  it('muestra un solo panel y conserva las relaciones ARIA',()=>{const fixture=setup();const tabs=[...fixture.nativeElement.querySelectorAll('[role="tab"]')] as HTMLButtonElement[];expect(tabs.length).toBe(5);for(const tab of tabs){const panel=fixture.nativeElement.querySelector('#'+tab.getAttribute('aria-controls'));expect(panel.getAttribute('aria-labelledby')).toBe(tab.id);}tabs[2].click();fixture.detectChanges();expect(tabs[2].getAttribute('aria-selected')).toBe('true');expect(tabs.filter(t=>t.tabIndex===0)).toEqual([tabs[2]]);const visible=[...fixture.nativeElement.querySelectorAll('[role="tabpanel"]')].filter((p:any)=>!p.hidden);expect(visible.length).toBe(1);expect(visible[0].textContent).toContain('Catálogo');expect(visible[0].textContent).toContain('Carrito');});
+  it('navega con flechas, Home y End manteniendo el foco',()=>{const fixture=setup();const tabs=[...fixture.nativeElement.querySelectorAll('[role="tab"]')] as HTMLButtonElement[];for(const tab of tabs)tab.scrollIntoView=vi.fn();const press=(index:number,key:string,expected:number)=>{tabs[index].dispatchEvent(new KeyboardEvent('keydown',{key,bubbles:true,cancelable:true}));fixture.detectChanges();expect(tabs[expected].getAttribute('aria-selected')).toBe('true');expect(document.activeElement).toBe(tabs[expected]);};press(0,'ArrowLeft',4);press(4,'Home',0);press(0,'End',4);press(4,'ArrowRight',0);});
+});

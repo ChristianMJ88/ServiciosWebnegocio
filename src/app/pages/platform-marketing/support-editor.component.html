@@ -1,0 +1,15 @@
+<section class="support-editor" aria-labelledby="support-title">
+  <header><div><span>Configuración global de Fluora</span><h2 id="support-title">Soporte y contacto legal</h2><p>Estos datos pertenecen a la plataforma. Cada negocio conserva su propio contacto.</p></div><button type="button" (click)="load()" [disabled]="loading() || saving()">Actualizar</button></header>
+  @if(loading()){<p role="status">Cargando contacto…</p>}
+  @if(error()){<p class="error" role="alert">{{error()}}</p>}
+  @if(message()){<p class="success" role="status">{{message()}}</p>}
+  @if(draft; as d){<form (ngSubmit)="save()" #form="ngForm"><fieldset [disabled]="saving() || loading()">
+    <legend>Atención y soporte</legend>
+    <div class="support-fields"><label>Correo de soporte<input name="correo" type="email" [(ngModel)]="d.correo" required maxlength="150" autocomplete="email"></label><label>Teléfono con código internacional<input name="telefono" type="tel" [(ngModel)]="d.telefono" required maxlength="64" autocomplete="tel"><small>Incluye + y el código de país.</small></label></div>
+    <fieldset class="days"><legend>Días de atención</legend>@for(day of days;track day.id){<label><input type="checkbox" [name]="'dia-'+day.id" [checked]="d.dias.includes(day.id)" (change)="toggleDay(day.id,$any($event.target).checked)">{{day.name}}</label>}</fieldset>
+    <div class="support-fields"><label>Desde<input name="horaInicio" type="time" step="60" [(ngModel)]="d.horaInicio" required></label><label>Hasta<input name="horaFin" type="time" step="60" [(ngModel)]="d.horaFin" required></label><label>Zona horaria IANA<input name="zonaHoraria" [(ngModel)]="d.zonaHoraria" required maxlength="64"><small>El horario se publica en esta zona.</small></label></div>
+    <label class="visibility"><input name="visible" type="checkbox" [(ngModel)]="d.visible"> Mostrar soporte en el sitio de Fluora</label>
+    @if(d.dias.length && d.horaInicio && d.horaFin && d.zonaHoraria){<aside aria-label="Vista previa del soporte"><strong>Vista previa</strong><p>{{schedule(d)}}</p><p>{{d.correo}} · {{d.telefono}}</p>@if(!d.visible){<small>El soporte está oculto al público.</small>}</aside>}
+    <fieldset class="legal-contact"><legend>Contacto legal</legend><p>Se publica en Privacidad, ARCO, Términos y Eliminación de datos, incluso si ocultas el soporte.</p><label>Correo legal<input name="correoLegal" type="email" [(ngModel)]="d.correoLegal" required maxlength="150"></label><small>Cambiarlo modifica el contacto de los documentos. Su fecha de última actualización no cambia automáticamente.</small></fieldset>
+  </fieldset><footer><p>Actualizar vuelve a cargar los datos y descarta los cambios sin guardar. Los cambios se validan y auditan en el backend; pueden tardar hasta 60 segundos en publicarse.</p><button type="submit" [disabled]="saving() || loading() || form.invalid">{{saving() ? 'Guardando…' : 'Guardar contacto'}}</button></footer></form>}
+</section>

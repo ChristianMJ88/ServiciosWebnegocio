@@ -1,5 +1,8 @@
+import { hasMarketingTabs } from './core/marketing/marketing-route';
+import { Location } from '@angular/common';
+import { MarketingNavComponent } from './components/marketing-nav/marketing-nav.component';
 import { SubscriptionAccessNoticeComponent } from './core/subscription/subscription-access-notice.component';
-import { Component, effect, inject, signal } from '@angular/core';
+import { Component, computed, effect, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRouteSnapshot, NavigationEnd, Router, RouterOutlet } from '@angular/router';
 import { filter } from 'rxjs/operators';
@@ -13,7 +16,7 @@ import { PlatformHostService } from './core/platform/platform-host.service';
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [RouterOutlet, HeaderComponent, FooterComponent, SubscriptionAccessNoticeComponent],
+  imports: [RouterOutlet, HeaderComponent, MarketingNavComponent, FooterComponent, SubscriptionAccessNoticeComponent],
   templateUrl: './app.html',
   styleUrl: './app.css'
 })
@@ -22,6 +25,11 @@ export class App {
   private readonly router = inject(Router);
   readonly tenantContext = inject(TenantContextService);
   private readonly platformHost = inject(PlatformHostService);
+  private readonly browserLocation=inject(Location);
+  readonly publicPath=signal(this.normalizarUrl(this.browserLocation.path()||'/'));
+  private readonly navigationRevision=signal(0);
+  readonly esNavegacionMarketing=computed(()=>this.mostrarChromePublico() && !this.tenantContext.activo() && !this.platformHost.isCustomTenantHost() && !/^\/e(?:\/|$)/.test(this.publicPath()));
+  readonly marketingBottomBar=computed(()=>{this.navigationRevision();return hasMarketingTabs(this.router.routerState.snapshot.root,this.publicPath());});
   protected readonly title = signal('ServiciosWebnegocio');
   esPanelInterno = signal(this.calcularEsPanelInterno());
   mostrarChromePublico = signal(this.calcularLayout() === 'public');
@@ -42,6 +50,8 @@ export class App {
         takeUntilDestroyed()
       )
       .subscribe(() => {
+        this.publicPath.set(this.normalizarUrl(this.router.url));
+        this.navigationRevision.update(value=>value+1);
         this.sincronizarTenantConRuta(this.router.url);
         this.publicReservationPage.set(/\/(agendar|servicios|productos)(\/[^/]+)?$/.test(this.normalizarUrl(this.router.url)));
         this.esPanelInterno.set(this.calcularEsPanelInterno());
@@ -76,7 +86,9 @@ export class App {
       return 'auth';
     }
 
-    const urlNormalizada = this.normalizarUrl(this.router.url);
+    const urlNormalizada = this.normalizarUrl(this.router.navigated?this.router.url:this.publicPath());
+    if(urlNormalizada==='/plataforma/acceso')return 'auth';
+    if(urlNormalizada.startsWith('/plataforma'))return 'panel';
     if (['/admin', '/staff', '/recepcion', '/caja', '/mi-cuenta'].some(ruta => urlNormalizada.startsWith(ruta))) {
       return 'panel';
     }

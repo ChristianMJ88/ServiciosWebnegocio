@@ -1,271 +1,88 @@
-
-import { AfterViewInit, Component, ElementRef, NgZone, OnDestroy, computed, inject, signal } from '@angular/core';
+import { MarketingSectionsDirective } from '../../core/marketing/marketing-sections.directive';
+import { DOCUMENT } from '@angular/common';
+import { afterEveryRender, AfterViewInit, ChangeDetectionStrategy, computed, Component, DestroyRef, ElementRef, NgZone, OnDestroy, inject, signal, viewChild } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Meta, Title } from '@angular/platform-browser';
-import { Router } from '@angular/router';
-import { gsap } from 'gsap';
+import { ActivatedRoute, Router } from '@angular/router';
+import type { gsap } from 'gsap';
+import { MarketingAppearanceService } from '../../core/marketing/marketing-appearance.service';
+import { MarketingOfferService } from '../../core/marketing/marketing-offer.service';
+import { LandingMarketingService } from '../../core/marketing/landing-marketing.service';
+import { PlatformContactService, PublicSupport } from '../../core/marketing/platform-contact.service';
 import { PlatformHostService } from '../../core/platform/platform-host.service';
 import { SeoService } from '../../core/seo/seo.service';
-import { PublicDiscoveryComponent } from '../../shared/components/public-discovery/public-discovery.component';
-import { PlanPublicoFluora, PublicPlansService } from '../../core/platform/public-plans.service';
-
-@Component({
-  selector: 'app-fluora-home',
-  standalone: true,
-  imports: [PublicDiscoveryComponent],
-  templateUrl: './fluora-home.component.html',
-  styleUrl: './fluora-home.component.css'
-})
-export class FluoraHomeComponent implements AfterViewInit, OnDestroy {
-  private readonly router = inject(Router);
-  private readonly elementRef = inject<ElementRef<HTMLElement>>(ElementRef);
-  private readonly zone = inject(NgZone);
-  readonly platformHost = inject(PlatformHostService);
-  readonly registrationHref = this.platformHost.appUrl('/registro');
-  private readonly title = inject(Title);
-  private readonly meta = inject(Meta);
-  private readonly seo = inject(SeoService);
-  private readonly plansApi = inject(PublicPlansService);
-  readonly plans = signal<PlanPublicoFluora[]>([]);
-  readonly plansLoading = signal(true);
-  readonly trialPlan = computed(() => this.plans().find(plan => plan.destacado) || this.plans()[0] || null);
-  readonly recommendedRegistrationHref = computed(() => {
-    const plan = this.trialPlan();
-    return plan ? this.registroPlanHref(plan.id) : this.registrationHref;
-  });
-  readonly recommendedCta = computed(() => {
-    const plan = this.trialPlan();
-    return plan ? this.planCta(plan) : 'Crear mi cuenta';
-  });
-  private agendaAnimation?: gsap.Context;
-  private agendaTimeline?: gsap.core.Timeline;
-  private heroObserver?: IntersectionObserver;
-
-  readonly heroHighlights = [
-    'Agenda por integrante y disponibilidad sin cruces.',
-    'Minisitio personalizable con reservas en línea.',
-    'CRM, recepción y caja conectados.'
-  ];
-
-  readonly heroSignals = [
-    {
-      title: 'Publica tu negocio',
-      body: 'Muestra tu marca, servicios, precios y contacto.',
-      icon: 'bi-window'
-    },
-    {
-      title: 'Recibe reservas',
-      body: 'Tus clientes eligen servicio y horario disponible.',
-      icon: 'bi-calendar2-check'
-    },
-    {
-      title: 'Coordina al equipo',
-      body: 'Cada cita llega a la agenda del integrante correcto.',
-      icon: 'bi-person-vcard'
-    },
-    {
-      title: 'Opera con contexto',
-      body: 'Recepción, caja y CRM comparten la información.',
-      icon: 'bi-diagram-3'
-    }
-  ];
-
-  readonly painPoints = [
-    {
-      title: 'Reservas entre mensajes y libretas',
-      body: 'Centraliza las citas para consultar horarios, servicios, responsables y estados desde un mismo lugar.'
-    },
-    {
-      title: 'Horarios que se cruzan',
-      body: 'Define la disponibilidad y los servicios de cada integrante para coordinar al equipo sin duplicar horarios.'
-    },
-    {
-      title: 'Clientes sin continuidad',
-      body: 'Conserva datos de contacto e historial de citas para que tu equipo pueda continuar la atención.'
-    },
-    {
-      title: 'Operación fragmentada',
-      body: 'Conecta agenda, recepción, caja y CRM para evitar capturar la misma información varias veces.'
-    }
-  ];
-
-  readonly pillars = [
-    {
-      title: 'Presencia digital',
-      body: 'Publica un minisitio con tu marca, portada, servicios, precios, contacto y reservas en línea.'
-    },
-    {
-      title: 'Agenda y equipo',
-      body: 'Coordina sucursales, servicios, horarios y disponibilidad individual sin perder la visión completa.'
-    },
-    {
-      title: 'Clientes y comunicación',
-      body: 'Mantén el CRM y el historial conectados con correo, recordatorios y la integración opcional de WhatsApp.'
-    },
-    {
-      title: 'Operación diaria',
-      body: 'Recepción, caja, cobros, roles y permisos trabajan sobre la misma información.'
-    }
-  ];
-
-  readonly workflow = [
-    {
-      step: '01',
-      title: 'Publica tu negocio',
-      body: 'Personaliza tu minisitio con tu marca, información, servicios, precios e imágenes.'
-    },
-    {
-      step: '02',
-      title: 'Fluora valida',
-      body: 'Relaciona sucursal, servicio, disponibilidad y responsable antes de registrar la reserva.'
-    },
-    {
-      step: '03',
-      title: 'Atiende con contexto',
-      body: 'La cita continúa en recepción y caja mientras el CRM conserva el historial del cliente.'
-    }
-  ];
-
-  readonly capabilities = [
-    {
-      title: 'Si trabajas por tu cuenta',
-      body: 'Publica tus servicios, recibe reservas y organiza clientes sin depender de mensajes y libretas.'
-    },
-    {
-      title: 'Si tienes un equipo',
-      body: 'Coordina agendas, servicios y horarios individuales sin provocar cruces entre integrantes.'
-    },
-    {
-      title: 'Si tu operación está creciendo',
-      body: 'Organiza sucursales, roles, recepción, caja y atención con una visión compartida.'
-    }
-  ];
-
-  readonly featureGroups = [
-    {
-      title: 'Presencia y reservas',
-      items: ['Minisitio por empresa', 'Marca, portada y contacto', 'Servicios, imágenes y precios', 'Reservas en línea']
-    },
-    {
-      title: 'Agenda y equipo',
-      items: ['Agenda por integrante', 'Disponibilidad y excepciones', 'Servicios asignados', 'Sucursales, roles y permisos']
-    },
-    {
-      title: 'Clientes y operación',
-      items: ['CRM e historial de citas', 'Recepción de clientes', 'Caja y cobros', 'Correo y WhatsApp opcional']
-    }
-  ];
-
-  readonly faqs = [
-    {
-      question: '¿Qué es Fluora Agenda?',
-      answer: 'Es una agenda de citas en línea para negocios de servicios que incluye minisitio web, CRM de clientes, recepción, caja y automatizaciones.'
-    },
-    {
-      question: '¿Puedo publicar mis servicios y precios?',
-      answer: 'Sí. Tu minisitio es personalizable y permite mostrar información del negocio, imágenes, servicios, precios y datos de contacto.'
-    },
-    {
-      question: '¿Sirve para emprendedoras y negocios pequeños?',
-      answer: 'Sí. Fluora está diseñada para ser fácil de usar y tener un costo razonable para emprendimientos, pequeños negocios y empresas medianas.'
-    },
-    {
-      question: '¿Cómo ayuda a reducir las citas perdidas?',
-      answer: 'Fluora puede enviar confirmaciones y recordatorios por WhatsApp y correo, además de conservar el historial para dar seguimiento a tus clientes.'
-    }
-  ];
-
-  constructor() {
-    this.plansApi.listar().subscribe({next: planes => {this.plans.set(planes);this.plansLoading.set(false);},error:()=>this.plansLoading.set(false)});
-    this.seo.applyMarketing();
-    this.title.setTitle('Fluora Agenda | Agenda de citas y minisitio para tu negocio');
-    this.meta.updateTag({ name: 'description', content: 'Agenda de citas para pequeños y medianos negocios. Incluye minisitio web personalizable, CRM, recepción, caja y recordatorios por WhatsApp y correo.' });
-    this.meta.updateTag({ name: 'keywords', content: 'agenda de citas, agenda para negocios, agenda online, minisitio web, CRM para pequeños negocios, recordatorio de citas, Fluora Agenda' });
-    this.meta.updateTag({ property: 'og:title', content: 'Fluora Agenda | Organiza citas y haz crecer tu negocio' });
-    this.meta.updateTag({ property: 'og:description', content: 'Agenda, minisitio web, clientes, recepción, caja y recordatorios en una plataforma accesible.' });
-    this.meta.updateTag({ property: 'og:type', content: 'website' });
-    if (this.platformHost.hasDedicatedAppHost() && this.platformHost.isAppHost()) {
-      void this.router.navigateByUrl('/acceso');
-    }
-  }
-
-  registroPlanHref(planId: number): string { return `${this.registrationHref}?plan=${planId}`; }
-  planCta(plan: PlanPublicoFluora): string {
-    return plan.diasPrueba > 0 ? `Probar ${plan.diasPrueba} días` : `Comenzar con ${plan.nombre}`;
-  }
-  precioPlan(plan: PlanPublicoFluora): string {
-    return new Intl.NumberFormat('es-MX',{maximumFractionDigits:2}).format(plan.precioMensual);
-  }
-  limiteTexto(plan: PlanPublicoFluora): string[] {
-    return plan.limites.map(limite => `${limite.valor} ${limite.unidad}`);
-  }
-
-  ngAfterViewInit(): void {
-    if (typeof window === 'undefined' || window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-      return;
-    }
-
-    this.zone.runOutsideAngular(() => {
-      const host = this.elementRef.nativeElement;
-      host.classList.add('gsap-enhanced');
-      this.agendaAnimation = gsap.context(() => {
-        gsap.timeline({ defaults: { ease: 'power2.out' } })
-          .from('.section-kicker--hero', { autoAlpha: 0, y: -8, duration: .4 })
-          .from('.refluora-hero h1', { autoAlpha: 0, y: 24, filter: 'blur(6px)', duration: .72 }, '-=.18')
-          .from('.refluora-hero__lead', { autoAlpha: 0, y: 14, duration: .5 }, '-=.38')
-          .from('.refluora-hero__actions > *', { autoAlpha: 0, y: 10, duration: .4, stagger: .1 }, '-=.25')
-          .from('.hero-signal', { autoAlpha: 0, y: 12, duration: .42, stagger: .08 }, '-=.15')
-          .from('.highlight-item', { autoAlpha: 0, x: -8, duration: .35, stagger: .07 }, '-=.2')
-          .fromTo('.refluora-hero__actions .btn-primary',
-            { boxShadow: '0 14px 38px rgba(0,245,160,.2)' },
-            { boxShadow: '0 18px 48px rgba(0,245,160,.34)', duration: .5, repeat: 1, yoyo: true },
-            '-=.08');
-
-        this.agendaTimeline = gsap.timeline({ repeat: -1, repeatDelay: 1 });
-
-        gsap.set('.booking-request', { autoAlpha: .52, x: -10 });
-        gsap.set('.agenda-connector i', { autoAlpha: .2, scaleX: .12, transformOrigin: 'left center' });
-        gsap.set('.agenda-slot--active', { autoAlpha: .3, scale: .97, transformOrigin: 'center center' });
-        gsap.set('.agenda-confirmation', { autoAlpha: 0, y: 12, scale: .94, transformOrigin: 'center center' });
-        gsap.set('.agenda-board footer span', { autoAlpha: .35, y: 4 });
-
-        this.agendaTimeline
-          .to('.booking-request', { autoAlpha: 1, x: 0, duration: .65, ease: 'power2.out' })
-          .to('.booking-request dl div', { backgroundColor: '#e8eef6', borderColor: '#b8c7da', duration: .3, stagger: .12, repeat: 1, yoyo: true }, '-=.12')
-          .to('.agenda-connector i', { autoAlpha: 1, scaleX: 1, duration: .7, ease: 'power2.inOut' }, '-=.08')
-          .to('.agenda-team .is-active', { scale: 1.06, duration: .24, repeat: 1, yoyo: true, ease: 'power1.inOut' }, '-=.25')
-          .to('.agenda-slot--active', {
-            autoAlpha: 1,
-            scale: 1,
-            boxShadow: '0 12px 30px rgba(76,95,124,.16)',
-            duration: .55,
-            ease: 'back.out(1.35)'
-          }, '-=.12')
-          .to('.agenda-confirmation', { autoAlpha: 1, y: 0, scale: 1, duration: .52, ease: 'back.out(1.55)' })
-          .to('.agenda-confirmation > span', { scale: 1.12, duration: .2, repeat: 1, yoyo: true, ease: 'power1.inOut' }, '-=.18')
-          .to('.agenda-board footer span', { autoAlpha: 1, y: 0, duration: .42, stagger: .16, ease: 'power2.out' }, '-=.08')
-          .to({}, { duration: 2.5 })
-          .to('.agenda-board footer span', { autoAlpha: .35, y: 4, duration: .35, stagger: .08 })
-          .to('.agenda-confirmation', { autoAlpha: 0, y: 10, scale: .96, duration: .35 }, '<')
-          .to('.agenda-slot--active', { autoAlpha: .3, scale: .97, boxShadow: 'none', duration: .4 }, '<')
-          .to('.agenda-connector i', { autoAlpha: .2, scaleX: .12, duration: .35 }, '<')
-          .to('.booking-request', { autoAlpha: .52, x: -10, duration: .45 }, '<');
-      }, host);
-
-      if ('IntersectionObserver' in window) {
-        const hero = host.querySelector('.refluora-hero');
-        if (hero) {
-          this.heroObserver = new IntersectionObserver(([entry]) => {
-            entry.isIntersecting ? this.agendaTimeline?.resume() : this.agendaTimeline?.pause();
-          }, { threshold: .15 });
-          this.heroObserver.observe(hero);
-        }
-      }
+import { HomeHeroComponent } from './sections/hero.component';
+import { HomePillarsComponent } from './sections/pillars.component';
+import { HomeWorkflowComponent } from './sections/workflow.component';
+import { HomeProductComponent } from './sections/product.component';
+import { HomePlansComponent } from './sections/plans.component';
+import { HomeFaqComponent } from './sections/faq.component';
+import { HomeClosingComponent } from './sections/closing.component';
+@Component({selector:'app-fluora-home',standalone:true,imports:[MarketingSectionsDirective,HomeHeroComponent,HomePillarsComponent,HomeWorkflowComponent,HomeProductComponent,HomePlansComponent,HomeFaqComponent,HomeClosingComponent],templateUrl:'./fluora-home.component.html',styleUrl:'./fluora-home.component.css',changeDetection:ChangeDetectionStrategy.OnPush})
+export class FluoraHomeComponent implements AfterViewInit,OnDestroy {
+  readonly platformHost=inject(PlatformHostService);
+  readonly offer=inject(MarketingOfferService);
+  readonly recommendedRegistrationHref=this.offer.href;
+  readonly recommendedCta=this.offer.label;
+  readonly support=signal<PublicSupport|null>(null);
+  readonly verticals=signal<{slug:string;titulo:string;descripcion:string}[]>([]);
+  readonly renderAnchors=signal(false);
+  private readonly element=inject<ElementRef<HTMLElement>>(ElementRef);
+  private readonly document=inject(DOCUMENT);
+  private readonly zone=inject(NgZone);
+  private readonly product=viewChild('productReady',{read:ElementRef});
+  private readonly plansSection=viewChild('plansReady',{read:ElementRef});
+  private readonly faq=viewChild('faqReady',{read:ElementRef});
+  private readonly closing=viewChild('closingReady',{read:ElementRef});
+  private pendingAnchor:string|null=null;
+  private contactsReady=signal(false);
+  private verticalsReady=signal(false);
+  readonly dataReady=computed(()=>this.contactsReady()&&this.verticalsReady()&&!this.offer.loading());
+  private destroyed=false;
+  private animation?:gsap.Context;
+  private releaseAppearance=()=>{};
+  constructor(){
+    const router=inject(Router),seo=inject(SeoService),meta=inject(Meta),title=inject(Title);
+    if(!this.platformHost.isCustomTenantHost()){
+      this.releaseAppearance=inject(MarketingAppearanceService).activate();
+      inject(PlatformContactService).publicSupport().pipe(takeUntilDestroyed()).subscribe(value=>{this.support.set(value);this.contactsReady.set(true);});
+    }else this.contactsReady.set(true);
+    inject(LandingMarketingService).navegacion().pipe(takeUntilDestroyed()).subscribe({next:links=>{this.verticals.set(links);this.verticalsReady.set(true);},error:()=>{this.verticalsReady.set(true);}});
+    this.offer.load();
+    seo.applyMarketing();
+    title.setTitle('Fluora | Agenda en línea para salones, barberías y spas');
+    const description='Organiza citas, equipo y clientes con Fluora. Publica tu propio sitio con reservas y tienda en línea. Consulta los módulos y precios de cada plan.';
+    meta.updateTag({name:'description',content:description});
+    meta.updateTag({name:'keywords',content:'agenda en línea, salones, barberías, spas, reservas, tienda en línea, Fluora'});
+    meta.updateTag({property:'og:title',content:'Fluora | Tu negocio, conectado'});
+    meta.updateTag({property:'og:description',content:description});
+    meta.updateTag({property:'og:type',content:'website'});
+    if(this.platformHost.hasDedicatedAppHost()&&this.platformHost.isAppHost())void router.navigateByUrl('/acceso');
+    inject(ActivatedRoute).fragment.pipe(takeUntilDestroyed()).subscribe(fragment=>{this.pendingAnchor=fragment;this.renderAnchors.set(!!fragment);});
+    // Anchors wait for deferred sections and preceding API content, not a timeout.
+    afterEveryRender(()=>{
+      if(!this.pendingAnchor||!this.product()||!this.plansSection()||!this.faq()||!this.closing()||!this.dataReady())return;
+      const target=[...this.element.nativeElement.querySelectorAll<HTMLElement>('[id]')].find(e=>e.id===this.pendingAnchor);
+      this.pendingAnchor=null;
+      target?.scrollIntoView({block:'start',behavior:'auto'});
     });
+    const cancelAnchor=()=>{this.pendingAnchor=null;};
+    const cancelKey=(event:KeyboardEvent)=>{if(['PageDown','PageUp','Home','End','ArrowDown','ArrowUp',' '].includes(event.key))cancelAnchor();};
+    const win=this.document.defaultView;
+    win?.addEventListener('wheel',cancelAnchor,{passive:true});win?.addEventListener('touchstart',cancelAnchor,{passive:true});win?.addEventListener('keydown',cancelKey);
+    inject(DestroyRef).onDestroy(()=>{win?.removeEventListener('wheel',cancelAnchor);win?.removeEventListener('touchstart',cancelAnchor);win?.removeEventListener('keydown',cancelKey);});
   }
-
-  ngOnDestroy(): void {
-    this.heroObserver?.disconnect();
-    this.agendaAnimation?.revert();
-    this.elementRef.nativeElement.classList.remove('gsap-enhanced');
+  registroPlanHref(id:number){return this.offer.planHref(id);}
+  async ngAfterViewInit(){
+    const win=this.document.defaultView;
+    if(!win||win.matchMedia('(prefers-reduced-motion:reduce)').matches||!win.matchMedia('(min-width:1200px)').matches)return;
+    const {gsap}=await this.loadAnimation();
+    if(this.destroyed||win.matchMedia('(prefers-reduced-motion:reduce)').matches||!win.matchMedia('(min-width:1200px)').matches)return;
+    this.zone.runOutsideAngular(()=>{this.animation=gsap.context(()=>{
+      // One brief decorative reveal. Heading and CTA are never hidden.
+      gsap.to('.fl-home-preview-icon',{scale:1.06,duration:.3,repeat:1,yoyo:true,ease:'power2.out',clearProps:'transform'});
+    },this.element.nativeElement);});
   }
+  private loadAnimation(){return import('gsap');}
+  ngOnDestroy(){this.destroyed=true;this.animation?.revert();this.releaseAppearance();}
 }

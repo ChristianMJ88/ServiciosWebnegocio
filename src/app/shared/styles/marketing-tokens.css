@@ -1,0 +1,33 @@
+/* Marketing only: aliases keep tenant font families and layouts unchanged. */
+@font-face{font-family:'Fluora Marketing Manrope';font-style:normal;font-weight:400 700;font-display:swap;src:url('/fonts/marketing/manrope.woff2') format('woff2')}
+@font-face{font-family:'Fluora Marketing Jakarta';font-style:normal;font-weight:700 800;font-display:swap;src:url('/fonts/marketing/plusjakartasans.woff2') format('woff2')}
+.fluora-marketing{
+ --fl-bg:#0a0f1a;--fl-surface:#121a2b;--fl-surface-2:#182238;
+ --fl-border:rgba(255,255,255,.08);--fl-text:#f4f7fb;--fl-muted:#a7b3c6;
+ --fl-action:#00f5a0;--fl-action-text:#04130e;--fl-accent:#5b8cff;
+ --fl-radius-sm:12px;--fl-radius:20px;--fl-radius-lg:28px;
+ --fl-nav-height:72px;--fl-space:clamp(40px,8vw,96px);--fl-gutter:20px;--fl-content:1200px;
+ --fl-font-body:'Fluora Marketing Manrope',system-ui,sans-serif;
+ --fl-font-heading:'Fluora Marketing Jakarta',system-ui,sans-serif;
+ font-family:var(--fl-font-body);
+}
+.fluora-marketing :is(h1,h2,h3){font-family:var(--fl-font-heading)}
+.fluora-marketing :is(a,button,summary,[tabindex],input):focus-visible{outline:3px solid var(--fl-action);outline-offset:3px;box-shadow:0 0 0 6px var(--fl-action-text)}
+.fluora-marketing[id],.fluora-marketing [id]{scroll-margin-top:calc(var(--fl-nav-height) + 18px)}
+
+@media(max-width:767px){.fluora-marketing{--fl-nav-height:calc(60px + env(safe-area-inset-top))}}
+
+/* Shared marketing primitives. No selectors leak into tenant pages. */
+.fluora-marketing .fl-container{width:min(var(--fl-content),calc(100% - 2 * var(--fl-gutter) - env(safe-area-inset-left) - env(safe-area-inset-right)));margin-inline:auto}
+.fluora-marketing .fl-section{padding-block:var(--fl-space)}
+.fluora-marketing .fl-kicker{color:var(--fl-action);font-size:12px;line-height:1.6;font-weight:700;letter-spacing:.08em;text-transform:uppercase;margin:0}
+.fluora-marketing .fl-heading{max-width:700px}
+.fluora-marketing .fl-heading h2{margin:12px 0 0;color:var(--fl-text);font-size:clamp(1.75rem,3.4vw,3rem);font-weight:700;line-height:1.2;letter-spacing:-.035em;text-wrap:balance}
+.fluora-marketing .fl-heading>p:not(.fl-kicker){margin:16px 0 0;color:var(--fl-muted);font-size:15px;line-height:1.7}
+.fluora-marketing .fl-button{display:inline-flex;align-items:center;justify-content:center;gap:12px;min-height:48px;min-width:0;padding:13px 22px;border:1px solid transparent;border-radius:var(--fl-radius-sm);background:var(--fl-action);color:var(--fl-action-text);font:700 14px/1.5 var(--fl-font-body);text-align:center;text-decoration:none;overflow-wrap:anywhere;transition:background .2s,box-shadow .2s;cursor:pointer}
+.fluora-marketing .fl-button:hover{background:#36ffb7;color:var(--fl-action-text);box-shadow:0 8px 24px #00f5a01a}
+.fluora-marketing .fl-button:focus-visible{box-shadow:0 0 0 6px var(--fl-action-text)}
+.fluora-marketing .fl-button-secondary{border-color:#ffffff29;background:transparent;color:var(--fl-text)}
+.fluora-marketing .fl-button-secondary:hover{background:var(--fl-surface-2);color:var(--fl-text);box-shadow:none}
+@media(prefers-reduced-motion:reduce){.fluora-marketing .fl-button{transition:none}}
+@media(max-width:767px){.marketing-home{--fl-space:32px}}

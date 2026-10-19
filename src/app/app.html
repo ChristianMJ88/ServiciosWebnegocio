@@ -1,14 +1,22 @@
 <app-subscription-access-notice></app-subscription-access-notice>
 @if (mostrarChromePublico()) {
-  <app-header></app-header>
+  @if (esNavegacionMarketing()) {
+    <app-marketing-nav />
+  } @else {
+    @defer (on immediate) {
+      <app-header></app-header>
+    } @placeholder {
+      <div class="public-header-slot" aria-hidden="true"></div>
+    }
+  }
 }
 
-<main class="min-vh-100" [class.panel-shell]="esPanelInterno()">
+<main class="min-vh-100" [class.panel-shell]="esPanelInterno()" [class.marketing-public-surface]="esNavegacionMarketing()">
   <router-outlet></router-outlet>
 </main>
 
-@if (mostrarChromePublico()) {
-  <app-footer></app-footer>
+@if (mostrarChromePublico() && (esNavegacionMarketing() || tenantContext.activo())) {
+  <app-footer [class.marketing-public-footer]="esNavegacionMarketing()" [class.marketing-bottom-space]="esNavegacionMarketing() && marketingBottomBar()"></app-footer>
 }
 
 <!-- Botón de WhatsApp Flotante -->

@@ -1,0 +1,21 @@
+<section class="fl-container fl-section" aria-labelledby="plans-title">
+  <div class="fl-home-plans-heading"><div class="fl-heading"><p class="fl-kicker">Planes para cada etapa</p><h2 id="plans-title">Elige tu plan.</h2><p>Módulos y límites vigentes, sin adivinanzas.</p></div>@if(canScroll()){<div class="fl-home-rail-controls" role="group" aria-label="Recorrer planes"><button type="button" (click)="move(-1)" aria-label="Ver planes anteriores"><i class="bi bi-arrow-left" aria-hidden="true"></i></button><button type="button" (click)="move(1)" aria-label="Ver siguientes planes"><i class="bi bi-arrow-right" aria-hidden="true"></i></button></div>}</div>
+  @if(offer.recommended();as trial){@if(trial.diasPrueba>0){<aside class="fl-home-trial-banner"><i class="bi bi-gift" aria-hidden="true"></i><div><strong>Prueba {{trial.nombre}} durante {{trial.diasPrueba}} días.</strong><span>Sin tarjeta. Prueba sujeta a elegibilidad.</span></div></aside>}}
+  @if(offer.loading()){<p class="fl-home-plans-state" role="status">Consultando los planes disponibles…</p>}
+  @else if(offer.failed()){<div class="fl-home-plans-state" role="status"><p>No pudimos consultar los planes en este momento.</p><button type="button" class="fl-button fl-button-secondary" (click)="offer.load()">Volver a consultar</button></div>}
+  @else if(!offer.plans().length){<p class="fl-home-plans-state">Los planes disponibles se publicarán desde Fluora Plataforma.</p>}
+  @else{
+    <p class="fl-home-swipe-hint"><i class="bi bi-arrow-left-right" aria-hidden="true"></i> Desliza o usa las flechas para comparar.</p>
+    <div #rail class="fl-home-plans-rail" role="region" aria-label="Planes de suscripción de Fluora" tabindex="0">
+      @for(plan of offer.plans();track plan.id){<article class="fl-home-plan-card" [class.fl-home-is-featured]="plan.destacado" [attr.aria-labelledby]="'plan-name-'+plan.id">
+        <div class="fl-home-plan-top"><h3 [id]="'plan-name-'+plan.id">{{plan.nombre}}</h3>@if(plan.destacado){<span>Recomendado</span>}</div>
+        <p class="fl-home-plan-description">{{plan.descripcion}}</p>
+        <div class="fl-home-plan-price"><strong>{{plan.precioMensual | appMoney:plan.moneda}}</strong><span>{{plan.moneda}} / mes</span></div>
+        <a class="fl-button" [class.fl-button-secondary]="!plan.destacado" [href]="offer.planHref(plan.id)" (click)="offer.signup()">{{offer.planLabel(plan)}}</a>
+        @if(plan.diasPrueba>0){<p class="fl-home-plan-trial">{{plan.diasPrueba}} días de prueba, sujeta a elegibilidad.</p>}
+        <details><summary>Ver módulos y límites <i class="bi bi-plus-lg" aria-hidden="true"></i></summary><ul>@for(module of plan.modulos;track module.moduloId){<li><i class="bi bi-check2" aria-hidden="true"></i><span>{{module.nombre}}</span></li>}</ul>@if(plan.limites.length){<dl>@for(limit of plan.limites;track limit.limiteId){<div><dt>{{limit.nombre}}</dt><dd>{{limit.valor}} {{limit.unidad}}</dd></div>}</dl>}</details>
+      </article>}
+    </div>
+  }
+  <p class="fl-home-plans-note"><i class="bi bi-info-circle" aria-hidden="true"></i><span>Los mensajes de WhatsApp y servicios de proveedores externos pueden generar consumos adicionales.</span></p>
+</section>

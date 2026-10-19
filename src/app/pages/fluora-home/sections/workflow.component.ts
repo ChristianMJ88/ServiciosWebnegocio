@@ -1,0 +1,4 @@
+import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { HOME_CONTENT } from '../fluora-home.content';
+@Component({selector:'app-home-workflow',standalone:true,template:`<section class="fl-container fl-section" aria-labelledby="workflow-title"><div class="fl-heading"><p class="fl-kicker">Así empiezas</p><h2 id="workflow-title">Empieza en tres pasos.</h2></div><ol>@for(step of steps;track step.title;let index=$index){<li><span class="fl-home-step-number" aria-hidden="true">0{{index+1}}</span><div><h3>{{step.title}}</h3><p>{{step.description}}</p></div></li>}</ol><p class="fl-home-note">Configura los módulos disponibles en tu plan, a tu ritmo.</p></section>`,styleUrl:'./workflow.component.css',changeDetection:ChangeDetectionStrategy.OnPush})
+export class HomeWorkflowComponent {readonly steps=HOME_CONTENT.workflow;}

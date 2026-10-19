@@ -37,7 +37,7 @@
   </div></section>
   @if(l.preguntas.length){<section class="section section-soft"><div class="vertical-container faq-layout"><header class="section-heading"><span class="eyebrow">Antes de comenzar</span><h2>Resolvamos tus dudas.</h2></header><div class="faq-list">@for(q of l.preguntas;track $index){<details><summary>{{ q.pregunta }}</summary><p>{{ q.respuesta }}</p></details>}</div></div></section>}
   <section class="section final-section"><div class="vertical-container final-card"><span class="eyebrow">{{ l.etiqueta }}</span><h2>{{ l.tituloFinal }}</h2><a class="action action-primary" [href]="registrationHref" (click)="signupClick()">{{ l.ctaPrincipal }} <i class="bi bi-arrow-right" aria-hidden="true"></i></a></div></section>
-  @if(showSticky()){<div class="mobile-cta"><a class="action action-primary" [href]="registrationHref" (click)="signupClick()">{{ l.ctaPrincipal }} <i class="bi bi-arrow-right" aria-hidden="true"></i></a></div>}
+
  </div>
 } @else if(failed()) {
  <section class="landing-state"><h1>Esta página no está disponible</h1><p>Consulta la información de Fluora y sus planes vigentes.</p><a class="btn btn-primary" [href]="host.marketingUrl('/')">Ir a Fluora</a></section>

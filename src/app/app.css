@@ -126,3 +126,8 @@
     font-size: 0.84rem;
   }
 }
+
+.marketing-public-surface{--fl-nav-height:72px}
+.marketing-public-footer{display:block}
+@media(max-width:767px){.marketing-public-surface{--fl-nav-height:calc(60px + env(safe-area-inset-top))}}
+@media(max-width:767px){.marketing-bottom-space{padding-bottom:calc(76px + env(safe-area-inset-bottom));background:#0a0f1a}}
