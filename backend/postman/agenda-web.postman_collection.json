@@ -1,0 +1,3712 @@
+{
+  "info": {
+    "_postman_id": "fe8b9619-29e0-4263-a5b8-a50f636c5142",
+    "name": "AgendaWeb",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "createdAt": "2025-12-31T06:44:58.000Z",
+    "updatedAt": "2026-01-29T09:26:04.000Z",
+    "lastUpdatedBy": "50283123",
+    "uid": "50283123-fe8b9619-29e0-4263-a5b8-a50f636c5142"
+  },
+  "item": [
+    {
+      "name": "Legado — Apps Script (conservado, fuera de regresión)",
+      "item": [
+        {
+          "name": "Agendar",
+          "id": "7f89847f-acb1-4dd2-a949-0da2fde89718",
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          },
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"{{0_nombre}}\",\n  \"telefono\": \"{{0_telefono}}\",\n  \"correo\": \"{{0_correo}}\",\n  \"servicio\": \"Uñas Gelish\",\n  \"fecha\": \"2026-01-02\",\n  \"hora\": \"11:00\",\n  \"token\": \"{{0_token}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{legacy_url_0}}"
+          },
+          "createdAt": "2025-12-31T06:45:18.000Z",
+          "updatedAt": "2026-02-13T17:45:59.000Z",
+          "uid": "50283123-7f89847f-acb1-4dd2-a949-0da2fde89718"
+        },
+        {
+          "name": "mensaje Whatsapp",
+          "id": "b8730279-9e3d-4e33-a982-dff475416e93",
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          },
+          "request": {
+            "auth": {
+              "type": "basic",
+              "basic": [
+                {
+                  "key": "password",
+                  "value": "{{legacy_token}}",
+                  "type": "string"
+                },
+                {
+                  "key": "username",
+                  "value": "{{legacy_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/x-www-form-urlencoded",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "From",
+                  "value": "{{1_from}}",
+                  "type": "text",
+                  "uuid": "64b008b1-9f70-4cba-976f-f9da4170227b"
+                },
+                {
+                  "key": "Body",
+                  "value": "Hola",
+                  "type": "text",
+                  "uuid": "fb1f1fb2-8f95-439e-95b4-f6465849fdfe"
+                },
+                {
+                  "key": "To",
+                  "value": "{{1_to}}",
+                  "type": "text",
+                  "uuid": "9797961d-4a08-4fb8-92be-618949eb4b0a"
+                }
+              ]
+            },
+            "url": "{{legacy_url_1}}"
+          },
+          "createdAt": "2025-12-31T12:16:34.000Z",
+          "updatedAt": "2026-02-12T20:13:45.000Z",
+          "uid": "50283123-b8730279-9e3d-4e33-a982-dff475416e93"
+        },
+        {
+          "name": "horarios",
+          "id": "ddd87ab6-f169-4e4c-a076-c7f278a758a2",
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          },
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": "{{legacy_url_2}}"
+          },
+          "createdAt": "2026-01-29T09:26:04.000Z",
+          "updatedAt": "2026-02-13T17:46:04.000Z",
+          "uid": "50283123-ddd87ab6-f169-4e4c-a076-c7f278a758a2"
+        }
+      ]
+    },
+    {
+      "name": "00 Humo (lectura)",
+      "item": [
+        {
+          "name": "Salud backend",
+          "id": "ef764bdb-7ff5-446f-be1b-f577c16a8ea4",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base}}/actuator/health"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP esperado', () => pm.expect([200]).to.include(pm.response.code));",
+                  "pm.test('Salud UP',()=>pm.expect(pm.response.json().status).to.eql('UP'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Marcador de base aislada",
+          "id": "66a405d9-f5cd-4d87-b7e8-35bc5c9ea3be",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Fluora-Prueba",
+                "value": "{{nonce}}"
+              }
+            ],
+            "url": "{{base}}/api/v1/publico/__pruebas/aislamiento"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP esperado', () => pm.expect([200]).to.include(pm.response.code));",
+                  "const x=pm.response.json();pm.test('Esquema efímero real',()=>{pm.expect(x.database).to.match(/^fluora_test_011_[a-z0-9]+$/);pm.expect(x.nonce).to.eql(pm.environment.get('nonce'));});pm.collectionVariables.set('marcadorInicial',JSON.stringify(x));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Login admin_a",
+          "id": "d8564c6c-5c11-4c0b-8f83-63a4a0f1b115",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base}}/api/v1/auth/app-login",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"correo\": \"{{admin_a_correo}}\",\n  \"contrasena\": \"{{api_password}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP esperado', () => pm.expect([200]).to.include(pm.response.code));",
+                  "const x=pm.response.json();pm.test('Acceso autenticado y RBAC efectivo',()=>{pm.expect(x.estado).to.eql('AUTENTICADO');pm.expect(x.sesion.tokenAcceso).to.be.a('string');pm.expect(x.sesion.permisos).to.be.an('array');pm.expect(x.sesion).not.to.have.property('tokenActualizacion');});if(x.sesion)pm.collectionVariables.set('token_admin_a',x.sesion.tokenAcceso);",
+                  "pm.test('Rol y permisos efectivos presentes',()=>{const s=pm.response.json().sesion;pm.expect(s.roles).to.include('ADMIN');pm.expect(s.permisos.length).to.be.above(0);});",
+                  "pm.test('Sesión sin permisos vacíos',()=>pm.expect(pm.response.json().sesion.permisos.length).to.be.above(0));",
+                  "pm.test('Permiso efectivo esperado',()=>pm.expect(pm.response.json().sesion.permisos).to.include('PARAMETROS_SISTEMA_GESTIONAR'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Refresh admin_a",
+          "id": "11ed7b8e-b49f-41fc-969c-6535302cfb30",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base}}/api/v1/auth/refrescar-token"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP esperado', () => pm.expect([200]).to.include(pm.response.code));",
+                  "pm.test('Refresh con cookie HttpOnly',()=>pm.expect(pm.response.json().tokenAcceso).to.be.a('string'));pm.test('Cookie protegida',()=>pm.expect(pm.response.headers.get('Set-Cookie')).to.include('HttpOnly'));",
+                  "pm.collectionVariables.set('refresh_revocado',pm.response.headers.get('Set-Cookie').split(';')[0]);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Logout admin_a",
+          "id": "d5e73485-0a4b-4783-b947-ea7897acd66d",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base}}/api/v1/auth/cerrar-sesion"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP esperado', () => pm.expect([204]).to.include(pm.response.code));",
+                  "pm.test('Logout sin contenido',()=>pm.expect(pm.response.text()).to.eql(''));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Login admin_b",
+          "id": "70a248c4-a941-4b7e-92e5-9414804aaf45",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base}}/api/v1/auth/app-login",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"correo\": \"{{admin_b_correo}}\",\n  \"contrasena\": \"{{api_password}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP esperado', () => pm.expect([200]).to.include(pm.response.code));",
+                  "const x=pm.response.json();pm.test('Acceso autenticado y RBAC efectivo',()=>{pm.expect(x.estado).to.eql('AUTENTICADO');pm.expect(x.sesion.tokenAcceso).to.be.a('string');pm.expect(x.sesion.permisos).to.be.an('array');pm.expect(x.sesion).not.to.have.property('tokenActualizacion');});if(x.sesion)pm.collectionVariables.set('token_admin_b',x.sesion.tokenAcceso);",
+                  "pm.test('Rol y permisos efectivos presentes',()=>{const s=pm.response.json().sesion;pm.expect(s.roles).to.include('ADMIN');pm.expect(s.permisos.length).to.be.above(0);});",
+                  "pm.test('Sesión sin permisos vacíos',()=>pm.expect(pm.response.json().sesion.permisos.length).to.be.above(0));",
+                  "pm.test('Permiso efectivo esperado',()=>pm.expect(pm.response.json().sesion.permisos).to.include('PARAMETROS_SISTEMA_GESTIONAR'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Refresh admin_b",
+          "id": "3dfb315c-4c06-486f-8220-c16a95ed42ac",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base}}/api/v1/auth/refrescar-token"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP esperado', () => pm.expect([200]).to.include(pm.response.code));",
+                  "pm.test('Refresh con cookie HttpOnly',()=>pm.expect(pm.response.json().tokenAcceso).to.be.a('string'));pm.test('Cookie protegida',()=>pm.expect(pm.response.headers.get('Set-Cookie')).to.include('HttpOnly'));",
+                  "pm.collectionVariables.set('refresh_revocado',pm.response.headers.get('Set-Cookie').split(';')[0]);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Logout admin_b",
+          "id": "4bb14370-19c7-4565-b5fd-62aa19eb7f3c",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base}}/api/v1/auth/cerrar-sesion"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP esperado', () => pm.expect([204]).to.include(pm.response.code));",
+                  "pm.test('Logout sin contenido',()=>pm.expect(pm.response.text()).to.eql(''));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Login recepcion",
+          "id": "7acfc777-3fea-44b3-a334-8d3f9fb02cb8",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base}}/api/v1/auth/app-login",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"correo\": \"{{recepcion_correo}}\",\n  \"contrasena\": \"{{api_password}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP esperado', () => pm.expect([200]).to.include(pm.response.code));",
+                  "const x=pm.response.json();pm.test('Acceso autenticado y RBAC efectivo',()=>{pm.expect(x.estado).to.eql('AUTENTICADO');pm.expect(x.sesion.tokenAcceso).to.be.a('string');pm.expect(x.sesion.permisos).to.be.an('array');pm.expect(x.sesion).not.to.have.property('tokenActualizacion');});if(x.sesion)pm.collectionVariables.set('token_recepcion',x.sesion.tokenAcceso);",
+                  "pm.test('Rol y permisos efectivos presentes',()=>{const s=pm.response.json().sesion;pm.expect(s.roles).to.include('RECEPCIONISTA');pm.expect(s.permisos.length).to.be.above(0);});",
+                  "pm.test('Sesión sin permisos vacíos',()=>pm.expect(pm.response.json().sesion.permisos.length).to.be.above(0));",
+                  "pm.test('Permiso efectivo esperado',()=>pm.expect(pm.response.json().sesion.permisos).to.include('RECEPCION_ACCESO'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Refresh recepcion",
+          "id": "292e1f78-4c72-43f7-a364-6c38159dd9a9",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base}}/api/v1/auth/refrescar-token"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP esperado', () => pm.expect([200]).to.include(pm.response.code));",
+                  "pm.test('Refresh con cookie HttpOnly',()=>pm.expect(pm.response.json().tokenAcceso).to.be.a('string'));pm.test('Cookie protegida',()=>pm.expect(pm.response.headers.get('Set-Cookie')).to.include('HttpOnly'));",
+                  "pm.collectionVariables.set('refresh_revocado',pm.response.headers.get('Set-Cookie').split(';')[0]);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Logout recepcion",
+          "id": "e1ea314b-42b6-4b08-98b9-3a5de946432c",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base}}/api/v1/auth/cerrar-sesion"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP esperado', () => pm.expect([204]).to.include(pm.response.code));",
+                  "pm.test('Logout sin contenido',()=>pm.expect(pm.response.text()).to.eql(''));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Login caja",
+          "id": "26c01a9e-1622-4029-9fc1-11fc76c4a0a0",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base}}/api/v1/auth/app-login",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"correo\": \"{{caja_correo}}\",\n  \"contrasena\": \"{{api_password}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP esperado', () => pm.expect([200]).to.include(pm.response.code));",
+                  "const x=pm.response.json();pm.test('Acceso autenticado y RBAC efectivo',()=>{pm.expect(x.estado).to.eql('AUTENTICADO');pm.expect(x.sesion.tokenAcceso).to.be.a('string');pm.expect(x.sesion.permisos).to.be.an('array');pm.expect(x.sesion).not.to.have.property('tokenActualizacion');});if(x.sesion)pm.collectionVariables.set('token_caja',x.sesion.tokenAcceso);",
+                  "pm.test('Rol y permisos efectivos presentes',()=>{const s=pm.response.json().sesion;pm.expect(s.roles).to.include('CAJERO');pm.expect(s.permisos.length).to.be.above(0);});",
+                  "pm.test('Sesión sin permisos vacíos',()=>pm.expect(pm.response.json().sesion.permisos.length).to.be.above(0));",
+                  "pm.test('Permiso efectivo esperado',()=>pm.expect(pm.response.json().sesion.permisos).to.include('CAJA_SESION_GESTIONAR'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Refresh caja",
+          "id": "febfaff8-14d3-4974-924b-0de866d2dd0e",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base}}/api/v1/auth/refrescar-token"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP esperado', () => pm.expect([200]).to.include(pm.response.code));",
+                  "pm.test('Refresh con cookie HttpOnly',()=>pm.expect(pm.response.json().tokenAcceso).to.be.a('string'));pm.test('Cookie protegida',()=>pm.expect(pm.response.headers.get('Set-Cookie')).to.include('HttpOnly'));",
+                  "pm.collectionVariables.set('refresh_revocado',pm.response.headers.get('Set-Cookie').split(';')[0]);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Logout caja",
+          "id": "9f7504da-b27b-4f96-b886-3eddeed4a30f",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base}}/api/v1/auth/cerrar-sesion"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP esperado', () => pm.expect([204]).to.include(pm.response.code));",
+                  "pm.test('Logout sin contenido',()=>pm.expect(pm.response.text()).to.eql(''));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Login staff_a",
+          "id": "b0c44b64-79ec-4408-83ae-1247a5272a24",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base}}/api/v1/auth/app-login",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"correo\": \"{{staff_a_correo}}\",\n  \"contrasena\": \"{{api_password}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP esperado', () => pm.expect([200]).to.include(pm.response.code));",
+                  "const x=pm.response.json();pm.test('Acceso autenticado y RBAC efectivo',()=>{pm.expect(x.estado).to.eql('AUTENTICADO');pm.expect(x.sesion.tokenAcceso).to.be.a('string');pm.expect(x.sesion.permisos).to.be.an('array');pm.expect(x.sesion).not.to.have.property('tokenActualizacion');});if(x.sesion)pm.collectionVariables.set('token_staff_a',x.sesion.tokenAcceso);",
+                  "pm.test('Rol y permisos efectivos presentes',()=>{const s=pm.response.json().sesion;pm.expect(s.roles).to.include('STAFF');pm.expect(s.permisos.length).to.be.above(0);});",
+                  "pm.test('Sesión sin permisos vacíos',()=>pm.expect(pm.response.json().sesion.permisos.length).to.be.above(0));",
+                  "pm.test('Permiso efectivo esperado',()=>pm.expect(pm.response.json().sesion.permisos).to.include('STAFF_AGENDA_VER'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Refresh staff_a",
+          "id": "5a1365ef-95da-4fa0-86fd-48c74a7401f9",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base}}/api/v1/auth/refrescar-token"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP esperado', () => pm.expect([200]).to.include(pm.response.code));",
+                  "pm.test('Refresh con cookie HttpOnly',()=>pm.expect(pm.response.json().tokenAcceso).to.be.a('string'));pm.test('Cookie protegida',()=>pm.expect(pm.response.headers.get('Set-Cookie')).to.include('HttpOnly'));",
+                  "pm.collectionVariables.set('refresh_revocado',pm.response.headers.get('Set-Cookie').split(';')[0]);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Logout staff_a",
+          "id": "dc06b024-8023-4d92-9e8d-f280196020f1",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base}}/api/v1/auth/cerrar-sesion"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP esperado', () => pm.expect([204]).to.include(pm.response.code));",
+                  "pm.test('Logout sin contenido',()=>pm.expect(pm.response.text()).to.eql(''));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Catálogo público",
+          "id": "05ab5eda-918e-4e8b-9fae-c26c333b3faa",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base}}/api/v1/publico/servicios/sitio/{{slug_a}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP esperado', () => pm.expect([200]).to.include(pm.response.code));",
+                  "pm.test('Catálogo estructurado sin secretos',()=>{pm.expect(pm.response.json().grupos).to.be.an('array');pm.expect(pm.response.text()).not.to.match(/token_acceso_cifrado|contrasena_hash/);});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Checkout público sin política",
+          "id": "78570b5b-2a76-48a1-8724-dcd79d1ea68e",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base}}/api/v1/publico/empresas/{{slug_a}}/checkout/configuracion"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP esperado', () => pm.expect([200]).to.include(pm.response.code));",
+                  "const x=pm.response.json();pm.test('Sin política no habilita cobro',()=>pm.expect(x.habilitado).to.eql(false));pm.test('No filtra secretos',()=>pm.expect(JSON.stringify(x)).not.to.match(/token_acceso|actor|cifrado|proveedorPagoId/));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Contacto legal global (008 F0)",
+          "id": "4ec983e4-dcb3-4ade-9cc9-ce36d4da60b5",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base}}/api/v1/publico/plataforma/contacto-legal"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP esperado',()=>pm.expect(pm.response.code).to.eql(200));",
+                  "pm.test('Contrato público mínimo',()=>{const x=pm.response.json();pm.expect(Object.keys(x)).to.eql(['correo']);pm.expect(x.correo).to.match(/^[^@]+@[^@]+$/);});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Soporte global sin campos privados (008 F0)",
+          "id": "00afee8d-1164-4728-9fd4-3ee8f9921eb7",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base}}/api/v1/publico/plataforma/soporte"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP esperado',()=>pm.expect(pm.response.code).to.eql(200));",
+                  "pm.test('Soporte sin auditoría ni contacto legal',()=>{const x=pm.response.json();pm.expect(Object.keys(x).sort()).to.eql(['correo','telefono','dias','horaInicio','horaFin','zonaHoraria'].sort());});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "01 Seguridad: tenant y RBAC",
+      "item": [
+        {
+          "name": "Sin sesión",
+          "id": "b4c11daf-47e4-4f6a-a01e-1d69408cdcc9",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base}}/api/v1/caja/catalogo"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP esperado', () => pm.expect([401]).to.include(pm.response.code));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Token firmado caducado",
+          "id": "ee446d43-992c-4183-875e-c2e15402bb22",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_caducado}}"
+              }
+            ],
+            "url": "{{base}}/api/v1/caja/catalogo"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP esperado', () => pm.expect([401]).to.include(pm.response.code));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Refresh después de logout",
+          "id": "872d4e0e-9f32-43e9-ac92-929a1182c4f9",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Cookie",
+                "value": "{{refresh_revocado}}"
+              }
+            ],
+            "url": "{{base}}/api/v1/auth/refrescar-token"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP esperado', () => pm.expect([401]).to.include(pm.response.code));",
+                  "pm.test('Refresh reenviado fue revocado en servidor',()=>{const x=pm.response.json();pm.expect(x.codigo).to.eql('ERROR_NEGOCIO');pm.expect(x.mensaje).to.include('ya no es valido');});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "recepcion no administra política",
+          "id": "f373db87-8a4a-4135-86ef-3475e29000af",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_recepcion}}"
+              }
+            ],
+            "url": "{{base}}/api/v1/admin/politica"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP esperado', () => pm.expect([403]).to.include(pm.response.code));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "caja no administra política",
+          "id": "a64f7f65-3591-469e-88b3-33b96e0b1094",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_caja}}"
+              }
+            ],
+            "url": "{{base}}/api/v1/admin/politica"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP esperado', () => pm.expect([403]).to.include(pm.response.code));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "staff_a no administra política",
+          "id": "99900215-af63-407a-91d9-cd5ff8033435",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_staff_a}}"
+              }
+            ],
+            "url": "{{base}}/api/v1/admin/politica"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP esperado', () => pm.expect([403]).to.include(pm.response.code));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Recepción no configura proveedores de pago",
+          "id": "c3a1d98e-923d-41cd-9438-93044c28f324",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_recepcion}}"
+              }
+            ],
+            "url": "{{base}}/api/v1/admin/pagos/configuracion"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP esperado', () => pm.expect([403]).to.include(pm.response.code));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "staff_a no abre Caja",
+          "id": "195b7426-7a99-4c9b-b91e-7518f0e79163",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_staff_a}}"
+              }
+            ],
+            "url": "{{base}}/api/v1/caja/sesiones/abrir",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"sucursalId\": \"{{sucursal_a}}\",\n  \"montoInicial\": 0\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP esperado', () => pm.expect([403]).to.include(pm.response.code));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "caja no administra usuarios",
+          "id": "8d048ac1-f4c2-4b04-94cf-e1c96a31caa5",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_caja}}"
+              }
+            ],
+            "url": "{{base}}/api/v1/admin/usuarios-internos"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP esperado', () => pm.expect([403]).to.include(pm.response.code));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "staff_a no administra usuarios",
+          "id": "2ca1de18-538c-4cda-ac0e-f399de72a508",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_staff_a}}"
+              }
+            ],
+            "url": "{{base}}/api/v1/admin/usuarios-internos"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP esperado', () => pm.expect([403]).to.include(pm.response.code));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Cita ajena no se revela",
+          "id": "4e69109b-4a37-4d9f-a823-384caa9af2a9",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_admin_a}}"
+              }
+            ],
+            "url": "{{base}}/api/v1/caja/citas/{{cita_b}}/pagos"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP esperado', () => pm.expect([404]).to.include(pm.response.code));",
+                  "pm.collectionVariables.set('mensajeCitaAjena',pm.response.json().mensaje);",
+                  "pm.test('Error con contrato público',()=>{const e=pm.response.json();pm.expect(e).to.have.property('mensaje');pm.expect(e.codigo).to.eql('ERROR_NEGOCIO');});",
+                  "pm.collectionVariables.set('codigoCitaAjena',pm.response.json().codigo);",
+                  "pm.test('Causa concreta del rechazo',()=>pm.expect(pm.response.json().mensaje).to.include(\"La cita no existe para la empresa\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Venta ajena no se revela",
+          "id": "03f0d231-4297-4222-9b86-c1fe6d784012",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_admin_a}}"
+              }
+            ],
+            "url": "{{base}}/api/v1/caja/ventas/{{venta_b}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP esperado', () => pm.expect([404]).to.include(pm.response.code));",
+                  "",
+                  "pm.test('Error con contrato público',()=>{const e=pm.response.json();pm.expect(e).to.have.property('mensaje');pm.expect(e.codigo).to.eql('ERROR_NEGOCIO');});",
+                  "pm.test('Causa concreta del rechazo',()=>pm.expect(pm.response.json().mensaje).to.include(\"Venta no encontrada\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Point ajeno o inexistente no se revela",
+          "id": "0a52f9fd-073f-45cd-ad9c-103f24098eb2",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_admin_a}}"
+              }
+            ],
+            "url": "{{base}}/api/v1/caja/point/ordenes/00000000-0000-0000-0000-000000000001"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP esperado', () => pm.expect([404]).to.include(pm.response.code));",
+                  "",
+                  "pm.test('Error con contrato público',()=>{const e=pm.response.json();pm.expect(e).to.have.property('mensaje');pm.expect(e.codigo).to.eql('ERROR_NEGOCIO');});",
+                  "pm.test('Causa concreta del rechazo',()=>pm.expect(pm.response.json().mensaje).to.include(\"Orden Point no encontrada\"));",
+                  "pm.collectionVariables.set('point404mensaje',pm.response.json().mensaje);pm.collectionVariables.set('point404codigo',pm.response.json().codigo);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Política 404 uniforme slug_b",
+          "id": "7a15a57c-eeff-4414-ac96-1cf71b4b0136",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base}}/api/v1/publico/empresas/{{slug_b}}/politicas"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP esperado', () => pm.expect([404]).to.include(pm.response.code));",
+                  "const x=pm.response.json();const previo=pm.collectionVariables.get('politica404');pm.test('Mismo mensaje 404',()=>{if(previo)pm.expect(x.mensaje).to.eql(previo);});pm.collectionVariables.set('politica404',x.mensaje);",
+                  "pm.test('Error con contrato público',()=>{const e=pm.response.json();pm.expect(e).to.have.property('mensaje');pm.expect(e.codigo).to.eql('ERROR_NEGOCIO');});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Política 404 uniforme slug_oculto",
+          "id": "3155eef2-4d3b-46bf-a6bc-b21b2b0890fa",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base}}/api/v1/publico/empresas/{{slug_oculto}}/politicas"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP esperado', () => pm.expect([404]).to.include(pm.response.code));",
+                  "const x=pm.response.json();const previo=pm.collectionVariables.get('politica404');pm.test('Mismo mensaje 404',()=>{if(previo)pm.expect(x.mensaje).to.eql(previo);});pm.collectionVariables.set('politica404',x.mensaje);",
+                  "pm.test('Error con contrato público',()=>{const e=pm.response.json();pm.expect(e).to.have.property('mensaje');pm.expect(e.codigo).to.eql('ERROR_NEGOCIO');});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Política 404 uniforme slug_inexistente",
+          "id": "d17766d0-c205-48d0-8d4b-384523e5e006",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base}}/api/v1/publico/empresas/{{slug_inexistente}}/politicas"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP esperado', () => pm.expect([404]).to.include(pm.response.code));",
+                  "const x=pm.response.json();const previo=pm.collectionVariables.get('politica404');pm.test('Mismo mensaje 404',()=>{if(previo)pm.expect(x.mensaje).to.eql(previo);});pm.collectionVariables.set('politica404',x.mensaje);",
+                  "pm.test('Error con contrato público',()=>{const e=pm.response.json();pm.expect(e).to.have.property('mensaje');pm.expect(e.codigo).to.eql('ERROR_NEGOCIO');});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Logout revoca refresh, conserva acceso hasta expirar",
+          "request": {
+            "method": "GET",
+            "url": "{{base}}/api/v1/auth/perfil",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_admin_a}}"
+              }
+            ]
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP esperado',()=>pm.expect(pm.response.code).to.eql(200));",
+                  "pm.test('JWT de acceso conserva vigencia',()=>pm.expect(pm.response.json().usuarioId).to.be.a('number'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Staff consulta su agenda propia",
+          "request": {
+            "method": "GET",
+            "url": "{{base}}/api/v1/staff/agenda?fecha={{fecha}}",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_staff_a}}"
+              }
+            ]
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP esperado',()=>pm.expect(pm.response.code).to.eql(200));",
+                  "pm.test('Agenda propia estructurada',()=>pm.expect(pm.response.json()).to.be.an('array'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Cita inexistente equivale a cita ajena",
+          "request": {
+            "method": "GET",
+            "url": "{{base}}/api/v1/caja/citas/{{cita_ausente}}/pagos",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_admin_a}}"
+              }
+            ]
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP esperado',()=>pm.expect(pm.response.code).to.eql(404));",
+                  "pm.test('404 uniforme',()=>{const x=pm.response.json();pm.expect(x.mensaje).to.eql(pm.collectionVariables.get('mensajeCitaAjena'));pm.expect(x.codigo).to.eql(pm.collectionVariables.get('codigoCitaAjena'));});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Tenant no administra contacto de plataforma (008 F0)",
+          "id": "8a4f6fd1-7787-4c81-af59-85c510d86dfd",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_admin_a}}"
+              }
+            ],
+            "url": "{{base}}/api/v1/plataforma/marketing/soporte"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP esperado',()=>pm.expect(pm.response.code).to.eql(403));",
+                  "pm.test('Ámbito de plataforma protegido',()=>pm.expect(pm.response.code).to.eql(403));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Tenant no modifica contacto de plataforma (008 F0)",
+          "id": "387f2588-4458-4e08-acda-a47a84e658fa",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_admin_a}}"
+              }
+            ],
+            "url": "{{base}}/api/v1/plataforma/marketing/soporte"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP esperado',()=>pm.expect(pm.response.code).to.eql(403));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Tenant no consulta empresas de plataforma (008 F0)",
+          "id": "3eb279c8-bcd6-400b-9aeb-a7a57f650143",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_admin_a}}"
+              }
+            ],
+            "url": "{{base}}/api/v1/plataforma/empresas"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP esperado',()=>pm.expect(pm.response.code).to.eql(403));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Plataforma exige sesión (008 F0)",
+          "id": "7ff57ea4-b4a8-4d4f-83a1-eef19809e985",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base}}/api/v1/plataforma/marketing/soporte"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP esperado',()=>pm.expect(pm.response.code).to.eql(401));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "02 Políticas (007-1)",
+      "item": [
+        {
+          "name": "Aviso de anticipo sin política",
+          "id": "7525c0a6-edc3-467d-9482-3f5a91400fa4",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_admin_a}}"
+              }
+            ],
+            "url": "{{base}}/api/v1/admin/politica"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP esperado', () => pm.expect([200]).to.include(pm.response.code));",
+                  "const x=pm.response.json();pm.test('Sin versión y con aviso',()=>{pm.expect(x.vigente).to.eql(null);pm.expect(x.avisoCobro).to.be.a('string');});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Vista previa singular",
+          "id": "1a62db82-daf0-428c-a9bb-b264f67633ab",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_admin_a}}"
+              }
+            ],
+            "url": "{{base}}/api/v1/admin/politica/vista-previa",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"versionBase\": 0,\n  \"modoNoShow\": \"RETENER\",\n  \"diasAclaracion\": 1,\n  \"contactoReclamosCorreo\": \"reclamos@example.test\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP esperado', () => pm.expect([200]).to.include(pm.response.code));",
+                  "pm.test('Plazo singular',()=>{const x=pm.response.json();pm.expect(x.texto).to.include('1 día');pm.expect(x.texto).not.to.include('1 días');});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Publicar versión inicial",
+          "id": "c7c853fe-4ff8-4cc5-a85b-93999d3669a1",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_admin_a}}"
+              }
+            ],
+            "url": "{{base}}/api/v1/admin/politica/versiones",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"versionBase\": 0,\n  \"modoNoShow\": \"RETENER\",\n  \"diasAclaracion\": 1,\n  \"contactoReclamosCorreo\": \"reclamos@example.test\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP esperado', () => pm.expect([200]).to.include(pm.response.code));",
+                  "const x=pm.response.json();pm.test('Versión inicial y momento UTC',()=>{pm.expect(x.vigente.version).to.eql(1);pm.expect(x.vigente.vigenteDesde).to.match(/Z$/);});pm.collectionVariables.set('politicaVersion',x.vigente.version);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Versión obsoleta devuelve conflicto",
+          "id": "1a524e49-62fb-4b2a-b970-ac9966cefce6",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_admin_a}}"
+              }
+            ],
+            "url": "{{base}}/api/v1/admin/politica/versiones",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"versionBase\": 0,\n  \"modoNoShow\": \"RETENER\",\n  \"diasAclaracion\": 1,\n  \"contactoReclamosCorreo\": \"reclamos@example.test\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP esperado', () => pm.expect([409]).to.include(pm.response.code));",
+                  "",
+                  "pm.test('Error con contrato público',()=>{const e=pm.response.json();pm.expect(e).to.have.property('mensaje');pm.expect(e.codigo).to.eql('ERROR_NEGOCIO');});",
+                  "pm.test('Causa concreta del rechazo',()=>pm.expect(pm.response.json().mensaje).to.include(\"La política cambió\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Contenido idéntico se deduplica",
+          "id": "40e15de3-7c70-4d65-9f35-0cfe161fbcd9",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_admin_a}}"
+              }
+            ],
+            "url": "{{base}}/api/v1/admin/politica/versiones",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"versionBase\": 1,\n  \"modoNoShow\": \"RETENER\",\n  \"diasAclaracion\": 1,\n  \"contactoReclamosCorreo\": \"reclamos@example.test\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP esperado', () => pm.expect([200]).to.include(pm.response.code));",
+                  "pm.test('No crea otra versión',()=>pm.expect(pm.response.json().vigente.version).to.eql(1));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Política pública vigente y caché",
+          "id": "69f92680-aefd-42d5-97db-c98fc63f5784",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base}}/api/v1/publico/empresas/{{slug_a}}/politicas"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP esperado', () => pm.expect([200]).to.include(pm.response.code));",
+                  "const x=pm.response.json();pm.test('Contrato exclusivamente público',()=>{pm.expect(x.version).to.eql(1);for(const k of ['id','empresaId','publicadaPorUsuarioId','actor','avisoCobro'])pm.expect(x).not.to.have.property(k);});pm.test('Caché 60 segundos',()=>pm.expect(pm.response.headers.get('Cache-Control')).to.include('max-age=60'));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "03 Reservas y anticipo (009, 010)",
+      "item": [
+        {
+          "name": "Cotización sin política bloquea anticipo",
+          "id": "641c7d2f-031a-4f29-b62f-f8d6291cc7df",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Tenant-Slug",
+                "value": "{{slug_b}}"
+              }
+            ],
+            "url": "{{base}}/api/v1/publico/citas/cotizar",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"sucursalId\": \"{{sucursal_b}}\",\n  \"items\": [\n    {\n      \"servicioId\": \"{{servicio_anticipo_b}}\",\n      \"fecha\": \"{{fecha}}\"\n    }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP esperado', () => pm.expect([200]).to.include(pm.response.code));",
+                  "pm.test('Backend no permite reservar',()=>{const x=pm.response.json();pm.expect(x.reservableEnLinea).to.eql(false);pm.expect(x.motivoNoReservable).to.be.a('string');});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Guardar contadores antes del rechazo",
+          "id": "30c01405-619a-411e-985c-59384a2c1c18",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Fluora-Prueba",
+                "value": "{{nonce}}"
+              }
+            ],
+            "url": "{{base}}/api/v1/publico/__pruebas/aislamiento"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP esperado', () => pm.expect([200]).to.include(pm.response.code));",
+                  "pm.collectionVariables.set('antesAnticipo',JSON.stringify(pm.response.json()));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Disponibilidad real a",
+          "id": "781afd33-6792-4ce4-88e5-7f59fadebe48",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Tenant-Slug",
+                "value": "{{slug_a}}"
+              }
+            ],
+            "url": "{{base}}/api/v1/publico/disponibilidad/franjas?sucursalId={{sucursal_a}}&servicioId={{servicio_anticipo_a}}&prestadorId={{staff_a}}&fecha={{fecha}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP esperado', () => pm.expect([200]).to.include(pm.response.code));",
+                  "const x=pm.response.json();pm.test('Franjas reales suficientes',()=>pm.expect(x.length).to.be.at.least(10));if(x.length>=10){pm.collectionVariables.set('inicio_anticipo_a',x[0].inicio);pm.collectionVariables.set('inicio_sin_a',x[1].inicio);pm.collectionVariables.set('inicio_recepcion_a',x[2].inicio);pm.collectionVariables.set('inicio_cancelar_a',x[3].inicio);pm.collectionVariables.set('inicio_mixta1_a',x[6].inicio);pm.collectionVariables.set('inicio_mixta2_a',x[8].inicio);}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Disponibilidad real b",
+          "id": "33891c6b-8eeb-493c-9eee-57f182ed1125",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Tenant-Slug",
+                "value": "{{slug_b}}"
+              }
+            ],
+            "url": "{{base}}/api/v1/publico/disponibilidad/franjas?sucursalId={{sucursal_b}}&servicioId={{servicio_anticipo_b}}&prestadorId={{staff_b}}&fecha={{fecha}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP esperado', () => pm.expect([200]).to.include(pm.response.code));",
+                  "const x=pm.response.json();pm.test('Franjas reales suficientes',()=>pm.expect(x.length).to.be.at.least(10));if(x.length>=10){pm.collectionVariables.set('inicio_anticipo_b',x[0].inicio);pm.collectionVariables.set('inicio_sin_b',x[1].inicio);pm.collectionVariables.set('inicio_recepcion_b',x[2].inicio);pm.collectionVariables.set('inicio_cancelar_b',x[3].inicio);pm.collectionVariables.set('inicio_mixta1_b',x[6].inicio);pm.collectionVariables.set('inicio_mixta2_b',x[8].inicio);}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Anticipo sin política no crea cita",
+          "id": "6ca0f9c7-3c74-4866-ba9a-a841266aeaaf",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Tenant-Slug",
+                "value": "{{slug_b}}"
+              }
+            ],
+            "url": "{{base}}/api/v1/publico/citas",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"sucursalId\": \"{{sucursal_b}}\",\n  \"servicioId\": \"{{servicio_anticipo_b}}\",\n  \"prestadorId\": \"{{staff_b}}\",\n  \"nombreCliente\": \"Cliente Postman\",\n  \"correoCliente\": \"rechazo@example.test\",\n  \"telefonoCliente\": \"5550000010\",\n  \"inicio\": \"{{inicio_anticipo_b}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP esperado', () => pm.expect([409]).to.include(pm.response.code));",
+                  "pm.test('Código estable de anticipo',()=>pm.expect(pm.response.json().codigo).to.eql('ANTICIPO_NO_DISPONIBLE'));",
+                  "pm.test('Error con contrato público',()=>{const e=pm.response.json();pm.expect(e).to.have.property('mensaje');pm.expect(e).to.have.property('codigo');});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Rechazo no crea cliente ni cita",
+          "id": "ce8977c5-8ace-4d74-8c2d-bdbde0740336",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Fluora-Prueba",
+                "value": "{{nonce}}"
+              }
+            ],
+            "url": "{{base}}/api/v1/publico/__pruebas/aislamiento"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP esperado', () => pm.expect([200]).to.include(pm.response.code));",
+                  "const antes=JSON.parse(pm.collectionVariables.get('antesAnticipo')),despues=pm.response.json();pm.test('Sin escrituras del rechazo',()=>{pm.expect(despues.citasB).to.eql(antes.citasB);pm.expect(despues.usuariosB).to.eql(antes.usuariosB);});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Cotización con política sí permite reservar",
+          "id": "626133ad-2589-4cf4-a152-3744128bd571",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Tenant-Slug",
+                "value": "{{slug_a}}"
+              }
+            ],
+            "url": "{{base}}/api/v1/publico/citas/cotizar",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"sucursalId\": \"{{sucursal_a}}\",\n  \"items\": [\n    {\n      \"servicioId\": \"{{servicio_anticipo_a}}\",\n      \"fecha\": \"{{fecha}}\"\n    }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP esperado', () => pm.expect([200]).to.include(pm.response.code));",
+                  "pm.test('Anticipo resuelto por backend',()=>{const x=pm.response.json();pm.expect(x.reservableEnLinea).to.eql(true);pm.expect(x.importeRequeridoTotal).to.eql(250);});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Reserva con anticipo queda pendiente de pago",
+          "id": "df6b6079-d1f7-407d-912d-1b87e495b612",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Tenant-Slug",
+                "value": "{{slug_a}}"
+              }
+            ],
+            "url": "{{base}}/api/v1/publico/citas",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"sucursalId\": \"{{sucursal_a}}\",\n  \"servicioId\": \"{{servicio_anticipo_a}}\",\n  \"prestadorId\": \"{{staff_a}}\",\n  \"nombreCliente\": \"Cliente Postman\",\n  \"correoCliente\": \"reserva@example.test\",\n  \"telefonoCliente\": \"5550000010\",\n  \"inicio\": \"{{inicio_anticipo_a}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP esperado', () => pm.expect([201]).to.include(pm.response.code));",
+                  "const x=pm.response.json();pm.test('Apartado hasta pagar',()=>{pm.expect(x.estado).to.eql('PENDIENTE_PAGO');pm.expect(x.importeRequerido).to.eql(250);pm.expect(x.pagoExpiraEn).to.match(/Z$/);});pm.collectionVariables.set('reserva_anticipo',x.id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Reserva sin anticipo queda pendiente",
+          "id": "53f36bf9-02f2-4801-824e-6a0c08197de7",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Tenant-Slug",
+                "value": "{{slug_a}}"
+              }
+            ],
+            "url": "{{base}}/api/v1/publico/citas",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"sucursalId\": \"{{sucursal_a}}\",\n  \"servicioId\": \"{{servicio_sin_a}}\",\n  \"prestadorId\": \"{{staff_a}}\",\n  \"nombreCliente\": \"Cliente Postman\",\n  \"correoCliente\": \"sin@example.test\",\n  \"telefonoCliente\": \"5550000010\",\n  \"inicio\": \"{{inicio_sin_a}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP esperado', () => pm.expect([201]).to.include(pm.response.code));",
+                  "const x=pm.response.json();pm.test('No inventa pago',()=>{pm.expect(x.estado).to.eql('PENDIENTE');pm.expect(x.requierePago).to.eql(false);});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Reserva mixta suma anticipos",
+          "id": "3030bf03-3081-4789-a635-2dcacf5c9220",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Tenant-Slug",
+                "value": "{{slug_a}}"
+              }
+            ],
+            "url": "{{base}}/api/v1/publico/citas/multiples",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"sucursalId\": \"{{sucursal_a}}\",\n  \"nombreCliente\": \"Cliente Mixto Postman\",\n  \"correoCliente\": \"mixta@example.test\",\n  \"telefonoCliente\": \"5550000011\",\n  \"items\": [\n    {\n      \"servicioId\": \"{{servicio_anticipo_a}}\",\n      \"prestadorId\": \"{{staff_a}}\",\n      \"inicio\": \"{{inicio_mixta1_a}}\"\n    },\n    {\n      \"servicioId\": \"{{servicio_sin_a}}\",\n      \"prestadorId\": \"{{staff_a}}\",\n      \"inicio\": \"{{inicio_mixta2_a}}\"\n    }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP esperado', () => pm.expect([201]).to.include(pm.response.code));",
+                  "const x=pm.response.json();pm.test('Mixta suma solo anticipos',()=>{pm.expect(x.citas).to.have.length(2);pm.expect(x.citas.reduce((s,c)=>s+Number(c.importeRequerido),0)).to.eql(250);});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Recepción mantiene reserva sin política pública",
+          "id": "95f251f4-87e5-4f06-90e0-8d689f883617",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_admin_b}}"
+              }
+            ],
+            "url": "{{base}}/api/v1/recepcion/citas",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"sucursalId\": \"{{sucursal_b}}\",\n  \"servicioId\": \"{{servicio_anticipo_b}}\",\n  \"prestadorId\": \"{{staff_b}}\",\n  \"nombreCliente\": \"Cliente Postman\",\n  \"correoCliente\": \"recepcion@example.test\",\n  \"telefonoCliente\": \"5550000010\",\n  \"inicio\": \"{{inicio_recepcion_b}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP esperado', () => pm.expect([200]).to.include(pm.response.code));",
+                  "pm.test('Origen interno no exige checkout',()=>pm.expect(pm.response.json().estado).not.to.eql('PENDIENTE_PAGO'));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "04 Checkout y aceptación (007-1)",
+      "item": [
+        {
+          "name": "Servicios requieren aceptación",
+          "id": "80cd51a0-e1e2-46d1-b910-c36e8b7da3d9",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "noacepta-{{nonce}}"
+              }
+            ],
+            "url": "{{base}}/api/v1/publico/empresas/{{slug_a}}/checkout/ordenes",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"sucursalId\": \"{{sucursal_a}}\",\n  \"correoCliente\": \"reserva@example.test\",\n  \"nombreDestinatario\": \"Cliente Postman\",\n  \"telefonoDestinatario\": \"5550000010\",\n  \"modalidadEntrega\": \"RECOGE_EN_SUCURSAL\",\n  \"productos\": [],\n  \"citaIds\": [\n    \"{{reserva_anticipo}}\"\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP esperado', () => pm.expect([409]).to.include(pm.response.code));",
+                  "",
+                  "pm.test('Error con contrato público',()=>{const e=pm.response.json();pm.expect(e).to.have.property('mensaje');pm.expect(e.codigo).to.eql('ERROR_NEGOCIO');});",
+                  "pm.test('Causa concreta del rechazo',()=>pm.expect(pm.response.json().mensaje).to.include(\"Acepta la versión vigente de la política\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Actualizar política a versión 2",
+          "id": "bffe2000-3af0-44fc-90c4-40539d7a0eaf",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_admin_a}}"
+              }
+            ],
+            "url": "{{base}}/api/v1/admin/politica/versiones",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"versionBase\": 1,\n  \"modoNoShow\": \"RETENER\",\n  \"diasAclaracion\": 2,\n  \"contactoReclamosCorreo\": \"reclamos@example.test\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP esperado', () => pm.expect([200]).to.include(pm.response.code));",
+                  "pm.test('Versión consecutiva',()=>pm.expect(pm.response.json().vigente.version).to.eql(2));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Servicios con versión vieja devuelven conflicto",
+          "id": "cfde9ed8-60b6-4db3-a81f-122636bf97d7",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "vieja-{{nonce}}"
+              }
+            ],
+            "url": "{{base}}/api/v1/publico/empresas/{{slug_a}}/checkout/ordenes",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"sucursalId\": \"{{sucursal_a}}\",\n  \"correoCliente\": \"reserva@example.test\",\n  \"nombreDestinatario\": \"Cliente Postman\",\n  \"telefonoDestinatario\": \"5550000010\",\n  \"modalidadEntrega\": \"RECOGE_EN_SUCURSAL\",\n  \"productos\": [],\n  \"citaIds\": [\n    \"{{reserva_anticipo}}\"\n  ],\n  \"aceptaPolitica\": true,\n  \"politicaVersion\": 1\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP esperado', () => pm.expect([409]).to.include(pm.response.code));",
+                  "",
+                  "pm.test('Error con contrato público',()=>{const e=pm.response.json();pm.expect(e).to.have.property('mensaje');pm.expect(e.codigo).to.eql('ERROR_NEGOCIO');});",
+                  "pm.test('Causa concreta del rechazo',()=>pm.expect(pm.response.json().mensaje).to.include(\"Acepta la versión vigente de la política\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Servicios aceptados crean orden sin cobrar",
+          "id": "01bb1bbd-784d-4603-80a8-a25edde519da",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "servicios-{{nonce}}"
+              }
+            ],
+            "url": "{{base}}/api/v1/publico/empresas/{{slug_a}}/checkout/ordenes",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"sucursalId\": \"{{sucursal_a}}\",\n  \"correoCliente\": \"reserva@example.test\",\n  \"nombreDestinatario\": \"Cliente Postman\",\n  \"telefonoDestinatario\": \"5550000010\",\n  \"modalidadEntrega\": \"RECOGE_EN_SUCURSAL\",\n  \"productos\": [],\n  \"citaIds\": [\n    \"{{reserva_anticipo}}\"\n  ],\n  \"aceptaPolitica\": true,\n  \"politicaVersion\": 2\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP esperado', () => pm.expect([201]).to.include(pm.response.code));",
+                  "const x=pm.response.json();pm.test('Orden no pagada y aceptación vigente',()=>{pm.expect(x.estado).not.to.eql('PAGADA');pm.expect(x.total).to.eql(250);});pm.collectionVariables.set('orden_servicio',x.id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Solo productos no exigen aceptación",
+          "id": "f2c36e6b-2321-4d58-90cc-af82e46421ea",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "productos-{{nonce}}"
+              }
+            ],
+            "url": "{{base}}/api/v1/publico/empresas/{{slug_a}}/checkout/ordenes",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"sucursalId\": \"{{sucursal_a}}\",\n  \"correoCliente\": \"reserva@example.test\",\n  \"nombreDestinatario\": \"Cliente Postman\",\n  \"telefonoDestinatario\": \"5550000010\",\n  \"modalidadEntrega\": \"RECOGE_EN_SUCURSAL\",\n  \"productos\": [\n    {\n      \"productoId\": \"{{producto}}\",\n      \"cantidad\": 1\n    }\n  ],\n  \"citaIds\": []\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP esperado', () => pm.expect([201]).to.include(pm.response.code));",
+                  "const x=pm.response.json();pm.test('Producto cotizado en backend',()=>{pm.expect(x.total).to.eql(50);pm.expect(x.estado).not.to.eql('PAGADA');});pm.collectionVariables.set('orden_producto',x.id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Reintento idempotente conserva orden",
+          "id": "e60b29e0-df25-4df1-867c-dbafca37adb4",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "productos-{{nonce}}"
+              }
+            ],
+            "url": "{{base}}/api/v1/publico/empresas/{{slug_a}}/checkout/ordenes",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"sucursalId\": \"{{sucursal_a}}\",\n  \"correoCliente\": \"reserva@example.test\",\n  \"nombreDestinatario\": \"Cliente Postman\",\n  \"telefonoDestinatario\": \"5550000010\",\n  \"modalidadEntrega\": \"RECOGE_EN_SUCURSAL\",\n  \"productos\": [\n    {\n      \"productoId\": \"{{producto}}\",\n      \"cantidad\": 1\n    }\n  ],\n  \"citaIds\": []\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP esperado', () => pm.expect([201]).to.include(pm.response.code));",
+                  "pm.test('Misma orden',()=>pm.expect(pm.response.json().id).to.eql(pm.collectionVariables.get('orden_producto')));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Checkout de otro tenant no se revela",
+          "id": "b0f58fea-9108-4879-a99b-8c17d5ce140d",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base}}/api/v1/publico/empresas/{{slug_b}}/checkout/ordenes/{{orden_producto}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP esperado', () => pm.expect([404]).to.include(pm.response.code));",
+                  "",
+                  "pm.test('Error con contrato público',()=>{const e=pm.response.json();pm.expect(e).to.have.property('mensaje');pm.expect(e.codigo).to.eql('ERROR_NEGOCIO');});",
+                  "pm.test('Causa concreta del rechazo',()=>pm.expect(pm.response.json().mensaje).to.include(\"Orden no encontrada\"));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "05 Recepción (009 P2)",
+      "item": [
+        {
+          "name": "Reserva interna para check-in",
+          "id": "a79dab7a-7f65-4c18-816a-1416511cc81c",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_recepcion}}"
+              }
+            ],
+            "url": "{{base}}/api/v1/recepcion/citas",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"sucursalId\": \"{{sucursal_a}}\",\n  \"servicioId\": \"{{servicio_sin_a}}\",\n  \"prestadorId\": \"{{staff_a}}\",\n  \"nombreCliente\": \"Cliente Postman\",\n  \"correoCliente\": \"agenda@example.test\",\n  \"telefonoCliente\": \"5550000010\",\n  \"inicio\": \"{{inicio_recepcion_a}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP esperado', () => pm.expect([200]).to.include(pm.response.code));",
+                  "const x=pm.response.json();pm.test('Reserva creada',()=>pm.expect(x.id).to.be.a('number'));pm.collectionVariables.set('cita_recepcion_nueva',x.id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Check-in interno",
+          "id": "6df418bf-ab3a-4bbb-8cba-f08602712879",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_recepcion}}"
+              }
+            ],
+            "url": "{{base}}/api/v1/recepcion/citas/{{cita_recepcion_nueva}}/check-in"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP esperado', () => pm.expect([200]).to.include(pm.response.code));",
+                  "pm.test('Cita activa con llegada UTC',()=>{const x=pm.response.json();pm.expect(x.seccionAgenda).to.eql('ACTIVA');pm.expect(x.checkInEn).to.match(/Z$/);});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Abrir Caja con rol efectivo",
+          "id": "bce0c3db-e7f2-426f-b314-e42041a2c70f",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_caja}}"
+              }
+            ],
+            "url": "{{base}}/api/v1/caja/sesiones/abrir",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"sucursalId\": \"{{sucursal_a}}\",\n  \"montoInicial\": 0\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP esperado', () => pm.expect([200]).to.include(pm.response.code));",
+                  "const x=pm.response.json();pm.test('Caja abierta',()=>pm.expect(x.estado).to.eql('ABIERTA'));pm.collectionVariables.set('sesionCaja',x.id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Cobrar cita de Recepción",
+          "id": "7ea5d400-912e-40cd-93b7-ab3ca68d6674",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_caja}}"
+              }
+            ],
+            "url": "{{base}}/api/v1/caja/citas/{{cita_recepcion_nueva}}/pagos",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"monto\": 500,\n  \"metodoPago\": \"TARJETA\",\n  \"referencia\": \"prueba-postman\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP esperado', () => pm.expect([200]).to.include(pm.response.code));",
+                  "pm.test('Pago registrado',()=>pm.expect(pm.response.json().monto).to.eql(500));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Agenda clasifica cita liquidada",
+          "id": "0b673102-cb9e-4830-afd4-3bbfd91cf6b2",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_recepcion}}"
+              }
+            ],
+            "url": "{{base}}/api/v1/recepcion/agenda?fecha={{fecha}}&sucursalId={{sucursal_a}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP esperado', () => pm.expect([200]).to.include(pm.response.code));",
+                  "const x=pm.response.json();pm.test('Sección desde saldo backend',()=>{const c=x.find(c=>String(c.id)===String(pm.collectionVariables.get('cita_recepcion_nueva')));pm.expect(c.seccionAgenda).to.eql('FINALIZADA');});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Reserva para cancelar",
+          "id": "67ed20f8-a927-43ef-883a-66130a2c421f",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_recepcion}}"
+              }
+            ],
+            "url": "{{base}}/api/v1/recepcion/citas",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"sucursalId\": \"{{sucursal_a}}\",\n  \"servicioId\": \"{{servicio_sin_a}}\",\n  \"prestadorId\": \"{{staff_a}}\",\n  \"nombreCliente\": \"Cliente Postman\",\n  \"correoCliente\": \"cancelar@example.test\",\n  \"telefonoCliente\": \"5550000010\",\n  \"inicio\": \"{{inicio_cancelar_a}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP esperado', () => pm.expect([200]).to.include(pm.response.code));",
+                  "pm.collectionVariables.set('cita_cancelada_nueva',pm.response.json().id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Cancelar cita sin pago ni check-in",
+          "id": "9803bfef-3743-4f17-ae5b-46c1513fed32",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_recepcion}}"
+              }
+            ],
+            "url": "{{base}}/api/v1/recepcion/citas/{{cita_cancelada_nueva}}/cancelar"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP esperado', () => pm.expect([200]).to.include(pm.response.code));",
+                  "pm.test('Sección cancelada',()=>pm.expect(pm.response.json().seccionAgenda).to.eql('CANCELADA'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Pagada sin check-in sigue activa",
+          "id": "1bc2d639-c93a-4c6f-a831-530f7e215895",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_recepcion}}"
+              }
+            ],
+            "url": "{{base}}/api/v1/recepcion/agenda?fecha={{ayer}}&sucursalId={{sucursal_a}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP esperado', () => pm.expect([200]).to.include(pm.response.code));",
+                  "pm.test('No finaliza solo por pago online',()=>{const c=pm.response.json().find(c=>String(c.id)===pm.environment.get('cita_online'));pm.expect(c.seccionAgenda).to.eql('ACTIVA');});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "06 Caja (009 P3 y 010)",
+      "item": [
+        {
+          "name": "Caja A no vende cita B",
+          "request": {
+            "method": "POST",
+            "url": "{{base}}/api/v1/caja/ventas",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_caja}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"sucursalId\": \"{{sucursal_a}}\", \"citaId\": \"{{cita_b}}\", \"metodoPago\": \"TARJETA\", \"productos\": []}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP esperado',()=>pm.expect(pm.response.code).to.eql(409));",
+                  "pm.test('Recurso ajeno sin revelar',()=>pm.expect(pm.response.json().codigo).to.eql('ERROR_NEGOCIO'));",
+                  "pm.test('Causa concreta del rechazo',()=>pm.expect(pm.response.json().mensaje).to.include(\"no está disponible para este negocio\"));",
+                  "pm.collectionVariables.set('ventaAjenaMensaje',pm.response.json().mensaje.replace(/[0-9]+/g,'{id}'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Caja no vende cita inexistente igual que ajena",
+          "request": {
+            "method": "POST",
+            "url": "{{base}}/api/v1/caja/ventas",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_caja}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"sucursalId\": \"{{sucursal_a}}\", \"citaId\": \"{{cita_ausente}}\", \"metodoPago\": \"TARJETA\", \"productos\": []}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado y causa uniformes',()=>{const x=pm.response.json();pm.expect(pm.response.code).to.eql(409);pm.expect(x.codigo).to.eql('ERROR_NEGOCIO');pm.expect(x.mensaje).to.include('no está disponible para este negocio');pm.expect(x.mensaje.replace(/[0-9]+/g,'{id}')).to.eql(pm.collectionVariables.get('ventaAjenaMensaje'));});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Venta incompatible cliente",
+          "id": "2bee4655-cc16-401d-8d8e-f745acbf7589",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_caja}}"
+              }
+            ],
+            "url": "{{base}}/api/v1/caja/ventas",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"sucursalId\": \"{{sucursal_a}}\",\n  \"citaIds\": [\n    \"{{cita_a}}\",\n    \"{{cita_otro_cliente}}\"\n  ],\n  \"productos\": [\n    {\n      \"productoId\": \"{{producto}}\",\n      \"cantidad\": 1\n    }\n  ],\n  \"metodoPago\": \"TARJETA\",\n  \"referencia\": \"prueba-postman\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP esperado', () => pm.expect([409]).to.include(pm.response.code));",
+                  "",
+                  "pm.test('Error con contrato público',()=>{const e=pm.response.json();pm.expect(e).to.have.property('mensaje');pm.expect(e.codigo).to.eql('ERROR_NEGOCIO');});",
+                  "pm.test('Causa concreta del rechazo',()=>pm.expect(pm.response.json().mensaje).to.include(\"pertenece a otro cliente\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Venta incompatible sucursal",
+          "id": "163c757e-2e83-4dd3-8c86-2fc75e089c91",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_caja}}"
+              }
+            ],
+            "url": "{{base}}/api/v1/caja/ventas",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"sucursalId\": \"{{sucursal_a}}\",\n  \"citaIds\": [\n    \"{{cita_a}}\",\n    \"{{cita_otra_sucursal}}\"\n  ],\n  \"productos\": [\n    {\n      \"productoId\": \"{{producto}}\",\n      \"cantidad\": 1\n    }\n  ],\n  \"metodoPago\": \"TARJETA\",\n  \"referencia\": \"prueba-postman\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP esperado', () => pm.expect([409]).to.include(pm.response.code));",
+                  "",
+                  "pm.test('Error con contrato público',()=>{const e=pm.response.json();pm.expect(e).to.have.property('mensaje');pm.expect(e.codigo).to.eql('ERROR_NEGOCIO');});",
+                  "pm.test('Causa concreta del rechazo',()=>pm.expect(pm.response.json().mensaje).to.include(\"pertenece a otra sucursal\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Venta incompatible moneda",
+          "id": "c2ce9d87-aa81-4e89-b21b-e57b60f419ba",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_caja}}"
+              }
+            ],
+            "url": "{{base}}/api/v1/caja/ventas",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"sucursalId\": \"{{sucursal_a}}\",\n  \"citaIds\": [\n    \"{{cita_a}}\",\n    \"{{cita_otra_moneda}}\"\n  ],\n  \"productos\": [\n    {\n      \"productoId\": \"{{producto}}\",\n      \"cantidad\": 1\n    }\n  ],\n  \"metodoPago\": \"TARJETA\",\n  \"referencia\": \"prueba-postman\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP esperado', () => pm.expect([409]).to.include(pm.response.code));",
+                  "",
+                  "pm.test('Error con contrato público',()=>{const e=pm.response.json();pm.expect(e).to.have.property('mensaje');pm.expect(e.codigo).to.eql('ERROR_NEGOCIO');});",
+                  "pm.test('Causa concreta del rechazo',()=>pm.expect(pm.response.json().mensaje).to.include(\"usa otra moneda\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "citaId y citaIds juntos son inválidos",
+          "id": "bad7d0fb-389a-4c30-9c18-19c092d56ed3",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_caja}}"
+              }
+            ],
+            "url": "{{base}}/api/v1/caja/ventas",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"sucursalId\": \"{{sucursal_a}}\",\n  \"citaIds\": [\n    \"{{cita_a}}\",\n    \"{{cita_a2}}\"\n  ],\n  \"productos\": [\n    {\n      \"productoId\": \"{{producto}}\",\n      \"cantidad\": 1\n    }\n  ],\n  \"metodoPago\": \"TARJETA\",\n  \"referencia\": \"prueba-postman\",\n  \"citaId\": \"{{cita_a}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP esperado', () => pm.expect([400]).to.include(pm.response.code));",
+                  "",
+                  "pm.test('Error con contrato público',()=>{const e=pm.response.json();pm.expect(e).to.have.property('mensaje');pm.expect(e.codigo).to.eql('ERROR_NEGOCIO');});",
+                  "pm.test('Causa concreta del rechazo',()=>pm.expect(pm.response.json().mensaje).to.include(\"Usa citaId o citaIds, no ambos\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Dos citas más producto",
+          "id": "75205d31-79d6-4db7-9d43-b502d62cfa4a",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_caja}}"
+              }
+            ],
+            "url": "{{base}}/api/v1/caja/ventas",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"sucursalId\": \"{{sucursal_a}}\",\n  \"citaIds\": [\n    \"{{cita_a}}\",\n    \"{{cita_a2}}\"\n  ],\n  \"productos\": [\n    {\n      \"productoId\": \"{{producto}}\",\n      \"cantidad\": 1\n    }\n  ],\n  \"metodoPago\": \"TARJETA\",\n  \"referencia\": \"prueba-postman\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP esperado', () => pm.expect([200]).to.include(pm.response.code));",
+                  "const x=pm.response.json();pm.test('Una venta tres líneas y total correcto',()=>{pm.expect(x.estado).to.eql('PAGADA');pm.expect(x.detalles).to.have.length(3);pm.expect(x.total).to.eql(1050);});pm.collectionVariables.set('venta_multiple',x.id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Cita pagada no se cobra de nuevo",
+          "id": "e3078f7c-6ee7-4346-964d-c59ec265e054",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_caja}}"
+              }
+            ],
+            "url": "{{base}}/api/v1/caja/ventas",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"sucursalId\": \"{{sucursal_a}}\",\n  \"citaIds\": [\n    \"{{cita_a}}\"\n  ],\n  \"productos\": [],\n  \"metodoPago\": \"TARJETA\",\n  \"referencia\": \"prueba-postman\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP esperado', () => pm.expect([409]).to.include(pm.response.code));",
+                  "",
+                  "pm.test('Error con contrato público',()=>{const e=pm.response.json();pm.expect(e).to.have.property('mensaje');pm.expect(e.codigo).to.eql('ERROR_NEGOCIO');});",
+                  "pm.test('Causa concreta del rechazo',()=>pm.expect(pm.response.json().mensaje).to.include(\"ya está pagada\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Primer pago parcial",
+          "id": "f5abc9ad-228f-4408-939f-6928086cd76a",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_caja}}"
+              }
+            ],
+            "url": "{{base}}/api/v1/caja/citas/{{cita_parcial}}/pagos",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"monto\": 200,\n  \"metodoPago\": \"EFECTIVO\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP esperado', () => pm.expect([200]).to.include(pm.response.code));",
+                  "pm.test('Pago parcial exacto',()=>pm.expect(pm.response.json().monto).to.eql(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Pendientes muestran saldo restante",
+          "id": "6cf11788-9bcf-40b4-81a1-12b3e99b6d44",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_caja}}"
+              }
+            ],
+            "url": "{{base}}/api/v1/caja/citas-por-cobrar?sucursalId={{sucursal_a}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP esperado', () => pm.expect([200]).to.include(pm.response.code));",
+                  "pm.test('Saldo común y pagadas excluidas',()=>{const x=pm.response.json();const c=x.find(c=>String(c.citaId)===pm.environment.get('cita_parcial'));pm.expect(c.pendiente).to.eql(300);pm.expect(x.some(c=>String(c.citaId)===pm.environment.get('cita_a'))).to.eql(false);});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Liquidar saldo restante",
+          "id": "53842dce-abbe-4c66-a981-f2f88530faa0",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_caja}}"
+              }
+            ],
+            "url": "{{base}}/api/v1/caja/citas/{{cita_parcial}}/pagos",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"monto\": 300,\n  \"metodoPago\": \"TARJETA\",\n  \"referencia\": \"saldo-postman\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP esperado', () => pm.expect([200]).to.include(pm.response.code));",
+                  "pm.test('Segundo pago exacto',()=>pm.expect(pm.response.json().monto).to.eql(300));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Caja posterior sin deudas pagadas",
+          "id": "4b6b3702-08e6-45a5-828f-d6c35955fac7",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_caja}}"
+              }
+            ],
+            "url": "{{base}}/api/v1/caja/citas-por-cobrar?sucursalId={{sucursal_a}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP esperado', () => pm.expect([200]).to.include(pm.response.code));",
+                  "pm.test('Pagadas fuera de pendientes',()=>pm.expect(pm.response.json().some(c=>String(c.citaId)===pm.environment.get('cita_parcial'))).to.eql(false));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "07 Point y pago dividido (010)",
+      "item": [
+        {
+          "name": "Método Point desde terminal del backend",
+          "id": "d2d1dc55-ec7f-4dff-8daf-e2f6592de3f2",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_caja}}"
+              }
+            ],
+            "url": "{{base}}/api/v1/caja/point/terminales?sucursalId={{sucursal_a}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP esperado',()=>pm.expect(pm.response.code).to.eql(200));",
+                  "const t=pm.response.json().find(t=>String(t.id)===pm.environment.get('terminal'));pm.test('Método Point disponible desde terminal',()=>{pm.expect(t).to.be.an('object');pm.expect(t.metodoPago.esPoint).to.eql(true);});if(t)pm.collectionVariables.set('metodo_point',t.metodoPago.codigo);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Guardar corte antes de Point",
+          "id": "b56b3f2f-d15f-48c5-9eab-fcc8cfa2da6b",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_caja}}"
+              }
+            ],
+            "url": "{{base}}/api/v1/caja/resumen?sucursalId={{sucursal_a}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP esperado', () => pm.expect([200]).to.include(pm.response.code));",
+                  "pm.collectionVariables.set('corteAntes',JSON.stringify(pm.response.json()));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Crear 700 con 300 efectivo y Point 400",
+          "id": "c5485ee3-14d7-4957-9662-0751a5c66250",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_caja}}"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "split-{{nonce}}"
+              }
+            ],
+            "url": "{{base}}/api/v1/caja/point/ordenes",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"terminalId\": \"{{terminal}}\",\n  \"venta\": {\n    \"sucursalId\": \"{{sucursal_a}}\",\n    \"citaId\": \"{{cita_point}}\",\n    \"productos\": [],\n    \"pagos\": [\n      {\n        \"metodoPago\": \"EFECTIVO\",\n        \"monto\": 300,\n        \"montoRecibido\": 500\n      },\n      {\n        \"metodoPago\": \"{{metodo_point}}\"\n      }\n    ]\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP esperado', () => pm.expect([200]).to.include(pm.response.code));",
+                  "const x=pm.response.json();pm.test('Point solo lleva el remanente',()=>{pm.expect(x.importe).to.eql(400);pm.expect(x.efectivoPrevisto).to.eql(300);pm.expect(x.estado).to.eql('CREADO');});pm.collectionVariables.set('orden_point',x.id);pm.collectionVariables.set('venta_point',x.ventaId);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "En espera no registra ningún pago",
+          "id": "ccdeee74-8616-4bb6-b781-b20b99fc5a13",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_caja}}"
+              }
+            ],
+            "url": "{{base}}/api/v1/caja/ventas/{{venta_point}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP esperado', () => pm.expect([200]).to.include(pm.response.code));",
+                  "pm.test('Partes previstas todavía no cobradas',()=>{const x=pm.response.json();pm.expect(x.estado).to.eql('PENDIENTE_PAGO');pm.expect(x.pagos).to.have.length(0);});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Point reserva saldo contra pago directo",
+          "id": "3c5fafa7-8799-42c1-9a8d-e5aa533e5ef3",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_caja}}"
+              }
+            ],
+            "url": "{{base}}/api/v1/caja/citas/{{cita_point}}/pagos",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"monto\": 700,\n  \"metodoPago\": \"TARJETA\",\n  \"referencia\": \"intento-duplicado\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP esperado', () => pm.expect([409]).to.include(pm.response.code));",
+                  "",
+                  "pm.test('Error con contrato público',()=>{const e=pm.response.json();pm.expect(e).to.have.property('mensaje');pm.expect(e.codigo).to.eql('ERROR_NEGOCIO');});",
+                  "pm.test('Causa concreta del rechazo',()=>pm.expect(pm.response.json().mensaje).to.include(\"cobro en la terminal Point en curso\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Aprobar terminal simulada sin red",
+          "id": "50df669f-6425-481c-a974-1d214dbe26c8",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_caja}}"
+              }
+            ],
+            "url": "{{base}}/api/v1/caja/point/ordenes/{{orden_point}}/simular-aprobacion"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP esperado', () => pm.expect([200]).to.include(pm.response.code));",
+                  "pm.test('Orden aprobada',()=>pm.expect(pm.response.json().estado).to.eql('APROBADO'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Comprobante registra ambas partes y cambio",
+          "id": "936a8f8b-444d-4877-b025-fba8b8e65075",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_caja}}"
+              }
+            ],
+            "url": "{{base}}/api/v1/caja/ventas/{{venta_point}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP esperado', () => pm.expect([200]).to.include(pm.response.code));",
+                  "pm.test('Venta atómica pagada',()=>{const x=pm.response.json();pm.expect(x.estado).to.eql('PAGADA');pm.expect(x.total).to.eql(700);pm.expect(x.pagos).to.have.length(2);const efectivo=x.pagos.find(p=>p.metodoPago==='EFECTIVO');pm.expect(efectivo.monto).to.eql(300);pm.expect(efectivo.montoRecibido).to.eql(500);pm.expect(efectivo.cambio).to.eql(200);pm.expect(x.pagos.reduce((s,p)=>s+p.monto,0)).to.eql(700);});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Corte separa cada método",
+          "id": "b5594a5d-8542-4938-a326-3445e1c9edec",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_caja}}"
+              }
+            ],
+            "url": "{{base}}/api/v1/caja/resumen?sucursalId={{sucursal_a}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP esperado', () => pm.expect([200]).to.include(pm.response.code));",
+                  "const a=JSON.parse(pm.collectionVariables.get('corteAntes')),b=pm.response.json();pm.test('Corte suma cobrado, no recibido',()=>{pm.expect(b.totalCobradoEfectivo-a.totalCobradoEfectivo).to.eql(300);pm.expect(b.totalCobradoPoint-a.totalCobradoPoint).to.eql(400);pm.expect(b.totalCobrado-a.totalCobrado).to.eql(700);});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Crear orden para cancelación",
+          "id": "e73500e5-8695-4b29-a3ef-6aecaaeb340b",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_caja}}"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "cancelar-{{nonce}}"
+              }
+            ],
+            "url": "{{base}}/api/v1/caja/point/ordenes",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"terminalId\": \"{{terminal}}\",\n  \"venta\": {\n    \"sucursalId\": \"{{sucursal_a}}\",\n    \"citaId\": \"{{cita_cancelar}}\",\n    \"productos\": [],\n    \"metodoPago\": \"{{metodo_point}}\"\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP esperado', () => pm.expect([200]).to.include(pm.response.code));",
+                  "pm.collectionVariables.set('point_cancelar',pm.response.json().id);pm.collectionVariables.set('venta_cancelar',pm.response.json().ventaId);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Cancelar orden libera reserva",
+          "id": "6883d668-511d-4fd1-8033-90423d0c9d30",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_caja}}"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "cancelacion-{{nonce}}"
+              }
+            ],
+            "url": "{{base}}/api/v1/caja/point/ordenes/{{point_cancelar}}/cancelar"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP esperado', () => pm.expect([200]).to.include(pm.response.code));",
+                  "pm.test('Orden cancelada',()=>pm.expect(pm.response.json().estado).to.eql('CANCELADO'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Cancelación conserva cero pagos",
+          "id": "e92debac-20a3-4d2b-8fb2-f3a2cf3c9c06",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_caja}}"
+              }
+            ],
+            "url": "{{base}}/api/v1/caja/ventas/{{venta_cancelar}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP esperado', () => pm.expect([200]).to.include(pm.response.code));",
+                  "pm.test('Sin cobro previsto',()=>{const x=pm.response.json();pm.expect(x.estado).to.eql('CANCELADA');pm.expect(x.pagos).to.have.length(0);});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Saldo liberado admite cobro posterior",
+          "id": "36301611-9868-434c-bb65-11f7080bbd73",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_caja}}"
+              }
+            ],
+            "url": "{{base}}/api/v1/caja/citas/{{cita_cancelar}}/pagos",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"monto\": 500,\n  \"metodoPago\": \"EFECTIVO\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP esperado', () => pm.expect([200]).to.include(pm.response.code));",
+                  "pm.test('Cobro posterior real de copia',()=>pm.expect(pm.response.json().monto).to.eql(500));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Proveedor simulado rechaza sin registrar partes",
+          "id": "89146f34-e38e-4702-921d-eca5c893ba93",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_caja}}"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "rechazo-{{nonce}}"
+              }
+            ],
+            "url": "{{base}}/api/v1/caja/point/ordenes",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"terminalId\": \"{{terminal}}\",\n  \"venta\": {\n    \"sucursalId\": \"{{sucursal_a}}\",\n    \"citaId\": \"{{cita_rechazo}}\",\n    \"productos\": [],\n    \"metodoPago\": \"{{metodo_point}}\"\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP esperado', () => pm.expect([200]).to.include(pm.response.code));",
+                  "const x=pm.response.json();pm.test('Rechazada',()=>pm.expect(x.estado).to.eql('RECHAZADO'));pm.collectionVariables.set('venta_rechazo',x.ventaId);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Rechazo mantiene cero pagos",
+          "id": "fe3b9546-2842-436b-98b7-c57e64a8db17",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_caja}}"
+              }
+            ],
+            "url": "{{base}}/api/v1/caja/ventas/{{venta_rechazo}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP esperado', () => pm.expect([200]).to.include(pm.response.code));",
+                  "pm.test('Sin pagos tras rechazo',()=>pm.expect(pm.response.json().pagos).to.have.length(0));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Point con varias citas",
+          "request": {
+            "method": "POST",
+            "url": "{{base}}/api/v1/caja/point/ordenes",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_caja}}"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "multiple-{{nonce}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"terminalId\": \"{{terminal}}\", \"venta\": {\"sucursalId\": \"{{sucursal_a}}\", \"citaIds\": [\"{{cita_point2}}\", \"{{cita_rechazo}}\"], \"productos\": [], \"metodoPago\": \"{{metodo_point}}\"}}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP esperado',()=>pm.expect(pm.response.code).to.eql(200));",
+                  "const x=pm.response.json();pm.test('Importe conjunto real',()=>pm.expect(x.importe).to.eql(1000));pm.collectionVariables.set('point_multiple',x.id);pm.collectionVariables.set('venta_point_multiple',x.ventaId);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Otro tenant no consulta Point creado",
+          "request": {
+            "method": "GET",
+            "url": "{{base}}/api/v1/caja/point/ordenes/{{point_multiple}}",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_admin_b}}"
+              }
+            ]
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP esperado',()=>pm.expect(pm.response.code).to.eql(404));",
+                  "pm.test('Orden ajena sin revelar',()=>pm.expect(pm.response.json().codigo).to.eql('ERROR_NEGOCIO'));",
+                  "pm.test('Causa concreta del rechazo',()=>pm.expect(pm.response.json().mensaje).to.include(\"Orden Point no encontrada\"));",
+                  "pm.test('Point ajeno equivale a inexistente',()=>{const x=pm.response.json();pm.expect(x.mensaje).to.eql(pm.collectionVariables.get('point404mensaje'));pm.expect(x.codigo).to.eql(pm.collectionVariables.get('point404codigo'));});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Aprobar Point multicita",
+          "request": {
+            "method": "POST",
+            "url": "{{base}}/api/v1/caja/point/ordenes/{{point_multiple}}/simular-aprobacion",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_caja}}"
+              }
+            ]
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP esperado',()=>pm.expect(pm.response.code).to.eql(200));",
+                  "pm.test('Aprobación multicita',()=>pm.expect(pm.response.json().estado).to.eql('APROBADO'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Multicita refleja dos líneas y un pago",
+          "request": {
+            "method": "GET",
+            "url": "{{base}}/api/v1/caja/ventas/{{venta_point_multiple}}",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_caja}}"
+              }
+            ]
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP esperado',()=>pm.expect(pm.response.code).to.eql(200));",
+                  "pm.test('Multicita acreditada',()=>{const x=pm.response.json();pm.expect(x.estado).to.eql('PAGADA');pm.expect(x.detalles).to.have.length(2);pm.expect(x.pagos).to.have.length(1);pm.expect(x.total).to.eql(1000);});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "0_correo",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "0_nombre",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "0_telefono",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "0_token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "1_from",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "1_to",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "legacy_token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "legacy_url_0",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "legacy_url_1",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "legacy_url_2",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "const url=pm.variables.replaceIn(pm.request.url.toString());",
+          "const humo=pm.info.requestName==='Salud backend' && pm.request.method==='GET' && /^http:\\/\\/(127\\.0\\.0\\.1|localhost):(8080|18080)\\/actuator\\/health$/.test(url);",
+          "const local=/^http:\\/\\/(127\\.0\\.0\\.1|localhost):18080(?:\\/|$)/.test(url);",
+          "if(!humo && (pm.environment.get('entorno')!=='aislado' || !local)) {",
+          " pm.test('Entorno no aislado',()=>{throw new Error('Entorno no aislado');});pm.execution.skipRequest();",
+          "} else if(!humo) {",
+          " pm.sendRequest({url:url.match(/^http:\\/\\/[^/]+/)[0]+'/api/v1/publico/__pruebas/aislamiento',method:'GET',header:{'X-Fluora-Prueba':pm.environment.get('nonce')}},(err,res)=>{",
+          "  let seguro=false;try {const m=res.json();seguro=!err && res.code===200 && /^fluora_test_011_[a-z0-9]+$/.test(m.database) && m.nonce===pm.environment.get('nonce');}catch(e){}",
+          "  if(!seguro){pm.test('Entorno no aislado: marcador',()=>{throw new Error('Entorno no aislado');});pm.execution.skipRequest();}",
+          " });",
+          "}"
+        ]
+      }
+    }
+  ]
+}

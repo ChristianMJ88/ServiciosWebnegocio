@@ -38,19 +38,27 @@ import static org.assertj.core.api.Assertions.*;
 class CobrosConcurrentesMysqlTest {
     interface Caso { void ejecutar(org.hibernate.SessionFactory sf) throws Exception; }
     void aislado(Caso caso) throws Exception {
-        String db="fluora_009_test_"+UUID.randomUUID().toString().replace("-","");
+        String db="fluora_test_009_"+UUID.randomUUID().toString().replace("-","");
         String base=System.getenv("FLUORA_REGRESION_MYSQL_URL"),user=System.getenv("FLUORA_REGRESION_MYSQL_USER"),password=System.getenv("FLUORA_REGRESION_MYSQL_PASSWORD");
         try(var c=DriverManager.getConnection(base,user,password);var s=c.createStatement()) {
+            com.techprotech.agenda.soporte.MysqlAislado.comprobar(c);
+            String hija=com.techprotech.agenda.soporte.MysqlAislado.urlHija(base,db);
             s.execute("CREATE DATABASE `"+db+"` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci");
+            try {
+            try(var destino=DriverManager.getConnection(hija,user,password)) {
+                com.techprotech.agenda.soporte.MysqlAislado.comprobar(destino);
+                assertThat(destino.getCatalog()).isEqualTo(db);
+            }
             var registry=new StandardServiceRegistryBuilder().applySettings(Map.of(
-                "hibernate.connection.url",base.replaceFirst("/[^/?]+(?=\\?|$)","/"+db),"hibernate.connection.username",user,"hibernate.connection.password",password,
+                "hibernate.connection.url",hija,"hibernate.connection.username",user,"hibernate.connection.password",password,
                 "hibernate.hbm2ddl.auto","create-drop","hibernate.connection.handling_mode","DELAYED_ACQUISITION_AND_HOLD","hibernate.connection.isolation",2,"hibernate.connection.pool_size",8)).build();
             try(var sf=new MetadataSources(registry).addAnnotatedClass(CitaEntidad.class).addAnnotatedClass(PagoCitaEntidad.class)
                     .addAnnotatedClass(VentaEntidad.class).addAnnotatedClass(VentaDetalleEntidad.class).addAnnotatedClass(com.techprotech.agenda.modulos.pagos.infraestructura.entidad.OrdenPointCajaEntidad.class).addAnnotatedClass(PagoVentaEntidad.class).addAnnotatedClass(com.techprotech.agenda.modulos.productos.infraestructura.entidad.ProductoExistenciaEntidad.class).buildMetadata().buildSessionFactory()) {
                 try(var em=sf.createEntityManager()){assertThat(em.createNativeQuery("SELECT DATABASE()",String.class).getSingleResult()).isEqualTo(db);}
                 try(var em=sf.createEntityManager()){em.getTransaction().begin();em.createNativeQuery("CREATE INDEX idx_pago_cita_empresa_cita ON pago_cita(empresa_id,cita_id,registrado_en)").executeUpdate();em.createNativeQuery("CREATE INDEX idx_venta_detalle_cita ON venta_detalle(empresa_id,cita_id)").executeUpdate();em.getTransaction().commit();}
                 caso.ejecutar(sf);
-            } finally {StandardServiceRegistryBuilder.destroy(registry);s.execute("DROP DATABASE `"+db+"`");}
+            } finally {StandardServiceRegistryBuilder.destroy(registry);}
+            } finally {s.execute("DROP DATABASE `"+db+"`");}
         }
     }
     @Test void ventaYPagoDirectoCompitenYSoloUnoCobraAunqueAmbosAbrieronInstantanea() throws Exception {

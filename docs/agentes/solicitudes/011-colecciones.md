@@ -1,0 +1,9 @@
+# 011 — colecciones y arnés de Postman, revisión previa a publicación
+
+Solo lectura. Usuario autorizó reutilizar sus colecciones de Postman, respaldarlas, sanearlas, extenderlas y, tras verde y comparación sin conflictos, actualizar las mismas colecciones. Sin crear colección nueva. No leer .env ni archivos privados.
+
+Respaldo privado de AgendaWeb (3peticiones), Mercado Pago Developers(145peticiones),1entorno, fuera de Git y modo0600. Backend/postman conserva ambas con IDs originales. AgendaWeb tiene las3originales (AppsScript obsoleto, no ejecutadas) bajo Legado más91 nuevas en00–07. Borrados ejemplos con datos originales; auth/PII reemplazados por variables vacías; originales privados intactos. Scripts MP sin console.log de respuestas, guarda en PRUEBA y escritura con autorización por corrida; token APP_USR requiere GET/users/me con id esperado y tag test_user. Colección MP no se ejecutará en esta tarea.
+
+Revisar las colecciones JSON, scripts/test-api.py, scripts/test-postman-guards.cjs y backend/src/test/java/fluora/postman/ApiAisladaApplication.java. La app aislada solo classpath pruebas, guarda DBA antes de Spring, jobs/envíos deshabilitados, Point @Primary simulado sin red. Tres tenants y sus usuarios fixture, roles/capacidades de tablas reales; no se modifican permisos de aplicación. Cada petición nueva comprueba puerto+entorno+nonce y DATABASE() en marcador test-only. Solo health permite habitual8080. Cinco pruebas negativas de guardas pasan. Runner importa solo con fluora_tests, elimina copia y proceso en finally. Postman archivo local --no-report-events y JUnit en target. No publicar resultados o secretos.
+
+Corrida real en curso; revisar contratos/aserciones sin rebajarlos para forzar verde. Falta registrar resultados/finalizar limpieza. Revisión del saneado requerida antes de subir colecciones. Sin commit011/008 ni despliegue. Working tree ajeno AGENTS/skills/revisiones preservado.

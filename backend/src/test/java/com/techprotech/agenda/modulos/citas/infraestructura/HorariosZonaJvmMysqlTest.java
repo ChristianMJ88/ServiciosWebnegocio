@@ -29,6 +29,7 @@ class HorariosZonaJvmMysqlTest {
             // Estas opciones son las que conserva la configuración de la aplicación.
             url+=(url.contains("?")?"&":"?")+"serverTimezone=UTC&forceConnectionTimeZoneToSession=true";
             var datasource=new SingleConnectionDataSource(url,System.getenv("FLUORA_REGRESION_MYSQL_USER"),System.getenv("FLUORA_REGRESION_MYSQL_PASSWORD"),true);
+            try(var conexion = datasource.getConnection()) { com.techprotech.agenda.soporte.MysqlAislado.comprobar(conexion); }
             var proveedor=new DatasourceConnectionProviderImpl();proveedor.setDataSource(datasource);
             proveedor.configure(java.util.Map.of());
             var registro=new StandardServiceRegistryBuilder().applySettings(HorariosZonaJvmRepositorioTest.configuracionJpa())

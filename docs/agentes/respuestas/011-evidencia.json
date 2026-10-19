@@ -1,0 +1,14 @@
+{
+  "fecha": "2026-10-18",
+  "coleccion": "AgendaWeb",
+  "peticionesProgramadas": 100,
+  "aserciones": 228,
+  "fallos": 0,
+  "errores": 0,
+  "omitidas": 0,
+  "sha256Junit": "dd2b856dd1dcc39d99265a8714bb88e019b34c457c9ddd85f41a884a7107e87a",
+  "reporte": "backend/target/postman/regresion.xml",
+  "origen": "archivo local, --no-report-events",
+  "copiaRetirada": true,
+  "puerto18080Libre": true
+}

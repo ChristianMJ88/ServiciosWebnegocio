@@ -13,14 +13,16 @@ import static org.assertj.core.api.Assertions.*;
 class MigracionesPoliticaMysqlTest {
     @org.junit.jupiter.api.io.TempDir java.nio.file.Path temporal;
     @Test void migraSinCambiarDatosExistentesYRechazaPoliticaDeOtroTenant() throws Exception {
-        String db = "fluora_007_test_" + UUID.randomUUID().toString().replace("-", "");
+        String db = "fluora_test_007_" + UUID.randomUUID().toString().replace("-", "");
         try (var administracion = DriverManager.getConnection(System.getenv("FLUORA_REGRESION_MYSQL_URL"),
                 System.getenv("FLUORA_REGRESION_MYSQL_USER"),System.getenv("FLUORA_REGRESION_MYSQL_PASSWORD")); var admin = administracion.createStatement()) {
+            com.techprotech.agenda.soporte.MysqlAislado.comprobar(administracion);
             String original = administracion.getCatalog();
             admin.execute("CREATE DATABASE `"+db+"` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci");
             String urlAislada = System.getenv("FLUORA_REGRESION_MYSQL_URL").replaceFirst("/[^/?]+(?=\\?|$)", "/"+db);
             try (var c = DriverManager.getConnection(urlAislada, System.getenv("FLUORA_REGRESION_MYSQL_USER"),
                     System.getenv("FLUORA_REGRESION_MYSQL_PASSWORD")); var s = c.createStatement()) {
+                com.techprotech.agenda.soporte.MysqlAislado.comprobar(c);
                 try (var actual = s.executeQuery("SELECT DATABASE()")) {actual.next(); assertThat(actual.getString(1)).isEqualTo(db);}
                 s.execute("CREATE TABLE `"+db+"`.cita LIKE `"+original+"`.cita");
                 s.execute("CREATE TABLE `"+db+"`.checkout_orden LIKE `"+original+"`.checkout_orden");
