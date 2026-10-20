@@ -1,4 +1,5 @@
-import { Injectable, signal } from '@angular/core';
+import { Injectable, PLATFORM_ID, inject, signal } from '@angular/core';
+import { isPlatformBrowser } from '@angular/common';
 
 export const CAMPAIGN_KEYS = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'utm_term'] as const;
 type CampaignKey = typeof CAMPAIGN_KEYS[number];
@@ -29,11 +30,13 @@ type TrackingRuntime = typeof globalThis & {
 };
 @Injectable({ providedIn: 'root' })
 export class MarketingTrackingService {
+  private readonly browser = isPlatformBrowser(inject(PLATFORM_ID));
   private readonly storageKey = 'fluora_marketing_attribution';
   private readonly context = signal<MarketingAttribution>(this.restore());
   private consent = false;
 
   capture(search: string, vertical?: string): void {
+    if (!this.browser) return;
     const incoming = readAttribution(new URLSearchParams(search), vertical);
     if (!incoming.vertical && !Object.keys(incoming.campaign).length) return;
     this.context.set({
@@ -54,7 +57,7 @@ export class MarketingTrackingService {
   }
 
   registrationUrl(base: string, planId?: number): string {
-    const url = new URL(base, globalThis.location?.origin);
+    const url = this.browser ? new URL(base, globalThis.location?.origin) : new URL(base);
     const context = this.context();
     if (planId !== undefined) url.searchParams.set('plan', String(planId));
     for (const key of CAMPAIGN_KEYS) {
@@ -69,6 +72,7 @@ export class MarketingTrackingService {
   setConsent(granted: boolean): void { this.consent = granted; }
 
   emit(event: MarketingEvent): void {
+    if (!this.browser) return;
     const runtime = globalThis as TrackingRuntime;
     if (!this.consent || runtime.__FLUORA_MARKETING_TRACKING__?.enabled !== true) return;
     // No enviar términos, contenido libre, URL, empresa, formulario ni identificadores de clientes.
@@ -82,6 +86,7 @@ export class MarketingTrackingService {
   }
 
   private restore(): MarketingAttribution {
+    if (!this.browser) return {campaign:{}};
     try {
       const stored = JSON.parse(globalThis.sessionStorage?.getItem(this.storageKey) || 'null');
       const params = new URLSearchParams();

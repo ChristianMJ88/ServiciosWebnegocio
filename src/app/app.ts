@@ -1,8 +1,8 @@
 import { hasMarketingTabs } from './core/marketing/marketing-route';
-import { Location } from '@angular/common';
+import { DOCUMENT, Location, isPlatformBrowser } from '@angular/common';
 import { MarketingNavComponent } from './components/marketing-nav/marketing-nav.component';
 import { SubscriptionAccessNoticeComponent } from './core/subscription/subscription-access-notice.component';
-import { Component, ElementRef, computed, effect, inject, signal, viewChild } from '@angular/core';
+import { Component, ElementRef, PLATFORM_ID, computed, effect, inject, signal, viewChild } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRouteSnapshot, NavigationCancel, NavigationCancellationCode, NavigationEnd, NavigationError, Router, RouterLink, RouterOutlet } from '@angular/router';
 import { filter } from 'rxjs/operators';
@@ -22,6 +22,8 @@ import { PlatformHostService } from './core/platform/platform-host.service';
   styleUrl: './app.css'
 })
 export class App {
+  private readonly browser = isPlatformBrowser(inject(PLATFORM_ID));
+  private readonly document = inject(DOCUMENT);
   readonly tenantStyles = inject(TENANT_PUBLIC_STYLES);
   private readonly authService = inject(AuthService);
   private readonly router = inject(Router);
@@ -76,7 +78,7 @@ export class App {
   }
 
   recargarNavegacion(): void {
-    globalThis.location?.reload();
+    if (this.browser) this.document.defaultView?.location.reload();
   }
 
   toggleChat() {
@@ -144,11 +146,11 @@ export class App {
   }
 
   private aplicarTemaTenant(tenant: ReturnType<TenantContextService['actual']>) {
-    if (typeof document === 'undefined') {
+    if (!this.browser) {
       return;
     }
 
-    const root = document.documentElement;
+    const root = this.document.documentElement;
     const primario = tenant?.colorPrimario || '#2563eb';
     const secundario = tenant?.colorSecundario || '#0f766e';
 

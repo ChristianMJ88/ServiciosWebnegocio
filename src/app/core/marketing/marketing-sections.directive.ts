@@ -1,9 +1,10 @@
-import { DOCUMENT } from '@angular/common';
-import { AfterViewInit, Directive, ElementRef, NgZone, OnDestroy, inject } from '@angular/core';
+import { DOCUMENT, isPlatformBrowser } from '@angular/common';
+import { AfterViewInit, Directive, ElementRef, NgZone, OnDestroy, PLATFORM_ID, inject } from '@angular/core';
 import { MarketingSectionsService } from './marketing-sections.service';
 
 @Directive({selector:'[appMarketingSections]',standalone:true})
 export class MarketingSectionsDirective implements AfterViewInit,OnDestroy {
+  private readonly browser=isPlatformBrowser(inject(PLATFORM_ID));
   private readonly element=inject<ElementRef<HTMLElement>>(ElementRef);
   private readonly document=inject(DOCUMENT);
   private readonly zone=inject(NgZone);
@@ -14,6 +15,7 @@ export class MarketingSectionsDirective implements AfterViewInit,OnDestroy {
   private readonly ids=['inicio','como-funciona','producto','planes','faq'];
 
   ngAfterViewInit(){
+    if(!this.browser)return;
     const win=this.document.defaultView;
     if(!win||typeof IntersectionObserver==='undefined')return;
     const elements=this.ids.map(id=>this.element.nativeElement.id===id?this.element.nativeElement:this.element.nativeElement.querySelector<HTMLElement>('#'+id)).filter((e):e is HTMLElement=>!!e);

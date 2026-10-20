@@ -1,0 +1,13 @@
+# M3 R4: revisión de implementación acotada
+
+Diseño `revisiones/008-f4-m3-r4-diseno.md` implementado; solo lectura, sin ejecutar suites/builds ni escribir código. Usuario autorizó continuar R4 tras commitR1 `00ec341`; parar antes de R3, sin commit nuevo ni despliegue.
+
+Implementación: contexto tipado/parse/proveedor exportado sin registrar en ningún entry, snapshotHost puro y server sin contexto falla cerrado; browser ignora token y mantiene clasificación anterior. Guardas de Auth/PlatformAuth (browser antes del campo que restaura), timer deSubscriptionNotice, EMPTY para tres métodos públicos de la cadenaHome, trackingservervacío/sinemit/URLabsoluta, DOMAppDOCUMENT browseronly, bootstrap/CSS serverno-op, Nav/listeners con misma temporalidad browser, Home/scrollspy guardados. No cambios Footer/SEO/Appearance/Plans/APIbase/interceptor ni backend.
+
+Parse añade una protección técnica necesaria al caso mencionado en §1: dos orígenes distintos con igualhostname (puertos diferentes) rechazan el contexto; si son exactamente el mismo origen integrado, se permite (noAppdedicado). Sin esto snapshot clasificaría como app+marketing y redirigiría al acceso en render. Error fijo sin valores recibidos. Validador/proveedor no utilizados en bundleCSR de la app, no orígenes reales incrustados.
+
+Pruebas: caracterización antes del refactor9/9verde, log privado /private/tmp/fluora-m3-r4-characterization.log. Contratosfocales39aprobadas/1fallo de preparación TestBed (faltaba awaitcompileComponents en nuevo testApp), corregido y test integrador en ejecución. Host20casos/contexto; core6casos (Auth, timerbrowser/server, APInoHTTP,tracking,fonts/CSS), tracking4 yHost9. Nuevo marketing-server-shell usa App+Routerrutasreales/Home, globalsstorage/media/observers tóxicos, sin requests ni tenantresolver, placeholders4 yGSAPnocarga. RAF no se envenena en integración porque el renderer jsdom puede programarlo: scrollspy server no puede llegar a RAF sinIO y browserregresióncubrecicloRAF; se declara límite, no se fingeSSRreal. Tests trackingoriginales conservan aserciones y nueva instancia conrunInInjectionContext para restauración real de storage.
+
+Archivos: git diff de src/app más nuevos marketing-render-context.ts/.spec.ts, marketing-server-contract.spec.ts, marketing-server-shell.spec.ts. Docsrespuesta008-f4-m3-r4.md. No @angular/ssr/platform-server/provider de contexto enmain, outputMode, providerhydration, nuevosendpoints ni cambioHosting. Próximasverificaciones: dos suitesnormales,37Node22,ambosbuilds/guarda yUI375/820/1440 en4200/8080 conpestañapropia; no4300.
+
+Solicito veredicto/hallazgos; resultados medidos se completarán por Codex. No leer .env/postmanlocal/credenciales. Resultado en revisiones/008-f4-m3-r4-codigo.md.

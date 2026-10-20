@@ -1,7 +1,7 @@
 import { MarketingSectionsService } from '../../core/marketing/marketing-sections.service';
 import { hasMarketingTabs, marketingPath } from '../../core/marketing/marketing-route';
-import { DOCUMENT, Location } from '@angular/common';
-import { ChangeDetectionStrategy, Component, DestroyRef, ElementRef, NgZone, ViewChild, computed, inject, signal } from '@angular/core';
+import { DOCUMENT, Location, isPlatformBrowser } from '@angular/common';
+import { ChangeDetectionStrategy, Component, DestroyRef, ElementRef, NgZone, PLATFORM_ID, ViewChild, computed, inject, signal } from '@angular/core';
 import { NavigationEnd, Router } from '@angular/router';
 import { toSignal, takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { filter, map, startWith } from 'rxjs';
@@ -35,9 +35,11 @@ export class MarketingNavComponent {
   constructor(){
     this.offer.load();
     inject(LandingMarketingService).navegacion().pipe(takeUntilDestroyed()).subscribe({next:links=>this.links.set(links),error:()=>this.links.set([])});
+    const releaseAppearance=inject(MarketingAppearanceService).activate(true);
+    inject(DestroyRef).onDestroy(releaseAppearance);
+    if(!isPlatformBrowser(inject(PLATFORM_ID)))return;
     const root=this.document.documentElement,oldGutter=root.style.scrollbarGutter;
     root.style.scrollbarGutter='stable';
-    const releaseAppearance=inject(MarketingAppearanceService).activate(true);
     this.router.events.pipe(filter(e=>e instanceof NavigationEnd),takeUntilDestroyed()).subscribe(()=>this.closeMenu());
     const win=this.document.defaultView;
     const onScroll=()=>{const next=marketingDetached(this.detached(),win?.scrollY||0);if(next!==this.detached())this.zone.run(()=>this.detached.set(next));};
@@ -46,7 +48,7 @@ export class MarketingNavComponent {
     const desktop=win?.matchMedia?.('(min-width:1200px)');
     const onDesktop=()=>{if(desktop?.matches)this.zone.run(()=>this.closeMenu());};
     this.zone.runOutsideAngular(()=>{win?.addEventListener('scroll',onScroll,{passive:true});this.document.addEventListener('click',onClick);this.document.addEventListener('keydown',onKey);desktop?.addEventListener('change',onDesktop);onScroll();});
-    inject(DestroyRef).onDestroy(()=>{win?.removeEventListener('scroll',onScroll);this.document.removeEventListener('click',onClick);this.document.removeEventListener('keydown',onKey);desktop?.removeEventListener('change',onDesktop);this.closeMenu();root.style.scrollbarGutter=oldGutter;releaseAppearance();});
+    inject(DestroyRef).onDestroy(()=>{win?.removeEventListener('scroll',onScroll);this.document.removeEventListener('click',onClick);this.document.removeEventListener('keydown',onKey);desktop?.removeEventListener('change',onDesktop);this.closeMenu();root.style.scrollbarGutter=oldGutter;});
   }
   sectionHref(id:string){return this.host.marketingUrl('/#'+id);}
   verticalHref(slug:string){return this.host.marketingUrl('/'+encodeURIComponent(slug));}

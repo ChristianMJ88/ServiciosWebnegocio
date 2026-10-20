@@ -1,5 +1,5 @@
-import { DOCUMENT } from '@angular/common';
-import { InjectionToken, Provider, Signal, inject, signal } from '@angular/core';
+import { DOCUMENT, isPlatformBrowser } from '@angular/common';
+import { InjectionToken, PLATFORM_ID, Provider, Signal, inject, signal } from '@angular/core';
 import { ResolveFn } from '@angular/router';
 
 export interface TenantPublicStyles {
@@ -54,7 +54,9 @@ export function createTenantPublicStyles(document: Document, timeoutMs = 10_000)
 }
 
 export function provideTenantPublicStyles(): Provider {
-  return { provide: TENANT_PUBLIC_STYLES, useFactory: () => createTenantPublicStyles(inject(DOCUMENT)) };
+  return { provide: TENANT_PUBLIC_STYLES, useFactory: () => isPlatformBrowser(inject(PLATFORM_ID))
+    ? createTenantPublicStyles(inject(DOCUMENT))
+    : {ready:signal(true).asReadonly(),ensure:()=>Promise.resolve()} };
 }
 
 export const tenantPublicStylesResolver: ResolveFn<true> = () =>

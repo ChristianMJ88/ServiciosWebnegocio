@@ -1,6 +1,6 @@
-import { Component, DestroyRef, effect, inject, signal } from '@angular/core';
+import { Component, DestroyRef, PLATFORM_ID, effect, inject, signal } from '@angular/core';
 import { A11yModule } from '@angular/cdk/a11y';
-import { DatePipe } from '@angular/common';
+import { DatePipe, isPlatformBrowser } from '@angular/common';
 import { Router, NavigationEnd } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { filter, timer } from 'rxjs';
@@ -53,7 +53,7 @@ export class SubscriptionAccessNoticeComponent {
   constructor() {
     effect(() => { if (this.auth.autenticado()) this.updateRoute(); else { this.access.clear();this.reviewingPayment.set(false); } });
     this.router.events.pipe(filter(event=>event instanceof NavigationEnd),takeUntilDestroyed(this.destroy)).subscribe(()=>this.updateRoute());
-    timer(60000,60000).pipe(takeUntilDestroyed(this.destroy)).subscribe(()=>{if(this.internal()&&this.auth.autenticado())this.access.refresh();});
+    if(isPlatformBrowser(inject(PLATFORM_ID)))timer(60000,60000).pipe(takeUntilDestroyed(this.destroy)).subscribe(()=>{if(this.internal()&&this.auth.autenticado())this.access.refresh();});
   }
   private updateRoute():void {
     const path=this.router.url.split('?')[0];

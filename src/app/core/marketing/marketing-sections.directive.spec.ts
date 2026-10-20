@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, PLATFORM_ID } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { afterEach, vi } from 'vitest';
 import { MarketingSectionsDirective } from './marketing-sections.directive';
@@ -6,7 +6,17 @@ import { MarketingSectionsService } from './marketing-sections.service';
 @Component({standalone:true,imports:[MarketingSectionsDirective],template:'<div appMarketingSections id="inicio" style="scroll-margin-top:78px"><section id="como-funciona"></section><section id="producto"></section><section id="planes"></section><section id="faq"></section></div>'})
 class Host {}
 describe('sección activa de marketing',()=>{
- afterEach(()=>vi.unstubAllGlobals());
+ afterEach(()=>{vi.restoreAllMocks();vi.unstubAllGlobals();});
+ it('contrato de servidor simulado: no crea observador ni programa RAF al redimensionar',()=>{
+  const observer=vi.fn(()=>{throw Error('Server scrollspy accessed IO');});
+  vi.stubGlobal('IntersectionObserver',observer);
+  TestBed.configureTestingModule({imports:[Host],providers:[{provide:PLATFORM_ID,useValue:'server'}]});
+  const fixture=TestBed.createComponent(Host);fixture.detectChanges();
+  const frame=vi.spyOn(window,'requestAnimationFrame');
+  window.dispatchEvent(new Event('resize'));
+  expect(observer).not.toHaveBeenCalled();expect(frame).not.toHaveBeenCalled();
+  expect(TestBed.inject(MarketingSectionsService).active()).toBe('');fixture.destroy();
+ });
  it('cambia la ubicación al cruzar el encabezado y libera observadores al salir',()=>{
   const observers:{notify:()=>void;disconnect:ReturnType<typeof vi.fn>;observe:ReturnType<typeof vi.fn>;options:IntersectionObserverInit}[]=[];
   vi.stubGlobal('IntersectionObserver',class{

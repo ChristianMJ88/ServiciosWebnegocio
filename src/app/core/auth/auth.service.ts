@@ -1,5 +1,6 @@
 import { AccessNoticeService } from './access-notice.service';
-import { Injectable, NgZone, computed, inject, signal } from '@angular/core';
+import { Injectable, NgZone, PLATFORM_ID, computed, inject, signal } from '@angular/core';
+import { isPlatformBrowser } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { Observable, catchError, finalize, map, shareReplay, tap, throwError } from 'rxjs';
 import { environment } from '../../../environments/environment';
@@ -65,6 +66,7 @@ export interface RespuestaAccesoApp {
   providedIn: 'root'
 })
 export class AuthService {
+  private readonly browser = isPlatformBrowser(inject(PLATFORM_ID));
   private readonly http = inject(HttpClient);
   private readonly ngZone = inject(NgZone);
   private readonly tenantContext = inject(TenantContextService);
@@ -306,8 +308,10 @@ export class AuthService {
 
   limpiarSesion() {
     this.ngZone.run(() => {
-      sessionStorage.removeItem(this.storageKey);
-      localStorage.removeItem(this.storageKey);
+      if (this.browser) {
+        sessionStorage.removeItem(this.storageKey);
+        localStorage.removeItem(this.storageKey);
+      }
       this.sesion.set(null);
     });
   }
@@ -318,8 +322,10 @@ export class AuthService {
 
   private saveSession(sesion: SesionUsuario) {
     this.ngZone.run(() => {
-      sessionStorage.setItem(this.storageKey, JSON.stringify(sesion));
-      localStorage.removeItem(this.storageKey);
+      if (this.browser) {
+        sessionStorage.setItem(this.storageKey, JSON.stringify(sesion));
+        localStorage.removeItem(this.storageKey);
+      }
       this.sesion.set(sesion);
     });
   }
@@ -343,6 +349,7 @@ export class AuthService {
   }
 
   private loadSession(): SesionUsuario | null {
+    if (!this.browser) return null;
     const raw = sessionStorage.getItem(this.storageKey) ?? localStorage.getItem(this.storageKey);
     if (!raw) {
       return null;

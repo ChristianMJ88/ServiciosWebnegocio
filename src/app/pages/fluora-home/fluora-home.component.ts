@@ -1,6 +1,6 @@
 import { MarketingSectionsDirective } from '../../core/marketing/marketing-sections.directive';
-import { DOCUMENT } from '@angular/common';
-import { afterEveryRender, AfterViewInit, ChangeDetectionStrategy, computed, Component, DestroyRef, ElementRef, NgZone, OnDestroy, inject, signal, viewChild } from '@angular/core';
+import { DOCUMENT, isPlatformBrowser } from '@angular/common';
+import { afterEveryRender, AfterViewInit, ChangeDetectionStrategy, computed, Component, DestroyRef, ElementRef, NgZone, OnDestroy, PLATFORM_ID, inject, signal, viewChild } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Meta, Title } from '@angular/platform-browser';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -20,6 +20,7 @@ import { HomeFaqComponent } from './sections/faq.component';
 import { HomeClosingComponent } from './sections/closing.component';
 @Component({selector:'app-fluora-home',standalone:true,imports:[MarketingSectionsDirective,HomeHeroComponent,HomePillarsComponent,HomeWorkflowComponent,HomeProductComponent,HomePlansComponent,HomeFaqComponent,HomeClosingComponent],templateUrl:'./fluora-home.component.html',styleUrl:'./fluora-home.component.css',changeDetection:ChangeDetectionStrategy.OnPush})
 export class FluoraHomeComponent implements AfterViewInit,OnDestroy {
+  private readonly browser=isPlatformBrowser(inject(PLATFORM_ID));
   readonly platformHost=inject(PlatformHostService);
   readonly offer=inject(MarketingOfferService);
   readonly recommendedRegistrationHref=this.offer.href;
@@ -68,12 +69,15 @@ export class FluoraHomeComponent implements AfterViewInit,OnDestroy {
     });
     const cancelAnchor=()=>{this.pendingAnchor=null;};
     const cancelKey=(event:KeyboardEvent)=>{if(['PageDown','PageUp','Home','End','ArrowDown','ArrowUp',' '].includes(event.key))cancelAnchor();};
-    const win=this.document.defaultView;
-    win?.addEventListener('wheel',cancelAnchor,{passive:true});win?.addEventListener('touchstart',cancelAnchor,{passive:true});win?.addEventListener('keydown',cancelKey);
-    inject(DestroyRef).onDestroy(()=>{win?.removeEventListener('wheel',cancelAnchor);win?.removeEventListener('touchstart',cancelAnchor);win?.removeEventListener('keydown',cancelKey);});
+    if(this.browser){
+      const win=this.document.defaultView;
+      win?.addEventListener('wheel',cancelAnchor,{passive:true});win?.addEventListener('touchstart',cancelAnchor,{passive:true});win?.addEventListener('keydown',cancelKey);
+      inject(DestroyRef).onDestroy(()=>{win?.removeEventListener('wheel',cancelAnchor);win?.removeEventListener('touchstart',cancelAnchor);win?.removeEventListener('keydown',cancelKey);});
+    }
   }
   registroPlanHref(id:number){return this.offer.planHref(id);}
   async ngAfterViewInit(){
+    if(!this.browser)return;
     const win=this.document.defaultView;
     if(!win||win.matchMedia('(prefers-reduced-motion:reduce)').matches||!win.matchMedia('(min-width:1200px)').matches)return;
     const {gsap}=await this.loadAnimation();

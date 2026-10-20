@@ -1,9 +1,33 @@
-import { Injectable } from '@angular/core';
+import { isPlatformBrowser } from '@angular/common';
+import { Injectable, PLATFORM_ID, inject } from '@angular/core';
+import { MARKETING_RENDER_CONTEXT, MarketingRenderContext } from './marketing-render-context';
 
-type RuntimeWithFluoraOrigins = typeof globalThis & {
+type RuntimeWithFluoraOrigins = {
   __FLUORA_APP_ORIGIN__?: string;
   __FLUORA_MARKETING_ORIGIN__?: string;
 };
+
+export type HostInput =
+  | {kind:'browser';location:Pick<Location,'origin'|'hostname'>|undefined;runtime:RuntimeWithFluoraOrigins}
+  | {kind:'server';context:MarketingRenderContext|null};
+export interface HostSnapshot {
+  readonly currentOrigin:string;
+  readonly currentHostname:string;
+  readonly marketingOrigin:string;
+  readonly appOrigin:string;
+}
+
+export function resolvePlatformHostSnapshot(input: HostInput): HostSnapshot {
+  if (input.kind === 'server') {
+    if (!input.context) throw new Error('Server render requires an explicit marketing context');
+    return {currentOrigin:input.context.marketingOrigin,currentHostname:getHostnameFromOrigin(input.context.marketingOrigin),
+      marketingOrigin:input.context.marketingOrigin,appOrigin:input.context.appOrigin};
+  }
+  const currentOrigin=cleanOrigin(input.location?.origin);
+  return {currentOrigin,currentHostname:input.location?.hostname??'',
+    marketingOrigin:cleanOrigin(input.runtime.__FLUORA_MARKETING_ORIGIN__)||currentOrigin,
+    appOrigin:cleanOrigin(input.runtime.__FLUORA_APP_ORIGIN__)||currentOrigin};
+}
 
 function cleanOrigin(origin: string | null | undefined): string {
   return (origin ?? '').trim().replace(/\/+$/, '');
@@ -43,54 +67,46 @@ export function isMarketingHostname(currentHostname: string, marketingHostname: 
   providedIn: 'root'
 })
 export class PlatformHostService {
-  private readonly runtime = globalThis as RuntimeWithFluoraOrigins;
-  private readonly currentOriginValue = cleanOrigin(globalThis.location?.origin);
-  private readonly currentHostnameValue = globalThis.location?.hostname ?? '';
-  private readonly configuredMarketingOrigin = cleanOrigin(this.runtime.__FLUORA_MARKETING_ORIGIN__);
-  private readonly configuredAppOrigin = cleanOrigin(this.runtime.__FLUORA_APP_ORIGIN__);
-  private readonly marketingOriginValue = this.resolveOrigin(this.configuredMarketingOrigin);
-  private readonly appOriginValue = this.resolveOrigin(this.configuredAppOrigin);
-  private readonly marketingHostnameValue = getHostnameFromOrigin(this.marketingOriginValue);
-  private readonly appHostnameValue = getHostnameFromOrigin(this.appOriginValue);
-
-  private resolveOrigin(configuredOrigin: string): string {
-    return configuredOrigin || this.currentOriginValue;
-  }
+  private readonly snapshot = resolvePlatformHostSnapshot(isPlatformBrowser(inject(PLATFORM_ID))
+    ? {kind:'browser',location:globalThis.location,runtime:globalThis as RuntimeWithFluoraOrigins}
+    : {kind:'server',context:inject(MARKETING_RENDER_CONTEXT)});
+  private readonly marketingHost = getHostnameFromOrigin(this.snapshot.marketingOrigin);
+  private readonly appHost = getHostnameFromOrigin(this.snapshot.appOrigin);
 
   currentHostname(): string {
-    return this.currentHostnameValue;
+    return this.snapshot.currentHostname;
   }
 
   currentOrigin(): string {
-    return this.currentOriginValue;
+    return this.snapshot.currentOrigin;
   }
 
   marketingOrigin(): string {
-    return this.marketingOriginValue;
+    return this.snapshot.marketingOrigin;
   }
 
   appOrigin(): string {
-    return this.appOriginValue;
+    return this.snapshot.appOrigin;
   }
 
   hasDedicatedAppHost(): boolean {
-    return !!this.appOriginValue
-      && !!this.marketingOriginValue
-      && this.appOriginValue !== this.marketingOriginValue;
+    return !!this.snapshot.appOrigin
+      && !!this.snapshot.marketingOrigin
+      && this.snapshot.appOrigin !== this.snapshot.marketingOrigin;
   }
 
   isAppHost(): boolean {
     return this.hasDedicatedAppHost()
-      && !!this.appHostnameValue
-      && this.currentHostnameValue === this.appHostnameValue;
+      && !!this.appHost
+      && this.snapshot.currentHostname === this.appHost;
   }
 
   isMarketingHost(): boolean {
-    return isMarketingHostname(this.currentHostnameValue, this.marketingHostnameValue);
+    return isMarketingHostname(this.snapshot.currentHostname, this.marketingHost);
   }
 
   isKnownPlatformHost(): boolean {
-    return this.isAppHost() || this.isMarketingHost() || isLocalHost(this.currentHostnameValue);
+    return this.isAppHost() || this.isMarketingHost() || isLocalHost(this.snapshot.currentHostname);
   }
 
   isCustomTenantHost(): boolean {
@@ -98,10 +114,10 @@ export class PlatformHostService {
   }
 
   appUrl(path = ''): string {
-    return `${this.appOriginValue}${path.startsWith('/') ? path : `/${path}`}`;
+    return `${this.snapshot.appOrigin}${path.startsWith('/') ? path : `/${path}`}`;
   }
 
   marketingUrl(path = ''): string {
-    return `${this.marketingOriginValue}${path.startsWith('/') ? path : `/${path}`}`;
+    return `${this.snapshot.marketingOrigin}${path.startsWith('/') ? path : `/${path}`}`;
   }
 }

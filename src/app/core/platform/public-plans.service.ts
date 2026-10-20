@@ -1,6 +1,7 @@
 import { HttpClient } from '@angular/common/http';
-import { Injectable, inject } from '@angular/core';
-import { Observable } from 'rxjs';
+import { Injectable, PLATFORM_ID, inject } from '@angular/core';
+import { isPlatformBrowser } from '@angular/common';
+import { EMPTY, Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
 
 export interface PlanPublicoFluora {
@@ -22,8 +23,11 @@ export interface PlanPublicoFluora {
 
 @Injectable({providedIn:'root'})
 export class PublicPlansService {
+  private readonly browser=isPlatformBrowser(inject(PLATFORM_ID));
   private readonly http=inject(HttpClient);
   listar(): Observable<PlanPublicoFluora[]> {
+    // No dynamic backend data in the server build; hydration policy belongs to R3.
+    if(!this.browser)return EMPTY;
     return this.http.get<PlanPublicoFluora[]>(`${environment.apiBaseUrl}/publico/plataforma/planes`);
   }
 }
