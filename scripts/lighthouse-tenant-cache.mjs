@@ -19,7 +19,8 @@ const { values } = parseArgs({ options: {
   sizes: { type: 'string', default: '390x844,820x1180,1440x900' },
   baseline: { type: 'boolean', default: false },
   'allow-quote': { type: 'boolean', default: false },
-  traces: { type: 'boolean', default: false }
+  traces: { type: 'boolean', default: false },
+  'spa-shell': { type: 'string', default: 'index' }
 } });
 if (!values.path?.startsWith('/') || values.path.startsWith('//')) throw new Error('Provide the public tenant path');
 const sizes = values.sizes.split(',').map(size => size.split('x').map(Number));
@@ -42,7 +43,7 @@ if (values.baseline) {
 const { fingerprint, headerChunks } = await fingerprintPublicBuild(root);
 await mkdir(output, { recursive: true, mode: 0o700 });
 // Exercise the proposed D1 policy locally; this does not modify hosting.
-const server = await publicPreview({ root, apiOrigin: values.api, requestLog: requests, allowQuote: values['allow-quote'], tenantCssRevalidate: !values.baseline });
+const server = await publicPreview({ root, apiOrigin: values.api, requestLog: requests, allowQuote: values['allow-quote'], tenantCssRevalidate: !values.baseline, spaShell: values['spa-shell'] });
 let chrome, child, interrupted = false;
 const interrupt = () => { interrupted = true; child?.kill('SIGINT'); };
 process.on('SIGINT', interrupt); process.on('SIGTERM', interrupt);
@@ -107,7 +108,7 @@ try {
   }
   await writeFile(path.join(output, 'summary.json'), JSON.stringify({ buildFingerprint: fingerprint, lighthouse: '13.4.1',
     path: values.path, sampleCountPerSizeAndCache: 1,
-    baseline: values.baseline, traces: values.traces, allowReadOnlyQuote: values['allow-quote'], headerChunks,
+    baseline: values.baseline, traces: values.traces, allowReadOnlyQuote: values['allow-quote'], headerChunks, spaShell: values['spa-shell'],
     backendWarmup: 'One discarded tenant navigation per size before cold/warm; cold still resets browser cache/storage',
     viewportProfile: 'All sizes, including desktop viewport1440, use mobile throttling simulate CPU4/150ms/1.6Mbps',
     cacheHeaders: values.baseline ? 'Baseline assets max-age604800; no deferred tenant CSS or D1 guard' : 'Preview assets max-age604800; tenant-public.css no-cache with ETag/304 simulates proposed D1, not deployed hosting',

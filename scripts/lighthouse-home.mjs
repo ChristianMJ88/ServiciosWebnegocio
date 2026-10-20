@@ -18,6 +18,7 @@ const { values } = parseArgs({ options: {
   path: { type: 'string', default: '/' },
   width: { type: 'string', default: '375' },
   height: { type: 'string', default: '812' },
+  'spa-shell': { type: 'string', default: 'index' },
 } });
 const root = path.resolve(values.root), output = path.resolve(values.output);
 if (!values.path.startsWith('/') || values.path.startsWith('//')) throw new Error('Use a local path');
@@ -31,7 +32,7 @@ if (version !== '13.4.1') throw new Error(`Fixed measurement requires Lighthouse
 async function describeBuild(root, label, port) {
   const { fingerprint, headerChunks } = await fingerprintPublicBuild(root);
   const requests = [];
-  return { root, label, port, fingerprint, headerChunks, requests, runs: [], server: await publicPreview({ root, apiOrigin: values.api, requestLog: requests }) };
+  return { root, label, port, fingerprint, headerChunks, requests, runs: [], server: await publicPreview({ root, apiOrigin: values.api, requestLog: requests, spaShell: values['spa-shell'] }) };
 }
 await mkdir(output, { recursive: true, mode: 0o700 });
 const scenarios = [await describeBuild(root, values.label, port)];
@@ -118,7 +119,7 @@ try {
       scriptHashes: Object.fromEntries(await Promise.all(['./lighthouse-home.mjs', './performance/public-preview.mjs', './performance/build-fingerprint.mjs'].map(async file => [file, createHash('sha256').update(await readFile(new URL(file, import.meta.url))).digest('hex')]))),
     },
     buildFingerprint: fingerprint, lighthouse: version, node: execFileSync(node, ['--version'], { encoding: 'utf8' }).trim(),
-    root: path.relative(process.cwd(), root), url, headerChunks, runs,
+    root: path.relative(process.cwd(), root), url, headerChunks, runs, spaShell: values['spa-shell'],
     median: { performance: median(runs.map(run => run.scores.performance)), fcp: median(runs.map(run => run.fcp)), lcp: median(runs.map(run => run.lcp)), tbt: median(runs.map(run => run.tbt)), cls: median(runs.map(run => run.cls)), speedIndex: median(runs.map(run => run.speedIndex)) },
   };
   await writeFile(path.join(output, scenarios.length === 1 ? 'summary.json' : `${label}-summary.json`), JSON.stringify(summary, null, 2), { mode: 0o600 });

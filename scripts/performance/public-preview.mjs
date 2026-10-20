@@ -3,10 +3,13 @@ import { readFile, readdir, stat } from 'node:fs/promises';
 import path from 'node:path';
 import { gzipSync } from 'node:zlib';
 import { createHash } from 'node:crypto';
+import { assertCsrContract } from '../../functions/csr-shell.js';
 
 /** Local production preview. Never proxies authentication or write endpoints. */
-export async function publicPreview({ root, apiOrigin, requestLog = [], allowQuote = false, tenantCssRevalidate = false }) {
+export async function publicPreview({ root, apiOrigin, requestLog = [], allowQuote = false, tenantCssRevalidate = false, spaShell = 'index' }) {
   root = path.resolve(root);
+  if (!['index', 'csr'].includes(spaShell)) throw new Error('spaShell must be index or csr');
+  if (spaShell === 'csr') assertCsrContract(await readFile(path.join(root, 'index.csr.html'), 'utf8'), await readFile(path.join(root, 'index.html'), 'utf8'));
   const api = new URL(apiOrigin);
   if (api.protocol !== 'http:' || !['localhost', '127.0.0.1', '[::1]'].includes(api.hostname) || api.username || api.password) {
     throw new Error('The API must be a local HTTP origin without credentials');
@@ -58,9 +61,10 @@ export async function publicPreview({ root, apiOrigin, requestLog = [], allowQuo
       }
       let file = path.resolve(root, '.' + decodeURIComponent(url.pathname));
       if (!file.startsWith(root + path.sep) && file !== root) { res.writeHead(403); return res.end(); }
+      if (url.pathname === '/') file = path.join(root, 'index.html');
       const info = await stat(file).catch(() => null);
       if (!info?.isFile()) {
-        if (req.headers.accept?.includes('text/html')) file = path.join(root, 'index.html');
+        if (req.headers.accept?.includes('text/html')) file = path.join(root, spaShell === 'csr' ? 'index.csr.html' : 'index.html');
         else { res.writeHead(404); return res.end(); }
       }
       const extension = path.extname(file);

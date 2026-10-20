@@ -7,6 +7,7 @@
     "build": "npm run build:marketing && npm run build:app",
     "prebuild:marketing": "npm run check:marketing-css",
     "build:marketing": "ng build --configuration production,marketing",
+    "postbuild:marketing": "node scripts/prepare-csr-shell.mjs --root dist/marketing/browser",
     "build:app": "ng build --configuration production,application",
     "watch": "ng build --watch --configuration development",
     "test": "ng test",

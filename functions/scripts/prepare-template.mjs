@@ -1,3 +1,5 @@
+// Obsoleto: producción usa loadCsrTemplate y descarga /index.csr.html.
+// Esta copia local no valida ni prepara las Functions desplegadas.
 import { copyFile, mkdir } from 'node:fs/promises';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';

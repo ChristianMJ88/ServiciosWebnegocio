@@ -73,5 +73,36 @@ Reportes bajo `tmp/`
 (ignorado), sin subirlos a un proveedor. Detiene la serie ante API caída/error de
 auditoría. No comparar con las series previas de DevTools.
 
+## Shell de navegación (M3 R1)
+
+`npm run build:marketing` prepara `index.csr.html` mediante su hook postbuild.
+Durante R1 es idéntico a index.html. Application conserva index.html y no usa
+ese hook. El prerender todavía no está habilitado.
+
+Los dos orquestadores admiten `--spa-shell index|csr` y registran el modo en su
+resumen. `index` mantiene compatibles las referencias M0/M2 archivadas. Para
+M3 usar `--spa-shell csr`: `/` y `/index.html` sirven el inicio; los enlaces
+profundos HTML usan el CSR validado antes de abrir el listener. No hay fallback
+silencioso si falta el CSR o contiene datos de hidratación. Los archivos reales
+y las restricciones del proxy se conservan. Este preview **no ejecuta** las
+Functions de tenant, landing ni directorio; sus renderers se verifican aparte.
+
+`npm run check:public-builds` comprueba el CSR, su contrato de assets y la salida
+vacía de application. Es también la guarda de predeploy del target marketing:
+solo valida, nunca construye ni repara. Un `ng build` directo omite el hook; antes
+de cualquier despliegue debe usarse el comando npm completo y pasar la guarda.
+La guarda exige ambos builds incluso si se prepara solo el target marketing.
+
+R1 necesita publicar Hosting marketing **antes** de Functions, porque la nueva
+carga remota exige `/index.csr.html`. Volver Hosting a una versión anterior sin
+revertir también Functions dejaría rutas públicas en503. No usar un despliegue
+combinado suponiendo orden. El sitio separado para futuros dominios de tenants
+será obligatorio antes de desplegar el prerender o conectar esos dominios; no
+se crea en R1, cuyo inicio todavía es CSR. Nada de esto autoriza un despliegue.
+El loader no sigue redirecciones: antes de publicar Functions debe comprobarse
+que FLUORA_MARKETING_ORIGIN sirve directamente el CSR publicado, con200, y no
+redirige a otro host. La comprobación de index.html del19/oct fue200 sinLocation;
+no sustituye esa validación posterior del nuevo CSR en Hosting.
+
 Fuentes: [Lighthouse CLI](https://github.com/GoogleChrome/lighthouse),
 [simulación de throttling](https://github.com/GoogleChrome/lighthouse/blob/main/docs/throttling.md).

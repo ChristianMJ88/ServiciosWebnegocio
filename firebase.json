@@ -6,6 +6,7 @@
   "hosting": [
     {
       "target": "marketing",
+      "predeploy": ["node scripts/check-public-builds.cjs"],
       "public": "dist/marketing/browser",
       "ignore": [
         "firebase.json",
@@ -116,7 +117,7 @@
         },
         {
           "source": "**",
-          "destination": "/index.html"
+          "destination": "/index.csr.html"
         }
       ]
     },

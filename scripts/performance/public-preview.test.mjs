@@ -70,3 +70,41 @@ test('attributes an overlapping response to the audit that started the request',
     await rm(root, { recursive: true, force: true });
   }
 });
+
+for (const spaShell of ['index','csr']) {
+  test(`serves home separately from deep-link shell: ${spaShell}`, async () => {
+    const root = await mkdtemp(path.join(tmpdir(), 'fluora-preview-shell-'));
+    const csr = '<html><head><base href="/"><link rel="stylesheet" href="styles-A.css"><script src="/runtime-config.js"></script></head><body><app-root></app-root><script type="module" src="main-A.js"></script></body></html>';
+    const home = csr.replace('</app-root>', '<h1>Home prerendered</h1></app-root>');
+    let server;
+    try {
+      await writeFile(path.join(root,'index.html'),home);
+      await writeFile(path.join(root,'index.csr.html'),csr);
+      await writeFile(path.join(root,'tenant-public.css'),'body{color:purple}');
+      server = await publicPreview({root,apiOrigin:'http://localhost:8080',spaShell});
+      await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));
+      const origin = `http://127.0.0.1:${server.address().port}`;
+      for (const route of ['/','/index.html']) assert.equal(await (await fetch(origin+route)).text(),home);
+      for (const route of ['/registro','/privacidad','/inexistente','/e/negocio-prueba/servicios']) {
+        assert.equal(await (await fetch(origin+route,{headers:{Accept:'text/html'}})).text(),spaShell==='csr'?csr:home);
+      }
+      assert.equal((await fetch(origin+'/missing.js')).status,404);
+      assert.equal(await (await fetch(origin+'/tenant-public.css')).text(),'body{color:purple}');
+      assert.equal((await fetch(origin+'/%2e%2e%2foutside')).status,403);
+    } finally {
+      if(server){server.closeAllConnections();await new Promise(resolve=>server.close(resolve));}
+      await rm(root,{recursive:true,force:true});
+    }
+  });
+}
+
+test('refuses missing/polluted CSR and unknown mode before any listener is opened', async () => {
+  const root = await mkdtemp(path.join(tmpdir(),'fluora-preview-invalid-'));
+  try {
+    await writeFile(path.join(root,'index.html'),'<app-root></app-root>');
+    await assert.rejects(publicPreview({root,apiOrigin:'http://localhost:8080',spaShell:'csr'}),{code:'ENOENT'});
+    await writeFile(path.join(root,'index.csr.html'),'<app-root><h1>Home</h1></app-root>');
+    await assert.rejects(publicPreview({root,apiOrigin:'http://localhost:8080',spaShell:'csr'}),/must be empty/);
+    await assert.rejects(publicPreview({root,apiOrigin:'http://localhost:8080',spaShell:'other'}),/spaShell/);
+  } finally {await rm(root,{recursive:true,force:true});}
+});

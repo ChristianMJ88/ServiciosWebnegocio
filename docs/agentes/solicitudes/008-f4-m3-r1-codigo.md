@@ -1,0 +1,9 @@
+# M3 R1: revisar implementación antes de entrega al usuario
+
+Implementadas correcciones H1–H7 de tu diseño008-f4-m3-r1-diseno. Revisa solo lectura, no ejecutes builds/suites ni escribas código.
+
+Archivos: functions/csr-shell.js y test (validador compartido, contrato y loader remotoCSR); functions/index.js tres consumidores reales; csr-functions.test.js ejecuta tres handlers reales en VM con SDK yfetch inyectados, verificando503/no-store/sin fallback. scripts/prepare-csr-shell.mjs y test (copy/CSR nativo/polluted/stale/missing/idempotencia/predeploy negativa); package.json solo postbuild marketing; firebase.json solo marketing rewrite+predeploy, app intacta; check-public-builds.cjs contrato/3renderers/applicationvacía/tablafallback. Preview spaShell index|csr y tests de root/deeplink/proxy/asset/traversal/shell inválido; flag en ambos medidores/resumen; README y respuesta008-f4-m3-r1. Script prepare-template se conserva marcado obsoleto, no se invierte en copia sin consumidor. Sin .firebaserc ni deploy.
+
+Pruebas focales31/31 Node20 aprobadas; Node22/Angular normal/builds finales en curso. No nuevas mediciones Lighthouse porque soloR1 y raíz sigueCSR. Snapshot dominios Firebase2sitios, solo3dominios plataforma, todos activos; sin dominiosclientes. Checkpoints51bb73b,15960c9,ac7781d previos. Working tree ajeno AGENTS/revisiones005006007plan/postman excluido. Esta faseR1 queda sin commit nuevo para revisión del usuario; no avanzarR4/R3/prerender.
+
+Solicito veredicto, posibles fallos funcionales o de despliegue y límites. Tiempo5s del loader preexistente conservado; redirect:error sin segunda petición. Guardia predeploy lee solamente y exige ambos builds; ngbuild directo sin hook falla. Documentado Hostingmarketing antesFunctions y reversión conjunta, target dominiosclientes pendiente antes de prerender/conectarlos. Resultado en revisiones/008-f4-m3-r1-codigo.md.

@@ -6,6 +6,7 @@ const { defineString } = require('firebase-functions/params');
 const { renderNotFound, renderSitemap, renderTenantHtml } = require('./seo-renderer');
 const { renderLandingHtml } = require('./landing-renderer');
 const { renderDirectoryHtml } = require('./directory-renderer');
+const { loadCsrTemplate } = require('./csr-shell');
 const appOriginParam = defineString('FLUORA_APP_ORIGIN');
 const { copyUpstreamHeaders } = require('./proxy-headers');
 
@@ -20,22 +21,6 @@ function runtimeConfig() {
     throw new Error('Faltan FLUORA_API_BASE_URL o FLUORA_MARKETING_ORIGIN');
   }
   return { apiBaseUrl, marketingOrigin };
-}
-
-async function loadCurrentTemplate(marketingOrigin) {
-  const templateResponse = await fetch(`${marketingOrigin}/index.html`, {
-    headers: { Accept: 'text/html' },
-    signal: AbortSignal.timeout(5000)
-  });
-  if (!templateResponse.ok) {
-    throw new Error(`El index de marketing respondió ${templateResponse.status}`);
-  }
-
-  const template = await templateResponse.text();
-  if (!template.includes('<app-root')) {
-    throw new Error('El index de marketing no contiene la aplicación esperada');
-  }
-  return template;
 }
 
 exports.apiProxy = onRequest(
@@ -91,7 +76,7 @@ exports.tenantPage = onRequest(
           headers: { Accept: 'application/json' },
           signal: AbortSignal.timeout(8000)
         }),
-        loadCurrentTemplate(marketingOrigin)
+        loadCsrTemplate(marketingOrigin)
       ]);
 
       if (!apiResponse.ok) {
@@ -184,7 +169,7 @@ exports.landingPage = onRequest(
    if(!appOrigin||!/^https:\/\//i.test(appOrigin))throw new Error('Origen de aplicación no configurado');
    const [data,template]=await Promise.all([
     fetch(apiBaseUrl+'/publico/marketing/landings/'+encodeURIComponent(slug),{signal:AbortSignal.timeout(8000)}),
-    loadCurrentTemplate(marketingOrigin)
+    loadCsrTemplate(marketingOrigin)
    ]);
    if(data.status===404){response.status(404).set('Cache-Control','no-store').send(renderNotFound('solicitada',marketingOrigin));return;}
    if(!data.ok)throw new Error('API de marketing no disponible');
@@ -209,7 +194,7 @@ exports.directoryPage = onRequest(
    }
    const [upstream,template]=await Promise.all([
     fetch(`${apiBaseUrl}/publico/marketplace?${params}`,{headers:{Accept:'application/json'},signal:AbortSignal.timeout(8000)}),
-    loadCurrentTemplate(marketingOrigin)
+    loadCsrTemplate(marketingOrigin)
    ]);
    if(!upstream.ok){response.status(upstream.status===400?400:503).set('Cache-Control','no-store').send(renderNotFound('directorio',marketingOrigin));return;}
    const directory=await upstream.json();
