@@ -1,8 +1,26 @@
 import { describe, expect, it } from 'vitest';
 import { PERMISOS } from '../../core/auth/permissions';
-import { construirGruposSidebarAdmin, esSeccionAdmin, filtrarModulosAdmin, filtrarPanelesOperativosAdmin } from './admin-dashboard.config';
+import { construirGruposSidebarAdmin, esSeccionAdmin, filtrarModulosAdmin, filtrarPanelesOperativosAdmin, seleccionarModuloActivo } from './admin-dashboard.config';
 
 describe('configuración del menú administrativo', () => {
+  it('admite una lista vacía de módulos concedidos por backend', () => {
+    const modulos = filtrarModulosAdmin([], new Set());
+    expect(modulos).toEqual([]);
+    expect(seleccionarModuloActivo(modulos, 'resumen')).toBeNull();
+  });
+
+  it('elige el primer módulo permitido si la sección solicitada no está disponible', () => {
+    const modulos = filtrarModulosAdmin([PERMISOS.serviciosGestionar], new Set(['servicios']));
+    expect(modulos.length).toBeGreaterThan(0);
+    expect(seleccionarModuloActivo(modulos, 'pagos')).toBe(modulos[0]);
+  });
+
+  it('conserva la sección solicitada cuando pertenece a los módulos permitidos', () => {
+    const modulos = filtrarModulosAdmin([PERMISOS.serviciosGestionar], new Set(['resumen', 'servicios']));
+    const seleccionado = seleccionarModuloActivo(modulos, 'servicios');
+    expect(seleccionado).toBe(modulos.find(modulo => modulo.id === 'servicios'));
+    expect(seleccionado?.id).toBe('servicios');
+  });
   it('permite abrir Caja y Recepción cuando capacidad y permiso son concedidos por el backend', () => {
     expect(filtrarPanelesOperativosAdmin([PERMISOS.cajaAcceso, PERMISOS.recepcionAcceso], new Set(['caja', 'recepcion']))
       .map(panel => panel.ruta)).toEqual(['/recepcion', '/caja']);

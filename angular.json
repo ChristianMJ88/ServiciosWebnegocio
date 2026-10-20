@@ -129,7 +129,8 @@
         "test": {
           "builder": "@angular/build:unit-test",
           "options": {
-            "buildTarget": "ServiciosWebnegocio:test-build"
+            "buildTarget": "ServiciosWebnegocio:test-build",
+            "runnerConfig": "vitest.config.mjs"
           }
         }
       }

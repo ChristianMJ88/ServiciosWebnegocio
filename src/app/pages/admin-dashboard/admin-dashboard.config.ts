@@ -34,6 +34,10 @@ export type ModuloAdminDef = {
   permiso?: PermisoCodigo;
 };
 
+export function seleccionarModuloActivo(modulos: readonly ModuloAdminDef[], seccion: SeccionAdmin): ModuloAdminDef | null {
+  return modulos.find(modulo => modulo.id === seccion) ?? modulos.at(0) ?? null;
+}
+
 export type PanelOperativoAdmin = {
   id: 'caja' | 'recepcion';
   titulo: string;

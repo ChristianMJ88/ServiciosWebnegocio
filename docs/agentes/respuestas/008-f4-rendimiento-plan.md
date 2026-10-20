@@ -91,3 +91,19 @@ Claude `revisiones/008-f4-m2-cierre.md` contrastó los JSON: **sin bloqueantes n
 - Se añadió para **próximas** mediciones `pendingApiRequests`, para hacer visibles las peticiones enestado0 al terminar la auditoría. Las series guardadas antes no registraban ese contador; no se ha rellenado retrospectivamente ni repetido muestras para mejorar cifras. Los errores recibidos y las API esenciales200 sí fueron comprobados. El test específico del camino502 queda opcional y no ejecutado.
 
 Siguiente revisión técnica sugerida por Claude: una línea baseP2sobreM0, con modo explícito sin tenantCSS, y análisis de trace antes de proponer corrección. Es recomendación pendiente, no implementación automática ni aprobación de un placeholder con altura supuesta. M3sigue reservado a decisión del usuario. Verificación final de huellas Home/P2 idénticas, guards/diff--check verdes y estilosapplication originales sin diff. Sin nuevas modificaciones de negocio.
+
+## Actualización posterior: CLS y T1 antes de M3
+
+La investigación posterior de CLS está cerrada localmente en `respuestas/008-f4-cls.md`, con revisión de Claude y30 muestras. Las cifras anteriores se conservan como historia de M2, no como estado final del tenant. HomeMarketing85 sigue pendiente.
+
+T1 corregido por selector puro real de Admin, cobertura de Booking y aislamiento por archivo permanente; no aumenta timeouts ni reduce workers. Tres corridas consecutivas del comando normal `env PATH=/Users/christianmejia/.nvm/versions/node/v20.19.0/bin:/opt/homebrew/bin:/usr/bin:/bin TZ=America/Mexico_City npm test -- --watch=false`, Node20.19.0/Vitest4.0.16, exit0 en todas:
+
+| Corrida | Pruebas/archivos | Duración | Tres pruebas más lentas |
+|---|---|---:|---|
+|1|304/82|36.34s|Booking precarga2321ms; promociones expandir1885ms; promociones guardar1618ms|
+|2|304/82|40.74s|Promociones expandir2282ms; Booking precarga2018ms; Home contacto1949ms|
+|3|304/82|35.62s|Booking precarga2112ms; Staff intervalo1979ms; promociones expandir1838ms|
+
+Margen mínimo2679ms frente a5000ms, sin pruebas individuales≥4s. Referencia anterior301/83 con un worker temporal9.87s no es una comparación controlada: aislamiento y concurrencia difieren. Variante de template mínimo falló antes de la solución final (41.27s); no se oculta. Detalle y logs en `respuestas/008-f4-t1.md`.
+
+Después de las suites se recompilaron marketing, application y producción predeterminada: exit0, sin NG8107; inicial476.17/824.99/848.17kB y transferencias estimadas130.28/167.70/176.59kB. Functions11 ypreview3 (14/14) verdes; guardas de CSS/assets/salidas y preparación de plantilla SEO correctas. No se atribuye una nueva medición Lighthouse a estos builds. Usuario autoriza commits y, después, comprobar dominios y M3 con su revisión por paso. No hay push ni despliegue.

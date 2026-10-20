@@ -102,6 +102,7 @@ import {
   construirGruposSidebarAdmin,
   esSeccionAdmin,
   filtrarModulosAdmin,
+  seleccionarModuloActivo,
   filtrarPanelesOperativosAdmin
 } from './admin-dashboard.config';
 import { AdminDashboardLoader } from './admin-dashboard.loader';
@@ -371,7 +372,7 @@ export class AdminDashboardComponent implements OnInit {
   readonly panelesOperativos = computed(() =>
     filtrarPanelesOperativosAdmin(this.authService.sesionActual()?.permisos ?? [], this.companyCapabilities.adminSectionCodes())
   );
-  readonly moduloActivo = computed(() => this.modulosAdmin().find(modulo => modulo.id === this.seccionActiva()) ?? this.modulosAdmin().at(0) ?? null);
+  readonly moduloActivo = computed(() => seleccionarModuloActivo(this.modulosAdmin(), this.seccionActiva()));
   readonly grupoActivoTitulo = computed(() =>
     this.gruposSidebar().find(grupo =>
       grupo.modulosVisibles.some(modulo => modulo.id === this.seccionActiva())
