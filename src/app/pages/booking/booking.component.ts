@@ -121,6 +121,11 @@ private readonly cargarDiasSeleccion=effect(() => {
   isSubmitting = signal(false);
   loadingSlots = signal(false);
   loadingCatalog = signal(false);
+  readonly catalogoInicialListo = signal(false);
+  private readonly staffInicialPendiente = signal<ReadonlySet<number>>(new Set());
+  private readonly cotizacionInicialPendiente = signal(false);
+  readonly presentacionInicialLista = computed(() => this.catalogoInicialListo()
+    && !this.cotizacionInicialPendiente() && this.staffInicialPendiente().size === 0);
   isMobile = signal(this.breakpointObserver.isMatched(this.mobileBreakpoint));
   schedulingMode = signal<'consecutive' | 'separated'>('consecutive');
   selectedDate = signal<string | null>(null);
@@ -445,15 +450,15 @@ private readonly cargarDiasSeleccion=effect(() => {
     this.cotizacion.set(null); this.errorCotizacion.set(''); this.cotizando.set(false);
     const empresaId = this.tenantContext.empresaId();
     const sucursalId = Number(this.bookingForm.value.branchId);
-    if (!empresaId || !sucursalId || !servicios.length) return;
+    if (!empresaId || !sucursalId || !servicios.length) { this.cotizacionInicialPendiente.set(false); return; }
     this.cotizando.set(true);
     this.appointmentService.cotizarCitas({empresaId,sucursalId,promocionId,productos:this.productosCart.items().map(p=>({productoId:p.productoId,cantidad:p.cantidad})),
       items: servicios.map(servicio => ({servicioId:servicio.id, fecha,
         inicio: itinerario?.items.find(item => item.servicio.id===servicio.id)?.slot.inicio
           ?? null}))
     }).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
-      next: resultado => { if(version!==this.quoteVersion) return; this.cotizacion.set(resultado); this.cotizando.set(false); },
-      error: error => { if(version!==this.quoteVersion) return; this.cotizando.set(false); this.errorCotizacion.set(error?.error?.mensaje || error?.error?.message || 'No pudimos confirmar el precio. Intenta de nuevo antes de reservar.'); }
+      next: resultado => { if(version!==this.quoteVersion) return; this.cotizacion.set(resultado); this.cotizando.set(false); this.cotizacionInicialPendiente.set(false); },
+      error: error => { if(version!==this.quoteVersion) return; this.cotizando.set(false); this.errorCotizacion.set(error?.error?.mensaje || error?.error?.message || 'No pudimos confirmar el precio. Intenta de nuevo antes de reservar.'); this.cotizacionInicialPendiente.set(false); }
     });
   }
 
@@ -887,12 +892,15 @@ private cargarDiasDisponibles(servicios:number[],desde?:string): void {
             this.selectedGroupId.set(null);
             this.selectedSubgroupId.set(null);
             this.loadServices(branch.id);
+          } else {
+            this.catalogoInicialListo.set(true);
           }
         },
         error: (err) => {
           this.loadingCatalog.set(false);
           console.error('Error cargando sucursales:', err);
           this.errorMessage = 'No se pudo cargar el catálogo de sucursales.';
+          this.catalogoInicialListo.set(true);
         }
       });
   }
@@ -916,11 +924,13 @@ private cargarDiasDisponibles(servicios:number[],desde?:string): void {
           const initialService = this.selectedServices()[0];
           const initialGroupId = initialService?.grupoId ?? this.availableGroups()[0]?.id ?? null;
           this.selectCatalogGroup(initialGroupId);
+          this.catalogoInicialListo.set(true);
         },
         error: (err) => {
           if (Number(this.bookingForm.value.branchId) !== branchId) return;
           console.error('Error cargando servicios:', err);
           this.errorMessage = 'No se pudo cargar el catálogo de servicios.';
+          this.catalogoInicialListo.set(true);
         }
       });
   }
@@ -1014,11 +1024,14 @@ elegirPrestador(servicioId:number,prestadorId:number|null): void {
   this.prestadoresElegidos.update(actual=>({...actual,[servicioId]:prestadorId}));
   this.saveCart();
 }
-private cargarStaffServicio(service: ServicioCatalogo) {
+private cargarStaffServicio(service: ServicioCatalogo, inicial = false) {
   const empresaId=this.tenantContext.empresaId();
   const sucursalId=Number(this.bookingForm.value.branchId);
   if(!empresaId || !Number.isSafeInteger(sucursalId) || sucursalId<=0) return;
-  this.appointmentService.getPublicStaff(empresaId,sucursalId,service.id).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+  if (inicial) this.staffInicialPendiente.update(ids => new Set([...ids, service.id]));
+  this.appointmentService.getPublicStaff(empresaId,sucursalId,service.id).pipe(takeUntilDestroyed(this.destroyRef), finalize(() => {
+    if (inicial) this.staffInicialPendiente.update(ids => { const pendientes = new Set(ids); pendientes.delete(service.id); return pendientes; });
+  })).subscribe({
     next:staff=>{
       if(Number(this.bookingForm.value.branchId)!==sucursalId || !this.selectedServices().some(s=>s.id===service.id)) return;
       this.staffByService.update(actual=>({...actual,[service.id]:staff}));
@@ -1112,10 +1125,11 @@ private cargarStaffServicio(service: ServicioCatalogo) {
       String(service.id) === token || service.slug?.toLowerCase() === token)).filter((service): service is ServicioCatalogo => !!service);
     const unique = found.filter((service, index) => found.findIndex(item => item.id === service.id) === index);
     const services = unique.filter(service => (service.moneda || 'MXN') === (unique[0]?.moneda || 'MXN'));
+    if (services.length) this.cotizacionInicialPendiente.set(true);
     this.selectedServices.set(services);
     this.bookingForm.patchValue({ serviceId: services[0]?.id ?? null });
     if (services.length < tokens.length) this.selectionNotice = 'Algunos servicios ya no están disponibles para esta sucursal o moneda. Revisa tu selección.';
-    services.forEach(service => this.cargarStaffServicio(service));
+    services.forEach(service => this.cargarStaffServicio(service, true));
     this.saveCart();
   }
 

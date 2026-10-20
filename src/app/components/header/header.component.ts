@@ -1,4 +1,5 @@
 import { MarketingTrackingService } from '../../core/marketing/marketing-tracking.service';
+import { Location } from '@angular/common';
 import { Component, HostListener, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
@@ -20,10 +21,11 @@ export class HeaderComponent {
   readonly tenantContext = inject(TenantContextService);
   readonly platformHost = inject(PlatformHostService);
   private readonly router = inject(Router);
+  private readonly location = inject(Location);
   readonly autenticadoVisible = computed(() => this.authService.autenticado());
   readonly rutaPanelVisible = computed(() => this.authService.rutaPanel());
   readonly tenantActivo = computed(() => this.tenantContext.activo());
-  readonly rutaActual = signal(this.normalizarUrl(this.router.url));
+  readonly rutaActual = signal(this.normalizarUrl(this.router.navigated ? this.router.url : (this.location.path() || '/')));
   readonly navbarCondensed = signal(false);
   readonly mobileMenuOpen = signal(false);
   readonly brandName = computed(() => this.tenantActivo() ? this.tenantContext.nombreComercial() : 'Fluora');

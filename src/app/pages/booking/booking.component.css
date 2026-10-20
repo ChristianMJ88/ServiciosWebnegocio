@@ -1417,3 +1417,6 @@
   .booking-itinerary-summary__side { justify-items: end; text-align: right !important; }
   .booking-itinerary-summary__main strong, .booking-itinerary-summary__side strong { font-size: 1rem; }
 }
+.booking-shell--pending {
+  visibility: hidden;
+}

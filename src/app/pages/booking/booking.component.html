@@ -23,9 +23,10 @@
       </div>
     </div>
 
+    <p class="visually-hidden" role="status">{{ !catalogoInicialListo() ? 'Cargando servicios disponibles…' : (!presentacionInicialLista() ? 'Preparando tu selección…' : '') }}</p>
     <div class="row justify-content-center">
       <div class="col-lg-11 col-xl-10">
-        <div class="card booking-shell">
+        <div class="card booking-shell" [class.booking-shell--pending]="!presentacionInicialLista()" [attr.inert]="presentacionInicialLista() ? null : ''" [attr.aria-busy]="presentacionInicialLista() ? null : true">
           <div class="row g-0">
             <div class="col-lg-8 col-xl-8">
               <div class="booking-main">
@@ -151,7 +152,8 @@
     </section>
   }
 }
-                        @if(cotizacion(); as presupuesto) { <p class="booking-inline-note" role="status">@if(presupuesto.reservableEnLinea === false) {{{ presupuesto.motivoNoReservable }}} @else if(presupuesto.requierePago) {Este servicio requiere pago para apartar tu horario: {{ presupuesto.importeRequeridoTotal | appMoney:presupuesto.moneda:2:2 }}. Tu cita se confirma al aprobarse el pago.} @else {Tu cita quedará pendiente de confirmación. @if(presupuesto.importeRequeridoTotal) {Anticipo requerido: {{ presupuesto.importeRequeridoTotal | appMoney:presupuesto.moneda:2:2 }}.} @else {Este servicio no requiere anticipo.}}</p> }
+                        @if(cotizacion(); as presupuesto) { <p class="booking-inline-note booking-quote-status" role="status">@if(presupuesto.reservableEnLinea === false) {{{ presupuesto.motivoNoReservable }}} @else if(presupuesto.requierePago) {Este servicio requiere pago para apartar tu horario: {{ presupuesto.importeRequeridoTotal | appMoney:presupuesto.moneda:2:2 }}. Tu cita se confirma al aprobarse el pago.} @else {Tu cita quedará pendiente de confirmación. @if(presupuesto.importeRequeridoTotal) {Anticipo requerido: {{ presupuesto.importeRequeridoTotal | appMoney:presupuesto.moneda:2:2 }}.} @else {Este servicio no requiere anticipo.}}</p> }
+                        @else if (cotizando()) { <p class="booking-inline-note booking-quote-status" role="status">Confirmando condiciones de tu reserva…</p> }
                         <section class="booking-service-browser" [attr.aria-label]="catalogContext()">
                           <header class="booking-service-browser__header">
                             <div><span>Explorar</span><h3>{{ catalogContext() }}</h3></div>

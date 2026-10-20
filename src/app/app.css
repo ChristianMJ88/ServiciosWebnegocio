@@ -1,4 +1,26 @@
 /* Estilos Globales y Flotantes */
+.public-content-pending {
+  visibility: hidden;
+}
+
+.public-shell-loading {
+  position: fixed;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  margin: 0;
+  color: var(--tenant-primary);
+  pointer-events: none;
+}
+
+.public-header-error {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 1rem;
+  padding: 1rem;
+}
+
 .panel-shell {
   min-height: 100vh;
 }

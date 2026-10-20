@@ -1,4 +1,4 @@
-import { Component, computed, effect, input, viewChild } from '@angular/core';
+import { Component, afterRenderEffect, computed, input, viewChild } from '@angular/core';
 import { FullCalendarComponent, FullCalendarModule } from '@fullcalendar/angular';
 import type { CalendarOptions } from '@fullcalendar/core';
 import dayGridPlugin from '@fullcalendar/daygrid';
@@ -15,11 +15,14 @@ export class BookingCalendarComponent {
   readonly selectedDate = input<string | null>(null);
   private readonly calendar = viewChild(FullCalendarComponent);
   constructor() {
-    effect(() => {
+    afterRenderEffect({ write: () => {
       const fecha = this.selectedDate();
-      const calendario = this.calendar();
-      if (fecha && calendario) calendario.getApi().gotoDate(fecha);
-    });
+      const api = this.calendar()?.getApi();
+      if (!fecha || !api) return;
+      const actual = api.getDate();
+      const fechaLocal = `${actual.getFullYear()}-${String(actual.getMonth() + 1).padStart(2, '0')}-${String(actual.getDate()).padStart(2, '0')}`;
+      if (fechaLocal !== fecha) api.gotoDate(fecha);
+    }});
   }
   readonly calendarOptions = computed<CalendarOptions>(() => ({
     ...this.options(),

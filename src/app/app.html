@@ -4,23 +4,35 @@
     <app-marketing-nav />
   } @else {
     @defer (on immediate) {
-      <app-header></app-header>
+      @if (tenantStyles.ready() && (tenantContext.activo() || navegacionResuelta())) {
+        <app-header #tenantHeader></app-header>
+      } @else {
+        <div class="public-header-slot" aria-hidden="true"></div>
+      }
     } @placeholder {
       <div class="public-header-slot" aria-hidden="true"></div>
+    } @error {
+      <nav #tenantHeaderError class="public-header-error" aria-label="Navegación alternativa">
+        <a [routerLink]="tenantContext.routeFor()">Volver al inicio</a>
+        <button type="button" (click)="recargarNavegacion()">Recargar navegación</button>
+      </nav>
     }
   }
 }
 
-<main class="min-vh-100" [class.panel-shell]="esPanelInterno()" [class.marketing-public-surface]="esNavegacionMarketing()">
+@if (contenidoPendiente()) {
+  <p class="public-shell-loading" role="status">Preparando el sitio…</p>
+}
+<main class="min-vh-100" [class.public-content-pending]="contenidoPendiente()" [attr.aria-busy]="contenidoPendiente() || null" [attr.inert]="contenidoPendiente() ? '' : null" [class.panel-shell]="esPanelInterno()" [class.marketing-public-surface]="esNavegacionMarketing()">
   <router-outlet></router-outlet>
 </main>
 
-@if (mostrarChromePublico() && (esNavegacionMarketing() || tenantContext.activo())) {
+@if (!contenidoPendiente() && mostrarChromePublico() && (esNavegacionMarketing() || (tenantContext.activo() && tenantStyles.ready()))) {
   <app-footer [class.marketing-public-footer]="esNavegacionMarketing()" [class.marketing-bottom-space]="esNavegacionMarketing() && marketingBottomBar()"></app-footer>
 }
 
 <!-- Botón de WhatsApp Flotante -->
-@if (mostrarChromePublico() && tenantContext.activo() && tenantContext.whatsappHabilitado() && !publicReservationPage()) {
+@if (!contenidoPendiente() && mostrarChromePublico() && tenantStyles.ready() && tenantContext.activo() && tenantContext.whatsappHabilitado() && !publicReservationPage()) {
   <a [href]="tenantContext.whatsappHref()" class="whatsapp-float shadow-lg" target="_blank" rel="noreferrer" title="Contáctanos por WhatsApp">
     <i class="bi bi-whatsapp" aria-hidden="true"></i>
     <span class="visually-hidden">WhatsApp</span>
@@ -28,7 +40,7 @@
 }
 
 <!-- Chatbot Flotante -->
-@if (mostrarChromePublico() && tenantContext.activo() && tenantContext.chatHabilitado() && !publicReservationPage()) {
+@if (!contenidoPendiente() && mostrarChromePublico() && tenantStyles.ready() && tenantContext.activo() && tenantContext.chatHabilitado() && !publicReservationPage()) {
   <div class="chatbot-wrapper shadow-lg" [class.open]="isChatOpen()">
     <div class="chat-header d-flex justify-content-between align-items-center px-3 py-2" (click)="toggleChat()">
       <i class="bi bi-chat-dots chat-launcher-icon" aria-hidden="true"></i>

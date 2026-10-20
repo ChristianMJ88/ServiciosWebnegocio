@@ -2,12 +2,13 @@ import { hasMarketingTabs } from './core/marketing/marketing-route';
 import { Location } from '@angular/common';
 import { MarketingNavComponent } from './components/marketing-nav/marketing-nav.component';
 import { SubscriptionAccessNoticeComponent } from './core/subscription/subscription-access-notice.component';
-import { Component, computed, effect, inject, signal } from '@angular/core';
+import { Component, ElementRef, computed, effect, inject, signal, viewChild } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { ActivatedRouteSnapshot, NavigationEnd, Router, RouterOutlet } from '@angular/router';
+import { ActivatedRouteSnapshot, NavigationCancel, NavigationCancellationCode, NavigationEnd, NavigationError, Router, RouterLink, RouterOutlet } from '@angular/router';
 import { filter } from 'rxjs/operators';
 import { HeaderComponent } from './components/header/header.component';
 import { FooterComponent } from './components/footer/footer.component';
+import { TENANT_PUBLIC_STYLES } from './core/styles/tenant-public-styles';
 
 import { AuthService } from './core/auth/auth.service';
 import { TenantContextService } from './core/tenant/tenant-context.service';
@@ -16,11 +17,12 @@ import { PlatformHostService } from './core/platform/platform-host.service';
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [RouterOutlet, HeaderComponent, MarketingNavComponent, FooterComponent, SubscriptionAccessNoticeComponent],
+  imports: [RouterOutlet, RouterLink, HeaderComponent, MarketingNavComponent, FooterComponent, SubscriptionAccessNoticeComponent],
   templateUrl: './app.html',
   styleUrl: './app.css'
 })
 export class App {
+  readonly tenantStyles = inject(TENANT_PUBLIC_STYLES);
   private readonly authService = inject(AuthService);
   private readonly router = inject(Router);
   readonly tenantContext = inject(TenantContextService);
@@ -30,6 +32,14 @@ export class App {
   private readonly navigationRevision=signal(0);
   readonly esNavegacionMarketing=computed(()=>this.mostrarChromePublico() && !this.tenantContext.activo() && !this.platformHost.isCustomTenantHost() && !/^\/e(?:\/|$)/.test(this.publicPath()));
   readonly marketingBottomBar=computed(()=>{this.navigationRevision();return hasMarketingTabs(this.router.routerState.snapshot.root,this.publicPath());});
+  readonly navegacionResuelta = signal(false);
+  private readonly headerRef = viewChild('tenantHeader', { read: ElementRef });
+  private readonly headerErrorRef = viewChild('tenantHeaderError', { read: ElementRef });
+  readonly contenidoPendiente = computed(() =>
+    this.mostrarChromePublico() && !this.esNavegacionMarketing()
+    && !this.headerRef() && !this.headerErrorRef()
+    && !(this.navegacionResuelta() && !this.tenantContext.activo())
+  );
   protected readonly title = signal('ServiciosWebnegocio');
   esPanelInterno = signal(this.calcularEsPanelInterno());
   mostrarChromePublico = signal(this.calcularLayout() === 'public');
@@ -38,18 +48,24 @@ export class App {
   chatMsg = signal('');
 
   constructor() {
+    effect(() => {
+      if (this.mostrarChromePublico() && !this.esNavegacionMarketing()) void this.tenantStyles.ensure();
+    });
     this.authService.sincronizarSesionPersistida();
-    this.sincronizarTenantConRuta(this.router.url);
+    this.sincronizarTenantConRuta(this.publicPath());
     effect(() => {
       const tenant = this.tenantContext.actual();
       this.aplicarTemaTenant(tenant);
     });
     this.router.events
       .pipe(
-        filter((event): event is NavigationEnd => event instanceof NavigationEnd),
+        filter((event): event is NavigationEnd | NavigationCancel | NavigationError => event instanceof NavigationEnd || event instanceof NavigationCancel || event instanceof NavigationError),
         takeUntilDestroyed()
       )
-      .subscribe(() => {
+      .subscribe(event => {
+        if (event instanceof NavigationCancel && (event.code === NavigationCancellationCode.Redirect || event.code === NavigationCancellationCode.SupersededByNewNavigation)) return;
+        this.navegacionResuelta.set(true);
+        if (!(event instanceof NavigationEnd)) return;
         this.publicPath.set(this.normalizarUrl(this.router.url));
         this.navigationRevision.update(value=>value+1);
         this.sincronizarTenantConRuta(this.router.url);
@@ -57,6 +73,10 @@ export class App {
         this.esPanelInterno.set(this.calcularEsPanelInterno());
         this.mostrarChromePublico.set(this.calcularLayout() === 'public');
       });
+  }
+
+  recargarNavegacion(): void {
+    globalThis.location?.reload();
   }
 
   toggleChat() {

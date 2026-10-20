@@ -3,8 +3,8 @@ import { ActivatedRoute, convertToParamMap } from '@angular/router';
 import { BreakpointObserver } from '@angular/cdk/layout';
 import { of, Subject } from 'rxjs';
 import { BookingComponent } from './booking.component';
-import { BookingDataService, ServicioCatalogo } from '../../services/booking-data.service';
-import { AppointmentService, FranjaDisponible, CotizacionCitas } from '../../services/appointment.service';
+import { BookingDataService, ServicioCatalogo, SucursalCatalogo } from '../../services/booking-data.service';
+import { AppointmentService, FranjaDisponible, CotizacionCitas, PrestadorPublico } from '../../services/appointment.service';
 import { TenantContextService } from '../../core/tenant/tenant-context.service';
 import { ReservationCartService } from '../../services/reservation-cart.service';
 import { PublicCheckoutService } from '../../services/public-checkout.service';
@@ -18,6 +18,144 @@ const service = (id: number, branch = 10, moneda = 'MXN'): ServicioCatalogo => (
 });
 
 describe('Public booking selection', () => {
+  function setupPendingSelection() {
+    const context = setup({sucursal:'10',servicios:'1'});
+    const quote = new Subject<CotizacionCitas>(), staff = new Subject<PrestadorPublico[]>();
+    context.cotizar.mockReturnValue(quote);
+    const getStaff = vi.spyOn(TestBed.inject(AppointmentService), 'getPublicStaff').mockReturnValue(staff);
+    context.component.ngOnInit();
+    return {...context,quote,staff,getStaff};
+  }
+  it.each(['quote', 'staff'])('waits for both initial responses even when %s arrives first', first => {
+    const {component,quote,staff,serverQuote,getStaff,dias} = setupPendingSelection();
+    expect(component.catalogoInicialListo()).toBe(true);
+    expect(component.presentacionInicialLista()).toBe(false); // Antes del effect de cotización.
+    TestBed.tick();
+    // El fixture no tiene días: el flujo existente consulta también el mes siguiente.
+    expect(dias).toHaveBeenCalledTimes(2);
+    expect(getStaff).toHaveBeenCalledExactlyOnceWith(1,10,1);
+    if (first === 'quote') { quote.next(serverQuote); quote.complete(); }
+    else { staff.next([]); staff.complete(); }
+    expect(component.presentacionInicialLista()).toBe(false);
+    if (first === 'quote') { staff.next([]); staff.complete(); }
+    else { quote.next(serverQuote); quote.complete(); }
+    expect(component.presentacionInicialLista()).toBe(true);
+  });
+  it('reveals errors without retaining an initial quote or staff wait', () => {
+    const {component,quote,staff} = setupPendingSelection(); TestBed.tick();
+    staff.error(new Error('Staff unavailable'));
+    quote.error({error:{mensaje:'Cotización no disponible'}});
+    expect(component.presentacionInicialLista()).toBe(true);
+    expect(component.errorStaff()).not.toBe('');
+    expect(component.errorCotizacion()).toBe('Cotización no disponible');
+  });
+  it('does not release the selection barrier for an obsolete quote', () => {
+    const {component,quote,staff,cotizar,serverQuote} = setupPendingSelection(); TestBed.tick();
+    staff.next([]); staff.complete();
+    const currentQuote = new Subject<CotizacionCitas>(); cotizar.mockReturnValue(currentQuote);
+    component.selectedDate.set('2026-10-18'); TestBed.tick();
+    quote.next(serverQuote); quote.complete();
+    expect(component.presentacionInicialLista()).toBe(false);
+    currentQuote.next(serverQuote); currentQuote.complete();
+    expect(component.presentacionInicialLista()).toBe(true);
+  });
+  it('releases a pending selection when a branch change removes its initial services', () => {
+    const {component,staff} = setupPendingSelection(); TestBed.tick();
+    staff.next([]); staff.complete();
+    component.onBranchChange('20'); TestBed.tick();
+    expect(component.presentacionInicialLista()).toBe(true);
+  });
+  it('ignores obsolete staff after changing branch and releases its initial wait on completion', () => {
+    const {component,staff,quote,serverQuote} = setupPendingSelection(); TestBed.tick();
+    component.onBranchChange('20'); TestBed.tick();
+    expect(component.presentacionInicialLista()).toBe(false);
+    quote.next(serverQuote); quote.complete();
+    expect(component.cotizacion()).toBeNull();
+    staff.next([{usuarioId:99,sucursalId:10,nombreMostrar:'Profesional anterior',biografia:null,fotoUrl:null,colorAgenda:null}]);
+    expect(component.staffByService()).toEqual({});
+    expect(component.presentacionInicialLista()).toBe(false);
+    staff.complete();
+    expect(component.presentacionInicialLista()).toBe(true);
+    expect(component.staffByService()).toEqual({});
+    expect(component.selectedServices()).toEqual([]);
+  });
+  it('does not hide again for later staff and price requests', () => {
+    const {component,quote,staff,serverQuote,cotizar,getStaff} = setupPendingSelection(); TestBed.tick();
+    staff.next([]); staff.complete(); quote.next(serverQuote); quote.complete();
+    expect(component.presentacionInicialLista()).toBe(true);
+    getStaff.mockReturnValue(new Subject<PrestadorPublico[]>());
+    cotizar.mockReturnValue(new Subject<CotizacionCitas>());
+    component.toggleService(service(2)); TestBed.tick();
+    expect(component.cotizando()).toBe(true);
+    expect(component.presentacionInicialLista()).toBe(true);
+  });
+  const branch = (id: number): SucursalCatalogo => ({ id, empresaId: 1, nombre: `Sucursal ${id}`, direccion: '', telefono: '', zonaHoraria: 'America/Mexico_City' });
+  function setupPendingCatalog(params: Record<string, string> = {}) {
+    const context = setup(params), branches = new Subject<SucursalCatalogo[]>(), services = new Subject<ServicioCatalogo[]>();
+    const data = TestBed.inject(BookingDataService);
+    vi.spyOn(data, 'getBranches').mockReturnValue(branches);
+    const getServices = vi.spyOn(data, 'getServices').mockReturnValue(services);
+    context.component.ngOnInit();
+    return { ...context, branches, services, getServices };
+  }
+  it('keeps the initial shell pending through branches and services, then reveals hydrated selection', () => {
+    const {component, branches, services} = setupPendingCatalog({sucursal:'10',servicios:'1'});
+    expect(component.catalogoInicialListo()).toBe(false);
+    branches.next([branch(10)]);
+    expect(component.catalogoInicialListo()).toBe(false);
+    services.next([service(1), service(2)]); services.complete();
+    expect(component.catalogoInicialListo()).toBe(true);
+    expect(component.selectedServices().map(item => item.id)).toEqual([1]);
+  });
+  it.each([{values: [] as SucursalCatalogo[]}, {values: [branch(10), branch(20)]}])('reveals an initial catalog without an automatically selected branch (%j)', ({values}) => {
+    const {component, branches, getServices} = setupPendingCatalog();
+    branches.next(values);
+    expect(component.catalogoInicialListo()).toBe(true);
+    expect(getServices).not.toHaveBeenCalled();
+  });
+  it('reveals branch errors instead of leaving the initial form hidden', () => {
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+    const {component, branches} = setupPendingCatalog();
+    branches.error(new Error('Network failure'));
+    expect(component.catalogoInicialListo()).toBe(true);
+    expect(component.errorMessage).toContain('sucursales');
+  });
+  it('reveals service errors and keeps the existing error message', () => {
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+    const {component, branches, services} = setupPendingCatalog();
+    branches.next([branch(10)]); services.error(new Error('Network failure'));
+    expect(component.catalogoInicialListo()).toBe(true);
+    expect(component.errorMessage).toContain('servicios');
+  });
+  it('does not reveal an obsolete service response before the current branch arrives', () => {
+    const {component, branches, services, getServices} = setupPendingCatalog({sucursal:'10'});
+    branches.next([branch(10), branch(20)]);
+    const currentServices = new Subject<ServicioCatalogo[]>();
+    getServices.mockReturnValue(currentServices); component.onBranchChange('20');
+    services.next([service(1)]); services.complete();
+    expect(component.catalogoInicialListo()).toBe(false);
+    currentServices.next([service(4,20)]); currentServices.complete();
+    expect(component.catalogoInicialListo()).toBe(true);
+    expect(component.services().map(item => item.id)).toEqual([4]);
+  });
+  it('keeps the form revealed when changing branch after the first load', () => {
+    const {component, branches} = setupPendingCatalog();
+    branches.next([branch(10), branch(20)]);
+    component.onBranchChange('20');
+    expect(component.loadingCatalog()).toBe(true);
+    expect(component.catalogoInicialListo()).toBe(true);
+  });
+  it('keeps the form revealed while reloading its sole branch after success', () => {
+    vi.useFakeTimers();
+    try {
+      const {component, branches, services, getServices} = setupPendingCatalog();
+      branches.next([branch(10)]); services.next([service(1)]); services.complete();
+      getServices.mockReturnValue(new Subject<ServicioCatalogo[]>());
+      (component as any).handleSuccess();
+      expect(component.loadingCatalog()).toBe(true);
+      expect(component.catalogoInicialListo()).toBe(true);
+    } finally { vi.clearAllTimers(); vi.useRealTimers(); }
+  });
   it('keeps later starting hours and distinct provider identities beyond eighteen combinations', () => {
     const { component } = setup();
     const slots: FranjaDisponible[] = Array.from({ length: 24 }, (_, index) => ({
