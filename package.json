@@ -5,11 +5,15 @@
     "ng": "ng",
     "start": "ng serve --host 0.0.0.0 --proxy-config proxy.conf.json",
     "build": "npm run build:marketing && npm run build:app",
+    "prebuild:marketing": "npm run check:marketing-css",
     "build:marketing": "ng build --configuration production,marketing",
     "build:app": "ng build --configuration production,application",
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
-    "check:public-assets": "node scripts/check-public-assets.cjs"
+    "check:public-assets": "node scripts/check-public-assets.cjs",
+    "check:public-builds": "node scripts/check-public-builds.cjs",
+    "css:marketing": "node scripts/css/marketing-subset.mjs",
+    "check:marketing-css": "node scripts/css/marketing-subset.mjs --check"
   },
   "prettier": {
     "printWidth": 100,
@@ -54,6 +58,7 @@
     "@angular/cli": "21.0.6",
     "@angular/compiler-cli": "21.0.6",
     "jsdom": "^27.1.0",
+    "postcss": "8.5.6",
     "typescript": "~5.9.2",
     "vitest": "^4.0.8"
   }

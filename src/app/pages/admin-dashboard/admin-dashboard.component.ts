@@ -371,7 +371,7 @@ export class AdminDashboardComponent implements OnInit {
   readonly panelesOperativos = computed(() =>
     filtrarPanelesOperativosAdmin(this.authService.sesionActual()?.permisos ?? [], this.companyCapabilities.adminSectionCodes())
   );
-  readonly moduloActivo = computed(() => this.modulosAdmin().find(modulo => modulo.id === this.seccionActiva()) ?? this.modulosAdmin()[0]);
+  readonly moduloActivo = computed(() => this.modulosAdmin().find(modulo => modulo.id === this.seccionActiva()) ?? this.modulosAdmin().at(0) ?? null);
   readonly grupoActivoTitulo = computed(() =>
     this.gruposSidebar().find(grupo =>
       grupo.modulosVisibles.some(modulo => modulo.id === this.seccionActiva())

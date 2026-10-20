@@ -4,44 +4,47 @@ import { Routes } from '@angular/router';
 import { tenantHostMatch } from './core/tenant/tenant-host.matchers';
 import { tenantHostResolver } from './core/tenant/tenant-host.resolver';
 import { tenantResolver } from './core/tenant/tenant.resolver';
+import { tenantPublicStylesResolver } from './core/styles/tenant-public-styles';
+
+const tenantHostPublicResolvers = { tenant: tenantHostResolver, estilos: tenantPublicStylesResolver };
 
 const redirectComponent = () => import('./pages/platform-redirect/platform-redirect.component')
   .then((m) => m.PlatformRedirectComponent);
 
 export const publicContentRoutes: Routes = [
-  { path: 'politicas', canMatch: [tenantHostMatch], resolve: {tenant: tenantHostResolver}, loadComponent: () => import('./pages/business-policy/business-policy.component').then(m => m.BusinessPolicyComponent) },
+  { path: 'politicas', canMatch: [tenantHostMatch], resolve: tenantHostPublicResolvers, loadComponent: () => import('./pages/business-policy/business-policy.component').then(m => m.BusinessPolicyComponent) },
   { path: 'negocios', canMatch: [() => inject(PlatformHostService).isKnownPlatformHost()],
     loadComponent: () => import('./pages/marketplace/marketplace.component').then(m => m.MarketplaceComponent) },
   {
-    path: '', canMatch: [tenantHostMatch], resolve: { tenant: tenantHostResolver },
+    path: '', canMatch: [tenantHostMatch], resolve: tenantHostPublicResolvers,
     loadComponent: () => import('./pages/home/home.component').then((m) => m.HomeComponent)
   },
   {
-    path: 'servicios', canMatch: [tenantHostMatch], resolve: { tenant: tenantHostResolver },
+    path: 'servicios', canMatch: [tenantHostMatch], resolve: tenantHostPublicResolvers,
     loadComponent: () => import('./pages/services/services.component').then((m) => m.ServicesComponent)
   },
   {
-    path: 'productos', canMatch: [tenantHostMatch], resolve: { tenant: tenantHostResolver },
+    path: 'productos', canMatch: [tenantHostMatch], resolve: tenantHostPublicResolvers,
     loadComponent: () => import('./pages/products/products.component').then((m) => m.ProductsComponent)
   },
   {
-    path: 'productos/:productoSlug', canMatch: [tenantHostMatch], resolve: { tenant: tenantHostResolver },
+    path: 'productos/:productoSlug', canMatch: [tenantHostMatch], resolve: tenantHostPublicResolvers,
     loadComponent: () => import('./pages/products/products.component').then((m) => m.ProductsComponent)
   },
   {
-    path: 'checkout', canMatch: [tenantHostMatch], resolve: { tenant: tenantHostResolver },
+    path: 'checkout', canMatch: [tenantHostMatch], resolve: tenantHostPublicResolvers,
     loadComponent: () => import('./pages/checkout/checkout.component').then((m) => m.CheckoutComponent)
   },
   {
-    path: 'agendar', canMatch: [tenantHostMatch], resolve: { tenant: tenantHostResolver },
+    path: 'agendar', canMatch: [tenantHostMatch], resolve: tenantHostPublicResolvers,
     loadComponent: () => import('./pages/booking/booking.component').then((m) => m.BookingComponent)
   },
   {
-    path: 'contacto', canMatch: [tenantHostMatch], resolve: { tenant: tenantHostResolver },
+    path: 'contacto', canMatch: [tenantHostMatch], resolve: tenantHostPublicResolvers,
     loadComponent: () => import('./pages/contact/contact.component').then((m) => m.ContactComponent)
   },
   {
-    path: 'registro', canMatch: [tenantHostMatch], resolve: { tenant: tenantHostResolver },
+    path: 'registro', canMatch: [tenantHostMatch], resolve: tenantHostPublicResolvers,
     loadComponent: () => import('./pages/register/register.component').then((m) => m.RegisterComponent)
   },
   ...['barberias', 'salones', 'esteticas', 'unas', 'spa'].map(vertical => ({
@@ -67,7 +70,7 @@ export const publicContentRoutes: Routes = [
   },
   { path: 'demo', redirectTo: '', pathMatch: 'full' },
   {
-    path: 'e/:slug', resolve: { tenant: tenantResolver },
+    path: 'e/:slug', resolve: { tenant: tenantResolver, estilos: tenantPublicStylesResolver },
     children: [
       { path: 'politicas', loadComponent: () => import('./pages/business-policy/business-policy.component').then(m => m.BusinessPolicyComponent) },
       { path: '', loadComponent: () => import('./pages/home/home.component').then((m) => m.HomeComponent) },

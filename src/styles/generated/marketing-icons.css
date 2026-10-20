@@ -1,0 +1,116 @@
+/* Generated from bootstrap-icons@1.13.1; SHA256 004322721c8557331759bc6ddaacbb689b0f0715d688aec82bd056d2d5b5cc3b.
+Classes: bi bi-arrow-down bi-arrow-left bi-arrow-left-right bi-arrow-right bi-arrow-up-right bi-bag bi-box-seam bi-building bi-calendar2-check bi-calendar2-week bi-chat-dots bi-check2 bi-chevron-down bi-clock bi-credit-card bi-dash-lg bi-envelope bi-geo-alt bi-gift bi-grid bi-grid-1x2 bi-house bi-info-circle bi-layers bi-link-45deg bi-list bi-people bi-person-check bi-person-circle bi-play-circle bi-plus-lg bi-question-circle bi-receipt bi-scissors bi-search bi-shop bi-sliders bi-telephone bi-three-dots bi-wallet2 bi-whatsapp bi-window bi-x-lg
+Run npm run css:marketing; do not edit by hand. */
+/*!
+ * Bootstrap Icons v1.13.1 (https://icons.getbootstrap.com/)
+ * Copyright 2019-2024 The Bootstrap Authors
+ * Licensed under MIT (https://github.com/twbs/icons/blob/main/LICENSE)
+ */
+
+@font-face {
+  font-display: block;
+  font-family: "bootstrap-icons";
+  src: url("../../../node_modules/bootstrap-icons/font/fonts/bootstrap-icons.woff2?e34853135f9e39acf64315236852cd5a") format("woff2"),
+url("../../../node_modules/bootstrap-icons/font/fonts/bootstrap-icons.woff?e34853135f9e39acf64315236852cd5a") format("woff");
+}
+
+.bi::before,
+[class^="bi-"]::before,
+[class*=" bi-"]::before {
+  display: inline-block;
+  font-family: bootstrap-icons !important;
+  font-style: normal;
+  font-weight: normal !important;
+  font-variant: normal;
+  text-transform: none;
+  line-height: 1;
+  vertical-align: -.125em;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.bi-arrow-down::before { content: "\f128"; }
+
+.bi-arrow-left-right::before { content: "\f12b"; }
+
+.bi-arrow-left::before { content: "\f12f"; }
+
+.bi-arrow-right::before { content: "\f138"; }
+
+.bi-arrow-up-right::before { content: "\f144"; }
+
+.bi-bag::before { content: "\f179"; }
+
+.bi-box-seam::before { content: "\f1c7"; }
+
+.bi-building::before { content: "\f1dd"; }
+
+.bi-calendar2-check::before { content: "\f1f8"; }
+
+.bi-calendar2-week::before { content: "\f209"; }
+
+.bi-chat-dots::before { content: "\f24a"; }
+
+.bi-check2::before { content: "\f272"; }
+
+.bi-chevron-down::before { content: "\f282"; }
+
+.bi-clock::before { content: "\f293"; }
+
+.bi-credit-card::before { content: "\f2dc"; }
+
+.bi-envelope::before { content: "\f32f"; }
+
+.bi-geo-alt::before { content: "\f3e8"; }
+
+.bi-gift::before { content: "\f3ec"; }
+
+.bi-grid-1x2::before { content: "\f3f4"; }
+
+.bi-grid::before { content: "\f3fc"; }
+
+.bi-house::before { content: "\f425"; }
+
+.bi-info-circle::before { content: "\f431"; }
+
+.bi-layers::before { content: "\f45b"; }
+
+.bi-link-45deg::before { content: "\f470"; }
+
+.bi-list::before { content: "\f479"; }
+
+.bi-people::before { content: "\f4d0"; }
+
+.bi-person-check::before { content: "\f4d6"; }
+
+.bi-person-circle::before { content: "\f4d7"; }
+
+.bi-play-circle::before { content: "\f4f3"; }
+
+.bi-question-circle::before { content: "\f505"; }
+
+.bi-receipt::before { content: "\f50f"; }
+
+.bi-scissors::before { content: "\f528"; }
+
+.bi-search::before { content: "\f52a"; }
+
+.bi-shop::before { content: "\f543"; }
+
+.bi-sliders::before { content: "\f56b"; }
+
+.bi-telephone::before { content: "\f5c1"; }
+
+.bi-three-dots::before { content: "\f5d4"; }
+
+.bi-wallet2::before { content: "\f615"; }
+
+.bi-whatsapp::before { content: "\f618"; }
+
+.bi-window::before { content: "\f620"; }
+
+.bi-dash-lg::before { content: "\f63b"; }
+
+.bi-plus-lg::before { content: "\f64d"; }
+
+.bi-x-lg::before { content: "\f659"; }

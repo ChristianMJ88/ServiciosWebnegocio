@@ -1,0 +1,6 @@
+@import 'bootstrap/dist/css/bootstrap-reboot.min.css';
+@import './styles/generated/marketing-bootstrap.css';
+@import './styles/generated/marketing-icons.css';
+@import './app/shared/styles/marketing-tokens.css';
+@import './app/shared/styles/tenant-fonts.css';
+@import './styles/public-base.css';

@@ -1,7 +1,15 @@
 import { applicationRoutes } from './app.routes.application';
 import { marketingRoutes } from './app.routes.marketing';
+import { tenantResolver } from './core/tenant/tenant.resolver';
+import { tenantHostResolver } from './core/tenant/tenant-host.resolver';
+import { tenantPublicStylesResolver } from './core/styles/tenant-public-styles';
 
 describe('separación de superficies web', () => {
+  it('waits for public styles on every route that resolves a tenant', () => {
+    const tenantRoutes = marketingRoutes.filter(route => Object.values(route.resolve || {}).some(resolver => resolver === tenantResolver || resolver === tenantHostResolver));
+    expect(tenantRoutes.length).toBeGreaterThan(1);
+    for (const route of tenantRoutes) expect(route.resolve?.['estilos']).toBe(tenantPublicStylesResolver);
+  });
   it('mantiene los paneles privados fuera del manifiesto de marketing', () => {
     const paths = marketingRoutes.map((route) => route.path);
 

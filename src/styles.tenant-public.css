@@ -1,0 +1,6 @@
+@import './styles/material-public-tokens.css';
+@import 'bootstrap/dist/css/bootstrap.min.css';
+@import 'bootstrap-icons/font/bootstrap-icons.css';
+@import './app/shared/styles/marketing-tokens.css';
+@import './app/shared/styles/tenant-fonts.css';
+@import './styles/public-base.css';

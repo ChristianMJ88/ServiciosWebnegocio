@@ -1,5 +1,6 @@
 import { provideEnvironmentInitializer } from '@angular/core';
 import { prepareMarketingHome } from './app/core/marketing/marketing-bootstrap';
+import { provideTenantPublicStyles } from './app/core/styles/tenant-public-styles';
 import { registerLocaleData } from '@angular/common';
 import localeEs from '@angular/common/locales/es';
 import localeEsMx from '@angular/common/locales/es-MX';
@@ -12,5 +13,5 @@ registerLocaleData(localeEs);
 registerLocaleData(localeEsMx);
 
 const config=createAppConfig(marketingRoutes);
-bootstrapApplication(App,{...config,providers:[...config.providers,provideEnvironmentInitializer(prepareMarketingHome)]})
+bootstrapApplication(App,{...config,providers:[...config.providers,provideTenantPublicStyles(),provideEnvironmentInitializer(prepareMarketingHome)]})
   .catch((err) => console.error(err));
