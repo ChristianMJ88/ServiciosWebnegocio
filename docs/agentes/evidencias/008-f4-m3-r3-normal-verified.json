@@ -1,0 +1,883 @@
+{
+  "phase": "final normal matrix with global criteria and region-aware observer",
+  "build": "42d6b0a8a87853626b7f6eb81767105b4e10aa8c41e67ea730ece5738c383ae1",
+  "samples": 32,
+  "initialClsCriterion": {
+    "limit": 0.01,
+    "max": 0.006662539669836604,
+    "violations": []
+  },
+  "identicalNormalPairs": 16,
+  "sameApiHashesAsBaseline": true,
+  "maxFinalScrollCls": 0.026181859858168982,
+  "results": [
+    {
+      "width": 360,
+      "height": 740,
+      "repeat": 1,
+      "initialCls": 0,
+      "finalCls": 0.026181859858168982,
+      "criticalBefore": [],
+      "sections": {
+        "product": {
+          "height": 767.8125,
+          "deltaCls": 0
+        },
+        "plans": {
+          "height": 883.296875,
+          "deltaCls": 0.018266210889944
+        },
+        "faq": {
+          "height": 588.125,
+          "deltaCls": 0.007915648968224982
+        },
+        "closing": {
+          "height": 717.53125,
+          "deltaCls": 0
+        }
+      }
+    },
+    {
+      "width": 360,
+      "height": 740,
+      "repeat": 2,
+      "initialCls": 0,
+      "finalCls": 0.026181859858168982,
+      "criticalBefore": [],
+      "sections": {
+        "product": {
+          "height": 767.8125,
+          "deltaCls": 0
+        },
+        "plans": {
+          "height": 883.296875,
+          "deltaCls": 0.018266210889944
+        },
+        "faq": {
+          "height": 588.125,
+          "deltaCls": 0.007915648968224982
+        },
+        "closing": {
+          "height": 717.53125,
+          "deltaCls": 0
+        }
+      }
+    },
+    {
+      "width": 740,
+      "height": 360,
+      "repeat": 1,
+      "initialCls": 0,
+      "finalCls": 0,
+      "criticalBefore": [],
+      "sections": {
+        "product": {
+          "height": 680.546875,
+          "deltaCls": 0
+        },
+        "plans": {
+          "height": 820.421875,
+          "deltaCls": 0
+        },
+        "faq": {
+          "height": 549.78125,
+          "deltaCls": 0
+        },
+        "closing": {
+          "height": 671.234375,
+          "deltaCls": 0
+        }
+      }
+    },
+    {
+      "width": 740,
+      "height": 360,
+      "repeat": 2,
+      "initialCls": 0,
+      "finalCls": 0,
+      "criticalBefore": [],
+      "sections": {
+        "product": {
+          "height": 680.546875,
+          "deltaCls": 0
+        },
+        "plans": {
+          "height": 820.421875,
+          "deltaCls": 0
+        },
+        "faq": {
+          "height": 549.78125,
+          "deltaCls": 0
+        },
+        "closing": {
+          "height": 671.234375,
+          "deltaCls": 0
+        }
+      }
+    },
+    {
+      "width": 375,
+      "height": 812,
+      "repeat": 1,
+      "initialCls": 0,
+      "finalCls": 0.016366669940122303,
+      "criticalBefore": [],
+      "sections": {
+        "product": {
+          "height": 748.953125,
+          "deltaCls": 0.005603723170302604
+        },
+        "plans": {
+          "height": 862.90625,
+          "deltaCls": 0
+        },
+        "faq": {
+          "height": 588.125,
+          "deltaCls": 0.0107629467698197
+        },
+        "closing": {
+          "height": 717.53125,
+          "deltaCls": 0
+        }
+      }
+    },
+    {
+      "width": 375,
+      "height": 812,
+      "repeat": 2,
+      "initialCls": 0,
+      "finalCls": 0.016366669940122303,
+      "criticalBefore": [],
+      "sections": {
+        "product": {
+          "height": 748.953125,
+          "deltaCls": 0.005603723170302604
+        },
+        "plans": {
+          "height": 862.90625,
+          "deltaCls": 0
+        },
+        "faq": {
+          "height": 588.125,
+          "deltaCls": 0.0107629467698197
+        },
+        "closing": {
+          "height": 717.53125,
+          "deltaCls": 0
+        }
+      }
+    },
+    {
+      "width": 812,
+      "height": 375,
+      "repeat": 1,
+      "initialCls": 0.0001605083360633195,
+      "finalCls": 0.0001605083360633195,
+      "criticalBefore": [],
+      "sections": {
+        "product": {
+          "height": 693.875,
+          "deltaCls": 0
+        },
+        "plans": {
+          "height": 908.921875,
+          "deltaCls": 0
+        },
+        "faq": {
+          "height": 707.6875,
+          "deltaCls": 0
+        },
+        "closing": {
+          "height": 708.140625,
+          "deltaCls": 0
+        }
+      }
+    },
+    {
+      "width": 812,
+      "height": 375,
+      "repeat": 2,
+      "initialCls": 0.0001605083360633195,
+      "finalCls": 0.0001605083360633195,
+      "criticalBefore": [],
+      "sections": {
+        "product": {
+          "height": 693.875,
+          "deltaCls": 0
+        },
+        "plans": {
+          "height": 908.921875,
+          "deltaCls": 0
+        },
+        "faq": {
+          "height": 707.6875,
+          "deltaCls": 0
+        },
+        "closing": {
+          "height": 708.140625,
+          "deltaCls": 0
+        }
+      }
+    },
+    {
+      "width": 391,
+      "height": 844,
+      "repeat": 1,
+      "initialCls": 0,
+      "finalCls": 0.0171390107687945,
+      "criticalBefore": [],
+      "sections": {
+        "product": {
+          "height": 757.953125,
+          "deltaCls": 0.009347107614945754
+        },
+        "plans": {
+          "height": 862.90625,
+          "deltaCls": 0
+        },
+        "faq": {
+          "height": 575.34375,
+          "deltaCls": 0.007791903153848746
+        },
+        "closing": {
+          "height": 717.53125,
+          "deltaCls": 0
+        }
+      }
+    },
+    {
+      "width": 391,
+      "height": 844,
+      "repeat": 2,
+      "initialCls": 0,
+      "finalCls": 0.0171390107687945,
+      "criticalBefore": [],
+      "sections": {
+        "product": {
+          "height": 757.953125,
+          "deltaCls": 0.009347107614945754
+        },
+        "plans": {
+          "height": 862.90625,
+          "deltaCls": 0
+        },
+        "faq": {
+          "height": 575.34375,
+          "deltaCls": 0.007791903153848746
+        },
+        "closing": {
+          "height": 717.53125,
+          "deltaCls": 0
+        }
+      }
+    },
+    {
+      "width": 844,
+      "height": 391,
+      "repeat": 1,
+      "initialCls": 0.00020684523935613936,
+      "finalCls": 0.00020684523935613936,
+      "criticalBefore": [],
+      "sections": {
+        "product": {
+          "height": 699.84375,
+          "deltaCls": 0
+        },
+        "plans": {
+          "height": 914.890625,
+          "deltaCls": 0
+        },
+        "faq": {
+          "height": 713.65625,
+          "deltaCls": 0
+        },
+        "closing": {
+          "height": 714.109375,
+          "deltaCls": 0
+        }
+      }
+    },
+    {
+      "width": 844,
+      "height": 391,
+      "repeat": 2,
+      "initialCls": 0.00020684523935613936,
+      "finalCls": 0.00020684523935613936,
+      "criticalBefore": [],
+      "sections": {
+        "product": {
+          "height": 699.84375,
+          "deltaCls": 0
+        },
+        "plans": {
+          "height": 914.890625,
+          "deltaCls": 0
+        },
+        "faq": {
+          "height": 713.65625,
+          "deltaCls": 0
+        },
+        "closing": {
+          "height": 714.109375,
+          "deltaCls": 0
+        }
+      }
+    },
+    {
+      "width": 768,
+      "height": 1024,
+      "repeat": 1,
+      "initialCls": 0.0022956705458151796,
+      "finalCls": 0.0022956705458151796,
+      "criticalBefore": [],
+      "sections": {
+        "product": {
+          "height": 686.84375,
+          "deltaCls": 0
+        },
+        "plans": {
+          "height": 901.890625,
+          "deltaCls": 0
+        },
+        "faq": {
+          "height": 700.65625,
+          "deltaCls": 0
+        },
+        "closing": {
+          "height": 701.109375,
+          "deltaCls": 0
+        }
+      }
+    },
+    {
+      "width": 768,
+      "height": 1024,
+      "repeat": 2,
+      "initialCls": 0.0022956705458151796,
+      "finalCls": 0.0022956705458151796,
+      "criticalBefore": [],
+      "sections": {
+        "product": {
+          "height": 686.84375,
+          "deltaCls": 0
+        },
+        "plans": {
+          "height": 901.890625,
+          "deltaCls": 0
+        },
+        "faq": {
+          "height": 700.65625,
+          "deltaCls": 0
+        },
+        "closing": {
+          "height": 701.109375,
+          "deltaCls": 0
+        }
+      }
+    },
+    {
+      "width": 1024,
+      "height": 768,
+      "repeat": 1,
+      "initialCls": 0.0025633002903002002,
+      "finalCls": 0.0025633002903002002,
+      "criticalBefore": [],
+      "sections": {
+        "product": {
+          "height": 746.453125,
+          "deltaCls": 0
+        },
+        "plans": {
+          "height": 951,
+          "deltaCls": 0
+        },
+        "faq": {
+          "height": 749.765625,
+          "deltaCls": 0
+        },
+        "closing": {
+          "height": 679.828125,
+          "deltaCls": 0
+        }
+      }
+    },
+    {
+      "width": 1024,
+      "height": 768,
+      "repeat": 2,
+      "initialCls": 0.0025716682236331203,
+      "finalCls": 0.0025716682236331203,
+      "criticalBefore": [],
+      "sections": {
+        "product": {
+          "height": 746.453125,
+          "deltaCls": 0
+        },
+        "plans": {
+          "height": 951,
+          "deltaCls": 0
+        },
+        "faq": {
+          "height": 749.765625,
+          "deltaCls": 0
+        },
+        "closing": {
+          "height": 679.828125,
+          "deltaCls": 0
+        }
+      }
+    },
+    {
+      "width": 820,
+      "height": 1180,
+      "repeat": 1,
+      "initialCls": 0.006662539669836604,
+      "finalCls": 0.006662539669836604,
+      "criticalBefore": [],
+      "sections": {
+        "product": {
+          "height": 695.15625,
+          "deltaCls": 0
+        },
+        "plans": {
+          "height": 910.203125,
+          "deltaCls": 0
+        },
+        "faq": {
+          "height": 708.96875,
+          "deltaCls": 0
+        },
+        "closing": {
+          "height": 709.421875,
+          "deltaCls": 0
+        }
+      }
+    },
+    {
+      "width": 820,
+      "height": 1180,
+      "repeat": 2,
+      "initialCls": 0.006662539669836604,
+      "finalCls": 0.006662539669836604,
+      "criticalBefore": [],
+      "sections": {
+        "product": {
+          "height": 695.15625,
+          "deltaCls": 0
+        },
+        "plans": {
+          "height": 910.203125,
+          "deltaCls": 0
+        },
+        "faq": {
+          "height": 708.96875,
+          "deltaCls": 0
+        },
+        "closing": {
+          "height": 709.421875,
+          "deltaCls": 0
+        }
+      }
+    },
+    {
+      "width": 1180,
+      "height": 820,
+      "repeat": 1,
+      "initialCls": 0.0026596517144901587,
+      "finalCls": 0.0026596517144901587,
+      "criticalBefore": [],
+      "sections": {
+        "product": {
+          "height": 821.671875,
+          "deltaCls": 0
+        },
+        "plans": {
+          "height": 982.34375,
+          "deltaCls": 0
+        },
+        "faq": {
+          "height": 781.109375,
+          "deltaCls": 0
+        },
+        "closing": {
+          "height": 715.65625,
+          "deltaCls": 0.0012925020669698223
+        }
+      }
+    },
+    {
+      "width": 1180,
+      "height": 820,
+      "repeat": 2,
+      "initialCls": 0.002665327396852951,
+      "finalCls": 0.002665327396852951,
+      "criticalBefore": [],
+      "sections": {
+        "product": {
+          "height": 821.671875,
+          "deltaCls": 0
+        },
+        "plans": {
+          "height": 982.34375,
+          "deltaCls": 0
+        },
+        "faq": {
+          "height": 781.109375,
+          "deltaCls": 0
+        },
+        "closing": {
+          "height": 715.65625,
+          "deltaCls": 0.0012925020669698223
+        }
+      }
+    },
+    {
+      "width": 1024,
+      "height": 1367,
+      "repeat": 1,
+      "initialCls": 0.0011524229367795376,
+      "finalCls": 0.0011524229367795376,
+      "criticalBefore": [
+        {
+          "name": "product",
+          "top": 1332.765625,
+          "height": 746.4375,
+          "loadedTop": 1332.765625,
+          "loadedHeight": 746.453125,
+          "mounted": true
+        }
+      ],
+      "sections": {
+        "product": {
+          "height": 746.453125,
+          "deltaCls": 0
+        },
+        "plans": {
+          "height": 951,
+          "deltaCls": 0
+        },
+        "faq": {
+          "height": 749.765625,
+          "deltaCls": 0
+        },
+        "closing": {
+          "height": 679.828125,
+          "deltaCls": 0
+        }
+      }
+    },
+    {
+      "width": 1024,
+      "height": 1367,
+      "repeat": 2,
+      "initialCls": 0.0011524229367795376,
+      "finalCls": 0.0011524229367795376,
+      "criticalBefore": [
+        {
+          "name": "product",
+          "top": 1332.765625,
+          "height": 746.4375,
+          "loadedTop": 1332.765625,
+          "loadedHeight": 746.453125,
+          "mounted": true
+        }
+      ],
+      "sections": {
+        "product": {
+          "height": 746.453125,
+          "deltaCls": 0
+        },
+        "plans": {
+          "height": 951,
+          "deltaCls": 0
+        },
+        "faq": {
+          "height": 749.765625,
+          "deltaCls": 0
+        },
+        "closing": {
+          "height": 679.828125,
+          "deltaCls": 0
+        }
+      }
+    },
+    {
+      "width": 1367,
+      "height": 1024,
+      "repeat": 1,
+      "initialCls": 0.0012917417187394019,
+      "finalCls": 0.0033515777819709313,
+      "criticalBefore": [],
+      "sections": {
+        "product": {
+          "height": 849.40625,
+          "deltaCls": 0.0013313656229997257
+        },
+        "plans": {
+          "height": 1001.203125,
+          "deltaCls": 0
+        },
+        "faq": {
+          "height": 791.96875,
+          "deltaCls": 0.0007284704402318032
+        },
+        "closing": {
+          "height": 730.9375,
+          "deltaCls": 0
+        }
+      }
+    },
+    {
+      "width": 1367,
+      "height": 1024,
+      "repeat": 2,
+      "initialCls": 0.0013024778714740616,
+      "finalCls": 0.0033623139347055903,
+      "criticalBefore": [],
+      "sections": {
+        "product": {
+          "height": 849.40625,
+          "deltaCls": 0.0013313656229997257
+        },
+        "plans": {
+          "height": 1001.203125,
+          "deltaCls": 0
+        },
+        "faq": {
+          "height": 791.96875,
+          "deltaCls": 0.0007284704402318032
+        },
+        "closing": {
+          "height": 730.9375,
+          "deltaCls": 0
+        }
+      }
+    },
+    {
+      "width": 1280,
+      "height": 800,
+      "repeat": 1,
+      "initialCls": 0.001793592917919159,
+      "finalCls": 0.001793592917919159,
+      "criticalBefore": [],
+      "sections": {
+        "product": {
+          "height": 845.84375,
+          "deltaCls": 0
+        },
+        "plans": {
+          "height": 997.640625,
+          "deltaCls": 0
+        },
+        "faq": {
+          "height": 788.40625,
+          "deltaCls": 0
+        },
+        "closing": {
+          "height": 725.84375,
+          "deltaCls": 0.00043701171875
+        }
+      }
+    },
+    {
+      "width": 1280,
+      "height": 800,
+      "repeat": 2,
+      "initialCls": 0.0018088696599006654,
+      "finalCls": 0.0018088696599006654,
+      "criticalBefore": [],
+      "sections": {
+        "product": {
+          "height": 845.84375,
+          "deltaCls": 0
+        },
+        "plans": {
+          "height": 997.640625,
+          "deltaCls": 0
+        },
+        "faq": {
+          "height": 788.40625,
+          "deltaCls": 0
+        },
+        "closing": {
+          "height": 725.84375,
+          "deltaCls": 0.00043701171875
+        }
+      }
+    },
+    {
+      "width": 800,
+      "height": 1280,
+      "repeat": 1,
+      "initialCls": 0.001436791455745697,
+      "finalCls": 0.001436791455745697,
+      "criticalBefore": [],
+      "sections": {
+        "product": {
+          "height": 691.96875,
+          "deltaCls": 0
+        },
+        "plans": {
+          "height": 907.015625,
+          "deltaCls": 0
+        },
+        "faq": {
+          "height": 705.78125,
+          "deltaCls": 0
+        },
+        "closing": {
+          "height": 706.234375,
+          "deltaCls": 0
+        }
+      }
+    },
+    {
+      "width": 800,
+      "height": 1280,
+      "repeat": 2,
+      "initialCls": 0.001436791455745697,
+      "finalCls": 0.001436791455745697,
+      "criticalBefore": [],
+      "sections": {
+        "product": {
+          "height": 691.96875,
+          "deltaCls": 0
+        },
+        "plans": {
+          "height": 907.015625,
+          "deltaCls": 0
+        },
+        "faq": {
+          "height": 705.78125,
+          "deltaCls": 0
+        },
+        "closing": {
+          "height": 706.234375,
+          "deltaCls": 0
+        }
+      }
+    },
+    {
+      "width": 1440,
+      "height": 900,
+      "repeat": 1,
+      "initialCls": 0.0017228242934322485,
+      "finalCls": 0.0017228242934322485,
+      "criticalBefore": [],
+      "sections": {
+        "product": {
+          "height": 851.21875,
+          "deltaCls": 0
+        },
+        "plans": {
+          "height": 1003.015625,
+          "deltaCls": 0
+        },
+        "faq": {
+          "height": 793.78125,
+          "deltaCls": 0.0001669801311728395
+        },
+        "closing": {
+          "height": 732.75,
+          "deltaCls": 0
+        }
+      }
+    },
+    {
+      "width": 1440,
+      "height": 900,
+      "repeat": 2,
+      "initialCls": 0.0017228242934322485,
+      "finalCls": 0.0017228242934322485,
+      "criticalBefore": [],
+      "sections": {
+        "product": {
+          "height": 851.21875,
+          "deltaCls": 0
+        },
+        "plans": {
+          "height": 1003.015625,
+          "deltaCls": 0
+        },
+        "faq": {
+          "height": 793.78125,
+          "deltaCls": 0.0001669801311728395
+        },
+        "closing": {
+          "height": 732.75,
+          "deltaCls": 0
+        }
+      }
+    },
+    {
+      "width": 900,
+      "height": 1440,
+      "repeat": 1,
+      "initialCls": 0.0010649388442804783,
+      "finalCls": 0.0010649388442804783,
+      "criticalBefore": [
+        {
+          "name": "product",
+          "top": 1366.15625,
+          "height": 707.953125,
+          "loadedTop": 1366.15625,
+          "loadedHeight": 711.078125,
+          "mounted": true
+        }
+      ],
+      "sections": {
+        "product": {
+          "height": 711.078125,
+          "deltaCls": 0
+        },
+        "plans": {
+          "height": 926.125,
+          "deltaCls": 0
+        },
+        "faq": {
+          "height": 724.890625,
+          "deltaCls": 0
+        },
+        "closing": {
+          "height": 725.34375,
+          "deltaCls": 0
+        }
+      }
+    },
+    {
+      "width": 900,
+      "height": 1440,
+      "repeat": 2,
+      "initialCls": 0.0010649388442804783,
+      "finalCls": 0.0010649388442804783,
+      "criticalBefore": [
+        {
+          "name": "product",
+          "top": 1366.15625,
+          "height": 707.953125,
+          "loadedTop": 1366.15625,
+          "loadedHeight": 711.078125,
+          "mounted": true
+        }
+      ],
+      "sections": {
+        "product": {
+          "height": 711.078125,
+          "deltaCls": 0
+        },
+        "plans": {
+          "height": 926.125,
+          "deltaCls": 0
+        },
+        "faq": {
+          "height": 724.890625,
+          "deltaCls": 0
+        },
+        "closing": {
+          "height": 725.34375,
+          "deltaCls": 0
+        }
+      }
+    }
+  ]
+}

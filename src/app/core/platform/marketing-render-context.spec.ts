@@ -1,12 +1,16 @@
 import { TestBed } from '@angular/core/testing';
 import { PLATFORM_ID, EnvironmentInjector, createEnvironmentInjector } from '@angular/core';
 import { afterEach, vi } from 'vitest';
-import { MARKETING_RENDER_CONTEXT, parseMarketingRenderContext, provideMarketingRenderContext } from './marketing-render-context';
+import { MARKETING_RENDER_CONTEXT, parseMarketingRenderContext, parseProductionMarketingRenderContext, provideMarketingRenderContext } from './marketing-render-context';
 import { PlatformHostService, resolvePlatformHostSnapshot } from './platform-host.service';
 
 const config = {route:'/',marketingOrigin:'https://marketing.test',appOrigin:'https://app.test'};
 describe('contexto y host: contrato de servidor simulado', () => {
   afterEach(() => vi.unstubAllGlobals());
+  it('el contexto productivo exige HTTPS y orígenes separados, sin defaults',()=>{
+    expect(parseProductionMarketingRenderContext(config)).toEqual(config);
+    for(const raw of [undefined,{...config,route:'/e/otro'},{...config,marketingOrigin:'http://marketing.test'},{...config,appOrigin:config.marketingOrigin}])expect(()=>parseProductionMarketingRenderContext(raw)).toThrow();
+  });
   it.each(['https','http'])('valida y congela orígenes %s sin valores de respaldo', protocol => {
     const value = parseMarketingRenderContext({route:'/',marketingOrigin:`${protocol}://marketing.test/`,appOrigin:`${protocol}://app.test`});
     expect(value.marketingOrigin).toBe(`${protocol}://marketing.test`);

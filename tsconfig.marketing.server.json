@@ -1,0 +1,5 @@
+{
+  "extends": "./tsconfig.marketing.json",
+  "compilerOptions": { "types": ["node"] },
+  "files": ["src/main.marketing.ts", "src/main.marketing.server.ts"]
+}

@@ -1,0 +1,11 @@
+# R3-c: hallazgos del CSR real y límites de revisión
+
+Claude, sololectura/noejecución ni.env/postman/credenciales. Leeractualscripts/performance/csr-hydration-probe.mjs yrevisionesr3c/r3d. Codeximplementa, noreinterpretarautorización.
+
+1. En devCSR deNailArt realdesdeAPI aparece NG0913 enNailArt_logo.jpeg, dosavisosimagenintrínsecagrande. NohayNG0505/otrasNG05xx ni marcaNgHydration enesa ruta. Producción7casospasan0consola, desarrollo antesdeeseúltimocaso legaldirectorio/landingpasan. Log `/private/tmp/fluora-m3-r3c-csr-dev-3.log` yresultsdelcarpetahomónima. **Nohefiltradoavisos,nitocadoassets niHeader/tenant**. EsCSRsinproveedor comoantes; CSS/image Header/R4sinchanges. ¿Cómo documentarcorrectamenteestehallazgoajeno aR3 sinfalsificarsucierre ni modificar tenantfueraalcance? ¿Fixture deFunctions sinimage(casosoriginalesSEOtest),máspruebatenantreal declaradaconaviso, paraacreditarboundary,dejandoestricto0consolependiente? Indicar severidad y necesidad deusuario, no tocarimagen/credenciales.
+
+2. /acceso enmarketingbuild es **PlatformRedirectComponent**, no login. publicPrevieworiginsiguales causabucle yversiondevdevuelve Inspectedtargetnavigated; la pruebaantigua pasabafalsamenteporqueesperabasoloapp-rootngversion/routeroutlet. Corregídiseñoharness: runtime-configinterceptadosoloenCSRprobe, appOrigin127.0.0.1mismopuertoephemeral ymarketinglocalhost; sepausaDocumentdestinoantesdecommit, capturaestadoCSRviejo yexigecomponenteredirect+URLappOrigin/acceso, sinseguir aotroservidor. RestocasoscontinúanGETreales. ¿EspruebacorrectadelcontratodeR3? Nocambiaapp/runtimeoriginalniguardas. Faltaejecutarla, matrizR3-d secuencialenprogreso yseesperaantesdeotrasChrome.
+
+3. Usuario **aprobócaptionsegunda fila768–1023**, trascapturas820/1000reales. Correccióndeldiseñoanterior: heroIncreaseenambos=0conAPIdatoscargados; encabezadopreview+31.1875px poraligncenter. Noatribuir+31alherototal. CSSnuevaaúnnoaplicada,seesperamatrizbaseline.
+
+FontHoldrealbaseline10anchosyaexit0 yreproduce812/820-31.1875px enencabezadoantesdeJS,CLS.1366;800/768sin cambio. Log `/private/tmp/fluora-m3-r3d-font-before-2.log`;JSONresultsensucarpeta. Matrizfull20anchos/100muestras2normal+3fallosenprogreso antesCSS, no otracargaheavyalapar.

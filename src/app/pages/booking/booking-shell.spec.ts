@@ -2,30 +2,35 @@ import { provideHttpClient } from '@angular/common/http';
 import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { registerLocaleData } from '@angular/common';
 import localeEs from '@angular/common/locales/es';
-import { DeferBlockBehavior, TestBed } from '@angular/core/testing';
+import { ComponentFixture, DeferBlockBehavior, TestBed } from '@angular/core/testing';
 import { BreakpointObserver } from '@angular/cdk/layout';
 import { ActivatedRoute, convertToParamMap, provideRouter } from '@angular/router';
-import { of, Subject } from 'rxjs';
+import { Observable, of, Subject } from 'rxjs';
 import { BookingComponent } from './booking.component';
 import { BookingDataService, ServicioCatalogo, SucursalCatalogo } from '../../services/booking-data.service';
 import { PublicCheckoutService } from '../../services/public-checkout.service';
 import { AppointmentService, CotizacionCitas, PrestadorPublico } from '../../services/appointment.service';
 import { TenantContextService } from '../../core/tenant/tenant-context.service';
-import { vi } from 'vitest';
+import { beforeEach, Mock, vi } from 'vitest';
 
 registerLocaleData(localeEs);
 
 describe('Booking: presentación del catálogo inicial', () => {
-  it.each([false, true])('mantiene la precarga inert y conserva el formulario hasta resolver la selección (error: %s)', async failure => {
-    const branches = new Subject<SucursalCatalogo[]>(), quote = new Subject<CotizacionCitas>(), staff = new Subject<PrestadorPublico[]>();
-    const cotizar = vi.fn(() => quote.asObservable());
-    const service: ServicioCatalogo = {
+  const service: ServicioCatalogo = {
       id:1,sucursalId:10,nombre:'Servicio de prueba',slug:'servicio',descripcion:'',moneda:'MXN',precio:100,duracionMinutos:30,
       bufferAntesMinutos:0,bufferDespuesMinutos:0,grupoId:null,grupoNombre:null,subgrupoId:null,subgrupoNombre:null,imagenUrl:null,
       ordenPublico:0,visiblePublico:true,requiereAnticipo:false,anticipoTipo:null,anticipoValor:null
     };
-    const result: CotizacionCitas = {moneda:'MXN',subtotalLista:100,descuentoTotal:0,total:100,anticipoTotal:0,promocion:null,motivoNoAplicada:null,
+  const result: CotizacionCitas = {moneda:'MXN',subtotalLista:100,descuentoTotal:0,total:100,anticipoTotal:0,promocion:null,motivoNoAplicada:null,
       lineas:[{servicioId:1,nombre:'Servicio de prueba',precioLista:100,descuento:0,precioNeto:100,anticipo:0,promocionAplicada:false}]};
+
+  describe('con selección precargada', () => {
+    let branches: Subject<SucursalCatalogo[]>, quote: Subject<CotizacionCitas>, staff: Subject<PrestadorPublico[]>;
+    let cotizar: Mock<() => Observable<CotizacionCitas>>;
+    let fixture: ComponentFixture<BookingComponent>, shell: HTMLElement;
+    beforeEach(async () => {
+      branches = new Subject(); quote = new Subject(); staff = new Subject();
+      cotizar = vi.fn(() => quote.asObservable());
     await TestBed.configureTestingModule({
       imports: [BookingComponent], deferBlockBehavior: DeferBlockBehavior.Manual,
       providers: [provideHttpClient(),provideHttpClientTesting(),provideRouter([]),
@@ -41,46 +46,59 @@ describe('Booking: presentación del catálogo inicial', () => {
       colorPrimario:null,colorSecundario:null,fuenteTitulos:null,fuenteCuerpo:null,heroTitulo:null,heroSubtitulo:null,heroImagenUrl:null,
       whatsapp:null,telefono:null,correo:null,direccion:null,instagramUrl:null,facebookUrl:null,tema:null
     });
-    const fixture = TestBed.createComponent(BookingComponent); fixture.detectChanges();
-    const shell = fixture.nativeElement.querySelector('.booking-shell') as HTMLElement;
+      fixture = TestBed.createComponent(BookingComponent); fixture.detectChanges();
+      await fixture.whenStable();
+      shell = fixture.nativeElement.querySelector('.booking-shell') as HTMLElement;
+    });
+
+  it.each([false, true])('mantiene la precarga inert y conserva el formulario hasta resolver la selección (error: %s)', async failure => {
     const flow = shell.querySelector('.booking-flow');
+    expect(branches.observed).toBe(true);
     branches.next([{id:10,empresaId:42,nombre:'Sucursal',direccion:'',telefono:'',zonaHoraria:'America/Mexico_City'}]);
-    fixture.detectChanges();
+    fixture.detectChanges(); await fixture.whenStable();
     const status = fixture.nativeElement.querySelector('p[role="status"]') as HTMLElement;
     expect(shell.hasAttribute('inert')).toBe(true);
     expect(shell.getAttribute('aria-busy')).toBe('true');
     expect(status.textContent).toContain('Preparando tu selección');
     expect(shell.contains(status)).toBe(false);
     expect(shell.querySelector('.booking-flow')).toBe(flow);
-    staff.next([]); staff.complete(); fixture.detectChanges();
+    expect(staff.observed).toBe(true);
+    staff.next([]); staff.complete(); fixture.detectChanges(); await fixture.whenStable();
     expect(shell.hasAttribute('inert')).toBe(true);
+    expect(cotizar).toHaveBeenCalledTimes(1); expect(quote.observed).toBe(true);
     if (failure) quote.error({error:{mensaje:'Precio temporalmente no disponible'}});
     else { quote.next(result); quote.complete(); }
-    fixture.detectChanges();
+    fixture.detectChanges(); await fixture.whenStable();
     expect(shell.hasAttribute('inert')).toBe(false);
     expect(status.textContent?.trim()).toBe('');
     expect(shell.querySelector('.booking-flow')).toBe(flow);
     if (failure) {
       const retry = Array.from(shell.querySelectorAll('button')).find(button=>button.textContent?.trim()==='Reintentar cotización')!;
       expect(retry).toBeTruthy();
-      cotizar.mockReturnValue(of(result)); retry.click(); fixture.detectChanges();
+      cotizar.mockReturnValue(of(result)); retry.click(); fixture.detectChanges(); await fixture.whenStable();
       expect(cotizar).toHaveBeenCalledTimes(2);
       expect(fixture.componentInstance.cotizacion()).toEqual(result);
       expect(shell.hasAttribute('inert')).toBe(false);
     }
     const nextQuote = new Subject<CotizacionCitas>(); cotizar.mockReturnValue(nextQuote.asObservable());
-    fixture.componentInstance.reintentarCotizacion(); fixture.detectChanges();
+    fixture.componentInstance.reintentarCotizacion(); fixture.detectChanges(); await fixture.whenStable();
+    expect(nextQuote.observed).toBe(true);
     const quoteStatus = shell.querySelector('.booking-quote-status') as HTMLElement;
     expect(quoteStatus.textContent?.trim()).toBe('Confirmando condiciones de tu reserva…');
     expect(quoteStatus.textContent).not.toContain('$');
     expect(fixture.componentInstance.cotizacion()).toBeNull();
     expect(shell.hasAttribute('inert')).toBe(false);
-    nextQuote.next(result); nextQuote.complete(); fixture.detectChanges();
+    nextQuote.next(result); nextQuote.complete(); fixture.detectChanges(); await fixture.whenStable();
     expect(fixture.componentInstance.cotizacion()).toEqual(result);
     expect(shell.querySelector('.booking-quote-status')?.textContent).toContain('pendiente de confirmación');
   });
-  it('conserva el formulario mientras espera y anuncia la carga fuera del contenedor oculto', async () => {
-    const branches = new Subject<SucursalCatalogo[]>();
+  });
+
+  describe('sin selección', () => {
+    let branches: Subject<SucursalCatalogo[]>;
+    let fixture: ComponentFixture<BookingComponent>, shell: HTMLElement;
+    beforeEach(async () => {
+    branches = new Subject<SucursalCatalogo[]>();
     await TestBed.configureTestingModule({
       imports: [BookingComponent],
       deferBlockBehavior: DeferBlockBehavior.Manual,
@@ -92,18 +110,24 @@ describe('Booking: presentación del catálogo inicial', () => {
         { provide: PublicCheckoutService, useValue: { config: () => of({ habilitado: false }) } }
       ]
     }).compileComponents();
-    const fixture = TestBed.createComponent(BookingComponent); fixture.detectChanges();
-    const shell = fixture.nativeElement.querySelector('.booking-shell') as HTMLElement;
+    fixture = TestBed.createComponent(BookingComponent); fixture.detectChanges();
+    await fixture.whenStable();
+    shell = fixture.nativeElement.querySelector('.booking-shell') as HTMLElement;
+    });
+
+  it('conserva el formulario mientras espera y anuncia la carga fuera del contenedor oculto', async () => {
     const form = shell.querySelector('.booking-flow');
     const status = fixture.nativeElement.querySelector('p[role="status"]') as HTMLElement;
     expect(shell.classList.contains('booking-shell--pending')).toBe(true);
     expect(shell.hasAttribute('inert')).toBe(true);
     expect(shell.contains(status)).toBe(false);
     expect(status.textContent).toContain('Cargando servicios');
-    branches.next([]); fixture.detectChanges();
+    expect(branches.observed).toBe(true);
+    branches.next([]); fixture.detectChanges(); await fixture.whenStable();
     expect(fixture.nativeElement.querySelector('.booking-flow')).toBe(form);
     expect(shell.classList.contains('booking-shell--pending')).toBe(false);
     expect(shell.hasAttribute('inert')).toBe(false);
     expect(status.textContent?.trim()).toBe('');
+  });
   });
 });

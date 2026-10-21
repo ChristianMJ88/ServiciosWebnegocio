@@ -3,8 +3,8 @@
     <p class="fl-kicker">{{content.kicker}}</p>
     <h1 id="home-title">{{content.title}}</h1>
     <p class="fl-home-hero-lead">{{content.lead}}</p>
-    <div class="fl-home-hero-actions"><a class="fl-button" [href]="offer.href()" (click)="offer.signup()">{{offer.label()}} <i class="bi bi-arrow-up-right" aria-hidden="true"></i></a><a class="fl-home-hero-secondary" href="#como-funciona">{{content.secondary}} <i class="bi bi-arrow-down" aria-hidden="true"></i></a></div>
-    <p class="fl-home-hero-reassurance">@if(offer.recommended();as plan){@if(plan.diasPrueba>0){Prueba sin tarjeta · }}{{content.reassurance}}</p>
+    <div class="fl-home-hero-actions"><a class="fl-button" [href]="offer.href()" (click)="offer.signup()">{{offerReady()?offer.label():offer.fallbackLabel}} <i class="bi bi-arrow-up-right" aria-hidden="true"></i></a><a class="fl-home-hero-secondary" href="#como-funciona">{{content.secondary}} <i class="bi bi-arrow-down" aria-hidden="true"></i></a></div>
+    <p class="fl-home-hero-reassurance">@if(offerReady()&&offer.recommended();as plan){@if(plan.diasPrueba>0){Prueba sin tarjeta · }}{{content.reassurance}}</p>
     <nav class="fl-home-hero-verticals" aria-label="Fluora para tu tipo de negocio">@for(vertical of verticals();track vertical.slug){<a [href]="href(vertical.slug)">{{label(vertical.titulo)}}</a>}</nav>
   </div>
   <div class="fl-home-hero-preview" role="group" aria-label="Vista ilustrativa de una agenda, sin datos de clientes">

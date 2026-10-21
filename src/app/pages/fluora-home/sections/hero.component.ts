@@ -8,6 +8,7 @@ export class HomeHeroComponent {
   readonly offer=inject(MarketingOfferService);
   readonly host=inject(PlatformHostService);
   readonly verticals=input<{slug:string;titulo:string;descripcion:string}[]>([]);
+  readonly offerReady=input(false);
   href(slug:string){return this.host.marketingUrl('/'+encodeURIComponent(slug));}
   label(title:string){return title.replace(/^Fluora para\s+/i,'');}
 }

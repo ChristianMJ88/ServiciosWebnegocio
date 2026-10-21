@@ -1,0 +1,3244 @@
+{
+  "phase": "R3-d baseline, not Lighthouse",
+  "build": "5e39195ebd04089d27707c25c9ff9394e14e0f73ba3983d2424f2419d31acfc3",
+  "samples": 100,
+  "identicalNormalPairs": 20,
+  "apiHashes": {
+    "/api/v1/publico/marketing/landings/navegacion": "4028abacc6296040eb528e95b6aa26a5f3a76df08f7b97c811b952bd2570ea69",
+    "/api/v1/publico/plataforma/planes": "81d95c82c6ed0fef44ac64f7f0eb462518e8a337a1175b17f535cc4161e6eeea",
+    "/api/v1/publico/plataforma/soporte": "eafbdaf398b6298acfaeea2193a993fad52a5f21634d4a81659f01332ce31d01"
+  },
+  "spacing": "--fl-space from marketing-tokens.css: mobile 32px, otherwise clamp(40px,8vw,96px)",
+  "reserves": {
+    "mobile": {
+      "product": {
+        "min": 616.546875,
+        "max": 703.8125,
+        "samples": [
+          {
+            "w": 360,
+            "v": 703.8125
+          },
+          {
+            "w": 740,
+            "v": 616.546875
+          },
+          {
+            "w": 375,
+            "v": 684.953125
+          },
+          {
+            "w": 391,
+            "v": 693.953125
+          },
+          {
+            "w": 767,
+            "v": 616.546875
+          }
+        ]
+      },
+      "plans": {
+        "min": 756.421875,
+        "max": 819.296875,
+        "samples": [
+          {
+            "w": 360,
+            "v": 819.296875
+          },
+          {
+            "w": 740,
+            "v": 756.421875
+          },
+          {
+            "w": 375,
+            "v": 798.90625
+          },
+          {
+            "w": 391,
+            "v": 798.90625
+          },
+          {
+            "w": 767,
+            "v": 756.421875
+          }
+        ]
+      },
+      "faq": {
+        "min": 485.78125,
+        "max": 524.125,
+        "samples": [
+          {
+            "w": 360,
+            "v": 524.125
+          },
+          {
+            "w": 740,
+            "v": 485.78125
+          },
+          {
+            "w": 375,
+            "v": 524.125
+          },
+          {
+            "w": 391,
+            "v": 511.34375
+          },
+          {
+            "w": 767,
+            "v": 485.78125
+          }
+        ]
+      },
+      "closing": {
+        "min": 607.234375,
+        "max": 653.53125,
+        "samples": [
+          {
+            "w": 360,
+            "v": 653.53125
+          },
+          {
+            "w": 740,
+            "v": 607.234375
+          },
+          {
+            "w": 375,
+            "v": 653.53125
+          },
+          {
+            "w": 391,
+            "v": 653.53125
+          },
+          {
+            "w": 767,
+            "v": 607.234375
+          }
+        ]
+      }
+    },
+    "tablet": {
+      "product": {
+        "min": 563.9549999999999,
+        "max": 577.5543749999999,
+        "samples": [
+          {
+            "w": 812,
+            "v": 563.9549999999999
+          },
+          {
+            "w": 844,
+            "v": 564.80375
+          },
+          {
+            "w": 768,
+            "v": 563.96375
+          },
+          {
+            "w": 820,
+            "v": 563.95625
+          },
+          {
+            "w": 800,
+            "v": 563.96875
+          },
+          {
+            "w": 900,
+            "v": 567.078125
+          },
+          {
+            "w": 1023,
+            "v": 577.5543749999999
+          }
+        ]
+      },
+      "plans": {
+        "min": 779.0018749999999,
+        "max": 787.1324999999999,
+        "samples": [
+          {
+            "w": 812,
+            "v": 779.0018749999999
+          },
+          {
+            "w": 844,
+            "v": 779.850625
+          },
+          {
+            "w": 768,
+            "v": 779.010625
+          },
+          {
+            "w": 820,
+            "v": 779.003125
+          },
+          {
+            "w": 800,
+            "v": 779.015625
+          },
+          {
+            "w": 900,
+            "v": 782.125
+          },
+          {
+            "w": 1023,
+            "v": 787.1324999999999
+          }
+        ]
+      },
+      "faq": {
+        "min": 577.7674999999999,
+        "max": 585.8981249999999,
+        "samples": [
+          {
+            "w": 812,
+            "v": 577.7674999999999
+          },
+          {
+            "w": 844,
+            "v": 578.61625
+          },
+          {
+            "w": 768,
+            "v": 577.77625
+          },
+          {
+            "w": 820,
+            "v": 577.76875
+          },
+          {
+            "w": 800,
+            "v": 577.78125
+          },
+          {
+            "w": 900,
+            "v": 580.890625
+          },
+          {
+            "w": 1023,
+            "v": 585.8981249999999
+          }
+        ]
+      },
+      "closing": {
+        "min": 578.2206249999999,
+        "max": 588.9293749999999,
+        "samples": [
+          {
+            "w": 812,
+            "v": 578.2206249999999
+          },
+          {
+            "w": 844,
+            "v": 579.069375
+          },
+          {
+            "w": 768,
+            "v": 578.229375
+          },
+          {
+            "w": 820,
+            "v": 578.221875
+          },
+          {
+            "w": 800,
+            "v": 578.234375
+          },
+          {
+            "w": 900,
+            "v": 581.34375
+          },
+          {
+            "w": 1023,
+            "v": 588.9293749999999
+          }
+        ]
+      }
+    },
+    "medium": {
+      "product": {
+        "min": 582.613125,
+        "max": 638.9725,
+        "samples": [
+          {
+            "w": 1024,
+            "v": 582.613125
+          },
+          {
+            "w": 1180,
+            "v": 632.871875
+          },
+          {
+            "w": 1024,
+            "v": 582.613125
+          },
+          {
+            "w": 1199,
+            "v": 638.9725
+          }
+        ]
+      },
+      "plans": {
+        "min": 787.16,
+        "max": 794.300625,
+        "samples": [
+          {
+            "w": 1024,
+            "v": 787.16
+          },
+          {
+            "w": 1180,
+            "v": 793.54375
+          },
+          {
+            "w": 1024,
+            "v": 787.16
+          },
+          {
+            "w": 1199,
+            "v": 794.300625
+          }
+        ]
+      },
+      "faq": {
+        "min": 585.925625,
+        "max": 593.06625,
+        "samples": [
+          {
+            "w": 1024,
+            "v": 585.925625
+          },
+          {
+            "w": 1180,
+            "v": 592.309375
+          },
+          {
+            "w": 1024,
+            "v": 585.925625
+          },
+          {
+            "w": 1199,
+            "v": 593.06625
+          }
+        ]
+      },
+      "closing": {
+        "min": 515.988125,
+        "max": 528.175625,
+        "samples": [
+          {
+            "w": 1024,
+            "v": 515.988125
+          },
+          {
+            "w": 1180,
+            "v": 526.85625
+          },
+          {
+            "w": 1024,
+            "v": 515.988125
+          },
+          {
+            "w": 1199,
+            "v": 528.175625
+          }
+        ]
+      }
+    },
+    "desktop": {
+      "product": {
+        "min": 639.328125,
+        "max": 659.21875,
+        "samples": [
+          {
+            "w": 1367,
+            "v": 657.40625
+          },
+          {
+            "w": 1280,
+            "v": 653.84375
+          },
+          {
+            "w": 1440,
+            "v": 659.21875
+          },
+          {
+            "w": 1200,
+            "v": 639.328125
+          }
+        ]
+      },
+      "plans": {
+        "min": 802.375,
+        "max": 811.015625,
+        "samples": [
+          {
+            "w": 1367,
+            "v": 809.203125
+          },
+          {
+            "w": 1280,
+            "v": 805.640625
+          },
+          {
+            "w": 1440,
+            "v": 811.015625
+          },
+          {
+            "w": 1200,
+            "v": 802.375
+          }
+        ]
+      },
+      "faq": {
+        "min": 593.140625,
+        "max": 601.78125,
+        "samples": [
+          {
+            "w": 1367,
+            "v": 599.96875
+          },
+          {
+            "w": 1280,
+            "v": 596.40625
+          },
+          {
+            "w": 1440,
+            "v": 601.78125
+          },
+          {
+            "w": 1200,
+            "v": 593.140625
+          }
+        ]
+      },
+      "closing": {
+        "min": 528.265625,
+        "max": 540.75,
+        "samples": [
+          {
+            "w": 1367,
+            "v": 538.9375
+          },
+          {
+            "w": 1280,
+            "v": 533.84375
+          },
+          {
+            "w": 1440,
+            "v": 540.75
+          },
+          {
+            "w": 1200,
+            "v": 528.265625
+          }
+        ]
+      }
+    }
+  },
+  "results": [
+    {
+      "width": 360,
+      "height": 740,
+      "scenario": "normal",
+      "repeat": 1,
+      "initialCls": 0,
+      "finalCls": 0.03338445413318724,
+      "headingHeight": 110.375,
+      "verticalsHeight": 94,
+      "sections": {
+        "product": {
+          "height": 767.8125,
+          "deltaCls": 0
+        },
+        "plans": {
+          "height": 883.296875,
+          "deltaCls": 0.018266210889944
+        },
+        "faq": {
+          "height": 588.125,
+          "deltaCls": 0.015118243243243243
+        },
+        "closing": {
+          "height": 717.53125,
+          "deltaCls": 0
+        }
+      }
+    },
+    {
+      "width": 360,
+      "height": 740,
+      "scenario": "normal",
+      "repeat": 2,
+      "initialCls": 0,
+      "finalCls": 0.03338445413318724,
+      "headingHeight": 110.375,
+      "verticalsHeight": 94,
+      "sections": {
+        "product": {
+          "height": 767.8125,
+          "deltaCls": 0
+        },
+        "plans": {
+          "height": 883.296875,
+          "deltaCls": 0.018266210889944
+        },
+        "faq": {
+          "height": 588.125,
+          "deltaCls": 0.015118243243243243
+        },
+        "closing": {
+          "height": 717.53125,
+          "deltaCls": 0
+        }
+      }
+    },
+    {
+      "width": 360,
+      "height": 740,
+      "scenario": "plans503",
+      "repeat": 1,
+      "initialCls": 0,
+      "finalCls": 0.049807968864134404,
+      "headingHeight": 110.375,
+      "verticalsHeight": 94,
+      "sections": {
+        "product": {
+          "height": 767.8125,
+          "deltaCls": 0
+        },
+        "plans": {
+          "height": 552.046875,
+          "deltaCls": 0.049807968864134404
+        },
+        "faq": {
+          "height": 588.125,
+          "deltaCls": 0
+        },
+        "closing": {
+          "height": 717.53125,
+          "deltaCls": 0
+        }
+      }
+    },
+    {
+      "width": 360,
+      "height": 740,
+      "scenario": "support503",
+      "repeat": 1,
+      "initialCls": 0,
+      "finalCls": 0.058665453037496956,
+      "headingHeight": 110.375,
+      "verticalsHeight": 94,
+      "sections": {
+        "product": {
+          "height": 767.8125,
+          "deltaCls": 0
+        },
+        "plans": {
+          "height": 883.296875,
+          "deltaCls": 0.018266210889944
+        },
+        "faq": {
+          "height": 531.125,
+          "deltaCls": 0.04039924214755296
+        },
+        "closing": {
+          "height": 717.53125,
+          "deltaCls": 0
+        }
+      }
+    },
+    {
+      "width": 360,
+      "height": 740,
+      "scenario": "nav503",
+      "repeat": 1,
+      "initialCls": 0,
+      "finalCls": 0.03338445413318724,
+      "headingHeight": 110.375,
+      "verticalsHeight": 94,
+      "sections": {
+        "product": {
+          "height": 767.8125,
+          "deltaCls": 0
+        },
+        "plans": {
+          "height": 883.296875,
+          "deltaCls": 0.018266210889944
+        },
+        "faq": {
+          "height": 588.125,
+          "deltaCls": 0.015118243243243243
+        },
+        "closing": {
+          "height": 669.53125,
+          "deltaCls": 0
+        }
+      }
+    },
+    {
+      "width": 740,
+      "height": 360,
+      "scenario": "normal",
+      "repeat": 1,
+      "initialCls": 0,
+      "finalCls": 0,
+      "headingHeight": 81.1875,
+      "verticalsHeight": 94,
+      "sections": {
+        "product": {
+          "height": 680.546875,
+          "deltaCls": 0
+        },
+        "plans": {
+          "height": 820.421875,
+          "deltaCls": 0
+        },
+        "faq": {
+          "height": 549.78125,
+          "deltaCls": 0
+        },
+        "closing": {
+          "height": 671.234375,
+          "deltaCls": 0
+        }
+      }
+    },
+    {
+      "width": 740,
+      "height": 360,
+      "scenario": "normal",
+      "repeat": 2,
+      "initialCls": 0,
+      "finalCls": 0,
+      "headingHeight": 81.1875,
+      "verticalsHeight": 94,
+      "sections": {
+        "product": {
+          "height": 680.546875,
+          "deltaCls": 0
+        },
+        "plans": {
+          "height": 820.421875,
+          "deltaCls": 0
+        },
+        "faq": {
+          "height": 549.78125,
+          "deltaCls": 0
+        },
+        "closing": {
+          "height": 671.234375,
+          "deltaCls": 0
+        }
+      }
+    },
+    {
+      "width": 740,
+      "height": 360,
+      "scenario": "plans503",
+      "repeat": 1,
+      "initialCls": 0,
+      "finalCls": 0,
+      "headingHeight": 81.1875,
+      "verticalsHeight": 94,
+      "sections": {
+        "product": {
+          "height": 680.546875,
+          "deltaCls": 0
+        },
+        "plans": {
+          "height": 511.265625,
+          "deltaCls": 0
+        },
+        "faq": {
+          "height": 549.78125,
+          "deltaCls": 0
+        },
+        "closing": {
+          "height": 671.234375,
+          "deltaCls": 0
+        }
+      }
+    },
+    {
+      "width": 740,
+      "height": 360,
+      "scenario": "support503",
+      "repeat": 1,
+      "initialCls": 0,
+      "finalCls": 0,
+      "headingHeight": 81.1875,
+      "verticalsHeight": 94,
+      "sections": {
+        "product": {
+          "height": 680.546875,
+          "deltaCls": 0
+        },
+        "plans": {
+          "height": 820.421875,
+          "deltaCls": 0
+        },
+        "faq": {
+          "height": 492.78125,
+          "deltaCls": 0
+        },
+        "closing": {
+          "height": 671.234375,
+          "deltaCls": 0
+        }
+      }
+    },
+    {
+      "width": 740,
+      "height": 360,
+      "scenario": "nav503",
+      "repeat": 1,
+      "initialCls": 0,
+      "finalCls": 0,
+      "headingHeight": 81.1875,
+      "verticalsHeight": 94,
+      "sections": {
+        "product": {
+          "height": 680.546875,
+          "deltaCls": 0
+        },
+        "plans": {
+          "height": 820.421875,
+          "deltaCls": 0
+        },
+        "faq": {
+          "height": 549.78125,
+          "deltaCls": 0
+        },
+        "closing": {
+          "height": 623.234375,
+          "deltaCls": 0
+        }
+      }
+    },
+    {
+      "width": 375,
+      "height": 812,
+      "scenario": "normal",
+      "repeat": 1,
+      "initialCls": 0,
+      "finalCls": 0.025387496890849084,
+      "headingHeight": 81.1875,
+      "verticalsHeight": 94,
+      "sections": {
+        "product": {
+          "height": 748.953125,
+          "deltaCls": 0.0006147682393409206
+        },
+        "plans": {
+          "height": 862.90625,
+          "deltaCls": 0
+        },
+        "faq": {
+          "height": 588.125,
+          "deltaCls": 0.024772728651508164
+        },
+        "closing": {
+          "height": 717.53125,
+          "deltaCls": 0
+        }
+      }
+    },
+    {
+      "width": 375,
+      "height": 812,
+      "scenario": "normal",
+      "repeat": 2,
+      "initialCls": 0,
+      "finalCls": 0.025387496890849084,
+      "headingHeight": 81.1875,
+      "verticalsHeight": 94,
+      "sections": {
+        "product": {
+          "height": 748.953125,
+          "deltaCls": 0.0006147682393409206
+        },
+        "plans": {
+          "height": 862.90625,
+          "deltaCls": 0
+        },
+        "faq": {
+          "height": 588.125,
+          "deltaCls": 0.024772728651508164
+        },
+        "closing": {
+          "height": 717.53125,
+          "deltaCls": 0
+        }
+      }
+    },
+    {
+      "width": 375,
+      "height": 812,
+      "scenario": "plans503",
+      "repeat": 1,
+      "initialCls": 0,
+      "finalCls": 0.0006147682393409206,
+      "headingHeight": 81.1875,
+      "verticalsHeight": 94,
+      "sections": {
+        "product": {
+          "height": 748.953125,
+          "deltaCls": 0.0006147682393409206
+        },
+        "plans": {
+          "height": 531.65625,
+          "deltaCls": 0
+        },
+        "faq": {
+          "height": 588.125,
+          "deltaCls": 0
+        },
+        "closing": {
+          "height": 717.53125,
+          "deltaCls": 0
+        }
+      }
+    },
+    {
+      "width": 375,
+      "height": 812,
+      "scenario": "support503",
+      "repeat": 1,
+      "initialCls": 0,
+      "finalCls": 0.05260830272209954,
+      "headingHeight": 81.1875,
+      "verticalsHeight": 94,
+      "sections": {
+        "product": {
+          "height": 748.953125,
+          "deltaCls": 0.0006147682393409206
+        },
+        "plans": {
+          "height": 862.90625,
+          "deltaCls": 0
+        },
+        "faq": {
+          "height": 531.125,
+          "deltaCls": 0.05199353448275862
+        },
+        "closing": {
+          "height": 717.53125,
+          "deltaCls": 0
+        }
+      }
+    },
+    {
+      "width": 375,
+      "height": 812,
+      "scenario": "nav503",
+      "repeat": 1,
+      "initialCls": 0,
+      "finalCls": 0.025387496890849084,
+      "headingHeight": 81.1875,
+      "verticalsHeight": 94,
+      "sections": {
+        "product": {
+          "height": 748.953125,
+          "deltaCls": 0.0006147682393409206
+        },
+        "plans": {
+          "height": 862.90625,
+          "deltaCls": 0
+        },
+        "faq": {
+          "height": 588.125,
+          "deltaCls": 0.024772728651508164
+        },
+        "closing": {
+          "height": 669.53125,
+          "deltaCls": 0
+        }
+      }
+    },
+    {
+      "width": 812,
+      "height": 375,
+      "scenario": "normal",
+      "repeat": 1,
+      "initialCls": 0.12903696451826865,
+      "finalCls": 0.12903696451826865,
+      "headingHeight": 89.1875,
+      "verticalsHeight": 96,
+      "sections": {
+        "product": {
+          "height": 693.875,
+          "deltaCls": 0
+        },
+        "plans": {
+          "height": 908.921875,
+          "deltaCls": 0
+        },
+        "faq": {
+          "height": 707.6875,
+          "deltaCls": 0
+        },
+        "closing": {
+          "height": 708.140625,
+          "deltaCls": 0
+        }
+      }
+    },
+    {
+      "width": 812,
+      "height": 375,
+      "scenario": "normal",
+      "repeat": 2,
+      "initialCls": 0.12903696451826865,
+      "finalCls": 0.12903696451826865,
+      "headingHeight": 89.1875,
+      "verticalsHeight": 96,
+      "sections": {
+        "product": {
+          "height": 693.875,
+          "deltaCls": 0
+        },
+        "plans": {
+          "height": 908.921875,
+          "deltaCls": 0
+        },
+        "faq": {
+          "height": 707.6875,
+          "deltaCls": 0
+        },
+        "closing": {
+          "height": 708.140625,
+          "deltaCls": 0
+        }
+      }
+    },
+    {
+      "width": 812,
+      "height": 375,
+      "scenario": "plans503",
+      "repeat": 1,
+      "initialCls": 0.1299888857333956,
+      "finalCls": 0.1299888857333956,
+      "headingHeight": 89.1875,
+      "verticalsHeight": 96,
+      "sections": {
+        "product": {
+          "height": 693.875,
+          "deltaCls": 0
+        },
+        "plans": {
+          "height": 580.578125,
+          "deltaCls": 0
+        },
+        "faq": {
+          "height": 707.6875,
+          "deltaCls": 0
+        },
+        "closing": {
+          "height": 708.140625,
+          "deltaCls": 0
+        }
+      }
+    },
+    {
+      "width": 812,
+      "height": 375,
+      "scenario": "support503",
+      "repeat": 1,
+      "initialCls": 0.13002723571964456,
+      "finalCls": 0.13002723571964456,
+      "headingHeight": 89.1875,
+      "verticalsHeight": 96,
+      "sections": {
+        "product": {
+          "height": 693.875,
+          "deltaCls": 0
+        },
+        "plans": {
+          "height": 908.921875,
+          "deltaCls": 0
+        },
+        "faq": {
+          "height": 638.6875,
+          "deltaCls": 0
+        },
+        "closing": {
+          "height": 708.140625,
+          "deltaCls": 0
+        }
+      }
+    },
+    {
+      "width": 812,
+      "height": 375,
+      "scenario": "nav503",
+      "repeat": 1,
+      "initialCls": 0.11504513488659433,
+      "finalCls": 0.11504513488659433,
+      "headingHeight": 89.1875,
+      "verticalsHeight": 44,
+      "sections": {
+        "product": {
+          "height": 693.875,
+          "deltaCls": 0
+        },
+        "plans": {
+          "height": 908.921875,
+          "deltaCls": 0
+        },
+        "faq": {
+          "height": 707.6875,
+          "deltaCls": 0
+        },
+        "closing": {
+          "height": 660.140625,
+          "deltaCls": 0
+        }
+      }
+    },
+    {
+      "width": 391,
+      "height": 844,
+      "scenario": "normal",
+      "repeat": 1,
+      "initialCls": 0,
+      "finalCls": 0.03587518741155859,
+      "headingHeight": 81.1875,
+      "verticalsHeight": 94,
+      "sections": {
+        "product": {
+          "height": 757.953125,
+          "deltaCls": 0.0024508711478852677
+        },
+        "plans": {
+          "height": 862.90625,
+          "deltaCls": 0
+        },
+        "faq": {
+          "height": 575.34375,
+          "deltaCls": 0.03342431626367332
+        },
+        "closing": {
+          "height": 717.53125,
+          "deltaCls": 0
+        }
+      }
+    },
+    {
+      "width": 391,
+      "height": 844,
+      "scenario": "normal",
+      "repeat": 2,
+      "initialCls": 0,
+      "finalCls": 0.03342431626367332,
+      "headingHeight": 81.1875,
+      "verticalsHeight": 94,
+      "sections": {
+        "product": {
+          "height": 757.953125,
+          "deltaCls": 0.0024508711478852677
+        },
+        "plans": {
+          "height": 862.90625,
+          "deltaCls": 0
+        },
+        "faq": {
+          "height": 575.34375,
+          "deltaCls": 0.03342431626367332
+        },
+        "closing": {
+          "height": 717.53125,
+          "deltaCls": 0
+        }
+      }
+    },
+    {
+      "width": 391,
+      "height": 844,
+      "scenario": "plans503",
+      "repeat": 1,
+      "initialCls": 0,
+      "finalCls": 0.0024508711478852677,
+      "headingHeight": 81.1875,
+      "verticalsHeight": 94,
+      "sections": {
+        "product": {
+          "height": 757.953125,
+          "deltaCls": 0.0024508711478852677
+        },
+        "plans": {
+          "height": 531.65625,
+          "deltaCls": 0
+        },
+        "faq": {
+          "height": 575.34375,
+          "deltaCls": 0
+        },
+        "closing": {
+          "height": 717.53125,
+          "deltaCls": 0
+        }
+      }
+    },
+    {
+      "width": 391,
+      "height": 844,
+      "scenario": "support503",
+      "repeat": 1,
+      "initialCls": 0,
+      "finalCls": 0.06569455109667348,
+      "headingHeight": 81.1875,
+      "verticalsHeight": 94,
+      "sections": {
+        "product": {
+          "height": 757.953125,
+          "deltaCls": 0.0024508711478852677
+        },
+        "plans": {
+          "height": 862.90625,
+          "deltaCls": 0
+        },
+        "faq": {
+          "height": 518.34375,
+          "deltaCls": 0.06324367994878821
+        },
+        "closing": {
+          "height": 717.53125,
+          "deltaCls": 0
+        }
+      }
+    },
+    {
+      "width": 391,
+      "height": 844,
+      "scenario": "nav503",
+      "repeat": 1,
+      "initialCls": 0,
+      "finalCls": 0.03587518741155859,
+      "headingHeight": 81.1875,
+      "verticalsHeight": 94,
+      "sections": {
+        "product": {
+          "height": 757.953125,
+          "deltaCls": 0.0024508711478852677
+        },
+        "plans": {
+          "height": 862.90625,
+          "deltaCls": 0
+        },
+        "faq": {
+          "height": 575.34375,
+          "deltaCls": 0.03342431626367332
+        },
+        "closing": {
+          "height": 669.53125,
+          "deltaCls": 0
+        }
+      }
+    },
+    {
+      "width": 844,
+      "height": 391,
+      "scenario": "normal",
+      "repeat": 1,
+      "initialCls": 0.015146381678839768,
+      "finalCls": 0.015146381678839768,
+      "headingHeight": 89.1875,
+      "verticalsHeight": 96,
+      "sections": {
+        "product": {
+          "height": 699.84375,
+          "deltaCls": 0
+        },
+        "plans": {
+          "height": 914.890625,
+          "deltaCls": 0
+        },
+        "faq": {
+          "height": 713.65625,
+          "deltaCls": 0
+        },
+        "closing": {
+          "height": 714.109375,
+          "deltaCls": 0
+        }
+      }
+    },
+    {
+      "width": 844,
+      "height": 391,
+      "scenario": "normal",
+      "repeat": 2,
+      "initialCls": 0.015146381678839768,
+      "finalCls": 0.015146381678839768,
+      "headingHeight": 89.1875,
+      "verticalsHeight": 96,
+      "sections": {
+        "product": {
+          "height": 699.84375,
+          "deltaCls": 0
+        },
+        "plans": {
+          "height": 914.890625,
+          "deltaCls": 0
+        },
+        "faq": {
+          "height": 713.65625,
+          "deltaCls": 0
+        },
+        "closing": {
+          "height": 714.109375,
+          "deltaCls": 0
+        }
+      }
+    },
+    {
+      "width": 844,
+      "height": 391,
+      "scenario": "plans503",
+      "repeat": 1,
+      "initialCls": 0.015083852030520411,
+      "finalCls": 0.015083852030520411,
+      "headingHeight": 89.1875,
+      "verticalsHeight": 96,
+      "sections": {
+        "product": {
+          "height": 699.84375,
+          "deltaCls": 0
+        },
+        "plans": {
+          "height": 586.546875,
+          "deltaCls": 0
+        },
+        "faq": {
+          "height": 713.65625,
+          "deltaCls": 0
+        },
+        "closing": {
+          "height": 714.109375,
+          "deltaCls": 0
+        }
+      }
+    },
+    {
+      "width": 844,
+      "height": 391,
+      "scenario": "support503",
+      "repeat": 1,
+      "initialCls": 0.015146381678839768,
+      "finalCls": 0.015146381678839768,
+      "headingHeight": 89.1875,
+      "verticalsHeight": 96,
+      "sections": {
+        "product": {
+          "height": 699.84375,
+          "deltaCls": 0
+        },
+        "plans": {
+          "height": 914.890625,
+          "deltaCls": 0
+        },
+        "faq": {
+          "height": 644.65625,
+          "deltaCls": 0
+        },
+        "closing": {
+          "height": 714.109375,
+          "deltaCls": 0
+        }
+      }
+    },
+    {
+      "width": 844,
+      "height": 391,
+      "scenario": "nav503",
+      "repeat": 1,
+      "initialCls": 0.0003364604821356179,
+      "finalCls": 0.0003364604821356179,
+      "headingHeight": 89.1875,
+      "verticalsHeight": 44,
+      "sections": {
+        "product": {
+          "height": 699.84375,
+          "deltaCls": 0
+        },
+        "plans": {
+          "height": 914.890625,
+          "deltaCls": 0
+        },
+        "faq": {
+          "height": 713.65625,
+          "deltaCls": 0
+        },
+        "closing": {
+          "height": 666.109375,
+          "deltaCls": 0
+        }
+      }
+    },
+    {
+      "width": 768,
+      "height": 1024,
+      "scenario": "normal",
+      "repeat": 1,
+      "initialCls": 0.01865127640000234,
+      "finalCls": 0.02863016681900869,
+      "headingHeight": 120.375,
+      "verticalsHeight": 96,
+      "sections": {
+        "product": {
+          "height": 686.84375,
+          "deltaCls": 0.009978890419006348
+        },
+        "plans": {
+          "height": 901.890625,
+          "deltaCls": 0
+        },
+        "faq": {
+          "height": 700.65625,
+          "deltaCls": 0
+        },
+        "closing": {
+          "height": 701.109375,
+          "deltaCls": 0
+        }
+      }
+    },
+    {
+      "width": 768,
+      "height": 1024,
+      "scenario": "normal",
+      "repeat": 2,
+      "initialCls": 0.01865127640000234,
+      "finalCls": 0.02863016681900869,
+      "headingHeight": 120.375,
+      "verticalsHeight": 96,
+      "sections": {
+        "product": {
+          "height": 686.84375,
+          "deltaCls": 0.009978890419006348
+        },
+        "plans": {
+          "height": 901.890625,
+          "deltaCls": 0
+        },
+        "faq": {
+          "height": 700.65625,
+          "deltaCls": 0
+        },
+        "closing": {
+          "height": 701.109375,
+          "deltaCls": 0
+        }
+      }
+    },
+    {
+      "width": 768,
+      "height": 1024,
+      "scenario": "plans503",
+      "repeat": 1,
+      "initialCls": 0.01665142228982101,
+      "finalCls": 0.026630312708827358,
+      "headingHeight": 120.375,
+      "verticalsHeight": 96,
+      "sections": {
+        "product": {
+          "height": 686.84375,
+          "deltaCls": 0.009978890419006348
+        },
+        "plans": {
+          "height": 573.546875,
+          "deltaCls": 0
+        },
+        "faq": {
+          "height": 700.65625,
+          "deltaCls": 0
+        },
+        "closing": {
+          "height": 701.109375,
+          "deltaCls": 0
+        }
+      }
+    },
+    {
+      "width": 768,
+      "height": 1024,
+      "scenario": "support503",
+      "repeat": 1,
+      "initialCls": 0.018630223193516336,
+      "finalCls": 0.028609113612522684,
+      "headingHeight": 120.375,
+      "verticalsHeight": 96,
+      "sections": {
+        "product": {
+          "height": 686.84375,
+          "deltaCls": 0.009978890419006348
+        },
+        "plans": {
+          "height": 901.890625,
+          "deltaCls": 0
+        },
+        "faq": {
+          "height": 631.65625,
+          "deltaCls": 0
+        },
+        "closing": {
+          "height": 701.109375,
+          "deltaCls": 0
+        }
+      }
+    },
+    {
+      "width": 768,
+      "height": 1024,
+      "scenario": "nav503",
+      "repeat": 1,
+      "initialCls": 0.0029046620475128293,
+      "finalCls": 0.012883552466519177,
+      "headingHeight": 120.375,
+      "verticalsHeight": 44,
+      "sections": {
+        "product": {
+          "height": 686.84375,
+          "deltaCls": 0.009978890419006348
+        },
+        "plans": {
+          "height": 901.890625,
+          "deltaCls": 0
+        },
+        "faq": {
+          "height": 700.65625,
+          "deltaCls": 0
+        },
+        "closing": {
+          "height": 653.109375,
+          "deltaCls": 0
+        }
+      }
+    },
+    {
+      "width": 1024,
+      "height": 768,
+      "scenario": "normal",
+      "repeat": 1,
+      "initialCls": 0.0028142812467801073,
+      "finalCls": 0.009800422451614093,
+      "headingHeight": 89.1875,
+      "verticalsHeight": 44,
+      "sections": {
+        "product": {
+          "height": 746.453125,
+          "deltaCls": 0.003434101740519206
+        },
+        "plans": {
+          "height": 951,
+          "deltaCls": 0
+        },
+        "faq": {
+          "height": 749.765625,
+          "deltaCls": 0.003552039464314779
+        },
+        "closing": {
+          "height": 679.828125,
+          "deltaCls": 0
+        }
+      }
+    },
+    {
+      "width": 1024,
+      "height": 768,
+      "scenario": "normal",
+      "repeat": 2,
+      "initialCls": 0.002864239717988918,
+      "finalCls": 0.009850380922822904,
+      "headingHeight": 89.1875,
+      "verticalsHeight": 44,
+      "sections": {
+        "product": {
+          "height": 746.453125,
+          "deltaCls": 0.003434101740519206
+        },
+        "plans": {
+          "height": 951,
+          "deltaCls": 0
+        },
+        "faq": {
+          "height": 749.765625,
+          "deltaCls": 0.003552039464314779
+        },
+        "closing": {
+          "height": 679.828125,
+          "deltaCls": 0
+        }
+      }
+    },
+    {
+      "width": 1024,
+      "height": 768,
+      "scenario": "plans503",
+      "repeat": 1,
+      "initialCls": 0.0005641720296504597,
+      "finalCls": 0.006281111796852202,
+      "headingHeight": 89.1875,
+      "verticalsHeight": 44,
+      "sections": {
+        "product": {
+          "height": 746.453125,
+          "deltaCls": 0.003434101740519206
+        },
+        "plans": {
+          "height": 622.65625,
+          "deltaCls": 0
+        },
+        "faq": {
+          "height": 749.765625,
+          "deltaCls": 0
+        },
+        "closing": {
+          "height": 679.828125,
+          "deltaCls": 0.002282838026682536
+        }
+      }
+    },
+    {
+      "width": 1024,
+      "height": 768,
+      "scenario": "support503",
+      "repeat": 1,
+      "initialCls": 0.0028142812467801073,
+      "finalCls": 0.007343757412551593,
+      "headingHeight": 89.1875,
+      "verticalsHeight": 44,
+      "sections": {
+        "product": {
+          "height": 746.453125,
+          "deltaCls": 0.003434101740519206
+        },
+        "plans": {
+          "height": 951,
+          "deltaCls": 0
+        },
+        "faq": {
+          "height": 680.765625,
+          "deltaCls": 0.0010953744252522788
+        },
+        "closing": {
+          "height": 679.828125,
+          "deltaCls": 0
+        }
+      }
+    },
+    {
+      "width": 1024,
+      "height": 768,
+      "scenario": "nav503",
+      "repeat": 1,
+      "initialCls": 0.002864239717988918,
+      "finalCls": 0.009850380922822904,
+      "headingHeight": 89.1875,
+      "verticalsHeight": 44,
+      "sections": {
+        "product": {
+          "height": 746.453125,
+          "deltaCls": 0.003434101740519206
+        },
+        "plans": {
+          "height": 951,
+          "deltaCls": 0
+        },
+        "faq": {
+          "height": 749.765625,
+          "deltaCls": 0.003552039464314779
+        },
+        "closing": {
+          "height": 631.828125,
+          "deltaCls": 0
+        }
+      }
+    },
+    {
+      "width": 820,
+      "height": 1180,
+      "scenario": "normal",
+      "repeat": 1,
+      "initialCls": 0.16926793935206189,
+      "finalCls": 0.18353736624088693,
+      "headingHeight": 89.1875,
+      "verticalsHeight": 96,
+      "sections": {
+        "product": {
+          "height": 695.15625,
+          "deltaCls": 0.014269426888825052
+        },
+        "plans": {
+          "height": 910.203125,
+          "deltaCls": 0
+        },
+        "faq": {
+          "height": 708.96875,
+          "deltaCls": 0
+        },
+        "closing": {
+          "height": 709.421875,
+          "deltaCls": 0
+        }
+      }
+    },
+    {
+      "width": 820,
+      "height": 1180,
+      "scenario": "normal",
+      "repeat": 2,
+      "initialCls": 0.16900755007803686,
+      "finalCls": 0.1832769769668619,
+      "headingHeight": 89.1875,
+      "verticalsHeight": 96,
+      "sections": {
+        "product": {
+          "height": 695.15625,
+          "deltaCls": 0.014269426888825052
+        },
+        "plans": {
+          "height": 910.203125,
+          "deltaCls": 0
+        },
+        "faq": {
+          "height": 708.96875,
+          "deltaCls": 0
+        },
+        "closing": {
+          "height": 709.421875,
+          "deltaCls": 0
+        }
+      }
+    },
+    {
+      "width": 820,
+      "height": 1180,
+      "scenario": "plans503",
+      "repeat": 1,
+      "initialCls": 0.16781506273330046,
+      "finalCls": 0.1820844896221255,
+      "headingHeight": 89.1875,
+      "verticalsHeight": 96,
+      "sections": {
+        "product": {
+          "height": 695.15625,
+          "deltaCls": 0.014269426888825052
+        },
+        "plans": {
+          "height": 581.859375,
+          "deltaCls": 0
+        },
+        "faq": {
+          "height": 708.96875,
+          "deltaCls": 0
+        },
+        "closing": {
+          "height": 709.421875,
+          "deltaCls": 0
+        }
+      }
+    },
+    {
+      "width": 820,
+      "height": 1180,
+      "scenario": "support503",
+      "repeat": 1,
+      "initialCls": 0.16900755007803686,
+      "finalCls": 0.1832769769668619,
+      "headingHeight": 89.1875,
+      "verticalsHeight": 96,
+      "sections": {
+        "product": {
+          "height": 695.15625,
+          "deltaCls": 0.014269426888825052
+        },
+        "plans": {
+          "height": 910.203125,
+          "deltaCls": 0
+        },
+        "faq": {
+          "height": 639.96875,
+          "deltaCls": 0
+        },
+        "closing": {
+          "height": 709.421875,
+          "deltaCls": 0
+        }
+      }
+    },
+    {
+      "width": 820,
+      "height": 1180,
+      "scenario": "nav503",
+      "repeat": 1,
+      "initialCls": 0.13806401290859877,
+      "finalCls": 0.1523334397974238,
+      "headingHeight": 89.1875,
+      "verticalsHeight": 44,
+      "sections": {
+        "product": {
+          "height": 695.15625,
+          "deltaCls": 0.014269426888825052
+        },
+        "plans": {
+          "height": 910.203125,
+          "deltaCls": 0
+        },
+        "faq": {
+          "height": 708.96875,
+          "deltaCls": 0
+        },
+        "closing": {
+          "height": 661.421875,
+          "deltaCls": 0
+        }
+      }
+    },
+    {
+      "width": 1180,
+      "height": 820,
+      "scenario": "normal",
+      "repeat": 1,
+      "initialCls": 0.0030109036216201543,
+      "finalCls": 0.028044491881231565,
+      "headingHeight": 89.1875,
+      "verticalsHeight": 44,
+      "sections": {
+        "product": {
+          "height": 821.671875,
+          "deltaCls": 0.014193623398098388
+        },
+        "plans": {
+          "height": 982.34375,
+          "deltaCls": 0
+        },
+        "faq": {
+          "height": 781.109375,
+          "deltaCls": 0.010839964861513023
+        },
+        "closing": {
+          "height": 715.65625,
+          "deltaCls": 0
+        }
+      }
+    },
+    {
+      "width": 1180,
+      "height": 820,
+      "scenario": "normal",
+      "repeat": 2,
+      "initialCls": 0.0030109036216201543,
+      "finalCls": 0.028044491881231565,
+      "headingHeight": 89.1875,
+      "verticalsHeight": 44,
+      "sections": {
+        "product": {
+          "height": 821.671875,
+          "deltaCls": 0.014193623398098388
+        },
+        "plans": {
+          "height": 982.34375,
+          "deltaCls": 0
+        },
+        "faq": {
+          "height": 781.109375,
+          "deltaCls": 0.010839964861513023
+        },
+        "closing": {
+          "height": 715.65625,
+          "deltaCls": 0
+        }
+      }
+    },
+    {
+      "width": 1180,
+      "height": 820,
+      "scenario": "plans503",
+      "repeat": 1,
+      "initialCls": 0.0012600152241961592,
+      "finalCls": 0.017395298399061808,
+      "headingHeight": 89.1875,
+      "verticalsHeight": 44,
+      "sections": {
+        "product": {
+          "height": 821.671875,
+          "deltaCls": 0.014193623398098388
+        },
+        "plans": {
+          "height": 654,
+          "deltaCls": 0
+        },
+        "faq": {
+          "height": 781.109375,
+          "deltaCls": 0
+        },
+        "closing": {
+          "height": 715.65625,
+          "deltaCls": 0.0019416597767672591
+        }
+      }
+    },
+    {
+      "width": 1180,
+      "height": 820,
+      "scenario": "support503",
+      "repeat": 1,
+      "initialCls": 0.002652050386440152,
+      "finalCls": 0.02198080193666752,
+      "headingHeight": 89.1875,
+      "verticalsHeight": 44,
+      "sections": {
+        "product": {
+          "height": 821.671875,
+          "deltaCls": 0.014193623398098388
+        },
+        "plans": {
+          "height": 982.34375,
+          "deltaCls": 0
+        },
+        "faq": {
+          "height": 712.109375,
+          "deltaCls": 0.00513512815212898
+        },
+        "closing": {
+          "height": 715.65625,
+          "deltaCls": 0
+        }
+      }
+    },
+    {
+      "width": 1180,
+      "height": 820,
+      "scenario": "nav503",
+      "repeat": 1,
+      "initialCls": 0.0030109036216201543,
+      "finalCls": 0.028044491881231565,
+      "headingHeight": 89.1875,
+      "verticalsHeight": 44,
+      "sections": {
+        "product": {
+          "height": 821.671875,
+          "deltaCls": 0.014193623398098388
+        },
+        "plans": {
+          "height": 982.34375,
+          "deltaCls": 0
+        },
+        "faq": {
+          "height": 781.109375,
+          "deltaCls": 0.010839964861513023
+        },
+        "closing": {
+          "height": 667.65625,
+          "deltaCls": 0
+        }
+      }
+    },
+    {
+      "width": 1024,
+      "height": 1367,
+      "scenario": "normal",
+      "repeat": 1,
+      "initialCls": 0.0013497804531700601,
+      "finalCls": 0.0013497804531700601,
+      "headingHeight": 89.1875,
+      "verticalsHeight": 44,
+      "sections": {
+        "product": {
+          "height": 746.453125,
+          "deltaCls": 0
+        },
+        "plans": {
+          "height": 951,
+          "deltaCls": 0
+        },
+        "faq": {
+          "height": 749.765625,
+          "deltaCls": 0
+        },
+        "closing": {
+          "height": 679.828125,
+          "deltaCls": 0
+        }
+      }
+    },
+    {
+      "width": 1024,
+      "height": 1367,
+      "scenario": "normal",
+      "repeat": 2,
+      "initialCls": 0.0013937053982880428,
+      "finalCls": 0.0013937053982880428,
+      "headingHeight": 89.1875,
+      "verticalsHeight": 44,
+      "sections": {
+        "product": {
+          "height": 746.453125,
+          "deltaCls": 0
+        },
+        "plans": {
+          "height": 951,
+          "deltaCls": 0
+        },
+        "faq": {
+          "height": 749.765625,
+          "deltaCls": 0
+        },
+        "closing": {
+          "height": 679.828125,
+          "deltaCls": 0
+        }
+      }
+    },
+    {
+      "width": 1024,
+      "height": 1367,
+      "scenario": "plans503",
+      "repeat": 1,
+      "initialCls": 0.0004257290082759056,
+      "finalCls": 0.0006392811295759186,
+      "headingHeight": 89.1875,
+      "verticalsHeight": 44,
+      "sections": {
+        "product": {
+          "height": 746.453125,
+          "deltaCls": 0
+        },
+        "plans": {
+          "height": 622.65625,
+          "deltaCls": 0.00021355212130001302
+        },
+        "faq": {
+          "height": 749.765625,
+          "deltaCls": 0
+        },
+        "closing": {
+          "height": 679.828125,
+          "deltaCls": 0
+        }
+      }
+    },
+    {
+      "width": 1024,
+      "height": 1367,
+      "scenario": "support503",
+      "repeat": 1,
+      "initialCls": 0.0013937053982880428,
+      "finalCls": 0.0013937053982880428,
+      "headingHeight": 89.1875,
+      "verticalsHeight": 44,
+      "sections": {
+        "product": {
+          "height": 746.453125,
+          "deltaCls": 0
+        },
+        "plans": {
+          "height": 951,
+          "deltaCls": 0
+        },
+        "faq": {
+          "height": 680.765625,
+          "deltaCls": 0
+        },
+        "closing": {
+          "height": 679.828125,
+          "deltaCls": 0
+        }
+      }
+    },
+    {
+      "width": 1024,
+      "height": 1367,
+      "scenario": "nav503",
+      "repeat": 1,
+      "initialCls": 0.0013937053982880428,
+      "finalCls": 0.0013937053982880428,
+      "headingHeight": 89.1875,
+      "verticalsHeight": 44,
+      "sections": {
+        "product": {
+          "height": 746.453125,
+          "deltaCls": 0
+        },
+        "plans": {
+          "height": 951,
+          "deltaCls": 0
+        },
+        "faq": {
+          "height": 749.765625,
+          "deltaCls": 0
+        },
+        "closing": {
+          "height": 631.828125,
+          "deltaCls": 0
+        }
+      }
+    },
+    {
+      "width": 1367,
+      "height": 1024,
+      "scenario": "normal",
+      "repeat": 1,
+      "initialCls": 0.0015280024356026014,
+      "finalCls": 0.07078785807294716,
+      "headingHeight": 97.1875,
+      "verticalsHeight": 44,
+      "sections": {
+        "product": {
+          "height": 849.40625,
+          "deltaCls": 0.040456530467035484
+        },
+        "plans": {
+          "height": 1001.203125,
+          "deltaCls": 0
+        },
+        "faq": {
+          "height": 791.96875,
+          "deltaCls": 0.028803325170309074
+        },
+        "closing": {
+          "height": 730.9375,
+          "deltaCls": 0
+        }
+      }
+    },
+    {
+      "width": 1367,
+      "height": 1024,
+      "scenario": "normal",
+      "repeat": 2,
+      "initialCls": 0.0015275186457722042,
+      "finalCls": 0.07078737428311677,
+      "headingHeight": 97.1875,
+      "verticalsHeight": 44,
+      "sections": {
+        "product": {
+          "height": 849.40625,
+          "deltaCls": 0.040456530467035484
+        },
+        "plans": {
+          "height": 1001.203125,
+          "deltaCls": 0
+        },
+        "faq": {
+          "height": 791.96875,
+          "deltaCls": 0.028803325170309074
+        },
+        "closing": {
+          "height": 730.9375,
+          "deltaCls": 0
+        }
+      }
+    },
+    {
+      "width": 1367,
+      "height": 1024,
+      "scenario": "plans503",
+      "repeat": 1,
+      "initialCls": 0.00038488147861971185,
+      "finalCls": 0.040841411945655194,
+      "headingHeight": 97.1875,
+      "verticalsHeight": 44,
+      "sections": {
+        "product": {
+          "height": 849.40625,
+          "deltaCls": 0.040456530467035484
+        },
+        "plans": {
+          "height": 664.859375,
+          "deltaCls": 0
+        },
+        "faq": {
+          "height": 791.96875,
+          "deltaCls": 0
+        },
+        "closing": {
+          "height": 730.9375,
+          "deltaCls": 0
+        }
+      }
+    },
+    {
+      "width": 1367,
+      "height": 1024,
+      "scenario": "support503",
+      "repeat": 1,
+      "initialCls": 0.0015280024356026014,
+      "finalCls": 0.056788795344344375,
+      "headingHeight": 97.1875,
+      "verticalsHeight": 44,
+      "sections": {
+        "product": {
+          "height": 849.40625,
+          "deltaCls": 0.040456530467035484
+        },
+        "plans": {
+          "height": 1001.203125,
+          "deltaCls": 0
+        },
+        "faq": {
+          "height": 722.96875,
+          "deltaCls": 0.01480426244170629
+        },
+        "closing": {
+          "height": 730.9375,
+          "deltaCls": 0
+        }
+      }
+    },
+    {
+      "width": 1367,
+      "height": 1024,
+      "scenario": "nav503",
+      "repeat": 1,
+      "initialCls": 0.0015387385883372606,
+      "finalCls": 0.07079859422568181,
+      "headingHeight": 97.1875,
+      "verticalsHeight": 44,
+      "sections": {
+        "product": {
+          "height": 849.40625,
+          "deltaCls": 0.040456530467035484
+        },
+        "plans": {
+          "height": 1001.203125,
+          "deltaCls": 0
+        },
+        "faq": {
+          "height": 791.96875,
+          "deltaCls": 0.028803325170309074
+        },
+        "closing": {
+          "height": 682.9375,
+          "deltaCls": 0
+        }
+      }
+    },
+    {
+      "width": 1280,
+      "height": 800,
+      "scenario": "normal",
+      "repeat": 1,
+      "initialCls": 0.0019514358401298525,
+      "finalCls": 0.021536396777629852,
+      "headingHeight": 97.1875,
+      "verticalsHeight": 44,
+      "sections": {
+        "product": {
+          "height": 845.84375,
+          "deltaCls": 0.011475219726562501
+        },
+        "plans": {
+          "height": 997.640625,
+          "deltaCls": 0
+        },
+        "faq": {
+          "height": 788.40625,
+          "deltaCls": 0.008109741210937499
+        },
+        "closing": {
+          "height": 725.84375,
+          "deltaCls": 0
+        }
+      }
+    },
+    {
+      "width": 1280,
+      "height": 800,
+      "scenario": "normal",
+      "repeat": 2,
+      "initialCls": 0.001966712582111359,
+      "finalCls": 0.02155167351961136,
+      "headingHeight": 97.1875,
+      "verticalsHeight": 44,
+      "sections": {
+        "product": {
+          "height": 845.84375,
+          "deltaCls": 0.011475219726562501
+        },
+        "plans": {
+          "height": 997.640625,
+          "deltaCls": 0
+        },
+        "faq": {
+          "height": 788.40625,
+          "deltaCls": 0.008109741210937499
+        },
+        "closing": {
+          "height": 725.84375,
+          "deltaCls": 0
+        }
+      }
+    },
+    {
+      "width": 1280,
+      "height": 800,
+      "scenario": "plans503",
+      "repeat": 1,
+      "initialCls": 0.00040574263334274295,
+      "finalCls": 0.014404766070842744,
+      "headingHeight": 97.1875,
+      "verticalsHeight": 44,
+      "sections": {
+        "product": {
+          "height": 845.84375,
+          "deltaCls": 0.011475219726562501
+        },
+        "plans": {
+          "height": 661.296875,
+          "deltaCls": 0
+        },
+        "faq": {
+          "height": 788.40625,
+          "deltaCls": 0
+        },
+        "closing": {
+          "height": 725.84375,
+          "deltaCls": 0.0025238037109375
+        }
+      }
+    },
+    {
+      "width": 1280,
+      "height": 800,
+      "scenario": "support503",
+      "repeat": 1,
+      "initialCls": 0.001966712582111359,
+      "finalCls": 0.01750870476961136,
+      "headingHeight": 97.1875,
+      "verticalsHeight": 44,
+      "sections": {
+        "product": {
+          "height": 845.84375,
+          "deltaCls": 0.011475219726562501
+        },
+        "plans": {
+          "height": 997.640625,
+          "deltaCls": 0
+        },
+        "faq": {
+          "height": 719.40625,
+          "deltaCls": 0.0040667724609375
+        },
+        "closing": {
+          "height": 725.84375,
+          "deltaCls": 0
+        }
+      }
+    },
+    {
+      "width": 1280,
+      "height": 800,
+      "scenario": "nav503",
+      "repeat": 1,
+      "initialCls": 0.001966712582111359,
+      "finalCls": 0.02155167351961136,
+      "headingHeight": 97.1875,
+      "verticalsHeight": 44,
+      "sections": {
+        "product": {
+          "height": 845.84375,
+          "deltaCls": 0.011475219726562501
+        },
+        "plans": {
+          "height": 997.640625,
+          "deltaCls": 0
+        },
+        "faq": {
+          "height": 788.40625,
+          "deltaCls": 0.008109741210937499
+        },
+        "closing": {
+          "height": 677.84375,
+          "deltaCls": 0
+        }
+      }
+    },
+    {
+      "width": 800,
+      "height": 1280,
+      "scenario": "normal",
+      "repeat": 1,
+      "initialCls": 0.014773527324199676,
+      "finalCls": 0.02860600107908249,
+      "headingHeight": 120.375,
+      "verticalsHeight": 96,
+      "sections": {
+        "product": {
+          "height": 691.96875,
+          "deltaCls": 0.013832473754882814
+        },
+        "plans": {
+          "height": 907.015625,
+          "deltaCls": 0
+        },
+        "faq": {
+          "height": 705.78125,
+          "deltaCls": 0
+        },
+        "closing": {
+          "height": 706.234375,
+          "deltaCls": 0
+        }
+      }
+    },
+    {
+      "width": 800,
+      "height": 1280,
+      "scenario": "normal",
+      "repeat": 2,
+      "initialCls": 0.014773527324199676,
+      "finalCls": 0.02860600107908249,
+      "headingHeight": 120.375,
+      "verticalsHeight": 96,
+      "sections": {
+        "product": {
+          "height": 691.96875,
+          "deltaCls": 0.013832473754882814
+        },
+        "plans": {
+          "height": 907.015625,
+          "deltaCls": 0
+        },
+        "faq": {
+          "height": 705.78125,
+          "deltaCls": 0
+        },
+        "closing": {
+          "height": 706.234375,
+          "deltaCls": 0
+        }
+      }
+    },
+    {
+      "width": 800,
+      "height": 1280,
+      "scenario": "plans503",
+      "repeat": 1,
+      "initialCls": 0.025587505066394806,
+      "finalCls": 0.039419978821277624,
+      "headingHeight": 120.375,
+      "verticalsHeight": 96,
+      "sections": {
+        "product": {
+          "height": 691.96875,
+          "deltaCls": 0.013832473754882814
+        },
+        "plans": {
+          "height": 578.671875,
+          "deltaCls": 0
+        },
+        "faq": {
+          "height": 705.78125,
+          "deltaCls": 0
+        },
+        "closing": {
+          "height": 706.234375,
+          "deltaCls": 0
+        }
+      }
+    },
+    {
+      "width": 800,
+      "height": 1280,
+      "scenario": "support503",
+      "repeat": 1,
+      "initialCls": 0.02683944262266159,
+      "finalCls": 0.0406719163775444,
+      "headingHeight": 120.375,
+      "verticalsHeight": 96,
+      "sections": {
+        "product": {
+          "height": 691.96875,
+          "deltaCls": 0.013832473754882814
+        },
+        "plans": {
+          "height": 907.015625,
+          "deltaCls": 0
+        },
+        "faq": {
+          "height": 636.78125,
+          "deltaCls": 0
+        },
+        "closing": {
+          "height": 706.234375,
+          "deltaCls": 0
+        }
+      }
+    },
+    {
+      "width": 800,
+      "height": 1280,
+      "scenario": "nav503",
+      "repeat": 1,
+      "initialCls": 0.013838253474235535,
+      "finalCls": 0.02767072722911835,
+      "headingHeight": 120.375,
+      "verticalsHeight": 44,
+      "sections": {
+        "product": {
+          "height": 691.96875,
+          "deltaCls": 0.013832473754882814
+        },
+        "plans": {
+          "height": 907.015625,
+          "deltaCls": 0
+        },
+        "faq": {
+          "height": 705.78125,
+          "deltaCls": 0
+        },
+        "closing": {
+          "height": 658.234375,
+          "deltaCls": 0
+        }
+      }
+    },
+    {
+      "width": 1440,
+      "height": 900,
+      "scenario": "normal",
+      "repeat": 1,
+      "initialCls": 0.001960843217847115,
+      "finalCls": 0.04455343581043971,
+      "headingHeight": 97.1875,
+      "verticalsHeight": 44,
+      "sections": {
+        "product": {
+          "height": 851.21875,
+          "deltaCls": 0.024841820987654323
+        },
+        "plans": {
+          "height": 1003.015625,
+          "deltaCls": 0
+        },
+        "faq": {
+          "height": 793.78125,
+          "deltaCls": 0.01775077160493827
+        },
+        "closing": {
+          "height": 732.75,
+          "deltaCls": 0
+        }
+      }
+    },
+    {
+      "width": 1440,
+      "height": 900,
+      "scenario": "normal",
+      "repeat": 2,
+      "initialCls": 0.0016308176550845549,
+      "finalCls": 0.04422341024767715,
+      "headingHeight": 97.1875,
+      "verticalsHeight": 44,
+      "sections": {
+        "product": {
+          "height": 851.21875,
+          "deltaCls": 0.024841820987654323
+        },
+        "plans": {
+          "height": 1003.015625,
+          "deltaCls": 0
+        },
+        "faq": {
+          "height": 793.78125,
+          "deltaCls": 0.01775077160493827
+        },
+        "closing": {
+          "height": 732.75,
+          "deltaCls": 0
+        }
+      }
+    },
+    {
+      "width": 1440,
+      "height": 900,
+      "scenario": "plans503",
+      "repeat": 1,
+      "initialCls": 0.0008752534759061,
+      "finalCls": 0.025717074463560422,
+      "headingHeight": 97.1875,
+      "verticalsHeight": 44,
+      "sections": {
+        "product": {
+          "height": 851.21875,
+          "deltaCls": 0.024841820987654323
+        },
+        "plans": {
+          "height": 666.671875,
+          "deltaCls": 0
+        },
+        "faq": {
+          "height": 793.78125,
+          "deltaCls": 0
+        },
+        "closing": {
+          "height": 732.75,
+          "deltaCls": 0
+        }
+      }
+    },
+    {
+      "width": 1440,
+      "height": 900,
+      "scenario": "support503",
+      "repeat": 1,
+      "initialCls": 0.0018243058569637346,
+      "finalCls": 0.03589837993103781,
+      "headingHeight": 97.1875,
+      "verticalsHeight": 44,
+      "sections": {
+        "product": {
+          "height": 851.21875,
+          "deltaCls": 0.024841820987654323
+        },
+        "plans": {
+          "height": 1003.015625,
+          "deltaCls": 0
+        },
+        "faq": {
+          "height": 724.78125,
+          "deltaCls": 0.009232253086419753
+        },
+        "closing": {
+          "height": 732.75,
+          "deltaCls": 0
+        }
+      }
+    },
+    {
+      "width": 1440,
+      "height": 900,
+      "scenario": "nav503",
+      "repeat": 1,
+      "initialCls": 0.0018243058569637346,
+      "finalCls": 0.04441689844955633,
+      "headingHeight": 97.1875,
+      "verticalsHeight": 44,
+      "sections": {
+        "product": {
+          "height": 851.21875,
+          "deltaCls": 0.024841820987654323
+        },
+        "plans": {
+          "height": 1003.015625,
+          "deltaCls": 0
+        },
+        "faq": {
+          "height": 793.78125,
+          "deltaCls": 0.01775077160493827
+        },
+        "closing": {
+          "height": 684.75,
+          "deltaCls": 0
+        }
+      }
+    },
+    {
+      "width": 900,
+      "height": 1440,
+      "scenario": "normal",
+      "repeat": 1,
+      "initialCls": 0.029402628974234287,
+      "finalCls": 0.029402628974234287,
+      "headingHeight": 89.1875,
+      "verticalsHeight": 96,
+      "sections": {
+        "product": {
+          "height": 711.078125,
+          "deltaCls": 0
+        },
+        "plans": {
+          "height": 926.125,
+          "deltaCls": 0
+        },
+        "faq": {
+          "height": 724.890625,
+          "deltaCls": 0
+        },
+        "closing": {
+          "height": 725.34375,
+          "deltaCls": 0
+        }
+      }
+    },
+    {
+      "width": 900,
+      "height": 1440,
+      "scenario": "normal",
+      "repeat": 2,
+      "initialCls": 0.058078944453486686,
+      "finalCls": 0.058078944453486686,
+      "headingHeight": 89.1875,
+      "verticalsHeight": 96,
+      "sections": {
+        "product": {
+          "height": 711.078125,
+          "deltaCls": 0
+        },
+        "plans": {
+          "height": 926.125,
+          "deltaCls": 0
+        },
+        "faq": {
+          "height": 724.890625,
+          "deltaCls": 0
+        },
+        "closing": {
+          "height": 725.34375,
+          "deltaCls": 0
+        }
+      }
+    },
+    {
+      "width": 900,
+      "height": 1440,
+      "scenario": "plans503",
+      "repeat": 1,
+      "initialCls": 0.028426189030148853,
+      "finalCls": 0.030447296644925088,
+      "headingHeight": 89.1875,
+      "verticalsHeight": 96,
+      "sections": {
+        "product": {
+          "height": 711.078125,
+          "deltaCls": 0.0020211076147762345
+        },
+        "plans": {
+          "height": 597.78125,
+          "deltaCls": 0
+        },
+        "faq": {
+          "height": 724.890625,
+          "deltaCls": 0
+        },
+        "closing": {
+          "height": 725.34375,
+          "deltaCls": 0
+        }
+      }
+    },
+    {
+      "width": 900,
+      "height": 1440,
+      "scenario": "support503",
+      "repeat": 1,
+      "initialCls": 0.029355363985540443,
+      "finalCls": 0.029355363985540443,
+      "headingHeight": 89.1875,
+      "verticalsHeight": 96,
+      "sections": {
+        "product": {
+          "height": 711.078125,
+          "deltaCls": 0
+        },
+        "plans": {
+          "height": 926.125,
+          "deltaCls": 0
+        },
+        "faq": {
+          "height": 655.890625,
+          "deltaCls": 0
+        },
+        "closing": {
+          "height": 725.34375,
+          "deltaCls": 0
+        }
+      }
+    },
+    {
+      "width": 900,
+      "height": 1440,
+      "scenario": "nav503",
+      "repeat": 1,
+      "initialCls": 0.0013663635421355238,
+      "finalCls": 0.0013663635421355238,
+      "headingHeight": 89.1875,
+      "verticalsHeight": 44,
+      "sections": {
+        "product": {
+          "height": 711.078125,
+          "deltaCls": 0
+        },
+        "plans": {
+          "height": 926.125,
+          "deltaCls": 0
+        },
+        "faq": {
+          "height": 724.890625,
+          "deltaCls": 0
+        },
+        "closing": {
+          "height": 677.34375,
+          "deltaCls": 0
+        }
+      }
+    },
+    {
+      "width": 767,
+      "height": 1024,
+      "scenario": "normal",
+      "repeat": 1,
+      "initialCls": 0,
+      "finalCls": 0.009970739483833313,
+      "headingHeight": 81.1875,
+      "verticalsHeight": 94,
+      "sections": {
+        "product": {
+          "height": 680.546875,
+          "deltaCls": 0.009970739483833313
+        },
+        "plans": {
+          "height": 820.421875,
+          "deltaCls": 0
+        },
+        "faq": {
+          "height": 549.78125,
+          "deltaCls": 0
+        },
+        "closing": {
+          "height": 671.234375,
+          "deltaCls": 0
+        }
+      }
+    },
+    {
+      "width": 767,
+      "height": 1024,
+      "scenario": "normal",
+      "repeat": 2,
+      "initialCls": 0,
+      "finalCls": 0.009970739483833313,
+      "headingHeight": 81.1875,
+      "verticalsHeight": 94,
+      "sections": {
+        "product": {
+          "height": 680.546875,
+          "deltaCls": 0.009970739483833313
+        },
+        "plans": {
+          "height": 820.421875,
+          "deltaCls": 0
+        },
+        "faq": {
+          "height": 549.78125,
+          "deltaCls": 0
+        },
+        "closing": {
+          "height": 671.234375,
+          "deltaCls": 0
+        }
+      }
+    },
+    {
+      "width": 767,
+      "height": 1024,
+      "scenario": "plans503",
+      "repeat": 1,
+      "initialCls": 0,
+      "finalCls": 0.009970739483833313,
+      "headingHeight": 81.1875,
+      "verticalsHeight": 94,
+      "sections": {
+        "product": {
+          "height": 680.546875,
+          "deltaCls": 0.009970739483833313
+        },
+        "plans": {
+          "height": 511.265625,
+          "deltaCls": 0
+        },
+        "faq": {
+          "height": 549.78125,
+          "deltaCls": 0
+        },
+        "closing": {
+          "height": 671.234375,
+          "deltaCls": 0
+        }
+      }
+    },
+    {
+      "width": 767,
+      "height": 1024,
+      "scenario": "support503",
+      "repeat": 1,
+      "initialCls": 0,
+      "finalCls": 0.009970739483833313,
+      "headingHeight": 81.1875,
+      "verticalsHeight": 94,
+      "sections": {
+        "product": {
+          "height": 680.546875,
+          "deltaCls": 0.009970739483833313
+        },
+        "plans": {
+          "height": 820.421875,
+          "deltaCls": 0
+        },
+        "faq": {
+          "height": 492.78125,
+          "deltaCls": 0
+        },
+        "closing": {
+          "height": 671.234375,
+          "deltaCls": 0
+        }
+      }
+    },
+    {
+      "width": 767,
+      "height": 1024,
+      "scenario": "nav503",
+      "repeat": 1,
+      "initialCls": 0,
+      "finalCls": 0.009970739483833313,
+      "headingHeight": 81.1875,
+      "verticalsHeight": 94,
+      "sections": {
+        "product": {
+          "height": 680.546875,
+          "deltaCls": 0.009970739483833313
+        },
+        "plans": {
+          "height": 820.421875,
+          "deltaCls": 0
+        },
+        "faq": {
+          "height": 549.78125,
+          "deltaCls": 0
+        },
+        "closing": {
+          "height": 623.234375,
+          "deltaCls": 0
+        }
+      }
+    },
+    {
+      "width": 1023,
+      "height": 768,
+      "scenario": "normal",
+      "repeat": 1,
+      "initialCls": 0.0027461730419093043,
+      "finalCls": 0.009546471897399692,
+      "headingHeight": 89.1875,
+      "verticalsHeight": 44,
+      "sections": {
+        "product": {
+          "height": 741.234375,
+          "deltaCls": 0.0032514694576816555
+        },
+        "plans": {
+          "height": 950.8125,
+          "deltaCls": 0
+        },
+        "faq": {
+          "height": 749.578125,
+          "deltaCls": 0.0035488293978087324
+        },
+        "closing": {
+          "height": 752.609375,
+          "deltaCls": 0
+        }
+      }
+    },
+    {
+      "width": 1023,
+      "height": 768,
+      "scenario": "normal",
+      "repeat": 2,
+      "initialCls": 0.0027461730419093043,
+      "finalCls": 0.009546471897399692,
+      "headingHeight": 89.1875,
+      "verticalsHeight": 44,
+      "sections": {
+        "product": {
+          "height": 741.234375,
+          "deltaCls": 0.0032514694576816555
+        },
+        "plans": {
+          "height": 950.8125,
+          "deltaCls": 0
+        },
+        "faq": {
+          "height": 749.578125,
+          "deltaCls": 0.0035488293978087324
+        },
+        "closing": {
+          "height": 752.609375,
+          "deltaCls": 0
+        }
+      }
+    },
+    {
+      "width": 1023,
+      "height": 768,
+      "scenario": "plans503",
+      "repeat": 1,
+      "initialCls": 0.0004771837155775784,
+      "finalCls": 0.008282046863182662,
+      "headingHeight": 89.1875,
+      "verticalsHeight": 44,
+      "sections": {
+        "product": {
+          "height": 741.234375,
+          "deltaCls": 0.0032514694576816555
+        },
+        "plans": {
+          "height": 622.46875,
+          "deltaCls": 0
+        },
+        "faq": {
+          "height": 749.578125,
+          "deltaCls": 0
+        },
+        "closing": {
+          "height": 752.609375,
+          "deltaCls": 0.0045533936899234285
+        }
+      }
+    },
+    {
+      "width": 1023,
+      "height": 768,
+      "scenario": "support503",
+      "repeat": 1,
+      "initialCls": 0.0027795221587241215,
+      "finalCls": 0.007120754543051264,
+      "headingHeight": 89.1875,
+      "verticalsHeight": 44,
+      "sections": {
+        "product": {
+          "height": 741.234375,
+          "deltaCls": 0.0032514694576816555
+        },
+        "plans": {
+          "height": 950.8125,
+          "deltaCls": 0
+        },
+        "faq": {
+          "height": 680.578125,
+          "deltaCls": 0.0010897629266454873
+        },
+        "closing": {
+          "height": 752.609375,
+          "deltaCls": 0
+        }
+      }
+    },
+    {
+      "width": 1023,
+      "height": 768,
+      "scenario": "nav503",
+      "repeat": 1,
+      "initialCls": 0.0027795221587241215,
+      "finalCls": 0.009579821014214509,
+      "headingHeight": 89.1875,
+      "verticalsHeight": 44,
+      "sections": {
+        "product": {
+          "height": 741.234375,
+          "deltaCls": 0.0032514694576816555
+        },
+        "plans": {
+          "height": 950.8125,
+          "deltaCls": 0
+        },
+        "faq": {
+          "height": 749.578125,
+          "deltaCls": 0.0035488293978087324
+        },
+        "closing": {
+          "height": 704.609375,
+          "deltaCls": 0
+        }
+      }
+    },
+    {
+      "width": 1199,
+      "height": 900,
+      "scenario": "normal",
+      "repeat": 1,
+      "initialCls": 0.0022525615277543013,
+      "finalCls": 0.04906471980780249,
+      "headingHeight": 89.1875,
+      "verticalsHeight": 44,
+      "sections": {
+        "product": {
+          "height": 830.8125,
+          "deltaCls": 0.026809378185524976
+        },
+        "plans": {
+          "height": 986.140625,
+          "deltaCls": 0
+        },
+        "faq": {
+          "height": 784.90625,
+          "deltaCls": 0.020002780094523213
+        },
+        "closing": {
+          "height": 720.015625,
+          "deltaCls": 0
+        }
+      }
+    },
+    {
+      "width": 1199,
+      "height": 900,
+      "scenario": "normal",
+      "repeat": 2,
+      "initialCls": 0.0022525615277543013,
+      "finalCls": 0.04906471980780249,
+      "headingHeight": 89.1875,
+      "verticalsHeight": 44,
+      "sections": {
+        "product": {
+          "height": 830.8125,
+          "deltaCls": 0.026809378185524976
+        },
+        "plans": {
+          "height": 986.140625,
+          "deltaCls": 0
+        },
+        "faq": {
+          "height": 784.90625,
+          "deltaCls": 0.020002780094523213
+        },
+        "closing": {
+          "height": 720.015625,
+          "deltaCls": 0
+        }
+      }
+    },
+    {
+      "width": 1199,
+      "height": 900,
+      "scenario": "plans503",
+      "repeat": 1,
+      "initialCls": 0.0006936242726018323,
+      "finalCls": 0.02750300245812681,
+      "headingHeight": 89.1875,
+      "verticalsHeight": 44,
+      "sections": {
+        "product": {
+          "height": 830.8125,
+          "deltaCls": 0.026809378185524976
+        },
+        "plans": {
+          "height": 657.796875,
+          "deltaCls": 0
+        },
+        "faq": {
+          "height": 784.90625,
+          "deltaCls": 0
+        },
+        "closing": {
+          "height": 720.015625,
+          "deltaCls": 0
+        }
+      }
+    },
+    {
+      "width": 1199,
+      "height": 900,
+      "scenario": "support503",
+      "repeat": 1,
+      "initialCls": 0.0022525615277543013,
+      "finalCls": 0.03883397196237574,
+      "headingHeight": 89.1875,
+      "verticalsHeight": 44,
+      "sections": {
+        "product": {
+          "height": 830.8125,
+          "deltaCls": 0.026809378185524976
+        },
+        "plans": {
+          "height": 986.140625,
+          "deltaCls": 0
+        },
+        "faq": {
+          "height": 715.90625,
+          "deltaCls": 0.009772032249096469
+        },
+        "closing": {
+          "height": 720.015625,
+          "deltaCls": 0
+        }
+      }
+    },
+    {
+      "width": 1199,
+      "height": 900,
+      "scenario": "nav503",
+      "repeat": 1,
+      "initialCls": 0.0021786609833558362,
+      "finalCls": 0.048990819263404026,
+      "headingHeight": 89.1875,
+      "verticalsHeight": 44,
+      "sections": {
+        "product": {
+          "height": 830.8125,
+          "deltaCls": 0.026809378185524976
+        },
+        "plans": {
+          "height": 986.140625,
+          "deltaCls": 0
+        },
+        "faq": {
+          "height": 784.90625,
+          "deltaCls": 0.020002780094523213
+        },
+        "closing": {
+          "height": 672.015625,
+          "deltaCls": 0
+        }
+      }
+    },
+    {
+      "width": 1200,
+      "height": 900,
+      "scenario": "normal",
+      "repeat": 1,
+      "initialCls": 0.002212347981770833,
+      "finalCls": 0.049096607241030085,
+      "headingHeight": 97.1875,
+      "verticalsHeight": 44,
+      "sections": {
+        "product": {
+          "height": 831.328125,
+          "deltaCls": 0.026863425925925926
+        },
+        "plans": {
+          "height": 994.375,
+          "deltaCls": 0
+        },
+        "faq": {
+          "height": 785.140625,
+          "deltaCls": 0.02002083333333333
+        },
+        "closing": {
+          "height": 720.265625,
+          "deltaCls": 0
+        }
+      }
+    },
+    {
+      "width": 1200,
+      "height": 900,
+      "scenario": "normal",
+      "repeat": 2,
+      "initialCls": 0.002212347981770833,
+      "finalCls": 0.049096607241030085,
+      "headingHeight": 97.1875,
+      "verticalsHeight": 44,
+      "sections": {
+        "product": {
+          "height": 831.328125,
+          "deltaCls": 0.026863425925925926
+        },
+        "plans": {
+          "height": 994.375,
+          "deltaCls": 0
+        },
+        "faq": {
+          "height": 785.140625,
+          "deltaCls": 0.02002083333333333
+        },
+        "closing": {
+          "height": 720.265625,
+          "deltaCls": 0
+        }
+      }
+    },
+    {
+      "width": 1200,
+      "height": 900,
+      "scenario": "plans503",
+      "repeat": 1,
+      "initialCls": 0.0006781170548804012,
+      "finalCls": 0.027541542980806327,
+      "headingHeight": 97.1875,
+      "verticalsHeight": 44,
+      "sections": {
+        "product": {
+          "height": 831.328125,
+          "deltaCls": 0.026863425925925926
+        },
+        "plans": {
+          "height": 658.03125,
+          "deltaCls": 0
+        },
+        "faq": {
+          "height": 785.140625,
+          "deltaCls": 0
+        },
+        "closing": {
+          "height": 720.265625,
+          "deltaCls": 0
+        }
+      }
+    },
+    {
+      "width": 1200,
+      "height": 900,
+      "scenario": "support503",
+      "repeat": 1,
+      "initialCls": 0.0021973405309606477,
+      "finalCls": 0.038859377567997684,
+      "headingHeight": 97.1875,
+      "verticalsHeight": 44,
+      "sections": {
+        "product": {
+          "height": 831.328125,
+          "deltaCls": 0.026863425925925926
+        },
+        "plans": {
+          "height": 994.375,
+          "deltaCls": 0
+        },
+        "faq": {
+          "height": 716.140625,
+          "deltaCls": 0.00979861111111111
+        },
+        "closing": {
+          "height": 720.265625,
+          "deltaCls": 0
+        }
+      }
+    },
+    {
+      "width": 1200,
+      "height": 900,
+      "scenario": "nav503",
+      "repeat": 1,
+      "initialCls": 0.002212347981770833,
+      "finalCls": 0.049096607241030085,
+      "headingHeight": 97.1875,
+      "verticalsHeight": 44,
+      "sections": {
+        "product": {
+          "height": 831.328125,
+          "deltaCls": 0.026863425925925926
+        },
+        "plans": {
+          "height": 994.375,
+          "deltaCls": 0
+        },
+        "faq": {
+          "height": 785.140625,
+          "deltaCls": 0.02002083333333333
+        },
+        "closing": {
+          "height": 672.265625,
+          "deltaCls": 0
+        }
+      }
+    }
+  ],
+  "maxInitialNormalCls": 0.16926793935206189,
+  "maxFinalNormalCls": 0.18353736624088693,
+  "clsPostprocessing": "Corrected H6: sessions start at first shift; original raw events, no samples discarded",
+  "correctedMetricCount": 0
+}

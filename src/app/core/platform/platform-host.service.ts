@@ -2,7 +2,7 @@ import { isPlatformBrowser } from '@angular/common';
 import { Injectable, PLATFORM_ID, inject } from '@angular/core';
 import { MARKETING_RENDER_CONTEXT, MarketingRenderContext } from './marketing-render-context';
 
-type RuntimeWithFluoraOrigins = {
+export type RuntimeWithFluoraOrigins = {
   __FLUORA_APP_ORIGIN__?: string;
   __FLUORA_MARKETING_ORIGIN__?: string;
 };
@@ -61,6 +61,16 @@ export function isMarketingHostname(currentHostname: string, marketingHostname: 
 
   return currentHostname === marketingHostname
     || currentHostname === `www.${marketingHostname}`;
+}
+
+/** Only the marketing root can reuse server-rendered Angular DOM; other routes stay CSR. */
+export function isHydratableMarketingHome(location: Pick<Location, 'origin'|'hostname'|'pathname'>|undefined,
+    runtime: RuntimeWithFluoraOrigins): boolean {
+  if (!location || location.pathname !== '/') return false;
+  const configuredOrigin=runtime.__FLUORA_MARKETING_ORIGIN__;
+  if(typeof configuredOrigin!=='string'||!configuredOrigin.trim())return false;
+  const snapshot = resolvePlatformHostSnapshot({kind:'browser',location,runtime});
+  return isMarketingHostname(snapshot.currentHostname, getHostnameFromOrigin(snapshot.marketingOrigin));
 }
 
 @Injectable({

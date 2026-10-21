@@ -34,3 +34,10 @@ export function parseMarketingRenderContext(raw: unknown): MarketingRenderContex
 export function provideMarketingRenderContext(raw: unknown): Provider {
   return {provide:MARKETING_RENDER_CONTEXT,useValue:parseMarketingRenderContext(raw)};
 }
+
+export function parseProductionMarketingRenderContext(raw: unknown): MarketingRenderContext {
+  const context=parseMarketingRenderContext(raw);
+  if(!context.marketingOrigin.startsWith('https://')||!context.appOrigin.startsWith('https://')||context.marketingOrigin===context.appOrigin)
+    throw new Error('Invalid production marketing render origins');
+  return context;
+}

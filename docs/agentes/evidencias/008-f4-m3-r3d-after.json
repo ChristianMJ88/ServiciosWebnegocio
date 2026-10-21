@@ -1,0 +1,3083 @@
+{
+  "phase": "R3-d after CSS, not Lighthouse",
+  "build": "364e57519e392fbdf1a1c459c14d06dd45ebdafd35a73bd03d9fbb7a3a3e0bac",
+  "samples": 100,
+  "identicalNormalPairs": 20,
+  "sameApiHashesAsBaseline": true,
+  "maxInitialNormalCls": 0.0030109036216201543,
+  "maxFinalNormalCls": 0.026181859858168982,
+  "results": [
+    {
+      "width": 360,
+      "height": 740,
+      "scenario": "normal",
+      "repeat": 1,
+      "initialCls": 0,
+      "finalCls": 0.026181859858168982,
+      "initialPlaceholders": [],
+      "headingHeight": 110.375,
+      "heroHeight": 985.515625,
+      "verticalsHeight": 94,
+      "sections": {
+        "product": {
+          "height": 767.8125,
+          "deltaCls": 0
+        },
+        "plans": {
+          "height": 883.296875,
+          "deltaCls": 0.018266210889944
+        },
+        "faq": {
+          "height": 588.125,
+          "deltaCls": 0.007915648968224982
+        },
+        "closing": {
+          "height": 717.53125,
+          "deltaCls": 0
+        }
+      }
+    },
+    {
+      "width": 360,
+      "height": 740,
+      "scenario": "normal",
+      "repeat": 2,
+      "initialCls": 0,
+      "finalCls": 0.026181859858168982,
+      "initialPlaceholders": [],
+      "headingHeight": 110.375,
+      "heroHeight": 985.515625,
+      "verticalsHeight": 94,
+      "sections": {
+        "product": {
+          "height": 767.8125,
+          "deltaCls": 0
+        },
+        "plans": {
+          "height": 883.296875,
+          "deltaCls": 0.018266210889944
+        },
+        "faq": {
+          "height": 588.125,
+          "deltaCls": 0.007915648968224982
+        },
+        "closing": {
+          "height": 717.53125,
+          "deltaCls": 0
+        }
+      }
+    },
+    {
+      "width": 360,
+      "height": 740,
+      "scenario": "plans503",
+      "repeat": 1,
+      "initialCls": 0,
+      "finalCls": 0.05390710600803507,
+      "initialPlaceholders": [],
+      "headingHeight": 110.375,
+      "heroHeight": 985.515625,
+      "verticalsHeight": 94,
+      "sections": {
+        "product": {
+          "height": 767.8125,
+          "deltaCls": 0
+        },
+        "plans": {
+          "height": 552.046875,
+          "deltaCls": 0.05390710600803507
+        },
+        "faq": {
+          "height": 588.125,
+          "deltaCls": 0
+        },
+        "closing": {
+          "height": 717.53125,
+          "deltaCls": 0
+        }
+      }
+    },
+    {
+      "width": 360,
+      "height": 740,
+      "scenario": "support503",
+      "repeat": 1,
+      "initialCls": 0,
+      "finalCls": 0.022725527681397614,
+      "initialPlaceholders": [],
+      "headingHeight": 110.375,
+      "heroHeight": 985.515625,
+      "verticalsHeight": 94,
+      "sections": {
+        "product": {
+          "height": 767.8125,
+          "deltaCls": 0
+        },
+        "plans": {
+          "height": 883.296875,
+          "deltaCls": 0.018266210889944
+        },
+        "faq": {
+          "height": 531.125,
+          "deltaCls": 0.004459316791453616
+        },
+        "closing": {
+          "height": 717.53125,
+          "deltaCls": 0
+        }
+      }
+    },
+    {
+      "width": 360,
+      "height": 740,
+      "scenario": "nav503",
+      "repeat": 1,
+      "initialCls": 0,
+      "finalCls": 0.026181859858168982,
+      "initialPlaceholders": [],
+      "headingHeight": 110.375,
+      "heroHeight": 985.515625,
+      "verticalsHeight": 94,
+      "sections": {
+        "product": {
+          "height": 767.8125,
+          "deltaCls": 0
+        },
+        "plans": {
+          "height": 883.296875,
+          "deltaCls": 0.018266210889944
+        },
+        "faq": {
+          "height": 588.125,
+          "deltaCls": 0.007915648968224982
+        },
+        "closing": {
+          "height": 669.53125,
+          "deltaCls": 0
+        }
+      }
+    },
+    {
+      "width": 740,
+      "height": 360,
+      "scenario": "normal",
+      "repeat": 1,
+      "initialCls": 0,
+      "finalCls": 0,
+      "initialPlaceholders": [],
+      "headingHeight": 81.1875,
+      "heroHeight": 935.21875,
+      "verticalsHeight": 94,
+      "sections": {
+        "product": {
+          "height": 680.546875,
+          "deltaCls": 0
+        },
+        "plans": {
+          "height": 820.421875,
+          "deltaCls": 0
+        },
+        "faq": {
+          "height": 549.78125,
+          "deltaCls": 0
+        },
+        "closing": {
+          "height": 671.234375,
+          "deltaCls": 0
+        }
+      }
+    },
+    {
+      "width": 740,
+      "height": 360,
+      "scenario": "normal",
+      "repeat": 2,
+      "initialCls": 0,
+      "finalCls": 0,
+      "initialPlaceholders": [],
+      "headingHeight": 81.1875,
+      "heroHeight": 935.21875,
+      "verticalsHeight": 94,
+      "sections": {
+        "product": {
+          "height": 680.546875,
+          "deltaCls": 0
+        },
+        "plans": {
+          "height": 820.421875,
+          "deltaCls": 0
+        },
+        "faq": {
+          "height": 549.78125,
+          "deltaCls": 0
+        },
+        "closing": {
+          "height": 671.234375,
+          "deltaCls": 0
+        }
+      }
+    },
+    {
+      "width": 740,
+      "height": 360,
+      "scenario": "plans503",
+      "repeat": 1,
+      "initialCls": 0,
+      "finalCls": 0,
+      "initialPlaceholders": [],
+      "headingHeight": 81.1875,
+      "heroHeight": 935.21875,
+      "verticalsHeight": 94,
+      "sections": {
+        "product": {
+          "height": 680.546875,
+          "deltaCls": 0
+        },
+        "plans": {
+          "height": 511.265625,
+          "deltaCls": 0
+        },
+        "faq": {
+          "height": 549.78125,
+          "deltaCls": 0
+        },
+        "closing": {
+          "height": 671.234375,
+          "deltaCls": 0
+        }
+      }
+    },
+    {
+      "width": 740,
+      "height": 360,
+      "scenario": "support503",
+      "repeat": 1,
+      "initialCls": 0,
+      "finalCls": 0,
+      "initialPlaceholders": [],
+      "headingHeight": 81.1875,
+      "heroHeight": 935.21875,
+      "verticalsHeight": 94,
+      "sections": {
+        "product": {
+          "height": 680.546875,
+          "deltaCls": 0
+        },
+        "plans": {
+          "height": 820.421875,
+          "deltaCls": 0
+        },
+        "faq": {
+          "height": 492.78125,
+          "deltaCls": 0
+        },
+        "closing": {
+          "height": 671.234375,
+          "deltaCls": 0
+        }
+      }
+    },
+    {
+      "width": 740,
+      "height": 360,
+      "scenario": "nav503",
+      "repeat": 1,
+      "initialCls": 0,
+      "finalCls": 0,
+      "initialPlaceholders": [],
+      "headingHeight": 81.1875,
+      "heroHeight": 935.21875,
+      "verticalsHeight": 94,
+      "sections": {
+        "product": {
+          "height": 680.546875,
+          "deltaCls": 0
+        },
+        "plans": {
+          "height": 820.421875,
+          "deltaCls": 0
+        },
+        "faq": {
+          "height": 549.78125,
+          "deltaCls": 0
+        },
+        "closing": {
+          "height": 623.234375,
+          "deltaCls": 0
+        }
+      }
+    },
+    {
+      "width": 375,
+      "height": 812,
+      "scenario": "normal",
+      "repeat": 1,
+      "initialCls": 0,
+      "finalCls": 0.016366669940122303,
+      "initialPlaceholders": [],
+      "headingHeight": 81.1875,
+      "heroHeight": 956.328125,
+      "verticalsHeight": 94,
+      "sections": {
+        "product": {
+          "height": 748.953125,
+          "deltaCls": 0.005603723170302604
+        },
+        "plans": {
+          "height": 862.90625,
+          "deltaCls": 0
+        },
+        "faq": {
+          "height": 588.125,
+          "deltaCls": 0.0107629467698197
+        },
+        "closing": {
+          "height": 717.53125,
+          "deltaCls": 0
+        }
+      }
+    },
+    {
+      "width": 375,
+      "height": 812,
+      "scenario": "normal",
+      "repeat": 2,
+      "initialCls": 0,
+      "finalCls": 0.016366669940122303,
+      "initialPlaceholders": [],
+      "headingHeight": 81.1875,
+      "heroHeight": 956.328125,
+      "verticalsHeight": 94,
+      "sections": {
+        "product": {
+          "height": 748.953125,
+          "deltaCls": 0.005603723170302604
+        },
+        "plans": {
+          "height": 862.90625,
+          "deltaCls": 0
+        },
+        "faq": {
+          "height": 588.125,
+          "deltaCls": 0.0107629467698197
+        },
+        "closing": {
+          "height": 717.53125,
+          "deltaCls": 0
+        }
+      }
+    },
+    {
+      "width": 375,
+      "height": 812,
+      "scenario": "plans503",
+      "repeat": 1,
+      "initialCls": 0,
+      "finalCls": 0.005603723170302604,
+      "initialPlaceholders": [],
+      "headingHeight": 81.1875,
+      "heroHeight": 956.328125,
+      "verticalsHeight": 94,
+      "sections": {
+        "product": {
+          "height": 748.953125,
+          "deltaCls": 0.005603723170302604
+        },
+        "plans": {
+          "height": 531.65625,
+          "deltaCls": 0
+        },
+        "faq": {
+          "height": 588.125,
+          "deltaCls": 0
+        },
+        "closing": {
+          "height": 717.53125,
+          "deltaCls": 0
+        }
+      }
+    },
+    {
+      "width": 375,
+      "height": 812,
+      "scenario": "support503",
+      "repeat": 1,
+      "initialCls": 0,
+      "finalCls": 0.011342831852568614,
+      "initialPlaceholders": [],
+      "headingHeight": 81.1875,
+      "heroHeight": 956.328125,
+      "verticalsHeight": 94,
+      "sections": {
+        "product": {
+          "height": 748.953125,
+          "deltaCls": 0.005603723170302604
+        },
+        "plans": {
+          "height": 862.90625,
+          "deltaCls": 0
+        },
+        "faq": {
+          "height": 531.125,
+          "deltaCls": 0.00573910868226601
+        },
+        "closing": {
+          "height": 717.53125,
+          "deltaCls": 0
+        }
+      }
+    },
+    {
+      "width": 375,
+      "height": 812,
+      "scenario": "nav503",
+      "repeat": 1,
+      "initialCls": 0,
+      "finalCls": 0.016366669940122303,
+      "initialPlaceholders": [],
+      "headingHeight": 81.1875,
+      "heroHeight": 956.328125,
+      "verticalsHeight": 94,
+      "sections": {
+        "product": {
+          "height": 748.953125,
+          "deltaCls": 0.005603723170302604
+        },
+        "plans": {
+          "height": 862.90625,
+          "deltaCls": 0
+        },
+        "faq": {
+          "height": 588.125,
+          "deltaCls": 0.0107629467698197
+        },
+        "closing": {
+          "height": 669.53125,
+          "deltaCls": 0
+        }
+      }
+    },
+    {
+      "width": 812,
+      "height": 375,
+      "scenario": "normal",
+      "repeat": 1,
+      "initialCls": 0.0001605083360633195,
+      "finalCls": 0.0001605083360633195,
+      "initialPlaceholders": [],
+      "headingHeight": 120.375,
+      "heroHeight": 629.671875,
+      "verticalsHeight": 96,
+      "sections": {
+        "product": {
+          "height": 693.875,
+          "deltaCls": 0
+        },
+        "plans": {
+          "height": 908.921875,
+          "deltaCls": 0
+        },
+        "faq": {
+          "height": 707.6875,
+          "deltaCls": 0
+        },
+        "closing": {
+          "height": 708.140625,
+          "deltaCls": 0
+        }
+      }
+    },
+    {
+      "width": 812,
+      "height": 375,
+      "scenario": "normal",
+      "repeat": 2,
+      "initialCls": 0.0001605083360633195,
+      "finalCls": 0.0001605083360633195,
+      "initialPlaceholders": [],
+      "headingHeight": 120.375,
+      "heroHeight": 629.671875,
+      "verticalsHeight": 96,
+      "sections": {
+        "product": {
+          "height": 693.875,
+          "deltaCls": 0
+        },
+        "plans": {
+          "height": 908.921875,
+          "deltaCls": 0
+        },
+        "faq": {
+          "height": 707.6875,
+          "deltaCls": 0
+        },
+        "closing": {
+          "height": 708.140625,
+          "deltaCls": 0
+        }
+      }
+    },
+    {
+      "width": 812,
+      "height": 375,
+      "scenario": "plans503",
+      "repeat": 1,
+      "initialCls": 0.00015109493931341858,
+      "finalCls": 0.00015109493931341858,
+      "initialPlaceholders": [],
+      "headingHeight": 120.375,
+      "heroHeight": 629.671875,
+      "verticalsHeight": 96,
+      "sections": {
+        "product": {
+          "height": 693.875,
+          "deltaCls": 0
+        },
+        "plans": {
+          "height": 580.578125,
+          "deltaCls": 0
+        },
+        "faq": {
+          "height": 707.6875,
+          "deltaCls": 0
+        },
+        "closing": {
+          "height": 708.140625,
+          "deltaCls": 0
+        }
+      }
+    },
+    {
+      "width": 812,
+      "height": 375,
+      "scenario": "support503",
+      "repeat": 1,
+      "initialCls": 0.0001605083360633195,
+      "finalCls": 0.0001605083360633195,
+      "initialPlaceholders": [],
+      "headingHeight": 120.375,
+      "heroHeight": 629.671875,
+      "verticalsHeight": 96,
+      "sections": {
+        "product": {
+          "height": 693.875,
+          "deltaCls": 0
+        },
+        "plans": {
+          "height": 908.921875,
+          "deltaCls": 0
+        },
+        "faq": {
+          "height": 638.6875,
+          "deltaCls": 0
+        },
+        "closing": {
+          "height": 708.140625,
+          "deltaCls": 0
+        }
+      }
+    },
+    {
+      "width": 812,
+      "height": 375,
+      "scenario": "nav503",
+      "repeat": 1,
+      "initialCls": 0.0001605083360633195,
+      "finalCls": 0.0001605083360633195,
+      "initialPlaceholders": [],
+      "headingHeight": 120.375,
+      "heroHeight": 629.671875,
+      "verticalsHeight": 96,
+      "sections": {
+        "product": {
+          "height": 693.875,
+          "deltaCls": 0
+        },
+        "plans": {
+          "height": 908.921875,
+          "deltaCls": 0
+        },
+        "faq": {
+          "height": 707.6875,
+          "deltaCls": 0
+        },
+        "closing": {
+          "height": 660.140625,
+          "deltaCls": 0
+        }
+      }
+    },
+    {
+      "width": 391,
+      "height": 844,
+      "scenario": "normal",
+      "repeat": 1,
+      "initialCls": 0,
+      "finalCls": 0.0171390107687945,
+      "initialPlaceholders": [],
+      "headingHeight": 81.1875,
+      "heroHeight": 956.328125,
+      "verticalsHeight": 94,
+      "sections": {
+        "product": {
+          "height": 757.953125,
+          "deltaCls": 0.009347107614945754
+        },
+        "plans": {
+          "height": 862.90625,
+          "deltaCls": 0
+        },
+        "faq": {
+          "height": 575.34375,
+          "deltaCls": 0.007791903153848746
+        },
+        "closing": {
+          "height": 717.53125,
+          "deltaCls": 0
+        }
+      }
+    },
+    {
+      "width": 391,
+      "height": 844,
+      "scenario": "normal",
+      "repeat": 2,
+      "initialCls": 0,
+      "finalCls": 0.0171390107687945,
+      "initialPlaceholders": [],
+      "headingHeight": 81.1875,
+      "heroHeight": 956.328125,
+      "verticalsHeight": 94,
+      "sections": {
+        "product": {
+          "height": 757.953125,
+          "deltaCls": 0.009347107614945754
+        },
+        "plans": {
+          "height": 862.90625,
+          "deltaCls": 0
+        },
+        "faq": {
+          "height": 575.34375,
+          "deltaCls": 0.007791903153848746
+        },
+        "closing": {
+          "height": 717.53125,
+          "deltaCls": 0
+        }
+      }
+    },
+    {
+      "width": 391,
+      "height": 844,
+      "scenario": "plans503",
+      "repeat": 1,
+      "initialCls": 0,
+      "finalCls": 0.009347107614945754,
+      "initialPlaceholders": [],
+      "headingHeight": 81.1875,
+      "heroHeight": 956.328125,
+      "verticalsHeight": 94,
+      "sections": {
+        "product": {
+          "height": 757.953125,
+          "deltaCls": 0.009347107614945754
+        },
+        "plans": {
+          "height": 531.65625,
+          "deltaCls": 0
+        },
+        "faq": {
+          "height": 575.34375,
+          "deltaCls": 0
+        },
+        "closing": {
+          "height": 717.53125,
+          "deltaCls": 0
+        }
+      }
+    },
+    {
+      "width": 391,
+      "height": 844,
+      "scenario": "support503",
+      "repeat": 1,
+      "initialCls": 0,
+      "finalCls": 0.020286643171200106,
+      "initialPlaceholders": [],
+      "headingHeight": 81.1875,
+      "heroHeight": 956.328125,
+      "verticalsHeight": 94,
+      "sections": {
+        "product": {
+          "height": 757.953125,
+          "deltaCls": 0.009347107614945754
+        },
+        "plans": {
+          "height": 862.90625,
+          "deltaCls": 0
+        },
+        "faq": {
+          "height": 518.34375,
+          "deltaCls": 0.010939535556254352
+        },
+        "closing": {
+          "height": 717.53125,
+          "deltaCls": 0
+        }
+      }
+    },
+    {
+      "width": 391,
+      "height": 844,
+      "scenario": "nav503",
+      "repeat": 1,
+      "initialCls": 0,
+      "finalCls": 0.0171390107687945,
+      "initialPlaceholders": [],
+      "headingHeight": 81.1875,
+      "heroHeight": 956.328125,
+      "verticalsHeight": 94,
+      "sections": {
+        "product": {
+          "height": 757.953125,
+          "deltaCls": 0.009347107614945754
+        },
+        "plans": {
+          "height": 862.90625,
+          "deltaCls": 0
+        },
+        "faq": {
+          "height": 575.34375,
+          "deltaCls": 0.007791903153848746
+        },
+        "closing": {
+          "height": 669.53125,
+          "deltaCls": 0
+        }
+      }
+    },
+    {
+      "width": 844,
+      "height": 391,
+      "scenario": "normal",
+      "repeat": 1,
+      "initialCls": 0.00020684523935613936,
+      "finalCls": 0.00020684523935613936,
+      "initialPlaceholders": [],
+      "headingHeight": 120.375,
+      "heroHeight": 631.078125,
+      "verticalsHeight": 96,
+      "sections": {
+        "product": {
+          "height": 699.84375,
+          "deltaCls": 0
+        },
+        "plans": {
+          "height": 914.890625,
+          "deltaCls": 0
+        },
+        "faq": {
+          "height": 713.65625,
+          "deltaCls": 0
+        },
+        "closing": {
+          "height": 714.109375,
+          "deltaCls": 0
+        }
+      }
+    },
+    {
+      "width": 844,
+      "height": 391,
+      "scenario": "normal",
+      "repeat": 2,
+      "initialCls": 0.00020684523935613936,
+      "finalCls": 0.00020684523935613936,
+      "initialPlaceholders": [],
+      "headingHeight": 120.375,
+      "heroHeight": 631.078125,
+      "verticalsHeight": 96,
+      "sections": {
+        "product": {
+          "height": 699.84375,
+          "deltaCls": 0
+        },
+        "plans": {
+          "height": 914.890625,
+          "deltaCls": 0
+        },
+        "faq": {
+          "height": 713.65625,
+          "deltaCls": 0
+        },
+        "closing": {
+          "height": 714.109375,
+          "deltaCls": 0
+        }
+      }
+    },
+    {
+      "width": 844,
+      "height": 391,
+      "scenario": "plans503",
+      "repeat": 1,
+      "initialCls": 0.0001984886696727387,
+      "finalCls": 0.0001984886696727387,
+      "initialPlaceholders": [],
+      "headingHeight": 120.375,
+      "heroHeight": 631.078125,
+      "verticalsHeight": 96,
+      "sections": {
+        "product": {
+          "height": 699.84375,
+          "deltaCls": 0
+        },
+        "plans": {
+          "height": 586.546875,
+          "deltaCls": 0
+        },
+        "faq": {
+          "height": 713.65625,
+          "deltaCls": 0
+        },
+        "closing": {
+          "height": 714.109375,
+          "deltaCls": 0
+        }
+      }
+    },
+    {
+      "width": 844,
+      "height": 391,
+      "scenario": "support503",
+      "repeat": 1,
+      "initialCls": 0.00020684523935613936,
+      "finalCls": 0.00020684523935613936,
+      "initialPlaceholders": [],
+      "headingHeight": 120.375,
+      "heroHeight": 631.078125,
+      "verticalsHeight": 96,
+      "sections": {
+        "product": {
+          "height": 699.84375,
+          "deltaCls": 0
+        },
+        "plans": {
+          "height": 914.890625,
+          "deltaCls": 0
+        },
+        "faq": {
+          "height": 644.65625,
+          "deltaCls": 0
+        },
+        "closing": {
+          "height": 714.109375,
+          "deltaCls": 0
+        }
+      }
+    },
+    {
+      "width": 844,
+      "height": 391,
+      "scenario": "nav503",
+      "repeat": 1,
+      "initialCls": 0.00020684523935613936,
+      "finalCls": 0.00020684523935613936,
+      "initialPlaceholders": [],
+      "headingHeight": 120.375,
+      "heroHeight": 631.078125,
+      "verticalsHeight": 96,
+      "sections": {
+        "product": {
+          "height": 699.84375,
+          "deltaCls": 0
+        },
+        "plans": {
+          "height": 914.890625,
+          "deltaCls": 0
+        },
+        "faq": {
+          "height": 713.65625,
+          "deltaCls": 0
+        },
+        "closing": {
+          "height": 666.109375,
+          "deltaCls": 0
+        }
+      }
+    },
+    {
+      "width": 768,
+      "height": 1024,
+      "scenario": "normal",
+      "repeat": 1,
+      "initialCls": 0.0029020413057878613,
+      "finalCls": 0.0029020413057878613,
+      "initialPlaceholders": [],
+      "headingHeight": 120.375,
+      "heroHeight": 629.671875,
+      "verticalsHeight": 96,
+      "sections": {
+        "product": {
+          "height": 686.84375,
+          "deltaCls": 0
+        },
+        "plans": {
+          "height": 901.890625,
+          "deltaCls": 0
+        },
+        "faq": {
+          "height": 700.65625,
+          "deltaCls": 0
+        },
+        "closing": {
+          "height": 701.109375,
+          "deltaCls": 0
+        }
+      }
+    },
+    {
+      "width": 768,
+      "height": 1024,
+      "scenario": "normal",
+      "repeat": 2,
+      "initialCls": 0.0029020413057878613,
+      "finalCls": 0.0029020413057878613,
+      "initialPlaceholders": [],
+      "headingHeight": 120.375,
+      "heroHeight": 629.671875,
+      "verticalsHeight": 96,
+      "sections": {
+        "product": {
+          "height": 686.84375,
+          "deltaCls": 0
+        },
+        "plans": {
+          "height": 901.890625,
+          "deltaCls": 0
+        },
+        "faq": {
+          "height": 700.65625,
+          "deltaCls": 0
+        },
+        "closing": {
+          "height": 701.109375,
+          "deltaCls": 0
+        }
+      }
+    },
+    {
+      "width": 768,
+      "height": 1024,
+      "scenario": "plans503",
+      "repeat": 1,
+      "initialCls": 0.0009021871956065297,
+      "finalCls": 0.0009021871956065297,
+      "initialPlaceholders": [],
+      "headingHeight": 120.375,
+      "heroHeight": 629.671875,
+      "verticalsHeight": 96,
+      "sections": {
+        "product": {
+          "height": 686.84375,
+          "deltaCls": 0
+        },
+        "plans": {
+          "height": 573.546875,
+          "deltaCls": 0
+        },
+        "faq": {
+          "height": 700.65625,
+          "deltaCls": 0
+        },
+        "closing": {
+          "height": 701.109375,
+          "deltaCls": 0
+        }
+      }
+    },
+    {
+      "width": 768,
+      "height": 1024,
+      "scenario": "support503",
+      "repeat": 1,
+      "initialCls": 0.0029020413057878613,
+      "finalCls": 0.0029020413057878613,
+      "initialPlaceholders": [],
+      "headingHeight": 120.375,
+      "heroHeight": 629.671875,
+      "verticalsHeight": 96,
+      "sections": {
+        "product": {
+          "height": 686.84375,
+          "deltaCls": 0
+        },
+        "plans": {
+          "height": 901.890625,
+          "deltaCls": 0
+        },
+        "faq": {
+          "height": 631.65625,
+          "deltaCls": 0
+        },
+        "closing": {
+          "height": 701.109375,
+          "deltaCls": 0
+        }
+      }
+    },
+    {
+      "width": 768,
+      "height": 1024,
+      "scenario": "nav503",
+      "repeat": 1,
+      "initialCls": 0.0029020413057878613,
+      "finalCls": 0.0029020413057878613,
+      "initialPlaceholders": [],
+      "headingHeight": 120.375,
+      "heroHeight": 629.671875,
+      "verticalsHeight": 96,
+      "sections": {
+        "product": {
+          "height": 686.84375,
+          "deltaCls": 0
+        },
+        "plans": {
+          "height": 901.890625,
+          "deltaCls": 0
+        },
+        "faq": {
+          "height": 700.65625,
+          "deltaCls": 0
+        },
+        "closing": {
+          "height": 653.109375,
+          "deltaCls": 0
+        }
+      }
+    },
+    {
+      "width": 1024,
+      "height": 768,
+      "scenario": "normal",
+      "repeat": 1,
+      "initialCls": 0.0028142812467801073,
+      "finalCls": 0.0028142812467801073,
+      "initialPlaceholders": [],
+      "headingHeight": 89.1875,
+      "heroHeight": 606.40625,
+      "verticalsHeight": 44,
+      "sections": {
+        "product": {
+          "height": 746.453125,
+          "deltaCls": 0
+        },
+        "plans": {
+          "height": 951,
+          "deltaCls": 0
+        },
+        "faq": {
+          "height": 749.765625,
+          "deltaCls": 0
+        },
+        "closing": {
+          "height": 679.828125,
+          "deltaCls": 0
+        }
+      }
+    },
+    {
+      "width": 1024,
+      "height": 768,
+      "scenario": "normal",
+      "repeat": 2,
+      "initialCls": 0.0028142812467801073,
+      "finalCls": 0.0028142812467801073,
+      "initialPlaceholders": [],
+      "headingHeight": 89.1875,
+      "heroHeight": 606.40625,
+      "verticalsHeight": 44,
+      "sections": {
+        "product": {
+          "height": 746.453125,
+          "deltaCls": 0
+        },
+        "plans": {
+          "height": 951,
+          "deltaCls": 0
+        },
+        "faq": {
+          "height": 749.765625,
+          "deltaCls": 0
+        },
+        "closing": {
+          "height": 679.828125,
+          "deltaCls": 0
+        }
+      }
+    },
+    {
+      "width": 1024,
+      "height": 768,
+      "scenario": "plans503",
+      "repeat": 1,
+      "initialCls": 0.0005641720296504597,
+      "finalCls": 0.0235272587936682,
+      "initialPlaceholders": [],
+      "headingHeight": 89.1875,
+      "heroHeight": 606.40625,
+      "verticalsHeight": 44,
+      "sections": {
+        "product": {
+          "height": 746.453125,
+          "deltaCls": 0
+        },
+        "plans": {
+          "height": 622.65625,
+          "deltaCls": 0.02296308676401774
+        },
+        "faq": {
+          "height": 749.765625,
+          "deltaCls": 0
+        },
+        "closing": {
+          "height": 679.828125,
+          "deltaCls": 0
+        }
+      }
+    },
+    {
+      "width": 1024,
+      "height": 768,
+      "scenario": "support503",
+      "repeat": 1,
+      "initialCls": 0.0028142812467801073,
+      "finalCls": 0.0028142812467801073,
+      "initialPlaceholders": [],
+      "headingHeight": 89.1875,
+      "heroHeight": 606.40625,
+      "verticalsHeight": 44,
+      "sections": {
+        "product": {
+          "height": 746.453125,
+          "deltaCls": 0
+        },
+        "plans": {
+          "height": 951,
+          "deltaCls": 0
+        },
+        "faq": {
+          "height": 680.765625,
+          "deltaCls": 0
+        },
+        "closing": {
+          "height": 679.828125,
+          "deltaCls": 0
+        }
+      }
+    },
+    {
+      "width": 1024,
+      "height": 768,
+      "scenario": "nav503",
+      "repeat": 1,
+      "initialCls": 0.0028142812467801073,
+      "finalCls": 0.008298079172770183,
+      "initialPlaceholders": [],
+      "headingHeight": 89.1875,
+      "heroHeight": 606.40625,
+      "verticalsHeight": 44,
+      "sections": {
+        "product": {
+          "height": 746.453125,
+          "deltaCls": 0
+        },
+        "plans": {
+          "height": 951,
+          "deltaCls": 0
+        },
+        "faq": {
+          "height": 749.765625,
+          "deltaCls": 0
+        },
+        "closing": {
+          "height": 631.828125,
+          "deltaCls": 0.008298079172770183
+        }
+      }
+    },
+    {
+      "width": 820,
+      "height": 1180,
+      "scenario": "normal",
+      "repeat": 1,
+      "initialCls": 0.0020276097984660633,
+      "finalCls": 0.0020276097984660633,
+      "initialPlaceholders": [],
+      "headingHeight": 120.375,
+      "heroHeight": 629.671875,
+      "verticalsHeight": 96,
+      "sections": {
+        "product": {
+          "height": 695.15625,
+          "deltaCls": 0
+        },
+        "plans": {
+          "height": 910.203125,
+          "deltaCls": 0
+        },
+        "faq": {
+          "height": 708.96875,
+          "deltaCls": 0
+        },
+        "closing": {
+          "height": 709.421875,
+          "deltaCls": 0
+        }
+      }
+    },
+    {
+      "width": 820,
+      "height": 1180,
+      "scenario": "normal",
+      "repeat": 2,
+      "initialCls": 0.0020276097984660633,
+      "finalCls": 0.0020276097984660633,
+      "initialPlaceholders": [],
+      "headingHeight": 120.375,
+      "heroHeight": 629.671875,
+      "verticalsHeight": 96,
+      "sections": {
+        "product": {
+          "height": 695.15625,
+          "deltaCls": 0
+        },
+        "plans": {
+          "height": 910.203125,
+          "deltaCls": 0
+        },
+        "faq": {
+          "height": 708.96875,
+          "deltaCls": 0
+        },
+        "closing": {
+          "height": 709.421875,
+          "deltaCls": 0
+        }
+      }
+    },
+    {
+      "width": 820,
+      "height": 1180,
+      "scenario": "plans503",
+      "repeat": 1,
+      "initialCls": 0.0005610583898173709,
+      "finalCls": 0.0005610583898173709,
+      "initialPlaceholders": [],
+      "headingHeight": 120.375,
+      "heroHeight": 629.671875,
+      "verticalsHeight": 96,
+      "sections": {
+        "product": {
+          "height": 695.15625,
+          "deltaCls": 0
+        },
+        "plans": {
+          "height": 581.859375,
+          "deltaCls": 0
+        },
+        "faq": {
+          "height": 708.96875,
+          "deltaCls": 0
+        },
+        "closing": {
+          "height": 709.421875,
+          "deltaCls": 0
+        }
+      }
+    },
+    {
+      "width": 820,
+      "height": 1180,
+      "scenario": "support503",
+      "repeat": 1,
+      "initialCls": 0.0020276097984660633,
+      "finalCls": 0.0020276097984660633,
+      "initialPlaceholders": [],
+      "headingHeight": 120.375,
+      "heroHeight": 629.671875,
+      "verticalsHeight": 96,
+      "sections": {
+        "product": {
+          "height": 695.15625,
+          "deltaCls": 0
+        },
+        "plans": {
+          "height": 910.203125,
+          "deltaCls": 0
+        },
+        "faq": {
+          "height": 639.96875,
+          "deltaCls": 0
+        },
+        "closing": {
+          "height": 709.421875,
+          "deltaCls": 0
+        }
+      }
+    },
+    {
+      "width": 820,
+      "height": 1180,
+      "scenario": "nav503",
+      "repeat": 1,
+      "initialCls": 0.0020139350085788005,
+      "finalCls": 0.0020139350085788005,
+      "initialPlaceholders": [],
+      "headingHeight": 120.375,
+      "heroHeight": 629.671875,
+      "verticalsHeight": 96,
+      "sections": {
+        "product": {
+          "height": 695.15625,
+          "deltaCls": 0
+        },
+        "plans": {
+          "height": 910.203125,
+          "deltaCls": 0
+        },
+        "faq": {
+          "height": 708.96875,
+          "deltaCls": 0
+        },
+        "closing": {
+          "height": 661.421875,
+          "deltaCls": 0
+        }
+      }
+    },
+    {
+      "width": 1180,
+      "height": 820,
+      "scenario": "normal",
+      "repeat": 1,
+      "initialCls": 0.0030109036216201543,
+      "finalCls": 0.0030109036216201543,
+      "initialPlaceholders": [],
+      "headingHeight": 89.1875,
+      "heroHeight": 630.078125,
+      "verticalsHeight": 44,
+      "sections": {
+        "product": {
+          "height": 821.671875,
+          "deltaCls": 0
+        },
+        "plans": {
+          "height": 982.34375,
+          "deltaCls": 0
+        },
+        "faq": {
+          "height": 781.109375,
+          "deltaCls": 0
+        },
+        "closing": {
+          "height": 715.65625,
+          "deltaCls": 0.0012925020669698223
+        }
+      }
+    },
+    {
+      "width": 1180,
+      "height": 820,
+      "scenario": "normal",
+      "repeat": 2,
+      "initialCls": 0.0030109036216201543,
+      "finalCls": 0.0030109036216201543,
+      "initialPlaceholders": [],
+      "headingHeight": 89.1875,
+      "heroHeight": 630.078125,
+      "verticalsHeight": 44,
+      "sections": {
+        "product": {
+          "height": 821.671875,
+          "deltaCls": 0
+        },
+        "plans": {
+          "height": 982.34375,
+          "deltaCls": 0
+        },
+        "faq": {
+          "height": 781.109375,
+          "deltaCls": 0
+        },
+        "closing": {
+          "height": 715.65625,
+          "deltaCls": 0.0012925020669698223
+        }
+      }
+    },
+    {
+      "width": 1180,
+      "height": 820,
+      "scenario": "plans503",
+      "repeat": 1,
+      "initialCls": 0.0013374192480433854,
+      "finalCls": 0.027917682269953264,
+      "initialPlaceholders": [],
+      "headingHeight": 89.1875,
+      "heroHeight": 630.078125,
+      "verticalsHeight": 44,
+      "sections": {
+        "product": {
+          "height": 821.671875,
+          "deltaCls": 0
+        },
+        "plans": {
+          "height": 654,
+          "deltaCls": 0.025287760954940057
+        },
+        "faq": {
+          "height": 781.109375,
+          "deltaCls": 0
+        },
+        "closing": {
+          "height": 715.65625,
+          "deltaCls": 0.0012925020669698223
+        }
+      }
+    },
+    {
+      "width": 1180,
+      "height": 820,
+      "scenario": "support503",
+      "repeat": 1,
+      "initialCls": 0.0030109036216201543,
+      "finalCls": 0.0030109036216201543,
+      "initialPlaceholders": [],
+      "headingHeight": 89.1875,
+      "heroHeight": 630.078125,
+      "verticalsHeight": 44,
+      "sections": {
+        "product": {
+          "height": 821.671875,
+          "deltaCls": 0
+        },
+        "plans": {
+          "height": 982.34375,
+          "deltaCls": 0
+        },
+        "faq": {
+          "height": 712.109375,
+          "deltaCls": 0.0011647051984291028
+        },
+        "closing": {
+          "height": 715.65625,
+          "deltaCls": 0
+        }
+      }
+    },
+    {
+      "width": 1180,
+      "height": 820,
+      "scenario": "nav503",
+      "repeat": 1,
+      "initialCls": 0.0030883076454673803,
+      "finalCls": 0.005831955353451839,
+      "initialPlaceholders": [],
+      "headingHeight": 89.1875,
+      "heroHeight": 630.078125,
+      "verticalsHeight": 44,
+      "sections": {
+        "product": {
+          "height": 821.671875,
+          "deltaCls": 0
+        },
+        "plans": {
+          "height": 982.34375,
+          "deltaCls": 0
+        },
+        "faq": {
+          "height": 781.109375,
+          "deltaCls": 0
+        },
+        "closing": {
+          "height": 667.65625,
+          "deltaCls": 0.005831955353451839
+        }
+      }
+    },
+    {
+      "width": 1024,
+      "height": 1367,
+      "scenario": "normal",
+      "repeat": 1,
+      "initialCls": 0.0013937053982880428,
+      "finalCls": 0.0013937053982880428,
+      "initialPlaceholders": [
+        {
+          "name": "product",
+          "top": 1332.765625,
+          "height": 746.4375,
+          "triggered": true
+        }
+      ],
+      "headingHeight": 89.1875,
+      "heroHeight": 606.40625,
+      "verticalsHeight": 44,
+      "sections": {
+        "product": {
+          "height": 746.453125,
+          "deltaCls": 0
+        },
+        "plans": {
+          "height": 951,
+          "deltaCls": 0
+        },
+        "faq": {
+          "height": 749.765625,
+          "deltaCls": 0
+        },
+        "closing": {
+          "height": 679.828125,
+          "deltaCls": 0
+        }
+      }
+    },
+    {
+      "width": 1024,
+      "height": 1367,
+      "scenario": "normal",
+      "repeat": 2,
+      "initialCls": 0.0013497804531700601,
+      "finalCls": 0.0013497804531700601,
+      "initialPlaceholders": [
+        {
+          "name": "product",
+          "top": 1332.765625,
+          "height": 746.4375,
+          "triggered": true
+        }
+      ],
+      "headingHeight": 89.1875,
+      "heroHeight": 606.40625,
+      "verticalsHeight": 44,
+      "sections": {
+        "product": {
+          "height": 746.453125,
+          "deltaCls": 0
+        },
+        "plans": {
+          "height": 951,
+          "deltaCls": 0
+        },
+        "faq": {
+          "height": 749.765625,
+          "deltaCls": 0
+        },
+        "closing": {
+          "height": 679.828125,
+          "deltaCls": 0
+        }
+      }
+    },
+    {
+      "width": 1024,
+      "height": 1367,
+      "scenario": "plans503",
+      "repeat": 1,
+      "initialCls": 0.0004257290082759056,
+      "finalCls": 0.0004257290082759056,
+      "initialPlaceholders": [
+        {
+          "name": "product",
+          "top": 1332.765625,
+          "height": 746.4375,
+          "triggered": true
+        }
+      ],
+      "headingHeight": 89.1875,
+      "heroHeight": 606.40625,
+      "verticalsHeight": 44,
+      "sections": {
+        "product": {
+          "height": 746.453125,
+          "deltaCls": 0
+        },
+        "plans": {
+          "height": 622.65625,
+          "deltaCls": 0
+        },
+        "faq": {
+          "height": 749.765625,
+          "deltaCls": 0
+        },
+        "closing": {
+          "height": 679.828125,
+          "deltaCls": 0
+        }
+      }
+    },
+    {
+      "width": 1024,
+      "height": 1367,
+      "scenario": "support503",
+      "repeat": 1,
+      "initialCls": 0.0013497804531700601,
+      "finalCls": 0.0013497804531700601,
+      "initialPlaceholders": [
+        {
+          "name": "product",
+          "top": 1332.765625,
+          "height": 746.4375,
+          "triggered": true
+        }
+      ],
+      "headingHeight": 89.1875,
+      "heroHeight": 606.40625,
+      "verticalsHeight": 44,
+      "sections": {
+        "product": {
+          "height": 746.453125,
+          "deltaCls": 0
+        },
+        "plans": {
+          "height": 951,
+          "deltaCls": 0
+        },
+        "faq": {
+          "height": 680.765625,
+          "deltaCls": 0
+        },
+        "closing": {
+          "height": 679.828125,
+          "deltaCls": 0
+        }
+      }
+    },
+    {
+      "width": 1024,
+      "height": 1367,
+      "scenario": "nav503",
+      "repeat": 1,
+      "initialCls": 0.0013937053982880428,
+      "finalCls": 0.0013937053982880428,
+      "initialPlaceholders": [
+        {
+          "name": "product",
+          "top": 1332.765625,
+          "height": 746.4375,
+          "triggered": true
+        }
+      ],
+      "headingHeight": 89.1875,
+      "heroHeight": 606.40625,
+      "verticalsHeight": 44,
+      "sections": {
+        "product": {
+          "height": 746.453125,
+          "deltaCls": 0
+        },
+        "plans": {
+          "height": 951,
+          "deltaCls": 0
+        },
+        "faq": {
+          "height": 749.765625,
+          "deltaCls": 0
+        },
+        "closing": {
+          "height": 631.828125,
+          "deltaCls": 0
+        }
+      }
+    },
+    {
+      "width": 1367,
+      "height": 1024,
+      "scenario": "normal",
+      "repeat": 1,
+      "initialCls": 0.0015280024356026014,
+      "finalCls": 0.002859368058602327,
+      "initialPlaceholders": [],
+      "headingHeight": 97.1875,
+      "heroHeight": 658.4375,
+      "verticalsHeight": 44,
+      "sections": {
+        "product": {
+          "height": 849.40625,
+          "deltaCls": 0.0013313656229997257
+        },
+        "plans": {
+          "height": 1001.203125,
+          "deltaCls": 0
+        },
+        "faq": {
+          "height": 791.96875,
+          "deltaCls": 0.0007284704402318032
+        },
+        "closing": {
+          "height": 730.9375,
+          "deltaCls": 0
+        }
+      }
+    },
+    {
+      "width": 1367,
+      "height": 1024,
+      "scenario": "normal",
+      "repeat": 2,
+      "initialCls": 0.0014462808302339988,
+      "finalCls": 0.0035061168934655282,
+      "initialPlaceholders": [],
+      "headingHeight": 97.1875,
+      "heroHeight": 658.4375,
+      "verticalsHeight": 44,
+      "sections": {
+        "product": {
+          "height": 849.40625,
+          "deltaCls": 0.0013313656229997257
+        },
+        "plans": {
+          "height": 1001.203125,
+          "deltaCls": 0
+        },
+        "faq": {
+          "height": 791.96875,
+          "deltaCls": 0.0007284704402318032
+        },
+        "closing": {
+          "height": 730.9375,
+          "deltaCls": 0
+        }
+      }
+    },
+    {
+      "width": 1367,
+      "height": 1024,
+      "scenario": "plans503",
+      "repeat": 1,
+      "initialCls": 0.00046660308398831435,
+      "finalCls": 0.0017979687069880402,
+      "initialPlaceholders": [],
+      "headingHeight": 97.1875,
+      "heroHeight": 658.4375,
+      "verticalsHeight": 44,
+      "sections": {
+        "product": {
+          "height": 849.40625,
+          "deltaCls": 0.0013313656229997257
+        },
+        "plans": {
+          "height": 664.859375,
+          "deltaCls": 0
+        },
+        "faq": {
+          "height": 791.96875,
+          "deltaCls": 0
+        },
+        "closing": {
+          "height": 730.9375,
+          "deltaCls": 0
+        }
+      }
+    },
+    {
+      "width": 1367,
+      "height": 1024,
+      "scenario": "support503",
+      "repeat": 1,
+      "initialCls": 0.0015387385883372606,
+      "finalCls": 0.012239223940614144,
+      "initialPlaceholders": [],
+      "headingHeight": 97.1875,
+      "heroHeight": 658.4375,
+      "verticalsHeight": 44,
+      "sections": {
+        "product": {
+          "height": 849.40625,
+          "deltaCls": 0.0013313656229997257
+        },
+        "plans": {
+          "height": 1001.203125,
+          "deltaCls": 0
+        },
+        "faq": {
+          "height": 722.96875,
+          "deltaCls": 0.009369119729277158
+        },
+        "closing": {
+          "height": 730.9375,
+          "deltaCls": 0
+        }
+      }
+    },
+    {
+      "width": 1367,
+      "height": 1024,
+      "scenario": "nav503",
+      "repeat": 1,
+      "initialCls": 0.0015280024356026014,
+      "finalCls": 0.0035878384988341306,
+      "initialPlaceholders": [],
+      "headingHeight": 97.1875,
+      "heroHeight": 658.4375,
+      "verticalsHeight": 44,
+      "sections": {
+        "product": {
+          "height": 849.40625,
+          "deltaCls": 0.0013313656229997257
+        },
+        "plans": {
+          "height": 1001.203125,
+          "deltaCls": 0
+        },
+        "faq": {
+          "height": 791.96875,
+          "deltaCls": 0.0007284704402318032
+        },
+        "closing": {
+          "height": 682.9375,
+          "deltaCls": 0
+        }
+      }
+    },
+    {
+      "width": 1280,
+      "height": 800,
+      "scenario": "normal",
+      "repeat": 1,
+      "initialCls": 0.0019514358401298525,
+      "finalCls": 0.0019514358401298525,
+      "initialPlaceholders": [],
+      "headingHeight": 97.1875,
+      "heroHeight": 645.21875,
+      "verticalsHeight": 44,
+      "sections": {
+        "product": {
+          "height": 845.84375,
+          "deltaCls": 0
+        },
+        "plans": {
+          "height": 997.640625,
+          "deltaCls": 0
+        },
+        "faq": {
+          "height": 788.40625,
+          "deltaCls": 0
+        },
+        "closing": {
+          "height": 725.84375,
+          "deltaCls": 0.00043701171875
+        }
+      }
+    },
+    {
+      "width": 1280,
+      "height": 800,
+      "scenario": "normal",
+      "repeat": 2,
+      "initialCls": 0.0019514358401298525,
+      "finalCls": 0.0019514358401298525,
+      "initialPlaceholders": [],
+      "headingHeight": 97.1875,
+      "heroHeight": 645.21875,
+      "verticalsHeight": 44,
+      "sections": {
+        "product": {
+          "height": 845.84375,
+          "deltaCls": 0
+        },
+        "plans": {
+          "height": 997.640625,
+          "deltaCls": 0
+        },
+        "faq": {
+          "height": 788.40625,
+          "deltaCls": 0
+        },
+        "closing": {
+          "height": 725.84375,
+          "deltaCls": 0.00043701171875
+        }
+      }
+    },
+    {
+      "width": 1280,
+      "height": 800,
+      "scenario": "plans503",
+      "repeat": 1,
+      "initialCls": 0.013392372810840604,
+      "finalCls": 0.016369857788085935,
+      "initialPlaceholders": [],
+      "headingHeight": 97.1875,
+      "heroHeight": 645.21875,
+      "verticalsHeight": 44,
+      "sections": {
+        "product": {
+          "height": 845.84375,
+          "deltaCls": 0
+        },
+        "plans": {
+          "height": 661.296875,
+          "deltaCls": 0.01593830871582031
+        },
+        "faq": {
+          "height": 788.40625,
+          "deltaCls": 0
+        },
+        "closing": {
+          "height": 725.84375,
+          "deltaCls": 0.000431549072265625
+        }
+      }
+    },
+    {
+      "width": 1280,
+      "height": 800,
+      "scenario": "support503",
+      "repeat": 1,
+      "initialCls": 0.001966712582111359,
+      "finalCls": 0.001966712582111359,
+      "initialPlaceholders": [],
+      "headingHeight": 97.1875,
+      "heroHeight": 645.21875,
+      "verticalsHeight": 44,
+      "sections": {
+        "product": {
+          "height": 845.84375,
+          "deltaCls": 0
+        },
+        "plans": {
+          "height": 997.640625,
+          "deltaCls": 0
+        },
+        "faq": {
+          "height": 719.40625,
+          "deltaCls": 0
+        },
+        "closing": {
+          "height": 725.84375,
+          "deltaCls": 0.00043701171875
+        }
+      }
+    },
+    {
+      "width": 1280,
+      "height": 800,
+      "scenario": "nav503",
+      "repeat": 1,
+      "initialCls": 0.0019514358401298525,
+      "finalCls": 0.005052307128906249,
+      "initialPlaceholders": [],
+      "headingHeight": 97.1875,
+      "heroHeight": 645.21875,
+      "verticalsHeight": 44,
+      "sections": {
+        "product": {
+          "height": 845.84375,
+          "deltaCls": 0
+        },
+        "plans": {
+          "height": 997.640625,
+          "deltaCls": 0
+        },
+        "faq": {
+          "height": 788.40625,
+          "deltaCls": 0
+        },
+        "closing": {
+          "height": 677.84375,
+          "deltaCls": 0.005052307128906249
+        }
+      }
+    },
+    {
+      "width": 800,
+      "height": 1280,
+      "scenario": "normal",
+      "repeat": 1,
+      "initialCls": 0.0017707627296447755,
+      "finalCls": 0.0017707627296447755,
+      "initialPlaceholders": [],
+      "headingHeight": 120.375,
+      "heroHeight": 629.671875,
+      "verticalsHeight": 96,
+      "sections": {
+        "product": {
+          "height": 691.96875,
+          "deltaCls": 0
+        },
+        "plans": {
+          "height": 907.015625,
+          "deltaCls": 0
+        },
+        "faq": {
+          "height": 705.78125,
+          "deltaCls": 0
+        },
+        "closing": {
+          "height": 706.234375,
+          "deltaCls": 0
+        }
+      }
+    },
+    {
+      "width": 800,
+      "height": 1280,
+      "scenario": "normal",
+      "repeat": 2,
+      "initialCls": 0.0017707627296447755,
+      "finalCls": 0.0017707627296447755,
+      "initialPlaceholders": [],
+      "headingHeight": 120.375,
+      "heroHeight": 629.671875,
+      "verticalsHeight": 96,
+      "sections": {
+        "product": {
+          "height": 691.96875,
+          "deltaCls": 0
+        },
+        "plans": {
+          "height": 907.015625,
+          "deltaCls": 0
+        },
+        "faq": {
+          "height": 705.78125,
+          "deltaCls": 0
+        },
+        "closing": {
+          "height": 706.234375,
+          "deltaCls": 0
+        }
+      }
+    },
+    {
+      "width": 800,
+      "height": 1280,
+      "scenario": "plans503",
+      "repeat": 1,
+      "initialCls": 0.012060152769088745,
+      "finalCls": 0.012060152769088745,
+      "initialPlaceholders": [],
+      "headingHeight": 120.375,
+      "heroHeight": 629.671875,
+      "verticalsHeight": 96,
+      "sections": {
+        "product": {
+          "height": 691.96875,
+          "deltaCls": 0
+        },
+        "plans": {
+          "height": 578.671875,
+          "deltaCls": 0
+        },
+        "faq": {
+          "height": 705.78125,
+          "deltaCls": 0
+        },
+        "closing": {
+          "height": 706.234375,
+          "deltaCls": 0
+        }
+      }
+    },
+    {
+      "width": 800,
+      "height": 1280,
+      "scenario": "support503",
+      "repeat": 1,
+      "initialCls": 0.01331209032535553,
+      "finalCls": 0.01331209032535553,
+      "initialPlaceholders": [],
+      "headingHeight": 120.375,
+      "heroHeight": 629.671875,
+      "verticalsHeight": 96,
+      "sections": {
+        "product": {
+          "height": 691.96875,
+          "deltaCls": 0
+        },
+        "plans": {
+          "height": 907.015625,
+          "deltaCls": 0
+        },
+        "faq": {
+          "height": 636.78125,
+          "deltaCls": 0
+        },
+        "closing": {
+          "height": 706.234375,
+          "deltaCls": 0
+        }
+      }
+    },
+    {
+      "width": 800,
+      "height": 1280,
+      "scenario": "nav503",
+      "repeat": 1,
+      "initialCls": 0.01331209032535553,
+      "finalCls": 0.01331209032535553,
+      "initialPlaceholders": [],
+      "headingHeight": 120.375,
+      "heroHeight": 629.671875,
+      "verticalsHeight": 96,
+      "sections": {
+        "product": {
+          "height": 691.96875,
+          "deltaCls": 0
+        },
+        "plans": {
+          "height": 907.015625,
+          "deltaCls": 0
+        },
+        "faq": {
+          "height": 705.78125,
+          "deltaCls": 0
+        },
+        "closing": {
+          "height": 658.234375,
+          "deltaCls": 0
+        }
+      }
+    },
+    {
+      "width": 1440,
+      "height": 900,
+      "scenario": "normal",
+      "repeat": 1,
+      "initialCls": 0.0018243058569637346,
+      "finalCls": 0.0018243058569637346,
+      "initialPlaceholders": [],
+      "headingHeight": 97.1875,
+      "heroHeight": 669.5,
+      "verticalsHeight": 44,
+      "sections": {
+        "product": {
+          "height": 851.21875,
+          "deltaCls": 0
+        },
+        "plans": {
+          "height": 1003.015625,
+          "deltaCls": 0
+        },
+        "faq": {
+          "height": 793.78125,
+          "deltaCls": 0.0001669801311728395
+        },
+        "closing": {
+          "height": 732.75,
+          "deltaCls": 0
+        }
+      }
+    },
+    {
+      "width": 1440,
+      "height": 900,
+      "scenario": "normal",
+      "repeat": 2,
+      "initialCls": 0.0018243058569637346,
+      "finalCls": 0.0018243058569637346,
+      "initialPlaceholders": [],
+      "headingHeight": 97.1875,
+      "heroHeight": 669.5,
+      "verticalsHeight": 44,
+      "sections": {
+        "product": {
+          "height": 851.21875,
+          "deltaCls": 0
+        },
+        "plans": {
+          "height": 1003.015625,
+          "deltaCls": 0
+        },
+        "faq": {
+          "height": 793.78125,
+          "deltaCls": 0.0001669801311728395
+        },
+        "closing": {
+          "height": 732.75,
+          "deltaCls": 0
+        }
+      }
+    },
+    {
+      "width": 1440,
+      "height": 900,
+      "scenario": "plans503",
+      "repeat": 1,
+      "initialCls": 0.0007387161150227196,
+      "finalCls": 0.036411458333333334,
+      "initialPlaceholders": [],
+      "headingHeight": 97.1875,
+      "heroHeight": 669.5,
+      "verticalsHeight": 44,
+      "sections": {
+        "product": {
+          "height": 851.21875,
+          "deltaCls": 0
+        },
+        "plans": {
+          "height": 666.671875,
+          "deltaCls": 0.036411458333333334
+        },
+        "faq": {
+          "height": 793.78125,
+          "deltaCls": 0
+        },
+        "closing": {
+          "height": 732.75,
+          "deltaCls": 0
+        }
+      }
+    },
+    {
+      "width": 1440,
+      "height": 900,
+      "scenario": "support503",
+      "repeat": 1,
+      "initialCls": 0.0018243058569637346,
+      "finalCls": 0.004004292052469136,
+      "initialPlaceholders": [],
+      "headingHeight": 97.1875,
+      "heroHeight": 669.5,
+      "verticalsHeight": 44,
+      "sections": {
+        "product": {
+          "height": 851.21875,
+          "deltaCls": 0
+        },
+        "plans": {
+          "height": 1003.015625,
+          "deltaCls": 0
+        },
+        "faq": {
+          "height": 724.78125,
+          "deltaCls": 0.004004292052469136
+        },
+        "closing": {
+          "height": 732.75,
+          "deltaCls": 0
+        }
+      }
+    },
+    {
+      "width": 1440,
+      "height": 900,
+      "scenario": "nav503",
+      "repeat": 1,
+      "initialCls": 0.001960843217847115,
+      "finalCls": 0.001960843217847115,
+      "initialPlaceholders": [],
+      "headingHeight": 97.1875,
+      "heroHeight": 669.5,
+      "verticalsHeight": 44,
+      "sections": {
+        "product": {
+          "height": 851.21875,
+          "deltaCls": 0
+        },
+        "plans": {
+          "height": 1003.015625,
+          "deltaCls": 0
+        },
+        "faq": {
+          "height": 793.78125,
+          "deltaCls": 0.0001669801311728395
+        },
+        "closing": {
+          "height": 684.75,
+          "deltaCls": 0
+        }
+      }
+    },
+    {
+      "width": 900,
+      "height": 1440,
+      "scenario": "normal",
+      "repeat": 1,
+      "initialCls": 0.0012750206297153636,
+      "finalCls": 0.0012750206297153636,
+      "initialPlaceholders": [
+        {
+          "name": "product",
+          "top": 1366.15625,
+          "height": 707.953125,
+          "triggered": true
+        }
+      ],
+      "headingHeight": 120.375,
+      "heroHeight": 639.609375,
+      "verticalsHeight": 96,
+      "sections": {
+        "product": {
+          "height": 711.078125,
+          "deltaCls": 0
+        },
+        "plans": {
+          "height": 926.125,
+          "deltaCls": 0
+        },
+        "faq": {
+          "height": 724.890625,
+          "deltaCls": 0
+        },
+        "closing": {
+          "height": 725.34375,
+          "deltaCls": 0
+        }
+      }
+    },
+    {
+      "width": 900,
+      "height": 1440,
+      "scenario": "normal",
+      "repeat": 2,
+      "initialCls": 0.0012750206297153636,
+      "finalCls": 0.0012750206297153636,
+      "initialPlaceholders": [
+        {
+          "name": "product",
+          "top": 1366.15625,
+          "height": 707.953125,
+          "triggered": true
+        }
+      ],
+      "headingHeight": 120.375,
+      "heroHeight": 639.609375,
+      "verticalsHeight": 96,
+      "sections": {
+        "product": {
+          "height": 711.078125,
+          "deltaCls": 0
+        },
+        "plans": {
+          "height": 926.125,
+          "deltaCls": 0
+        },
+        "faq": {
+          "height": 724.890625,
+          "deltaCls": 0
+        },
+        "closing": {
+          "height": 725.34375,
+          "deltaCls": 0
+        }
+      }
+    },
+    {
+      "width": 900,
+      "height": 1440,
+      "scenario": "plans503",
+      "repeat": 1,
+      "initialCls": 0.0003526218492798354,
+      "finalCls": 0.006782969433191873,
+      "initialPlaceholders": [
+        {
+          "name": "product",
+          "top": 1366.15625,
+          "height": 707.953125,
+          "triggered": true
+        }
+      ],
+      "headingHeight": 120.375,
+      "heroHeight": 639.609375,
+      "verticalsHeight": 96,
+      "sections": {
+        "product": {
+          "height": 711.078125,
+          "deltaCls": 0.006430347583912037
+        },
+        "plans": {
+          "height": 597.78125,
+          "deltaCls": 0
+        },
+        "faq": {
+          "height": 724.890625,
+          "deltaCls": 0
+        },
+        "closing": {
+          "height": 725.34375,
+          "deltaCls": 0
+        }
+      }
+    },
+    {
+      "width": 900,
+      "height": 1440,
+      "scenario": "support503",
+      "repeat": 1,
+      "initialCls": 0.001281796804671425,
+      "finalCls": 0.001281796804671425,
+      "initialPlaceholders": [
+        {
+          "name": "product",
+          "top": 1366.15625,
+          "height": 707.953125,
+          "triggered": true
+        }
+      ],
+      "headingHeight": 120.375,
+      "heroHeight": 639.609375,
+      "verticalsHeight": 96,
+      "sections": {
+        "product": {
+          "height": 711.078125,
+          "deltaCls": 0
+        },
+        "plans": {
+          "height": 926.125,
+          "deltaCls": 0
+        },
+        "faq": {
+          "height": 655.890625,
+          "deltaCls": 0
+        },
+        "closing": {
+          "height": 725.34375,
+          "deltaCls": 0
+        }
+      }
+    },
+    {
+      "width": 900,
+      "height": 1440,
+      "scenario": "nav503",
+      "repeat": 1,
+      "initialCls": 0.001281796804671425,
+      "finalCls": 0.001281796804671425,
+      "initialPlaceholders": [
+        {
+          "name": "product",
+          "top": 1366.15625,
+          "height": 707.953125,
+          "triggered": true
+        }
+      ],
+      "headingHeight": 120.375,
+      "heroHeight": 639.609375,
+      "verticalsHeight": 96,
+      "sections": {
+        "product": {
+          "height": 711.078125,
+          "deltaCls": 0
+        },
+        "plans": {
+          "height": 926.125,
+          "deltaCls": 0
+        },
+        "faq": {
+          "height": 724.890625,
+          "deltaCls": 0
+        },
+        "closing": {
+          "height": 677.34375,
+          "deltaCls": 0
+        }
+      }
+    },
+    {
+      "width": 767,
+      "height": 1024,
+      "scenario": "normal",
+      "repeat": 1,
+      "initialCls": 0,
+      "finalCls": 0,
+      "initialPlaceholders": [],
+      "headingHeight": 81.1875,
+      "heroHeight": 935.21875,
+      "verticalsHeight": 94,
+      "sections": {
+        "product": {
+          "height": 680.546875,
+          "deltaCls": 0
+        },
+        "plans": {
+          "height": 820.421875,
+          "deltaCls": 0
+        },
+        "faq": {
+          "height": 549.78125,
+          "deltaCls": 0
+        },
+        "closing": {
+          "height": 671.234375,
+          "deltaCls": 0
+        }
+      }
+    },
+    {
+      "width": 767,
+      "height": 1024,
+      "scenario": "normal",
+      "repeat": 2,
+      "initialCls": 0,
+      "finalCls": 0,
+      "initialPlaceholders": [],
+      "headingHeight": 81.1875,
+      "heroHeight": 935.21875,
+      "verticalsHeight": 94,
+      "sections": {
+        "product": {
+          "height": 680.546875,
+          "deltaCls": 0
+        },
+        "plans": {
+          "height": 820.421875,
+          "deltaCls": 0
+        },
+        "faq": {
+          "height": 549.78125,
+          "deltaCls": 0
+        },
+        "closing": {
+          "height": 671.234375,
+          "deltaCls": 0
+        }
+      }
+    },
+    {
+      "width": 767,
+      "height": 1024,
+      "scenario": "plans503",
+      "repeat": 1,
+      "initialCls": 0,
+      "finalCls": 0,
+      "initialPlaceholders": [],
+      "headingHeight": 81.1875,
+      "heroHeight": 935.21875,
+      "verticalsHeight": 94,
+      "sections": {
+        "product": {
+          "height": 680.546875,
+          "deltaCls": 0
+        },
+        "plans": {
+          "height": 511.265625,
+          "deltaCls": 0
+        },
+        "faq": {
+          "height": 549.78125,
+          "deltaCls": 0
+        },
+        "closing": {
+          "height": 671.234375,
+          "deltaCls": 0
+        }
+      }
+    },
+    {
+      "width": 767,
+      "height": 1024,
+      "scenario": "support503",
+      "repeat": 1,
+      "initialCls": 0,
+      "finalCls": 0,
+      "initialPlaceholders": [],
+      "headingHeight": 81.1875,
+      "heroHeight": 935.21875,
+      "verticalsHeight": 94,
+      "sections": {
+        "product": {
+          "height": 680.546875,
+          "deltaCls": 0
+        },
+        "plans": {
+          "height": 820.421875,
+          "deltaCls": 0
+        },
+        "faq": {
+          "height": 492.78125,
+          "deltaCls": 0
+        },
+        "closing": {
+          "height": 671.234375,
+          "deltaCls": 0
+        }
+      }
+    },
+    {
+      "width": 767,
+      "height": 1024,
+      "scenario": "nav503",
+      "repeat": 1,
+      "initialCls": 0,
+      "finalCls": 0,
+      "initialPlaceholders": [],
+      "headingHeight": 81.1875,
+      "heroHeight": 935.21875,
+      "verticalsHeight": 94,
+      "sections": {
+        "product": {
+          "height": 680.546875,
+          "deltaCls": 0
+        },
+        "plans": {
+          "height": 820.421875,
+          "deltaCls": 0
+        },
+        "faq": {
+          "height": 549.78125,
+          "deltaCls": 0
+        },
+        "closing": {
+          "height": 623.234375,
+          "deltaCls": 0
+        }
+      }
+    },
+    {
+      "width": 1023,
+      "height": 768,
+      "scenario": "normal",
+      "repeat": 1,
+      "initialCls": 0.0025381395581449092,
+      "finalCls": 0.0025381395581449092,
+      "initialPlaceholders": [],
+      "headingHeight": 120.375,
+      "heroHeight": 658.265625,
+      "verticalsHeight": 96,
+      "sections": {
+        "product": {
+          "height": 741.234375,
+          "deltaCls": 0
+        },
+        "plans": {
+          "height": 950.8125,
+          "deltaCls": 0
+        },
+        "faq": {
+          "height": 749.578125,
+          "deltaCls": 0
+        },
+        "closing": {
+          "height": 752.609375,
+          "deltaCls": 0.0003547158836347344
+        }
+      }
+    },
+    {
+      "width": 1023,
+      "height": 768,
+      "scenario": "normal",
+      "repeat": 2,
+      "initialCls": 0.0025381395581449092,
+      "finalCls": 0.0025381395581449092,
+      "initialPlaceholders": [],
+      "headingHeight": 120.375,
+      "heroHeight": 658.265625,
+      "verticalsHeight": 96,
+      "sections": {
+        "product": {
+          "height": 741.234375,
+          "deltaCls": 0
+        },
+        "plans": {
+          "height": 950.8125,
+          "deltaCls": 0
+        },
+        "faq": {
+          "height": 749.578125,
+          "deltaCls": 0
+        },
+        "closing": {
+          "height": 752.609375,
+          "deltaCls": 0.0003547158836347344
+        }
+      }
+    },
+    {
+      "width": 1023,
+      "height": 768,
+      "scenario": "plans503",
+      "repeat": 1,
+      "initialCls": 0.00018099306349474669,
+      "finalCls": 0.02335891963261335,
+      "initialPlaceholders": [],
+      "headingHeight": 120.375,
+      "heroHeight": 658.265625,
+      "verticalsHeight": 96,
+      "sections": {
+        "product": {
+          "height": 741.234375,
+          "deltaCls": 0
+        },
+        "plans": {
+          "height": 622.46875,
+          "deltaCls": 0.02282321068548387
+        },
+        "faq": {
+          "height": 749.578125,
+          "deltaCls": 0
+        },
+        "closing": {
+          "height": 752.609375,
+          "deltaCls": 0.0003547158836347344
+        }
+      }
+    },
+    {
+      "width": 1023,
+      "height": 768,
+      "scenario": "support503",
+      "repeat": 1,
+      "initialCls": 0.0025381395581449092,
+      "finalCls": 0.0025381395581449092,
+      "initialPlaceholders": [],
+      "headingHeight": 120.375,
+      "heroHeight": 658.265625,
+      "verticalsHeight": 96,
+      "sections": {
+        "product": {
+          "height": 741.234375,
+          "deltaCls": 0
+        },
+        "plans": {
+          "height": 950.8125,
+          "deltaCls": 0
+        },
+        "faq": {
+          "height": 680.578125,
+          "deltaCls": 0
+        },
+        "closing": {
+          "height": 752.609375,
+          "deltaCls": 0.0003547158836347344
+        }
+      }
+    },
+    {
+      "width": 1023,
+      "height": 768,
+      "scenario": "nav503",
+      "repeat": 1,
+      "initialCls": 0.0024833315066412898,
+      "finalCls": 0.002989469735153959,
+      "initialPlaceholders": [],
+      "headingHeight": 120.375,
+      "heroHeight": 658.265625,
+      "verticalsHeight": 96,
+      "sections": {
+        "product": {
+          "height": 741.234375,
+          "deltaCls": 0
+        },
+        "plans": {
+          "height": 950.8125,
+          "deltaCls": 0
+        },
+        "faq": {
+          "height": 749.578125,
+          "deltaCls": 0
+        },
+        "closing": {
+          "height": 704.609375,
+          "deltaCls": 0.002989469735153959
+        }
+      }
+    },
+    {
+      "width": 1199,
+      "height": 900,
+      "scenario": "normal",
+      "repeat": 1,
+      "initialCls": 0.0021786609833558362,
+      "finalCls": 0.004271608810248617,
+      "initialPlaceholders": [],
+      "headingHeight": 89.1875,
+      "heroHeight": 632.984375,
+      "verticalsHeight": 44,
+      "sections": {
+        "product": {
+          "height": 830.8125,
+          "deltaCls": 0.0018807339449541285
+        },
+        "plans": {
+          "height": 986.140625,
+          "deltaCls": 0
+        },
+        "faq": {
+          "height": 784.90625,
+          "deltaCls": 0.00021221388193865258
+        },
+        "closing": {
+          "height": 720.015625,
+          "deltaCls": 0
+        }
+      }
+    },
+    {
+      "width": 1199,
+      "height": 900,
+      "scenario": "normal",
+      "repeat": 2,
+      "initialCls": 0.0021786609833558362,
+      "finalCls": 0.004271608810248617,
+      "initialPlaceholders": [],
+      "headingHeight": 89.1875,
+      "heroHeight": 632.984375,
+      "verticalsHeight": 44,
+      "sections": {
+        "product": {
+          "height": 830.8125,
+          "deltaCls": 0.0018807339449541285
+        },
+        "plans": {
+          "height": 986.140625,
+          "deltaCls": 0
+        },
+        "faq": {
+          "height": 784.90625,
+          "deltaCls": 0.00021221388193865258
+        },
+        "closing": {
+          "height": 720.015625,
+          "deltaCls": 0
+        }
+      }
+    },
+    {
+      "width": 1199,
+      "height": 900,
+      "scenario": "plans503",
+      "repeat": 1,
+      "initialCls": 0.0006197237282033672,
+      "finalCls": 0.0025004576731574957,
+      "initialPlaceholders": [],
+      "headingHeight": 89.1875,
+      "heroHeight": 632.984375,
+      "verticalsHeight": 44,
+      "sections": {
+        "product": {
+          "height": 830.8125,
+          "deltaCls": 0.0018807339449541285
+        },
+        "plans": {
+          "height": 657.796875,
+          "deltaCls": 0
+        },
+        "faq": {
+          "height": 784.90625,
+          "deltaCls": 0
+        },
+        "closing": {
+          "height": 720.015625,
+          "deltaCls": 0
+        }
+      }
+    },
+    {
+      "width": 1199,
+      "height": 900,
+      "scenario": "support503",
+      "repeat": 1,
+      "initialCls": 0.0022525615277543013,
+      "finalCls": 0.00952048155370185,
+      "initialPlaceholders": [],
+      "headingHeight": 89.1875,
+      "heroHeight": 632.984375,
+      "verticalsHeight": 44,
+      "sections": {
+        "product": {
+          "height": 830.8125,
+          "deltaCls": 0.0018807339449541285
+        },
+        "plans": {
+          "height": 986.140625,
+          "deltaCls": 0
+        },
+        "faq": {
+          "height": 715.90625,
+          "deltaCls": 0.005387186080993421
+        },
+        "closing": {
+          "height": 720.015625,
+          "deltaCls": 0
+        }
+      }
+    },
+    {
+      "width": 1199,
+      "height": 900,
+      "scenario": "nav503",
+      "repeat": 1,
+      "initialCls": 0.0022525615277543013,
+      "finalCls": 0.0043455093546470825,
+      "initialPlaceholders": [],
+      "headingHeight": 89.1875,
+      "heroHeight": 632.984375,
+      "verticalsHeight": 44,
+      "sections": {
+        "product": {
+          "height": 830.8125,
+          "deltaCls": 0.0018807339449541285
+        },
+        "plans": {
+          "height": 986.140625,
+          "deltaCls": 0
+        },
+        "faq": {
+          "height": 784.90625,
+          "deltaCls": 0.00021221388193865258
+        },
+        "closing": {
+          "height": 672.015625,
+          "deltaCls": 0
+        }
+      }
+    },
+    {
+      "width": 1200,
+      "height": 900,
+      "scenario": "normal",
+      "repeat": 1,
+      "initialCls": 0.0021973405309606477,
+      "finalCls": 0.0021973405309606477,
+      "initialPlaceholders": [],
+      "headingHeight": 97.1875,
+      "heroHeight": 633.125,
+      "verticalsHeight": 44,
+      "sections": {
+        "product": {
+          "height": 831.328125,
+          "deltaCls": 0
+        },
+        "plans": {
+          "height": 994.375,
+          "deltaCls": 0
+        },
+        "faq": {
+          "height": 785.140625,
+          "deltaCls": 0
+        },
+        "closing": {
+          "height": 720.265625,
+          "deltaCls": 0
+        }
+      }
+    },
+    {
+      "width": 1200,
+      "height": 900,
+      "scenario": "normal",
+      "repeat": 2,
+      "initialCls": 0.002212347981770833,
+      "finalCls": 0.002212347981770833,
+      "initialPlaceholders": [],
+      "headingHeight": 97.1875,
+      "heroHeight": 633.125,
+      "verticalsHeight": 44,
+      "sections": {
+        "product": {
+          "height": 831.328125,
+          "deltaCls": 0
+        },
+        "plans": {
+          "height": 994.375,
+          "deltaCls": 0
+        },
+        "faq": {
+          "height": 785.140625,
+          "deltaCls": 0
+        },
+        "closing": {
+          "height": 720.265625,
+          "deltaCls": 0
+        }
+      }
+    },
+    {
+      "width": 1200,
+      "height": 900,
+      "scenario": "plans503",
+      "repeat": 1,
+      "initialCls": 0.000663109604070216,
+      "finalCls": 0.047337268518518515,
+      "initialPlaceholders": [],
+      "headingHeight": 97.1875,
+      "heroHeight": 633.125,
+      "verticalsHeight": 44,
+      "sections": {
+        "product": {
+          "height": 831.328125,
+          "deltaCls": 0
+        },
+        "plans": {
+          "height": 658.03125,
+          "deltaCls": 0.047337268518518515
+        },
+        "faq": {
+          "height": 785.140625,
+          "deltaCls": 0
+        },
+        "closing": {
+          "height": 720.265625,
+          "deltaCls": 0
+        }
+      }
+    },
+    {
+      "width": 1200,
+      "height": 900,
+      "scenario": "support503",
+      "repeat": 1,
+      "initialCls": 0.002212347981770833,
+      "finalCls": 0.006004195601851853,
+      "initialPlaceholders": [],
+      "headingHeight": 97.1875,
+      "heroHeight": 633.125,
+      "verticalsHeight": 44,
+      "sections": {
+        "product": {
+          "height": 831.328125,
+          "deltaCls": 0
+        },
+        "plans": {
+          "height": 994.375,
+          "deltaCls": 0
+        },
+        "faq": {
+          "height": 716.140625,
+          "deltaCls": 0.006004195601851853
+        },
+        "closing": {
+          "height": 720.265625,
+          "deltaCls": 0
+        }
+      }
+    },
+    {
+      "width": 1200,
+      "height": 900,
+      "scenario": "nav503",
+      "repeat": 1,
+      "initialCls": 0.002212347981770833,
+      "finalCls": 0.002212347981770833,
+      "initialPlaceholders": [],
+      "headingHeight": 97.1875,
+      "heroHeight": 633.125,
+      "verticalsHeight": 44,
+      "sections": {
+        "product": {
+          "height": 831.328125,
+          "deltaCls": 0
+        },
+        "plans": {
+          "height": 994.375,
+          "deltaCls": 0
+        },
+        "faq": {
+          "height": 785.140625,
+          "deltaCls": 0
+        },
+        "closing": {
+          "height": 672.265625,
+          "deltaCls": 0
+        }
+      }
+    }
+  ],
+  "clsPostprocessing": "Corrected H6: sessions start at first shift; original raw events, no samples discarded",
+  "correctedMetricCount": 0
+}

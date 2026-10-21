@@ -1,2 +1,29 @@
-:host{display:block}.marketing-home{background:var(--fl-bg);color:var(--fl-text)}.anchor-alias{height:0}.section-placeholder{background:var(--fl-bg)}.product-placeholder{min-height:650px;background:var(--fl-surface)}.plans-placeholder{min-height:700px}.faq-placeholder{min-height:650px;background:var(--fl-surface)}.closing-placeholder{min-height:700px}
-@media(max-width:767px){.product-placeholder{min-height:720px}.plans-placeholder{min-height:800px}.faq-placeholder{min-height:700px}.closing-placeholder{min-height:650px}}
+:host{display:block}
+/* Measured minima excluding 2 * --fl-space; content may always grow.
+ * Evidence: docs/agentes/evidencias/008-f4-m3-r3d-baseline.json
+ * Build 5e39195ebd04; 100 samples, 20 widths, two identical normal measurements.
+ * Configurable content and error states retain the residual documented in R3.
+ */
+.marketing-home{
+ background:var(--fl-bg);color:var(--fl-text);
+ --fl-reserve-product:639.328px;--fl-reserve-plans:802.375px;
+ --fl-reserve-faq:593.14px;--fl-reserve-closing:528.265px;
+}
+.anchor-alias{height:0}
+.section-placeholder{background:var(--fl-bg)}
+.product-placeholder{min-height:calc(var(--fl-reserve-product) + 2 * var(--fl-space));background:var(--fl-surface)}
+.plans-placeholder{min-height:calc(var(--fl-reserve-plans) + 2 * var(--fl-space))}
+.faq-placeholder{min-height:calc(var(--fl-reserve-faq) + 2 * var(--fl-space));background:var(--fl-surface)}
+.closing-placeholder{min-height:calc(var(--fl-reserve-closing) + 2 * var(--fl-space))}
+@media(min-width:1024px) and (max-width:1199px){.marketing-home{
+ --fl-reserve-product:582.613px;--fl-reserve-plans:787.16px;
+ --fl-reserve-faq:585.925px;--fl-reserve-closing:515.988px;
+}}
+@media(min-width:768px) and (max-width:1023px){.marketing-home{
+ --fl-reserve-product:563.954px;--fl-reserve-plans:779.001px;
+ --fl-reserve-faq:577.767px;--fl-reserve-closing:578.22px;
+}}
+@media(max-width:767px){.marketing-home{
+ --fl-reserve-product:616.546px;--fl-reserve-plans:756.421px;
+ --fl-reserve-faq:485.781px;--fl-reserve-closing:607.234px;
+}}

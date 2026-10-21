@@ -108,3 +108,22 @@ test('refuses missing/polluted CSR and unknown mode before any listener is opene
     await assert.rejects(publicPreview({root,apiOrigin:'http://localhost:8080',spaShell:'other'}),/spaShell/);
   } finally {await rm(root,{recursive:true,force:true});}
 });
+
+test('explicit split sends partial root HTML without compression; other routes stay unchanged', async () => {
+ const root=await mkdtemp(path.join(tmpdir(),'fluora-preview-split-'));let server;
+ const html='<html><head></head><body><nav>first</nav><main>rest</main></body></html>';
+ try{
+  await writeFile(path.join(root,'index.html'),html);
+  await assert.rejects(publicPreview({root,apiOrigin:'http://localhost:8080',htmlSplit:{after:'missing',holdMs:100}}),/exactly once/);
+  await assert.rejects(publicPreview({root,apiOrigin:'http://localhost:8080',htmlSplit:{after:'<nav>',holdMs:0}}),/Invalid/);
+  server=await publicPreview({root,apiOrigin:'http://localhost:8080',htmlSplit:{after:'</nav>',holdMs:150}});
+  await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));
+  const origin='http://127.0.0.1:'+server.address().port;
+  const response=await fetch(origin+'/',{headers:{'Accept-Encoding':'gzip'}});
+  assert.equal(response.headers.get('content-length'),null);assert.equal(response.headers.get('content-encoding'),null);
+  const reader=response.body.getReader(),first=await reader.read();assert.equal(new TextDecoder().decode(first.value),html.split('</nav>')[0]+'</nav>');
+  let remainder='';for(;;){const next=await reader.read();if(next.done)break;remainder+=new TextDecoder().decode(next.value);}assert.equal(remainder,'<main>rest</main></body></html>');
+  assert.equal(await(await fetch(origin+'/index.html')).text(),html);
+  assert.equal((await fetch(origin+'/',{method:'HEAD',headers:{'Accept-Encoding':'identity'}})).headers.get('content-length'),String(Buffer.byteLength(html)));
+ }finally{if(server){server.closeAllConnections();await new Promise(resolve=>server.close(resolve));}await rm(root,{recursive:true,force:true});}
+});

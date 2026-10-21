@@ -1,6 +1,6 @@
 import { MarketingSectionsDirective } from '../../core/marketing/marketing-sections.directive';
 import { DOCUMENT, isPlatformBrowser } from '@angular/common';
-import { afterEveryRender, AfterViewInit, ChangeDetectionStrategy, computed, Component, DestroyRef, ElementRef, NgZone, OnDestroy, PLATFORM_ID, inject, signal, viewChild } from '@angular/core';
+import { afterRenderEffect, afterNextRender, AfterViewInit, ChangeDetectionStrategy, computed, Component, DestroyRef, ElementRef, NgZone, OnDestroy, PLATFORM_ID, inject, signal, viewChild } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Meta, Title } from '@angular/platform-browser';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -27,22 +27,25 @@ export class FluoraHomeComponent implements AfterViewInit,OnDestroy {
   readonly recommendedCta=this.offer.label;
   readonly support=signal<PublicSupport|null>(null);
   readonly verticals=signal<{slug:string;titulo:string;descripcion:string}[]>([]);
+  readonly hydrated=signal(false);
+  readonly heroVerticals=computed(()=>this.hydrated()?this.verticals():[]);
   readonly renderAnchors=signal(false);
   private readonly element=inject<ElementRef<HTMLElement>>(ElementRef);
   private readonly document=inject(DOCUMENT);
   private readonly zone=inject(NgZone);
   private readonly product=viewChild('productReady',{read:ElementRef});
-  private readonly plansSection=viewChild('plansReady',{read:ElementRef});
+  private readonly plansSection=viewChild<HomePlansComponent>('plansReady');
   private readonly faq=viewChild('faqReady',{read:ElementRef});
   private readonly closing=viewChild('closingReady',{read:ElementRef});
-  private pendingAnchor:string|null=null;
+  private readonly pendingAnchor=signal<string|null>(null);
   private contactsReady=signal(false);
   private verticalsReady=signal(false);
-  readonly dataReady=computed(()=>this.contactsReady()&&this.verticalsReady()&&!this.offer.loading());
+  readonly dataReady=computed(()=>this.hydrated()&&this.contactsReady()&&this.verticalsReady()&&!this.offer.loading());
   private destroyed=false;
   private animation?:gsap.Context;
   private releaseAppearance=()=>{};
   constructor(){
+    if(this.browser)afterNextRender(()=>this.hydrated.set(true));
     const router=inject(Router),seo=inject(SeoService),meta=inject(Meta),title=inject(Title);
     if(!this.platformHost.isCustomTenantHost()){
       this.releaseAppearance=inject(MarketingAppearanceService).activate();
@@ -59,15 +62,16 @@ export class FluoraHomeComponent implements AfterViewInit,OnDestroy {
     meta.updateTag({property:'og:description',content:description});
     meta.updateTag({property:'og:type',content:'website'});
     if(this.platformHost.hasDedicatedAppHost()&&this.platformHost.isAppHost())void router.navigateByUrl('/acceso');
-    inject(ActivatedRoute).fragment.pipe(takeUntilDestroyed()).subscribe(fragment=>{this.pendingAnchor=fragment;this.renderAnchors.set(!!fragment);});
+    inject(ActivatedRoute).fragment.pipe(takeUntilDestroyed()).subscribe(fragment=>{this.pendingAnchor.set(fragment);this.renderAnchors.set(!!fragment);});
     // Anchors wait for deferred sections and preceding API content, not a timeout.
-    afterEveryRender(()=>{
-      if(!this.pendingAnchor||!this.product()||!this.plansSection()||!this.faq()||!this.closing()||!this.dataReady())return;
-      const target=[...this.element.nativeElement.querySelectorAll<HTMLElement>('[id]')].find(e=>e.id===this.pendingAnchor);
-      this.pendingAnchor=null;
+    afterRenderEffect(()=>{
+      const anchor=this.pendingAnchor();
+      if(!anchor||!this.product()||!this.plansSection()?.layoutReady()||!this.faq()||!this.closing()||!this.dataReady())return;
+      const target=[...this.element.nativeElement.querySelectorAll<HTMLElement>('[id]')].find(e=>e.id===anchor);
+      this.pendingAnchor.set(null);
       target?.scrollIntoView({block:'start',behavior:'auto'});
     });
-    const cancelAnchor=()=>{this.pendingAnchor=null;};
+    const cancelAnchor=()=>{this.pendingAnchor.set(null);};
     const cancelKey=(event:KeyboardEvent)=>{if(['PageDown','PageUp','Home','End','ArrowDown','ArrowUp',' '].includes(event.key))cancelAnchor();};
     if(this.browser){
       const win=this.document.defaultView;

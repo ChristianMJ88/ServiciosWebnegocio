@@ -2,14 +2,15 @@ import { TestBed } from '@angular/core/testing';
 import { registerLocaleData } from '@angular/common';
 import localeEsMx from '@angular/common/locales/es-MX';
 import { of } from 'rxjs';
-import { describe, it, expect, vi } from 'vitest';
+import { beforeEach, describe, it, expect, vi } from 'vitest';
 import { CajaPaymentsSectionComponent } from './caja-payments-section.component';
 import { CajaService, CitaPorCobrar } from '../../../core/caja/caja.service';
 import { crearFormularioPago } from '../forms/caja.forms';
 
+registerLocaleData(localeEsMx);
+
 describe('Desglose pactado de promociones en Caja', () => {
   function render(descuento: number, conComprobante=false) {
-    registerLocaleData(localeEsMx);
     TestBed.configureTestingModule({
       imports: [CajaPaymentsSectionComponent],
       providers: [{ provide: CajaService, useValue: { listarTerminalesPoint: () => of([]) } }]
@@ -30,6 +31,7 @@ describe('Desglose pactado de promociones en Caja', () => {
     fixture.detectChanges();
     return fixture.nativeElement as HTMLElement;
   }
+  describe('contrato de clase', () => {
   it('envía varias citas compatibles a Point usando el saldo del backend',()=>{
     const crearOrdenPoint=vi.fn(()=>of({id:'P-test',estado:'CREADO'}));TestBed.configureTestingModule({providers:[{provide:CajaService,useValue:{crearOrdenPoint}}]});
     const c=TestBed.runInInjectionContext(()=>new CajaPaymentsSectionComponent());const cita={citaId:1,clienteId:42,sucursalId:3,moneda:'MXN',pendiente:200} as CitaPorCobrar;
@@ -47,18 +49,31 @@ describe('Desglose pactado de promociones en Caja', () => {
     c.registrarCobro();expect(registrarVenta).toHaveBeenCalledWith(expect.objectContaining({citaId:null,citaIds:[1,2]}));expect(c.ventaCobrada()?.detalles.length).toBe(2);
     const parcial=vi.fn();c.savePayment.subscribe(parcial);c.registrarCobro();expect(parcial).toHaveBeenCalledOnce();
   });
+  });
+  describe('DOM con promoción', () => {
+  let vista: HTMLElement;
+  beforeEach(() => { vista = render(50); });
   it('presenta los importes del backend sin restar otra vez el descuento', () => {
-    const vista = render(50);
     expect(vista.querySelector('.caja-promotion-breakdown')?.textContent).toContain('Oferta pactada');
     expect(vista.querySelector('del')?.textContent).toContain('$250.00');
     expect(vista.querySelector('.caja-promotion-breakdown')?.textContent).toContain('$50.00');
     expect(vista.querySelector('.caja-payment-highlight')?.textContent).toContain('$200.00');
   });
-  it('conserva el contexto de cobro sin bloque de promoción cuando no hay descuento', () => {
-    expect(render(0).querySelector('.caja-promotion-breakdown')).toBeNull();
   });
+  describe('DOM sin promoción', () => {
+  let vista: HTMLElement;
+  beforeEach(() => { vista = render(0); });
+  it('conserva el contexto de cobro sin bloque de promoción cuando no hay descuento', () => {
+    expect(vista.querySelector('.caja-promotion-breakdown')).toBeNull();
+    expect(vista.querySelector('.caja-payment-context')).not.toBeNull();
+  });
+  });
+  describe('DOM con comprobante', () => {
+  let vista: HTMLElement;
+  beforeEach(() => { vista = render(0,true); });
   it('el comprobante pagado no se mezcla con el contexto o el historial de la siguiente cita',()=>{
-    const vista=render(0,true);expect(vista.querySelector('app-venta-comprobante')?.textContent).toContain('Cita liquidada');expect(vista.querySelector('app-venta-comprobante')?.textContent).toContain('$560.00');
+    expect(vista.querySelector('app-venta-comprobante')?.textContent).toContain('Cita liquidada');expect(vista.querySelector('app-venta-comprobante')?.textContent).toContain('$560.00');
     expect(vista.querySelector('.caja-payment-context')).toBeNull();expect(vista.querySelector('.caja-history')).toBeNull();
+  });
   });
 });

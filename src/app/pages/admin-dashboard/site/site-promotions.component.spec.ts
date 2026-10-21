@@ -1,30 +1,32 @@
-import { TestBed } from '@angular/core/testing';
-import { of } from 'rxjs';
-import { describe, expect, it, vi } from 'vitest';
+import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { MAT_DATE_LOCALE } from '@angular/material/core';
+import { Observable, of } from 'rxjs';
+import { beforeEach, describe, expect, it, Mock, vi } from 'vitest';
 import { SitePromotionsComponent } from './site-promotions.component';
 import { SitePromotionsFacade } from './site-promotions.facade';
 
 describe('Editor de promociones', () => {
-  it('sends the existing promotion ID when saving edits', async () => {
-    const guardar=vi.fn((_payload: any) => of([]));
-    await TestBed.configureTestingModule({imports:[SitePromotionsComponent]})
-      .overrideComponent(SitePromotionsComponent,{set:{providers:[{provide:SitePromotionsFacade,useValue:{
+  let fixture: ComponentFixture<SitePromotionsComponent>;
+  let guardar: Mock<(payload: any) => Observable<never[]>>;
+  beforeEach(async () => {
+    guardar=vi.fn((_payload: any) => of([]));
+    TestBed.configureTestingModule({imports:[SitePromotionsComponent]});
+    // Patch only DI: overriding component metadata would JIT-compile the whole template.
+    TestBed.overrideProvider(SitePromotionsFacade,{useValue:{
         cargar:()=>of({promociones:[],servicios:[],sucursales:[],media:null}),guardar
-      }}]}}).compileComponents();
-    const fixture=TestBed.createComponent(SitePromotionsComponent);fixture.detectChanges();
+      }});
+    await TestBed.compileComponents();
+    fixture=TestBed.createComponent(SitePromotionsComponent);fixture.detectChanges();
+    await fixture.whenStable();
+  });
+  it('sends the existing promotion ID when saving edits', () => {
     const editor=fixture.componentInstance;editor.agregar();editor.promociones()[0].id=42;editor.promociones()[0].titulo='Oferta existente';
     editor.guardar();
+    expect(guardar).toHaveBeenCalledOnce();
     expect(guardar.mock.calls[0][0].promociones[0].id).toBe(42);
   });
   it('expande el editor con fechas sin ciclos de actualización y conserva los cambios al contraerlo', async () => {
-    await TestBed.configureTestingModule({ imports: [SitePromotionsComponent] })
-      .overrideComponent(SitePromotionsComponent, { set: { providers: [
-        { provide: SitePromotionsFacade, useValue: {
-          cargar: () => of({ promociones: [], servicios: [], sucursales: [], media: null })
-        } }
-      ] } }).compileComponents();
-    const fixture = TestBed.createComponent(SitePromotionsComponent);
-    fixture.detectChanges();
+    expect(fixture.debugElement.injector.get(MAT_DATE_LOCALE)).toBe('es-MX');
     const editor = fixture.componentInstance;
     editor.agregar();
     const item = editor.promociones()[0];

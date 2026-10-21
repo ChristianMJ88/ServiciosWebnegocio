@@ -22,3 +22,10 @@ h1{max-width:15ch;margin:18px 0 24px;font-size:clamp(2.4rem,4.6vw,4.25rem);font-
 @media(max-width:1199px){.fl-home-hero{gap:32px}.fl-home-preview-heading{flex-wrap:wrap;padding:20px}.fl-home-preview-caption{margin:0}.fl-home-agenda-entry{padding:16px 12px}.fl-home-hero-actions{gap:8px 16px}}
 @media(max-width:767px){.fl-home-hero{grid-template-columns:1fr;gap:32px;padding-block:28px 40px}h1{max-width:100%;margin:14px 0 16px;font-size:clamp(2.4rem,8vw,3rem)}.fl-home-hero-lead{font-size:15px;line-height:1.55;margin-bottom:20px}.fl-home-hero-actions{gap:8px}.fl-home-hero-actions .fl-button{width:100%}.fl-home-hero-secondary{width:100%;min-height:44px;font-size:13px}.fl-home-hero-reassurance{margin:10px 0 16px;text-align:center}.fl-home-hero-verticals{gap:6px;min-height:94px}.fl-home-hero-verticals a{justify-content:center;flex:1 1 auto;min-height:44px;padding:7px 9px}.fl-home-hero-preview{border-radius:20px}.fl-home-preview-heading{padding:16px;gap:10px}.fl-home-preview-caption{margin-left:auto}.fl-home-agenda-preview{padding:24px 16px;gap:12px}.fl-home-agenda-entry{padding:16px 12px}.fl-home-muted-entry{margin-left:16px}.fl-home-preview-footer{padding:14px 16px}}
 @media(prefers-reduced-motion:reduce){.fl-home-hero-verticals a{transition:none}}
+/* Stable tablet caption approved by the user; two chip rows measured in R3-d.
+ * min-height reserves presentation space, without fixing the number of links.
+ */
+@media(min-width:768px) and (max-width:1023px){
+ .fl-home-preview-caption{flex-basis:100%}
+ .fl-home-hero-verticals{min-height:calc(2 * 44px + 8px)}
+}

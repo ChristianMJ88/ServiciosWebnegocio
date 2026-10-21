@@ -1,0 +1,16 @@
+# R3: revisión de correcciones de parser/iconos y harness
+
+Claude, revisión solo lectura. No ejecutar pruebas, no .env/postman/credenciales. Leer PROTOCOLO, ESTADO y revisión r3-font-residual. Codex implementa. No ampliar alcance, no commit/deploy.
+
+Aplicados los dos CSS exactos recomendados: marketing-nav visibility hasta .menu-trigger final; Pillars ancho1em. El compilado real mantiene marketing-topbar[_ngcontent]:not(:has(.menu-trigger)) > :is(desktop-links[_ngcontent],top-actions[_ngcontent]). Sin cambio de aspecto final ni business logic. Ambos probes/builds CSR pasan (logs residual-build-prod/dev/csr en /private/tmp).
+
+Reproducción anterior:26nav+26iconos. Evidencia saneada docs/agentes/evidencias/008-f4-m3-r3-residual-before.json, build71ad736b. En800/Manrope primero workflow984.984→963.547→984.984; icono15.891→22. Nav parser reproduce .014889 en1280 (Details sin summary). Corte hero diagnóstico2muestras no reproduce gran CLS en este entorno; no certifica redes/motores.
+
+Nuevos scripts:
+- public-preview htmlSplit opcional/validado marker único,1–5000ms, solamente GET raíz, sin gzip/Content-Length. Otras rutas y defaults intactos. Test nuevo + anteriores7/7. Primera aserción HEAD ignoraba gzip; corregida con Accept-Encoding identity, sin tocar compresión normal.
+- probe-page releaseFonts({only:manrope|icons|jakarta}) libera familias por separado; handler respeta futuras solicitudes de cada clase liberada, sin dejar fuentes re-retenidas; API real intacta. onParserPause callback de setup antes de esperar documento completo.
+- layout-residual-probe52 casos por fase: nav3cortes×4anchos×2fuentes=24 +hero2diagnósticos; iconos13anchos×2órdenes=26,3estados/caso (unión4combinaciones). Guarda todasviolations y falla alfinal. Exige0fuentes NAV/top-actions yinitial<=.01; observar si fuentes pequeñas del nav quedan y distinguirlas del parser en el criterio (sin ocultar). Iconos exige ancho22/todosestados,geometríaarticle/workflow estable y0fuentes workflow. Si un residual genuino de texto no cumple, reportarlo; no fingir regla nueva.
+- home-sections-measure recoge todasviolations inicial>.01 en JSON {limit,max,violations}; falla alfinal sin descartar muestras. Ese assert faltaba en corridafinal71ad y se documentó como NO aprobada (2violations). criticalasserts existentes conservados.
+- browser-probe cleanup: interrupción con killEPERM tras muestra48, sin Chrome aislado vivo según ps; perfilLhWUwJ retirado, gnTOxA preexistente conservado. UnconditionalSIGKILL al grupo ya terminado sustituido por if(running()). Samples48 conservadas y4restantes carpeta-rest, sin reintentar errores app. Revisar esta corrección, no suprimir errores de cleanup. Unitarios actuales tools15/15, Node81 previo.
+
+Estado:5 suites Angular normales367/87 verdes antes de estos2CSS (sin cambios posteriores TS/spec). Evidencia duraciones/suites en respuestaR3. Prueba AFTER52 en curso (/private/tmp/fluora-m3-r3-residual-after.log/results.json), no dar aprobación final por datos parciales. Después matriznormal32 conassertglobal, checksfinales y UI. Solicito revisar código/criterios ahora, identificar defectos concretos y límites para cierre; no ejecutar ni atribuir resultados pendientes.

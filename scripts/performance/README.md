@@ -106,3 +106,106 @@ no sustituye esa validación posterior del nuevo CSR en Hosting.
 
 Fuentes: [Lighthouse CLI](https://github.com/GoogleChrome/lighthouse),
 [simulación de throttling](https://github.com/GoogleChrome/lighthouse/blob/main/docs/throttling.md).
+
+## Probe local de hidratación (M3 R3)
+
+El build de producción sigue siendo CSR. Este probe usa una configuración aparte,
+no participa en `npm run build`, Firebase ni predeploy. Compilar con Node20 y
+ejecutar las herramientas CDP con Node22 (WebSocket nativo):
+
+```sh
+npm run build:marketing:hydration-probe
+npm run build:marketing:hydration-probe -- --mode development
+/ruta/a/node22 scripts/check-hydration-probe.mjs dist/marketing-hydration-probe/production
+/ruta/a/node22 scripts/performance/hydration-probe.mjs
+/ruta/a/node22 scripts/performance/hydration-probe.mjs --root dist/marketing-hydration-probe/development
+```
+
+Los orígenes se leen de `public/runtime-config.js`, con validación HTTPS y hosts
+distintos, y se pasan como argumentos `define` al builder21.0.6. No se lee `.env`
+ni se duplican dominios en angular.json. El servidor sin contexto falla cerrado.
+Las únicas rutas de servidor son raíz prerenderizada y comodín CSR. La guarda
+exige una sola ruta emitida, estado exclusivamente de hidratación, sin datos de
+API, y un CSR vacío compatible. Solo usar artefactos de un build con exit0.
+
+Cada muestra abre Chrome headless en un perfil temporal independiente, sin
+conectar al Chrome personal ni cambiar sus preferencias. El preview escucha en
+un puerto efímero, nunca4200/8080/4300, y solo reenvía GET/HEAD públicos al backend
+local indicado por `--api`. No inicia ni detiene el backend. Se cierra el grupo
+propio de procesos y el servidor en limpieza independiente, conservando el error
+original si también falla la limpieza.
+
+Otros ejercicios, ejecutados secuencialmente y sin builds/suites simultáneos:
+
+```sh
+/ruta/a/node22 scripts/performance/hydration-probe.mjs --sizes 375x812 --replay --scenario apiSlow
+/ruta/a/node22 scripts/performance/navigation-hydration-probe.mjs
+/ruta/a/node22 scripts/performance/font-hydration-probe.mjs
+/ruta/a/node22 scripts/performance/loading-plans-measure.mjs
+/ruta/a/node22 scripts/performance/home-sections-measure.mjs
+/ruta/a/node22 scripts/performance/csr-hydration-probe.mjs --tenant slug-publico-real
+```
+
+`apiSlow` retiene las GET1500ms antes de enviarlas; `netSlow` emula150ms,
+200000B/s de descarga,93750B/s de subida yCPU4. Son diagnósticos locales, no SLA.
+Las marcas del SDK se leen de `mark_feature_usage.detail.feature`; que exista la
+marca no acredita por sí solo que terminó la hidratación. Se espera a la limpieza
+del event replay, red y chunks en calma, hashes de respuestas y dos frames.
+
+La matriz registra CLS por ventanas desde la navegación hasta estabilidad
+(`initial`) y por sección tras scroll (`deltaCls`), además del acumulado (`final`).
+Este último depende del ritmo de scroll del script: no es Lighthouse ni CrUX.
+Las reservas CSS son mínimos medidos, no alturas fijas ni garantías para textos
+configurables futuros. Los fallos503 son inyectados por el probe; todos los demás
+datos provienen de las GET reales, con huellas para detectar cambios entre fases.
+
+El probe CSR llama los renderers existentes sobre index.csr.html y verifica que
+sus hijos iniciales se retiran sin hidratar. `/acceso` es una redirección al
+origen de la app: se comprueba el documento anterior y se pausa el destino sin
+seguirlo. Para ello el runtime interceptado usa dos orígenes locales distintos,
+declarados en cada resultado. Exige una sola navegación y una ventana de calma.
+
+Si los datos reales generan NG0913, la consola estricta hace fallar esa corrida:
+no se suprime el aviso. La variante `--logo null` es un fixture **derivado**:
+clona SiteConfig con logoUrl=null y las respuestas del directorio con
+negocios[*].imagenUrl=null, dejando el resto de campos y GET intactos. Registra
+esas sustituciones; no modifica la API ni el negocio. Usar outputs distintos y
+reportar el fallo real junto al resultado derivado, sin presentarlos como una
+misma prueba exitosa.
+
+Los resultados/capturas se guardan por defecto en `/private/tmp`, con permisos
+privados. Las tablas saneadas de evidencia en docs/agentes no contienen cuerpos
+de API, URLs de imágenes, contactos ni credenciales. El cierre de R3 no autoriza
+prerender productivo, Hosting, Functions, dominios o despliegue.
+
+### Parser pauses and separate font arrival (R3 residuals)
+
+`layout-residual-probe.mjs --phase before|after --kind all|nav|icons`
+keeps every sample and returns nonzero for final violations. It uses the same
+isolated Chrome lifecycle and local read-only APIs. `--phase before` records the
+reproduction without treating known pre-fix layout shifts as success criteria.
+The nav fixture splits only the root HTML into two uncompressed chunks; every
+other route and the default preview remain unchanged. Its hero cut is explicitly
+diagnostic. Font samples release Jakarta, then Manrope/icons in both orders;
+geometry is captured between releases. No API payload, font file or business
+configuration is modified. Output defaults to a private temporary directory.
+
+The normal section matrix records every initial CLS violation before failing the
+run. A successful process exit from an older harness without this global check
+must not be reported as satisfying the initial CLS limit.
+The revised residual classifier preserves parser, font and hydration events by
+ancestor region, including text nodes. Only parser/hydration shifts fail the nav
+check; font shifts remain visible and count toward total initial CLS. Icon-only
+transitions compare workflow position relative to pillars; Manrope transitions
+are reported separately as `textResidual`. Empty geometry is an error.
+`--phase before --kind nav --widths 1280 --cuts details --baseline-presentation`
+is an explicitly derived negative control: it overrides only the new visibility
+rule in an isolated page, to verify the observer on an incomplete header. It is
+not evidence for an earlier build SHA and never edits source or business data.
+
+`nav-cta-probe.mjs` records a public-build fingerprint with its 12 explicitly
+derived trial/error fixtures. `beforeFontState` distinguishes fallback from loaded
+fonts; `before`, `after`, and `afterFonts` carry Range and neighbour geometry.
+The former duplicate `fallback` field was removed. CTA content reclassification
+requires the original SSR icon node, stable boxes, a changed label and the measured
+centering delta; it never subtracts the residual from total CLS.

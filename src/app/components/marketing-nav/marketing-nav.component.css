@@ -5,3 +5,5 @@
 @media(prefers-reduced-motion:reduce){.marketing-topbar::before{transition:none}}
 
 .top-cta{min-width:120px}
+/* The last control marks a complete header while streamed HTML is parsed. */
+.marketing-topbar:not(:has(.menu-trigger))>:is(.desktop-links,.top-actions){visibility:hidden}

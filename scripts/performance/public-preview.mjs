@@ -6,9 +6,14 @@ import { createHash } from 'node:crypto';
 import { assertCsrContract } from '../../functions/csr-shell.js';
 
 /** Local production preview. Never proxies authentication or write endpoints. */
-export async function publicPreview({ root, apiOrigin, requestLog = [], allowQuote = false, tenantCssRevalidate = false, spaShell = 'index' }) {
+export async function publicPreview({ root, apiOrigin, requestLog = [], allowQuote = false, tenantCssRevalidate = false, spaShell = 'index', htmlSplit }) {
   root = path.resolve(root);
   if (!['index', 'csr'].includes(spaShell)) throw new Error('spaShell must be index or csr');
+  if (htmlSplit && (typeof htmlSplit.after !== 'string' || !htmlSplit.after || !Number.isInteger(htmlSplit.holdMs) || htmlSplit.holdMs < 1 || htmlSplit.holdMs > 5000)) throw new Error('Invalid test HTML split');
+  if (htmlSplit) {
+    const home = await readFile(path.join(root, 'index.html'), 'utf8');
+    if (home.split(htmlSplit.after).length !== 2) throw new Error('HTML split marker must occur exactly once');
+  }
   if (spaShell === 'csr') assertCsrContract(await readFile(path.join(root, 'index.csr.html'), 'utf8'), await readFile(path.join(root, 'index.html'), 'utf8'));
   const api = new URL(apiOrigin);
   if (api.protocol !== 'http:' || !['localhost', '127.0.0.1', '[::1]'].includes(api.hostname) || api.username || api.password) {
@@ -69,6 +74,15 @@ export async function publicPreview({ root, apiOrigin, requestLog = [], allowQuo
       }
       const extension = path.extname(file);
       const data = await readFile(file);
+      // Explicit local regression fixture: exercise a parser pause, not a data API.
+      if (htmlSplit && url.pathname === '/' && req.method === 'GET') {
+        const offset = Buffer.byteLength(data.toString('utf8').split(htmlSplit.after)[0] + htmlSplit.after);
+        res.writeHead(200, { 'Content-Type': mime['.html'], 'Cache-Control': 'no-store' });
+        res.write(data.subarray(0, offset));
+        const timer = setTimeout(() => res.end(data.subarray(offset)), htmlSplit.holdMs);
+        res.once('close', () => clearTimeout(timer));
+        return;
+      }
       const revalidate = tenantCssRevalidate && url.pathname === '/tenant-public.css';
       const etag = revalidate ? '"' + createHash('sha256').update(data).digest('hex') + '"' : null;
       if (revalidate && req.headers['if-none-match'] === etag) {

@@ -49,6 +49,7 @@ describe('árbol de marketing: contrato de servidor simulado (jsdom)', () => {
     expect(fixture.nativeElement.querySelector('.top-cta').href).toBe('https://app.test/registro');
     const home=fixture.debugElement.query(By.directive(FluoraHomeComponent)).componentInstance as FluoraHomeComponent;
     expect(home.offer.plans()).toEqual([]);expect(home.offer.loading()).toBe(true);expect(home.support()).toBeNull();expect(home.verticals()).toEqual([]);
+    expect(home.hydrated()).toBe(false);expect(home.dataReady()).toBe(false);
     expect(byHost).not.toHaveBeenCalled();expect(bySlug).not.toHaveBeenCalled();expect(animation).not.toHaveBeenCalled();
     for(const spy of storage)expect(spy).not.toHaveBeenCalled();
     for(const [type] of windowListeners.mock.calls)expect(['scroll','wheel','touchstart','keydown','resize']).not.toContain(type);

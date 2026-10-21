@@ -1,17 +1,8 @@
-import { provideEnvironmentInitializer } from '@angular/core';
-import { prepareMarketingHome } from './app/core/marketing/marketing-bootstrap';
-import { provideTenantPublicStyles } from './app/core/styles/tenant-public-styles';
-import { registerLocaleData } from '@angular/common';
-import localeEs from '@angular/common/locales/es';
-import localeEsMx from '@angular/common/locales/es-MX';
+import './app/marketing-locale';
 import { bootstrapApplication } from '@angular/platform-browser';
 import { App } from './app/app';
-import { createAppConfig } from './app/app.config.base';
-import { marketingRoutes } from './app/app.routes.marketing';
+import { createMarketingAppConfig } from './app/app.config.marketing';
+import { isHydratableMarketingHome, RuntimeWithFluoraOrigins } from './app/core/platform/platform-host.service';
 
-registerLocaleData(localeEs);
-registerLocaleData(localeEsMx);
-
-const config=createAppConfig(marketingRoutes);
-bootstrapApplication(App,{...config,providers:[...config.providers,provideTenantPublicStyles(),provideEnvironmentInitializer(prepareMarketingHome)]})
+bootstrapApplication(App,createMarketingAppConfig(isHydratableMarketingHome(globalThis.location,globalThis as RuntimeWithFluoraOrigins)))
   .catch((err) => console.error(err));

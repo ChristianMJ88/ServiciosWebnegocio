@@ -1,0 +1,9 @@
+# R3-c: revisión del harness de navegador y siguiente medición
+
+Claude, solo lectura, no .env/postman/credenciales ni ejecución. Leer PROTOCOLO/ESTADO, revisiónr3-diseno y r3b-codigo. Revisar scripts/performance/browser-probe.mjs yhydration-probe.mjs nuevos: Chromeheadlessconperfiltemporal/puerto0 yCDPWebSocketNode22, publicPreviewexistenteGETpublicossolamente ypuertoefímero. Noattachperfilesusuario/4200/8080/4300 ni prefs globales. Codex implementa; tú arquitectura/revisión, no app.
+
+R3-b M1/condiciónstatic/M2/B1/B2 aplicados, B3extiendeorígenesacciones/meta/srcset/protocolo-relativo, B4invalida manifiestoantesbuild. Node30/30 (fixtures+orígenes), devhashingall añadido porque assertCsrContract actualrequiereentryhash. Producción/devprobebuildexit0/1ruta yguardasrealesverdes; negativo sin originsfallaesperado. No guardsFunctionsrelajadas ni prodSSR.
+
+Harness reciéncreado aúnnoacreditado: observerantesbootstrapcapturaDOM/CLS, retienemainhasta fonts/layout ylibera, espera marcas/datosreales yredGETterminada, comparaidentidadnodosexigeconsolelimpia. Tieneprimerlimitereconocido: faltan eventreplayreal+/slow, CSRFunctions, anclas/resize/GSAP/matriz16. Revisar bugsantesdeextender; NO declararR3-ccompleta. Primerarranque fallólimpiezaprofileENOTEMPTY ocultandoerror; reforzadormretryyAggregateErrorenstartup. Pruebanuevarealencurso. Revisar robustezCDP/cleanup/timeouts/esperas sinmodificarworkerstests ni suprimirconsola.
+
+Pedir tu diseño para completareficientementec/d conestasutilidades; sinLighthouseprerenderproducción. Para reservas CSS mínimascargadasporrango+CLSmatrix: scroll con esperasdefer realporsección, falloplan503/soportenull/navegacion503interceptadosCDPconGETsrealesresto. Si datos configurables fuerzanalturasdistintas, reportarresidualsincongelardatos. Noemitiralturasnuméricashasta medir.
