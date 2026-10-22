@@ -192,11 +192,10 @@
 
       @if (seccionActiva() === 'publicacion') {
         <app-site-marketplace />
+        <app-site-domains />
         <section class="editor-panel">
           <div class="editor-panel__heading"><span class="editor-panel__icon"><i class="bi bi-globe2"></i></span><div><h3>Dominio y publicación</h3><p>Controla dónde está disponible tu sitio y cuándo hacerlo visible.</p></div></div>
-          <div class="editor-fields">
-            <mat-form-field appearance="outline" class="full-width"><mat-label>Dominio principal</mat-label><input matInput name="sitioDominioPrincipal" [(ngModel)]="formularioSitio().dominioPrincipal" maxlength="255" placeholder="reservas.tumarca.com"><mat-hint>{{ dominioPrincipalPreview() || 'Aún no configurado' }}</mat-hint></mat-form-field>
-          </div>
+
           <label class="publish-control"><span class="publish-control__icon"><i class="bi bi-broadcast"></i></span><span><strong>Publicar sitio web</strong><small>Al activarlo, tus clientes podrán visitar la página pública.</small></span><mat-slide-toggle name="sitioPublicado" [(ngModel)]="formularioSitio().publicado" aria-label="Publicar sitio web"></mat-slide-toggle></label>
           <div class="publication-url"><i class="bi bi-link-45deg"></i><span><small>URL pública de Fluora</small><strong>{{ rutaPublicaPreview() }}</strong></span></div>
         </section>

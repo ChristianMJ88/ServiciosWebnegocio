@@ -6,7 +6,7 @@ import { TenantContextService } from './tenant-context.service';
 import { TenantSiteService } from './tenant-site.service';
 import { SeoService } from '../seo/seo.service';
 
-export const tenantHostResolver: ResolveFn<true | UrlTree> = () => {
+export const tenantHostResolver: ResolveFn<true | UrlTree> = (_route, state) => {
   const router = inject(Router);
   const platformHost = inject(PlatformHostService);
   const tenantContext = inject(TenantContextService);
@@ -21,12 +21,12 @@ export const tenantHostResolver: ResolveFn<true | UrlTree> = () => {
   return tenantSiteService.getByHostname(platformHost.currentHostname()).pipe(
     tap(config => {
       tenantContext.setTenant(config);
-      seo.applyTenant(config, '/');
+      seo.applyTenant(config, state.url);
     }),
     map(() => true as const),
     catchError(() => {
       tenantContext.clearTenant();
-      return of(router.createUrlTree(['/']));
+      return of(router.createUrlTree(['/sitio-no-disponible']));
     })
   );
 };

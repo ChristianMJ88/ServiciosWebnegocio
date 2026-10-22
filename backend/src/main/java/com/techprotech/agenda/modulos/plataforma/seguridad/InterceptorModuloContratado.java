@@ -28,8 +28,10 @@ public class InterceptorModuloContratado implements HandlerInterceptor {
         boolean operacion=java.util.List.of("/api/v1/admin/","/api/v1/caja","/api/v1/recepcion","/api/v1/staff/")
                 .stream().anyMatch(prefijo->ruta.equals(prefijo)||ruta.startsWith(prefijo.endsWith("/")?prefijo:prefijo+"/"));
         boolean regularizacion=ruta.equals("/api/v1/admin/suscripcion")||ruta.startsWith("/api/v1/admin/suscripcion/");
+        // Domain read/retirement remain available after expiry. Its service authorizes every paid mutation.
+        boolean gestionDominios=ruta.equals("/api/v1/admin/dominios")||ruta.startsWith("/api/v1/admin/dominios/");
         if(requerido!=null)capacidades.exigirModulo(usuario.empresaId(),requerido.value());
-        else if(operacion&&!regularizacion)capacidades.exigirSuscripcion(usuario.empresaId());
+        else if(operacion&&!regularizacion&&!gestionDominios)capacidades.exigirSuscripcion(usuario.empresaId());
         return true;
     }
 }

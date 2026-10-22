@@ -683,7 +683,8 @@ export interface ConfiguracionSitioAdmin {
 export interface GuardarConfiguracionSitioPayload {
   slug: string;
   nombreComercial: string;
-  dominioPrincipal: string | null;
+  /** @deprecated Accepted only for compatibility; the site payload never sends it. */
+  dominioPrincipal?: string | null;
   logoUrl: string | null;
   descripcionCorta: string | null;
   colorPrimario: string | null;

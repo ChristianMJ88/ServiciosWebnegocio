@@ -24,12 +24,14 @@ public class ControladorSitioPublico {
     }
 
     @GetMapping("/{slug}")
-    public SitioPublicoResponse obtenerPorSlug(@PathVariable String slug) {
+    public SitioPublicoResponse obtenerPorSlug(@PathVariable String slug, jakarta.servlet.http.HttpServletResponse response) {
+        response.setHeader("Cache-Control", "no-store");
         return servicioSitioPublico.obtenerPorSlug(slug);
     }
 
     @GetMapping("/host/{hostname}")
-    public SitioPublicoResponse obtenerPorHostname(@PathVariable String hostname) {
+    public SitioPublicoResponse obtenerPorHostname(@PathVariable String hostname, jakarta.servlet.http.HttpServletResponse response) {
+        response.setHeader("Cache-Control", "no-store");
         return servicioSitioPublico.obtenerPorHostname(hostname);
     }
 }

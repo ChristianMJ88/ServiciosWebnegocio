@@ -96,4 +96,20 @@ describe('SeoService', () => {
     expect(schema['@type']).toBe('WebPage');
     expect(schema['telephone']).toBeUndefined();
   });
+  it('conserva el canonical que devuelve backend en dominio y slug, sin inferir planes', () => {
+    const service=TestBed.inject(SeoService);
+    const config={...tenant, dominioPrincipal:'reservas.fixture.mx'};
+    for (const path of ['/servicios','/e/nail-art/servicios?utm_source=fixture']) {
+      service.applyTenant(config,path);
+      expect(document.querySelector<HTMLLinkElement>('link[rel="canonical"]')?.href).toBe('https://reservas.fixture.mx/servicios');
+    }
+    service.applyTenant({...config,dominioPrincipal:null},'/e/nail-art');
+    expect(document.querySelector<HTMLLinkElement>('link[rel="canonical"]')?.href).toBe('https://example.test/e/nail-art');
+  });
+  it('publica enlaces de productos con el mismo canonical del backend', () => {
+    const service=TestBed.inject(SeoService);
+    service.applyProductCatalog({...tenant,dominioPrincipal:'fixture.mx'},{tienda:{},productos:[{nombre:'Artículo',slug:'articulo',descripcion:null,imagenUrl:null,precio:80,moneda:'MXN',disponible:true}]});
+    expect(document.querySelector<HTMLLinkElement>('link[rel="canonical"]')?.href).toBe('https://fixture.mx/productos');
+    expect(JSON.parse(document.getElementById('tenant-structured-data')?.textContent||'{}').itemListElement[0].url).toBe('https://fixture.mx/productos/articulo');
+  });
 });

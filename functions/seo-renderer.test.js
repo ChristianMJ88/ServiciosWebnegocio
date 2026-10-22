@@ -69,3 +69,9 @@ test('inyecta SEO de una ficha de producto con oferta estructurada', () => {
   assert.match(html, /"price":"80.00"/);
   assert.match(html, /schema.org\/InStock/);
 });
+
+test('slug y dominio propio comparten canonical de backend, sin trasladar el path /e',()=>{
+ const tenant={slug:'fixture',nombreComercial:'Fixture',publicado:true,dominioPrincipal:'marca.mx'};
+ for(const route of ['/e/fixture/servicios?utm_source=fixture','/servicios'])assert.match(renderTenantHtml(template,tenant,route,marketingOrigin),/canonical" href="https:\/\/marca.mx\/servicios"/);
+ assert.match(renderTenantHtml(template,{...tenant,dominioPrincipal:null},'/e/fixture',marketingOrigin),/canonical" href="https:\/\/example.test\/e\/fixture"/);
+});

@@ -34,10 +34,10 @@ describe('admin site forms', () => {
       heroEnlaceCta: '  https://negocio.mx/promocion  ',
       footerTexto: '  Atención personalizada  '
     });
+    expect(payload).not.toHaveProperty('dominioPrincipal');
     expect(payload).toEqual(expect.objectContaining({
       slug: 'negocio',
       nombreComercial: 'Mi negocio',
-      dominioPrincipal: 'negocio.mx',
       descripcionCorta: null,
       seoTitulo: 'Agenda en Puebla',
       heroVideoUrl: 'https://cdn.negocio.mx/portada.mp4',

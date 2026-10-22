@@ -13,7 +13,7 @@ export class SeoService {
 
   applyTenant(config: TenantSiteConfig, path = `/e/${config.slug}`): void {
     const canonicalPath = path.split('?')[0].split('#')[0] || `/e/${config.slug}`;
-    const canonical = this.platformHost.marketingUrl(canonicalPath);
+    const canonical = this.tenantUrl(config, canonicalPath);
     const description = config.seoDescripcion?.trim() || this.tenantDescription(config);
     const pageTitle = config.seoTitulo?.trim() || `${config.nombreComercial} | Reserva tu cita en línea`;
     const image = config.heroImagenUrl || config.logoUrl;
@@ -95,7 +95,7 @@ export class SeoService {
     productos: Array<{ nombre: string; slug: string; descripcion: string | null; imagenUrl: string | null; precio: number; moneda: string; disponible: boolean }>;
   }, product?: { nombre: string; slug: string; descripcion: string | null; imagenUrl: string | null; precio: number; moneda: string; disponible: boolean } | null): void {
     const path = product ? `/e/${config.slug}/productos/${product.slug}` : `/e/${config.slug}/productos`;
-    const canonical = this.platformHost.marketingUrl(path);
+    const canonical = this.tenantUrl(config, path);
     const title = product
       ? `${product.nombre} | ${config.nombreComercial}`
       : catalog.tienda.seoTitulo?.trim() || `${catalog.tienda.titulo?.trim() || 'Productos'} | ${config.nombreComercial}`;
@@ -125,6 +125,16 @@ export class SeoService {
     this.setStructuredData(product
       ? this.productSchema(config, product, canonical, description)
       : this.productListSchema(config, catalog.productos, canonical));
+  }
+
+  private tenantUrl(config: TenantSiteConfig, path: string): string {
+    const host = config.dominioPrincipal;
+    if (host && /^(?=.{1,253}$)[a-z0-9-]+(?:\.[a-z0-9-]+)+$/.test(host)) {
+      const prefix = `/e/${encodeURIComponent(config.slug)}`;
+      const local = path === prefix || path === `${prefix}/` ? '/' : path.startsWith(`${prefix}/`) ? path.slice(prefix.length) : path;
+      return `https://${host}${local}`;
+    }
+    return this.platformHost.marketingUrl(path);
   }
 
   private tenantDescription(config: TenantSiteConfig): string {
@@ -195,7 +205,7 @@ export class SeoService {
       url, numberOfItems: products.length,
       itemListElement: products.map((product, index) => ({
         '@type': 'ListItem', position: index + 1, name: product.nombre,
-        url: this.platformHost.marketingUrl(`/e/${config.slug}/productos/${product.slug}`)
+        url: this.tenantUrl(config, `/e/${config.slug}/productos/${product.slug}`)
       }))
     };
   }

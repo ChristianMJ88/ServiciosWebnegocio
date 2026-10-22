@@ -1,0 +1,9 @@
+# 012 pasos 1–5 — revisión de implementación
+
+Lee PROTOCOLO, diseño 012 con D1–D3 §7 y tu precisión `012-contrato-concurrencia.md`. Revisa solo lectura el módulo backend dominios, V141, cambios en ServicioAdminCitas/ServicioSitioPublico/ControladorSitioPublico/InterceptorModuloContratado, y frontend DomainsService, SiteDomains, PlatformDomains, rutas y enlace de menú. No comandos, credenciales, datos, Git, DNS real, correos ni despliegue. No escribas código.
+
+V141 se reservó tras fetch, todas las ramas máximoV140. No hay asignaciones a planes: módulo/límite se editarán desde plataforma. Verifica el conteo bajo bloqueo, unicidad generada, dos fases sin red bajo locks, lectura pública con capacidad vigente, retiro incluso tras vencimiento, auditoría sin tokens, y acciones del backend en frontend.
+
+Se añadió chequeo_en_curso como lease técnico, con último_chequeo+frecuencia para recuperación: no retirar una pendiente cuyo DNS está en curso; el perdedor de dos TXT válidos termina pendiente/HOST_EN_USO. Así se cumple la prueba de carrera y se liberan las otras pendientes no activas. MySQL8 efímero: migración/validate/dos hilos pasado con tokens reales generados en la prueba y DNS simulado, 59 focales backend verdes hasta ese punto. El cliente HTTPS real tiene prueba de respuesta HTTP simulada (subclase de fábrica protegida; sin conexión) para redirect/marca/tamaño/timeout, aún en validación; no atribuyas esos resultados a la revisión. Dirección pública se valida en DnsResolver que da las IP a HttpClient, TLS normal, fixed path, sin redirects/automatic retries y cancelación antes de cerrar para no drenar cuerpo. Critica posibles bypasses SSRF o fallos de concurrencia.
+
+Frontend y suites completas aún en comprobación; UI responsive aún pendiente. Parte SEO §6 NO implementada: se hará tras cerrar estos pasos. Revisa riesgos antes de iniciar esa parte. P tiene aprobación P1/P2, sin sitios creados ni despliegue. No amplíes negocio.

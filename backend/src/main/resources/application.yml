@@ -52,6 +52,18 @@ management:
         enabled: true
 
 aplicacion:
+  dominios:
+    origen-marketing: ${FLUORA_MARKETING_ORIGIN:${aplicacion.correo-bienvenida.origen-publico}}
+    origen-app: ${FLUORA_APP_ORIGIN:}
+    sitio-hosting: ${DOMINIOS_SITIO_HOSTING:}
+    # Enable only when real DNS/HTTPS checks have been authorized for this environment.
+    verificacion-automatica: ${DOMINIOS_VERIFICACION_AUTOMATICA:false}
+    frecuencia-segundos: ${DOMINIOS_FRECUENCIA_SEGUNDOS:60}
+    aviso-pendiente-dias: ${DOMINIOS_AVISO_PENDIENTE_DIAS:7}
+    intervalo-ms: ${DOMINIOS_INTERVALO_MS:300000}
+    lote: ${DOMINIOS_LOTE:50}
+    reintento-base-segundos: ${DOMINIOS_REINTENTO_BASE_SEGUNDOS:300}
+    reintento-maximo-segundos: ${DOMINIOS_REINTENTO_MAXIMO_SEGUNDOS:86400}
   caja:
     dias-pendientes: ${CAJA_PENDIENTES_DIAS:90}
   tareas-programadas:

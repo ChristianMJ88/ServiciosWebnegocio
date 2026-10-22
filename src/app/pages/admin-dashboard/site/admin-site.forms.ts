@@ -9,7 +9,6 @@ export function crearFormularioSitio(
   return {
     slug: configuracion?.slug ?? slugActual,
     nombreComercial: configuracion?.nombreComercial ?? nombreEmpresa,
-    dominioPrincipal: configuracion?.dominioPrincipal ?? '',
     logoUrl: configuracion?.logoUrl ?? '',
     descripcionCorta: configuracion?.descripcionCorta ?? '',
     colorPrimario: configuracion?.colorPrimario ?? null,
@@ -84,11 +83,11 @@ export function crearFormularioSitio(
 export function construirPayloadSitio(
   formulario: GuardarConfiguracionSitioPayload
 ): GuardarConfiguracionSitioPayload {
+  const { dominioPrincipal: _legacyDomain, ...editable } = formulario;
   return {
-    ...formulario,
+    ...editable,
     slug: formulario.slug.trim(),
     nombreComercial: formulario.nombreComercial.trim(),
-    dominioPrincipal: normalizarTextoOpcional(formulario.dominioPrincipal),
     logoUrl: normalizarTextoOpcional(formulario.logoUrl),
     descripcionCorta: normalizarTextoOpcional(formulario.descripcionCorta),
     colorPrimario: normalizarTextoOpcional(formulario.colorPrimario),

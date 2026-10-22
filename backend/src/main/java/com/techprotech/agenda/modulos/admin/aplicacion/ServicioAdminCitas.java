@@ -556,13 +556,10 @@ public class ServicioAdminCitas {
         String slugNormalizado = normalizarSlugPublico(request.slug());
         validarSlugSitioDisponible(empresaId, slugNormalizado);
 
-        String dominioPrincipal = normalizarDominioPrincipal(request.dominioPrincipal());
-        validarDominioPrincipalDisponible(empresaId, dominioPrincipal);
-
         configuracion.setEmpresaId(empresaId);
         configuracion.setSlug(slugNormalizado);
         configuracion.setNombreComercial(request.nombreComercial().trim());
-        configuracion.setDominioPrincipal(dominioPrincipal);
+        // Compatibility input is intentionally ignored. Only verified domain transitions derive this value.
         configuracion.setLogoUrl(normalizarOpcional(request.logoUrl()));
         configuracion.setDescripcionCorta(normalizarOpcional(request.descripcionCorta()));
         configuracion.setColorPrimario(normalizarColorHex(request.colorPrimario()));
@@ -2624,18 +2621,6 @@ public class ServicioAdminCitas {
                 });
     }
 
-    private void validarDominioPrincipalDisponible(Long empresaId, String dominioPrincipal) {
-        if (dominioPrincipal == null) {
-            return;
-        }
-
-        empresaSitioConfigRepositorio.findByDominioPrincipalIgnoreCase(dominioPrincipal)
-                .filter(configuracion -> !configuracion.getEmpresaId().equals(empresaId))
-                .ifPresent(configuracion -> {
-                    throw new ResponseStatusException(CONFLICT, "Ese dominio principal ya está configurado en otro tenant");
-                });
-    }
-
     private String normalizarSlugPublico(String valor) {
         String ascii = Normalizer.normalize(valor == null ? "" : valor, Normalizer.Form.NFD)
                 .replaceAll("\\p{M}", "");
@@ -2650,28 +2635,6 @@ public class ServicioAdminCitas {
             throw new ResponseStatusException(BAD_REQUEST, "El slug del sitio no puede exceder 100 caracteres");
         }
         return slug;
-    }
-
-    private String normalizarDominioPrincipal(String valor) {
-        String limpio = normalizarOpcional(valor);
-        if (limpio == null) {
-            return null;
-        }
-
-        String candidato = limpio;
-        try {
-            if (!candidato.contains("://")) {
-                candidato = "https://" + candidato;
-            }
-            URI uri = URI.create(candidato);
-            String host = uri.getHost();
-            if (host == null || host.isBlank()) {
-                throw new IllegalArgumentException("host vacío");
-            }
-            return IDN.toASCII(host.trim().toLowerCase(Locale.ROOT));
-        } catch (Exception exception) {
-            throw new ResponseStatusException(BAD_REQUEST, "Debes indicar un dominio principal válido");
-        }
     }
 
     private String normalizarColorHex(String valor) {

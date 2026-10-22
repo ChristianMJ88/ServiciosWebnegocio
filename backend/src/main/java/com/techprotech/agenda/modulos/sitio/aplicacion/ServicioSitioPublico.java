@@ -12,6 +12,8 @@ import java.util.List;
 @Service
 public class ServicioSitioPublico {
 
+    private final com.techprotech.agenda.modulos.dominios.aplicacion.ServicioConsultaDominios dominios;
+
     private final EmpresaSitioConfigRepositorio empresaSitioConfigRepositorio;
     private final ServicioConstructorSitio servicioConstructorSitio;
     private final ServicioServiciosDestacadosSitio servicioServiciosDestacadosSitio;
@@ -35,7 +37,8 @@ public class ServicioSitioPublico {
             ServicioResenasSitio servicioResenasSitio,
             ServicioPreguntasFrecuentesSitio servicioPreguntasFrecuentesSitio,
             ServicioMapaSitio servicioMapaSitio,
-            ServicioConfiguracionTienda servicioConfiguracionTienda
+            ServicioConfiguracionTienda servicioConfiguracionTienda,
+            com.techprotech.agenda.modulos.dominios.aplicacion.ServicioConsultaDominios dominios
     ) {
         this.empresaSitioConfigRepositorio = empresaSitioConfigRepositorio;
         this.servicioConstructorSitio = servicioConstructorSitio;
@@ -48,6 +51,7 @@ public class ServicioSitioPublico {
         this.servicioPreguntasFrecuentesSitio = servicioPreguntasFrecuentesSitio;
         this.servicioMapaSitio = servicioMapaSitio;
         this.servicioConfiguracionTienda = servicioConfiguracionTienda;
+        this.dominios = dominios;
     }
 
     public SitioPublicoResponse obtenerPorSlug(String slug) {
@@ -59,7 +63,7 @@ public class ServicioSitioPublico {
     }
 
     public SitioPublicoResponse obtenerPorHostname(String hostname) {
-        EmpresaSitioConfigEntidad sitio = empresaSitioConfigRepositorio.findByDominioPrincipalIgnoreCase(hostname)
+        EmpresaSitioConfigEntidad sitio = empresaSitioConfigRepositorio.findById(dominios.empresaActiva(hostname))
                 .filter(EmpresaSitioConfigEntidad::isPublicado)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "No existe un sitio publicado para ese dominio"));
 
@@ -75,7 +79,7 @@ public class ServicioSitioPublico {
                 sitio.getEmpresaId(),
                 sitio.getSlug(),
                 sitio.getNombreComercial(),
-                sitio.getDominioPrincipal(),
+                dominios.dominioPublico(sitio.getEmpresaId(), sitio.getDominioPrincipal()),
                 sitio.getLogoUrl(),
                 sitio.getDescripcionCorta(),
                 sitio.getColorPrimario(),

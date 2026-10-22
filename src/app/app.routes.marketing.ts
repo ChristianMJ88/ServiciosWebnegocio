@@ -12,6 +12,8 @@ const redirectComponent = () => import('./pages/platform-redirect/platform-redir
   .then((m) => m.PlatformRedirectComponent);
 
 export const publicContentRoutes: Routes = [
+  { path: 'sitio-no-disponible', canMatch: [tenantHostMatch], loadComponent: () => import('./pages/tenant-unavailable/tenant-unavailable.component').then(m=>m.TenantUnavailableComponent) },
+  { path: 'e', canMatch: [tenantHostMatch], children: [{ path: '**', loadComponent: redirectComponent, data: { destination: 'marketing' } }] },
   { path: 'politicas', canMatch: [tenantHostMatch], resolve: tenantHostPublicResolvers, loadComponent: () => import('./pages/business-policy/business-policy.component').then(m => m.BusinessPolicyComponent) },
   { path: 'negocios', canMatch: [() => inject(PlatformHostService).isKnownPlatformHost()],
     loadComponent: () => import('./pages/marketplace/marketplace.component').then(m => m.MarketplaceComponent) },
@@ -47,6 +49,7 @@ export const publicContentRoutes: Routes = [
     path: 'registro', canMatch: [tenantHostMatch], resolve: tenantHostPublicResolvers,
     loadComponent: () => import('./pages/register/register.component').then((m) => m.RegisterComponent)
   },
+  { path: '**', canMatch: [tenantHostMatch], loadComponent: redirectComponent, data: { destination: 'marketing' } },
   ...['barberias', 'salones', 'esteticas', 'unas', 'spa'].map(vertical => ({
     path: vertical, canMatch: [() => inject(PlatformHostService).isKnownPlatformHost()],
     loadComponent: () => import('./pages/fluora-vertical/fluora-vertical.component').then(m => m.FluoraVerticalComponent),

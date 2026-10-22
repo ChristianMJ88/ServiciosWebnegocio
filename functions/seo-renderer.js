@@ -69,6 +69,18 @@ function productSchema(tenant, product, canonical, description, marketingOrigin)
   return schema;
 }
 
+function tenantUrl(tenant, requestPath, marketingOrigin) {
+  const cleanPath = requestPath.split('?')[0].split('#')[0];
+  const host = tenant.dominioPrincipal;
+  // This is a presentation of the backend's verified, capability-filtered field.
+  if (typeof host === 'string' && /^(?=.{1,253}$)[a-z0-9-]+(?:\.[a-z0-9-]+)+$/.test(host)) {
+    const prefix = '/e/' + encodeURIComponent(tenant.slug);
+    const local = cleanPath === prefix || cleanPath === prefix + '/' ? '/' : cleanPath.startsWith(prefix + '/') ? cleanPath.slice(prefix.length) : cleanPath;
+    return 'https://' + host + local;
+  }
+  return marketingOrigin + cleanPath;
+}
+
 function productListSchema(tenant, catalog, canonical, marketingOrigin) {
   return {
     '@context': 'https://schema.org',
@@ -80,14 +92,14 @@ function productListSchema(tenant, catalog, canonical, marketingOrigin) {
       '@type': 'ListItem',
       position: index + 1,
       name: product.nombre,
-      url: `${marketingOrigin}/e/${encodeURIComponent(tenant.slug)}/productos/${encodeURIComponent(product.slug)}`
+      url: tenantUrl(tenant, `/e/${encodeURIComponent(tenant.slug)}/productos/${encodeURIComponent(product.slug)}`, marketingOrigin)
     }))
   };
 }
 
 function renderTenantHtml(template, tenant, requestPath, marketingOrigin, productCatalog = null) {
   const cleanPath = requestPath.split('?')[0].split('#')[0];
-  const canonical = `${marketingOrigin}${cleanPath}`;
+  const canonical = tenantUrl(tenant, cleanPath, marketingOrigin);
   const product = productCatalog?.productos?.length === 1 && /\/productos\/[^/]+$/i.test(cleanPath)
     ? productCatalog.productos[0]
     : null;

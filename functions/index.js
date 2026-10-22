@@ -8,6 +8,7 @@ const { renderLandingHtml } = require('./landing-renderer');
 const { renderDirectoryHtml } = require('./directory-renderer');
 const { loadCsrTemplate } = require('./csr-shell');
 const appOriginParam = defineString('FLUORA_APP_ORIGIN');
+const clientesOriginParam = defineString('FLUORA_CLIENTES_ORIGIN');
 const { copyUpstreamHeaders } = require('./proxy-headers');
 
 const apiBaseUrlParam = defineString('FLUORA_API_BASE_URL');
@@ -205,4 +206,11 @@ exports.directoryPage = onRequest(
    response.status(503).set('Retry-After','60').set('Cache-Control','no-store').send(renderNotFound('directorio',marketingOrigin));
   }
  }
+);
+
+// Isolated Hosting target for customer-owned domains. No registrar or Hosting writes.
+const { createCustomDomainHandler } = require('./custom-domain-page');
+exports.customDomainPage = onRequest(
+  { region: 'us-central1', memory: '256MiB', timeoutSeconds: 30, maxInstances: 10 },
+  createCustomDomainHandler({config: () => ({...runtimeConfig(), clientesOrigin: clientesOriginParam.value().trim()}), log: detail => logger.error('No fue posible renderizar el dominio propio.', detail)})
 );

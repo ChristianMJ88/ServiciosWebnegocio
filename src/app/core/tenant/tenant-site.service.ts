@@ -9,6 +9,7 @@ import { TenantSiteConfig } from './tenant.types';
 })
 export class TenantSiteService {
   private readonly http = inject(HttpClient);
+  private hostInicialConsumido = false;
 
   getBySlug(slug: string): Observable<TenantSiteConfig> {
     const slugNormalizado = slug.trim().toLowerCase();
@@ -41,6 +42,15 @@ export class TenantSiteService {
     const hostNormalizado = hostname.trim().toLowerCase();
     if (!hostNormalizado) {
       return throwError(() => new Error('Se requiere el dominio del tenant'));
+    }
+
+    const runtime = globalThis as typeof globalThis & { __FLUORA_CUSTOM_HOST__?: string; __FLUORA_TENANT__?: TenantSiteConfig };
+    if (!this.hostInicialConsumido && runtime.__FLUORA_CUSTOM_HOST__ === hostNormalizado && runtime.__FLUORA_TENANT__) {
+      this.hostInicialConsumido = true;
+      const tenant = runtime.__FLUORA_TENANT__;
+      delete runtime.__FLUORA_CUSTOM_HOST__;
+      delete runtime.__FLUORA_TENANT__;
+      return of(tenant);
     }
 
     if (!environment.apiBaseUrl) {

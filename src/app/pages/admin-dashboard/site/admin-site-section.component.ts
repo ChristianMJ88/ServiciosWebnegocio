@@ -1,3 +1,4 @@
+import { SiteDomainsComponent } from './site-domains.component';
 import { CommonModule } from '@angular/common';
 import { Component, OnInit, computed, inject, input, output, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
@@ -42,6 +43,7 @@ type SiteEditorSectionId =
     MatInputModule,
     MatSelectModule,
     MatSlideToggleModule,
+    SiteDomainsComponent,
     SiteBlockBuilderComponent,
     SiteFeaturedServicesComponent,
     SitePromotionsComponent,
@@ -102,11 +104,6 @@ export class AdminSiteSectionComponent implements OnInit {
   ));
 
   readonly rutaPublicaPreview = computed(() => this.platformHost.marketingUrl(`/e/${this.slugPreview()}`));
-
-  readonly dominioPrincipalPreview = computed(() => {
-    const dominio = this.normalizarDominio(this.formularioSitio().dominioPrincipal || '');
-    return dominio ? `https://${dominio}` : null;
-  });
 
   readonly heroPreviewImage = computed(() => this.formularioSitio().heroImagenUrl || this.defaultHeroImage);
   readonly heroPreviewVideo = computed(() => this.formularioSitio().heroVideoUrl?.trim() || null);
@@ -202,11 +199,4 @@ export class AdminSiteSectionComponent implements OnInit {
     return slug || 'mi-negocio';
   }
 
-  private normalizarDominio(valor: string): string {
-    return valor
-      .trim()
-      .toLowerCase()
-      .replace(/^https?:\/\//, '')
-      .replace(/\/.*$/, '');
-  }
 }
