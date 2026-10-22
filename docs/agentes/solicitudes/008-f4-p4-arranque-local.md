@@ -1,0 +1,9 @@
+# Recuperación del entorno local para P4
+
+Usuario informa que reinició pero backend no funciona; autorizó continuar diagnóstico/reparación. Leer PROTOCOLO y ESTADO. Solo lectura, sin ejecutar builds/procesos ni consultar secretos.
+
+Comprobado: ningún Java backend; 8080 y3302 rechazaban conexión. Docker agenda-mysql Exited0, volumen original backend_agenda_mysql_data y puerto3302:3306. Se arrancó ese mismo contenedor, sin crear/recrear volumen. IntelliJ muestra bienvenida y aviso suscripciónUltimatevencida; no se modifica licencia. Se abrirá backend desde CLIJava21 para probarAPIlocal yseguirP4.
+
+Además .run/Backend Spring Boot (dev).run.xml fuerza propiedadesDB_* yJWT_SECRETO literales, anulando backend/.env. Comparación privada solo booleana confirmóJWTdistinto al.env; no incluir valores. myRunnerSettings hereda; projectSDKtemurin21 en.idea/misc. CmdOptions también sustituye spring-boot.run.jvmArguments delpom y pierde-Duser.timezone=UTC. Propongo quitar todos los-DDB_*/JWT y el overridejvmArguments; conservar únicamente -Dspring-boot.run.profiles=dev. Así perfildev carga.envdelbackend ypom conserva UTC. No cambiar credenciales/env ni globalIDE/licencia.
+
+Revisa esa corrección mínima y pruebas: guarda estática que compruebe perfildev, cwdbackend, meta spring-boot:run y ausencia de overridesDB/JWT/jvmArguments; JVMUTC enpom intacta. Estadoinicial.run sin cambiosajenos. No tocar aplicación/backend/012/SQL. Para P4 se arranca CLI con schedulersdeshabilitados por la propiedad existente y sinDevToolsrestart, evitando jobs y recompilación durante la medida; se informa al usuario y se documenta. Antes de arranque, consulta metadataFlywaylocal de solo lectura para comprobar que no hay migracionespendientes, sinrepair. Si algo falla se diagnostica, no se omiten validaciones. ¿Hay bloqueantes o ajustesmínimos?
