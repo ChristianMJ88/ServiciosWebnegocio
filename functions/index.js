@@ -8,7 +8,7 @@ const { renderLandingHtml } = require('./landing-renderer');
 const { renderDirectoryHtml } = require('./directory-renderer');
 const { loadCsrTemplate } = require('./csr-shell');
 const appOriginParam = defineString('FLUORA_APP_ORIGIN');
-const clientesOriginParam = defineString('FLUORA_CLIENTES_ORIGIN');
+const clientesOriginParam = defineString('FLUORA_CLIENTES_ORIGIN', { default: '' });
 const { copyUpstreamHeaders } = require('./proxy-headers');
 
 const apiBaseUrlParam = defineString('FLUORA_API_BASE_URL');

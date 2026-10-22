@@ -56,8 +56,10 @@ test('template comes from configured clients origin, independent of marketing de
  const seen=[];const res=response();await createCustomDomainHandler({config,fetchImpl:async()=>Response.json(tenant),templateLoader:async origin=>{seen.push(origin);return shell;}})(request(),res);
  assert.equal(res.statusCode,200);assert.deepEqual(seen,['https://clientes.fixture.test']);assert.match(res.body,/__FLUORA_CUSTOM_HOST__/);
 });
-for(const clientesOrigin of [undefined,'http://clientes.fixture.test','https://x.test/path'])test('client origin fails closed '+clientesOrigin,async()=>{
- const res=response();await createCustomDomainHandler({config:()=>({...config(),clientesOrigin}),fetchImpl:()=>{throw Error('Must not fetch');}})(request(),res);assert.equal(res.statusCode,503);
+for(const clientesOrigin of [undefined,'','http://clientes.fixture.test','https://x.test/path'])test('client origin fails closed '+JSON.stringify(clientesOrigin),async()=>{
+ let apiCalls=0,templateCalls=0;
+ const res=response();await createCustomDomainHandler({config:()=>({...config(),clientesOrigin}),fetchImpl:()=>{apiCalls++;throw Error('Must not fetch');},templateLoader:()=>{templateCalls++;throw Error('Must not load template');}})(request(),res);
+ assert.equal(res.statusCode,503);assert.equal(apiCalls,0);assert.equal(templateCalls,0);assert.equal(res.headers['Retry-After'],'60');
 });
 for(const path of ['/SERVICIOS','/servicios/','/productos/ARTICULO'])test('normalized route '+path,async()=>{
  const res=response();await handler(async()=>Response.json(tenant))(request(path+'?utm=x',{path}),res);assert.equal(res.statusCode,301);assert.equal(res.headers.Location,'https://marca.mx'+path.toLowerCase().replace(/\/$/,'')+'?utm=x');
