@@ -53,3 +53,6 @@ backend/.env
 # Qodana (configuración local, no versionar)
 qodana.yaml
 .github/workflows/qodana_code_quality.yml
+
+# Python bytecode cache
+__pycache__/

@@ -8,9 +8,14 @@ parser=argparse.ArgumentParser(description=__doc__)
 parser.add_argument('--mysql-env',type=pathlib.Path,required=True,help='JSON privado con FLUORA_REGRESION_MYSQL_*')
 parser.add_argument('--source-dump',type=pathlib.Path,help='Dump privado sin CREATE DATABASE ni USE; lectura de origen hecha fuera de las pruebas')
 parser.add_argument('--copy-local',action='store_true',help='Exportar agenda_db del contenedor local en modo solo lectura')
+parser.add_argument('--fresh-schema',action='store_true',help='Esquema vacío; Flyway real crea todas las tablas antes de las fixtures')
+parser.add_argument('--mysql-collation',help='Collation del esquema efímero (obligatoria en modo fresco)')
 parser.add_argument('--keep-on-failure',action='store_true',help='Conservar solo logs privados, nunca la base o el proceso')
 args=parser.parse_args()
-if bool(args.source_dump)==bool(args.copy_local):parser.error('Selecciona exactamente --source-dump o --copy-local')
+if sum([bool(args.source_dump),args.copy_local,args.fresh_schema])!=1:parser.error('Selecciona exactamente --source-dump, --copy-local o --fresh-schema')
+if args.fresh_schema and not args.mysql_collation:parser.error('Collation utf8mb4 explícita requerida en modo fresco')
+if args.mysql_collation and not re.fullmatch(r'utf8mb4_[a-z0-9_]+',args.mysql_collation):parser.error('Collation utf8mb4 inválida')
+args.mysql_collation=args.mysql_collation or 'utf8mb4_unicode_ci'
 config=json.loads(args.mysql_env.read_text())
 if config['FLUORA_REGRESION_MYSQL_USER'].lower()=='root':raise SystemExit('No se permite root en las pruebas')
 base=config['FLUORA_REGRESION_MYSQL_URL']
@@ -40,19 +45,23 @@ try:
   if 'WITH GRANT OPTION' in grant or not (rule=='GRANT USAGE ON *.*' or re.fullmatch(r'GRANT [A-Z_, ]+ ON `fluora\\_test\\_%`\.\*',rule)):
    raise RuntimeError('Cuenta MySQL con privilegios fuera del patrón de pruebas')
  if query('SELECT CURRENT_ROLE();')!='NONE':raise RuntimeError('No se permiten roles MySQL')
- query('CREATE DATABASE `'+db+'` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;');created=True
+ query('CREATE DATABASE `'+db+'` CHARACTER SET utf8mb4 COLLATE '+args.mysql_collation+';');created=True
  if query('SELECT DATABASE();',db)!=db:raise RuntimeError('Base destino incorrecta')
- if args.copy_local:
-  dump=subprocess.run(['docker','exec','agenda-mysql','sh','-c','MYSQL_PWD="$MYSQL_ROOT_PASSWORD" exec mysqldump -uroot --no-tablespaces --set-gtid-purged=OFF --single-transaction --skip-comments --skip-triggers --skip-add-locks agenda_db'],capture_output=True,check=True).stdout.decode()
- else:dump=args.source_dump.read_text()
- if re.search(r'(?im)^\s*(CREATE\s+DATABASE|USE\s+)',dump):raise RuntimeError('Dump con selección de base no permitido')
- query(dump,db);dump=None
+ if args.fresh_schema:
+  if query('SELECT COUNT(*) FROM information_schema.TABLES WHERE TABLE_SCHEMA=DATABASE();',db)!='0':raise RuntimeError('El esquema nuevo no está vacío')
+ else:
+  if args.copy_local:
+   dump=subprocess.run(['docker','exec','agenda-mysql','sh','-c','MYSQL_PWD="$MYSQL_ROOT_PASSWORD" exec mysqldump -uroot --no-tablespaces --set-gtid-purged=OFF --single-transaction --skip-comments --skip-triggers --skip-add-locks agenda_db'],capture_output=True,check=True).stdout.decode()
+  else:dump=args.source_dump.read_text()
+  if re.search(r'(?im)^\s*(CREATE\s+DATABASE|USE\s+)',dump):raise RuntimeError('Dump con selección de base no permitido')
+  query(dump,db);dump=None
  java_home=pathlib.Path(env.get('JAVA_HOME','/Library/Java/JavaVirtualMachines/temurin-21.jdk/Contents/Home'))
  env['JAVA_HOME']=str(java_home)
  with (work/'compile.log').open('w') as log:subprocess.run(['mvn','-q','test-compile'],cwd=ROOT/'backend',env=env,stdout=log,stderr=subprocess.STDOUT,check=True)
  with (work/'classpath.log').open('w') as log:
   subprocess.run(['mvn','-q','dependency:build-classpath','-Dmdep.includeScope=test','-Dmdep.outputFile='+str(work/'classpath.txt')],cwd=ROOT/'backend',env=env,stdout=log,stderr=subprocess.STDOUT,check=True)
- cp=str(ROOT/'backend/target/classes')+':'+(work/'classpath.txt').read_text().strip()
+ dependencies=[entry for entry in (work/'classpath.txt').read_text().strip().split(os.pathsep) if 'spring-boot-devtools' not in pathlib.Path(entry).name]
+ cp=os.pathsep.join([str(ROOT/'backend/target/classes'),*dependencies])
  for folder in ['fluora/postman','com/techprotech/agenda/soporte']:
   dest=work/'classes'/folder;dest.parent.mkdir(parents=True,exist_ok=True)
   shutil.copytree(ROOT/'backend/target/test-classes'/folder,dest)

@@ -26,6 +26,12 @@ node --test scripts/test-postman-guards.cjs
 node scripts/test-postman-guards-cli.cjs
 ```
 
+Para verificar el DDL real de Flyway, sin heredar un esquema que Hibernate haya
+modificado antes, usar `--fresh-schema --mysql-collation utf8mb4_0900_ai_ci` en
+lugar de `--copy-local`. El arnés comprueba que el esquema efímero esté vacío;
+Flyway y sus callbacks crean el esquema antes de `validate` y de las fixtures.
+La collation se pasa como parámetro del ensayo; no cambia la base habitual.
+
 `--copy-local` **solo lee** `agenda_db` del contenedor local `agenda-mysql` con
 mysqldump. La importación usa exclusivamente el usuario restringido en una base
 nueva `fluora_test_011_*`. Como alternativa, `--source-dump /ruta/privada/dump.sql`
