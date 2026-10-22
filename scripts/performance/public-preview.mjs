@@ -3,17 +3,20 @@ import { readFile, readdir, stat } from 'node:fs/promises';
 import path from 'node:path';
 import { gzipSync } from 'node:zlib';
 import { createHash } from 'node:crypto';
-import { assertCsrContract } from '../../functions/csr-shell.js';
+import { assertCsrContract, assertCsrShell } from '../../functions/csr-shell.js';
 
 /** Local production preview. Never proxies authentication or write endpoints. */
-export async function publicPreview({ root, apiOrigin, requestLog = [], allowQuote = false, tenantCssRevalidate = false, spaShell = 'index', htmlSplit }) {
+export async function publicPreview({ root, apiOrigin, requestLog = [], allowQuote = false, tenantCssRevalidate = false, spaShell = 'index', htmlSplit, hostingTarget, functionHandler }) {
   root = path.resolve(root);
+  const hosting = hostingTarget ? JSON.parse(await readFile(new URL('../../firebase.json',import.meta.url),'utf8')).hosting.find(site=>site.target===hostingTarget) : null;
+  if(hostingTarget&&!hosting)throw new Error('Unknown Hosting target');
   if (!['index', 'csr'].includes(spaShell)) throw new Error('spaShell must be index or csr');
   if (htmlSplit && (typeof htmlSplit.after !== 'string' || !htmlSplit.after || !Number.isInteger(htmlSplit.holdMs) || htmlSplit.holdMs < 1 || htmlSplit.holdMs > 5000)) throw new Error('Invalid test HTML split');
   if (htmlSplit) {
     const home = await readFile(path.join(root, 'index.html'), 'utf8');
     if (home.split(htmlSplit.after).length !== 2) throw new Error('HTML split marker must occur exactly once');
   }
+  if (spaShell === 'index' && hostingTarget !== 'clientes') assertCsrShell(await readFile(path.join(root, 'index.html'), 'utf8'));
   if (spaShell === 'csr') assertCsrContract(await readFile(path.join(root, 'index.csr.html'), 'utf8'), await readFile(path.join(root, 'index.html'), 'utf8'));
   const api = new URL(apiOrigin);
   if (api.protocol !== 'http:' || !['localhost', '127.0.0.1', '[::1]'].includes(api.hostname) || api.username || api.password) {
@@ -69,7 +72,12 @@ export async function publicPreview({ root, apiOrigin, requestLog = [], allowQuo
       if (url.pathname === '/') file = path.join(root, 'index.html');
       const info = await stat(file).catch(() => null);
       if (!info?.isFile()) {
-        if (req.headers.accept?.includes('text/html')) file = path.join(root, spaShell === 'csr' ? 'index.csr.html' : 'index.html');
+        const rewrite=hosting?.rewrites.find(rule=>matchesHostingPath(rule.source,url.pathname));
+        if(rewrite?.function){
+          if(!functionHandler){res.writeHead(501);return res.end('Function execution is not part of this static preview');}
+          return await functionHandler(rewrite.function.functionId,req,res);
+        }
+        if (req.headers.accept?.includes('text/html')) file = path.join(root,rewrite?.destination ? rewrite.destination.replace(/^\//,'') : spaShell === 'csr' ? 'index.csr.html' : 'index.html');
         else { res.writeHead(404); return res.end(); }
       }
       const extension = path.extname(file);
@@ -103,4 +111,11 @@ export async function publicPreview({ root, apiOrigin, requestLog = [], allowQuo
       if (!res.headersSent) res.writeHead(500); res.end();
     }
   });
+}
+
+export function matchesHostingPath(pattern,pathname){
+  if(pattern==='**')return true;
+  if(pattern.endsWith('{,/**}')){const base=pattern.slice(0,-6);return pathname===base||pathname.startsWith(base+'/');}
+  if(pattern.endsWith('/**')){const base=pattern.slice(0,-3);return pathname===base||pathname.startsWith(base+'/');}
+  return pattern===pathname;
 }

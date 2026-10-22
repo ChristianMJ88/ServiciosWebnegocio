@@ -1,0 +1,2 @@
+# P1 — cierre de hallazgos
+Lee tu revisión `008-f4-m3-p1-codigo.md` y verifica en lectura las correcciones 1–5: scripts/build-marketing, check-hydration-probe, check-public-builds, tests de ambos y wiring/package. 49 pruebas focales Node verdes y guarda productiva real verde, ejecutadas por Codex; build 503.12/138.50, una ruta. No ejecutes pruebas, Git, servicios ni leas credenciales. Da dictamen para pasar a P2; no amplíes alcance. Backend ha empezado validación de hostname 012 en módulo separado y no forma parte de esta revisión.

@@ -1,0 +1,320 @@
+{
+  "date": "2026-10-21",
+  "status": "All local P4 criteria met; awaiting user review",
+  "ruleReview": "008-f4-m3-p-reactivar.md",
+  "series": "AB/BA/AB/BA/AB; five per build; two warmups separate",
+  "baseline": {
+    "buildFingerprint": "86a0c01127aef407222cf499f367827fb426dc0d461b92f3ee31364e83085b21",
+    "lighthouse": "13.4.1",
+    "node": "v22.21.1",
+    "browser": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/155.0.0.0 Safari/537.36",
+    "spaShell": "csr",
+    "median": {
+      "performance": 82,
+      "fcp": 3123.8385749999998,
+      "lcp": 3819.905499999999,
+      "tbt": 83,
+      "cls": 0.0019374831903629462,
+      "speedIndex": 3123.8385749999998
+    },
+    "runs": [
+      {
+        "sequence": 3,
+        "run": 1,
+        "scores": {
+          "performance": 82,
+          "accessibility": 100,
+          "best-practices": 100,
+          "seo": 100
+        },
+        "fcp": 3147.652825,
+        "lcp": 3841.8505000000005,
+        "tbt": 93.5,
+        "cls": 0.00044001335671010373,
+        "speedIndex": 3147.652825,
+        "headerRequested": false,
+        "tenantStylesRequested": false
+      },
+      {
+        "sequence": 6,
+        "run": 2,
+        "scores": {
+          "performance": 83,
+          "accessibility": 100,
+          "best-practices": 100,
+          "seo": 100
+        },
+        "fcp": 3101.68825,
+        "lcp": 3777.904999999999,
+        "tbt": 66.5,
+        "cls": 0.0019374831903629462,
+        "speedIndex": 3101.68825,
+        "headerRequested": false,
+        "tenantStylesRequested": false
+      },
+      {
+        "sequence": 7,
+        "run": 3,
+        "scores": {
+          "performance": 83,
+          "accessibility": 100,
+          "best-practices": 100,
+          "seo": 100
+        },
+        "fcp": 3091.91155,
+        "lcp": 3707.787,
+        "tbt": 53,
+        "cls": 0.00044001335671010373,
+        "speedIndex": 3091.91155,
+        "headerRequested": false,
+        "tenantStylesRequested": false
+      },
+      {
+        "sequence": 10,
+        "run": 4,
+        "scores": {
+          "performance": 82,
+          "accessibility": 100,
+          "best-practices": 100,
+          "seo": 100
+        },
+        "fcp": 3123.8385749999998,
+        "lcp": 3819.905499999999,
+        "tbt": 88.5,
+        "cls": 0.0019374831903629462,
+        "speedIndex": 3123.8385749999998,
+        "headerRequested": false,
+        "tenantStylesRequested": false
+      },
+      {
+        "sequence": 11,
+        "run": 5,
+        "scores": {
+          "performance": 82,
+          "accessibility": 100,
+          "best-practices": 100,
+          "seo": 100
+        },
+        "fcp": 3127.1707749999996,
+        "lcp": 3856.4934999999987,
+        "tbt": 83,
+        "cls": 0.0019374831903629462,
+        "speedIndex": 3127.1707749999996,
+        "headerRequested": false,
+        "tenantStylesRequested": false
+      }
+    ]
+  },
+  "prerender": {
+    "buildFingerprint": "da5fbb28f3934f98184b9dbce5a350dd5a10f15af3c4daf4260aab9ae3be16d9",
+    "lighthouse": "13.4.1",
+    "node": "v22.21.1",
+    "browser": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/155.0.0.0 Safari/537.36",
+    "spaShell": "csr",
+    "median": {
+      "performance": 85,
+      "fcp": 2943.0028,
+      "lcp": 3693.1703999999995,
+      "tbt": 122,
+      "cls": 0.00977409023210949,
+      "speedIndex": 2943.0028
+    },
+    "runs": [
+      {
+        "sequence": 4,
+        "run": 1,
+        "scores": {
+          "performance": 88,
+          "accessibility": 100,
+          "best-practices": 100,
+          "seo": 100
+        },
+        "fcp": 1880.1704,
+        "lcp": 3693.1703999999995,
+        "tbt": 89,
+        "cls": 0.00977409023210949,
+        "speedIndex": 1880.1704,
+        "headerRequested": false,
+        "tenantStylesRequested": false
+      },
+      {
+        "sequence": 5,
+        "run": 2,
+        "scores": {
+          "performance": 85,
+          "accessibility": 100,
+          "best-practices": 100,
+          "seo": 100
+        },
+        "fcp": 2943.0028,
+        "lcp": 3393.0028,
+        "tbt": 112.5,
+        "cls": 0.00977409023210949,
+        "speedIndex": 2943.0028,
+        "headerRequested": false,
+        "tenantStylesRequested": false
+      },
+      {
+        "sequence": 8,
+        "run": 3,
+        "scores": {
+          "performance": 81,
+          "accessibility": 100,
+          "best-practices": 100,
+          "seo": 100
+        },
+        "fcp": 3089.2569999999996,
+        "lcp": 3703.5139999999997,
+        "tbt": 174,
+        "cls": 0.00977409023210949,
+        "speedIndex": 3089.2569999999996,
+        "headerRequested": false,
+        "tenantStylesRequested": false
+      },
+      {
+        "sequence": 9,
+        "run": 4,
+        "scores": {
+          "performance": 75,
+          "accessibility": 100,
+          "best-practices": 100,
+          "seo": 100
+        },
+        "fcp": 3388.885,
+        "lcp": 4239.946250000001,
+        "tbt": 122,
+        "cls": 0,
+        "speedIndex": 4761.436792008637,
+        "headerRequested": false,
+        "tenantStylesRequested": false
+      },
+      {
+        "sequence": 12,
+        "run": 5,
+        "scores": {
+          "performance": 87,
+          "accessibility": 100,
+          "best-practices": 100,
+          "seo": 100
+        },
+        "fcp": 2083.238,
+        "lcp": 3689.0772500000003,
+        "tbt": 123.50000000000045,
+        "cls": 0.00977409023210949,
+        "speedIndex": 2083.238,
+        "headerRequested": false,
+        "tenantStylesRequested": false
+      }
+    ]
+  },
+  "warmups": [
+    {
+      "label": "r3-csr",
+      "separateFromMeasuredRuns": true,
+      "performance": 81
+    },
+    {
+      "label": "p-prerender",
+      "separateFromMeasuredRuns": true,
+      "performance": 86
+    }
+  ],
+  "lcp": [
+    {
+      "run": 1,
+      "selector": "app-home-hero > section.fl-home-hero > div.fl-home-hero-copy > h1#home-title",
+      "snippet": "<h1 _ngcontent-ng-c3270840073=\"\" id=\"home-title\">"
+    },
+    {
+      "run": 2,
+      "selector": "app-home-hero > section.fl-home-hero > div.fl-home-hero-copy > h1#home-title",
+      "snippet": "<h1 _ngcontent-ng-c3270840073=\"\" id=\"home-title\">"
+    },
+    {
+      "run": 3,
+      "selector": "app-home-hero > section.fl-home-hero > div.fl-home-hero-copy > h1#home-title",
+      "snippet": "<h1 _ngcontent-ng-c3270840073=\"\" id=\"home-title\">"
+    },
+    {
+      "run": 4,
+      "selector": "app-home-hero > section.fl-home-hero > div.fl-home-hero-copy > h1#home-title",
+      "snippet": "<h1 _ngcontent-ng-c3270840073=\"\" id=\"home-title\">"
+    },
+    {
+      "run": 5,
+      "selector": "app-home-hero > section.fl-home-hero > div.fl-home-hero-copy > h1#home-title",
+      "snippet": "<h1 _ngcontent-ng-c3270840073=\"\" id=\"home-title\">"
+    }
+  ],
+  "criteria": {
+    "performanceMedianAtLeast85": true,
+    "accessibilityEveryRun100": true,
+    "bestPracticesEveryRun100": true,
+    "seoEveryRun100": true,
+    "candidateClsEveryRunAtMostPoint01": true,
+    "lcpEveryRunTitleOrLead": true,
+    "headerAbsentEveryCandidateRun": true
+  },
+  "controlClsAllTenAtMostPoint01": true,
+  "artifactsUnchanged": true,
+  "power": {
+    "before": {
+      "battery": "Now drawing from 'AC Power'\n -InternalBattery-0 (id=23920739)\t55%; charging; 2:17 remaining present: true",
+      "settings": "System-wide power settings:\nCurrently in use:\n standby              1\n Sleep On Power Button 1\n hibernatefile        /var/vm/sleepimage\n powernap             1\n networkoversleep     0\n disksleep            10\n sleep                1 (sleep prevented by ChatGPT, sharingd, powerd)\n hibernatemode        3\n ttyskeepawake        1\n displaysleep         5 (display sleep prevented by ChatGPT)\n tcpkeepalive         1\n lowpowermode         0\n womp                 1",
+      "settingsByPowerSource": "Battery Power:\n Sleep On Power Button 1\n lowpowermode         1\n standby              1\n ttyskeepawake        1\n hibernatemode        3\n powernap             1\n hibernatefile        /var/vm/sleepimage\n displaysleep         5\n womp                 0\n networkoversleep     0\n sleep                1\n lessbright           1\n tcpkeepalive         1\n disksleep            10\nAC Power:\n Sleep On Power Button 1\n lowpowermode         0\n standby              1\n ttyskeepawake        1\n hibernatemode        3\n powernap             1\n hibernatefile        /var/vm/sleepimage\n displaysleep         5\n womp                 1\n networkoversleep     0\n sleep                1\n tcpkeepalive         1\n disksleep            10",
+      "thermal": "Note: No thermal warning level has been recorded\nNote: No performance warning level has been recorded\nNote: No CPU power status has been recorded"
+    },
+    "after": {
+      "battery": "Now drawing from 'AC Power'\n -InternalBattery-0 (id=23920739)\t56%; charging; 2:21 remaining present: true",
+      "settings": "System-wide power settings:\nCurrently in use:\n standby              1\n Sleep On Power Button 1\n hibernatefile        /var/vm/sleepimage\n powernap             1\n networkoversleep     0\n disksleep            10\n sleep                1 (sleep prevented by powerd, ChatGPT)\n hibernatemode        3\n ttyskeepawake        1\n displaysleep         5 (display sleep prevented by ChatGPT)\n tcpkeepalive         1\n lowpowermode         0\n womp                 1",
+      "settingsByPowerSource": "Battery Power:\n Sleep On Power Button 1\n lowpowermode         1\n standby              1\n ttyskeepawake        1\n hibernatemode        3\n powernap             1\n hibernatefile        /var/vm/sleepimage\n displaysleep         5\n womp                 0\n networkoversleep     0\n sleep                1\n lessbright           1\n tcpkeepalive         1\n disksleep            10\nAC Power:\n Sleep On Power Button 1\n lowpowermode         0\n standby              1\n ttyskeepawake        1\n hibernatemode        3\n powernap             1\n hibernatefile        /var/vm/sleepimage\n displaysleep         5\n womp                 1\n networkoversleep     0\n sleep                1\n tcpkeepalive         1\n disksleep            10",
+      "thermal": "Note: No thermal warning level has been recorded\nNote: No performance warning level has been recorded\nNote: No CPU power status has been recorded"
+    },
+    "causalClaim": false
+  },
+  "frontend": {
+    "paused": "82535 T    ng serve -o (ServiciosWebnegocio)",
+    "after": "82535 R    ng serve -o (ServiciosWebnegocio)"
+  },
+  "rawReports": "Conservados en carpeta temporal privada; no versionados",
+  "rawFolderLabel": "fluora-p-p4-repeat-vMKCD0FI",
+  "extractionNote": "Lighthouse 13.4.1: nodo LCP leído de lcp-breakdown-insight. lcp-discovery-insight existe sin details para texto; se recorren ambas auditorías, sin cambiar ni repetir las mediciones.",
+  "environmentObservation": {
+    "activeBuildsSuitesOrClaudeReviews": false,
+    "idleClaudeCliProcessesPresent": 2,
+    "backgroundProcessesPresent": [
+      "Homebrew mysqld (distinct from Docker agenda-mysql): 43.1% CPU at preflight",
+      "syspolicyd: 69.5%",
+      "mds_stores: 21%",
+      "mediaanalysisd: 20%"
+    ],
+    "source": "processes-measurement-before.txt",
+    "causalClaim": false,
+    "seriesRepeatedOrSamplesDiscarded": false
+  },
+  "artifactsVerification": {
+    "method": "Post-series fingerprint computed and compared in summarizer with assertion; identical",
+    "separateAfterFingerprintFilePersisted": false,
+    "limit": "Verified in console; no independent post-series hash snapshot persisted; not recomputed after closure"
+  },
+  "normalBackendRestoration": {
+    "pid": 49912,
+    "utc": true,
+    "controlledDevtoolsOverrideAbsent": true,
+    "schedulerThreads": 1,
+    "healthHttp": 200,
+    "publicSupportHttp": 200,
+    "publicPlansHttp": 200,
+    "frontendProxyHttp": 200,
+    "tenantHtmlHttp": 200,
+    "newMigrationsApplied": 0
+  },
+  "portsAfter": {
+    "4173": "free",
+    "4174": "free",
+    "4200": "active original PID82535",
+    "4300": "free",
+    "8080": "active regular backend PID49912"
+  },
+  "review": "008-f4-m3-p4-repeticion-cierre.md"
+}

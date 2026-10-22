@@ -6,7 +6,9 @@
   "hosting": [
     {
       "target": "marketing",
-      "predeploy": ["node scripts/check-public-builds.cjs"],
+      "predeploy": [
+        "node scripts/check-public-builds.cjs"
+      ],
       "public": "dist/marketing/browser",
       "ignore": [
         "firebase.json",
@@ -178,6 +180,85 @@
         {
           "source": "**",
           "destination": "/index.html"
+        }
+      ]
+    },
+    {
+      "target": "clientes",
+      "predeploy": [
+        "node scripts/check-public-builds.cjs && node scripts/check-clientes-site.mjs"
+      ],
+      "public": "dist/clientes/browser",
+      "ignore": [
+        "firebase.json",
+        "**/.*",
+        "**/node_modules/**"
+      ],
+      "headers": [
+        {
+          "source": "/",
+          "headers": [
+            {
+              "key": "Cache-Control",
+              "value": "no-store, no-cache, must-revalidate, max-age=0"
+            }
+          ]
+        },
+        {
+          "source": "**/*.html",
+          "headers": [
+            {
+              "key": "Cache-Control",
+              "value": "no-store, no-cache, must-revalidate, max-age=0"
+            }
+          ]
+        },
+        {
+          "source": "/runtime-config.js",
+          "headers": [
+            {
+              "key": "Cache-Control",
+              "value": "no-store, no-cache, must-revalidate, max-age=0"
+            }
+          ]
+        },
+        {
+          "source": "/fluora-host.txt",
+          "headers": [
+            {
+              "key": "Cache-Control",
+              "value": "no-store"
+            }
+          ]
+        },
+        {
+          "source": "/index.csr.html",
+          "headers": [
+            {
+              "key": "Cache-Control",
+              "value": "no-store"
+            },
+            {
+              "key": "X-Robots-Tag",
+              "value": "noindex, nofollow"
+            }
+          ]
+        }
+      ],
+      "rewrites": [
+        {
+          "source": "/api/**",
+          "function": {
+            "functionId": "apiProxy",
+            "region": "us-central1"
+          }
+        },
+        {
+          "source": "**",
+          "function": {
+            "functionId": "customDomainPage",
+            "region": "us-central1"
+          }
         }
       ]
     }

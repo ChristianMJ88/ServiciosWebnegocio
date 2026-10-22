@@ -15,7 +15,7 @@ herramienta**. No cambia la versión Node20 del proyecto ni sus dependencias.
 npm install --prefix /ruta/temporal/lighthouse --ignore-scripts --no-audit --no-fund --save-exact lighthouse@13.4.1
 LIGHTHOUSE_CLI=/ruta/temporal/lighthouse/node_modules/lighthouse/cli/index.js \
 LIGHTHOUSE_NODE=/ruta/a/node22 \
-node scripts/lighthouse-home.mjs --label m0 --output tmp/lighthouse/m0
+node scripts/lighthouse-home.mjs --spa-shell csr --label m0 --output tmp/lighthouse/m0
 ```
 
 `--root`, `--api`, `--port`, `--path`, `--width` y `--height` son configurables.
@@ -76,8 +76,10 @@ auditoría. No comparar con las series previas de DevTools.
 ## Shell de navegación (M3 R1)
 
 `npm run build:marketing` prepara `index.csr.html` mediante su hook postbuild.
-Durante R1 es idéntico a index.html. Application conserva index.html y no usa
-ese hook. El prerender todavía no está habilitado.
+El usuario reactivó P: index.html prerenderiza la raíz e index.csr.html es
+un shell vacío del mismo build. Application conserva index.html y no usa ese
+hook. El wrapper diagnóstico usa exactamente la configuración de marketing.
+No hay despliegue autorizado.
 
 Los dos orquestadores admiten `--spa-shell index|csr` y registran el modo en su
 resumen. `index` mantiene compatibles las referencias M0/M2 archivadas. Para
@@ -209,3 +211,24 @@ fonts; `before`, `after`, and `afterFonts` carry Range and neighbour geometry.
 The former duplicate `fallback` field was removed. CTA content reclassification
 requires the original SSR icon node, stable boxes, a changed label and the measured
 centering delta; it never subtracts the residual from total CLS.
+
+## P: previsualización y evidencia de módulos del navegador
+
+El artefacto productivo de marketing vuelve a P por decisión del usuario.
+check-hydration-probe exige raíz prerenderizada, shell vacío coherente,
+manifiesto production/prerender, runtime revisado y ausencia de datos de negocio,
+HTML adicional y sourcemaps. La configuración marketing es única, tanto para
+producción como para el wrapper diagnóstico. Se rechazan salidas anidadas o que
+contengan la carpeta productiva; desarrollo no puede escribir en ella. El
+modo `index` se rechaza antes de escuchar si el archivo lleva contenido/hidratación.
+No usar cifras de tenant obtenidas con el home prerenderizado como fallback.
+`node scripts/build-marketing.mjs --stats` permite comprobar los inputs de los
+outputs JS del navegador en `stats.json`; es diagnóstico y comparte el builder.
+La evidencia resume los inputs, las huellas y los resultados; no se versiona el
+metafile completo. Las Functions de SEO siguen reutilizando CSR. El sitio de
+clientes se configura localmente sin crearlo ni desplegarlo.
+
+Para verificar las rutas CSR del artefacto P:
+`node scripts/performance/csr-hydration-probe.mjs --root dist/marketing --tenant <slug-existente>`. El modo por defecto valida primero el prerender. La opción `--rendering csr` y check-marketing-csr quedan para artefactos CSR archivados, no como guardas productivas.
+
+P4 repetida: conservar la serie previa y escribir otro resumen; alternar AB/BA/AB/BA/AB, cinco corridas por build y dos warmups separados. Condiciones y regla en revisiones/008-f4-m3-p-reactivar.md: Header ausente en P; cualquier incumplimiento requiere decisión del usuario, sin microajustes. Una serie abortada se conserva y se repite entera, sin mezclar corridas.

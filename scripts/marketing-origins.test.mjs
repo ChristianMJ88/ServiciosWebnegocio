@@ -19,10 +19,10 @@ for(const value of [undefined,'http://marketing.test','https://marketing.test/',
 test('rejects distinct ports sharing a hostname and equal origins',()=>{
  for(const appOrigin of ['https://marketing.test','https://marketing.test:444'])assert.throws(()=>origins.validateMarketingOrigins({marketingOrigin:'https://marketing.test',appOrigin}));
 });
-test('probe config contains neither define nor duplicate domain literals; production stays CSR',async()=>{
+test('marketing prerender shares origins and application remains CSR',async()=>{
  const config=JSON.parse(await readFile(new URL('../angular.json',import.meta.url),'utf8')).projects.ServiciosWebnegocio.architect.build.configurations;
- assert.equal(config['marketing-hydration-probe'].define,undefined);assert.doesNotMatch(JSON.stringify(config['marketing-hydration-probe']),/https?:\/\//);
- assert.equal(config['marketing-hydration-probe'].outputMode,'static');
- for(const key of ['prerender','ssr','appShell'])assert.equal(Object.hasOwn(config['marketing-hydration-probe'],key),false);
- assert.equal(config.marketing.outputMode,undefined);assert.equal(config.application.server,undefined);
+ assert.equal(config.marketing.define,undefined);assert.doesNotMatch(JSON.stringify(config.marketing),/https?:\/\//);
+ assert.equal(config.marketing.outputMode,'static');assert.equal(config.marketing.server,'src/main.marketing.server.ts');assert.equal(config['marketing-prerender'],undefined);
+ for(const key of ['prerender','ssr','appShell'])assert.equal(Object.hasOwn(config.marketing,key),false);
+ assert.equal(config['marketing-hydration-probe'],undefined);assert.equal(config.application.server,undefined);
 });

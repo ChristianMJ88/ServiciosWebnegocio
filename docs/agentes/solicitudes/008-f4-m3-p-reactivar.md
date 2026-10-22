@@ -1,0 +1,11 @@
+# Reactivar P y repetir P4 por decisión expresa del usuario
+
+Lee PROTOCOLO, ESTADO, 008-f4-m3-p-diseno §5 y 008-f4-m3-p-012-verificacion. El usuario reconsidera CSR y autoriza volver marketing a prerender P, conservando012, repetir alternado5+5 sin otros procesos, sin commit ni despliegue hasta revisar.
+
+Propongo restauración por fragmentos: marketing incorpora server/static/tsconfigserver, se retira el perfil prerender separado, buildMarketing único para producción y wrapper diagnóstico (sin dos reglas); manifiesto shell=prerender; postbuild y predeploy exigen checkHydrationProbe production y shell correcto. Conservar guarda CSR como herramienta para CSR archivados y pruebas negativas, no como guarda productiva. No tocar backend/planes/RBAC/012, migraciones ni secretos. Actualizar wiring/negativos para P, mantener protección de rutas de salida para evitar borrar clientes/app.
+
+P4 mismo orquestador/perfil/Lighthouse13.4.1, baseline CSR de4e93dd1 archivado antes de P, candidato nuevo con huella propia; AB/BA/AB/BA/AB, 2warmups apartados, sin descartar corridas ni microajustes. Interpretación de regla vigente: medianaP>=85,A/BP/SEO100,CLS<=.01 enlas10,LCPdeP h1/lead; si<85 decideusuario. No encuentro otra regla de decisión posterior: confirma o identifica texto concreto distinto. No concluir por +11 solo. Se conservarán serie anterior y sus límites.
+
+Antes medir: builds/Node/sonda de hidratación terminados, sin suite/Claude/build simultáneos; discos17GiBlibres. AC/batería97%pero pmset dice descargando; observar alimentación antes/después sin atribuir causalidad. Servicios4200/8080sondelusuario;8080/MySQLnecesariosparaAPIreal. Se puede pausar temporalmente ngserve4200 medianteSTOP/CONT con PID/command verificados para quitar watcher durante medición, sin matar el proceso; restore finally. No detener otras apps ni cambiar ajustes globales.
+
+Revisa alcance/guardas y regla antes de medir, solo lectura, no escribas aplicación ni ejecutes procesos. N1/N2 de012son condiciones de despliegue, no se amplía ahora a cambios operativos ajenos a esta repetición. Angular tres normales cubiertas por tu verificación reciente; no se atribuirán a configuraciónSSRactual. Pruebas Angular se repetirán antes de P4 si el tiempo/entorno lo permiten; ningún cambio de testTimeout/workers.

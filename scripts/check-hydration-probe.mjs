@@ -6,9 +6,15 @@ import { JSDOM } from 'jsdom';
 import csrTools from '../functions/csr-shell.js';
 import originsTools from './lib/marketing-origins.cjs';
 
-export async function checkHydrationProbe(root, runtimeFile=path.resolve('public/runtime-config.js')) {
+export async function checkHydrationProbe(root, runtimeFile=path.join(root,'browser/runtime-config.js'), {production=false}={}) {
   const origins=originsTools.readMarketingOrigins(runtimeFile);
   const manifest=JSON.parse(await readFile(path.join(root,'render-origins.json'),'utf8'));
+  assert.equal(manifest.shell,'prerender','Prerender manifest required');
+  assert.ok(['production','development'].includes(manifest.mode), 'Known build mode required');
+  if (production) {
+    assert.equal(manifest.mode,'production','Deployment requires an optimized production build');
+    assert.equal(await readFile(path.join(root,'browser/runtime-config.js'),'utf8'),await readFile(path.resolve('public/runtime-config.js'),'utf8'),'Published runtime must match reviewed source');
+  }
   assert.equal(manifest.marketingOrigin,origins.marketingOrigin);assert.equal(manifest.appOrigin,origins.appOrigin);
   const routes=JSON.parse(await readFile(path.join(root,'prerendered-routes.json'),'utf8'));
   assert.deepEqual(Object.keys(routes.routes),['/'],'Only the marketing root may be prerendered');
@@ -19,16 +25,19 @@ export async function checkHydrationProbe(root, runtimeFile=path.resolve('public
   try {
     const d=page.window.document;
     assert.ok(d.querySelector('app-root[ngh][ng-server-context="ssg"]'));
-    assert.ok(d.querySelector('h1#home-title')?.textContent?.trim());
-    assert.ok(d.querySelector('.fl-home-hero-lead')?.textContent?.trim());
+    assert.equal(d.querySelector('h1#home-title')?.textContent?.trim(), 'La agenda en línea para salones, barberías y spas.');
+    assert.equal(d.querySelector('.fl-home-hero-lead')?.textContent?.trim(), 'Reservas y ventas en tu sitio. Equipo y cobros en una app.');
+    assert.ok(d.querySelector('.fl-home-hero-verticals'), 'Reserve space for dynamic business categories');
+    assert.equal(d.querySelector('.fl-home-hero-secondary')?.getAttribute('href'), '#como-funciona');
     assert.equal(d.querySelector('.fl-home-hero-actions .fl-button')?.textContent?.trim(),'Crear mi cuenta');
     const cta=new URL(d.querySelector('.fl-home-hero-actions .fl-button').getAttribute('href'));
     assert.equal(cta.origin,origins.appOrigin);assert.equal(cta.pathname,'/registro');
     assert.ok(html.includes('nghm')&&html.includes('_ejsas'),'Hydration integrity and replay must be present');
     assert.equal(d.body.hasAttribute('ngcm'),false);
     assert.equal(shell.window.document.body.hasAttribute('ngcm'),true);
-    assert.equal(d.querySelector('.fl-home-plan-card,.fl-home-trial-banner,[data-fluora-support],.fl-home-hero-verticals a'),null);
-    assert.doesNotMatch(html,/mailto:|tel:|Prueba sin tarjeta|localhost|127\.0\.0\.1/);
+    assert.equal(d.querySelector('.fl-home-plan-card,.fl-home-plan-price,.fl-home-trial-banner,[data-fluora-support],.fl-home-hero-verticals a'),null);
+    assert.doesNotMatch(html,/mailto:|tel:|sin tarjeta|localhost|127\.0\.0\.1|__FLUORA_TENANT__|\bdiasPrueba\b|\$\s?\d|MXN|\/mes\b/i);
+    for (const link of d.querySelectorAll('a[href]')) assert.ok(!new URL(link.getAttribute('href'),origins.marketingOrigin).pathname.startsWith('/e/'),'No tenant links in prerender');
     const states=[...d.querySelectorAll('script[type="application/json"]')];
     assert.equal(states.length,1);assert.equal(states[0].id,'ng-state');
     const state=JSON.parse(states[0].textContent);
@@ -44,7 +53,10 @@ export async function checkHydrationProbe(root, runtimeFile=path.resolve('public
     assert.doesNotMatch(html,/-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----|\bsk_(?:live|test)_[A-Za-z0-9]{20,}|\bAPP_USR-[0-9]{10,}-[A-Za-z0-9-]{20,}/);
     const emitted=[];
     async function collect(folder){for(const item of await readdir(folder,{withFileTypes:true})){
-      const file=path.join(folder,item.name);if(item.isDirectory())await collect(file);else if(item.name.endsWith('.html'))emitted.push(path.relative(browser,file));
+      const file=path.join(folder,item.name);if(item.isDirectory())await collect(file);else {
+        if(production)assert.ok(!item.name.endsWith('.map'),'No sourcemaps in production output');
+        if(item.name.endsWith('.html'))emitted.push(path.relative(browser,file));
+      }
     }}
     await collect(browser);assert.deepEqual(emitted.sort(),['index.csr.html','index.html']);
     return {routes:['/'],stateKeys:Object.keys(state),htmlBytes:Buffer.byteLength(html),csrBytes:Buffer.byteLength(csr),origins};
@@ -53,5 +65,5 @@ export async function checkHydrationProbe(root, runtimeFile=path.resolve('public
 
 if(process.argv[1]&&import.meta.url===pathToFileURL(path.resolve(process.argv[1])).href){
   const root=process.argv[2];if(!root)throw new Error('A probe output root is required');
-  console.log(JSON.stringify(await checkHydrationProbe(path.resolve(root))));
+  console.log(JSON.stringify(await checkHydrationProbe(path.resolve(root),undefined,{production:process.argv.includes('--production')})));
 }

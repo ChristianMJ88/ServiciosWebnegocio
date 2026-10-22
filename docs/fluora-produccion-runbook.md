@@ -128,16 +128,23 @@ No conectar el backend al contenedor de otro proyecto. Las migraciones Flyway no
 | --- | --- | --- |
 | `marketing` | `fir-serviciosweb-b2901` | `refluora.com`, `www.refluora.com` |
 | `app` | `fluora` | `app.refluora.com` |
+| `clientes` | Propuesto en `.firebaserc`; **sitio aún no creado** | Solo dominios verificados por 012 |
 
 Cada target publica un artefacto independiente desde el mismo workspace Angular:
 
 - `marketing`: `dist/marketing/browser` para landing, legales, minisitios y reservas públicas.
 - `app`: `dist/application/browser` para registro, acceso y paneles privados.
+- `clientes`: `dist/clientes/browser`, con `index.csr.html` y assets del mismo build; sin `index.html`, para que la raíz pase por `customDomainPage`.
 
 ```bash
 npm run build
-firebase deploy --only hosting:marketing,hosting:app --project fir-serviciosweb-b2901
+# Solo después de autorizar crear/preparar clientes y desplegar. No ejecutar aún.
+firebase deploy --only hosting:marketing,hosting:app,hosting:clientes --project fir-serviciosweb-b2901
 ```
+
+012 agrega `FLUORA_CLIENTES_ORIGIN` a los parámetros de Functions: origen HTTPS fijo del sitio `clientes`, confirmado cuando se cree. `customDomainPage` descarga su plantilla de ese sitio, nunca de marketing ni de un host del visitante. Así una actualización independiente de marketing no rompe los assets de clientes. No configurar el valor propuesto como si el sitio ya existiera. Para backend, `DOMINIOS_SITIO_HOSTING` debe coincidir con su ID confirmado. Sin esos valores, la conexión/Function falla cerrada. La activación de jobs DNS/HTTPS y el despliegue requieren autorización aparte.
+
+Cada publicación futura del workspace incluye el artefacto `clientes`. No es un despliegue atómico entre sitios: si alguno falla se verifica y se reintenta o revierte el conjunto. La coherencia del HTML de clientes con sus assets queda aislada del despliegue de marketing. Consultar `docs/dominios-propios.md` para flujo, costos y comprobaciones previas.
 
 `public/runtime-config.js` publica:
 

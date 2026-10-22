@@ -4,10 +4,10 @@
   "scripts": {
     "ng": "ng",
     "start": "ng serve --host 0.0.0.0 --proxy-config proxy.conf.json",
-    "build": "npm run build:marketing && npm run build:app",
+    "build": "npm run build:marketing && npm run build:app && npm run build:clientes",
     "prebuild:marketing": "npm run check:marketing-css",
-    "build:marketing": "ng build --configuration production,marketing",
-    "postbuild:marketing": "node scripts/prepare-csr-shell.mjs --root dist/marketing/browser",
+    "build:marketing": "node scripts/build-marketing.mjs",
+    "postbuild:marketing": "node scripts/prepare-csr-shell.mjs --root dist/marketing/browser && node scripts/check-hydration-probe.mjs dist/marketing --production",
     "build:app": "ng build --configuration production,application",
     "build:marketing:hydration-probe": "npm run check:marketing-css && node scripts/build-marketing-hydration-probe.mjs",
     "watch": "ng build --watch --configuration development",
@@ -15,7 +15,8 @@
     "check:public-assets": "node scripts/check-public-assets.cjs",
     "check:public-builds": "node scripts/check-public-builds.cjs",
     "css:marketing": "node scripts/css/marketing-subset.mjs",
-    "check:marketing-css": "node scripts/css/marketing-subset.mjs --check"
+    "check:marketing-css": "node scripts/css/marketing-subset.mjs --check",
+    "build:clientes": "node scripts/prepare-clientes-site.mjs && node scripts/check-clientes-site.mjs"
   },
   "prettier": {
     "printWidth": 100,

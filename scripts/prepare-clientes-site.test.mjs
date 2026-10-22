@@ -1,0 +1,31 @@
+import { test } from 'node:test';
+import assert from 'node:assert/strict';
+import { mkdtemp,mkdir,writeFile,readFile,rm } from 'node:fs/promises';
+import path from 'node:path';
+import { tmpdir } from 'node:os';
+import { prepareClientesSite } from './prepare-clientes-site.mjs';
+import { checkClientesSite } from './check-clientes-site.mjs';
+const csr='<html><head><base href="/"><link rel="stylesheet" href="styles-A.css"><script src="/runtime-config.js"></script></head><body><app-root></app-root><script type="module" src="main-A.js"></script></body></html>';
+for(const kind of ['valid','valid-csr','polluted','marker','robots','extra-html','foreign-rewrite','fallback-order','stale-assets','extra-file','changed-js','sourcemap','noscript-home'])test('client hosting guard '+kind,async t=>{
+ const base=await mkdtemp(path.join(tmpdir(),'fluora-clients-'));t.after(()=>rm(base,{recursive:true,force:true}));const source=path.join(base,'marketing'),out=path.join(base,'clientes');await mkdir(source);
+ await writeFile(path.join(source,'index.html'),kind==='valid-csr'?csr:csr.replace('</app-root>','<h1 id="home-title">Home</h1></app-root>'));
+ await writeFile(path.join(source,'index.csr.html'),csr);await writeFile(path.join(source,'robots.txt'),'User-agent: *\nAllow: /\nSitemap: https://platform.example/sitemap.xml\n');
+ await writeFile(path.join(source,'main-A.js'),'browser');
+ await prepareClientesSite(source,out);
+ const config=JSON.parse(await readFile('firebase.json','utf8')),file=path.join(base,'firebase.json');const site=config.hosting.find(s=>s.target==='clientes');
+ if(kind==='polluted')await writeFile(path.join(out,'index.html'),await readFile(path.join(source,'index.html')));
+ if(kind==='marker')await writeFile(path.join(out,'fluora-host.txt'),'wrong');
+ if(kind==='robots')await writeFile(path.join(out,'robots.txt'),'Sitemap: https://platform.example/sitemap.xml');
+ if(kind==='extra-html')await writeFile(path.join(out,'home.html'),'<app-root><h1>Home</h1></app-root>');
+ if(kind==='foreign-rewrite')site.rewrites[0].function.functionId='tenantPage';
+ if(kind==='fallback-order')site.rewrites.reverse();
+ if(kind==='extra-file')await writeFile(path.join(out,'sitemap.xml'),'extra');
+ if(kind==='changed-js')await writeFile(path.join(out,'main-A.js'),'modified');
+ if(kind==='sourcemap')await writeFile(path.join(out,'main.js.map'),'{}');
+ if(kind==='noscript-home')await writeFile(path.join(out,'index.csr.html'),csr.replace('</body>','<noscript><h1 id="home-title">Home</h1></noscript></body>'));
+ if(kind==='stale-assets')await writeFile(path.join(out,'index.csr.html'),csr.replace('main-A','main-old'));
+ await writeFile(file,JSON.stringify(config));
+ if(kind==='valid'||kind==='valid-csr'){await checkClientesSite(out,source,file);assert.equal(await readFile(path.join(out,'main-A.js'),'utf8'),'browser');await prepareClientesSite(source,out);await checkClientesSite(out,source,file);}
+ else await assert.rejects(checkClientesSite(out,source,file));
+ await assert.rejects(prepareClientesSite(source,source));
+});

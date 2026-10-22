@@ -11,7 +11,7 @@ for (const revalidate of [false, true]) {
     const root = await mkdtemp(path.join(tmpdir(), 'fluora-preview-cache-'));
     let server;
     try {
-      await writeFile(path.join(root, 'index.html'), '<html></html>');
+      await writeFile(path.join(root, 'index.html'), '<html><app-root></app-root></html>');
       await writeFile(path.join(root, 'tenant-public.css'), 'body{color:purple}');
       const requestLog = [];
       server = await publicPreview({ root, apiOrigin: 'http://localhost:8080', tenantCssRevalidate: revalidate, requestLog });
@@ -49,7 +49,7 @@ test('attributes an overlapping response to the audit that started the request',
   });
   let server;
   try {
-    await writeFile(path.join(root, 'index.html'), '<html></html>');
+    await writeFile(path.join(root, 'index.html'), '<html><app-root></app-root></html>');
     await new Promise(resolve => upstream.listen(0, '127.0.0.1', resolve));
     const requestLog = [];
     server = await publicPreview({ root, apiOrigin: `http://127.0.0.1:${upstream.address().port}`, requestLog });
@@ -81,6 +81,7 @@ for (const spaShell of ['index','csr']) {
       await writeFile(path.join(root,'index.html'),home);
       await writeFile(path.join(root,'index.csr.html'),csr);
       await writeFile(path.join(root,'tenant-public.css'),'body{color:purple}');
+      if(spaShell==='index'){await assert.rejects(publicPreview({root,apiOrigin:'http://localhost:8080',spaShell}),/must be empty/);return;}
       server = await publicPreview({root,apiOrigin:'http://localhost:8080',spaShell});
       await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));
       const origin = `http://127.0.0.1:${server.address().port}`;
@@ -111,7 +112,7 @@ test('refuses missing/polluted CSR and unknown mode before any listener is opene
 
 test('explicit split sends partial root HTML without compression; other routes stay unchanged', async () => {
  const root=await mkdtemp(path.join(tmpdir(),'fluora-preview-split-'));let server;
- const html='<html><head></head><body><nav>first</nav><main>rest</main></body></html>';
+ const html='<html><head></head><body><nav>first</nav><app-root></app-root><main>rest</main></body></html>';
  try{
   await writeFile(path.join(root,'index.html'),html);
   await assert.rejects(publicPreview({root,apiOrigin:'http://localhost:8080',htmlSplit:{after:'missing',holdMs:100}}),/exactly once/);
@@ -122,7 +123,7 @@ test('explicit split sends partial root HTML without compression; other routes s
   const response=await fetch(origin+'/',{headers:{'Accept-Encoding':'gzip'}});
   assert.equal(response.headers.get('content-length'),null);assert.equal(response.headers.get('content-encoding'),null);
   const reader=response.body.getReader(),first=await reader.read();assert.equal(new TextDecoder().decode(first.value),html.split('</nav>')[0]+'</nav>');
-  let remainder='';for(;;){const next=await reader.read();if(next.done)break;remainder+=new TextDecoder().decode(next.value);}assert.equal(remainder,'<main>rest</main></body></html>');
+  let remainder='';for(;;){const next=await reader.read();if(next.done)break;remainder+=new TextDecoder().decode(next.value);}assert.equal(remainder,'<app-root></app-root><main>rest</main></body></html>');
   assert.equal(await(await fetch(origin+'/index.html')).text(),html);
   assert.equal((await fetch(origin+'/',{method:'HEAD',headers:{'Accept-Encoding':'identity'}})).headers.get('content-length'),String(Buffer.byteLength(html)));
  }finally{if(server){server.closeAllConnections();await new Promise(resolve=>server.close(resolve));}await rm(root,{recursive:true,force:true});}

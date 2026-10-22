@@ -83,14 +83,10 @@
                 }
               ],
               "index": "src/index.html",
-              "tsConfig": "tsconfig.marketing.json",
-              "outputPath": { "base": "dist/marketing", "browser": "browser" }
-            },
-            "marketing-hydration-probe": {
-              "server": "src/main.marketing.server.ts",
-              "outputMode": "static",
               "tsConfig": "tsconfig.marketing.server.json",
-              "outputPath": { "base": "dist/marketing-hydration-probe", "browser": "browser" }
+              "outputPath": { "base": "dist/marketing", "browser": "browser" },
+              "server": "src/main.marketing.server.ts",
+              "outputMode": "static"
             },
             "application": {
               "browser": "src/main.application.ts",

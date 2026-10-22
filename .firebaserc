@@ -10,6 +10,9 @@
         ],
         "app": [
           "fluora"
+        ],
+        "clientes": [
+          "fluora-clientes"
         ]
       }
     }

@@ -1,0 +1,928 @@
+{
+  "status": "Prerender P reactivated; repeat P4 meets local criteria; awaiting user review; no commit or deployment",
+  "method": {
+    "pairedAlternatingRuns": "AB/BA, five per build, two warmups recorded separately",
+    "source": "CSR archived before P from verified 4e93dd1 build; current P fingerprint below",
+    "viewport": "375x812 mobile simulate, Lighthouse M0 profile, gzip preview, real public backend reads",
+    "noConcurrentBuildsOrSuites": true,
+    "powerObservation": "AC Power; battery 9%, discharging, observed near end only; no causal claim or continuous power record",
+    "rawReports": "private temporary files, excluded from repository"
+  },
+  "baseline": {
+    "label": "r3-csr",
+    "buildFingerprint": "86a0c01127aef407222cf499f367827fb426dc0d461b92f3ee31364e83085b21",
+    "spaShell": "csr",
+    "lighthouse": "13.4.1",
+    "node": "v22.21.1",
+    "chrome": "HeadlessChrome/155.0.0.0",
+    "median": {
+      "performance": 71,
+      "fcp": 3242.4728999999998,
+      "lcp": 4216.709350000001,
+      "tbt": 349.5,
+      "cls": 0.0007063839209881336,
+      "speedIndex": 3242.4728999999998
+    },
+    "runs": [
+      {
+        "run": 1,
+        "sequence": 3,
+        "scores": {
+          "performance": 82,
+          "accessibility": 100,
+          "best-practices": 100,
+          "seo": 100
+        },
+        "fcp": 3090.2474,
+        "lcp": 3960.7470000000003,
+        "tbt": 42.5,
+        "cls": 0.0007063839209881336,
+        "speedIndex": 3090.2474,
+        "headerRequested": false,
+        "tenantStylesRequested": false
+      },
+      {
+        "run": 2,
+        "sequence": 6,
+        "scores": {
+          "performance": 67,
+          "accessibility": 100,
+          "best-practices": 100,
+          "seo": 100
+        },
+        "fcp": 3389.957575,
+        "lcp": 4424.248949999999,
+        "tbt": 417.49999999999955,
+        "cls": 0,
+        "speedIndex": 3389.957575,
+        "headerRequested": false,
+        "tenantStylesRequested": false
+      },
+      {
+        "run": 3,
+        "sequence": 7,
+        "scores": {
+          "performance": 64,
+          "accessibility": 100,
+          "best-practices": 100,
+          "seo": 100
+        },
+        "fcp": 3594.5918,
+        "lcp": 4816.153,
+        "tbt": 412,
+        "cls": 0.0007063839209881336,
+        "speedIndex": 3620.42846202703,
+        "headerRequested": false,
+        "tenantStylesRequested": false
+      },
+      {
+        "run": 4,
+        "sequence": 10,
+        "scores": {
+          "performance": 80,
+          "accessibility": 100,
+          "best-practices": 100,
+          "seo": 100
+        },
+        "fcp": 3111.5886,
+        "lcp": 3940.4810000000007,
+        "tbt": 136.5,
+        "cls": 0.0007063839209881336,
+        "speedIndex": 3111.5886,
+        "headerRequested": false,
+        "tenantStylesRequested": false
+      },
+      {
+        "run": 5,
+        "sequence": 11,
+        "scores": {
+          "performance": 71,
+          "accessibility": 100,
+          "best-practices": 100,
+          "seo": 100
+        },
+        "fcp": 3242.4728999999998,
+        "lcp": 4216.709350000001,
+        "tbt": 349.5,
+        "cls": 0.0007063839209881336,
+        "speedIndex": 3242.4728999999998,
+        "headerRequested": false,
+        "tenantStylesRequested": false
+      }
+    ],
+    "homeShell": "csr"
+  },
+  "prerender": {
+    "label": "p-prerender",
+    "buildFingerprint": "da5fbb28f3934f98184b9dbce5a350dd5a10f15af3c4daf4260aab9ae3be16d9",
+    "spaShell": "csr",
+    "lighthouse": "13.4.1",
+    "node": "v22.21.1",
+    "chrome": "HeadlessChrome/155.0.0.0",
+    "median": {
+      "performance": 82,
+      "fcp": 2020.65045,
+      "lcp": 3697.5062,
+      "tbt": 260.5,
+      "cls": 0.00977409023210949,
+      "speedIndex": 2020.65045
+    },
+    "runs": [
+      {
+        "run": 1,
+        "sequence": 4,
+        "scores": {
+          "performance": 82,
+          "accessibility": 100,
+          "best-practices": 100,
+          "seo": 100
+        },
+        "fcp": 3089.2722000000003,
+        "lcp": 3703.5443999999998,
+        "tbt": 156.5,
+        "cls": 0.00977409023210949,
+        "speedIndex": 3089.2722000000003,
+        "headerRequested": false,
+        "tenantStylesRequested": false
+      },
+      {
+        "run": 2,
+        "sequence": 5,
+        "scores": {
+          "performance": 87,
+          "accessibility": 100,
+          "best-practices": 100,
+          "seo": 100
+        },
+        "fcp": 2020.65045,
+        "lcp": 3047.1003,
+        "tbt": 260.5,
+        "cls": 0.00977409023210949,
+        "speedIndex": 2020.65045,
+        "headerRequested": false,
+        "tenantStylesRequested": false
+      },
+      {
+        "run": 3,
+        "sequence": 8,
+        "scores": {
+          "performance": 78,
+          "accessibility": 100,
+          "best-practices": 100,
+          "seo": 100
+        },
+        "fcp": 1900.5238,
+        "lcp": 3776.2618999999995,
+        "tbt": 417,
+        "cls": 0.00977409023210949,
+        "speedIndex": 1900.5238,
+        "headerRequested": false,
+        "tenantStylesRequested": false
+      },
+      {
+        "run": 4,
+        "sequence": 9,
+        "scores": {
+          "performance": 78,
+          "accessibility": 100,
+          "best-practices": 100,
+          "seo": 100
+        },
+        "fcp": 3086.2531,
+        "lcp": 3697.5062,
+        "tbt": 272,
+        "cls": 0.00977409023210949,
+        "speedIndex": 3086.2531,
+        "headerRequested": false,
+        "tenantStylesRequested": false
+      },
+      {
+        "run": 5,
+        "sequence": 12,
+        "scores": {
+          "performance": 94,
+          "accessibility": 100,
+          "best-practices": 100,
+          "seo": 100
+        },
+        "fcp": 1889.86445,
+        "lcp": 1889.86445,
+        "tbt": 234.5,
+        "cls": 0.009783544325875415,
+        "speedIndex": 1889.86445,
+        "headerRequested": false,
+        "tenantStylesRequested": false
+      }
+    ],
+    "homeShell": "prerender",
+    "fallbackShell": "csr"
+  },
+  "criteria": {
+    "performanceMedianAtLeast85": false,
+    "accessibility100": true,
+    "bestPractices100": true,
+    "seo100": true,
+    "lcpIsHero": true,
+    "clsAtMostPoint01": true
+  },
+  "lcpNodes": [
+    {
+      "run": 1,
+      "selector": "app-home-hero > section.fl-home-hero > div.fl-home-hero-copy > h1#home-title"
+    },
+    {
+      "run": 2,
+      "selector": "app-home-hero > section.fl-home-hero > div.fl-home-hero-copy > h1#home-title"
+    },
+    {
+      "run": 3,
+      "selector": "app-home-hero > section.fl-home-hero > div.fl-home-hero-copy > h1#home-title"
+    },
+    {
+      "run": 4,
+      "selector": "app-home-hero > section.fl-home-hero > div.fl-home-hero-copy > h1#home-title"
+    },
+    {
+      "run": 5,
+      "selector": "app-home-hero > section.fl-home-hero > div.fl-home-hero-copy > h1#home-title"
+    }
+  ],
+  "verification": {
+    "backend": {
+      "tests": 697,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 1
+    },
+    "angular": {
+      "tests": 387,
+      "files": 92,
+      "consecutiveNormalRuns": 3,
+      "seconds": [
+        44.12,
+        48.18,
+        32.91
+      ]
+    },
+    "node": {
+      "passed": 158,
+      "failed": 0
+    },
+    "browserStats": {
+      "matchedOutputs": 53,
+      "serverInputsWithBytes": 0
+    },
+    "normalMatrix": {
+      "samples": 32,
+      "maxInitialCls": 0.006662539669836604,
+      "violations": 0
+    },
+    "domainUi": {
+      "fixtureSamples": 24,
+      "overflow": 0,
+      "minButtonHeight": 44
+    },
+    "tenant": {
+      "samples": 30,
+      "warmups": 15,
+      "spaShell": "csr",
+      "nonPrefillMax": 0.0004698445389355297,
+      "prefillMax": 0.0033787663966049386,
+      "rows": [
+        {
+          "route": "home",
+          "width": 390,
+          "height": 844,
+          "cache": "cold",
+          "cls": 0.0004698445389355297,
+          "scores": {
+            "performance": 71,
+            "accessibility": 97,
+            "best-practices": 100,
+            "seo": 100
+          }
+        },
+        {
+          "route": "home",
+          "width": 390,
+          "height": 844,
+          "cache": "warm",
+          "cls": 0.0004698445389355297,
+          "scores": {
+            "performance": 88,
+            "accessibility": 97,
+            "best-practices": 100,
+            "seo": 100
+          }
+        },
+        {
+          "route": "home",
+          "width": 820,
+          "height": 1180,
+          "cache": "cold",
+          "cls": 0.0001143209478633137,
+          "scores": {
+            "performance": 65,
+            "accessibility": 97,
+            "best-practices": 100,
+            "seo": 100
+          }
+        },
+        {
+          "route": "home",
+          "width": 820,
+          "height": 1180,
+          "cache": "warm",
+          "cls": 0.0001143209478633137,
+          "scores": {
+            "performance": 97,
+            "accessibility": 97,
+            "best-practices": 100,
+            "seo": 100
+          }
+        },
+        {
+          "route": "home",
+          "width": 1440,
+          "height": 900,
+          "cache": "cold",
+          "cls": 0.0000982349537037037,
+          "scores": {
+            "performance": 71,
+            "accessibility": 97,
+            "best-practices": 100,
+            "seo": 100
+          }
+        },
+        {
+          "route": "home",
+          "width": 1440,
+          "height": 900,
+          "cache": "warm",
+          "cls": 0.0000982349537037037,
+          "scores": {
+            "performance": 100,
+            "accessibility": 97,
+            "best-practices": 100,
+            "seo": 100
+          }
+        },
+        {
+          "route": "services",
+          "width": 390,
+          "height": 844,
+          "cache": "cold",
+          "cls": 0,
+          "scores": {
+            "performance": 73,
+            "accessibility": 96,
+            "best-practices": 100,
+            "seo": 100
+          }
+        },
+        {
+          "route": "services",
+          "width": 390,
+          "height": 844,
+          "cache": "warm",
+          "cls": 0.0004698445389355297,
+          "scores": {
+            "performance": 93,
+            "accessibility": 96,
+            "best-practices": 100,
+            "seo": 100
+          }
+        },
+        {
+          "route": "services",
+          "width": 820,
+          "height": 1180,
+          "cache": "cold",
+          "cls": 0,
+          "scores": {
+            "performance": 75,
+            "accessibility": 96,
+            "best-practices": 100,
+            "seo": 100
+          }
+        },
+        {
+          "route": "services",
+          "width": 820,
+          "height": 1180,
+          "cache": "warm",
+          "cls": 0.0001143209478633137,
+          "scores": {
+            "performance": 99,
+            "accessibility": 96,
+            "best-practices": 100,
+            "seo": 100
+          }
+        },
+        {
+          "route": "services",
+          "width": 1440,
+          "height": 900,
+          "cache": "cold",
+          "cls": 0,
+          "scores": {
+            "performance": 72,
+            "accessibility": 96,
+            "best-practices": 100,
+            "seo": 100
+          }
+        },
+        {
+          "route": "services",
+          "width": 1440,
+          "height": 900,
+          "cache": "warm",
+          "cls": 0.0000982349537037037,
+          "scores": {
+            "performance": 99,
+            "accessibility": 96,
+            "best-practices": 100,
+            "seo": 100
+          }
+        },
+        {
+          "route": "booking",
+          "width": 390,
+          "height": 844,
+          "cache": "cold",
+          "cls": 0,
+          "scores": {
+            "performance": 76,
+            "accessibility": 96,
+            "best-practices": 100,
+            "seo": 100
+          }
+        },
+        {
+          "route": "booking",
+          "width": 390,
+          "height": 844,
+          "cache": "warm",
+          "cls": 0.0004698445389355297,
+          "scores": {
+            "performance": 100,
+            "accessibility": 96,
+            "best-practices": 100,
+            "seo": 100
+          }
+        },
+        {
+          "route": "booking",
+          "width": 820,
+          "height": 1180,
+          "cache": "cold",
+          "cls": 0,
+          "scores": {
+            "performance": 77,
+            "accessibility": 96,
+            "best-practices": 100,
+            "seo": 100
+          }
+        },
+        {
+          "route": "booking",
+          "width": 820,
+          "height": 1180,
+          "cache": "warm",
+          "cls": 0.0001143209478633137,
+          "scores": {
+            "performance": 100,
+            "accessibility": 96,
+            "best-practices": 100,
+            "seo": 100
+          }
+        },
+        {
+          "route": "booking",
+          "width": 1440,
+          "height": 900,
+          "cache": "cold",
+          "cls": 0,
+          "scores": {
+            "performance": 77,
+            "accessibility": 96,
+            "best-practices": 100,
+            "seo": 100
+          }
+        },
+        {
+          "route": "booking",
+          "width": 1440,
+          "height": 900,
+          "cache": "warm",
+          "cls": 0.0000982349537037037,
+          "scores": {
+            "performance": 100,
+            "accessibility": 96,
+            "best-practices": 100,
+            "seo": 100
+          }
+        },
+        {
+          "route": "checkout",
+          "width": 390,
+          "height": 844,
+          "cache": "cold",
+          "cls": 0.0004698445389355297,
+          "scores": {
+            "performance": 76,
+            "accessibility": 93,
+            "best-practices": 100,
+            "seo": 100
+          }
+        },
+        {
+          "route": "checkout",
+          "width": 390,
+          "height": 844,
+          "cache": "warm",
+          "cls": 0.0004698445389355297,
+          "scores": {
+            "performance": 100,
+            "accessibility": 93,
+            "best-practices": 100,
+            "seo": 100
+          }
+        },
+        {
+          "route": "checkout",
+          "width": 820,
+          "height": 1180,
+          "cache": "cold",
+          "cls": 0.0001143209478633137,
+          "scores": {
+            "performance": 76,
+            "accessibility": 93,
+            "best-practices": 100,
+            "seo": 100
+          }
+        },
+        {
+          "route": "checkout",
+          "width": 820,
+          "height": 1180,
+          "cache": "warm",
+          "cls": 0.0001143209478633137,
+          "scores": {
+            "performance": 100,
+            "accessibility": 93,
+            "best-practices": 100,
+            "seo": 100
+          }
+        },
+        {
+          "route": "checkout",
+          "width": 1440,
+          "height": 900,
+          "cache": "cold",
+          "cls": 0.0000982349537037037,
+          "scores": {
+            "performance": 77,
+            "accessibility": 93,
+            "best-practices": 100,
+            "seo": 100
+          }
+        },
+        {
+          "route": "checkout",
+          "width": 1440,
+          "height": 900,
+          "cache": "warm",
+          "cls": 0.0000982349537037037,
+          "scores": {
+            "performance": 100,
+            "accessibility": 93,
+            "best-practices": 100,
+            "seo": 100
+          }
+        },
+        {
+          "route": "prefill",
+          "width": 390,
+          "height": 844,
+          "cache": "cold",
+          "cls": 0,
+          "scores": {
+            "performance": 76,
+            "accessibility": 93,
+            "best-practices": 100,
+            "seo": 100
+          }
+        },
+        {
+          "route": "prefill",
+          "width": 390,
+          "height": 844,
+          "cache": "warm",
+          "cls": 0.0004698445389355297,
+          "scores": {
+            "performance": 100,
+            "accessibility": 93,
+            "best-practices": 100,
+            "seo": 100
+          }
+        },
+        {
+          "route": "prefill",
+          "width": 820,
+          "height": 1180,
+          "cache": "cold",
+          "cls": 0,
+          "scores": {
+            "performance": 76,
+            "accessibility": 94,
+            "best-practices": 100,
+            "seo": 100
+          }
+        },
+        {
+          "route": "prefill",
+          "width": 820,
+          "height": 1180,
+          "cache": "warm",
+          "cls": 0.0001143209478633137,
+          "scores": {
+            "performance": 99,
+            "accessibility": 94,
+            "best-practices": 100,
+            "seo": 100
+          }
+        },
+        {
+          "route": "prefill",
+          "width": 1440,
+          "height": 900,
+          "cache": "cold",
+          "cls": 0.003280531442901235,
+          "scores": {
+            "performance": 76,
+            "accessibility": 94,
+            "best-practices": 100,
+            "seo": 100
+          }
+        },
+        {
+          "route": "prefill",
+          "width": 1440,
+          "height": 900,
+          "cache": "warm",
+          "cls": 0.0033787663966049386,
+          "scores": {
+            "performance": 100,
+            "accessibility": 94,
+            "best-practices": 100,
+            "seo": 100
+          }
+        }
+      ]
+    }
+  },
+  "userDecision": {
+    "decision": "Volver marketing a CSR",
+    "date": "2026-10-21",
+    "preserve012": true,
+    "newLighthouseSeries": false
+  },
+  "csrRevert": {
+    "homeShell": "csr",
+    "fallbackShell": "csr",
+    "buildFingerprint": "d4705a7da135726ac985093b234235c7fdda07db084b6f044320063aa6a7a73f",
+    "htmlBytes": 9930,
+    "clientMarkerBuildId": "e33862baea08f6030652c3df92024544b71ac231e07dbf5235e7f3d1834aae74",
+    "freshLighthouse": null,
+    "inheritsEarlierPerformance": false,
+    "builds": {
+      "completeNode20": true,
+      "marketingStatsNode22": true,
+      "publicAndClientGuards": true,
+      "diagnosticProductionUnchanged": true
+    },
+    "browserStats": {
+      "matchedOutputs": 53,
+      "serverInputsWithBytes": 0
+    },
+    "node": {
+      "passed": 175,
+      "failed": 0
+    },
+    "angular": {
+      "completePassedRun": {
+        "tests": 387,
+        "files": 92,
+        "seconds": 84.01
+      },
+      "secondRun": {
+        "exit": 1,
+        "executed": 380,
+        "passed": 377,
+        "failed": 3,
+        "failedFiles": 5,
+        "seconds": 117.1,
+        "errors": [
+          "ENOSPC in two file loads",
+          "three test timeouts at unchanged 5s"
+        ]
+      },
+      "threeConsecutiveGreen": false
+    },
+    "responsive": [
+      {
+        "width": 375,
+        "height": 812,
+        "menu": "open/escape/focus",
+        "ctaPath": "/registro",
+        "faqActive": true,
+        "overflow": false,
+        "pendingApi": 0,
+        "consoleErrors": 0,
+        "exceptions": 0
+      },
+      {
+        "width": 820,
+        "height": 1180,
+        "menu": "open/escape/focus",
+        "ctaPath": "/registro",
+        "faqActive": true,
+        "overflow": false,
+        "pendingApi": 0,
+        "consoleErrors": 0,
+        "exceptions": 0
+      },
+      {
+        "width": 1440,
+        "height": 900,
+        "menu": "desktop-links",
+        "ctaPath": "/registro",
+        "faqActive": true,
+        "overflow": false,
+        "pendingApi": 0,
+        "consoleErrors": 0,
+        "exceptions": 0
+      }
+    ],
+    "publicRoutes": [
+      {
+        "name": "/acceso",
+        "path": "/acceso",
+        "documents": 1,
+        "appDocuments": 1,
+        "hydration": false,
+        "warnings": 0,
+        "exceptions": 0
+      },
+      {
+        "name": "/privacidad",
+        "path": "/privacidad",
+        "documents": 1,
+        "appDocuments": 0,
+        "hydration": false,
+        "warnings": 0,
+        "exceptions": 0
+      },
+      {
+        "name": "/negocios",
+        "path": "/negocios",
+        "documents": 1,
+        "appDocuments": 0,
+        "hydration": false,
+        "warnings": 0,
+        "exceptions": 0
+      },
+      {
+        "name": "/barberias",
+        "path": "/barberias",
+        "documents": 1,
+        "appDocuments": 0,
+        "hydration": false,
+        "warnings": 0,
+        "exceptions": 0
+      },
+      {
+        "name": "tenant-renderer",
+        "path": "/e/nail-art",
+        "documents": 1,
+        "appDocuments": 0,
+        "hydration": false,
+        "warnings": 0,
+        "exceptions": 0
+      },
+      {
+        "name": "landing-renderer",
+        "path": "/barberias",
+        "documents": 1,
+        "appDocuments": 0,
+        "hydration": false,
+        "warnings": 0,
+        "exceptions": 0
+      },
+      {
+        "name": "directory-renderer",
+        "path": "/negocios",
+        "documents": 1,
+        "appDocuments": 0,
+        "hydration": false,
+        "warnings": 0,
+        "exceptions": 0
+      }
+    ],
+    "backendRerun": false,
+    "backendReason": "No backend changes during CSR return; 012 full suite evidence retained separately",
+    "emulator": {
+      "demoOnly": true,
+      "passed": true,
+      "evidenceFolder": "fluora-012-emulator-RyT6sb",
+      "rootAndServices200": true,
+      "canonicalCorrect": true,
+      "hashedAsset200": true,
+      "marketingTemplateReads": 0,
+      "capabilityRemoved404Restored200": true,
+      "originPreserved": true,
+      "realClientIpChainProven": false
+    },
+    "rawEvidence": "private temporary files; browser helper uses real read-only APIs and local runtime origins; no business overrides",
+    "limits": [
+      "No new Lighthouse score for CSR; P4 target remains unmet",
+      "No three consecutive green Angular runs after CSR return",
+      "No deployment, real domain, site creation, commit or plan changes"
+    ]
+  },
+  "p4Repeat": {
+    "requestedDate": "2026-10-21",
+    "decision": "Reconsidero la decisión: vuelve marketing al prerender (P), conservando 012",
+    "status": "All local P4 criteria met; awaiting user review",
+    "ruleReview": "008-f4-m3-p-reactivar.md",
+    "baselineFingerprint": "86a0c01127aef407222cf499f367827fb426dc0d461b92f3ee31364e83085b21",
+    "candidateFingerprint": "da5fbb28f3934f98184b9dbce5a350dd5a10f15af3c4daf4260aab9ae3be16d9",
+    "inheritsPriorScores": false,
+    "checks": {
+      "completeBuild": true,
+      "nodePassed": 190,
+      "nodeFailed": 0,
+      "angularTests": 387,
+      "angularFiles": 92,
+      "consecutiveNormalRuns": 3,
+      "angularSeconds": [
+        48.74,
+        53.99,
+        63.79
+      ],
+      "localDatabaseRecovered": true,
+      "flywayAppliedVersion": 142,
+      "newMigrationsApplied": 0,
+      "backendApi200": true,
+      "measurementBackendUtc": true,
+      "measurementBackendDevtoolsDisabled": true,
+      "measurementBackendSchedulerThreads": 0
+    },
+    "newMeasuredRuns": 10,
+    "commit": false,
+    "deployment": false,
+    "preflightAttempts": [
+      {
+        "kind": "Public API unavailable",
+        "measuredRuns": 0
+      },
+      {
+        "kind": "Isolated Chrome debugging port unavailable",
+        "measuredRuns": 0
+      },
+      {
+        "folder": "fluora-p-p4-repeat-U0DSx4te",
+        "kind": "DevTools startup transport timeout",
+        "measuredRuns": 0,
+        "frontendRestored": true,
+        "batteryPercent": 56,
+        "powerSource": "Battery Power",
+        "lowPowerModeBattery": 1,
+        "lowPowerModeAc": 1
+      }
+    ],
+    "warmupsSeparate": 2,
+    "resultFile": "008-f4-m3-p4-repeticion-resumen.json",
+    "baselineMedian": 82,
+    "prerenderMedian": 85,
+    "criteria": {
+      "performanceMedianAtLeast85": true,
+      "accessibilityEveryRun100": true,
+      "bestPracticesEveryRun100": true,
+      "seoEveryRun100": true,
+      "candidateClsEveryRunAtMostPoint01": true,
+      "lcpEveryRunTitleOrLead": true,
+      "headerAbsentEveryCandidateRun": true
+    },
+    "artifactsUnchanged": true,
+    "frontendRestored": true,
+    "powerSource": "AC Power",
+    "lowPowerModeAcBefore": 0,
+    "lowPowerModeAcAfter": 0,
+    "normalBackendRestored": true,
+    "review": "008-f4-m3-p4-repeticion-cierre.md",
+    "backgroundObservationRecorded": true
+  },
+  "methodScope": "Historical original series only; its powerObservation is not the repeat conditions. See p4Repeat.resultFile for the fresh series."
+}

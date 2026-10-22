@@ -5,12 +5,17 @@ const { parseArgs } = require('node:util');
 const { assertCsrShell, assertCsrContract } = require('../functions/csr-shell');
 const { values } = parseArgs({ options: { 'dist-root': { type: 'string', default: path.resolve(__dirname, '../dist') } } });
 
+async function main() {
 for (const entry of ['marketing', 'application']) {
   const root = path.resolve(values['dist-root'], entry, 'browser');
   const index = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
   const shell = entry === 'marketing' ? fs.readFileSync(path.join(root, 'index.csr.html'), 'utf8') : index;
   assertCsrShell(shell);
-  if (entry === 'marketing') assertCsrContract(shell, index);
+  if (entry === 'marketing') {
+    assertCsrContract(shell, index);
+    const { checkHydrationProbe } = await import('./check-hydration-probe.mjs');
+    await checkHydrationProbe(path.resolve(values['dist-root'], entry),undefined,{production:true});
+  }
   const active = index.replace(/<noscript\b[^>]*>[\s\S]*?<\/noscript>/gi, '');
   const links = [...active.matchAll(/<link\b[^>]*>/gi)].map(match => match[0]);
   const global = links.filter(link => /\brel=["']stylesheet["']/i.test(link) && /\bhref=["']styles[.-]/i.test(link));
@@ -48,3 +53,5 @@ for (const site of [marketing, app]) {
   assert.equal(site.rewrites.at(-1).source, '**', 'SPA fallback must follow every Function rewrite');
 }
 console.log('Public build paths, empty CSR, asset contracts, SEO renderers and hosting fallback verified');
+}
+main().catch(error => { console.error(error); process.exitCode = 1; });
