@@ -3,7 +3,8 @@
 const { onRequest } = require('firebase-functions/v2/https');
 const { logger } = require('firebase-functions');
 const { defineString } = require('firebase-functions/params');
-const { renderNotFound, renderSitemap, renderTenantHtml } = require('./seo-renderer');
+const { renderNotFound, renderTenantHtml } = require('./seo-renderer');
+const { createSitemapHandler } = require('./sitemap-handler');
 const { renderLandingHtml } = require('./landing-renderer');
 const { renderDirectoryHtml } = require('./directory-renderer');
 const { loadCsrTemplate } = require('./csr-shell');
@@ -126,35 +127,7 @@ exports.tenantPage = onRequest(
 
 exports.sitemap = onRequest(
   { region: 'us-central1', memory: '256MiB', timeoutSeconds: 15, maxInstances: 5 },
-  async (_request, response) => {
-    const { apiBaseUrl, marketingOrigin } = runtimeConfig();
-    try {
-      const [apiResponse, productsResponse, landingsResponse] = await Promise.all([
-        fetch(`${apiBaseUrl}/publico/sitio/indice`, {
-          headers: { Accept: 'application/json' }, signal: AbortSignal.timeout(8000)
-        }),
-        fetch(`${apiBaseUrl}/publico/productos/sitio/indice`, {
-          headers: { Accept: 'application/json' }, signal: AbortSignal.timeout(8000)
-        }),
-        fetch(`${apiBaseUrl}/publico/marketing/landings/indice`, {signal:AbortSignal.timeout(8000)})
-      ]);
-      if (!apiResponse.ok) throw new Error(`El índice público respondió ${apiResponse.status}`);
-      if (!productsResponse.ok) throw new Error(`El índice de productos respondió ${productsResponse.status}`);
-
-      if (!landingsResponse.ok) throw new Error("Índice de landing pages no disponible");
-      const landingSlugs = await landingsResponse.json();
-      const index = await apiResponse.json();
-      const productIndex = await productsResponse.json();
-      const slugs = Array.isArray(index?.slugs) ? index.slugs : [];
-      response.status(200)
-        .set('Content-Type', 'application/xml; charset=utf-8')
-        .set('Cache-Control', 'public, max-age=300, s-maxage=3600, stale-while-revalidate=86400')
-        .send(renderSitemap(slugs, marketingOrigin, Array.isArray(productIndex?.productos) ? productIndex.productos : [], landingSlugs));
-    } catch (error) {
-      logger.error('No fue posible generar el sitemap dinámico.', { error });
-      response.status(503).set('Retry-After', '60').set('Cache-Control', 'no-store').send('');
-    }
-  }
+  createSitemapHandler({ config: runtimeConfig, log: logger })
 );
 
 exports.landingPage = onRequest(

@@ -180,6 +180,10 @@ Así, al compartir el minisito se genera una tarjeta con el nombre, descripción
 
 `https://refluora.com/sitemap.xml` es dinámico. Consulta el índice público e incluye páginas base y slugs válidos sin duplicados. Se validaron `/`, `/registro` y `/e/nail-art`.
 
+Compatibilidad durante 014: el índice de sitios es obligatorio (fallo HTTP, red o JSON → 503 sin XML parcial). Los índices de productos y landings son opcionales: ante esos fallos se omiten únicamente sus URL y se registra un aviso con el identificador fijo del índice, sin cuerpos ni datos del negocio. El siguiente GET exitoso vuelve a incorporarlas desde el backend; no se incrustan slugs. Desplegar solo `functions:sitemap` para esta reparación no autoriza publicar Hosting ni backend.
+
+La política de limpieza de imágenes de Functions puede impedir recuperar revisiones antiguas con `update-traffic`. La reversión de código de Functions debe hacerse desplegando una fuente anterior revisada; un estado histórico `Ready=True` no prueba que su imagen siga disponible. Después de cualquier reparación comprobar el tráfico efectivo, `Ready=True` y un GET público 200 con `urlset`.
+
 | Function | Runtime | Región | Acceso |
 | --- | --- | --- | --- |
 | `tenantPage` | Node.js 22, 2nd Gen | `us-central1` | Público |
